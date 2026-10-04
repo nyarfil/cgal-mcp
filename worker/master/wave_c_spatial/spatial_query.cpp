@@ -348,8 +348,8 @@ Json compute_aabb_closest(const Request& request, const Profile& profile) {
       {"squared_distance", exact_scalar(squared, source.unit + "^2")},
       {"primitive_count", triangles.size()}};
   return report_shell(request, profile, std::move(results),
-                      {"aabb_tree_built", "nondegenerate_primitives",
-                       "closest_point_and_primitive_found"});
+                      {{"aabb_tree_built", true}, {"nondegenerate_primitives", true},
+                       {"closest_point_and_primitive_found", true}});
 }
 
 Json compute_kdtree_range(const Request& request, const Profile& profile) {
@@ -397,8 +397,8 @@ Json compute_kdtree_range(const Request& request, const Profile& profile) {
       {"truncated", total > hits.size()},
       {"points", std::move(listed)}};
   return report_shell(request, profile, std::move(results),
-                      {"kd_tree_built", "range_query_executed",
-                       "result_bound_recorded"});
+                      {{"kd_tree_built", true}, {"range_query_executed", true},
+                       {"result_bound_recorded", true}});
 }
 
 Json compute_nearest(const Request& request, const Profile& profile) {
@@ -452,8 +452,9 @@ Json compute_nearest(const Request& request, const Profile& profile) {
                   {"point_count", points.size()},
                   {"neighbors", std::move(neighbors)}};
   return report_shell(request, profile, std::move(results),
-                      {"kd_tree_built", "orthogonal_k_neighbor_search_executed",
-                       "neighbor_count_bounded"});
+                      {{"kd_tree_built", true},
+                       {"orthogonal_k_neighbor_search_executed", true},
+                       {"neighbor_count_bounded", true}});
 }
 
 Json compute_intersections(const Request& request, const Profile& profile) {
@@ -504,8 +505,8 @@ Json compute_intersections(const Request& request, const Profile& profile) {
       {"truncated", total > indices.size()},
       {"primitive_indices", indices}};
   return report_shell(request, profile, std::move(results),
-                      {"aabb_tree_built", "nondegenerate_primitives",
-                       "intersection_candidates_enumerated"});
+                      {{"aabb_tree_built", true}, {"nondegenerate_primitives", true},
+                       {"intersection_candidates_enumerated", true}});
 }
 
 Json compute_bbox(const Request& request, const Profile& profile) {
@@ -541,7 +542,7 @@ Json compute_bbox(const Request& request, const Profile& profile) {
                         maximum[2] - minimum[2]},
                        source.unit)}};
   return report_shell(request, profile, std::move(results),
-                      {"bbox_3_executed", "finite_bounds"});
+                      {{"bounding_box_executed", true}, {"finite_bounds", true}});
 }
 
 const Profile& profile_for(const std::string& operation) {
