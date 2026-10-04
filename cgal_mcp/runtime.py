@@ -12,10 +12,12 @@ class SimplifyParameters(BaseModel):
     error_bound: float = Field(gt=0, allow_inf_nan=False)
     envelope: float = Field(default=0.0, ge=0, allow_inf_nan=False)
     preserve_border: StrictBool = True
-    constrained_edges: list[tuple[int,int]] = Field(default_factory=list, max_length=10000)
+    constrained_edges: list[list[int]] = Field(default_factory=list, max_length=10000)
 
     @model_validator(mode="after")
     def error_is_useful(self):
+        if any(len(edge)!=2 for edge in self.constrained_edges):
+            raise ValueError("constrained_edges must contain index pairs")
         if self.error_bound >= self.tolerance:
             raise ValueError("error_bound must be smaller than tolerance")
         return self

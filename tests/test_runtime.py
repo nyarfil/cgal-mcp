@@ -38,3 +38,25 @@ class RuntimeTests(unittest.IsolatedAsyncioTestCase):
         a=self.runtime.register(TRI,"mm");p=self.runtime.plan(a["asset_id"],PARAM)
         j=self.runtime.execute(p["plan_id"])
         self.assertEqual((await self.runtime.cancel(j["job_id"]))["state"],"cancelled")
+
+    async def test_timeout_and_running_cancel_stop_process(self):
+        import os
+        root=pathlib.Path(self.temp.name);script=root/"slow-worker";pidfile=root/"pid"
+        script.write_text("#!/usr/bin/env python3\nimport os,time,pathlib\n"+
+                          "pathlib.Path("+repr(str(pidfile))+").write_text(str(os.getpid()))\n"+
+                          "time.sleep(30)\n")
+        script.chmod(0o700);self.runtime.worker=script;self.runtime.timeout=0.15
+        a=self.runtime.register(TRI,"mm");p=self.runtime.plan(a["asset_id"],PARAM)
+        job=self.runtime.execute(p["plan_id"]);await self.runtime.tasks[job["job_id"]]
+        self.assertEqual(self.runtime.status(job["job_id"])["state"],"timed_out")
+        if pidfile.exists():
+            with self.assertRaises(ProcessLookupError): os.kill(int(pidfile.read_text()),0)
+        pidfile.unlink(missing_ok=True);self.runtime.timeout=60
+        job=self.runtime.execute(p["plan_id"])
+        for _ in range(100):
+            if pidfile.exists():break
+            await asyncio.sleep(0.01)
+        self.assertTrue(pidfile.exists())
+        await self.runtime.cancel(job["job_id"])
+        self.assertEqual(self.runtime.status(job["job_id"])["state"],"cancelled")
+        with self.assertRaises(ProcessLookupError): os.kill(int(pidfile.read_text()),0)

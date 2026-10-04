@@ -16,11 +16,12 @@ class CatalogTests(unittest.TestCase):
     def test_unknown_goal_does_not_select_arbitrary_tool(self):
         self.assertEqual(discover("unrelated_operation_zz"), [])
 
-    def test_no_planned_tool_is_executable(self):
-        self.assertEqual(discover("軽量化", implemented_only=True), [])
+    def test_only_supported_capabilities_are_executable(self):
+        self.assertTrue(discover("軽量化", implemented_only=True))
         for item in CATALOG:
-            with self.assertRaises(NotImplementedError):
-                require_executable(item.id)
+            self.assertEqual(require_executable(item.id)["status"], "implemented")
+        with self.assertRaises(KeyError):
+            require_executable("Triangulation_3/Delaunay_triangulation_3.h")
 
     def test_unknown_id(self):
         with self.assertRaises(KeyError):
