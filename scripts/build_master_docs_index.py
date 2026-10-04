@@ -133,7 +133,7 @@ def _document_rows(source_root: Path, docs_root: Path, packages: dict[str, dict]
             "path": f"catalog/packages.json#{package_id}", "sha256": package_manifest_sha256,
             "content": package["reason"], "aliases": _aliases(package_id, package["title"]),
         })
-    for path in sorted(docs_root.rglob("*.html")):
+    for path in sorted(docs_root.rglob("*.html"), key=lambda item: item.relative_to(docs_root).as_posix()):
         package_id = _package_for_path(path, docs_root, package_ids)
         rows.append({
             "kind": "manual_page", "package": package_id, "status": packages.get(package_id, {}).get("status", "REFERENCE_ONLY"),
@@ -141,7 +141,8 @@ def _document_rows(source_root: Path, docs_root: Path, packages: dict[str, dict]
             "content": _read_text(path, html_source=True), "aliases": _aliases(package_id, path.stem),
         })
     include_root = source_root / "include" / "CGAL"
-    for path in sorted(item for item in include_root.rglob("*") if item.is_file() and item.suffix.lower() in HEADER_SUFFIXES):
+    for path in sorted((item for item in include_root.rglob("*") if item.is_file() and item.suffix.lower() in HEADER_SUFFIXES),
+                       key=lambda item: item.relative_to(source_root).as_posix()):
         package_id = _package_for_header(path, package_ids)
         rows.append({
             "kind": "public_header", "package": package_id, "status": packages.get(package_id, {}).get("status", "REFERENCE_ONLY"),
@@ -149,7 +150,8 @@ def _document_rows(source_root: Path, docs_root: Path, packages: dict[str, dict]
             "content": _read_text(path), "aliases": _aliases(package_id, path.stem),
         })
     examples_root = source_root / "examples"
-    for path in sorted(item for item in examples_root.rglob("*") if item.is_file() and item.suffix.lower() in EXAMPLE_SUFFIXES):
+    for path in sorted((item for item in examples_root.rglob("*") if item.is_file() and item.suffix.lower() in EXAMPLE_SUFFIXES),
+                       key=lambda item: item.relative_to(source_root).as_posix()):
         package_id = _package_for_path(path, examples_root, package_ids)
         rows.append({
             "kind": "example", "package": package_id, "status": packages.get(package_id, {}).get("status", "REFERENCE_ONLY"),

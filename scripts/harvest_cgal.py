@@ -85,7 +85,7 @@ def _tree_hash(root: Path, files: list[Path]) -> str | None:
     if not files:
         return None
     digest = hashlib.sha256()
-    for path in sorted(files):
+    for path in sorted(files, key=lambda item: item.relative_to(root).as_posix()):
         digest.update(path.relative_to(root).as_posix().encode("utf-8"))
         digest.update(b"\0")
         digest.update(sha256_file(path).encode("ascii"))
@@ -101,7 +101,8 @@ def _find_package_root(source_root: Path, package_id: str) -> Path | None:
 def _collect_files(root: Path | None, suffixes: set[str]) -> list[Path]:
     if root is None or not root.is_dir():
         return []
-    return sorted(path for path in root.rglob("*") if path.is_file() and path.suffix.lower() in suffixes)
+    return sorted((path for path in root.rglob("*") if path.is_file() and path.suffix.lower() in suffixes),
+                  key=lambda item: item.relative_to(root).as_posix())
 
 
 def _spdx_evidence(source_root: Path, package_id: str, headers: list[Path]) -> list[dict[str, object]]:

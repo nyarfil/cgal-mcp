@@ -19,10 +19,23 @@ from fetch_master_baseline import (  # noqa: E402
     safe_extract_tar_xz,
     verify_extracted_tree,
 )
-from harvest_cgal import VERSION, build_catalog, parse_package_overview, validate_snapshot  # noqa: E402
+from harvest_cgal import VERSION, _collect_files, _tree_hash, build_catalog, parse_package_overview, validate_snapshot  # noqa: E402
 
 
 class MasterHarvesterTests(unittest.TestCase):
+    def test_canonical_paths_use_case_sensitive_posix_order_on_every_os(self):
+        # WindowsPath's default comparison case-folds names; catalog order must not.
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            upper, lower = root / "Z.h", root / "a.h"
+            upper.write_bytes(b"upper")
+            lower.write_bytes(b"lower")
+            self.assertEqual([p.name for p in _collect_files(root, {".h"})], ["Z.h", "a.h"])
+            expected = hashlib.sha256(
+                ("Z.h\0" + hashlib.sha256(b"upper").hexdigest() + "\n" +
+                 "a.h\0" + hashlib.sha256(b"lower").hexdigest() + "\n").encode()).hexdigest()
+            self.assertEqual(_tree_hash(root, [lower, upper]), expected)
+
     def _fixture(self, root: Path) -> tuple[Path, Path]:
         source = root / "source"
         docs = root / "docs"
