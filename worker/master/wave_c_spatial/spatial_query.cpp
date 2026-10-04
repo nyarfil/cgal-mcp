@@ -748,7 +748,7 @@ OperationDefinition analysis_definition(const Profile& profile) {
        p.id == "spatial.nearest_neighbors")
           ? std::vector<std::string>{"Spatial_searching"}
           : (p.id == "spatial.bounding_box"
-                 ? std::vector<std::string>{"Principal_component_analysis_LGPL"}
+                 ? std::vector<std::string>{"Principal_component_analysis"}
                  : std::vector<std::string>{"AABB_tree", "Surface_mesh"});
   Json bindings = Json::object();
   Json parameter_bindings = Json::object();
