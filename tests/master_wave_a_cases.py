@@ -26,6 +26,13 @@ def digest(path: pathlib.Path) -> str:
 
 
 TRACE_PATH = os.environ.get("CGAL_MASTER_ACCEPTANCE_TRACE")
+NORMAL_FILTER_FIXTURE = (
+    pathlib.Path(__file__).resolve().parent
+    / "fixtures/master/wave_a/bounded_normal_inversion.off"
+)
+NORMAL_FILTER_FIXTURE_SHA256 = (
+    "02fa9498ee15d604a00a79a6e903d82618afa3e65ed5e1c3118864a5a61e1f04"
+)
 
 
 def canonical_hash(value: object) -> str:
@@ -545,36 +552,78 @@ with tempfile.TemporaryDirectory() as folder:
         pathlib.Path(envelope_tight["outputs"][0]["path"])
     )
 
-    # A torus gives bounded-normal-change a nontrivial adversarial surface. The
-    # moderate 0.2 ratio retains more geometry than the earlier aggressive control;
-    # the filter selects a different valid result after the same number of collapses.
-    # Identical outputs would prove only parameter echoing.
-    guard_vertices, guard_faces = torus_fixture()
-    normal_guard = root / "normal-guard-torus.off"
-    write_off(normal_guard, guard_vertices, guard_faces)
+    # This fixed asymmetric fan has one uniquely short edge (about 0.0412 mm).
+    # In the decimal-token domain its midpoint changes a surviving face normal
+    # from (0, 0, 0.02) to (0, -0.01, -0.02), with dot -1/2500. The replay
+    # separately proves a strict negative margin for the parsed binary64 values.
+    # The unfiltered collapse is therefore an intentional negative control.
+    normal_guard = NORMAL_FILTER_FIXTURE
+    assert digest(normal_guard) == NORMAL_FILTER_FIXTURE_SHA256
+    normal_control_parameters = base_parameters(
+        "edge_length_midpoint",
+        {"kind": "edge_length", "value": typed_length(0.1)},
+    ) | {
+        "preserve_border": False,
+        "bounded_normal_change": False,
+    }
+    normal_filtered_parameters = normal_control_parameters | {
+        "bounded_normal_change": True,
+    }
+    assert {
+        key: value for key, value in normal_control_parameters.items()
+        if key != "bounded_normal_change"
+    } == {
+        key: value for key, value in normal_filtered_parameters.items()
+        if key != "bounded_normal_change"
+    }
     normal_control = run(
         worker,
         request(
             "mesh.simplify.edge_collapse",
             [artifact(normal_guard, "bounded-normal-control-input")],
             stage(root, "bounded-normal-control-simplify"),
-            base_parameters("gh_triangle", {"kind": "edge_ratio", "value": 0.2}),
+            normal_control_parameters,
             request_id="bounded-normal-control-simplify",
         ),
     )
     assert normal_control["status"] == "ok", normal_control
-    assert normal_control["metrics"]["edges_removed"] > 0, normal_control
+    assert normal_control["metrics"]["edges_before"] == 6, normal_control
+    assert normal_control["metrics"]["edges_removed"] == 3, normal_control
+    assert normal_control["metrics"]["edges_after"] == 3, normal_control
+    assert normal_control["metrics"]["bounded_normal_change_enabled"] is False, normal_control
     normal_control_output = pathlib.Path(normal_control["outputs"][0]["path"])
-    validate_candidate(worker, root, "bounded-normal-control", normal_control_output, normal_guard)
+    normal_control_integrity = run(
+        worker,
+        request(
+            "mesh.validate.simplification_integrity",
+            [
+                artifact(normal_control_output, "bounded-normal-control-candidate"),
+                artifact(normal_guard, "bounded-normal-control-source"),
+            ],
+            stage(root, "bounded-normal-control-integrity"),
+            {"preserve_border": False, "constrained_edges": []},
+            request_id="bounded-normal-control-integrity",
+        ),
+    )
+    assert normal_control_integrity["status"] == "error", normal_control_integrity
+    assert normal_control_integrity["outputs"] == [], normal_control_integrity
+    assert normal_control_integrity["error"]["class"] == "VALIDATION_FAILED", normal_control_integrity
+    assert (
+        normal_control_integrity["error"]["code"]
+        == "OPEN_SURFACE_WINDING_CHANGED"
+    ), normal_control_integrity
     normal_adversarial = simplify_fixture(
         worker,
         root,
         normal_guard,
         "bounded-normal-adversarial",
-        base_parameters("gh_triangle", {"kind": "edge_ratio", "value": 0.2}) |
-        {"bounded_normal_change": True},
+        normal_filtered_parameters,
+        {"preserve_border": False, "constrained_edges": []},
+        expect_removal=False,
     )
-    assert normal_control["metrics"]["edges_removed"] == normal_adversarial["metrics"]["edges_removed"]
+    assert normal_adversarial["metrics"]["edges_before"] == 6, normal_adversarial
+    assert normal_adversarial["metrics"]["edges_after"] == 6, normal_adversarial
+    assert normal_adversarial["metrics"]["bounded_normal_change_enabled"] is True, normal_adversarial
     assert digest(normal_control_output) != digest(
         pathlib.Path(normal_adversarial["outputs"][0]["path"])
     )

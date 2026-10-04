@@ -16,6 +16,7 @@ from typing import Any
 from .errors import InvalidInput, MasterError, PreconditionFailure, WorkerFailure
 from .planner import PlanBuilder
 from .registry import OperationRegistry
+from .search import QueryTerms, fts_expression, lexical_score, parse_query
 from .store import ArtifactStore
 from .resources import ResourceConfig
 from .supervisor import WorkerSupervisor, default_worker_path
@@ -431,46 +432,77 @@ class MasterRuntime:
             raise InvalidInput("file_access_denied", "Path is outside configured CGAL Master file roots")
 
     def docs_search(self, query: str, limit: int = 10) -> dict[str, Any]:
-        if not query.strip() or not 1 <= limit <= 100:
+        if not isinstance(query, str) or not query.strip() or type(limit) is not int or not 1 <= limit <= 100:
             raise InvalidInput("docs_search", "Query and limit are invalid")
         if self.docs_index is not None:
             return self._docs_sqlite_search(query, limit)
-        roots = [self.catalog_root]
+        parsed = parse_query(query)
         records: list[dict[str, Any]] = []
-        terms = query.lower().split()
-        index_available = (self.catalog_root / "baseline.json").is_file() and (self.catalog_root / "docs_index.jsonl").is_file()
+        baseline_path = self.catalog_root / "baseline.json"
+        packages_path = self.catalog_root / "packages.json"
+        jsonl = self.catalog_root / "docs_index.jsonl"
+        index_available = (baseline_path.is_file() and packages_path.is_file()
+                           and jsonl.is_file())
         if not index_available:
             return {"query": query, "index_scope": "unavailable", "index_available": False,
                     "results": [], "legacy_api_index_used": False}
-        for root in roots:
-            if not root.is_dir():
-                continue
-            jsonl = root / "docs_index.jsonl"
-            if jsonl.is_file():
-                try:
-                    with jsonl.open("r", encoding="utf-8") as stream:
-                        for line in stream:
-                            value = json.loads(line)
-                            text = json.dumps(value, ensure_ascii=False).lower()
-                            score = sum(text.count(term) for term in terms)
-                            if score:
-                                records.append({"title": value.get("title", value.get("package", "")),
-                                    "source": jsonl.name, "score": score,
-                                    "package": value.get("package"), "kind": value.get("kind"),
-                                    "docs_url": value.get("docs_url"),
-                                    "identifiers": value.get("identifiers", [])[:25],
-                                    "source_snippets": value.get("source_snippets", [])})
-                except (OSError, json.JSONDecodeError):
-                    pass
-            for path in sorted(root.glob("*.json")):
-                if path.name == "operations.json":
+        try:
+            baseline = json.loads(baseline_path.read_text(encoding="utf-8"))
+            packages_document = json.loads(packages_path.read_text(encoding="utf-8"))
+            expected_count = baseline.get("package_count")
+            package_rows = packages_document.get("packages")
+            if (baseline.get("schema_version") != 1
+                    or not isinstance(expected_count, int) or expected_count <= 0
+                    or packages_document.get("schema_version") != 1
+                    or packages_document.get("baseline") != baseline.get("catalog_version")
+                    or not isinstance(package_rows, list)
+                    or len(package_rows) != expected_count):
+                raise ValueError("baseline/packages metadata disagree")
+            expected_packages = {item.get("id") for item in package_rows
+                                 if isinstance(item, dict) and isinstance(item.get("id"), str)}
+            if len(expected_packages) != expected_count:
+                raise ValueError("packages catalog contains missing or duplicate ids")
+            index_rows: list[dict[str, Any]] = []
+            with jsonl.open("r", encoding="utf-8") as stream:
+                for line_number, line in enumerate(stream, 1):
+                    if not line.strip():
+                        raise ValueError(f"blank JSONL record at line {line_number}")
+                    value = json.loads(line)
+                    if (not isinstance(value, dict) or value.get("kind") != "package"
+                            or value.get("status") != "CATALOGED"
+                            or not isinstance(value.get("package"), str)
+                            or not isinstance(value.get("title"), str)
+                            or not isinstance(value.get("docs_url"), str)
+                            or f"/{baseline.get('cgal_version')}/" not in value["docs_url"]):
+                        raise ValueError(f"invalid package JSONL record at line {line_number}")
+                    index_rows.append(value)
+            indexed_packages = {value["package"] for value in index_rows}
+            if (len(index_rows) != expected_count or len(indexed_packages) != expected_count
+                    or indexed_packages != expected_packages):
+                raise ValueError("package JSONL is truncated, duplicated, or disagrees with packages.json")
+            for value in index_rows:
+                title = str(value.get("title", value.get("package", "")))
+                package = str(value.get("package") or "")
+                identifiers = tuple(str(item) for item in value.get("identifiers", [])[:25])
+                title_score, title_shared = lexical_score(
+                    parsed, f"{title} {package}", aliases=(title, package))
+                identifier_score, identifier_shared = lexical_score(
+                    parsed, " ".join(identifiers))
+                shared = title_shared | identifier_shared
+                score = 3.0 * title_score + 0.25 * identifier_score
+                if score <= 0:
                     continue
-                try:
-                    value = json.loads(path.read_text(encoding="utf-8"))
-                except (OSError, json.JSONDecodeError):
-                    continue
-                self._collect_docs(value, path.name, terms, records)
-        records.sort(key=lambda item: (-item["score"], item["source"], item["title"]))
+                records.append({"title": title, "source": jsonl.name,
+                                "score": round(score, 6), "package": package,
+                                "kind": value.get("kind"),
+                                "docs_url": value.get("docs_url"),
+                                "identifiers": list(identifiers),
+                                "source_snippets": value.get("source_snippets", []),
+                                "matched_concepts": sorted(shared)})
+        except (OSError, json.JSONDecodeError, ValueError) as exc:
+            raise InvalidInput("docs_catalog_fallback",
+                               f"Pinned fallback documentation catalog is invalid: {exc}") from exc
+        records.sort(key=lambda item: (-item["score"], item["package"] or "", item["title"]))
         for record in records:
             record.update({"scope": "reference", "executable": False})
         return {"query": query, "index_scope": "pinned_generated_catalog", "index_available": True,
@@ -512,39 +544,87 @@ class MasterRuntime:
     def _docs_sqlite_search(self, query: str, limit: int) -> dict[str, Any]:
         metadata = self._docs_sqlite_metadata()
         assert self.docs_index is not None
-        phrase = '"' + query.replace('"', '""') + '"'
+        parsed = parse_query(query)
+        expression = fts_expression(parsed)
+        if expression is None:
+            return {"query": query, "index_scope": "pinned_generated_catalog",
+                    "index_available": True, "index_backend": "sqlite-fts5-trigram",
+                    "catalog_version": metadata["catalog_version"],
+                    "cgal_version": metadata["cgal_version"], "results": [],
+                    "legacy_api_index_used": False}
+        candidate_limit = min(max(limit * 40, 200), 2000)
         try:
             connection = sqlite3.connect(f"file:{self.docs_index.as_posix()}?mode=ro&immutable=1", uri=True)
             try:
                 rows = connection.execute("""SELECT d.kind,d.package_id,d.status,d.title,d.source_path,
-                    d.source_sha256,snippet(documents_fts,2,'[',']','…',14),bm25(documents_fts)
+                    d.source_sha256,d.aliases,
+                    snippet(documents_fts,2,'[',']','…',14),
+                    bm25(documents_fts,10.0,6.0,0.2)
                     FROM documents_fts JOIN documents d ON d.id=documents_fts.rowid
-                    WHERE documents_fts MATCH ? ORDER BY bm25(documents_fts) LIMIT ?""",
-                    (phrase, limit)).fetchall()
+                    WHERE documents_fts MATCH ?
+                    ORDER BY bm25(documents_fts,10.0,6.0,0.2) LIMIT ?""",
+                    (expression, candidate_limit)).fetchall()
             finally:
                 connection.close()
         except sqlite3.Error as exc:
             raise InvalidInput("docs_index_query", f"Docs index query failed: {exc}") from exc
-        fields = ("kind", "package", "status", "title", "source_path", "source_sha256", "snippet", "rank")
-        results = [dict(zip(fields, row)) for row in rows]
-        for result in results:
-            result.update({"scope": "reference", "executable": False})
+        fields = ("kind", "package", "status", "title", "source_path",
+                  "source_sha256", "aliases", "snippet", "fts_rank")
+        scored: list[dict[str, Any]] = []
+        for row in rows:
+            result = dict(zip(fields, row))
+            lexical, shared = lexical_score(
+                parsed,
+                f"{result['title']} {result['package'] or ''} {result['aliases'] or ''}",
+                aliases=(str(result["title"]), str(result["package"] or "")))
+            rank = abs(float(result.pop("fts_rank")))
+            result["score"] = round(4.0 * lexical + 8.0 / (1.0 + rank), 6)
+            result["matched_concepts"] = sorted(shared)
+            result["scope"] = "reference"
+            result["executable"] = False
+            scored.append(result)
+        scored.sort(key=lambda item: (-item["score"], item["package"] or "",
+                                      item["kind"], item["title"], item["source_path"]))
+        # Prevent a single package's many headers/examples from hiding other
+        # relevant packages. One result per package is selected first, then a
+        # second pass fills any remaining slots deterministically.
+        results: list[dict[str, Any]] = []
+        selected: set[int] = set()
+        seen_packages: set[str] = set()
+        for index, item in enumerate(scored):
+            package = str(item["package"] or "")
+            if package in seen_packages:
+                continue
+            results.append(item)
+            selected.add(index)
+            seen_packages.add(package)
+            if len(results) == limit:
+                break
+        if len(results) < limit:
+            for index, item in enumerate(scored):
+                if index in selected:
+                    continue
+                results.append(item)
+                if len(results) == limit:
+                    break
         return {"query": query, "index_scope": "pinned_generated_catalog", "index_available": True,
                 "index_backend": "sqlite-fts5-trigram", "catalog_version": metadata["catalog_version"],
                 "cgal_version": metadata["cgal_version"],
                 "results": results, "legacy_api_index_used": False}
 
     @classmethod
-    def _collect_docs(cls, value: Any, source: str, terms: list[str],
+    def _collect_docs(cls, value: Any, source: str, terms: QueryTerms,
                       records: list[dict[str, Any]], prefix: str = "") -> None:
         if isinstance(value, dict):
             title = str(value.get("name") or value.get("id") or value.get("title") or prefix)
-            text = json.dumps(value, ensure_ascii=False).lower()
-            score = sum(text.count(term) for term in terms)
-            if score:
+            package = str(value.get("package") or value.get("id") or "")
+            score, shared = lexical_score(terms, f"{title} {package}",
+                                          aliases=(title, package))
+            if score and (not terms.concepts or shared):
                 records.append({"title": title, "source": source, "score": score,
-                                "package": value.get("package") or value.get("id"),
-                                "references": value.get("sources") or value.get("docs") or []})
+                                "package": package,
+                                "references": value.get("sources") or value.get("docs") or [],
+                                "matched_concepts": sorted(shared)})
             for key, item in value.items():
                 if isinstance(item, (dict, list)):
                     cls._collect_docs(item, source, terms, records, str(key))

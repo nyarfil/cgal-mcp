@@ -604,6 +604,66 @@ class MasterCoreTest(unittest.TestCase):
                  "validates": "analysis"},
             ]})
 
+    def test_boolean_plans_exact_sources_units_and_validator_binding(self):
+        fixtures = Path("tests/fixtures/master/wave_a_boolean").resolve()
+        runtime = self.runtime()
+        source_a = runtime.artifact_import(
+            str(fixtures / "cube_a.off"), "cm", artifact_type="TriangleSurfaceMesh")
+        source_b = runtime.artifact_import(
+            str(fixtures / "cube_overlap.off"), "cm",
+            artifact_type="TriangleSurfaceMesh")
+        validators = {
+            "union": "mesh.validate.boolean_union",
+            "intersection": "mesh.validate.boolean_intersection",
+            "difference": "mesh.validate.boolean_difference",
+        }
+        for kind, validator_id in validators.items():
+            operation = f"mesh.boolean.{kind}"
+            plan = runtime.plan({"operation_id": operation,
+                "inputs": {"source_a": source_a["artifact_id"],
+                           "source_b": source_b["artifact_id"]},
+                "parameters": {"operation": kind}})
+            self.assertEqual([step["operation"] for step in plan["steps"]],
+                             [operation, validator_id])
+            transform, validator = plan["steps"]
+            self.assertEqual(transform["outputs"][0]["unit_from"], "source_a")
+            self.assertEqual(validator["parameters"], {"operation": kind})
+            self.assertEqual(validator["inputs"]["candidate"], {
+                "step": transform["id"], "slot": "geometry",
+                "type": "TriangleSurfaceMesh", "format": "off", "unit": "cm"})
+            self.assertEqual(validator["inputs"]["source_a"]["artifact_id"],
+                             source_a["artifact_id"])
+            self.assertEqual(validator["inputs"]["source_b"]["artifact_id"],
+                             source_b["artifact_id"])
+
+        source_m = runtime.artifact_import(
+            str(fixtures / "cube_overlap.off"), "m",
+            artifact_type="TriangleSurfaceMesh")
+        with self.assertRaisesRegex(InvalidInput, "one unit"):
+            runtime.plan({"operation_id": "mesh.boolean.union",
+                "inputs": [source_a["artifact_id"], source_m["artifact_id"]],
+                "parameters": {"operation": "union"}})
+        with self.assertRaisesRegex(PreconditionFailure, "numeric scale contract"):
+            extreme = runtime.artifact_import(
+                str(fixtures / "extreme_translation_cube.off"), "cm",
+                artifact_type="TriangleSurfaceMesh")
+            runtime.plan({"operation_id": "mesh.boolean.union",
+                "inputs": [extreme["artifact_id"], source_b["artifact_id"]],
+                "parameters": {"operation": "union"}})
+
+        with self.assertRaisesRegex(InvalidInput, "does not bind exactly"):
+            runtime.plan({"steps": [
+                {"id": "boolean", "operation": "mesh.boolean.difference",
+                 "inputs": {"source_a": source_a["artifact_id"],
+                            "source_b": source_b["artifact_id"]},
+                 "parameters": {"operation": "difference"}},
+                {"id": "forged", "operation": "mesh.validate.boolean_difference",
+                 "inputs": {"candidate": {"step": "boolean", "slot": "geometry"},
+                            "source_a": source_b["artifact_id"],
+                            "source_b": source_a["artifact_id"]},
+                 "parameters": {"operation": "difference"}, "validates": "boolean"},
+            ]})
+
     def test_wave_b_parameter_schemas_units_and_validator_bindings(self):
         source_path = Path("tests/fixtures/master/wave_b/noisy_plane_with_outlier.xyz").resolve()
         normals_path = Path("tests/fixtures/master/wave_b/plane_normals_alternating.ply").resolve()

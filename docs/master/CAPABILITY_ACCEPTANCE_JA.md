@@ -19,9 +19,20 @@ checked-in reportを読むだけの`scripts/master_acceptance.py`は、再計算
 
 試験は7 cost/placement、5 stop predicate、constraint、bounded distance、normal-change、
 Polyhedral Envelopeを含みます。同一入力でfilterの有無・厳しさを比較し、
-stop条件は出力の計測値で確認します。23の合格ケースと46のvalidator実行について、
+stop条件は出力の計測値で確認します。22の合格ケースと44のvalidator実行について、
 request・response・入力・出力・validator report・source・workerのhashを照合します。
 FastEnvelopeの外部依存は別の未対応policyとして残っています。
+
+bounded normal changeは、実行時の三角関数や対称形状のcost順序に依存しない固定OFFを
+使います。唯一の最短辺をmidpointへcollapseすると、残存面の変更前後の法線内積が
+OFFの十進token領域で厳密に`-1/2500`となります。さらに実際にworkerが保持する
+IEEE-754 binary64座標を有理数へ戻して検証し、同じ辺が唯一のstop対象であり、法線内積が
+`-3/10000`未満の負値になることもhash固定します。filter無効のcontrolは3辺を削除しますが、厳格validatorが
+`OPEN_SURFACE_WINDING_CHANGED`で拒否します。このcandidateは合格geometryへ数えません。
+同じ入力・kernel・parameterで`bounded_normal_change`だけを有効にしたケースはcollapseを
+拒否して0辺削除となり、integrityとHausdorffの両validatorを通過します。reportはcontrolの
+source/candidate/error、解析値、parameter差分を`negative_control_proofs`へhash付きで保存し、
+合格した`operation_results`とは分離します。
 
 受入runnerは登録済みの正式native workerと固定harnessを実行します。
 任意の試験command、JSONから指定された未知のコード、test stubで要求を合格にしません。

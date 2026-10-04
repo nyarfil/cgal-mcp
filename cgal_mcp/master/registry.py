@@ -12,6 +12,8 @@ from typing import Any, Iterable
 
 from .errors import InvalidInput, UnsupportedOperation
 from .policies import PolicyRegistry
+from .search import (METHOD_CONCEPTS, enriched_text, match_operation, parse_query,
+                     requested_parameter_values)
 from .util import ID_RE, canonical_json
 
 
@@ -375,13 +377,13 @@ class OperationRegistry:
             self._search.execute("CREATE VIRTUAL TABLE operation_fts USING fts5(id UNINDEXED, text)")
             self.search_mode = "fts5-unicode61"
         for operation in self.operations.values():
-            search_text = " ".join([
+            search_text = enriched_text(" ".join([
                 operation["id"], operation["summary"], operation["package"],
                 *operation.get("aliases", []), *operation.get("dependencies", []),
                 *(item.get("identifier", "") for item in operation.get("sources", [])),
                 *(kind for spec in operation["io"]["inputs"] for kind in spec.get("types", [])),
                 *(spec.get("type", "") for spec in operation["io"]["outputs"]),
-            ]).lower()
+            ]))
             self._search.execute("INSERT INTO operation_fts(id,text) VALUES(?,?)", (operation["id"], search_text))
         self._search.commit()
 
@@ -401,10 +403,13 @@ class OperationRegistry:
             raise InvalidInput("search_query", "Search query must not be empty")
         if type(limit) is not int or not 1 <= limit <= 100:
             raise InvalidInput("search_limit", "Search limit must be between 1 and 100")
-        query_terms = [term.lower() for term in query.replace(".", " ").split() if term]
-        candidates: list[tuple[float, dict[str, Any], list[str]]] = []
+        parsed = parse_query(query)
+        candidates: list[tuple[bool, float, dict[str, Any], list[str], Any,
+                               dict[str, Any], dict[str, list[str]]]] = []
         fts_scores: dict[str, float] = {}
-        fts_terms = [term for term in query_terms if len(term) >= 3]
+        fts_terms = list(parsed.words)
+        for concept in sorted(parsed.concepts):
+            fts_terms.append(concept.replace("_", " "))
         if fts_terms:
             expression = " OR ".join('"' + term.replace('"', '""') + '"' for term in fts_terms)
             try:
@@ -435,29 +440,87 @@ class OperationRegistry:
             expression = operation["license"].get("expression") or operation["license"].get("spdx")
             if allowed_licenses is not None and expression not in allowed_licenses:
                 continue
-            haystack = " ".join([operation["id"], operation["summary"], operation["package"],
-                                  *operation.get("aliases", [])]).lower()
-            score = fts_scores.get(operation["id"], 0.0)
-            if score:
+            aliases = tuple(operation.get("aliases", []))
+            primary_text = " ".join([
+                operation["id"], operation["summary"], operation["package"],
+                *aliases,
+            ])
+            evidence = match_operation(parsed, primary_text, aliases=aliases)
+            fts_score = fts_scores.get(operation["id"], 0.0)
+            score = evidence.score + fts_score
+            if fts_score:
                 reasons.append("FTS5 registry index matched")
-            score += sum(3.0 if term in operation["id"] else 1.0 for term in query_terms if term in haystack)
-            if query.lower() in haystack:
-                score += 4.0
             if score <= 0:
                 continue
-            reasons.append("registry alias/text matched")
+            if evidence.covered_primary_concepts:
+                reasons.append("registered metadata covers: " + ", ".join(
+                    sorted(evidence.covered_primary_concepts)))
+            if evidence.uncovered_primary_concepts:
+                reasons.append("registered metadata does not cover: " + ", ".join(
+                    sorted(evidence.uncovered_primary_concepts)))
+            if evidence.word_matches or evidence.alias_matches:
+                reasons.append("registry alias/text matched")
+            route_supported = evidence.route_supported
+            if operation.get("role", "transform") == "validator" and "validation" not in parsed.concepts:
+                route_supported = False
+                reasons.append("validator requires explicit validation intent")
+            schema_parameters = _schema_properties(operation["parameters"])
+            required_parameters: dict[str, Any] = {}
+            parameter_conflicts: dict[str, list[str]] = {}
+            for parameter, values in requested_parameter_values(parsed.concepts).items():
+                if parameter not in schema_parameters:
+                    continue
+                if len(values) == 1:
+                    required_parameters[parameter] = next(iter(values))
+                else:
+                    parameter_conflicts[parameter] = sorted(values)
+            if parameter_conflicts:
+                route_supported = False
+                reasons.append("query requests conflicting parameter values")
             if operation["status"] in EXECUTABLE_STATUSES:
                 score += 1.0
                 reasons.append("registered adapter available")
-            candidates.append((score, operation, reasons))
-        candidates.sort(key=lambda item: (-item[0], item[1]["id"]))
+            candidates.append((route_supported, score, operation,
+                               reasons, evidence, required_parameters,
+                               parameter_conflicts))
+        candidates.sort(key=lambda item: (not item[0], -item[1], item[2]["id"]))
+        safe = [item for item in candidates if item[0]]
+        route_confidence = "none"
+        recommended: str | None = None
+        recommended_parameters: dict[str, Any] = {}
+        if safe:
+            gap = math.inf if len(safe) == 1 else safe[0][1] - safe[1][1]
+            if safe[0][4].confidence == "high" and gap > 2.0:
+                route_confidence = "high"
+                recommended = safe[0][2]["id"]
+                recommended_parameters = safe[0][5]
+            else:
+                route_confidence = "ambiguous" if gap <= 2.0 else safe[0][4].confidence
+        primary = sorted(parsed.concepts)
         return {"query": query, "search_mode": self.search_mode, "candidates": [
             {"operation_id": operation["id"], "revision": operation["revision"],
              "status": operation["status"], "score": score, "why": reasons,
+             "route_supported": route_supported,
+             "confidence": evidence.confidence if route_supported else "low",
+             "covered_primary_concepts": sorted(evidence.covered_primary_concepts),
+             "uncovered_primary_concepts": sorted(evidence.uncovered_primary_concepts),
+             "covered_method_concepts": sorted(evidence.covered_method_concepts),
+             "uncovered_method_concepts": sorted(evidence.uncovered_method_concepts),
+             "required_parameters": required_parameters,
+             "parameter_conflicts": parameter_conflicts,
              "input_types": [kind for spec in operation["io"]["inputs"] for kind in spec.get("types", [])],
              "output_types": [spec.get("type") for spec in operation["io"]["outputs"]]}
-            for score, operation, reasons in candidates[:limit]
-        ]}
+            for (route_supported, score, operation, reasons, evidence,
+                 required_parameters, parameter_conflicts) in candidates[:limit]
+        ], "query_analysis": {
+            "normalized": parsed.normalized,
+            "primary_concepts": primary,
+            "requested_method_concepts": sorted(parsed.concepts & METHOD_CONCEPTS),
+            "routing_confidence": route_confidence,
+            "recommended_operation": recommended,
+            "required_parameters": recommended_parameters,
+            "automatic_route_supported": recommended is not None,
+        }}
 
     def verify_manifest(self, manifest: dict[str, Any], required_operation: str) -> dict[str, Any]:
         if manifest.get("protocol") != 1 or not isinstance(manifest.get("operations"), list):

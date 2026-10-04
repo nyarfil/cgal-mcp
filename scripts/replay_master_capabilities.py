@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import base64
 import copy
+from fractions import Fraction
 import hashlib
 import json
 import math
@@ -25,6 +26,12 @@ if str(SCRIPT_REPO) not in sys.path:
 
 from scripts.master_acceptance import (
     REPO,
+    WAVE_A_BOUNDED_NORMAL_ANALYTIC_PROOF,
+    WAVE_A_BOUNDED_NORMAL_CONTROL,
+    WAVE_A_BOUNDED_NORMAL_ERROR_CLASS,
+    WAVE_A_BOUNDED_NORMAL_ERROR_CODE,
+    WAVE_A_BOUNDED_NORMAL_FILTERED,
+    WAVE_A_BOUNDED_NORMAL_FIXTURE_SHA256,
     WAVE_A_REQUIREMENT_CASES,
     _canonical_hash,
     evaluate_requirements,
@@ -60,7 +67,7 @@ POLICY_CASES = {
         "bounded-distance", "filter-control", "bounded-distance-tight",
     ],
     f"{TRANSFORM}.filter.bounded_normal_change": [
-        "bounded-normal", "bounded-normal-control", "bounded-normal-adversarial",
+        "bounded-normal", "bounded-normal-adversarial",
     ],
     f"{TRANSFORM}.filter.polyhedral_envelope": [
         "polyhedral-envelope", "filter-control", "polyhedral-envelope-tight",
@@ -241,12 +248,9 @@ def _case_expectations() -> dict[str, dict[str, Any]]:
             "policy": "gh_plane_line", "stop": "edge_ratio", "expect_removal": False,
             "metric": ("polyhedral_envelope_enabled", True),
         },
-        "bounded-normal-control": {
-            "policy": "gh_triangle", "stop": "edge_ratio",
-            "metric": ("bounded_normal_change_enabled", False),
-        },
         "bounded-normal-adversarial": {
-            "policy": "gh_triangle", "stop": "edge_ratio",
+            "policy": "edge_length_midpoint", "stop": "edge_length",
+            "expect_removal": False,
             "metric": ("bounded_normal_change_enabled", True),
         },
     })
@@ -352,8 +356,197 @@ def _validator_record(record: dict, operation_id: str, revision: int,
     }
 
 
+def _bounded_normal_fixture_proof(digest: str, blobs: dict[str, dict]) -> dict:
+    """Prove the inversion in both decimal-token and parsed-binary64 domains."""
+    if digest != WAVE_A_BOUNDED_NORMAL_FIXTURE_SHA256:
+        raise ValueError("Bounded-normal control did not use the approved fixed fixture")
+    try:
+        tokens = base64.b64decode(blobs[digest]["content"], validate=True).decode("ascii").split()
+        if tokens[:4] != ["OFF", "4", "3", "0"]:
+            raise ValueError
+        decimal_vertices = [
+            tuple(Fraction(tokens[4 + index * 3 + axis]) for axis in range(3))
+            for index in range(4)
+        ]
+        binary64_vertices = [
+            tuple(Fraction.from_float(float(tokens[4 + index * 3 + axis])) for axis in range(3))
+            for index in range(4)
+        ]
+        cursor = 16
+        faces = []
+        for _ in range(3):
+            if tokens[cursor] != "3":
+                raise ValueError
+            faces.append(tuple(int(tokens[cursor + offset]) for offset in range(1, 4)))
+            cursor += 4
+        if cursor != len(tokens):
+            raise ValueError
+    except (KeyError, UnicodeError, ValueError, TypeError, IndexError) as error:
+        raise ValueError("Bounded-normal fixture is not the approved four-vertex OFF") from error
+
+    edges = {
+        tuple(sorted((face[offset], face[(offset + 1) % 3])))
+        for face in faces for offset in range(3)
+    }
+
+    def squared_distance(vertices: list[tuple[Fraction, ...]], edge: tuple[int, int]) -> Fraction:
+        first, second = (vertices[index] for index in edge)
+        return sum((first[axis] - second[axis]) ** 2 for axis in range(3))
+
+    decimal_ordered = sorted((squared_distance(decimal_vertices, edge), edge) for edge in edges)
+    if (decimal_ordered[0] != (Fraction(17, 10000), (1, 3)) or
+            decimal_ordered[1][0] <= Fraction(1, 100)):
+        raise ValueError("Bounded-normal fixture does not have the required unique short edge")
+
+    def subtract(first: tuple[Fraction, ...], second: tuple[Fraction, ...]) -> tuple[Fraction, ...]:
+        return tuple(first[axis] - second[axis] for axis in range(3))
+
+    def cross(first: tuple[Fraction, ...], second: tuple[Fraction, ...]) -> tuple[Fraction, ...]:
+        return (
+            first[1] * second[2] - first[2] * second[1],
+            first[2] * second[0] - first[0] * second[2],
+            first[0] * second[1] - first[1] * second[0],
+        )
+
+    p, q, r, s = decimal_vertices
+    midpoint = tuple((q[axis] + s[axis]) / 2 for axis in range(3))
+    original_normal = cross(subtract(p, q), subtract(r, q))
+    collapsed_normal = cross(subtract(p, midpoint), subtract(r, midpoint))
+    scalar_product = sum(original_normal[axis] * collapsed_normal[axis] for axis in range(3))
+    if (midpoint != (Fraction(0), Fraction(-1, 100), Fraction(1, 200)) or
+            original_normal != (Fraction(0), Fraction(0), Fraction(1, 50)) or
+            collapsed_normal != (Fraction(0), Fraction(-1, 100), Fraction(-1, 50)) or
+            scalar_product != Fraction(-1, 2500)):
+        raise ValueError("Bounded-normal fixture no longer proves a strict normal inversion")
+
+    binary_ordered = sorted((squared_distance(binary64_vertices, edge), edge) for edge in edges)
+    stop_squared = Fraction.from_float(0.1) ** 2
+    p, q, r, s = binary64_vertices
+    binary_midpoint = tuple((q[axis] + s[axis]) / 2 for axis in range(3))
+    binary_original_normal = cross(subtract(p, q), subtract(r, q))
+    binary_collapsed_normal = cross(subtract(p, binary_midpoint), subtract(r, binary_midpoint))
+    binary_scalar_product = sum(
+        binary_original_normal[axis] * binary_collapsed_normal[axis]
+        for axis in range(3)
+    )
+    if (binary_ordered[0][1] != (1, 3) or
+            not binary_ordered[0][0] < stop_squared or
+            not binary_ordered[1][0] > stop_squared or
+            not binary_scalar_product < Fraction(-3, 10000)):
+        raise ValueError("Binary64 worker coordinates no longer prove the bounded-normal effect")
+    return copy.deepcopy(WAVE_A_BOUNDED_NORMAL_ANALYTIC_PROOF)
+
+
+def _build_bounded_normal_negative_control(
+    records: dict[str, dict],
+    blobs: dict[str, dict],
+    declared: dict[str, dict],
+    manifest_sha256: str,
+    positive_result: dict,
+) -> tuple[dict, set[str]]:
+    transform = records.get(f"{WAVE_A_BOUNDED_NORMAL_CONTROL}-simplify")
+    integrity = records.get(f"{WAVE_A_BOUNDED_NORMAL_CONTROL}-integrity")
+    if not isinstance(transform, dict) or not isinstance(integrity, dict):
+        raise ValueError("Bounded-normal negative control trace is incomplete")
+    if (transform.get("operation_id") != TRANSFORM or
+            integrity.get("operation_id") != INTEGRITY):
+        raise ValueError("Bounded-normal negative control operation chain is incorrect")
+
+    request = transform["request"]
+    response = transform["response"]
+    metrics = response.get("metrics", {})
+    input_hashes = _blob_hashes(request.get("inputs"))
+    output_hashes = _blob_hashes(response.get("outputs"))
+    if (response.get("status") != "ok" or input_hashes != [WAVE_A_BOUNDED_NORMAL_FIXTURE_SHA256] or
+            len(output_hashes) != 1 or output_hashes[0] == input_hashes[0] or
+            metrics.get("policy") != "edge_length_midpoint" or
+            metrics.get("stop_policy") != "edge_length" or
+            metrics.get("bounded_normal_change_enabled") is not False or
+            (metrics.get("edges_before"), metrics.get("edges_removed"), metrics.get("edges_after")) !=
+            (6, 3, 3)):
+        raise ValueError("Bounded-normal negative control transform assertions failed")
+
+    positive_request = positive_result["request"]
+    positive_metrics = positive_result["response"].get("metrics", {})
+    control_parameters = copy.deepcopy(request.get("parameters"))
+    filtered_parameters = copy.deepcopy(positive_request.get("parameters"))
+    if not isinstance(control_parameters, dict) or not isinstance(filtered_parameters, dict):
+        raise ValueError("Bounded-normal paired parameters are missing")
+    control_flag = control_parameters.pop("bounded_normal_change", None)
+    filtered_flag = filtered_parameters.pop("bounded_normal_change", None)
+    if (control_flag is not False or filtered_flag is not True or
+            control_parameters != filtered_parameters or
+            request.get("kernel") != positive_request.get("kernel") or
+            input_hashes != positive_result.get("input_hashes") or
+            positive_metrics.get("edges_before") != 6 or
+            positive_metrics.get("edges_removed") != 0 or
+            positive_metrics.get("edges_after") != 6):
+        raise ValueError("Bounded-normal control differs from the filtered run beyond the filter flag")
+    stop = control_parameters.get("stop")
+    if (control_parameters.get("policy") != "edge_length_midpoint" or
+            control_parameters.get("preserve_border") is not False or
+            stop != {"kind": "edge_length", "value": {"value": 0.1, "unit": "mm"}}):
+        raise ValueError("Bounded-normal negative control parameters are not the analytic recipe")
+
+    failure_request = integrity["request"]
+    failure_response = integrity["response"]
+    failure_inputs = _blob_hashes(failure_request.get("inputs"))
+    error = failure_response.get("error")
+    if (failure_request.get("parameters") != {"preserve_border": False, "constrained_edges": []} or
+            failure_inputs != [output_hashes[0], input_hashes[0]] or
+            failure_response.get("status") != "error" or
+            failure_response.get("outputs") != [] or
+            failure_response.get("metrics") != {} or
+            not isinstance(error, dict) or
+            error.get("class") != WAVE_A_BOUNDED_NORMAL_ERROR_CLASS or
+            error.get("code") != WAVE_A_BOUNDED_NORMAL_ERROR_CODE):
+        raise ValueError("Bounded-normal negative candidate was not rejected by the strict validator")
+
+    parameter_proof = {
+        "only_changed_parameter": "bounded_normal_change",
+        "control_value": False,
+        "filtered_value": True,
+        "shared_parameters_sha256": _canonical_hash(control_parameters),
+    }
+    proof = {
+        "case_id": WAVE_A_BOUNDED_NORMAL_CONTROL,
+        "operation_id": TRANSFORM,
+        "revision": declared[TRANSFORM]["revision"],
+        "worker_manifest_sha256": manifest_sha256,
+        "test_id": "wave-a-worker-cases",
+        "paired_positive_case_id": WAVE_A_BOUNDED_NORMAL_FILTERED,
+        "request": request,
+        "request_sha256": transform["request_sha256"],
+        "response": response,
+        "response_sha256": transform["response_sha256"],
+        "input_hashes": input_hashes,
+        "output_hashes": output_hashes,
+        "bindings": {
+            "source_sha256": input_hashes[0],
+            "rejected_candidate_sha256": output_hashes[0],
+        },
+        "parameter_proof": parameter_proof,
+        "analytic_fixture": _bounded_normal_fixture_proof(input_hashes[0], blobs),
+        "expected_validator_failure": {
+            "operation_id": INTEGRITY,
+            "revision": declared[INTEGRITY]["revision"],
+            "request": failure_request,
+            "request_sha256": integrity["request_sha256"],
+            "response": failure_response,
+            "response_sha256": integrity["response_sha256"],
+            "input_hashes": failure_inputs,
+            "output_hashes": [],
+            "status": "expected_error",
+        },
+        "status": "expected_rejection",
+    }
+    return proof, set(input_hashes + output_hashes + failure_inputs)
+
+
 def _build_results(records: dict[str, dict], blobs: dict[str, dict], declared: dict[str, dict],
-                   manifest_sha256: str) -> tuple[list[dict], dict[str, object], set[str]]:
+                   manifest_sha256: str) -> tuple[
+                       list[dict], dict[str, object], dict[str, dict], set[str]
+                   ]:
     results = []
     reports: dict[str, object] = {}
     used_blobs: set[str] = set()
@@ -439,15 +632,17 @@ def _build_results(records: dict[str, dict], blobs: dict[str, dict], declared: d
         filtered["validation"]["checks"]["adversarial_filter_effect"] = {
             "pass": True, "control_case_id": "filter-control",
         }
-    normal_control = indexed["bounded-normal-control"]
-    normal_filtered = indexed["bounded-normal-adversarial"]
-    if (normal_control["input_hashes"] != normal_filtered["input_hashes"] or
-            normal_control["response"]["metrics"]["edges_removed"] !=
-            normal_filtered["response"]["metrics"]["edges_removed"] or
-            normal_control["output_hashes"] == normal_filtered["output_hashes"]):
-        raise ValueError("Bounded-normal filter did not change the shared adversarial result")
-    normal_filtered["validation"]["checks"]["adversarial_filter_effect"] = {
-        "pass": True, "control_case_id": "bounded-normal-control",
+    if len(results) != 22 or sum(len(result["validators"]) for result in results) != 44:
+        raise ValueError("Wave A positive evidence must remain 22 cases with 44 validator passes")
+    normal_filtered = indexed[WAVE_A_BOUNDED_NORMAL_FILTERED]
+    normal_proof, normal_used_blobs = _build_bounded_normal_negative_control(
+        records, blobs, declared, manifest_sha256, normal_filtered,
+    )
+    used_blobs.update(normal_used_blobs)
+    normal_filtered["validation"]["checks"]["bounded_normal_negative_control"] = {
+        "pass": True,
+        "negative_control_id": WAVE_A_BOUNDED_NORMAL_CONTROL,
+        "rejected_candidate_sha256": normal_proof["bindings"]["rejected_candidate_sha256"],
     }
     edge_length_control = indexed["stop-edge_length-below-minimum"]
     edge_length_active = indexed["stop-edge_length"]
@@ -463,7 +658,12 @@ def _build_results(records: dict[str, dict], blobs: dict[str, dict], declared: d
         result["validation"]["checks"]["stop_threshold_effect"] = {
             "pass": True, "control_case_id": control_case_id,
         }
-    return results, reports, used_blobs
+    return (
+        results,
+        reports,
+        {WAVE_A_BOUNDED_NORMAL_CONTROL: normal_proof},
+        used_blobs,
+    )
 
 
 def replay(worker: Path) -> dict:
@@ -535,7 +735,9 @@ def replay(worker: Path) -> dict:
     _require_unchanged(worker, worker_sha256, "Worker binary")
     _require_unchanged(CASE_SOURCE, source_bytes_sha256, "Wave A test source")
     _require_unchanged(Path(__file__), generator_bytes_sha256, "Acceptance generator source")
-    results, reports, used_blobs = _build_results(records, blobs, declared, manifest_sha256)
+    results, reports, negative_control_proofs, used_blobs = _build_results(
+        records, blobs, declared, manifest_sha256,
+    )
     if not used_blobs.issubset(blobs):
         raise ValueError("A verified result refers to a blob absent from the trace")
     blobs = {digest: blobs[digest] for digest in sorted(used_blobs)}
@@ -586,6 +788,7 @@ def replay(worker: Path) -> dict:
         "blobs": blobs,
         "reports": reports,
         "operation_results": results,
+        "negative_control_proofs": negative_control_proofs,
         "coverage_note": "Six original 7.7 requirements are replayed through 7 cost/placement policies, "
                          "5 stop predicates, constraint/border cases, bounded distance, bounded normal "
                          "change, Polyhedral Envelope, and both mandatory validators. The immutable "

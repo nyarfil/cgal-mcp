@@ -276,11 +276,35 @@ class PlanBuilder:
         candidates = result["candidates"]
         if not candidates:
             raise UnsupportedOperation(goal)
-        if len(candidates) > 1 and candidates[0]["score"] <= candidates[1]["score"]:
+        analysis = result.get("query_analysis", {})
+        if analysis.get("routing_confidence") == "ambiguous":
             raise InvalidInput("ambiguous_route", "Goal matches multiple operations equally; provide operation_id")
-        selected = candidates[0]["operation_id"]
+        selected = analysis.get("recommended_operation")
+        if (analysis.get("automatic_route_supported") is not True
+                or analysis.get("routing_confidence") != "high"
+                or not isinstance(selected, str)
+                or not any(candidate["operation_id"] == selected
+                           and candidate.get("route_supported") is True
+                           and candidate.get("confidence") == "high"
+                           and not candidate.get("uncovered_primary_concepts")
+                           for candidate in candidates)):
+            raise UnsupportedOperation(goal)
+        selected_candidate = next(candidate for candidate in candidates
+                                  if candidate["operation_id"] == selected)
+        required_parameters = analysis.get("required_parameters", {})
+        parameters = request.get("parameters", {})
+        if not isinstance(parameters, dict):
+            raise InvalidInput("plan_parameters", "Parameters must be an object")
+        for name, expected in required_parameters.items():
+            if name not in parameters:
+                raise InvalidInput("route_parameter_missing",
+                                   f"Goal requires explicit parameter {name}={expected!r}")
+            if parameters[name] != expected:
+                raise InvalidInput("route_parameter_conflict",
+                                   f"Parameter {name} contradicts the method requested by the goal")
         return selected, {"mode": "registry_route", "selected": selected,
-                          "why": candidates[0]["why"], "candidates": candidates}
+                          "why": selected_candidate["why"], "candidates": candidates,
+                          "query_analysis": analysis}
 
     @staticmethod
     def _policy_gate(operation: dict[str, Any], policy: Any) -> None:

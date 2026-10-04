@@ -9,6 +9,7 @@ on:
       - 'scripts/verify_master_foundation.py'
       - 'scripts/verify_master_wave_a.py'
       - 'scripts/verify_master_wave_a_mesh.py'
+      - 'scripts/verify_master_wave_a_boolean.py'
       - 'scripts/verify_master_wave_b.py'
       - 'scripts/master_acceptance.py'
       - 'scripts/replay_master_capabilities.py'
@@ -85,6 +86,7 @@ jobs:
           python scripts/verify_master_wave_a.py --worker build-master/cgal-master-worker --output work/master-wave-a-ci.json
           python scripts/verify_master_wave_b.py --worker build-master/cgal-master-worker --output work/master-wave-b-ci.json
           python scripts/verify_master_wave_a_mesh.py --worker build-master/cgal-master-worker --output work/master-wave-a-mesh-ci.json
+          python scripts/verify_master_wave_a_boolean.py --worker build-master/cgal-master-worker --output work/master-wave-a-boolean-ci.json
           python scripts/replay_master_capabilities.py --worker build-master/cgal-master-worker --output work/master-capability-ci.json
           python -m tests.master_mcp_e2e auto
           python -m tests.master_mcp_e2e legacy
@@ -104,6 +106,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python scripts/verify_master_wave_a_mesh.py --worker build-master/Release/cgal-master-worker.exe --output work/master-wave-a-mesh-ci.json
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python scripts/verify_master_wave_a_boolean.py --worker build-master/Release/cgal-master-worker.exe --output work/master-wave-a-boolean-ci.json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python scripts/replay_master_capabilities.py --worker build-master/Release/cgal-master-worker.exe --output work/master-capability-ci.json
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python -m tests.master_mcp_e2e auto
@@ -122,4 +126,5 @@ jobs:
             work/master-wave-a-ci.json
             work/master-wave-b-ci.json
             work/master-wave-a-mesh-ci.json
+            work/master-wave-a-boolean-ci.json
             work/master-capability-ci.json

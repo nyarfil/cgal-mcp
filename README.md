@@ -17,6 +17,7 @@ StellaCADはStandalone受入後に正式統合する利用側です。
 - 外れ値除去・3方式の間引き・Jet平滑化・PCA/Jet法線・MST向き統一を専用validator付きで実行。
 - 法線付き点群のASCII PLYと、出力点数を実行時に確認する点群処理DAG。
 - メッシュの健全性・成分・法線・計測・sharp feature・自己交差を専用validator付きで検査。
+- 閉鎖三角形メッシュのBoolean和・積・差を専用validator付きで実行し、精度損失を拒否。
 - workerの資源制限、失敗した候補の隔離、原本保持、stdioとStreamable HTTP。
 - 版固定のHTML・header・exampleを検索する任意のローカル全文索引。
 
@@ -27,6 +28,7 @@ StellaCADはStandalone受入後に正式統合する利用側です。
 軽量化の移行範囲と再試験手順は [軽量化マイルストーン](docs/master/WAVE_A_JA.md) に記録しています。
 点群の対応範囲は [点群処理](docs/master/WAVE_B_JA.md)、
 メッシュ検査の対応範囲は [検査・計測](docs/master/WAVE_A_MESH_JA.md)、
+Booleanの対応範囲は [Boolean](docs/master/WAVE_A_BOOLEAN_JA.md)、
 原本要求に対する実計算の判定方法は [主要能力の受入](docs/master/CAPABILITY_ACCEPTANCE_JA.md) を参照してください。
 実PCの凸包測定と資源設定は [性能・資源設定](docs/master/PERFORMANCE_JA.md) に記録しています。
 実PCの接続確認範囲は [ホスト接続](docs/master/HOST_CONNECTION_JA.md) を参照してください。

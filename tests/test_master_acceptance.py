@@ -10,6 +10,15 @@ from unittest import mock
 import scripts.master_acceptance as acceptance_module
 from scripts.master_acceptance import (
     REPO,
+    WAVE_A_BOUNDED_NORMAL_ANALYTIC_PROOF,
+    WAVE_A_BOUNDED_NORMAL_CONTROL,
+    WAVE_A_BOUNDED_NORMAL_ERROR_CLASS,
+    WAVE_A_BOUNDED_NORMAL_ERROR_CODE,
+    WAVE_A_BOUNDED_NORMAL_FILTERED,
+    WAVE_A_BOUNDED_NORMAL_FIXTURE_SHA256,
+    WAVE_A_TRANSFORM,
+    WAVE_A_VALIDATORS,
+    _bounded_normal_negative_control_reasons,
     _canonical_hash,
     _evidence_reasons,
     evaluate_requirements,
@@ -44,6 +53,128 @@ def string_values(value: object):
     elif isinstance(value, list):
         for item in value:
             yield from string_values(item)
+
+
+def bounded_normal_proof_context() -> tuple[dict, dict, dict, dict, dict, set[str], str]:
+    """Minimal internally consistent structure for negative-proof tamper tests."""
+    candidate = "c" * 64
+    positive_output = "d" * 64
+    manifest_digest = "e" * 64
+    shared = {
+        "policy": "edge_length_midpoint",
+        "stop": {"kind": "edge_length", "value": {"value": 0.1, "unit": "mm"}},
+        "preserve_border": False,
+        "constrained_edges": [],
+        "max_symmetric_deviation": {"value": 2.0, "unit": "mm"},
+        "hausdorff_error_bound": {"value": 0.01, "unit": "mm"},
+    }
+
+    def artifact(digest: str) -> dict:
+        return {"blob_sha256": digest}
+
+    control_request = {
+        "operation": WAVE_A_TRANSFORM,
+        "request_id": f"{WAVE_A_BOUNDED_NORMAL_CONTROL}-simplify",
+        "inputs": [artifact(WAVE_A_BOUNDED_NORMAL_FIXTURE_SHA256)],
+        "parameters": shared | {"bounded_normal_change": False},
+        "kernel": "package_recommended",
+    }
+    control_response = {
+        "request_id": control_request["request_id"],
+        "status": "ok",
+        "outputs": [artifact(candidate)],
+        "metrics": {
+            "policy": "edge_length_midpoint",
+            "stop_policy": "edge_length",
+            "bounded_normal_change_enabled": False,
+            "edges_before": 6,
+            "edges_removed": 3,
+            "edges_after": 3,
+        },
+    }
+    failure_request = {
+        "operation": WAVE_A_VALIDATORS[0],
+        "request_id": f"{WAVE_A_BOUNDED_NORMAL_CONTROL}-integrity",
+        "inputs": [artifact(candidate), artifact(WAVE_A_BOUNDED_NORMAL_FIXTURE_SHA256)],
+        "parameters": {"preserve_border": False, "constrained_edges": []},
+    }
+    failure_response = {
+        "request_id": failure_request["request_id"],
+        "status": "error",
+        "outputs": [],
+        "metrics": {},
+        "error": {
+            "class": WAVE_A_BOUNDED_NORMAL_ERROR_CLASS,
+            "code": WAVE_A_BOUNDED_NORMAL_ERROR_CODE,
+        },
+    }
+    proof = {
+        "case_id": WAVE_A_BOUNDED_NORMAL_CONTROL,
+        "operation_id": WAVE_A_TRANSFORM,
+        "revision": 1,
+        "worker_manifest_sha256": manifest_digest,
+        "test_id": "wave-a-worker-cases",
+        "paired_positive_case_id": WAVE_A_BOUNDED_NORMAL_FILTERED,
+        "request": control_request,
+        "request_sha256": _canonical_hash(control_request),
+        "response": control_response,
+        "response_sha256": _canonical_hash(control_response),
+        "input_hashes": [WAVE_A_BOUNDED_NORMAL_FIXTURE_SHA256],
+        "output_hashes": [candidate],
+        "bindings": {
+            "source_sha256": WAVE_A_BOUNDED_NORMAL_FIXTURE_SHA256,
+            "rejected_candidate_sha256": candidate,
+        },
+        "parameter_proof": {
+            "only_changed_parameter": "bounded_normal_change",
+            "control_value": False,
+            "filtered_value": True,
+            "shared_parameters_sha256": _canonical_hash(shared),
+        },
+        "analytic_fixture": copy.deepcopy(WAVE_A_BOUNDED_NORMAL_ANALYTIC_PROOF),
+        "expected_validator_failure": {
+            "operation_id": WAVE_A_VALIDATORS[0],
+            "revision": 1,
+            "request": failure_request,
+            "request_sha256": _canonical_hash(failure_request),
+            "response": failure_response,
+            "response_sha256": _canonical_hash(failure_response),
+            "input_hashes": [candidate, WAVE_A_BOUNDED_NORMAL_FIXTURE_SHA256],
+            "output_hashes": [],
+            "status": "expected_error",
+        },
+        "status": "expected_rejection",
+    }
+    positive_request = {
+        "operation": WAVE_A_TRANSFORM,
+        "inputs": [artifact(WAVE_A_BOUNDED_NORMAL_FIXTURE_SHA256)],
+        "parameters": shared | {"bounded_normal_change": True},
+        "kernel": "package_recommended",
+    }
+    positive = {
+        "case_id": WAVE_A_BOUNDED_NORMAL_FILTERED,
+        "input_hashes": [WAVE_A_BOUNDED_NORMAL_FIXTURE_SHA256],
+        "output_hashes": [positive_output],
+        "request": positive_request,
+        "response": {"status": "ok", "metrics": {
+            "bounded_normal_change_enabled": True,
+            "edges_before": 6,
+            "edges_removed": 0,
+            "edges_after": 6,
+        }},
+        "validation": {"checks": {"bounded_normal_negative_control": {
+            "pass": True,
+            "negative_control_id": WAVE_A_BOUNDED_NORMAL_CONTROL,
+            "rejected_candidate_sha256": candidate,
+        }}},
+    }
+    report = {"negative_control_proofs": {WAVE_A_BOUNDED_NORMAL_CONTROL: proof}}
+    indexed = {WAVE_A_BOUNDED_NORMAL_FILTERED: positive}
+    operations = {WAVE_A_TRANSFORM: {"revision": 1}, WAVE_A_VALIDATORS[0]: {"revision": 1}}
+    declared = copy.deepcopy(operations)
+    tests = {"wave-a-worker-cases": {}}
+    blobs = {WAVE_A_BOUNDED_NORMAL_FIXTURE_SHA256, candidate, positive_output}
+    return report, indexed, operations, declared, tests, blobs, manifest_digest
 
 
 class AcceptanceContractTests(unittest.TestCase):
@@ -210,6 +341,39 @@ class AcceptanceContractTests(unittest.TestCase):
         report["reports"][digest]["status"] = "fail"
         reasons = _evidence_reasons(report, item, operations, REPO)
         self.assertIn(f"Evidence validator report hash mismatch: {digest}", reasons)
+
+    def test_bounded_normal_negative_control_contract_is_internally_consistent(self):
+        context = bounded_normal_proof_context()
+        self.assertEqual(_bounded_normal_negative_control_reasons(*context), [])
+
+    def test_bounded_normal_negative_control_artifact_tamper_is_rejected(self):
+        context = bounded_normal_proof_context()
+        proof = context[0]["negative_control_proofs"][WAVE_A_BOUNDED_NORMAL_CONTROL]
+        proof["bindings"]["rejected_candidate_sha256"] = "f" * 64
+        reasons = _bounded_normal_negative_control_reasons(*context)
+        self.assertIn(
+            "Evidence bounded-normal negative control artifact binding mismatch", reasons,
+        )
+
+    def test_bounded_normal_negative_control_wrong_error_is_rejected(self):
+        context = bounded_normal_proof_context()
+        failure = context[0]["negative_control_proofs"][
+            WAVE_A_BOUNDED_NORMAL_CONTROL
+        ]["expected_validator_failure"]
+        failure["response"]["error"]["code"] = "SELF_INTERSECTION"
+        failure["response_sha256"] = _canonical_hash(failure["response"])
+        reasons = _bounded_normal_negative_control_reasons(*context)
+        self.assertIn(
+            "Evidence bounded-normal strict validator rejection mismatch", reasons,
+        )
+
+    def test_bounded_normal_negative_control_missing_parameter_proof_is_rejected(self):
+        context = bounded_normal_proof_context()
+        del context[0]["negative_control_proofs"][
+            WAVE_A_BOUNDED_NORMAL_CONTROL
+        ]["parameter_proof"]
+        reasons = _bounded_normal_negative_control_reasons(*context)
+        self.assertIn("Evidence bounded-normal parameter proof mismatch", reasons)
 
     def test_worker_hash_change_during_replay_is_rejected(self):
         with tempfile.TemporaryDirectory() as folder:

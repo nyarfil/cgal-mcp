@@ -22,7 +22,7 @@ WAVE_A_REQUIREMENT_CASES = {
         "stop-face_count", "stop-face_ratio", "stop-edge_length", "constraints",
         "preserve-open-border", "bounded-distance", "bounded-normal", "polyhedral-envelope",
         "filter-control", "bounded-distance-tight", "polyhedral-envelope-tight",
-        "bounded-normal-control", "bounded-normal-adversarial",
+        "bounded-normal-adversarial",
         "stop-edge_length-below-minimum",
     }),
     "major.7.7.02": frozenset({
@@ -44,7 +44,7 @@ WAVE_A_REQUIREMENT_CASES = {
         "polyhedral-envelope", "filter-control", "polyhedral-envelope-tight",
     }),
     "major.7.7.06": frozenset({
-        "bounded-normal", "bounded-normal-control", "bounded-normal-adversarial",
+        "bounded-normal", "bounded-normal-adversarial",
     }),
 }
 WAVE_A_TRANSFORM = "mesh.simplify.edge_collapse"
@@ -68,11 +68,42 @@ WAVE_A_POLICY_CASES = {
         "bounded-distance", "filter-control", "bounded-distance-tight",
     }),
     f"{WAVE_A_TRANSFORM}.filter.bounded_normal_change": frozenset({
-        "bounded-normal", "bounded-normal-control", "bounded-normal-adversarial",
+        "bounded-normal", "bounded-normal-adversarial",
     }),
     f"{WAVE_A_TRANSFORM}.filter.polyhedral_envelope": frozenset({
         "polyhedral-envelope", "filter-control", "polyhedral-envelope-tight",
     }),
+}
+WAVE_A_BOUNDED_NORMAL_CONTROL = "bounded-normal-control"
+WAVE_A_BOUNDED_NORMAL_FILTERED = "bounded-normal-adversarial"
+WAVE_A_BOUNDED_NORMAL_FIXTURE_SHA256 = (
+    "02fa9498ee15d604a00a79a6e903d82618afa3e65ed5e1c3118864a5a61e1f04"
+)
+WAVE_A_BOUNDED_NORMAL_ERROR_CLASS = "VALIDATION_FAILED"
+WAVE_A_BOUNDED_NORMAL_ERROR_CODE = "OPEN_SURFACE_WINDING_CHANGED"
+WAVE_A_BOUNDED_NORMAL_ANALYTIC_PROOF = {
+    "source_sha256": WAVE_A_BOUNDED_NORMAL_FIXTURE_SHA256,
+    "decimal_token_domain": {
+        "unique_short_edge": [1, 3],
+        "short_edge_squared": {
+            "numerator": 17, "denominator": 10000, "unit": "mm^2",
+        },
+        "next_edge_squared_greater_than": {
+            "numerator": 1, "denominator": 100, "unit": "mm^2",
+        },
+        "collapse_midpoint": ["0", "-1/100", "1/200"],
+        "original_normal": ["0", "0", "1/50"],
+        "collapsed_normal": ["0", "-1/100", "-1/50"],
+        "normal_scalar_product": {"numerator": -1, "denominator": 2500},
+    },
+    "binary64_storage_domain": {
+        "conversion": "exact rational of IEEE-754 binary64 parsed coordinates",
+        "unique_short_edge": [1, 3],
+        "short_edge_squared_less_than_stop_squared": True,
+        "next_edge_squared_greater_than_stop_squared": True,
+        "normal_scalar_product_sign": "negative",
+        "normal_scalar_product_less_than": {"numerator": -3, "denominator": 10000},
+    },
 }
 WAVE_A_UNMET_STANDALONE_GATES = {
     "remaining_major_capability_requirements",
@@ -215,6 +246,164 @@ def _exchange_blob_hashes(value: object, field: str) -> list[str] | None:
     return hashes
 
 
+def _bounded_normal_negative_control_reasons(
+    report: dict,
+    indexed_results: dict[str, dict],
+    operations: dict[str, dict],
+    declared: dict[str, dict],
+    tests: dict[str, dict],
+    blob_hashes: set[str],
+    manifest_digest: str | None,
+) -> list[str]:
+    """Validate the replayed rejection proof without treating it as a good output."""
+    reasons: list[str] = []
+    proofs = report.get("negative_control_proofs")
+    if (not isinstance(proofs, dict) or
+            set(proofs) != {WAVE_A_BOUNDED_NORMAL_CONTROL} or
+            not isinstance(proofs.get(WAVE_A_BOUNDED_NORMAL_CONTROL), dict)):
+        return ["Evidence bounded-normal negative control proof is missing"]
+    proof = proofs[WAVE_A_BOUNDED_NORMAL_CONTROL]
+    positive = indexed_results.get(WAVE_A_BOUNDED_NORMAL_FILTERED)
+    transform = operations.get(WAVE_A_TRANSFORM, {})
+    transform_handler = declared.get(WAVE_A_TRANSFORM, {})
+    integrity_id = WAVE_A_VALIDATORS[0]
+    integrity = operations.get(integrity_id, {})
+    integrity_handler = declared.get(integrity_id, {})
+
+    if (proof.get("case_id") != WAVE_A_BOUNDED_NORMAL_CONTROL or
+            WAVE_A_BOUNDED_NORMAL_CONTROL in indexed_results):
+        reasons.append("Evidence negative control was counted as a positive geometry case")
+    if (proof.get("operation_id") != WAVE_A_TRANSFORM or
+            proof.get("revision") != transform.get("revision") or
+            transform_handler.get("revision") != transform.get("revision") or
+            proof.get("worker_manifest_sha256") != manifest_digest or
+            proof.get("test_id") not in tests or
+            proof.get("status") != "expected_rejection" or
+            proof.get("paired_positive_case_id") != WAVE_A_BOUNDED_NORMAL_FILTERED):
+        reasons.append("Evidence bounded-normal negative control build/test binding mismatch")
+    reasons.extend(_hash_bound_exchange(proof, "bounded-normal negative control"))
+
+    input_hashes = proof.get("input_hashes")
+    output_hashes = proof.get("output_hashes")
+    if (input_hashes != [WAVE_A_BOUNDED_NORMAL_FIXTURE_SHA256] or
+            not isinstance(output_hashes, list) or len(output_hashes) != 1 or
+            output_hashes[0] == WAVE_A_BOUNDED_NORMAL_FIXTURE_SHA256 or
+            not all(_valid_digest(value) and value in blob_hashes
+                    for value in input_hashes + output_hashes)):
+        reasons.append("Evidence bounded-normal negative control artifact hashes are invalid")
+        candidate_sha256 = None
+    else:
+        candidate_sha256 = output_hashes[0]
+    if (proof.get("input_hashes") != _exchange_blob_hashes(proof.get("request"), "inputs") or
+            proof.get("output_hashes") != _exchange_blob_hashes(proof.get("response"), "outputs")):
+        reasons.append("Evidence bounded-normal negative control exchange binding mismatch")
+    bindings = proof.get("bindings")
+    if bindings != {
+        "source_sha256": WAVE_A_BOUNDED_NORMAL_FIXTURE_SHA256,
+        "rejected_candidate_sha256": candidate_sha256,
+    }:
+        reasons.append("Evidence bounded-normal negative control artifact binding mismatch")
+
+    request = proof.get("request")
+    response = proof.get("response")
+    parameters = request.get("parameters") if isinstance(request, dict) else None
+    metrics = response.get("metrics") if isinstance(response, dict) else None
+    if (not isinstance(request, dict) or not isinstance(response, dict) or
+            not isinstance(parameters, dict) or request.get("operation") != WAVE_A_TRANSFORM or
+            response.get("status") != "ok" or not isinstance(metrics, dict) or
+            parameters.get("policy") != "edge_length_midpoint" or
+            parameters.get("stop") != {
+                "kind": "edge_length", "value": {"value": 0.1, "unit": "mm"},
+            } or parameters.get("preserve_border") is not False or
+            parameters.get("bounded_normal_change") is not False or
+            metrics.get("policy") != "edge_length_midpoint" or
+            metrics.get("stop_policy") != "edge_length" or
+            metrics.get("bounded_normal_change_enabled") is not False or
+            (metrics.get("edges_before"), metrics.get("edges_removed"), metrics.get("edges_after")) !=
+            (6, 3, 3)):
+        reasons.append("Evidence bounded-normal negative control transform semantics mismatch")
+
+    if proof.get("analytic_fixture") != WAVE_A_BOUNDED_NORMAL_ANALYTIC_PROOF:
+        reasons.append("Evidence bounded-normal analytic fixture proof mismatch")
+
+    if isinstance(parameters, dict):
+        shared_parameters = dict(parameters)
+        control_value = shared_parameters.pop("bounded_normal_change", None)
+    else:
+        shared_parameters = {}
+        control_value = None
+    positive_request = positive.get("request") if isinstance(positive, dict) else None
+    positive_response = positive.get("response") if isinstance(positive, dict) else None
+    positive_parameters = (dict(positive_request.get("parameters", {}))
+                           if isinstance(positive_request, dict) else {})
+    filtered_value = positive_parameters.pop("bounded_normal_change", None)
+    parameter_proof = proof.get("parameter_proof")
+    if (control_value is not False or filtered_value is not True or
+            shared_parameters != positive_parameters or
+            not isinstance(positive_request, dict) or
+            not isinstance(positive, dict) or
+            proof.get("input_hashes") != positive.get("input_hashes") or
+            request.get("kernel") != positive_request.get("kernel") or
+            parameter_proof != {
+                "only_changed_parameter": "bounded_normal_change",
+                "control_value": False,
+                "filtered_value": True,
+                "shared_parameters_sha256": _canonical_hash(shared_parameters),
+            }):
+        reasons.append("Evidence bounded-normal parameter proof mismatch")
+    positive_metrics = (positive_response.get("metrics", {})
+                        if isinstance(positive_response, dict) else {})
+    positive_check = (positive.get("validation", {}).get("checks", {}).get(
+        "bounded_normal_negative_control") if isinstance(positive, dict) else None)
+    if (positive_metrics.get("bounded_normal_change_enabled") is not True or
+            (positive_metrics.get("edges_before"), positive_metrics.get("edges_removed"),
+             positive_metrics.get("edges_after")) != (6, 0, 6) or
+            positive_check != {
+                "pass": True,
+                "negative_control_id": WAVE_A_BOUNDED_NORMAL_CONTROL,
+                "rejected_candidate_sha256": candidate_sha256,
+            }):
+        reasons.append("Evidence bounded-normal filtered positive result is not bound to the rejection proof")
+
+    failure = proof.get("expected_validator_failure")
+    if not isinstance(failure, dict):
+        reasons.append("Evidence bounded-normal expected validator failure is missing")
+        return reasons
+    reasons.extend(_hash_bound_exchange(failure, "bounded-normal expected validator failure"))
+    failure_request = failure.get("request")
+    failure_response = failure.get("response")
+    failure_inputs = failure.get("input_hashes")
+    failure_error = (failure_response.get("error")
+                     if isinstance(failure_response, dict) else None)
+    if (failure.get("operation_id") != integrity_id or
+            failure.get("revision") != integrity.get("revision") or
+            integrity_handler.get("revision") != integrity.get("revision") or
+            failure.get("status") != "expected_error" or
+            failure.get("output_hashes") != [] or
+            failure_inputs != [candidate_sha256, WAVE_A_BOUNDED_NORMAL_FIXTURE_SHA256] or
+            not all(_valid_digest(value) and value in blob_hashes
+                    for value in failure_inputs if value is not None) or
+            not isinstance(failure_request, dict) or
+            failure_request.get("operation") != integrity_id or
+            failure_request.get("parameters") != {
+                "preserve_border": False, "constrained_edges": [],
+            } or failure_inputs != _exchange_blob_hashes(failure_request, "inputs") or
+            not isinstance(failure_response, dict) or
+            failure_response.get("status") != "error" or
+            failure_response.get("outputs") != [] or
+            failure_response.get("metrics") != {} or
+            not isinstance(failure_error, dict) or
+            failure_error.get("class") != WAVE_A_BOUNDED_NORMAL_ERROR_CLASS or
+            failure_error.get("code") != WAVE_A_BOUNDED_NORMAL_ERROR_CODE):
+        reasons.append("Evidence bounded-normal strict validator rejection mismatch")
+    if candidate_sha256 is not None and any(
+        candidate_sha256 in result.get("output_hashes", [])
+        for result in indexed_results.values() if isinstance(result, dict)
+    ):
+        reasons.append("Evidence rejected bounded-normal candidate was published as positive geometry")
+    return reasons
+
+
 def _evidence_reasons(report: dict, item: dict, operations: dict[str, dict], root: Path,
                       replayed_report: dict | None = None) -> list[str]:
     """Tie evidence to a baseline, actual handler build, fixtures and executable tests."""
@@ -339,7 +528,10 @@ def _evidence_reasons(report: dict, item: dict, operations: dict[str, dict], roo
         indexed = {result.get("case_id"): result for result in results if isinstance(result, dict)}
         if len(indexed) != len([result for result in results if isinstance(result, dict)]):
             reasons.append("Evidence contains duplicate execution case ids")
-        for case_id in expected_cases:
+        all_positive_cases = set().union(*WAVE_A_REQUIREMENT_CASES.values())
+        if set(indexed) != all_positive_cases or len(indexed) != 22:
+            reasons.append("Evidence positive Wave A case set differs from the 22-case contract")
+        for case_id in sorted(all_positive_cases):
             result = indexed.get(case_id)
             if not isinstance(result, dict) or result.get("operation_id") != WAVE_A_TRANSFORM:
                 reasons.append(f"Evidence has no covered execution case: {case_id}")
@@ -386,6 +578,9 @@ def _evidence_reasons(report: dict, item: dict, operations: dict[str, dict], roo
                 if (not _valid_digest(validator.get("request_sha256")) or
                         not _valid_digest(validator.get("response_sha256"))):
                     reasons.append(f"Evidence validator exchange hash missing: {case_id}/{validator_id}")
+        reasons.extend(_bounded_normal_negative_control_reasons(
+            report, indexed, operations, declared, tests, blob_hashes, manifest_digest,
+        ))
     return reasons
 
 
