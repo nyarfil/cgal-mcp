@@ -6,3 +6,7 @@ find_package(nlohmann_json 3.10 REQUIRED)
 add_executable(cgal-worker main.cpp)
 target_compile_features(cgal-worker PRIVATE cxx_std_17)
 target_link_libraries(cgal-worker PRIVATE CGAL::CGAL Eigen3::Eigen nlohmann_json::nlohmann_json)
+
+add_executable(cgal-distance distance.cpp)
+target_compile_features(cgal-distance PRIVATE cxx_std_17)
+target_link_libraries(cgal-distance PRIVATE CGAL::CGAL Eigen3::Eigen nlohmann_json::nlohmann_json)
