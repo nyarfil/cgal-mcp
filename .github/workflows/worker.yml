@@ -1,0 +1,19 @@
+name: CGAL worker
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y libboost-all-dev libgmp-dev libmpfr-dev nlohmann-json3-dev
+      - name: Download pinned CGAL release
+        run: |
+          curl -fL https://github.com/CGAL/cgal/releases/download/v6.2.1/CGAL-6.2.1.tar.xz -o /tmp/cgal.tar.xz
+          echo 'b6be77c60765a8456335de991eeaf6ffec55256984e4a9ecc6a97c37bbfe85bf  /tmp/cgal.tar.xz' | sha256sum -c -
+          tar -xf /tmp/cgal.tar.xz -C /tmp
+      - run: cmake -S worker -B build -DCGAL_DIR=/tmp/CGAL-6.2.1 -DCMAKE_BUILD_TYPE=Release
+      - run: cmake --build build -j1
+      - run: python tests/worker_smoke.py build/cgal-worker

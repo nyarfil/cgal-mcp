@@ -1,0 +1,7 @@
+cmake_minimum_required(VERSION 3.22)
+project(cgal_mcp_worker LANGUAGES CXX)
+find_package(CGAL 6.2.1 EXACT REQUIRED)
+find_package(nlohmann_json 3.10 REQUIRED)
+add_executable(cgal-worker main.cpp)
+target_compile_features(cgal-worker PRIVATE cxx_std_17)
+target_link_libraries(cgal-worker PRIVATE CGAL::CGAL nlohmann_json::nlohmann_json)
