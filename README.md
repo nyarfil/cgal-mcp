@@ -22,6 +22,7 @@ StellaCADはStandalone受入後に正式統合する利用側です。
 操作・ビルド・区切りの証拠は [Master基盤](docs/master/FOUNDATION_JA.md)、
 完成判定は [実装決定](docs/master/IMPLEMENTATION_DECISIONS_JA.md) を参照してください。
 軽量化の移行範囲と再試験手順は [軽量化マイルストーン](docs/master/WAVE_A_JA.md) に記録しています。
+実PCの接続確認範囲は [ホスト接続](docs/master/HOST_CONNECTION_JA.md) を参照してください。
 
 ## 現在実装済みのv0.1
 Python MCP/Router/PlannerとC++17 CGAL 6.2.1 workerによる、検証付きメッシュ簡略化。

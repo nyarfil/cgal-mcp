@@ -5,6 +5,7 @@ on:
       - 'catalog/**'
       - 'scripts/fetch_master_baseline.py'
       - 'scripts/harvest_cgal.py'
+      - 'scripts/build_major_inventory.py'
       - 'scripts/build_master_docs_index.py'
       - 'scripts/sync_master_package_catalog.py'
       - 'scripts/master_acceptance.py'
@@ -41,3 +42,7 @@ jobs:
         run: |
           python scripts/harvest_cgal.py --source work/master-baseline/source/CGAL-6.2.1 --docs work/master-baseline/docs/doc_html --output work/reproduced-catalog
           python -c "from pathlib import Path; names=['baseline.json','packages.json','docs_index.jsonl']; assert all((Path('catalog')/n).read_bytes()==(Path('work/reproduced-catalog')/n).read_bytes() for n in names), 'Catalog snapshot differs from pinned official inputs'"
+      - name: Reproduce the provisional major-capability planning inventory
+        run: |
+          python scripts/build_major_inventory.py --output work/reproduced-major-inventory.json
+          python -c "from pathlib import Path; assert Path('catalog/major_capability_inventory.json').read_bytes()==Path('work/reproduced-major-inventory.json').read_bytes(), 'Planning inventory differs from pinned source and original requirements'"

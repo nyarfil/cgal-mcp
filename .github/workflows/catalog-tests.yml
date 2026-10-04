@@ -26,6 +26,10 @@ jobs:
           python-version: ${{ matrix.python }}
       - run: python -m pip install -e '.[mesh]'
       - run: python -m unittest discover -s tests -v
+      - name: MCP continuity after controlled worker faults
+        run: |
+          python -m tests.master_fault_mcp_e2e auto
+          python -m tests.master_fault_mcp_e2e legacy
       - name: Build and verify installed Master outside the checkout
         run: |
           python -m pip wheel . --no-deps --wheel-dir work/wheels
