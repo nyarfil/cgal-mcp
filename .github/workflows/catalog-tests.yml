@@ -17,11 +17,16 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
+        python: ['3.12', '3.13']
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: ${{ matrix.python }}
       - run: python -m pip install -e '.[mesh]'
       - run: python -m unittest discover -s tests -v
+      - name: Build and verify installed Master outside the checkout
+        run: |
+          python -m pip wheel . --no-deps --wheel-dir work/wheels
+          python scripts/verify_master_package.py --wheel work/wheels/cgal_mcp-0.1.0-py3-none-any.whl

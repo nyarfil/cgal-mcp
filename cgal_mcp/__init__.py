@@ -1,1 +1,1 @@
-"""CGAL MCP components. Geometry worker and MCP transport are not yet implemented."""
+"""CGAL MCP legacy adapters and the generic Master runtime under development."""

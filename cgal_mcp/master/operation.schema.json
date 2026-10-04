@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cgal.org/cgal-master/operation.schema.json",
+  "type": "object",
+  "required": ["schema_version", "cgal_version", "operations"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "cgal_version": {"type": "string"},
+    "operations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "revision", "status", "summary", "aliases", "package", "sources", "license", "io", "parameters", "preconditions", "kernel", "validation"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^[a-z][a-z0-9_]*(?:\\.[a-z0-9_]+)+$"},
+          "revision": {"type": "integer", "minimum": 1},
+          "status": {"enum": ["DISCOVERED", "CATALOGED", "ADAPTER_PLANNED", "IMPLEMENTED", "VALIDATED", "DEPRECATED", "BLOCKED", "EXCLUDED"]},
+          "aliases": {"type": "array", "items": {"type": "string"}},
+          "sources": {"type": "array", "items": {"type": "object", "required": ["kind", "identifier"]}},
+          "license": {"type": "object", "required": ["expression", "package", "evidence"]},
+          "io": {"type": "object", "required": ["inputs", "outputs"]},
+          "parameters": {"type": "object"},
+          "preconditions": {"type": "array"},
+          "kernel": {"type": "object", "required": ["supported", "default"]},
+          "validation": {"type": "object", "required": ["required", "validators"]}
+        }
+      }
+    }
+  }
+}

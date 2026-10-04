@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "generator": "master-foundation-acceptance",
+  "status": "pass",
+  "scope": "first_generic_hull_slice",
+  "standalone_accepted": false,
+  "requirements": [],
+  "fixture": {
+    "path": "tests/fixtures/master/cube_with_interior.xyz",
+    "sha256": "299fc3e1e6363388d7fa80fcc86a297dde4740fd59f7d2fc628bdb0d27ae7a39"
+  },
+  "worker_manifest": {
+    "actual_cgal_version": "6.2.1",
+    "build": {
+      "cgal_release_date": 20260903,
+      "cgal_version": "6.2.1",
+      "cgal_version_nr": 1060211000,
+      "compiler": {
+        "family": "msvc",
+        "full_version": 195035725,
+        "version": 1950
+      },
+      "source_attestation": "configured_pinned_official_archive",
+      "source_kind": "official_release",
+      "source_sha256": "b6be77c60765a8456335de991eeaf6ffec55256984e4a9ecc6a97c37bbfe85bf"
+    },
+    "operations": [
+      {
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "hull.convex_3",
+        "input_types": [
+          "PointSet3"
+        ],
+        "output_type": "TriangleSurfaceMesh",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "exact_constructions",
+          "package_recommended"
+        ]
+      },
+      {
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "hull.validate.convex_enclosure",
+        "input_types": [
+          "TriangleSurfaceMesh",
+          "PointSet3"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "exact_constructions",
+          "package_recommended"
+        ]
+      }
+    ],
+    "protocol": 1,
+    "request_model": "one_json_line_per_process",
+    "resource_enforcement": "parent_supervisor",
+    "supported_kernels": [
+      "exact_constructions",
+      "package_recommended"
+    ],
+    "worker": "cgal-master-worker",
+    "supervisor_executable_sha256": "a471b60889432ed612654eed257da25f4a9c1bd2be12a6f555aef228a08485cb"
+  },
+  "worker_manifest_sha256": "5ad16280ddc5c9c4c45854799001236f93aaacf7b4bcdb06a8c9fc1cfb5c00b1",
+  "input_hashes": [
+    "299fc3e1e6363388d7fa80fcc86a297dde4740fd59f7d2fc628bdb0d27ae7a39"
+  ],
+  "output_hashes": [
+    "2d00fc5801c798e52cdfd7f4b1ef79db1395fa517810c85b03ffeaea78d17118"
+  ],
+  "operations": [
+    "hull.convex_3",
+    "hull.validate.convex_enclosure"
+  ],
+  "validation_reports": [
+    {
+      "all_original_points_enclosed": true,
+      "boundary_point_count": 8,
+      "closed": true,
+      "inside_point_count": 1,
+      "original_point_count": 9,
+      "outward_oriented": true,
+      "positive_volume": true,
+      "status": "pass",
+      "strongly_convex": true,
+      "triangulated": true,
+      "valid": true,
+      "volume": {
+        "approximate": 8.0,
+        "exact": "8",
+        "unit": "mm^3"
+      }
+    }
+  ],
+  "checks": {
+    "automatic_validator": true,
+    "input_unchanged": true,
+    "artifact_plan_job_persistence": true,
+    "required_resource_limit": "windows_job_object"
+  },
+  "coverage_note": "This slice does not complete the combined 2D/3D hull requirement or any major family."
+}

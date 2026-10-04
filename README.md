@@ -1,10 +1,24 @@
 # CGAL Master MCP（開発中）
 
 目標は、CGAL全体の能力を発見・選択・組合せ・実行・検証できる独立MCP。
-**現在のコードは軽量化関連のv0.1で、Master MCPの要求は未達です。**
+**汎用Masterの基盤を実装中です。全主要能力のStandalone受入は未達です。**
 ユーザー提供の設計書と現状差分、修正した開発順序は
 [開発基準](docs/master/SCOPE_CORRECTION_JA.md) を参照してください。
 StellaCADはStandalone受入後に正式統合する利用側です。
+
+## 新しいMasterの基盤
+
+- 公式CGAL 6.2.1の配布物・SHA-256から全126パッケージを収録。
+- Package・Operation・validatorを分離し、出典・ライセンス根拠・未対応理由を記録。
+- 固定12工具、型付き不変DAG、必須validator、SQLiteによるArtifact・Plan・job・履歴の永続化。
+- 点群から3D凸包を生成し、閉鎖性・向き・正体積・凸性・入力点包含を検証する汎用経路。
+- workerの資源制限、失敗した候補の隔離、原本保持、stdioとStreamable HTTP。
+- 版固定のHTML・header・exampleを検索する任意のローカル全文索引。
+
+凸包は最初の基盤受入です。原本7.1〜7.15の15分野・80要求を完了した意味ではありません。
+既存v0.1とStellaCAD用sidecarの互換経路を維持して拡張します。
+操作・ビルド・区切りの証拠は [Master基盤](docs/master/FOUNDATION_JA.md)、
+完成判定は [実装決定](docs/master/IMPLEMENTATION_DECISIONS_JA.md) を参照してください。
 
 ## 現在実装済みのv0.1
 Python MCP/Router/PlannerとC++17 CGAL 6.2.1 workerによる、検証付きメッシュ簡略化。

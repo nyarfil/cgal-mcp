@@ -1,0 +1,99 @@
+name: Master worker and protocol
+on:
+  push:
+    paths:
+      - 'cgal_mcp/master/**'
+      - 'worker/**'
+      - 'catalog/**'
+      - 'scripts/fetch_master_baseline.py'
+      - 'scripts/verify_master_foundation.py'
+      - 'tests/**master**'
+      - 'pyproject.toml'
+      - '.github/workflows/master-worker.yml'
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  worker:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-2022]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -e '.[mesh]'
+      - name: Fetch the official checksummed CGAL source
+        run: python scripts/fetch_master_baseline.py --root work/master-baseline --source-only
+      - name: Linux dependency packages
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libboost-all-dev libgmp-dev libmpfr-dev libeigen3-dev nlohmann-json3-dev
+      - name: Pin Windows vcpkg tooling
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          git init work/vcpkg
+          git -C work/vcpkg remote add origin https://github.com/microsoft/vcpkg.git
+          git -C work/vcpkg fetch --depth 1 origin 19780d9cdf84d0944cf9a318666703b89ab6629c
+          git -C work/vcpkg checkout --detach FETCH_HEAD
+          & work/vcpkg/bootstrap-vcpkg.bat -disableMetrics
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - uses: actions/cache@v4
+        if: runner.os == 'Windows'
+        with:
+          path: work/vcpkg/installed
+          key: master-vcpkg-x64-windows-19780d9-cgal-eigen-json
+      - name: Windows dependencies
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          & work/vcpkg/vcpkg.exe install cgal:x64-windows eigen3:x64-windows nlohmann-json:x64-windows
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Configure Linux using the official CGAL source
+        if: runner.os == 'Linux'
+        run: >-
+          cmake -S worker -B build-master -DCMAKE_BUILD_TYPE=Release
+          -DCGAL_DIR="$PWD/work/master-baseline/source/CGAL-6.2.1"
+          -DCGAL_MASTER_SOURCE_KIND=official_release
+          -DCGAL_MASTER_SOURCE_SHA256=b6be77c60765a8456335de991eeaf6ffec55256984e4a9ecc6a97c37bbfe85bf
+      - name: Configure Windows VS2022 using the official CGAL source
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $taskVcpkgRoot = Join-Path $PWD 'work/vcpkg'
+          $taskCgalRoot = Join-Path $PWD 'work/master-baseline/source/CGAL-6.2.1'
+          cmake -S worker -B build-master -G 'Visual Studio 17 2022' -A x64 "-DCMAKE_TOOLCHAIN_FILE=$taskVcpkgRoot/scripts/buildsystems/vcpkg.cmake" "-DCGAL_DIR=$taskCgalRoot" -DCGAL_MASTER_SOURCE_KIND=official_release -DCGAL_MASTER_SOURCE_SHA256=b6be77c60765a8456335de991eeaf6ffec55256984e4a9ecc6a97c37bbfe85bf
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - run: cmake --build build-master --config Release --target cgal-master-worker --parallel 1
+      - name: Actual generic hull, validation and restart acceptance
+        run: python scripts/verify_master_foundation.py --output work/master-foundation-ci.json
+      - name: Linux worker geometry and failure cases
+        if: runner.os == 'Linux'
+        run: |
+          python tests/master_worker_smoke.py build-master/cgal-master-worker
+          python tests/master_worker_cases.py build-master/cgal-master-worker
+          python -m tests.master_mcp_e2e auto
+          python -m tests.master_mcp_e2e legacy
+          python -m tests.master_http_e2e auto
+          python -m tests.master_http_e2e legacy
+      - name: Windows worker geometry and failure cases
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          python tests/master_worker_smoke.py build-master/Release/cgal-master-worker.exe
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tests/master_worker_cases.py build-master/Release/cgal-master-worker.exe
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m tests.master_mcp_e2e auto
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m tests.master_mcp_e2e legacy
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m tests.master_http_e2e auto
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m tests.master_http_e2e legacy
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

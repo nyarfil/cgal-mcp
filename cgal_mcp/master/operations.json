@@ -1,0 +1,70 @@
+{
+  "$schema": "operation.schema.json",
+  "schema_version": 1,
+  "catalog_revision": "master-foundation-1",
+  "cgal_version": "6.2.1",
+  "build_requirements": {"source_kind": "official_release", "source_sha256": "b6be77c60765a8456335de991eeaf6ffec55256984e4a9ecc6a97c37bbfe85bf"},
+  "operations": [
+    {
+      "id": "hull.convex_3",
+      "revision": 1,
+      "status": "VALIDATED",
+      "evidence": {"tests": ["tests/master_worker_cases.py", "tests/test_master_core.py", "tests/master_mcp_e2e.py"], "worker_manifest_operation": "hull.convex_3"},
+      "role": "transform",
+      "summary": "Construct the three-dimensional convex hull of a finite point set.",
+      "aliases": ["3d convex hull", "convex hull points", "包絡凸包", "3次元凸包"],
+      "package": "Convex_hull_3",
+      "dependencies": ["Convex_hull_3", "Polygon_mesh_processing"],
+      "sources": [
+        {"kind": "cgal_package", "identifier": "Convex_hull_3"},
+        {"kind": "cgal_symbol", "identifier": "CGAL::convex_hull_3"},
+        {"kind": "header", "identifier": "CGAL/convex_hull_3.h"},
+        {"kind": "manual", "identifier": "Convex_hull_3/index.html"},
+        {"kind": "cgal_package", "identifier": "Polygon_mesh_processing"},
+        {"kind": "cgal_symbol", "identifier": "CGAL::Polygon_mesh_processing::is_outward_oriented"},
+        {"kind": "cgal_symbol", "identifier": "CGAL::Polygon_mesh_processing::reverse_face_orientations"},
+        {"kind": "cgal_symbol", "identifier": "CGAL::Polygon_mesh_processing::volume"}
+      ],
+      "license": {"expression": "GPL-3.0-or-later OR LicenseRef-Commercial", "package": "Convex_hull_3 + Polygon_mesh_processing", "commercial_option": true, "evidence": [{"path": "include/CGAL/convex_hull_3.h", "sha256": "d05de99d8b11edcb96d4608be68a3be9c294368079e5a37cf447c323a0daeed5"}, {"path": "include/CGAL/Polygon_mesh_processing/orientation.h", "sha256": "45cb6ca3b95b1877b48878ea82cee895b52ce839d50555609d214e6c0cfc63fe"}, {"path": "include/CGAL/Polygon_mesh_processing/measure.h", "sha256": "ba707292f05045a0c6eea3d73c3b21435673f440f4461b5ac5cf19542f6c540b"}]},
+      "io": {
+        "inputs": [{"slot": "points", "types": ["PointSet3"], "formats": ["xyz"], "unit_dimension": "length"}],
+        "outputs": [{"slot": "geometry", "type": "TriangleSurfaceMesh", "format": "off", "unit_from": "points"}]
+      },
+      "parameters": {"type": "object", "additionalProperties": false, "properties": {}},
+      "preconditions": [{"id": "finite_coordinates", "property": "finite", "equals": true}, {"id": "at_least_four_points", "property": "point_count", "minimum": 4}],
+      "kernel": {"supported": ["exact_constructions", "package_recommended"], "default": "package_recommended"},
+      "validation": {"required": true, "validators": ["hull.validate.convex_enclosure"], "bindings": {"hull.validate.convex_enclosure": {"geometry": {"output": "geometry"}, "source": {"input": "points"}}}}
+    },
+    {
+      "id": "hull.validate.convex_enclosure",
+      "revision": 1,
+      "status": "VALIDATED",
+      "evidence": {"tests": ["tests/master_worker_cases.py", "tests/test_master_core.py", "tests/master_mcp_e2e.py"], "worker_manifest_operation": "hull.validate.convex_enclosure"},
+      "role": "validator",
+      "summary": "Validate convexity and enclosure of a hull against its source points.",
+      "aliases": ["validate convex hull", "convex enclosure validation", "凸包検証"],
+      "package": "Polygon_mesh_processing",
+      "dependencies": ["Convex_hull_3", "Polygon_mesh_processing"],
+      "sources": [
+        {"kind": "cgal_package", "identifier": "Convex_hull_3"},
+        {"kind": "cgal_symbol", "identifier": "CGAL::is_strongly_convex_3"},
+        {"kind": "cgal_package", "identifier": "Polygon_mesh_processing"},
+        {"kind": "cgal_symbol", "identifier": "CGAL::Side_of_triangle_mesh"},
+        {"kind": "cgal_symbol", "identifier": "CGAL::Polygon_mesh_processing::is_outward_oriented"},
+        {"kind": "cgal_symbol", "identifier": "CGAL::Polygon_mesh_processing::volume"}
+      ],
+      "license": {"expression": "GPL-3.0-or-later OR LicenseRef-Commercial", "package": "Convex_hull_3 + Polygon_mesh_processing", "commercial_option": true, "evidence": [{"path": "include/CGAL/convexity_check_3.h", "sha256": "718a94996a93d4d16d263dd770d231c1e0305d80d9c48aee6167ef436c1d6a54"}, {"path": "include/CGAL/Side_of_triangle_mesh.h", "sha256": "3c0b35fa40276bfa70c20a710b7321ba935b228e3e4f657181233e936fbe77a4"}, {"path": "include/CGAL/Polygon_mesh_processing/orientation.h", "sha256": "45cb6ca3b95b1877b48878ea82cee895b52ce839d50555609d214e6c0cfc63fe"}, {"path": "include/CGAL/Polygon_mesh_processing/measure.h", "sha256": "ba707292f05045a0c6eea3d73c3b21435673f440f4461b5ac5cf19542f6c540b"}]},
+      "io": {
+        "inputs": [
+          {"slot": "geometry", "types": ["TriangleSurfaceMesh"], "formats": ["off"], "unit_dimension": "length"},
+          {"slot": "source", "types": ["PointSet3"], "formats": ["xyz"], "unit_dimension": "length"}
+        ],
+        "outputs": [{"slot": "validation", "type": "ValidationReport", "format": "json", "unit": "none"}]
+      },
+      "parameters": {"type": "object", "additionalProperties": false, "properties": {}},
+      "preconditions": [],
+      "kernel": {"supported": ["exact_constructions", "package_recommended"], "default": "package_recommended"},
+      "validation": {"required": false, "validators": [], "required_report_checks": {"valid": true, "triangulated": true, "closed": true, "outward_oriented": true, "positive_volume": true, "strongly_convex": true, "all_original_points_enclosed": true}}
+    }
+  ]
+}
