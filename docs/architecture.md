@@ -1,7 +1,7 @@
 # CGAL MCP 設計書 v0.1
 ## 構成
 catalog.py: 5能力と日英別名。api_index.json/api_search.py: 102件の版固定ヘッダー索引。
-server.py: 公式MCPServerと10個の固定入口。
+server.py: 公式MCPServerと11個の固定入口。
 runtime.py: OFF検査、資産ハッシュ、Pydantic計画、Semaphore、非同期subprocess、結果公開。
 worker/main.cpp: plane+line簡略化、Envelope、拘束。
 worker/distance.cpp: 双方向bounded-error距離と三値判定。

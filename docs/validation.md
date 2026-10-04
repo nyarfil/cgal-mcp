@@ -21,3 +21,27 @@ C++17、CGAL 6.2.1の配布archiveをSHA-256確認して使用。
 1単位離れた平行三角形の双方向bounded-error距離を確認。
 許容値1.01でpass、0.9でfail、1.0でindeterminate。
 この限定fixtureでの成功を全メッシュ種類での検証として扱わない。
+
+## 最終検証: e44dcc514e877e24461adf339ad7f6bcab2f627d
+確認日: 2026-10-04（日本時間）。
+- [Python / MCP CI](https://github.com/nyarfil/cgal-mcp/actions/runs/37208836611): 成功、23テスト。
+- [CGAL / MCP通しCI](https://github.com/nyarfil/cgal-mcp/actions/runs/37208836604): 成功。
+
+検証内容:
+1. 102件の版固定索引、日英候補検索、個別定義取得、正しいレシピへのRouter選択。
+2. 公式SDK 2.3.0によるin-process通信と実stdio通信（auto/legacy）、resource取得。
+3. パッケージのeditable install、スキーマ検査、不正値/不正OFF/未知ID/入力変更拒否。
+4. 非同期jobのqueued取消、実行中取消、timeout、プロセス終了、worker欠落のfailed。
+5. CGAL 6.2.1/C++17ビルド、plane+line、Envelope、境界/明示辺拘束、
+   Constrained placement、自己交差/退化検査。
+6. 平面グリッド、閉じた曲面、穴付き平面、自己交差入力。
+7. 双方向bounded-error Hausdorff、pass/fail/indeterminate。
+8. MCP登録→型付き計画→job実行→CGAL簡略化→独立検証→受理成果物取得。
+9. MCPによる2資産の単独Hausdorff計画と実行。
+10. CAD変更時の適用拒否、atomic applyのホスト契約、同形状の別オブジェクトの分離。
+
+限界:
+- fixtureでの成功は全CGAL API・全入力の検証を意味しない。
+- 102件はヘッダー検索索引。実行対象は重点の5能力とその組み合わせ。
+- StellaCAD本体ソースに対するパッチ・実UI/Undo試験は未実施。
+- Windows/macOS、HTTP公開、分散job、再起動時のjob復旧は未検証/対象外。
