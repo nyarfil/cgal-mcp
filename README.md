@@ -1,56 +1,92 @@
-# CGAL MCP
-独立CGAL MCPを実装し、検証後にStellaCADへ統合するプロジェクト。
+# CGAL MCP v0.1
+Python MCP/Router/PlannerとC++17 CGAL 6.2.1 workerによる、検証付きメッシュ簡略化。
 
-## 実装状態
-- 能力検索・オンデマンド定義取得: 実装、CI検証済み。
-- MCP公式SDK 2.3.0の通信入口: 実装、公式Clientで検証済み。
-- C++17 CGAL 6.2.1 worker: plane+line簡略化、境界拘束、Constrained placement、
-  任意のPolyhedral Envelopeフィルタを実装。CIでビルド/実計算検証。
-- 双方向bounded-error Hausdorff: 独立workerとして実装、実計算CI成功。
-- 102件のCGALヘッダー索引: 版固定の長尾API検索を実装。実行可能な102機能という意味ではありません。
-- 明示稜線拘束、asset/job管理、Planner、MCPからの幾何計算実行: 未実装。
+## 提供する機能
+- 常時10ツールだけ提示。日英能力検索、個別Schema取得、Router、型付き計画。
+- 102件の版固定CGALヘッダー索引をオンデマンド検索。102件の実行機能ではありません。
+- plane+line簡略化、任意Envelope、境界/明示辺拘束、Constrained placement。
+- 双方向bounded-error Hausdorff検証。合格した成果物のみ公開。
+- 資産ハッシュ、非同期job、timeout、cancel、監査記録。
+- StellaCADのrevision/undo付きホスト境界と統合設計。
 
-MCP入口は現段階で検索/定義取得のみ。workerは内部CLIとして独立し、
-MCPからの幾何計算実行はまだ公開しません。
-全CGAL機能を完全に検証済みという意味ではありません。
-
-## 導入
-Python 3.10以上、C++17コンパイラ、CMake 3.22以上、CGAL 6.2.1、
-Boost、GMP、MPFR、Eigen3、nlohmann-jsonが必要です。
+## 導入（Linux）
+Python 3.10+、C++17、CMake 3.22+。CIはUbuntu/Python3.12で検証します。
 
 ```sh
 git clone https://github.com/nyarfil/cgal-mcp.git
 cd cgal-mcp
-python -m pip install -r requirements.txt
-python -m unittest discover -s tests -v
-python -m cgal_mcp.server
-```
-
-最後のコマンドはstdio MCPサーバーを起動します。MCPホストから同じコマンドを
-起動し、作業ディレクトリをこのリポジトリに設定してください。
-
-```sh
-cmake -S worker -B build -DCGAL_DIR=/absolute/path/to/CGAL-6.2.1 -DCMAKE_BUILD_TYPE=Release
+python -m venv .venv
+. .venv/bin/activate
+python -m pip install -e .
+sudo apt-get update
+sudo apt-get install -y libboost-all-dev libgmp-dev libmpfr-dev libeigen3-dev nlohmann-json3-dev
+mkdir -p work
+curl -fL https://github.com/CGAL/cgal/releases/download/v6.2.1/CGAL-6.2.1.tar.xz -o work/cgal.tar.xz
+echo 'b6be77c60765a8456335de991eeaf6ffec55256984e4a9ecc6a97c37bbfe85bf  work/cgal.tar.xz' | sha256sum -c -
+tar -xf work/cgal.tar.xz -C work
+cmake -S worker -B build -DCGAL_DIR="$PWD/work/CGAL-6.2.1" -DCMAKE_BUILD_TYPE=Release
 cmake --build build -j1
+python -m unittest discover -s tests -v
 python tests/worker_smoke.py build/cgal-worker
-```
-
-workerはstdinでversion=1, operation=simplify, input, output, edge_ratio,
-preserve_border, envelopeを持つJSONを1件読み、stdoutにJSONを1件返します。
-edge_ratioは残す辺の割合で(0,1)。envelopeは入力座標の単位で0なら無効。
-入力の上書き防止、単位、パス管理、self-intersection検査は今後のjob層で実装するため、
-workerを外部ユーザーに直接公開しないでください。
-簡略化worker単体のhausdorff_verifiedはfalseです。検証は独立したcgal-distanceを使います。
-その入力はversion=1, operation=hausdorff, input_a, input_b, error_bound, tolerance。
-結果は双方向距離推定値と誤差幅、保守的なlower/upper、pass/fail/indeterminateです。
-
-```sh
 python tests/distance_smoke.py build/cgal-distance
+PYTHONPATH=. python tests/mcp_e2e.py
 ```
 
-## 資料
+CGALを含む配布では対象パッケージのGPL/commercial条件を確認してください。
+Windows/macOSのビルドとホスト統合は未検証です。
+
+## MCP接続
+MCPホストのstdio設定に、以下のcommand/args/envを登録します。
+ホストによって設定ファイル形式は異なるため、絶対パスを実環境に置き換えてください。
+
+```json
+{
+  "command": "/absolute/path/cgal-mcp/.venv/bin/python",
+  "args": ["-m", "cgal_mcp.server"],
+  "env": {
+    "CGAL_MCP_WORKER": "/absolute/path/cgal-mcp/build/cgal-worker",
+    "CGAL_MCP_DISTANCE": "/absolute/path/cgal-mcp/build/cgal-distance",
+    "CGAL_MCP_DATA": "/absolute/path/cgal-mcp/work/data"
+  }
+}
+```
+
+## 操作例
+1. discover_capabilities(query="軽量化") または route_goal。
+2. describe_capability(capability_id="mesh.simplify")で入力Schema取得。
+3. register_mesh(off=<ASCII三角形OFF>, unit="mm")でasset_idを取得。
+4. plan_simplification(asset_id, parameters)でplan_idを取得。
+5. execute_plan(plan_id)でjob_idを取得。
+6. job_status(job_id)でsucceededまで確認。取消はcancel_job。
+7. get_artifact(asset_id=<結果artifactのID>)でOFF/単位/ハッシュを取得。
+
+parameters例:
+```json
+{
+  "edge_ratio": 0.5,
+  "tolerance": 0.1,
+  "error_bound": 0.001,
+  "envelope": 0.01,
+  "preserve_border": true,
+  "constrained_edges": [[0, 1]]
+}
+```
+
+残す辺の割合50%、mm入力なら許容誤差0.1mm。指定辺は入力頂点番号で実在する必要があります。
+拘束により割合に届かない場合も実測値とtarget_metを返します。
+検証fail/indeterminateはrejectedで、成果物を公開しません。
+stdio出力はMCP通信専用。診断はworker結果かjobのerrorで確認します。
+
+## 制限
+入力OFFは4MiB以下の三角形メッシュ。材質・UV・B-rep・面IDの自動維持は対象外。
+plan/job索引はセッション内。再起動で復旧しませんが監査ファイルと資産は残ります。
+ローカルの信頼されたホスト向けで、HTTP公開・複数利用者認証・分散処理は対象外。
+全CGAL APIを実行する完成品という意味ではなく、重点機能を接続したv0.1です。
+StellaCAD本体への接続には本体リポジトリのホスト実装が必要です。
+
+## 設計と検証
 - [設計仕様](docs/specification.md)
 - [設計書](docs/architecture.md)
-- [StellaCAD統合案](docs/stellacad-integration.md)
+- [StellaCAD統合設計](docs/stellacad-integration.md)
 - [調査記録](docs/research.md)
 - [検証記録](docs/validation.md)

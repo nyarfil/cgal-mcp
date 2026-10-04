@@ -1,38 +1,33 @@
-# CGAL MCP 設計書
-## データフロー
-MCP入口 → 能力検索 → 定義取得 → Planner → 前提条件検査 → job manager →
-C++17 worker → 独立検証 → artifact store。
-Pythonはプロトコル・選択・実行管理を担当し、幾何計算はCGALで行う。
+# CGAL MCP 設計書 v0.1
+## 構成
+catalog.py: 5能力と日英別名。api_index.json/api_search.py: 102件の版固定ヘッダー索引。
+server.py: 公式MCPServerと10個の固定入口。
+runtime.py: OFF検査、資産ハッシュ、Pydantic計画、Semaphore、非同期subprocess、結果公開。
+worker/main.cpp: plane+line簡略化、Envelope、拘束。
+worker/distance.cpp: 双方向bounded-error距離と三値判定。
+worker/preflight.h: CGALで退化/自己交差の入力出力検査。
+stellacad.py: revision付きスナップショットとatomic applyのホスト境界。
 
-## 再利用
-MCPの通信、ライフサイクル、スキーマ処理は公式Python SDKを使う。
-幾何アルゴリズムはCGALの公式実装とexamplesを基準にする。
-独自実装は能力索引、計画、資産管理、検証結果の統一に限定する。
-SDK mainのREADMEとリリースAPIの一致を確認して版固定する。
+## 選択とオンデマンドロード
+discoverはID/要約/状態/スコアだけ。describeがSchemaと実行レシピを返す。
+Routerの低確信・曖昧な選択は候補一覧に留める。
+Plannerは入力単位・存在する辺・数値条件を検証して固定処理順序を構成する。
+能力情報の取得と実行計画を分離し、未対応の長尾APIは検索だけにする。
 
-## Router
-現段階は依存なしの決定的な能力検索を先に実装する。
-完全一致・別名一致を優先し、トークン一致で補う。
-implemented_onlyで実行可能候補だけに絞れる。
-低スコアでは無理に機能を選ばない。意味検索追加時も状態・前提条件を優先する。
-検索の出力は能力ID、要約、状態、スコアのみ。詳細スキーマはdescribeで取得する。
+## 成果物
+root/<asset_id>.offは内容ハッシュ付き資産。root/<job_id>/audit.jsonは監査記録。
+candidate.offはjob私有の一時出力。合格時に登録し、finallyで候補を削除する。
+元メッシュは上書きしない。読み直し時にハッシュを確認する。
+MCPサーバーはローカルの信頼されたCAD/AIホスト向け。HTTP公開や複数利用者認証は対象外。
 
-## Workerとjob管理（未実装）
-版付きJSON要求を標準入力で受け、標準出力はJSON結果だけとする。
-診断は標準エラー。boundedな入力サイズ、出力サイズ、実行時間とプロセス数を設定。
-ジョブごとに作業領域と元メッシュのコピーを作る。
-SIGTERM後の猶予を経てkillし、不完全な成果物を公開しない。
-要求ID、input hash、schema hashを照合し、古い計画の実行を拒否する。
-出力は一時ファイルからatomic renameで確定する。
+## 障害
+worker欠落、exit非0、壊れたJSON、応答版不一致、巨大応答、結果欠落をfailedにする。
+計算のtimeoutはtimed_out。取消はcancelled。許容誤差fail/indeterminateはrejected。
+queued取消は実行前に終了する。実行中は子プロセスをkillしてwaitする。
+プロセスを子階層に分けないCGAL workerが前提。
+再起動時のplan/job索引復旧は未実装。監査ファイルと資産は残る。
 
-## 検証
-C++ workerの操作結果と検証結果を分離する。
-許容誤差は入力単位で指定。bbox相対誤差は明示変換して記録する。
-Hausdorffの方向、推定/境界、誤差幅、乱数seedを結果に含める。
-トポロジー妥当性と幾何誤差は別々に判定する。
-constraintsのedge collapse禁止とplacementによる位置保持を別要件にする。
-
-## リリース
-verifiedは対象版の実計算とMCP統合テストの証拠がある場合だけ設定。
-GitHub ActionsはまずRouterをテストする。workerとMCPのテストが加わるまで
-このCIの成功をCGAL MCP全体の検証と扱わない。
+## 再利用とライセンス
+MCP公式SDKを使用。CGAL公式例とポリシーを組み合わせ、幾何アルゴリズムを再実装しない。
+CGAL各パッケージのGPL/commercialライセンス条件は配布対象ごとに確認する。
+別プロセス化をライセンス回避と扱わない。

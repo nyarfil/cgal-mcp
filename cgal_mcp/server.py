@@ -82,5 +82,8 @@ def capability_definition(capability_id: str) -> str:
     import json
     return json.dumps(describe_capability(capability_id),ensure_ascii=False)
 
-if __name__=="__main__":
+def main():
     mcp.run(transport="stdio")
+
+if __name__=="__main__":
+    main()

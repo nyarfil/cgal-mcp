@@ -1,19 +1,32 @@
-# StellaCAD統合案
-状態: ソース未提供のため境界設計。既存内部APIは推測しない。
+# StellaCAD統合設計 v0.1
+StellaCAD本体ソース未提供のためホスト境界を確定。内部APIの架空実装はしない。
 
-独立MCPの実計算検証完了後に統合する。
-StellaCAD adapterは選択モデルの不変スナップショットをassetとして登録する。
-座標系、単位、変換行列、法線、材質、部品/面ID、拘束の対応表を添える。
-三角形化する場合、CAD/B-repと三角形メッシュ間の対応と許容誤差を保存する。
-簡略化結果から正確なB-repが復元できるという前提は置かない。
+## 実装した境界
+cgal_mcp.stellacad.CADHost:
+- snapshot(object_id)→Snapshot(object_id,revision,off,unit)
+- apply_mesh_atomic(object_id,expected_revision,off,unit,metadata)
+後者はrevision照合・置換・undo履歴登録を一つのトランザクションで実行するホスト責務。
 
-UIは目的、目標削減、許容誤差、保持する境界と稜線を設定できる。
-結果プレビューに前後の面/辺数、誤差、拘束保持、停止理由を表示する。
-モデルrevisionと入力hashが変わった場合は適用を拒否し再計算する。
-適用はStellaCADの既存トランザクション/undoに結び付ける。
-検証不合格、cancel、timeout、worker crashではモデルを変更しない。
-ジョブ実行はUIスレッドから分離し、進捗とcancelを提供する。
+StellaCADAdapter.prepareはスナップショットを資産登録して計画を作る。
+execute_plan/job_statusで非同期実行する。
+applyは成功かつ検証passを必須とし、最新revision/形状/単位を再照合する。
+ホストのatomic applyで競合を防ぐ。適用後に同じ計画の再適用を拒否する。
+tests/test_stellacad.pyが変更済みモデルの拒否と適用経路を検証する。
 
-確定に必要な情報: StellaCADリポジトリ、使用言語、形状カーネル、
-モデル/資産表現、プラグイン機構、undo契約、ビルド対象OS、配布方式。
-CGAL各パッケージのライセンスとStellaCAD配布条件の整合は実装対象ごとに記録する。
+## UI
+選択モデル→目的検索→削減割合/許容誤差/保持辺の設定→計画→実行→結果プレビュー→適用。
+結果には辺数、目標達成、拘束保持、Hausdorff境界、判定、失敗理由を表示する。
+cancelで元モデルは変更しない。検証不合格には適用ボタンを提供しない。
+
+## 形状表現
+メッシュスナップショットはモデルローカル座標系で生成し同じ系で適用。
+ワールド変換はホストが保持し、単位は明示する。
+B-repモデルを三角形化する場合は独立のmesh結果として扱う。
+元の正確なB-rep/UV/材質/面IDが簡略化結果に自動復元される前提を置かない。
+機械的接合箇所は境界またはconstrained_edgesに変換する。
+
+## 本体への接続作業
+StellaCADの選択取得、メッシュ抽出、revision、Undo、UI非同期処理をCADHostへ実装する。
+Plugin/IPC形式は本体リポジトリで確認後に確定する。
+同梱CGALのライセンス、OS別worker配布、アップデート方式を確定する。
+実際のStellaCADへのパッチは本体ソースが利用可能になってから実施する。
