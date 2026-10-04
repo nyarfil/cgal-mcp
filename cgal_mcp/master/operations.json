@@ -1,7 +1,7 @@
 {
   "$schema": "operation.schema.json",
   "schema_version": 1,
-  "catalog_revision": "master-core-hull-wave-a-wave-b-mesh-boolean-validated-1",
+  "catalog_revision": "master-core-hull-wave-a-wave-b-mesh-boolean-spatial-implemented-1",
   "cgal_version": "6.2.1",
   "build_requirements": {
     "source_kind": "official_release",
@@ -1226,7 +1226,7 @@
           "bounds": {
             "minimum_span": 1e-100,
             "maximum_absolute_coordinate": 1e+100,
-            "maximum_translation_to_span_ratio": 1000000.0
+            "maximum_translation_to_span_ratio": 1000000
           }
         }
       ],
@@ -1284,7 +1284,7 @@
           "input_format": "xyz",
           "numeric_scale_contract": {
             "maximum_absolute_coordinate": 1e+100,
-            "maximum_translation_to_span_ratio": 1000000.0,
+            "maximum_translation_to_span_ratio": 1000000,
             "minimum_span": 1e-100
           },
           "output_format": "xyz",
@@ -1428,7 +1428,7 @@
           "bounds": {
             "minimum_span": 1e-100,
             "maximum_absolute_coordinate": 1e+100,
-            "maximum_translation_to_span_ratio": 1000000.0
+            "maximum_translation_to_span_ratio": 1000000
           }
         }
       ],
@@ -1484,7 +1484,7 @@
           "numeric_scale_contract": {
             "finite_coordinate_to_cell_ratio": true,
             "maximum_absolute_coordinate": 1e+100,
-            "maximum_translation_to_span_ratio": 1000000.0,
+            "maximum_translation_to_span_ratio": 1000000,
             "minimum_span": 1e-100
           },
           "output_format": "xyz",
@@ -1808,7 +1808,7 @@
           "bounds": {
             "minimum_span": 1e-100,
             "maximum_absolute_coordinate": 1e+100,
-            "maximum_translation_to_span_ratio": 1000000.0
+            "maximum_translation_to_span_ratio": 1000000
           }
         }
       ],
@@ -1863,7 +1863,7 @@
           "input_format": "xyz",
           "numeric_scale_contract": {
             "maximum_absolute_coordinate": 1e+100,
-            "maximum_translation_to_span_ratio": 1000000.0,
+            "maximum_translation_to_span_ratio": 1000000,
             "minimum_span": 1e-100
           },
           "output_format": "xyz",
@@ -2005,7 +2005,7 @@
           "bounds": {
             "minimum_span": 1e-100,
             "maximum_absolute_coordinate": 1e+100,
-            "maximum_translation_to_span_ratio": 1000000.0
+            "maximum_translation_to_span_ratio": 1000000
           }
         },
         {
@@ -2076,7 +2076,7 @@
           },
           "numeric_scale_contract": {
             "maximum_absolute_coordinate": 1e+100,
-            "maximum_translation_to_span_ratio": 1000000.0,
+            "maximum_translation_to_span_ratio": 1000000,
             "minimum_span": 1e-100
           },
           "output_format": "xyz",
@@ -2270,7 +2270,7 @@
           "bounds": {
             "minimum_span": 1e-100,
             "maximum_absolute_coordinate": 1e+100,
-            "maximum_translation_to_span_ratio": 1000000.0
+            "maximum_translation_to_span_ratio": 1000000
           }
         },
         {
@@ -2346,7 +2346,7 @@
           ],
           "numeric_scale_contract": {
             "maximum_absolute_coordinate": 1e+100,
-            "maximum_translation_to_span_ratio": 1000000.0,
+            "maximum_translation_to_span_ratio": 1000000,
             "minimum_span": 1e-100
           },
           "output_format": "ascii_ply_with_x_y_z_nx_ny_nz",
@@ -2507,7 +2507,7 @@
           "bounds": {
             "minimum_span": 1e-100,
             "maximum_absolute_coordinate": 1e+100,
-            "maximum_translation_to_span_ratio": 1000000.0
+            "maximum_translation_to_span_ratio": 1000000
           }
         }
       ],
@@ -2562,7 +2562,7 @@
           "input_format": "ascii_ply_with_x_y_z_nx_ny_nz",
           "numeric_scale_contract": {
             "maximum_absolute_coordinate": 1e+100,
-            "maximum_translation_to_span_ratio": 1000000.0,
+            "maximum_translation_to_span_ratio": 1000000,
             "minimum_span": 1e-100
           },
           "output_format": "ascii_ply_with_x_y_z_nx_ny_nz",
@@ -7956,6 +7956,1972 @@
         "reference_comparison": "exact EPECK Boolean replay, exact signed volume, and mutual exact set difference",
         "report_numeric_storage": "booleans and exact rational strings; no approximate tolerance",
         "requested_policy": "exact_constructions or package_recommended"
+      }
+    },
+    {
+      "id": "spatial.aabb.closest_point",
+      "revision": 1,
+      "status": "IMPLEMENTED",
+      "role": "analysis",
+      "summary": "Find the closest point and source triangle on a triangle mesh with CGAL AABB Tree.",
+      "aliases": [
+        "AABB closest point",
+        "closest point on mesh",
+        "nearest point on mesh",
+        "mesh point distance",
+        "メッシュ最近点",
+        "メッシュへの最近点"
+      ],
+      "package": "AABB_tree",
+      "major_requirements": [
+        "major.7.2.01"
+      ],
+      "dependencies": [
+        "AABB_tree",
+        "Surface_mesh"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "AABB_tree"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::AABB_tree::closest_point_and_primitive"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::AABB_tree::squared_distance"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/AABB_tree.h"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "AABB_tree",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/AABB_tree.h",
+            "sha256": "10d72986ffe39d5afdf74918e8f59312a41d2aecc0fdebca15f0757632aa292c"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "source",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "analysis",
+            "type": "GeometryAnalysisReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "query_point"
+        ],
+        "properties": {
+          "query_point": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "value",
+              "unit"
+            ],
+            "properties": {
+              "value": {
+                "type": "array",
+                "minItems": 3,
+                "maxItems": 3,
+                "items": {
+                  "type": "number"
+                }
+              },
+              "unit": {
+                "type": "string",
+                "enum": [
+                  "mm",
+                  "cm",
+                  "m"
+                ]
+              }
+            }
+          }
+        }
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 268435456,
+          "maximum_vertices": 200000,
+          "maximum_faces": 400000
+        },
+        {
+          "id": "triangle_surface_mesh",
+          "property": "triangulated",
+          "equals": true
+        },
+        {
+          "id": "aabb_nondegenerate_primitives",
+          "worker_check": {
+            "code": "AABB_DEGENERATE_PRIMITIVE"
+          }
+        }
+      ],
+      "kernel": {
+        "supported": [
+          "exact_constructions",
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "validation": {
+        "required": true,
+        "validators": [
+          "spatial.validate.aabb_closest_point"
+        ],
+        "bindings": {
+          "spatial.validate.aabb_closest_point": {
+            "artifacts": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "source": {
+                "input": "source"
+              }
+            },
+            "parameters": {
+              "query_point": {
+                "parameter": "query_point",
+                "optional": true
+              }
+            }
+          }
+        },
+        "producer_diagnostics_are_non_authoritative": true
+      },
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "info": {
+          "geometry_mutation": false,
+          "input_format": "off",
+          "output_format": "json",
+          "output_slot": "analysis",
+          "max_report_bytes": 16777216,
+          "validators": [
+            "spatial.validate.aabb_closest_point"
+          ],
+          "validator_artifact_bindings": {
+            "spatial.validate.aabb_closest_point": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "source": {
+                "input": "source"
+              }
+            }
+          },
+          "validator_parameter_bindings": {
+            "spatial.validate.aabb_closest_point": {
+              "query_point": "query_point"
+            }
+          },
+          "source_version": "6.2.1",
+          "source_kind": "official_release"
+        }
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_wave_c_spatial_cases.py",
+          "tests/master_wave_c_spatial_mcp_e2e.py:auto",
+          "tests/master_wave_c_spatial_mcp_e2e.py:legacy"
+        ],
+        "review_status": "pending_web_branch_ci",
+        "web_change_record": "docs/web-changes/2026-10-05-spatial-query.md",
+        "worker_manifest_operation": "spatial.aabb.closest_point"
+      }
+    },
+    {
+      "id": "spatial.kdtree.range",
+      "revision": 1,
+      "status": "IMPLEMENTED",
+      "role": "analysis",
+      "summary": "Return point-set members inside a radius using CGAL Kd_tree fuzzy-sphere range search.",
+      "aliases": [
+        "KD tree range search",
+        "radius search",
+        "points within radius",
+        "fuzzy sphere range",
+        "点群範囲検索",
+        "半径内の点",
+        "KD木範囲検索"
+      ],
+      "package": "Spatial_searching",
+      "major_requirements": [
+        "major.7.2.02"
+      ],
+      "dependencies": [
+        "Spatial_searching"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Spatial_searching"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Kd_tree::search"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Fuzzy_sphere"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Kd_tree.h"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Fuzzy_sphere.h"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Spatial_searching",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Orthogonal_k_neighbor_search.h",
+            "sha256": "67c8c09482f48cb1c4d26afb3d550d4ba5871f650cbd8fa5e39097bf2138c7ec"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "source",
+            "types": [
+              "PointSet3"
+            ],
+            "formats": [
+              "xyz"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "analysis",
+            "type": "GeometryAnalysisReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "center",
+          "radius"
+        ],
+        "properties": {
+          "center": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "value",
+              "unit"
+            ],
+            "properties": {
+              "value": {
+                "type": "array",
+                "minItems": 3,
+                "maxItems": 3,
+                "items": {
+                  "type": "number"
+                }
+              },
+              "unit": {
+                "type": "string",
+                "enum": [
+                  "mm",
+                  "cm",
+                  "m"
+                ]
+              }
+            }
+          },
+          "radius": {
+            "type": "TypedLength",
+            "minimum": 0
+          },
+          "epsilon": {
+            "type": "TypedLength",
+            "minimum": 0,
+            "default": {
+              "value": 0,
+              "unit": "mm"
+            }
+          },
+          "max_results": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100000,
+            "default": 10000
+          }
+        }
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 268435456,
+          "maximum_vertices": 2000000
+        },
+        {
+          "id": "minimum_point_count",
+          "property": "point_count",
+          "minimum": 1
+        }
+      ],
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "validation": {
+        "required": true,
+        "validators": [
+          "spatial.validate.kdtree_range"
+        ],
+        "bindings": {
+          "spatial.validate.kdtree_range": {
+            "artifacts": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "source": {
+                "input": "source"
+              }
+            },
+            "parameters": {
+              "center": {
+                "parameter": "center",
+                "optional": true
+              },
+              "radius": {
+                "parameter": "radius",
+                "optional": true
+              },
+              "epsilon": {
+                "parameter": "epsilon",
+                "optional": true
+              },
+              "max_results": {
+                "parameter": "max_results",
+                "optional": true
+              }
+            }
+          }
+        },
+        "producer_diagnostics_are_non_authoritative": true
+      },
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "geometry_mutation": false,
+          "input_format": "xyz",
+          "output_format": "json",
+          "output_slot": "analysis",
+          "max_report_bytes": 16777216,
+          "validators": [
+            "spatial.validate.kdtree_range"
+          ],
+          "validator_artifact_bindings": {
+            "spatial.validate.kdtree_range": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "source": {
+                "input": "source"
+              }
+            }
+          },
+          "validator_parameter_bindings": {
+            "spatial.validate.kdtree_range": {
+              "center": "center",
+              "radius": "radius",
+              "epsilon": "epsilon",
+              "max_results": "max_results"
+            }
+          },
+          "source_version": "6.2.1",
+          "source_kind": "official_release"
+        }
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_wave_c_spatial_cases.py",
+          "tests/master_wave_c_spatial_mcp_e2e.py:auto",
+          "tests/master_wave_c_spatial_mcp_e2e.py:legacy"
+        ],
+        "review_status": "pending_web_branch_ci",
+        "web_change_record": "docs/web-changes/2026-10-05-spatial-query.md",
+        "worker_manifest_operation": "spatial.kdtree.range"
+      }
+    },
+    {
+      "id": "spatial.nearest_neighbors",
+      "revision": 1,
+      "status": "IMPLEMENTED",
+      "role": "analysis",
+      "summary": "Find k nearest points in a point set with CGAL Orthogonal_k_neighbor_search.",
+      "aliases": [
+        "k nearest neighbors",
+        "KNN point search",
+        "nearest neighbor point set",
+        "KD tree nearest neighbor",
+        "k近傍",
+        "点群最近傍",
+        "最近傍点検索"
+      ],
+      "package": "Spatial_searching",
+      "major_requirements": [
+        "major.7.2.03"
+      ],
+      "dependencies": [
+        "Spatial_searching"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Spatial_searching"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Orthogonal_k_neighbor_search"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Orthogonal_k_neighbor_search.h"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Spatial_searching",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Orthogonal_k_neighbor_search.h",
+            "sha256": "67c8c09482f48cb1c4d26afb3d550d4ba5871f650cbd8fa5e39097bf2138c7ec"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "source",
+            "types": [
+              "PointSet3"
+            ],
+            "formats": [
+              "xyz"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "analysis",
+            "type": "GeometryAnalysisReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "query_point",
+          "k"
+        ],
+        "properties": {
+          "query_point": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "value",
+              "unit"
+            ],
+            "properties": {
+              "value": {
+                "type": "array",
+                "minItems": 3,
+                "maxItems": 3,
+                "items": {
+                  "type": "number"
+                }
+              },
+              "unit": {
+                "type": "string",
+                "enum": [
+                  "mm",
+                  "cm",
+                  "m"
+                ]
+              }
+            }
+          },
+          "k": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100000
+          },
+          "epsilon": {
+            "type": "number",
+            "minimum": 0,
+            "default": 0
+          }
+        }
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 268435456,
+          "maximum_vertices": 2000000
+        },
+        {
+          "id": "minimum_point_count",
+          "property": "point_count",
+          "minimum": 1
+        }
+      ],
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "validation": {
+        "required": true,
+        "validators": [
+          "spatial.validate.nearest_neighbors"
+        ],
+        "bindings": {
+          "spatial.validate.nearest_neighbors": {
+            "artifacts": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "source": {
+                "input": "source"
+              }
+            },
+            "parameters": {
+              "query_point": {
+                "parameter": "query_point",
+                "optional": true
+              },
+              "k": {
+                "parameter": "k",
+                "optional": true
+              },
+              "epsilon": {
+                "parameter": "epsilon",
+                "optional": true
+              }
+            }
+          }
+        },
+        "producer_diagnostics_are_non_authoritative": true
+      },
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "geometry_mutation": false,
+          "input_format": "xyz",
+          "output_format": "json",
+          "output_slot": "analysis",
+          "max_report_bytes": 16777216,
+          "validators": [
+            "spatial.validate.nearest_neighbors"
+          ],
+          "validator_artifact_bindings": {
+            "spatial.validate.nearest_neighbors": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "source": {
+                "input": "source"
+              }
+            }
+          },
+          "validator_parameter_bindings": {
+            "spatial.validate.nearest_neighbors": {
+              "query_point": "query_point",
+              "k": "k",
+              "epsilon": "epsilon"
+            }
+          },
+          "source_version": "6.2.1",
+          "source_kind": "official_release"
+        }
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_wave_c_spatial_cases.py",
+          "tests/master_wave_c_spatial_mcp_e2e.py:auto",
+          "tests/master_wave_c_spatial_mcp_e2e.py:legacy"
+        ],
+        "review_status": "pending_web_branch_ci",
+        "web_change_record": "docs/web-changes/2026-10-05-spatial-query.md",
+        "worker_manifest_operation": "spatial.nearest_neighbors"
+      }
+    },
+    {
+      "id": "spatial.intersection_candidates",
+      "revision": 1,
+      "status": "IMPLEMENTED",
+      "role": "analysis",
+      "summary": "Enumerate source triangles intersected by a finite segment using CGAL AABB Tree.",
+      "aliases": [
+        "segment mesh intersection candidates",
+        "AABB segment intersection",
+        "intersected primitives",
+        "raycast segment candidates",
+        "線分交差候補",
+        "交差面候補",
+        "線分とメッシュの交差"
+      ],
+      "package": "AABB_tree",
+      "major_requirements": [
+        "major.7.2.04"
+      ],
+      "dependencies": [
+        "AABB_tree",
+        "Surface_mesh"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "AABB_tree"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::AABB_tree::all_intersected_primitives"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::AABB_tree::do_intersect"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/AABB_tree.h"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "AABB_tree",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/AABB_tree.h",
+            "sha256": "10d72986ffe39d5afdf74918e8f59312a41d2aecc0fdebca15f0757632aa292c"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "source",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "analysis",
+            "type": "GeometryAnalysisReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "segment_start",
+          "segment_end"
+        ],
+        "properties": {
+          "segment_start": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "value",
+              "unit"
+            ],
+            "properties": {
+              "value": {
+                "type": "array",
+                "minItems": 3,
+                "maxItems": 3,
+                "items": {
+                  "type": "number"
+                }
+              },
+              "unit": {
+                "type": "string",
+                "enum": [
+                  "mm",
+                  "cm",
+                  "m"
+                ]
+              }
+            }
+          },
+          "segment_end": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "value",
+              "unit"
+            ],
+            "properties": {
+              "value": {
+                "type": "array",
+                "minItems": 3,
+                "maxItems": 3,
+                "items": {
+                  "type": "number"
+                }
+              },
+              "unit": {
+                "type": "string",
+                "enum": [
+                  "mm",
+                  "cm",
+                  "m"
+                ]
+              }
+            }
+          },
+          "max_candidates": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100000,
+            "default": 10000
+          }
+        }
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 268435456,
+          "maximum_vertices": 200000,
+          "maximum_faces": 400000
+        },
+        {
+          "id": "triangle_surface_mesh",
+          "property": "triangulated",
+          "equals": true
+        },
+        {
+          "id": "aabb_nondegenerate_primitives",
+          "worker_check": {
+            "code": "AABB_DEGENERATE_PRIMITIVE"
+          }
+        }
+      ],
+      "kernel": {
+        "supported": [
+          "exact_constructions",
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "validation": {
+        "required": true,
+        "validators": [
+          "spatial.validate.intersection_candidates"
+        ],
+        "bindings": {
+          "spatial.validate.intersection_candidates": {
+            "artifacts": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "source": {
+                "input": "source"
+              }
+            },
+            "parameters": {
+              "segment_start": {
+                "parameter": "segment_start",
+                "optional": true
+              },
+              "segment_end": {
+                "parameter": "segment_end",
+                "optional": true
+              },
+              "max_candidates": {
+                "parameter": "max_candidates",
+                "optional": true
+              }
+            }
+          }
+        },
+        "producer_diagnostics_are_non_authoritative": true
+      },
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "info": {
+          "geometry_mutation": false,
+          "input_format": "off",
+          "output_format": "json",
+          "output_slot": "analysis",
+          "max_report_bytes": 16777216,
+          "validators": [
+            "spatial.validate.intersection_candidates"
+          ],
+          "validator_artifact_bindings": {
+            "spatial.validate.intersection_candidates": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "source": {
+                "input": "source"
+              }
+            }
+          },
+          "validator_parameter_bindings": {
+            "spatial.validate.intersection_candidates": {
+              "segment_start": "segment_start",
+              "segment_end": "segment_end",
+              "max_candidates": "max_candidates"
+            }
+          },
+          "source_version": "6.2.1",
+          "source_kind": "official_release"
+        }
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_wave_c_spatial_cases.py",
+          "tests/master_wave_c_spatial_mcp_e2e.py:auto",
+          "tests/master_wave_c_spatial_mcp_e2e.py:legacy"
+        ],
+        "review_status": "pending_web_branch_ci",
+        "web_change_record": "docs/web-changes/2026-10-05-spatial-query.md",
+        "worker_manifest_operation": "spatial.intersection_candidates"
+      }
+    },
+    {
+      "id": "spatial.bounding_box",
+      "revision": 1,
+      "status": "IMPLEMENTED",
+      "role": "analysis",
+      "summary": "Compute an axis-aligned bounding box of a 3D point set with CGAL bounding_box.",
+      "aliases": [
+        "axis aligned bounding box",
+        "point set bounding box",
+        "AABB of points",
+        "point cloud bounds",
+        "点群境界ボックス",
+        "点群AABB",
+        "バウンディングボックス"
+      ],
+      "package": "Principal_component_analysis_LGPL",
+      "major_requirements": [
+        "major.7.2.05"
+      ],
+      "dependencies": [
+        "Principal_component_analysis_LGPL"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Principal_component_analysis_LGPL"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::bounding_box"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/bounding_box.h"
+        }
+      ],
+      "license": {
+        "expression": "LGPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Principal_component_analysis_LGPL",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/bounding_box.h",
+            "sha256": "96b9c007bf220b5d4c264909d364f9cecca26ceb8024eb892430c80c1c4a6814"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "source",
+            "types": [
+              "PointSet3"
+            ],
+            "formats": [
+              "xyz"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "analysis",
+            "type": "GeometryAnalysisReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [],
+        "properties": {}
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 268435456,
+          "maximum_vertices": 2000000
+        },
+        {
+          "id": "minimum_point_count",
+          "property": "point_count",
+          "minimum": 1
+        }
+      ],
+      "kernel": {
+        "supported": [
+          "exact_constructions",
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "validation": {
+        "required": true,
+        "validators": [
+          "spatial.validate.bounding_box"
+        ],
+        "bindings": {
+          "spatial.validate.bounding_box": {
+            "artifacts": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "source": {
+                "input": "source"
+              }
+            },
+            "parameters": {}
+          }
+        },
+        "producer_diagnostics_are_non_authoritative": true
+      },
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "info": {
+          "geometry_mutation": false,
+          "input_format": "xyz",
+          "output_format": "json",
+          "output_slot": "analysis",
+          "max_report_bytes": 16777216,
+          "validators": [
+            "spatial.validate.bounding_box"
+          ],
+          "validator_artifact_bindings": {
+            "spatial.validate.bounding_box": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "source": {
+                "input": "source"
+              }
+            }
+          },
+          "validator_parameter_bindings": {
+            "spatial.validate.bounding_box": {}
+          },
+          "source_version": "6.2.1",
+          "source_kind": "official_release"
+        }
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_wave_c_spatial_cases.py",
+          "tests/master_wave_c_spatial_mcp_e2e.py:auto",
+          "tests/master_wave_c_spatial_mcp_e2e.py:legacy"
+        ],
+        "review_status": "pending_web_branch_ci",
+        "web_change_record": "docs/web-changes/2026-10-05-spatial-query.md",
+        "worker_manifest_operation": "spatial.bounding_box"
+      }
+    },
+    {
+      "id": "spatial.validate.aabb_closest_point",
+      "revision": 1,
+      "status": "IMPLEMENTED",
+      "role": "validator",
+      "summary": "Independently replay and validate an AABB closest-point report.",
+      "aliases": [
+        "validate AABB closest point",
+        "最近点検証"
+      ],
+      "package": "AABB_tree",
+      "dependencies": [
+        "AABB_tree",
+        "Surface_mesh"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "AABB_tree"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::AABB_tree::closest_point_and_primitive"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::AABB_tree::squared_distance"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/AABB_tree.h"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "AABB_tree",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/AABB_tree.h",
+            "sha256": "10d72986ffe39d5afdf74918e8f59312a41d2aecc0fdebca15f0757632aa292c"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "GeometryAnalysisReport"
+            ],
+            "formats": [
+              "json"
+            ],
+            "unit_dimension": "none",
+            "units": [
+              "none"
+            ]
+          },
+          {
+            "slot": "source",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "query_point"
+        ],
+        "properties": {
+          "query_point": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "value",
+              "unit"
+            ],
+            "properties": {
+              "value": {
+                "type": "array",
+                "minItems": 3,
+                "maxItems": 3,
+                "items": {
+                  "type": "number"
+                }
+              },
+              "unit": {
+                "type": "string",
+                "enum": [
+                  "mm",
+                  "cm",
+                  "m"
+                ]
+              }
+            }
+          }
+        }
+      },
+      "preconditions": [],
+      "kernel": {
+        "supported": [
+          "exact_constructions",
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "validation": {
+        "required": false,
+        "validators": [],
+        "required_report_checks": {
+          "schema_version": 1,
+          "status": "pass",
+          "passed": true,
+          "checks.schema_valid": true,
+          "checks.source_identity_matches": true,
+          "checks.analysis_kind_matches": true,
+          "checks.result_semantics_valid": true,
+          "checks.official_cgal_reference_match": true
+        },
+        "required_report_fields": [],
+        "required_report_minimum": {}
+      },
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "info": {
+          "validates": "spatial.aabb.closest_point",
+          "candidate_report_schema": "GeometryAnalysisReport/v1",
+          "report_schema": "ValidationReport/v1",
+          "required_report_checks": {
+            "schema_version": 1,
+            "status": "pass",
+            "passed": true,
+            "checks.schema_valid": true,
+            "checks.source_identity_matches": true,
+            "checks.analysis_kind_matches": true,
+            "checks.result_semantics_valid": true,
+            "checks.official_cgal_reference_match": true
+          },
+          "source_version": "6.2.1",
+          "source_kind": "official_release"
+        }
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_wave_c_spatial_cases.py",
+          "tests/master_wave_c_spatial_mcp_e2e.py:auto",
+          "tests/master_wave_c_spatial_mcp_e2e.py:legacy"
+        ],
+        "review_status": "pending_web_branch_ci",
+        "web_change_record": "docs/web-changes/2026-10-05-spatial-query.md",
+        "worker_manifest_operation": "spatial.validate.aabb_closest_point"
+      }
+    },
+    {
+      "id": "spatial.validate.kdtree_range",
+      "revision": 1,
+      "status": "IMPLEMENTED",
+      "role": "validator",
+      "summary": "Independently replay and validate a Kd-tree range-search report.",
+      "aliases": [
+        "validate KD range search",
+        "範囲検索検証"
+      ],
+      "package": "Spatial_searching",
+      "dependencies": [
+        "Spatial_searching"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Spatial_searching"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Kd_tree::search"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Fuzzy_sphere"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Kd_tree.h"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Fuzzy_sphere.h"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Spatial_searching",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Orthogonal_k_neighbor_search.h",
+            "sha256": "67c8c09482f48cb1c4d26afb3d550d4ba5871f650cbd8fa5e39097bf2138c7ec"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "GeometryAnalysisReport"
+            ],
+            "formats": [
+              "json"
+            ],
+            "unit_dimension": "none",
+            "units": [
+              "none"
+            ]
+          },
+          {
+            "slot": "source",
+            "types": [
+              "PointSet3"
+            ],
+            "formats": [
+              "xyz"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "center",
+          "radius"
+        ],
+        "properties": {
+          "center": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "value",
+              "unit"
+            ],
+            "properties": {
+              "value": {
+                "type": "array",
+                "minItems": 3,
+                "maxItems": 3,
+                "items": {
+                  "type": "number"
+                }
+              },
+              "unit": {
+                "type": "string",
+                "enum": [
+                  "mm",
+                  "cm",
+                  "m"
+                ]
+              }
+            }
+          },
+          "radius": {
+            "type": "TypedLength",
+            "minimum": 0
+          },
+          "epsilon": {
+            "type": "TypedLength",
+            "minimum": 0,
+            "default": {
+              "value": 0,
+              "unit": "mm"
+            }
+          },
+          "max_results": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100000,
+            "default": 10000
+          }
+        }
+      },
+      "preconditions": [],
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "validation": {
+        "required": false,
+        "validators": [],
+        "required_report_checks": {
+          "schema_version": 1,
+          "status": "pass",
+          "passed": true,
+          "checks.schema_valid": true,
+          "checks.source_identity_matches": true,
+          "checks.analysis_kind_matches": true,
+          "checks.result_semantics_valid": true,
+          "checks.official_cgal_reference_match": true
+        },
+        "required_report_fields": [],
+        "required_report_minimum": {}
+      },
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "validates": "spatial.kdtree.range",
+          "candidate_report_schema": "GeometryAnalysisReport/v1",
+          "report_schema": "ValidationReport/v1",
+          "required_report_checks": {
+            "schema_version": 1,
+            "status": "pass",
+            "passed": true,
+            "checks.schema_valid": true,
+            "checks.source_identity_matches": true,
+            "checks.analysis_kind_matches": true,
+            "checks.result_semantics_valid": true,
+            "checks.official_cgal_reference_match": true
+          },
+          "source_version": "6.2.1",
+          "source_kind": "official_release"
+        }
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_wave_c_spatial_cases.py",
+          "tests/master_wave_c_spatial_mcp_e2e.py:auto",
+          "tests/master_wave_c_spatial_mcp_e2e.py:legacy"
+        ],
+        "review_status": "pending_web_branch_ci",
+        "web_change_record": "docs/web-changes/2026-10-05-spatial-query.md",
+        "worker_manifest_operation": "spatial.validate.kdtree_range"
+      }
+    },
+    {
+      "id": "spatial.validate.nearest_neighbors",
+      "revision": 1,
+      "status": "IMPLEMENTED",
+      "role": "validator",
+      "summary": "Independently replay and validate a nearest-neighbor report.",
+      "aliases": [
+        "validate nearest neighbors",
+        "最近傍検証"
+      ],
+      "package": "Spatial_searching",
+      "dependencies": [
+        "Spatial_searching"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Spatial_searching"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Orthogonal_k_neighbor_search"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Orthogonal_k_neighbor_search.h"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Spatial_searching",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Orthogonal_k_neighbor_search.h",
+            "sha256": "67c8c09482f48cb1c4d26afb3d550d4ba5871f650cbd8fa5e39097bf2138c7ec"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "GeometryAnalysisReport"
+            ],
+            "formats": [
+              "json"
+            ],
+            "unit_dimension": "none",
+            "units": [
+              "none"
+            ]
+          },
+          {
+            "slot": "source",
+            "types": [
+              "PointSet3"
+            ],
+            "formats": [
+              "xyz"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "query_point",
+          "k"
+        ],
+        "properties": {
+          "query_point": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "value",
+              "unit"
+            ],
+            "properties": {
+              "value": {
+                "type": "array",
+                "minItems": 3,
+                "maxItems": 3,
+                "items": {
+                  "type": "number"
+                }
+              },
+              "unit": {
+                "type": "string",
+                "enum": [
+                  "mm",
+                  "cm",
+                  "m"
+                ]
+              }
+            }
+          },
+          "k": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100000
+          },
+          "epsilon": {
+            "type": "number",
+            "minimum": 0,
+            "default": 0
+          }
+        }
+      },
+      "preconditions": [],
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "validation": {
+        "required": false,
+        "validators": [],
+        "required_report_checks": {
+          "schema_version": 1,
+          "status": "pass",
+          "passed": true,
+          "checks.schema_valid": true,
+          "checks.source_identity_matches": true,
+          "checks.analysis_kind_matches": true,
+          "checks.result_semantics_valid": true,
+          "checks.official_cgal_reference_match": true
+        },
+        "required_report_fields": [],
+        "required_report_minimum": {}
+      },
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "validates": "spatial.nearest_neighbors",
+          "candidate_report_schema": "GeometryAnalysisReport/v1",
+          "report_schema": "ValidationReport/v1",
+          "required_report_checks": {
+            "schema_version": 1,
+            "status": "pass",
+            "passed": true,
+            "checks.schema_valid": true,
+            "checks.source_identity_matches": true,
+            "checks.analysis_kind_matches": true,
+            "checks.result_semantics_valid": true,
+            "checks.official_cgal_reference_match": true
+          },
+          "source_version": "6.2.1",
+          "source_kind": "official_release"
+        }
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_wave_c_spatial_cases.py",
+          "tests/master_wave_c_spatial_mcp_e2e.py:auto",
+          "tests/master_wave_c_spatial_mcp_e2e.py:legacy"
+        ],
+        "review_status": "pending_web_branch_ci",
+        "web_change_record": "docs/web-changes/2026-10-05-spatial-query.md",
+        "worker_manifest_operation": "spatial.validate.nearest_neighbors"
+      }
+    },
+    {
+      "id": "spatial.validate.intersection_candidates",
+      "revision": 1,
+      "status": "IMPLEMENTED",
+      "role": "validator",
+      "summary": "Independently replay and validate segment-mesh intersection candidates.",
+      "aliases": [
+        "validate intersection candidates",
+        "交差候補検証"
+      ],
+      "package": "AABB_tree",
+      "dependencies": [
+        "AABB_tree",
+        "Surface_mesh"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "AABB_tree"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::AABB_tree::all_intersected_primitives"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::AABB_tree::do_intersect"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/AABB_tree.h"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "AABB_tree",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/AABB_tree.h",
+            "sha256": "10d72986ffe39d5afdf74918e8f59312a41d2aecc0fdebca15f0757632aa292c"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "GeometryAnalysisReport"
+            ],
+            "formats": [
+              "json"
+            ],
+            "unit_dimension": "none",
+            "units": [
+              "none"
+            ]
+          },
+          {
+            "slot": "source",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "segment_start",
+          "segment_end"
+        ],
+        "properties": {
+          "segment_start": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "value",
+              "unit"
+            ],
+            "properties": {
+              "value": {
+                "type": "array",
+                "minItems": 3,
+                "maxItems": 3,
+                "items": {
+                  "type": "number"
+                }
+              },
+              "unit": {
+                "type": "string",
+                "enum": [
+                  "mm",
+                  "cm",
+                  "m"
+                ]
+              }
+            }
+          },
+          "segment_end": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "value",
+              "unit"
+            ],
+            "properties": {
+              "value": {
+                "type": "array",
+                "minItems": 3,
+                "maxItems": 3,
+                "items": {
+                  "type": "number"
+                }
+              },
+              "unit": {
+                "type": "string",
+                "enum": [
+                  "mm",
+                  "cm",
+                  "m"
+                ]
+              }
+            }
+          },
+          "max_candidates": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100000,
+            "default": 10000
+          }
+        }
+      },
+      "preconditions": [],
+      "kernel": {
+        "supported": [
+          "exact_constructions",
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "validation": {
+        "required": false,
+        "validators": [],
+        "required_report_checks": {
+          "schema_version": 1,
+          "status": "pass",
+          "passed": true,
+          "checks.schema_valid": true,
+          "checks.source_identity_matches": true,
+          "checks.analysis_kind_matches": true,
+          "checks.result_semantics_valid": true,
+          "checks.official_cgal_reference_match": true
+        },
+        "required_report_fields": [],
+        "required_report_minimum": {}
+      },
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "info": {
+          "validates": "spatial.intersection_candidates",
+          "candidate_report_schema": "GeometryAnalysisReport/v1",
+          "report_schema": "ValidationReport/v1",
+          "required_report_checks": {
+            "schema_version": 1,
+            "status": "pass",
+            "passed": true,
+            "checks.schema_valid": true,
+            "checks.source_identity_matches": true,
+            "checks.analysis_kind_matches": true,
+            "checks.result_semantics_valid": true,
+            "checks.official_cgal_reference_match": true
+          },
+          "source_version": "6.2.1",
+          "source_kind": "official_release"
+        }
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_wave_c_spatial_cases.py",
+          "tests/master_wave_c_spatial_mcp_e2e.py:auto",
+          "tests/master_wave_c_spatial_mcp_e2e.py:legacy"
+        ],
+        "review_status": "pending_web_branch_ci",
+        "web_change_record": "docs/web-changes/2026-10-05-spatial-query.md",
+        "worker_manifest_operation": "spatial.validate.intersection_candidates"
+      }
+    },
+    {
+      "id": "spatial.validate.bounding_box",
+      "revision": 1,
+      "status": "IMPLEMENTED",
+      "role": "validator",
+      "summary": "Independently replay and validate a point-set bounding box report.",
+      "aliases": [
+        "validate bounding box",
+        "境界ボックス検証"
+      ],
+      "package": "Principal_component_analysis_LGPL",
+      "dependencies": [
+        "Principal_component_analysis_LGPL"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Principal_component_analysis_LGPL"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::bounding_box"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/bounding_box.h"
+        }
+      ],
+      "license": {
+        "expression": "LGPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Principal_component_analysis_LGPL",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/bounding_box.h",
+            "sha256": "96b9c007bf220b5d4c264909d364f9cecca26ceb8024eb892430c80c1c4a6814"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "GeometryAnalysisReport"
+            ],
+            "formats": [
+              "json"
+            ],
+            "unit_dimension": "none",
+            "units": [
+              "none"
+            ]
+          },
+          {
+            "slot": "source",
+            "types": [
+              "PointSet3"
+            ],
+            "formats": [
+              "xyz"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [],
+        "properties": {}
+      },
+      "preconditions": [],
+      "kernel": {
+        "supported": [
+          "exact_constructions",
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "validation": {
+        "required": false,
+        "validators": [],
+        "required_report_checks": {
+          "schema_version": 1,
+          "status": "pass",
+          "passed": true,
+          "checks.schema_valid": true,
+          "checks.source_identity_matches": true,
+          "checks.analysis_kind_matches": true,
+          "checks.result_semantics_valid": true,
+          "checks.official_cgal_reference_match": true
+        },
+        "required_report_fields": [],
+        "required_report_minimum": {}
+      },
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "info": {
+          "validates": "spatial.bounding_box",
+          "candidate_report_schema": "GeometryAnalysisReport/v1",
+          "report_schema": "ValidationReport/v1",
+          "required_report_checks": {
+            "schema_version": 1,
+            "status": "pass",
+            "passed": true,
+            "checks.schema_valid": true,
+            "checks.source_identity_matches": true,
+            "checks.analysis_kind_matches": true,
+            "checks.result_semantics_valid": true,
+            "checks.official_cgal_reference_match": true
+          },
+          "source_version": "6.2.1",
+          "source_kind": "official_release"
+        }
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_wave_c_spatial_cases.py",
+          "tests/master_wave_c_spatial_mcp_e2e.py:auto",
+          "tests/master_wave_c_spatial_mcp_e2e.py:legacy"
+        ],
+        "review_status": "pending_web_branch_ci",
+        "web_change_record": "docs/web-changes/2026-10-05-spatial-query.md",
+        "worker_manifest_operation": "spatial.validate.bounding_box"
       }
     }
   ]
