@@ -116,12 +116,17 @@ def _checked_remove_tree(target: Path, root: Path) -> None:
         shutil.rmtree(resolved_target)
 
 
+def _canonical_json_bytes(data: dict[str, object]) -> bytes:
+    """Canonical receipt encoding, independent of host newline translation."""
+    return (json.dumps(data, indent=2, sort_keys=True) + "\n").encode("utf-8")
+
+
 def _atomic_write_json(destination: Path, data: dict[str, object]) -> None:
     descriptor, temporary_name = tempfile.mkstemp(dir=destination.parent, suffix=".json")
     os.close(descriptor)
     temporary = Path(temporary_name)
     try:
-        temporary.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        temporary.write_bytes(_canonical_json_bytes(data))
         temporary.replace(destination)
     finally:
         temporary.unlink(missing_ok=True)
@@ -225,14 +230,16 @@ def _load_receipt(path: Path) -> dict[str, object]:
     return loaded
 
 
-def _receipt_projection(receipt: dict[str, object], receipt_path: Path) -> dict[str, object]:
+def _receipt_projection(receipt: dict[str, object]) -> dict[str, object]:
     archive = receipt["archive"]
     assert isinstance(archive, dict)
     members = receipt["members"]
     assert isinstance(members, list)
     return {
         "filename": archive["filename"], "sha256": archive["sha256"], "root": receipt["root"],
-        "member_count": len(members), "tree_sha256": receipt["tree_sha256"], "receipt_sha256": sha256_file(receipt_path),
+        "member_count": len(members), "tree_sha256": receipt["tree_sha256"],
+        "receipt_sha256": hashlib.sha256(_canonical_json_bytes(receipt)).hexdigest(),
+        "receipt_sha256_encoding": "sorted-json-indent2-utf8-lf",
     }
 
 
@@ -254,7 +261,7 @@ def verified_official_provenance(source_root: Path, docs_root: Path) -> dict[str
         if receipt.get("kind") != kind or receipt.get("root") != metadata["directory"]:
             raise ValueError(f"official {kind} receipt metadata mismatch")
         verify_receipt(archive, extracted_root.parent, receipt)
-        inputs[kind] = _receipt_projection(receipt, receipt_path)
+        inputs[kind] = _receipt_projection(receipt)
     return {"mode": "official", "source": inputs["source"], "docs": inputs["docs"]}
 
 

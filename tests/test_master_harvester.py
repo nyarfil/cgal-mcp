@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import hashlib
 import io
+import json
 import sys
 import tarfile
 import tempfile
@@ -15,6 +16,9 @@ sys.path.insert(0, str(REPOSITORY / "scripts"))
 
 from fetch_master_baseline import (  # noqa: E402
     ARTIFACTS,
+    _atomic_write_json,
+    _load_receipt,
+    _receipt_projection,
     archive_receipt,
     safe_extract_tar_xz,
     verify_extracted_tree,
@@ -23,6 +27,22 @@ from harvest_cgal import VERSION, _collect_files, _tree_hash, build_catalog, par
 
 
 class MasterHarvesterTests(unittest.TestCase):
+    def test_receipt_digest_ignores_host_newlines_but_binds_member_content(self):
+        receipt = {"archive": {"filename": "fixture.tar.xz", "sha256": "a" * 64},
+                   "root": "fixture", "members": [{"path": "fixture/data", "sha256": "b" * 64}],
+                   "tree_sha256": "c" * 64}
+        with tempfile.TemporaryDirectory() as directory:
+            lf, crlf = Path(directory) / "lf.json", Path(directory) / "crlf.json"
+            _atomic_write_json(lf, receipt)
+            self.assertNotIn(b"\r", lf.read_bytes())
+            crlf.write_bytes(lf.read_bytes().replace(b"\n", b"\r\n"))
+            expected = _receipt_projection(_load_receipt(lf))
+            self.assertEqual(expected, _receipt_projection(_load_receipt(crlf)))
+            self.assertEqual(expected["receipt_sha256"], hashlib.sha256(lf.read_bytes()).hexdigest())
+            tampered = json.loads(lf.read_bytes())
+            tampered["members"][0]["sha256"] = "d" * 64
+            self.assertNotEqual(expected["receipt_sha256"], _receipt_projection(tampered)["receipt_sha256"])
+
     def test_canonical_paths_use_case_sensitive_posix_order_on_every_os(self):
         # WindowsPath's default comparison case-folds names; catalog order must not.
         with tempfile.TemporaryDirectory() as directory:
