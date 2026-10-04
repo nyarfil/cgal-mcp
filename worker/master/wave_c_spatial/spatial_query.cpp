@@ -459,7 +459,7 @@ Json compute_intersections(const Request& request, const Profile& profile) {
   const auto max_candidates =
       bounded_limit(request.parameters, "max_candidates", 10000);
   auto triangles = mesh_triangles(source);
-  AabbTree tree(triangles.begin(), triangles.end());
+  AabbTree tree(triangles.cbegin(), triangles.cend());
   ExactSegment segment(start, end);
   std::vector<TriangleList::const_iterator> hits;
   tree.all_intersected_primitives(segment, std::back_inserter(hits));
