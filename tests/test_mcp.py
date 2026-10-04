@@ -14,3 +14,10 @@ class MCPTests(unittest.IsolatedAsyncioTestCase):
             detail = await client.call_tool("describe_capability",
                                            {"capability_id": "mesh.simplify"})
             self.assertFalse(detail.is_error)
+
+    async def test_router_chooses_exact_capability_and_correct_recipe(self):
+        from cgal_mcp.server import route_goal,describe_capability
+        self.assertEqual(route_goal("ハウスドルフ")["selected"],"mesh.hausdorff")
+        self.assertIn("plan_hausdorff",route_goal("ハウスドルフ")["workflow"])
+        self.assertIsNone(route_goal("unrelated_zz")["selected"])
+        self.assertNotIn("edge_ratio",describe_capability("mesh.hausdorff")["execution_schema"]["properties"])

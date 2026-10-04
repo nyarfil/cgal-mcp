@@ -29,7 +29,9 @@ def describe_capability(capability_id: str) -> dict[str, Any]:
     definition["implementation"]="worker_available" if capability_id in {
         "mesh.simplify","mesh.simplify.plane_line","mesh.envelope","mesh.constraints","mesh.hausdorff"} else "indexed"
     definition["execution_schema"]=(DistanceParameters if capability_id=="mesh.hausdorff" else SimplifyParameters).model_json_schema()
-    definition["execution_recipe"]="register_mesh → plan_simplification → execute_plan → job_status → get_artifact"
+    definition["execution_recipe"]=("register_mesh × 2 → plan_hausdorff → execute_plan → job_status"
+        if capability_id=="mesh.hausdorff" else
+        "register_mesh → plan_simplification → execute_plan → job_status → get_artifact")
     return definition
 
 @mcp.tool()
@@ -60,8 +62,14 @@ def plan_hausdorff(asset_a: str, asset_b: str, parameters: dict) -> dict[str, An
 def route_goal(goal: str) -> dict[str, Any]:
     """Rank candidates and report the supported workflow; never silently choose a weak match."""
     candidates=discover(goal,5)
-    return {"candidates":candidates,"workflow":"describe_capability → register_mesh → plan_simplification",
-            "requires_explicit_parameters":True,"selected":None}
+    selected=None
+    if candidates and candidates[0]["score"]>=10:
+        if len(candidates)==1 or candidates[0]["score"]-candidates[1]["score"]>=5:
+            selected=candidates[0]["id"]
+    definition=describe_capability(selected) if selected else None
+    return {"candidates":candidates,
+            "workflow":definition["execution_recipe"] if definition else "describe_capability",
+            "requires_explicit_parameters":True,"selected":selected}
 
 @mcp.tool()
 async def execute_plan(plan_id: str) -> dict[str, Any]:
