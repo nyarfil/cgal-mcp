@@ -11,7 +11,7 @@
 #include <CGAL/Orthogonal_k_neighbor_search.h>
 #include <CGAL/Search_traits_3.h>
 #include <CGAL/bounding_box.h>
-#include <CGAL/number_utils.h>
+#include <CGAL/number_utils.h>\n#include <CGAL/squared_distance_3.h>
 
 #include <algorithm>
 #include <array>
@@ -313,7 +313,7 @@ Json compute_aabb_closest(const Request& request, const Profile& profile) {
                   "query_point");
   const Point query(query_values[0], query_values[1], query_values[2]);
   auto triangles = mesh_triangles(source);
-  AabbTree tree(triangles.begin(), triangles.end());
+  AabbTree tree(triangles.cbegin(), triangles.cend());
   tree.accelerate_distance_queries();
   const auto hit = tree.closest_point_and_primitive(query);
   const auto squared = tree.squared_distance(query);
@@ -358,7 +358,7 @@ Json compute_kdtree_range(const Request& request, const Profile& profile) {
   std::vector<SearchPoint> hits;
   tree.search(std::back_inserter(hits), sphere);
   std::sort(hits.begin(), hits.end(), [](const auto& a, const auto& b) {
-    return std::tie(a.x(), a.y(), a.z()) < std::tie(b.x(), b.y(), b.z());
+    return std::make_tuple(a.x(), a.y(), a.z()) <\n           std::make_tuple(b.x(), b.y(), b.z());
   });
   const auto total = hits.size();
   if (hits.size() > max_results) hits.resize(max_results);
@@ -412,11 +412,10 @@ Json compute_nearest(const Request& request, const Profile& profile) {
   KdTree tree(points.begin(), points.end());
   NeighborSearch search(tree, query, static_cast<unsigned int>(k_raw),
                         SearchKernel::FT(epsilon), true);
-  NeighborSearch::Distance distance;
   Json neighbors = Json::array();
   for (auto it = search.begin(); it != search.end(); ++it) {
-    const auto actual =
-        CGAL::to_double(distance.inverse_of_transformed_distance(it->second));
+    const auto squared = CGAL::to_double(CGAL::squared_distance(query, it->first));
+    const auto actual = std::sqrt(squared);
     if (!std::isfinite(actual)) {
       throw WorkerError("NUMERIC_FAILURE", "RESULT_NOT_REPRESENTABLE",
                         "Nearest-neighbor distance is not finite");
@@ -504,9 +503,13 @@ Json compute_bbox(const Request& request, const Profile& profile) {
     throw WorkerError("RESOURCE_LIMIT", "POINT_LIMIT_EXCEEDED",
                       "Bounding-box query exceeds the bounded point limit");
   }
-  const auto box = CGAL::bbox_3(points.begin(), points.end());
-  const std::array<double, 3> minimum = {box.xmin(), box.ymin(), box.zmin()};
-  const std::array<double, 3> maximum = {box.xmax(), box.ymax(), box.zmax()};
+  const auto box = CGAL::bounding_box(points.begin(), points.end());
+  const std::array<double, 3> minimum = {
+      CGAL::to_double(box.xmin()), CGAL::to_double(box.ymin()),
+      CGAL::to_double(box.zmin())};
+  const std::array<double, 3> maximum = {
+      CGAL::to_double(box.xmax()), CGAL::to_double(box.ymax()),
+      CGAL::to_double(box.zmax())};
   Json results = {{"point_count", points.size()},
                   {"minimum", typed_point_json(minimum, source.unit)},
                   {"maximum", typed_point_json(maximum, source.unit)},
@@ -707,8 +710,7 @@ OperationDefinition analysis_definition(const Profile& profile) {
   definition.supported_kernels = {"exact_constructions", "package_recommended"};
   definition.effective_kernel =
       (p.id == "spatial.kdtree.range" ||
-       p.id == "spatial.nearest_neighbors" ||
-       p.id == "spatial.bounding_box")
+       p.id == "spatial.nearest_neighbors")
           ? "CGAL::Exact_predicates_inexact_constructions_kernel"
           : "CGAL::Exact_predicates_exact_constructions_kernel";
   definition.dependencies =
@@ -716,7 +718,7 @@ OperationDefinition analysis_definition(const Profile& profile) {
        p.id == "spatial.nearest_neighbors")
           ? std::vector<std::string>{"Spatial_searching"}
           : (p.id == "spatial.bounding_box"
-                 ? std::vector<std::string>{"Bounding_box"}
+                 ? std::vector<std::string>{"Principal_component_analysis_LGPL"}
                  : std::vector<std::string>{"AABB_tree", "Surface_mesh"});
   Json bindings = Json::object();
   Json parameter_bindings = Json::object();
