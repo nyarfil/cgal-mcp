@@ -1,0 +1,244 @@
+{
+  "schema_version": 1,
+  "generator": "master-wave-a-milestone",
+  "generator_sha256": "11dcb9ab868528e67ca2786b42e0c7cf1f2b9f995c23764468242a7008bd2c21",
+  "status": "pass",
+  "scope": "mesh_simplification_policies_and_dual_validation",
+  "standalone_accepted": false,
+  "requirements": [],
+  "operations": [
+    "mesh.simplify.edge_collapse",
+    "mesh.validate.simplification_integrity",
+    "mesh.distance.symmetric_hausdorff"
+  ],
+  "worker_sha256": "a4d1941bbb7472a1cf7da42960ca859d38ae90a717573f9b464ac698e5186316",
+  "worker_manifest": {
+    "actual_cgal_version": "6.2.1",
+    "build": {
+      "cgal_release_date": 20260903,
+      "cgal_version": "6.2.1",
+      "cgal_version_nr": 1060211000,
+      "compiler": {
+        "family": "msvc",
+        "full_version": 195035725,
+        "version": 1950
+      },
+      "source_attestation": "configured_pinned_official_archive",
+      "source_kind": "official_release",
+      "source_sha256": "b6be77c60765a8456335de991eeaf6ffec55256984e4a9ecc6a97c37bbfe85bf"
+    },
+    "operations": [
+      {
+        "dependencies": [],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "hull.convex_3",
+        "info": {},
+        "input_types": [
+          "PointSet3"
+        ],
+        "output_type": "TriangleSurfaceMesh",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "exact_constructions",
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "hull.validate.convex_enclosure",
+        "info": {},
+        "input_types": [
+          "TriangleSurfaceMesh",
+          "PointSet3"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "exact_constructions",
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Surface_mesh_simplification",
+          "Polygon_mesh_processing",
+          "Eigen3"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "mesh.simplify.edge_collapse",
+        "info": {
+          "input_format": "off",
+          "optional_constraints": [
+            "preserve_border",
+            "constrained_edges",
+            "bounded_distance",
+            "bounded_normal_change",
+            "polyhedral_envelope"
+          ],
+          "output_format": "off",
+          "policies": [
+            "lindstrom_turk",
+            "edge_length_midpoint",
+            "gh_plane",
+            "gh_triangle",
+            "gh_plane_line",
+            "gh_probabilistic_plane",
+            "gh_probabilistic_triangle"
+          ],
+          "policy_parameter": "policy",
+          "stop_parameter": "stop",
+          "stop_policies": [
+            "edge_count",
+            "edge_ratio",
+            "face_count",
+            "face_ratio",
+            "edge_length"
+          ],
+          "supported_units": [
+            "mm",
+            "cm",
+            "m"
+          ],
+          "unit_dimension": "length",
+          "validator_parameter_bindings": {
+            "mesh.distance.symmetric_hausdorff": {
+              "error_bound": "hausdorff_error_bound",
+              "tolerance": "max_symmetric_deviation"
+            },
+            "mesh.validate.simplification_integrity": {
+              "constrained_edges": "constrained_edges",
+              "preserve_border": "preserve_border"
+            }
+          }
+        },
+        "input_types": [
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "TriangleSurfaceMesh",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing",
+          "AABB_tree"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "mesh.validate.simplification_integrity",
+        "info": {
+          "checks": [
+            "valid_triangle_mesh",
+            "no_degenerate_faces",
+            "manifold_vertices",
+            "no_self_intersection",
+            "component_count",
+            "per_component_euler_characteristic",
+            "per_component_border_count",
+            "closedness",
+            "per_component_orientation_and_signed_volume",
+            "per_component_nesting_level_orientation",
+            "open_surface_winding",
+            "whole_mesh_bounds_volume_with_cavity_support",
+            "protected_edges"
+          ],
+          "closed_component_orientation_policy": "orientation follows containment nesting parity (even outward, odd inward); inward nested cavity shells are legal",
+          "input_format": "off",
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_format": "json",
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "TriangleSurfaceMesh",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "mesh.distance.symmetric_hausdorff",
+        "info": {
+          "bound_parameters": [
+            "tolerance",
+            "error_bound"
+          ],
+          "effective_concurrency": "sequential",
+          "input_format": "off",
+          "input_slots": [
+            "reference",
+            "candidate"
+          ],
+          "method": "bounded_error_symmetric_Hausdorff_distance",
+          "output_format": "json",
+          "output_slot": "validation",
+          "verdicts": [
+            "pass",
+            "fail",
+            "indeterminate"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      }
+    ],
+    "protocol": 1,
+    "request_model": "one_json_line_per_process",
+    "resource_enforcement": "parent_supervisor",
+    "supported_kernels": [
+      "exact_constructions",
+      "package_recommended"
+    ],
+    "worker": "cgal-master-worker"
+  },
+  "worker_manifest_sha256": "a22f52af39aed6c8629ea19b5fc3fca7824ad7c7f8898d7981bc2a48a492207f",
+  "operation_catalog_sha256": "109bdf1128d1882bbbaa1e9e04f7de051ab09de7c0f0c9c68f26e6e70d2453c9",
+  "policy_catalog_sha256": "1f9aa3c8988c8ed486a7c48171c212f89905263a576a7cbb1e7f10d1aab721c8",
+  "tests": [
+    {
+      "test": "tests/master_wave_a_cases.py",
+      "sha256": "ab6afac2484e808053d4b9a24f34bb1eaecf741eb03347bd8a66c746d3f2bd14",
+      "mode": "worker",
+      "exit_code": 0,
+      "status": "pass"
+    },
+    {
+      "test": "tests/master_wave_a_mcp_e2e.py",
+      "sha256": "ac0bd712beefc85be69e27fb2863b5fcf0172d3089872bac44e73bb8de779477",
+      "mode": "auto",
+      "exit_code": 0,
+      "status": "pass"
+    },
+    {
+      "test": "tests/master_wave_a_mcp_e2e.py",
+      "sha256": "ac0bd712beefc85be69e27fb2863b5fcf0172d3089872bac44e73bb8de779477",
+      "mode": "legacy",
+      "exit_code": 0,
+      "status": "pass"
+    }
+  ],
+  "coverage_note": "Only the enumerated policies and adapters were replayed. The 80 major requirements and standalone acceptance remain incomplete. FastEnvelope is blocked by its separate external dependency."
+}

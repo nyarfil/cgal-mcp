@@ -1,70 +1,1119 @@
 {
   "$schema": "operation.schema.json",
   "schema_version": 1,
-  "catalog_revision": "master-foundation-1",
+  "catalog_revision": "master-wave-a-1",
   "cgal_version": "6.2.1",
-  "build_requirements": {"source_kind": "official_release", "source_sha256": "b6be77c60765a8456335de991eeaf6ffec55256984e4a9ecc6a97c37bbfe85bf"},
+  "build_requirements": {
+    "source_kind": "official_release",
+    "source_sha256": "b6be77c60765a8456335de991eeaf6ffec55256984e4a9ecc6a97c37bbfe85bf"
+  },
   "operations": [
     {
       "id": "hull.convex_3",
       "revision": 1,
       "status": "VALIDATED",
-      "evidence": {"tests": ["tests/master_worker_cases.py", "tests/test_master_core.py", "tests/master_mcp_e2e.py"], "worker_manifest_operation": "hull.convex_3"},
+      "evidence": {
+        "tests": [
+          "tests/master_worker_cases.py",
+          "tests/test_master_core.py",
+          "tests/master_mcp_e2e.py"
+        ],
+        "worker_manifest_operation": "hull.convex_3"
+      },
       "role": "transform",
       "summary": "Construct the three-dimensional convex hull of a finite point set.",
-      "aliases": ["3d convex hull", "convex hull points", "包絡凸包", "3次元凸包"],
-      "package": "Convex_hull_3",
-      "dependencies": ["Convex_hull_3", "Polygon_mesh_processing"],
-      "sources": [
-        {"kind": "cgal_package", "identifier": "Convex_hull_3"},
-        {"kind": "cgal_symbol", "identifier": "CGAL::convex_hull_3"},
-        {"kind": "header", "identifier": "CGAL/convex_hull_3.h"},
-        {"kind": "manual", "identifier": "Convex_hull_3/index.html"},
-        {"kind": "cgal_package", "identifier": "Polygon_mesh_processing"},
-        {"kind": "cgal_symbol", "identifier": "CGAL::Polygon_mesh_processing::is_outward_oriented"},
-        {"kind": "cgal_symbol", "identifier": "CGAL::Polygon_mesh_processing::reverse_face_orientations"},
-        {"kind": "cgal_symbol", "identifier": "CGAL::Polygon_mesh_processing::volume"}
+      "aliases": [
+        "3d convex hull",
+        "convex hull points",
+        "包絡凸包",
+        "3次元凸包"
       ],
-      "license": {"expression": "GPL-3.0-or-later OR LicenseRef-Commercial", "package": "Convex_hull_3 + Polygon_mesh_processing", "commercial_option": true, "evidence": [{"path": "include/CGAL/convex_hull_3.h", "sha256": "d05de99d8b11edcb96d4608be68a3be9c294368079e5a37cf447c323a0daeed5"}, {"path": "include/CGAL/Polygon_mesh_processing/orientation.h", "sha256": "45cb6ca3b95b1877b48878ea82cee895b52ce839d50555609d214e6c0cfc63fe"}, {"path": "include/CGAL/Polygon_mesh_processing/measure.h", "sha256": "ba707292f05045a0c6eea3d73c3b21435673f440f4461b5ac5cf19542f6c540b"}]},
-      "io": {
-        "inputs": [{"slot": "points", "types": ["PointSet3"], "formats": ["xyz"], "unit_dimension": "length"}],
-        "outputs": [{"slot": "geometry", "type": "TriangleSurfaceMesh", "format": "off", "unit_from": "points"}]
+      "package": "Convex_hull_3",
+      "dependencies": [
+        "Convex_hull_3",
+        "Polygon_mesh_processing"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Convex_hull_3"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::convex_hull_3"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/convex_hull_3.h"
+        },
+        {
+          "kind": "manual",
+          "identifier": "Convex_hull_3/index.html"
+        },
+        {
+          "kind": "cgal_package",
+          "identifier": "Polygon_mesh_processing"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Polygon_mesh_processing::is_outward_oriented"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Polygon_mesh_processing::reverse_face_orientations"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Polygon_mesh_processing::volume"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Convex_hull_3 + Polygon_mesh_processing",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/convex_hull_3.h",
+            "sha256": "d05de99d8b11edcb96d4608be68a3be9c294368079e5a37cf447c323a0daeed5"
+          },
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/orientation.h",
+            "sha256": "45cb6ca3b95b1877b48878ea82cee895b52ce839d50555609d214e6c0cfc63fe"
+          },
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/measure.h",
+            "sha256": "ba707292f05045a0c6eea3d73c3b21435673f440f4461b5ac5cf19542f6c540b"
+          }
+        ]
       },
-      "parameters": {"type": "object", "additionalProperties": false, "properties": {}},
-      "preconditions": [{"id": "finite_coordinates", "property": "finite", "equals": true}, {"id": "at_least_four_points", "property": "point_count", "minimum": 4}],
-      "kernel": {"supported": ["exact_constructions", "package_recommended"], "default": "package_recommended"},
-      "validation": {"required": true, "validators": ["hull.validate.convex_enclosure"], "bindings": {"hull.validate.convex_enclosure": {"geometry": {"output": "geometry"}, "source": {"input": "points"}}}}
+      "io": {
+        "inputs": [
+          {
+            "slot": "points",
+            "types": [
+              "PointSet3"
+            ],
+            "formats": [
+              "xyz"
+            ],
+            "unit_dimension": "length"
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "geometry",
+            "type": "TriangleSurfaceMesh",
+            "format": "off",
+            "unit_from": "points"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {}
+      },
+      "preconditions": [
+        {
+          "id": "finite_coordinates",
+          "property": "finite",
+          "equals": true
+        },
+        {
+          "id": "at_least_four_points",
+          "property": "point_count",
+          "minimum": 4
+        }
+      ],
+      "kernel": {
+        "supported": [
+          "exact_constructions",
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "validation": {
+        "required": true,
+        "validators": [
+          "hull.validate.convex_enclosure"
+        ],
+        "bindings": {
+          "hull.validate.convex_enclosure": {
+            "geometry": {
+              "output": "geometry"
+            },
+            "source": {
+              "input": "points"
+            }
+          }
+        }
+      }
     },
     {
       "id": "hull.validate.convex_enclosure",
       "revision": 1,
       "status": "VALIDATED",
-      "evidence": {"tests": ["tests/master_worker_cases.py", "tests/test_master_core.py", "tests/master_mcp_e2e.py"], "worker_manifest_operation": "hull.validate.convex_enclosure"},
+      "evidence": {
+        "tests": [
+          "tests/master_worker_cases.py",
+          "tests/test_master_core.py",
+          "tests/master_mcp_e2e.py"
+        ],
+        "worker_manifest_operation": "hull.validate.convex_enclosure"
+      },
       "role": "validator",
       "summary": "Validate convexity and enclosure of a hull against its source points.",
-      "aliases": ["validate convex hull", "convex enclosure validation", "凸包検証"],
-      "package": "Polygon_mesh_processing",
-      "dependencies": ["Convex_hull_3", "Polygon_mesh_processing"],
-      "sources": [
-        {"kind": "cgal_package", "identifier": "Convex_hull_3"},
-        {"kind": "cgal_symbol", "identifier": "CGAL::is_strongly_convex_3"},
-        {"kind": "cgal_package", "identifier": "Polygon_mesh_processing"},
-        {"kind": "cgal_symbol", "identifier": "CGAL::Side_of_triangle_mesh"},
-        {"kind": "cgal_symbol", "identifier": "CGAL::Polygon_mesh_processing::is_outward_oriented"},
-        {"kind": "cgal_symbol", "identifier": "CGAL::Polygon_mesh_processing::volume"}
+      "aliases": [
+        "validate convex hull",
+        "convex enclosure validation",
+        "凸包検証"
       ],
-      "license": {"expression": "GPL-3.0-or-later OR LicenseRef-Commercial", "package": "Convex_hull_3 + Polygon_mesh_processing", "commercial_option": true, "evidence": [{"path": "include/CGAL/convexity_check_3.h", "sha256": "718a94996a93d4d16d263dd770d231c1e0305d80d9c48aee6167ef436c1d6a54"}, {"path": "include/CGAL/Side_of_triangle_mesh.h", "sha256": "3c0b35fa40276bfa70c20a710b7321ba935b228e3e4f657181233e936fbe77a4"}, {"path": "include/CGAL/Polygon_mesh_processing/orientation.h", "sha256": "45cb6ca3b95b1877b48878ea82cee895b52ce839d50555609d214e6c0cfc63fe"}, {"path": "include/CGAL/Polygon_mesh_processing/measure.h", "sha256": "ba707292f05045a0c6eea3d73c3b21435673f440f4461b5ac5cf19542f6c540b"}]},
+      "package": "Polygon_mesh_processing",
+      "dependencies": [
+        "Convex_hull_3",
+        "Polygon_mesh_processing"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Convex_hull_3"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::is_strongly_convex_3"
+        },
+        {
+          "kind": "cgal_package",
+          "identifier": "Polygon_mesh_processing"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Side_of_triangle_mesh"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Polygon_mesh_processing::is_outward_oriented"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Polygon_mesh_processing::volume"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Convex_hull_3 + Polygon_mesh_processing",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/convexity_check_3.h",
+            "sha256": "718a94996a93d4d16d263dd770d231c1e0305d80d9c48aee6167ef436c1d6a54"
+          },
+          {
+            "path": "include/CGAL/Side_of_triangle_mesh.h",
+            "sha256": "3c0b35fa40276bfa70c20a710b7321ba935b228e3e4f657181233e936fbe77a4"
+          },
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/orientation.h",
+            "sha256": "45cb6ca3b95b1877b48878ea82cee895b52ce839d50555609d214e6c0cfc63fe"
+          },
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/measure.h",
+            "sha256": "ba707292f05045a0c6eea3d73c3b21435673f440f4461b5ac5cf19542f6c540b"
+          }
+        ]
+      },
       "io": {
         "inputs": [
-          {"slot": "geometry", "types": ["TriangleSurfaceMesh"], "formats": ["off"], "unit_dimension": "length"},
-          {"slot": "source", "types": ["PointSet3"], "formats": ["xyz"], "unit_dimension": "length"}
+          {
+            "slot": "geometry",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length"
+          },
+          {
+            "slot": "source",
+            "types": [
+              "PointSet3"
+            ],
+            "formats": [
+              "xyz"
+            ],
+            "unit_dimension": "length"
+          }
         ],
-        "outputs": [{"slot": "validation", "type": "ValidationReport", "format": "json", "unit": "none"}]
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
       },
-      "parameters": {"type": "object", "additionalProperties": false, "properties": {}},
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {}
+      },
       "preconditions": [],
-      "kernel": {"supported": ["exact_constructions", "package_recommended"], "default": "package_recommended"},
-      "validation": {"required": false, "validators": [], "required_report_checks": {"valid": true, "triangulated": true, "closed": true, "outward_oriented": true, "positive_volume": true, "strongly_convex": true, "all_original_points_enclosed": true}}
+      "kernel": {
+        "supported": [
+          "exact_constructions",
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "validation": {
+        "required": false,
+        "validators": [],
+        "required_report_checks": {
+          "valid": true,
+          "triangulated": true,
+          "closed": true,
+          "outward_oriented": true,
+          "positive_volume": true,
+          "strongly_convex": true,
+          "all_original_points_enclosed": true
+        }
+      }
+    },
+    {
+      "id": "mesh.simplify.edge_collapse",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "transform",
+      "summary": "Simplify a valid triangle surface mesh with CGAL edge collapse and an explicitly selected public policy.",
+      "aliases": [
+        "mesh simplification",
+        "edge collapse",
+        "surface mesh simplification",
+        "メッシュ簡略化",
+        "エッジ崩壊"
+      ],
+      "package": "Surface_mesh_simplification",
+      "major_requirements": [
+        "major.7.7.01",
+        "major.7.7.02",
+        "major.7.7.03",
+        "major.7.7.04",
+        "major.7.7.05",
+        "major.7.7.06"
+      ],
+      "dependencies": [
+        "Surface_mesh_simplification",
+        "Polygon_mesh_processing",
+        "Eigen3"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Surface_mesh_simplification::edge_collapse"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Surface_mesh_simplification/edge_collapse.h"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Surface_mesh_simplification/Policies/Edge_collapse/GarlandHeckbert_policies.h"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Surface_mesh_simplification/Policies/Edge_collapse/LindstromTurk_cost.h"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Surface_mesh_simplification/Policies/Edge_collapse/Polyhedral_envelope_filter.h"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Surface_mesh_simplification + Polygon_mesh_processing",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Surface_mesh_simplification/edge_collapse.h",
+            "sha256": "4790f3b81ff1635cc91c054afa749a7509a66641b045fb0fe0d13d2270f2a393"
+          },
+          {
+            "path": "include/CGAL/Surface_mesh_simplification/Policies/Edge_collapse/GarlandHeckbert_policies.h",
+            "sha256": "2a821576206e077a9412685f324434cf712f94547f385a81c2a99ef182c2dd44"
+          },
+          {
+            "path": "include/CGAL/Surface_mesh_simplification/Policies/Edge_collapse/LindstromTurk_cost.h",
+            "sha256": "8da342291e440a49bb55218f67b2f5fa42fe95fec4475b8b9ae789711525d6fe"
+          },
+          {
+            "path": "include/CGAL/Surface_mesh_simplification/Policies/Edge_collapse/Polyhedral_envelope_filter.h",
+            "sha256": "8994ac9057f78ece344ab1ddd45b791b0b63c7aa51521bd251f141a0ba888eb6"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "geometry",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "geometry",
+            "type": "TriangleSurfaceMesh",
+            "format": "off",
+            "unit_from": "geometry"
+          }
+        ]
+      },
+      "precision": {
+        "kernel_policy": "package_recommended",
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64",
+        "off_output_decimal_digits": 17,
+        "unsupported_kernel_policies": [
+          "exact_constructions",
+          "fast_inexact"
+        ]
+      },
+      "preconditions": [
+        {
+          "id": "finite_coordinates",
+          "property": "finite",
+          "equals": true
+        },
+        {
+          "id": "triangulated",
+          "property": "triangulated",
+          "equals": true
+        },
+        {
+          "id": "manifold_edges",
+          "property": "manifold_edges",
+          "equals": true
+        }
+      ],
+      "evidence": {
+        "tests": [
+          "tests/master_wave_a_cases.py",
+          "tests/test_master_core.py",
+          "tests/master_wave_a_mcp_e2e.py"
+        ],
+        "worker_manifest_operation": "mesh.simplify.edge_collapse"
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "stop",
+          "policy",
+          "max_symmetric_deviation",
+          "hausdorff_error_bound"
+        ],
+        "properties": {
+          "stop": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "value"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "edge_count"
+                  },
+                  "value": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "value"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "face_count"
+                  },
+                  "value": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "value"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "edge_ratio"
+                  },
+                  "value": {
+                    "type": "number",
+                    "exclusiveMinimum": 0,
+                    "maximum": 1
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "value"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "face_ratio"
+                  },
+                  "value": {
+                    "type": "number",
+                    "exclusiveMinimum": 0,
+                    "maximum": 1
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "value"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "edge_length"
+                  },
+                  "value": {
+                    "type": "TypedLength",
+                    "exclusiveMinimum": 0
+                  }
+                }
+              }
+            ]
+          },
+          "policy": {
+            "type": "string",
+            "enum": [
+              "lindstrom_turk",
+              "edge_length_midpoint",
+              "gh_plane",
+              "gh_triangle",
+              "gh_plane_line",
+              "gh_probabilistic_plane",
+              "gh_probabilistic_triangle"
+            ]
+          },
+          "preserve_border": {
+            "type": "boolean",
+            "default": true
+          },
+          "constrained_edges": {
+            "type": "array",
+            "default": [],
+            "items": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          },
+          "bounded_distance": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0
+          },
+          "polyhedral_envelope": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0
+          },
+          "bounded_normal_change": {
+            "type": "boolean",
+            "default": false
+          },
+          "max_symmetric_deviation": {
+            "type": "TypedLength",
+            "minimum": 0
+          },
+          "hausdorff_error_bound": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0
+          }
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "validation": {
+        "required": true,
+        "validators": [
+          "mesh.validate.simplification_integrity",
+          "mesh.distance.symmetric_hausdorff"
+        ],
+        "bindings_schema": "wave_a_validator_bindings_v1",
+        "bindings": {
+          "mesh.validate.simplification_integrity": {
+            "artifacts": {
+              "candidate": {
+                "output": "geometry"
+              },
+              "source": {
+                "input": "geometry"
+              }
+            },
+            "parameters": {
+              "preserve_border": {
+                "parameter": "preserve_border"
+              },
+              "constrained_edges": {
+                "parameter": "constrained_edges"
+              }
+            }
+          },
+          "mesh.distance.symmetric_hausdorff": {
+            "artifacts": {
+              "reference": {
+                "input": "geometry"
+              },
+              "candidate": {
+                "output": "geometry"
+              }
+            },
+            "parameters": {
+              "tolerance": {
+                "parameter": "max_symmetric_deviation"
+              },
+              "error_bound": {
+                "parameter": "hausdorff_error_bound"
+              }
+            }
+          }
+        }
+      },
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "input_format": "off",
+          "output_format": "off",
+          "unit_dimension": "length",
+          "supported_units": [
+            "mm",
+            "cm",
+            "m"
+          ],
+          "policy_parameter": "policy",
+          "policies": [
+            "lindstrom_turk",
+            "edge_length_midpoint",
+            "gh_plane",
+            "gh_triangle",
+            "gh_plane_line",
+            "gh_probabilistic_plane",
+            "gh_probabilistic_triangle"
+          ],
+          "stop_parameter": "stop",
+          "stop_policies": [
+            "edge_count",
+            "edge_ratio",
+            "face_count",
+            "face_ratio",
+            "edge_length"
+          ],
+          "optional_constraints": [
+            "preserve_border",
+            "constrained_edges",
+            "bounded_distance",
+            "bounded_normal_change",
+            "polyhedral_envelope"
+          ]
+        }
+      }
+    },
+    {
+      "id": "mesh.validate.simplification_integrity",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "validator",
+      "summary": "Reject simplification candidates that violate mesh health, topology, orientation, or protected-edge invariants.",
+      "aliases": [
+        "simplification integrity",
+        "validate simplified mesh",
+        "簡略化整合性検証"
+      ],
+      "package": "Polygon_mesh_processing",
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Polygon_mesh_processing"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Polygon_mesh_processing::does_self_intersect"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Polygon_mesh_processing::is_closed"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Polygon_mesh_processing/self_intersections.h"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Polygon_mesh_processing/manifoldness.h"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Polygon_mesh_processing::volume_connected_components"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Polygon_mesh_processing::split_connected_components"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Polygon_mesh_processing::is_outward_oriented"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Polygon_mesh_processing::volume"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Polygon_mesh_processing/connected_components.h"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Polygon_mesh_processing/orientation.h"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Polygon_mesh_processing/measure.h"
+        },
+        {
+          "kind": "cgal_package",
+          "identifier": "AABB_tree"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::AABB_tree"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::AABB_face_graph_triangle_primitive"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Polygon_mesh_processing::compute_face_normal"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/AABB_tree.h"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/AABB_face_graph_triangle_primitive.h"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/AABB_traits_3.h"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Polygon_mesh_processing/compute_normal.h"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Exact_predicates_exact_constructions_kernel"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Cartesian_converter"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Exact_predicates_exact_constructions_kernel.h"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Cartesian_converter.h"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Polygon_mesh_processing",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/self_intersections.h",
+            "sha256": "d459c0e6480a9e1c2cbef291340ae61a0bf4e79ceb182365c1b922dd7e38ae8f"
+          },
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/manifoldness.h",
+            "sha256": "b7089cd3b24ca28b030da574086e27e051f8092e3b02be8e581828583127a91f"
+          },
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/connected_components.h",
+            "sha256": "3f980c0349166a44c80e990fdf83a91086bee637e4850c44c1ff295fda594e70"
+          },
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/orientation.h",
+            "sha256": "45cb6ca3b95b1877b48878ea82cee895b52ce839d50555609d214e6c0cfc63fe"
+          },
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/measure.h",
+            "sha256": "ba707292f05045a0c6eea3d73c3b21435673f440f4461b5ac5cf19542f6c540b"
+          },
+          {
+            "path": "include/CGAL/AABB_tree.h",
+            "sha256": "55d57cfd3ab1ea62373150eb28410e05560a9614ea915598b7afabe6622a9904"
+          },
+          {
+            "path": "include/CGAL/AABB_face_graph_triangle_primitive.h",
+            "sha256": "1ab0b9373671480e948eea3a2288cf4f5c4cc93d3c0ec5fa23b9a2dd3b3799a7"
+          },
+          {
+            "path": "include/CGAL/AABB_traits_3.h",
+            "sha256": "c16821483935696c2c6d9a7b1173d025183c599975b8f06a2500884b33fd30bc"
+          },
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/compute_normal.h",
+            "sha256": "bc53b2e20f93dddaa467bd59d344ff3f7396b41dd280835961159b77711abc40"
+          },
+          {
+            "path": "include/CGAL/Exact_predicates_exact_constructions_kernel.h",
+            "sha256": "cce340046975e85aa48247615f6e78cf25d71f75ec22c908f0ca2dd85d6e11a1"
+          },
+          {
+            "path": "include/CGAL/Cartesian_converter.h",
+            "sha256": "d28a302dca5347f480e4021fedaea28c658c1e12e13a28486569d1c56264c50f"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length"
+          },
+          {
+            "slot": "source",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length"
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "preserve_border",
+          "constrained_edges"
+        ],
+        "properties": {
+          "preserve_border": {
+            "type": "boolean",
+            "default": true
+          },
+          "constrained_edges": {
+            "type": "array",
+            "default": [],
+            "items": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        }
+      },
+      "preconditions": [],
+      "evidence": {
+        "tests": [
+          "tests/master_wave_a_cases.py",
+          "tests/test_master_core.py",
+          "tests/master_wave_a_mcp_e2e.py"
+        ],
+        "worker_manifest_operation": "mesh.validate.simplification_integrity"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64",
+        "closed_component_volume_test": "exact rational evaluation of the binary64 coordinates",
+        "open_surface_winding_test": "exact cross-product and dot-product sign evaluation of binary64 coordinates"
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "validation": {
+        "required": false,
+        "validators": [],
+        "required_report_checks": {
+          "valid": true,
+          "triangulated": true,
+          "self_intersection": false,
+          "closedness_preserved": true,
+          "protected_edges_preserved": true,
+          "component_topology_preserved": true,
+          "open_surface_winding_preserved": true
+        }
+      },
+      "dependencies": [
+        "Polygon_mesh_processing",
+        "AABB_tree"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "input_format": "off",
+          "output_slot": "validation",
+          "output_format": "json",
+          "checks": [
+            "valid_triangle_mesh",
+            "no_degenerate_faces",
+            "manifold_vertices",
+            "no_self_intersection",
+            "component_count",
+            "per_component_euler_characteristic",
+            "per_component_border_count",
+            "closedness",
+            "per_component_orientation_and_signed_volume",
+            "per_component_nesting_level_orientation",
+            "open_surface_winding",
+            "whole_mesh_bounds_volume_with_cavity_support",
+            "protected_edges"
+          ],
+          "closed_component_orientation_policy": "orientation follows containment nesting parity (even outward, odd inward); inward nested cavity shells are legal"
+        }
+      },
+      "topology_contract": {
+        "per_component": [
+          "euler_characteristic",
+          "border_count",
+          "closedness",
+          "orientation",
+          "exact_nonzero_signed_volume_for_closed_components",
+          "containment_nesting_level"
+        ],
+        "closed_whole_mesh": "CGAL::Polygon_mesh_processing::volume_connected_components nesting level and orientation parity, plus CGAL::Polygon_mesh_processing::does_bound_a_volume",
+        "cavity_policy": "Closed component orientation follows containment nesting parity (even outward, odd inward); inward nested cavity shells are legal and geometry is never reoriented by the validator.",
+        "failure_codes": {
+          "source_invalid_nesting": "SOURCE_INVALID_NESTED_ORIENTATION",
+          "candidate_invalid_nesting": "CANDIDATE_INVALID_NESTED_ORIENTATION",
+          "open_surface_winding_changed": "OPEN_SURFACE_WINDING_CHANGED",
+          "open_components_changed": "OPEN_COMPONENTS_CHANGED"
+        },
+        "open_surface_winding": "Candidate and source open components must agree under bidirectional AABB nearest-face correspondence with exact normal-direction sign comparison."
+      }
+    },
+    {
+      "id": "mesh.distance.symmetric_hausdorff",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "validator",
+      "summary": "Bound symmetric Hausdorff deviation between a reference and candidate triangle mesh.",
+      "aliases": [
+        "symmetric Hausdorff distance",
+        "mesh deviation validation",
+        "対称ハウスドルフ距離"
+      ],
+      "package": "Polygon_mesh_processing",
+      "major_requirements": [
+        "major.7.3.06"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Polygon_mesh_processing"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Polygon_mesh_processing::bounded_error_symmetric_Hausdorff_distance"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Polygon_mesh_processing/distance.h"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Polygon_mesh_processing",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/distance.h",
+            "sha256": "e4e10b3837b4175dd35d22f3056cc5a89d38b8e42f3bdaa1a84a390ca900f2bd"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "reference",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length"
+          },
+          {
+            "slot": "candidate",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length"
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "tolerance",
+          "error_bound"
+        ],
+        "properties": {
+          "tolerance": {
+            "type": "TypedLength",
+            "minimum": 0
+          },
+          "error_bound": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0
+          }
+        }
+      },
+      "preconditions": [],
+      "evidence": {
+        "tests": [
+          "tests/master_wave_a_cases.py",
+          "tests/test_master_core.py",
+          "tests/master_wave_a_mcp_e2e.py"
+        ],
+        "worker_manifest_operation": "mesh.distance.symmetric_hausdorff"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64",
+        "bound_interpretation": "lower=max(0,estimate-error_bound); upper=estimate+error_bound",
+        "effective_concurrency": "sequential",
+        "concurrency_note": "CGAL 6.2.1 documents the Parallel_tag implementation as sequential for this operation."
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "validation": {
+        "required": false,
+        "validators": [],
+        "required_report_checks": {
+          "status": "pass",
+          "valid": true,
+          "verdict": "pass"
+        }
+      },
+      "dependencies": [
+        "Polygon_mesh_processing"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "input_slots": [
+            "reference",
+            "candidate"
+          ],
+          "input_format": "off",
+          "output_slot": "validation",
+          "output_format": "json",
+          "method": "bounded_error_symmetric_Hausdorff_distance",
+          "effective_concurrency": "sequential",
+          "bound_parameters": [
+            "tolerance",
+            "error_bound"
+          ],
+          "verdicts": [
+            "pass",
+            "fail",
+            "indeterminate"
+          ]
+        }
+      }
     }
   ]
 }

@@ -40,13 +40,18 @@ add_executable(cgal-master-worker
   master/operation.cpp
   master/convex_hull_3.cpp
   master/validate_convex_enclosure.cpp
+  master/wave_a/mesh_io.cpp
+  master/wave_a/simplify_edge_collapse.cpp
+  master/wave_a/validate_simplification_integrity.cpp
+  master/wave_a/symmetric_hausdorff.cpp
 )
 target_compile_features(cgal-master-worker PRIVATE cxx_std_17)
 target_compile_definitions(cgal-master-worker PRIVATE
   CGAL_MASTER_SOURCE_KIND="${CGAL_MASTER_SOURCE_KIND}"
   CGAL_MASTER_SOURCE_SHA256="${CGAL_MASTER_SOURCE_SHA256}"
 )
-target_link_libraries(cgal-master-worker PRIVATE CGAL::CGAL nlohmann_json::nlohmann_json)
+target_link_libraries(cgal-master-worker PRIVATE
+  CGAL::CGAL Eigen3::Eigen nlohmann_json::nlohmann_json)
 
 if(MSVC)
   target_compile_options(cgal-worker PRIVATE /bigobj)

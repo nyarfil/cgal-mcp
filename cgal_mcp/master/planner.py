@@ -3,17 +3,45 @@
 from __future__ import annotations
 
 from collections import deque
+import copy
 import math
 from typing import Any
 
 from .errors import InvalidInput, PreconditionFailure, UnsupportedOperation
 from .registry import OperationRegistry
 from .store import ArtifactStore
-from .util import canonical_json, digest_bytes, normalize_quantities
+from .util import canonical_json, digest_bytes
 
 
 def _validate_value(schema: dict[str, Any], value: Any, path: str) -> None:
+    if "const" in schema and value != schema["const"]:
+        raise InvalidInput("parameter_const", f"{path} has an invalid discriminator")
+    if schema.get("oneOf"):
+        matches = 0
+        last_error: InvalidInput | None = None
+        for alternative in schema["oneOf"]:
+            try:
+                _validate_value(alternative, value, path)
+                matches += 1
+            except InvalidInput as exc:
+                last_error = exc
+        if matches != 1:
+            raise InvalidInput("parameter_one_of",
+                               f"{path} must match exactly one allowed shape") from last_error
+        return
     kind = schema.get("type")
+    if kind == "TypedLength":
+        if (not isinstance(value, dict) or set(value) != {"value", "unit"}
+                or not isinstance(value["value"], (int, float)) or isinstance(value["value"], bool)
+                or not math.isfinite(float(value["value"]))
+                or value["unit"] not in {"mm", "cm", "m"}):
+            raise InvalidInput("parameter_length", f"{path} must be a normalized TypedLength")
+        number = float(value["value"])
+        if "minimum" in schema and number < schema["minimum"]:
+            raise InvalidInput("parameter_range", f"{path} is below its minimum")
+        if "exclusiveMinimum" in schema and number <= schema["exclusiveMinimum"]:
+            raise InvalidInput("parameter_range", f"{path} must exceed its minimum")
+        return
     valid_type = {
         "object": lambda item: isinstance(item, dict),
         "array": lambda item: isinstance(item, list),
@@ -60,6 +88,87 @@ def _validate_value(schema: dict[str, Any], value: Any, path: str) -> None:
 
 def _validate_parameters(schema: dict[str, Any], value: dict[str, Any]) -> None:
     _validate_value(schema, value, "parameters")
+
+
+def _schema_alternative(schema: dict[str, Any], value: Any) -> dict[str, Any]:
+    alternatives = schema.get("oneOf", [])
+    for alternative in alternatives:
+        try:
+            # Discriminators and the raw container shape are sufficient to
+            # select a branch before TypedLength normalization.
+            if isinstance(value, dict):
+                properties = alternative.get("properties", {})
+                if all("const" not in child or value.get(name) == child["const"]
+                       for name, child in properties.items()):
+                    return alternative
+        except (AttributeError, TypeError):
+            continue
+    raise InvalidInput("parameter_one_of", "Parameter does not select an allowed shape")
+
+
+def _apply_defaults(schema: dict[str, Any], value: Any) -> Any:
+    if schema.get("oneOf"):
+        return _apply_defaults(_schema_alternative(schema, value), value)
+    if schema.get("type") == "object" and isinstance(value, dict):
+        result = copy.deepcopy(value)
+        for name, child in schema.get("properties", {}).items():
+            if name not in result and "default" in child:
+                result[name] = copy.deepcopy(child["default"])
+            if name in result:
+                result[name] = _apply_defaults(child, result[name])
+        return result
+    if schema.get("type") == "array" and isinstance(value, list) and isinstance(schema.get("items"), dict):
+        return [_apply_defaults(schema["items"], item) for item in value]
+    return copy.deepcopy(value)
+
+
+def _normalize_parameter_value(schema: dict[str, Any], value: Any, input_unit: str,
+                               path: str, history: list[dict[str, Any]]) -> Any:
+    if schema.get("oneOf"):
+        return _normalize_parameter_value(_schema_alternative(schema, value), value,
+                                          input_unit, path, history)
+    if schema.get("type") == "TypedLength":
+        if (not isinstance(value, dict) or set(value) != {"value", "unit"}
+                or not isinstance(value.get("value"), (int, float))
+                or isinstance(value.get("value"), bool)
+                or not math.isfinite(float(value["value"]))):
+            raise InvalidInput("parameter_length", "TypedLength requires only finite value and unit")
+        source_unit = value.get("unit")
+        scales = {"mm": 1.0, "cm": 10.0, "m": 1000.0}
+        if source_unit not in scales or input_unit not in scales:
+            raise InvalidInput("parameter_unit", "TypedLength requires mm, cm or m")
+        source_value = float(value["value"])
+        factor = scales[source_unit] / scales[input_unit]
+        target_value = source_value * factor
+        if not math.isfinite(target_value):
+            raise InvalidInput("parameter_unit_overflow",
+                               "TypedLength conversion produced a non-finite value")
+        history.append({"path": path, "dimension": "length",
+                        "source": {"value": source_value, "unit": source_unit},
+                        "target": {"value": target_value, "unit": input_unit},
+                        "factor": factor})
+        return {"value": target_value, "unit": input_unit}
+    if schema.get("type") == "object" and isinstance(value, dict):
+        properties = schema.get("properties", {})
+        return {name: _normalize_parameter_value(properties.get(name, {}), item, input_unit,
+                                                  f"{path}.{name}" if path else name, history)
+                for name, item in value.items()}
+    if schema.get("type") == "array" and isinstance(value, list) and isinstance(schema.get("items"), dict):
+        return [_normalize_parameter_value(schema["items"], item, input_unit,
+                                           f"{path}[{index}]", history)
+                for index, item in enumerate(value)]
+    return copy.deepcopy(value)
+
+
+def _prepare_parameters(schema: dict[str, Any], value: Any,
+                        input_unit: str) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    if not isinstance(value, dict):
+        raise InvalidInput("parameter_type", "parameters must be object")
+    defaulted = _apply_defaults(schema, value)
+    history: list[dict[str, Any]] = []
+    normalized = _normalize_parameter_value(schema, defaulted, input_unit, "", history)
+    _validate_parameters(schema, normalized)
+    return normalized, history
 
 
 def _acyclic(steps: list[dict[str, Any]]) -> None:
@@ -200,7 +309,8 @@ class PlanBuilder:
             if spec.get("formats") and artifact["format"] not in spec["formats"]:
                 raise InvalidInput("input_format", f"Input {spec['slot']} format {artifact['format']} is unsupported")
             normalized[spec["slot"]] = {"artifact_id": artifact_id,
-                                        "sha256": artifact["sha256"], "type": artifact["type"]}
+                                        "sha256": artifact["sha256"], "type": artifact["type"],
+                                        "format": artifact["format"], "unit": artifact["unit"]}
         self._preconditions(operation, normalized)
         units = {self.store.inspect(value["artifact_id"])["unit"] for value in normalized.values()}
         if len(units) > 1:
@@ -223,18 +333,19 @@ class PlanBuilder:
         operation = self.registry.get(operation_id, executable=True)
         normalized = self._normalize_bindings(operation, bindings)
         input_unit = self.store.inspect(next(iter(normalized.values()))["artifact_id"])["unit"] if normalized else "mm"
-        try:
-            normalized_parameters = normalize_quantities(parameters, input_unit)
-        except ValueError as exc:
-            raise InvalidInput("parameter_unit", str(exc)) from exc
-        _validate_parameters(operation["parameters"], normalized_parameters)
+        normalized_parameters, normalization_history = _prepare_parameters(
+            operation["parameters"], parameters, input_unit)
+        selected_policies = self.registry.resolve_policies(operation_id, normalized_parameters)
         selected_kernel = kernel or operation["kernel"]["default"]
         if selected_kernel not in operation["kernel"]["supported"]:
             raise InvalidInput("kernel_unsupported", f"Unsupported kernel for {operation_id}")
         return {"id": step_id, "operation": operation_id, "revision": operation["revision"],
                 "role": operation.get("role", "transform"), "inputs": normalized,
                 "parameters": normalized_parameters, "kernel": selected_kernel,
-                "outputs": operation["io"]["outputs"]}
+                "outputs": operation["io"]["outputs"],
+                "parameter_normalization": normalization_history,
+                "policies": [{key: policy[key] for key in ("id", "revision", "group", "name", "status")}
+                             for policy in selected_policies]}
 
     def _inject_validators(self, steps: list[dict[str, Any]]) -> list[dict[str, Any]]:
         result = list(steps)
@@ -244,40 +355,60 @@ class PlanBuilder:
             if operation["validation"]["required"] and not validators:
                 raise InvalidInput("missing_validator", f"Mutating operation {operation['id']} has no validator")
             for index, validator_id in enumerate(validators, 1):
-                validator = self.registry.get(validator_id, executable=True)
-                validator_specs = validator["io"]["inputs"]
-                binding_recipe = operation["validation"].get("bindings", {}).get(validator_id)
-                if not isinstance(binding_recipe, dict):
-                    raise InvalidInput("validator_binding", f"{operation['id']} lacks bindings for {validator_id}")
-                bindings: dict[str, dict[str, str]] = {}
-                for spec in validator_specs:
-                    recipe = binding_recipe.get(spec["slot"])
-                    if not isinstance(recipe, dict):
-                        raise InvalidInput("validator_binding", f"Binding for {validator_id}:{spec['slot']} is missing")
-                    if isinstance(recipe.get("output"), str):
-                        output = next((item for item in operation["io"]["outputs"]
-                                       if item["slot"] == recipe["output"]), None)
-                        if output is None or output["type"] not in spec["types"]:
-                            raise InvalidInput("validator_type", f"{validator_id} cannot validate the configured output")
-                        output_binding = {"step": step["id"], "slot": output["slot"],
-                                          "type": output["type"], "format": output["format"]}
-                        if output.get("unit_from") and output["unit_from"] in step["inputs"]:
-                            source_unit = step["inputs"][output["unit_from"]].get("unit")
-                            if source_unit:
-                                output_binding["unit"] = source_unit
-                        elif output.get("unit"):
-                            output_binding["unit"] = output["unit"]
-                        bindings[spec["slot"]] = output_binding
-                    elif isinstance(recipe.get("input"), str) and recipe["input"] in step["inputs"]:
-                        bindings[spec["slot"]] = dict(step["inputs"][recipe["input"]])
-                    else:
-                        raise InvalidInput("validator_binding", f"Invalid binding for {validator_id}:{spec['slot']}")
-                result.append({"id": f"{step['id']}_validate_{index}", "operation": validator_id,
-                               "revision": validator["revision"], "role": "validator",
-                               "inputs": bindings, "parameters": {},
-                               "kernel": validator["kernel"]["default"],
-                               "outputs": validator["io"]["outputs"], "validates": step["id"]})
+                result.append(self._validator_step(step, operation, validator_id, index))
         return result
+
+    def _validator_step(self, step: dict[str, Any], operation: dict[str, Any],
+                        validator_id: str, index: int) -> dict[str, Any]:
+        validator = self.registry.get(validator_id, executable=True)
+        binding_recipe = operation["validation"].get("bindings", {}).get(validator_id)
+        if not isinstance(binding_recipe, dict):
+            raise InvalidInput("validator_binding", f"{operation['id']} lacks bindings for {validator_id}")
+        artifact_recipe = binding_recipe.get("artifacts", binding_recipe)
+        bindings: dict[str, dict[str, str]] = {}
+        for spec in validator["io"]["inputs"]:
+            recipe = artifact_recipe.get(spec["slot"])
+            if not isinstance(recipe, dict):
+                raise InvalidInput("validator_binding", f"Binding for {validator_id}:{spec['slot']} is missing")
+            if isinstance(recipe.get("output"), str):
+                output = next((item for item in operation["io"]["outputs"]
+                               if item["slot"] == recipe["output"]), None)
+                if output is None or output["type"] not in spec["types"]:
+                    raise InvalidInput("validator_type", f"{validator_id} cannot validate the configured output")
+                output_binding = {"step": step["id"], "slot": output["slot"],
+                                  "type": output["type"], "format": output["format"]}
+                if output.get("unit_from") and output["unit_from"] in step["inputs"]:
+                    output_binding["unit"] = step["inputs"][output["unit_from"]]["unit"]
+                elif output.get("unit"):
+                    output_binding["unit"] = output["unit"]
+                bindings[spec["slot"]] = output_binding
+            elif isinstance(recipe.get("input"), str) and recipe["input"] in step["inputs"]:
+                bindings[spec["slot"]] = dict(step["inputs"][recipe["input"]])
+            else:
+                raise InvalidInput("validator_binding", f"Invalid binding for {validator_id}:{spec['slot']}")
+        parameter_recipe = binding_recipe.get("parameters", {}) if "artifacts" in binding_recipe else {}
+        parameters: dict[str, Any] = {}
+        normalization_history: list[dict[str, Any]] = []
+        for target, recipe in parameter_recipe.items():
+            source = recipe.get("parameter") if isinstance(recipe, dict) else None
+            if source not in step["parameters"]:
+                raise InvalidInput("validator_parameter_binding",
+                                   f"{operation['id']} parameter {source!r} is unavailable for {validator_id}")
+            parameters[target] = copy.deepcopy(step["parameters"][source])
+            for entry in step.get("parameter_normalization", []):
+                if entry.get("path") == source or str(entry.get("path", "")).startswith(source + "."):
+                    propagated = copy.deepcopy(entry)
+                    propagated["path"] = target + str(entry["path"])[len(source):]
+                    propagated["bound_from"] = source
+                    normalization_history.append(propagated)
+        _validate_parameters(validator["parameters"], parameters)
+        return {"id": f"{step['id']}_validate_{index}", "operation": validator_id,
+                "revision": validator["revision"], "role": "validator",
+                "inputs": bindings, "parameters": parameters,
+                "parameter_normalization": normalization_history,
+                "kernel": validator["kernel"]["default"],
+                "outputs": validator["io"]["outputs"], "validates": step["id"],
+                "policies": []}
 
     def _explicit_steps(self, raw_steps: Any) -> list[dict[str, Any]]:
         if not isinstance(raw_steps, list) or not raw_steps:
@@ -326,15 +457,16 @@ class PlanBuilder:
                     raise PreconditionFailure(f"{operation['id']} preconditions cannot be proven for a prior-step output")
                 self._preconditions(operation, normalized)
             input_unit = next(iter(input_units), "mm")
-            try:
-                normalized_parameters = normalize_quantities(raw.get("parameters", {}), input_unit)
-            except ValueError as exc:
-                raise InvalidInput("parameter_unit", str(exc)) from exc
-            _validate_parameters(operation["parameters"], normalized_parameters)
+            normalized_parameters, normalization_history = _prepare_parameters(
+                operation["parameters"], raw.get("parameters", {}), input_unit)
+            selected_policies = self.registry.resolve_policies(operation["id"], normalized_parameters)
             step = {"id": raw["id"], "operation": operation["id"], "revision": operation["revision"],
                     "role": operation.get("role", "transform"), "inputs": normalized,
                     "parameters": normalized_parameters, "kernel": raw.get("kernel", operation["kernel"]["default"]),
-                    "outputs": operation["io"]["outputs"]}
+                    "outputs": operation["io"]["outputs"],
+                    "parameter_normalization": normalization_history,
+                    "policies": [{key: policy[key] for key in ("id", "revision", "group", "name", "status")}
+                                 for policy in selected_policies]}
             if isinstance(raw.get("validates"), str):
                 step["validates"] = raw["validates"]
             if step["kernel"] not in operation["kernel"]["supported"]:
@@ -355,12 +487,16 @@ class PlanBuilder:
                 existing = [candidate for candidate in result
                             if candidate.get("validates") == step["id"] and candidate["operation"] == validator_id]
                 for candidate in existing:
-                    expected = self._inject_validators([step])[1]["inputs"]
-                    if candidate["inputs"] != expected:
+                    validator_index = operation["validation"]["validators"].index(validator_id) + 1
+                    expected = self._validator_step(step, operation, validator_id, validator_index)
+                    if (candidate["inputs"] != expected["inputs"]
+                            or candidate["parameters"] != expected["parameters"]
+                            or candidate["kernel"] != expected["kernel"]):
                         raise InvalidInput("validator_binding", f"Explicit validator {candidate['id']} does not bind exactly to {step['id']}")
                     bound_validator_steps.add(candidate["id"])
                 if not existing:
-                    existing = self._inject_validators([step])[1:]
+                    validator_index = operation["validation"]["validators"].index(validator_id) + 1
+                    existing = [self._validator_step(step, operation, validator_id, validator_index)]
                 validators_after.setdefault(step["id"], []).extend(existing)
         ordered: list[dict[str, Any]] = []
         for step in result:

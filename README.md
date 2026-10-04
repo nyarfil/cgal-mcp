@@ -12,6 +12,8 @@ StellaCADはStandalone受入後に正式統合する利用側です。
 - Package・Operation・validatorを分離し、出典・ライセンス根拠・未対応理由を記録。
 - 固定12工具、型付き不変DAG、必須validator、SQLiteによるArtifact・Plan・job・履歴の永続化。
 - 点群から3D凸包を生成し、閉鎖性・向き・正体積・凸性・入力点包含を検証する汎用経路。
+- 同じ汎用経路で軽量化の7 cost/placement・5 stop predicateと各constraint/filterを実行。
+- 軽量化の必須検証は、形状・位相・向きの検査と双方向bounded-error Hausdorffの両方。
 - workerの資源制限、失敗した候補の隔離、原本保持、stdioとStreamable HTTP。
 - 版固定のHTML・header・exampleを検索する任意のローカル全文索引。
 
@@ -19,6 +21,7 @@ StellaCADはStandalone受入後に正式統合する利用側です。
 既存v0.1とStellaCAD用sidecarの互換経路を維持して拡張します。
 操作・ビルド・区切りの証拠は [Master基盤](docs/master/FOUNDATION_JA.md)、
 完成判定は [実装決定](docs/master/IMPLEMENTATION_DECISIONS_JA.md) を参照してください。
+軽量化の移行範囲と再試験手順は [軽量化マイルストーン](docs/master/WAVE_A_JA.md) に記録しています。
 
 ## 現在実装済みのv0.1
 Python MCP/Router/PlannerとC++17 CGAL 6.2.1 workerによる、検証付きメッシュ簡略化。

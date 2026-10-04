@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 from .errors import InvalidInput, UnsupportedOperation
+from .policies import PolicyRegistry
 from .util import ID_RE, canonical_json
 
 
@@ -39,7 +40,8 @@ def _validate_json_schema(schema: Any, operation_id: str, location: str = "param
     if not isinstance(schema, dict):
         raise InvalidInput("operation_parameters", f"{operation_id} {location} schema must be an object")
     kind = schema.get("type")
-    if kind is not None and kind not in {"object", "array", "string", "number", "integer", "boolean"}:
+    if kind is not None and kind not in {"object", "array", "string", "number", "integer", "boolean",
+                                         "TypedLength"}:
         raise InvalidInput("operation_parameters", f"Unsupported schema type for {operation_id} at {location}")
     if "required" in schema and (not isinstance(schema["required"], list)
             or not all(isinstance(item, str) for item in schema["required"])):
@@ -53,6 +55,12 @@ def _validate_json_schema(schema: Any, operation_id: str, location: str = "param
         _validate_json_schema(child, operation_id, f"{location}.{name}")
     if "items" in schema:
         _validate_json_schema(schema["items"], operation_id, f"{location}[]")
+    alternatives = schema.get("oneOf", [])
+    if alternatives:
+        if not isinstance(alternatives, list) or not alternatives:
+            raise InvalidInput("operation_parameters", f"Invalid oneOf for {operation_id} at {location}")
+        for index, alternative in enumerate(alternatives):
+            _validate_json_schema(alternative, operation_id, f"{location}.oneOf[{index}]")
 
 
 def _default_paths() -> list[Path]:
@@ -65,7 +73,8 @@ def _default_paths() -> list[Path]:
 
 
 class OperationRegistry:
-    def __init__(self, paths: Path | Iterable[Path] | None = None):
+    def __init__(self, paths: Path | Iterable[Path] | None = None, *,
+                 policies: Path | None = None):
         if paths is None:
             selected = _default_paths()
         elif isinstance(paths, Path):
@@ -78,16 +87,29 @@ class OperationRegistry:
         self.operations: dict[str, dict[str, Any]] = {}
         self.cgal_versions: set[str] = set()
         self.build_requirements: dict[str, str] = {}
+        self.policy_registry = PolicyRegistry(policies)
         for path in self.paths:
             self._load(path)
+        if self.cgal_versions and self.policy_registry.cgal_version not in self.cgal_versions:
+            raise InvalidInput("policy_registry_version", "Policy and Operation CGAL versions disagree")
+        if any(self.build_requirements.get(key) != value
+               for key, value in self.policy_registry.build_requirements.items()):
+            raise InvalidInput("policy_registry_build", "Policy and Operation build requirements disagree")
         self._validate_links()
         self.revision = __import__("hashlib").sha256(canonical_json({
-            key: self.operations[key] for key in sorted(self.operations)
+            "operations": {key: self.operations[key] for key in sorted(self.operations)},
+            "policy_revision": self.policy_registry.revision,
         })).hexdigest()
         self._search = sqlite3.connect(":memory:")
         self._build_index()
 
     def _validate_links(self) -> None:
+        for policy in self.policy_registry.policies.values():
+            if policy["operation"] not in self.operations:
+                raise InvalidInput("policy_operation", f"Policy references unknown operation {policy['operation']}")
+        for operation_id in self.policy_registry.requirements:
+            if operation_id not in self.operations:
+                raise InvalidInput("policy_operation", f"Policy requirements reference unknown operation {operation_id}")
         for operation in self.operations.values():
             outputs_geometry = any(item.get("type") != "ValidationReport"
                                    for item in operation["io"]["outputs"])
@@ -102,11 +124,12 @@ class OperationRegistry:
                     raise InvalidInput("validator_reference", f"Validator {validator_id} has non-report output")
                 recipe = operation["validation"]["bindings"].get(validator_id)
                 validator_slots = {item["slot"]: item for item in validator["io"]["inputs"]}
-                if not isinstance(recipe, dict) or set(recipe) != set(validator_slots):
+                artifact_recipe = recipe.get("artifacts") if isinstance(recipe, dict) and "artifacts" in recipe else recipe
+                if not isinstance(artifact_recipe, dict) or set(artifact_recipe) != set(validator_slots):
                     raise InvalidInput("validator_binding", f"{operation['id']} bindings do not cover {validator_id}")
                 input_specs = {item["slot"]: item for item in operation["io"]["inputs"]}
                 output_specs = {item["slot"]: item for item in operation["io"]["outputs"]}
-                for slot, binding in recipe.items():
+                for slot, binding in artifact_recipe.items():
                     if not isinstance(binding, dict) or set(binding) not in ({"input"}, {"output"}):
                         raise InvalidInput("validator_binding", f"Invalid binding recipe for {operation['id']}:{slot}")
                     source = (output_specs.get(binding.get("output")) if "output" in binding
@@ -119,6 +142,19 @@ class OperationRegistry:
                     source_formats = [source["format"]] if "format" in source else source["formats"]
                     if not any(name in validator_slots[slot]["formats"] for name in source_formats):
                         raise InvalidInput("validator_binding", f"Binding format mismatch for {operation['id']}:{slot}")
+                parameter_recipe = recipe.get("parameters", {}) if isinstance(recipe, dict) and "artifacts" in recipe else {}
+                if not isinstance(parameter_recipe, dict):
+                    raise InvalidInput("validator_binding", f"Invalid parameter bindings for {operation['id']}:{validator_id}")
+                source_parameters = operation["parameters"].get("properties", {})
+                validator_parameters = validator["parameters"].get("properties", {})
+                if set(parameter_recipe) != set(validator["parameters"].get("required", [])):
+                    raise InvalidInput("validator_binding", f"Parameter bindings do not cover required parameters for {validator_id}")
+                for target, binding in parameter_recipe.items():
+                    source_name = binding.get("parameter") if isinstance(binding, dict) else None
+                    if target not in validator_parameters or source_name not in source_parameters:
+                        raise InvalidInput("validator_binding", f"Unknown parameter binding for {operation['id']}:{target}")
+                    if validator_parameters[target].get("type") != source_parameters[source_name].get("type"):
+                        raise InvalidInput("validator_binding", f"Parameter binding type mismatch for {operation['id']}:{target}")
 
     def close(self) -> None:
         self._search.close()
@@ -245,6 +281,15 @@ class OperationRegistry:
             raise InvalidInput("operation_license", f"License evidence is invalid for {operation['id']}")
         return operation
 
+    def policies_for(self, operation_id: str) -> list[dict[str, Any]]:
+        self.get(operation_id)
+        return self.policy_registry.for_operation(operation_id)
+
+    def resolve_policies(self, operation_id: str,
+                         parameters: dict[str, Any]) -> list[dict[str, Any]]:
+        self.get(operation_id)
+        return self.policy_registry.resolve(operation_id, parameters)
+
     def _build_index(self) -> None:
         try:
             self._search.execute("CREATE VIRTUAL TABLE operation_fts USING fts5(id UNINDEXED, text, tokenize='trigram')")
@@ -360,4 +405,24 @@ class OperationRegistry:
                 raise InvalidInput("manifest_build_mismatch", f"Worker build {key} disagrees with registry")
         if not set(expected["kernel"]["supported"]).issubset(set(actual.get("supported_kernels", []))):
             raise InvalidInput("manifest_kernel_mismatch", f"Worker kernels disagree with registry for {required_operation}")
+        if actual.get("role") != expected.get("role", "transform"):
+            raise InvalidInput("manifest_role_mismatch", f"Worker role disagrees with registry for {required_operation}")
+        manifest_contract = expected.get("worker_manifest", {})
+        if manifest_contract.get("require_dependencies"):
+            if set(actual.get("dependencies", [])) != set(expected.get("dependencies", [])):
+                raise InvalidInput("manifest_dependency_mismatch", f"Worker dependencies disagree with registry for {required_operation}")
+        effective_kernel = manifest_contract.get("effective_kernel")
+        if effective_kernel and actual.get("effective_kernel") != effective_kernel:
+            raise InvalidInput("manifest_kernel_mismatch", f"Worker effective kernel disagrees with registry for {required_operation}")
+        expected_info = manifest_contract.get("info", {})
+        actual_info = actual.get("info", {})
+        if any(actual_info.get(key) != value for key, value in expected_info.items()):
+            raise InvalidInput("manifest_metadata_mismatch", f"Worker metadata disagrees with registry for {required_operation}")
+        parameter_bindings = {}
+        for validator, recipe in expected["validation"].get("bindings", {}).items():
+            if isinstance(recipe, dict) and isinstance(recipe.get("parameters"), dict):
+                parameter_bindings[validator] = {
+                    target: binding["parameter"] for target, binding in recipe["parameters"].items()}
+        if parameter_bindings and actual_info.get("validator_parameter_bindings") != parameter_bindings:
+            raise InvalidInput("manifest_binding_mismatch", f"Worker validator bindings disagree with registry for {required_operation}")
         return copy.deepcopy(manifest)

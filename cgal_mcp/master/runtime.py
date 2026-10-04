@@ -75,13 +75,14 @@ def _docs_index_path(explicit: Path | None, catalog_root: Path) -> Path | None:
 
 class MasterRuntime:
     def __init__(self, root: Path, *, operations: Path | list[Path] | None = None,
+                 policies: Path | None = None,
                  worker: Path | None = None, concurrency: int = 2,
                  require_memory_limit: bool = True, catalog_root: Path | None = None,
                  allowed_file_roots: list[Path] | None = None,
                  docs_index: Path | None = None):
         if type(concurrency) is not int or not 1 <= concurrency <= 2:
             raise ValueError("Master worker concurrency must be 1 or 2")
-        self.registry = OperationRegistry(operations)
+        self.registry = OperationRegistry(operations, policies=policies)
         self.store = ArtifactStore(root)
         self.planner = PlanBuilder(self.registry, self.store)
         self.supervisor = WorkerSupervisor(self.registry, worker or default_worker_path(),
@@ -115,6 +116,7 @@ class MasterRuntime:
     def capabilities_describe(self, operation_id: str) -> dict[str, Any]:
         operation = self.registry.get(operation_id)
         return {**operation, "registry_revision": self.registry.revision,
+                "policies": self.registry.policies_for(operation_id),
                 "executable": operation["status"] in {"IMPLEMENTED", "VALIDATED"}}
 
     def plan(self, request: dict[str, Any]) -> dict[str, Any]:
@@ -209,7 +211,9 @@ class MasterRuntime:
                             descriptor["format"], descriptor["type"],
                             {"kind": "worker", "job_id": job_id, "operation": operation["id"]},
                             {"job_id": job_id, "operation_id": operation["id"],
-                             "input_hashes": input_hashes, "parameters": step["parameters"],
+                             "input_hashes": input_hashes,
+                             "parameters": {"values": step["parameters"],
+                                            "normalization": step.get("parameter_normalization", [])},
                              "build": transform["build"]})
                         artifacts.append(artifact)
                 self.store.complete_job_success(job_id, artifacts, validation_reports)

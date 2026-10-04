@@ -33,8 +33,8 @@ def make_worker(directory: Path, mode: str = "ok") -> Path:
     worker = directory / f"worker_{mode}.py"
     source = f'''import json, pathlib, sys, time
 manifest={{"protocol":1,"actual_cgal_version":"6.2.1","build":{{"actual_cgal_version":"6.2.1","source_kind":"official_release","source_sha256":"b6be77c60765a8456335de991eeaf6ffec55256984e4a9ecc6a97c37bbfe85bf","test_stub":True}},"operations":[
-{{"id":"hull.convex_3","revision":1,"input_types":["PointSet3"],"output_type":"TriangleSurfaceMesh","supported_kernels":["exact_constructions","package_recommended"]}},
-{{"id":"hull.validate.convex_enclosure","revision":1,"input_types":["TriangleSurfaceMesh","PointSet3"],"output_type":"ValidationReport","supported_kernels":["exact_constructions","package_recommended"]}}]}}
+{{"id":"hull.convex_3","revision":1,"input_types":["PointSet3"],"output_type":"TriangleSurfaceMesh","role":"transform","supported_kernels":["exact_constructions","package_recommended"]}},
+{{"id":"hull.validate.convex_enclosure","revision":1,"input_types":["TriangleSurfaceMesh","PointSet3"],"output_type":"ValidationReport","role":"validator","supported_kernels":["exact_constructions","package_recommended"]}}]}}
 if {mode!r} == "manifest_wrong": manifest["operations"][0]["revision"]=2
 if "--manifest" in sys.argv:
     print(json.dumps(manifest)); raise SystemExit(0)
@@ -56,6 +56,60 @@ else:
     path=output/"validation.json"; path.write_text(json.dumps(report),encoding="utf-8")
     outputs=[{{"slot":"validation","type":"ValidationReport","unit":"none","format":"json","path":str(path.resolve())}}]
 print(json.dumps({{"protocol":1,"request_id":request["request_id"],"status":"ok","outputs":outputs,"metrics":{{}},"diagnostics":[]}}))
+'''
+    worker.write_text(source, encoding="utf-8")
+    return worker
+
+
+def make_wave_worker(directory: Path, mode: str = "pass") -> Path:
+    document = json.loads(Path("cgal_mcp/master/operations.json").read_text(encoding="utf-8"))
+    operations = []
+    for operation in document["operations"]:
+        actual = {"id": operation["id"], "revision": operation["revision"],
+                  "input_types": [item["types"][0] for item in operation["io"]["inputs"]],
+                  "output_type": operation["io"]["outputs"][0]["type"],
+                  "role": operation["role"], "supported_kernels": operation["kernel"]["supported"]}
+        contract = operation.get("worker_manifest", {})
+        if contract:
+            actual.update({"effective_kernel": contract["effective_kernel"],
+                           "dependencies": operation["dependencies"],
+                           "info": dict(contract["info"])})
+            bindings = {validator: {target: binding["parameter"]
+                                    for target, binding in recipe.get("parameters", {}).items()}
+                        for validator, recipe in operation["validation"].get("bindings", {}).items()
+                        if recipe.get("parameters")}
+            if bindings:
+                actual["info"]["validator_parameter_bindings"] = bindings
+        operations.append(actual)
+    manifest = {"protocol": 1, "actual_cgal_version": "6.2.1",
+        "build": {"source_kind": "official_release",
+                  "source_sha256": "b6be77c60765a8456335de991eeaf6ffec55256984e4a9ecc6a97c37bbfe85bf",
+                  "test_stub": True}, "operations": operations}
+    worker = directory / f"wave_worker_{mode}.py"
+    source = f'''import json, pathlib, shutil, sys
+manifest={manifest!r}
+if "--manifest" in sys.argv:
+ print(json.dumps(manifest)); raise SystemExit(0)
+request=json.loads(sys.stdin.readline()); operation=request["operation"]; mode={mode!r}
+output=pathlib.Path(request["output_dir"])
+if operation == "mesh.simplify.edge_collapse":
+ path=output/"geometry.off"; shutil.copyfile(request["inputs"][0]["path"],path)
+ outputs=[{{"slot":"geometry","type":"TriangleSurfaceMesh","unit":request["inputs"][0]["unit"],"format":"off","path":str(path.resolve())}}]
+ metrics={{"edges_removed":1}}
+elif operation == "mesh.validate.simplification_integrity":
+ if mode == "integrity_fail":
+  print(json.dumps({{"protocol":1,"request_id":request["request_id"],"status":"error","outputs":[],"error":{{"class":"VALIDATION_FAILED","code":"PROTECTED_EDGE_CHANGED","message":"changed","recoverable":False,"suggested_operations":[]}}}})); raise SystemExit(0)
+ report={{"status":"pass","valid":True,"triangulated":True,"self_intersection":False,"closedness_preserved":True,"component_topology_preserved":True,"protected_edges_preserved":True,"open_surface_winding_preserved":True}}
+ path=output/"validation.json"; path.write_text(json.dumps(report))
+ outputs=[{{"slot":"validation","type":"ValidationReport","unit":"none","format":"json","path":str(path.resolve())}}]; metrics=report
+elif operation == "mesh.distance.symmetric_hausdorff":
+ verdict="indeterminate" if mode == "indeterminate" else "pass"
+ report={{"status":"pass" if verdict == "pass" else "fail","valid":verdict == "pass","verdict":verdict}}
+ path=output/"validation.json"; path.write_text(json.dumps(report))
+ outputs=[{{"slot":"validation","type":"ValidationReport","unit":"none","format":"json","path":str(path.resolve())}}]; metrics=report
+else:
+ raise SystemExit(2)
+print(json.dumps({{"protocol":1,"request_id":request["request_id"],"status":"ok","outputs":outputs,"metrics":metrics,"diagnostics":[]}}))
 '''
     worker.write_text(source, encoding="utf-8")
     return worker
@@ -157,6 +211,140 @@ class MasterCoreTest(unittest.TestCase):
         for invalid in (True, float("nan"), float("inf")):
             with self.assertRaisesRegex(ValueError, "finite number"):
                 normalize_quantities({"length": {"value": invalid, "unit": "cm"}}, "mm")
+
+    def test_wave_a_policy_registry_units_and_dual_validator_bindings(self):
+        mesh = self.root / "mesh.off"; mesh.write_text(TETRA, encoding="ascii")
+        runtime = self.runtime()
+        artifact = runtime.artifact_import(str(mesh), "mm")
+        plan = runtime.plan({"operation_id": "mesh.simplify.edge_collapse",
+            "inputs": [artifact["artifact_id"]], "parameters": {
+                "stop": {"kind": "edge_length", "value": {"value": 0.1, "unit": "cm"}},
+                "policy": "lindstrom_turk",
+                "max_symmetric_deviation": {"value": 0.002, "unit": "m"},
+                "hausdorff_error_bound": {"value": 0.01, "unit": "cm"}}})
+        self.assertEqual([step["operation"] for step in plan["steps"]], [
+            "mesh.simplify.edge_collapse", "mesh.validate.simplification_integrity",
+            "mesh.distance.symmetric_hausdorff"])
+        transform, integrity, hausdorff = plan["steps"]
+        self.assertEqual(transform["parameters"]["stop"]["value"], {"value": 1.0, "unit": "mm"})
+        self.assertEqual(transform["parameters"]["max_symmetric_deviation"], {"value": 2.0, "unit": "mm"})
+        self.assertEqual(transform["parameters"]["hausdorff_error_bound"], {"value": 0.1, "unit": "mm"})
+        self.assertEqual([item["path"] for item in transform["parameter_normalization"]],
+                         ["stop.value", "max_symmetric_deviation", "hausdorff_error_bound"])
+        self.assertEqual(integrity["parameters"], {"preserve_border": True, "constrained_edges": []})
+        self.assertEqual(hausdorff["parameters"], {
+            "tolerance": {"value": 2.0, "unit": "mm"},
+            "error_bound": {"value": 0.1, "unit": "mm"}})
+        self.assertEqual({item["bound_from"] for item in hausdorff["parameter_normalization"]},
+                         {"max_symmetric_deviation", "hausdorff_error_bound"})
+        self.assertEqual({item["group"] for item in transform["policies"]},
+                         {"cost_placement", "stop_predicate", "wrapper"})
+        described = runtime.capabilities_describe("mesh.simplify.edge_collapse")
+        self.assertNotIn("policy_inventory", described)
+        self.assertEqual(len(described["policies"]), 17)
+        self.assertEqual(sum(item["status"] == "BLOCKED" for item in described["policies"]), 1)
+
+    def test_wave_a_validator_parameters_cannot_be_omitted_or_rebound(self):
+        mesh = self.root / "mesh.off"; mesh.write_text(TETRA, encoding="ascii")
+        runtime = self.runtime()
+        artifact = runtime.artifact_import(str(mesh), "mm")
+        base = {"stop": {"kind": "edge_ratio", "value": 0.8},
+                "policy": "gh_plane", "max_symmetric_deviation": {"value": 1, "unit": "mm"},
+                "hausdorff_error_bound": {"value": 0.01, "unit": "mm"}}
+        missing = dict(base); missing.pop("max_symmetric_deviation")
+        with self.assertRaisesRegex(InvalidInput, "lacks"):
+            runtime.plan({"operation_id": "mesh.simplify.edge_collapse",
+                          "inputs": [artifact["artifact_id"]], "parameters": missing})
+        steps = [
+            {"id": "simplify", "operation": "mesh.simplify.edge_collapse",
+             "inputs": {"geometry": artifact["artifact_id"]}, "parameters": base},
+            {"id": "integrity", "operation": "mesh.validate.simplification_integrity",
+             "inputs": {"candidate": {"step": "simplify", "slot": "geometry"},
+                        "source": artifact["artifact_id"]},
+             "parameters": {"preserve_border": True, "constrained_edges": []},
+             "validates": "simplify"},
+            {"id": "distance", "operation": "mesh.distance.symmetric_hausdorff",
+             "inputs": {"reference": artifact["artifact_id"],
+                        "candidate": {"step": "simplify", "slot": "geometry"}},
+             "parameters": {"tolerance": {"value": 99, "unit": "mm"},
+                            "error_bound": {"value": 0.01, "unit": "mm"}},
+             "validates": "simplify"}]
+        with self.assertRaisesRegex(InvalidInput, "does not bind exactly"):
+            runtime.plan({"steps": steps})
+        bad = dict(base); bad["max_symmetric_deviation"] = {
+            "value": 1, "unit": "mm", "spoofed_history": []}
+        with self.assertRaisesRegex(InvalidInput, "only finite value and unit"):
+            runtime.plan({"operation_id": "mesh.simplify.edge_collapse",
+                          "inputs": [artifact["artifact_id"]], "parameters": bad})
+        overflow = dict(base); overflow["max_symmetric_deviation"] = {
+            "value": 1e308, "unit": "m"}
+        with self.assertRaisesRegex(InvalidInput, "non-finite"):
+            runtime.plan({"operation_id": "mesh.simplify.edge_collapse",
+                          "inputs": [artifact["artifact_id"]], "parameters": overflow})
+        metre_artifact = runtime.artifact_import(str(mesh), "m")
+        underflow = dict(base); underflow["hausdorff_error_bound"] = {
+            "value": 5e-324, "unit": "mm"}
+        with self.assertRaisesRegex(InvalidInput, "must exceed"):
+            runtime.plan({"operation_id": "mesh.simplify.edge_collapse",
+                          "inputs": [metre_artifact["artifact_id"]], "parameters": underflow})
+
+    def test_wave_a_manifest_metadata_and_bindings_are_gated(self):
+        registry = OperationRegistry(); self.resources.append(registry)
+        operation = registry.get("mesh.simplify.edge_collapse")
+        contract = operation["worker_manifest"]
+        info = dict(contract["info"])
+        info["validator_parameter_bindings"] = {
+            validator: {target: binding["parameter"]
+                        for target, binding in recipe["parameters"].items()}
+            for validator, recipe in operation["validation"]["bindings"].items()}
+        actual = {"id": operation["id"], "revision": 1, "input_types": ["TriangleSurfaceMesh"],
+                  "output_type": "TriangleSurfaceMesh", "role": "transform",
+                  "supported_kernels": ["package_recommended"],
+                  "effective_kernel": contract["effective_kernel"],
+                  "dependencies": operation["dependencies"], "info": info}
+        manifest = {"protocol": 1, "actual_cgal_version": "6.2.1",
+                    "build": {"source_kind": "official_release",
+                              "source_sha256": "b6be77c60765a8456335de991eeaf6ffec55256984e4a9ecc6a97c37bbfe85bf"},
+                    "operations": [actual]}
+        registry.verify_manifest(manifest, operation["id"])
+        bad = json.loads(json.dumps(manifest))
+        bad["operations"][0]["info"]["policies"].remove("gh_plane")
+        with self.assertRaisesRegex(InvalidInput, "metadata disagrees"):
+            registry.verify_manifest(bad, operation["id"])
+        bad = json.loads(json.dumps(manifest))
+        bad["operations"][0]["info"]["validator_parameter_bindings"][
+            "mesh.distance.symmetric_hausdorff"]["tolerance"] = "hausdorff_error_bound"
+        with self.assertRaisesRegex(InvalidInput, "bindings disagree"):
+            registry.verify_manifest(bad, operation["id"])
+
+    def test_wave_a_publication_requires_both_validator_passes(self):
+        async def run(mode: str) -> tuple[MasterRuntime, dict]:
+            mesh = self.root / f"mesh-{mode}.off"; mesh.write_text(TETRA, encoding="ascii")
+            runtime = MasterRuntime(self.root / f"wave-{mode}",
+                worker=make_wave_worker(self.root, mode), require_memory_limit=False)
+            self.resources.append(runtime)
+            artifact = runtime.artifact_import(str(mesh), "mm")
+            plan = runtime.plan({"operation_id": "mesh.simplify.edge_collapse",
+                "inputs": [artifact["artifact_id"]], "parameters": {
+                    "stop": {"kind": "edge_ratio", "value": 0.8}, "policy": "lindstrom_turk",
+                    "max_symmetric_deviation": {"value": 2, "unit": "mm"},
+                    "hausdorff_error_bound": {"value": 0.01, "unit": "mm"}}})
+            self.assertEqual(len([step for step in plan["steps"] if step["role"] == "validator"]), 2)
+            queued = await runtime.execute(plan["plan_id"])
+            await runtime.tasks[queued["job_id"]]
+            return runtime, runtime.job_status(queued["job_id"])
+        async def scenario():
+            passed_runtime, passed = await run("pass")
+            self.assertEqual((passed["state"], passed["validation_status"]), ("succeeded", "passed"))
+            self.assertEqual(len(passed["validation"]), 2)
+            self.assertEqual(passed_runtime.store.counts()["artifacts"], 2)
+            for mode in ("integrity_fail", "indeterminate"):
+                failed_runtime, failed = await run(mode)
+                self.assertEqual((failed["state"], failed["execution_status"], failed["validation_status"]),
+                                 ("rejected", "succeeded", "failed"))
+                self.assertEqual(failed_runtime.store.counts()["artifacts"], 1)
+                self.assertFalse(failed.get("outputs"))
+        asyncio.run(scenario())
 
     def test_unknown_operation_is_rejected_before_worker(self):
         runtime = MasterRuntime(self.root / "unknown", worker=self.root / "does-not-exist.exe",

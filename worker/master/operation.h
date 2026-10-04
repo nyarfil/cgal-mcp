@@ -15,6 +15,12 @@ struct OperationDefinition {
   std::string output_type;
   std::string role;
   std::function<Json(const Request&)> execute;
+  std::vector<std::string> supported_kernels = {
+      "exact_constructions", "package_recommended"};
+  std::string effective_kernel =
+      "CGAL::Exact_predicates_exact_constructions_kernel";
+  std::vector<std::string> dependencies;
+  Json info = Json::object();
 };
 
 OperationDefinition convex_hull_operation();

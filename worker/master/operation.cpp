@@ -1,4 +1,5 @@
 #include "operation.h"
+#include "wave_a/wave_a_operations.h"
 
 #include <CGAL/version.h>
 
@@ -34,7 +35,11 @@ Json compiler_manifest() {
 
 const std::vector<OperationDefinition>& operation_registry() {
   static const std::vector<OperationDefinition> registry = {
-      convex_hull_operation(), convex_enclosure_validator_operation()};
+      convex_hull_operation(),
+      convex_enclosure_validator_operation(),
+      wave_a::simplify_edge_collapse_operation(),
+      wave_a::simplification_integrity_validator_operation(),
+      wave_a::symmetric_hausdorff_operation()};
   return registry;
 }
 
@@ -55,9 +60,10 @@ Json manifest() {
          {"input_types", operation.input_types},
          {"output_type", operation.output_type},
          {"role", operation.role},
-         {"supported_kernels",
-          Json::array({"exact_constructions", "package_recommended"})},
-         {"effective_kernel", "CGAL::Exact_predicates_exact_constructions_kernel"}});
+         {"supported_kernels", operation.supported_kernels},
+         {"effective_kernel", operation.effective_kernel},
+         {"dependencies", operation.dependencies},
+         {"info", operation.info}});
   }
   const std::string actual_version = CGAL_MASTER_STRINGIFY(CGAL_VERSION);
   const std::string source_kind = CGAL_MASTER_SOURCE_KIND;
