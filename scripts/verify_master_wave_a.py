@@ -32,9 +32,14 @@ def verify(worker: Path) -> dict:
     ]
     results = []
     for arguments, test in commands:
-        result = subprocess.run([sys.executable, *arguments], cwd=REPO,
-            env={**os.environ, "CGAL_MASTER_WORKER": str(worker)},
-            check=True, capture_output=True, text=True, encoding="utf-8", timeout=600)
+        try:
+            result = subprocess.run([sys.executable, *arguments], cwd=REPO,
+                env={**os.environ, "CGAL_MASTER_WORKER": str(worker)},
+                check=True, capture_output=True, text=True, encoding="utf-8", timeout=600)
+        except subprocess.CalledProcessError as error:
+            print(error.stdout or "", end="", file=sys.stderr)
+            print(error.stderr or "", end="", file=sys.stderr)
+            raise
         assert "PASS" in result.stdout, result.stdout
         results.append({"test": test, "sha256": digest(REPO / test),
                         "mode": arguments[-1] if arguments[0] == "-m" else "worker",
