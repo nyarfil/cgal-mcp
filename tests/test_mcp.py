@@ -7,7 +7,7 @@ class MCPTests(unittest.IsolatedAsyncioTestCase):
         async with Client(mcp) as client:
             tools = await client.list_tools()
             names = {tool.name for tool in tools.tools}
-            self.assertEqual(names, {"discover_capabilities", "describe_capability"})
+            self.assertEqual(names, {"discover_capabilities", "describe_capability", "search_api"})
             result = await client.call_tool("discover_capabilities", {"query": "軽量化"})
             self.assertFalse(result.is_error)
             detail = await client.call_tool("describe_capability",

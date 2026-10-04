@@ -20,5 +20,11 @@ def capability_definition(capability_id: str) -> str:
     import json
     return json.dumps(describe(capability_id), ensure_ascii=False)
 
+@mcp.tool()
+def search_api(query: str, limit: int = 5) -> list[dict]:
+    """Search 102 pinned CGAL header entries. Indexed APIs are not executable."""
+    from cgal_mcp.api_search import search_api as search
+    return search(query, limit)
+
 if __name__ == '__main__':
     mcp.run(transport='stdio')
