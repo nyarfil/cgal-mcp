@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import copy
 import json
+import math
 import os
 import sqlite3
 from pathlib import Path
@@ -61,6 +62,26 @@ def _validate_json_schema(schema: Any, operation_id: str, location: str = "param
             raise InvalidInput("operation_parameters", f"Invalid oneOf for {operation_id} at {location}")
         for index, alternative in enumerate(alternatives):
             _validate_json_schema(alternative, operation_id, f"{location}.oneOf[{index}]")
+
+
+def _schema_properties(schema: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    result = dict(schema.get("properties", {}))
+    for alternative in schema.get("oneOf", []):
+        for name, child in _schema_properties(alternative).items():
+            existing = result.get(name)
+            if existing is not None and existing.get("type") != child.get("type"):
+                raise InvalidInput("operation_parameters",
+                                   f"Conditional parameter {name} has inconsistent types")
+            result[name] = child
+    return result
+
+
+def _schema_required_sets(schema: dict[str, Any]) -> list[set[str]]:
+    alternatives = schema.get("oneOf", [])
+    if alternatives:
+        return [required for alternative in alternatives
+                for required in _schema_required_sets(alternative)]
+    return [set(schema.get("required", []))]
 
 
 def _default_paths() -> list[Path]:
@@ -145,14 +166,18 @@ class OperationRegistry:
                 parameter_recipe = recipe.get("parameters", {}) if isinstance(recipe, dict) and "artifacts" in recipe else {}
                 if not isinstance(parameter_recipe, dict):
                     raise InvalidInput("validator_binding", f"Invalid parameter bindings for {operation['id']}:{validator_id}")
-                source_parameters = operation["parameters"].get("properties", {})
-                validator_parameters = validator["parameters"].get("properties", {})
-                if set(parameter_recipe) != set(validator["parameters"].get("required", [])):
+                source_parameters = _schema_properties(operation["parameters"])
+                validator_parameters = _schema_properties(validator["parameters"])
+                required_sets = _schema_required_sets(validator["parameters"])
+                if not any(required.issubset(parameter_recipe) for required in required_sets):
                     raise InvalidInput("validator_binding", f"Parameter bindings do not cover required parameters for {validator_id}")
                 for target, binding in parameter_recipe.items():
                     source_name = binding.get("parameter") if isinstance(binding, dict) else None
                     if target not in validator_parameters or source_name not in source_parameters:
                         raise InvalidInput("validator_binding", f"Unknown parameter binding for {operation['id']}:{target}")
+                    if set(binding) - {"parameter", "optional"} or (
+                            "optional" in binding and type(binding["optional"]) is not bool):
+                        raise InvalidInput("validator_binding", f"Invalid parameter binding for {operation['id']}:{target}")
                     if validator_parameters[target].get("type") != source_parameters[source_name].get("type"):
                         raise InvalidInput("validator_binding", f"Parameter binding type mismatch for {operation['id']}:{target}")
 
@@ -250,11 +275,43 @@ class OperationRegistry:
         _validate_json_schema(operation["parameters"], operation["id"])
         if operation["parameters"].get("type") != "object":
             raise InvalidInput("operation_parameters", f"Parameters schema must be object for {operation['id']}")
+        def valid_precondition(item: Any) -> bool:
+            if not isinstance(item, dict) or not isinstance(item.get("id"), str):
+                return False
+            if isinstance(item.get("property"), str) and ("equals" in item or "minimum" in item):
+                return True
+            if isinstance(item.get("worker_check"), dict):
+                return True
+            bounds = item.get("bounds")
+            return (isinstance(bounds, dict)
+                    and set(bounds) == {"minimum_span", "maximum_absolute_coordinate",
+                                        "maximum_translation_to_span_ratio"}
+                    and all(isinstance(value, (int, float)) and not isinstance(value, bool)
+                            and math.isfinite(float(value)) and value > 0
+                            for value in bounds.values()))
         if (not isinstance(operation["preconditions"], list)
-                or not all(isinstance(item, dict) and isinstance(item.get("id"), str)
-                           and isinstance(item.get("property"), str)
-                           and ("equals" in item or "minimum" in item) for item in operation["preconditions"])):
+                or not all(valid_precondition(item) for item in operation["preconditions"])):
             raise InvalidInput("operation_preconditions", f"Invalid preconditions for {operation['id']}")
+        parameter_preconditions = operation.get("parameter_preconditions", [])
+        if (not isinstance(parameter_preconditions, list)
+                or not all(isinstance(item, dict)
+                           and isinstance(item.get("parameter"), str)
+                           and isinstance(item.get("input"), str)
+                           and item["input"] in slots
+                           and ((isinstance(item.get("less_than_metadata"), str)
+                                 and "finite_coordinate_ratio_metadata" not in item)
+                                or (isinstance(item.get("finite_coordinate_ratio_metadata"), str)
+                                    and "less_than_metadata" not in item))
+                           for item in parameter_preconditions)):
+            raise InvalidInput("operation_preconditions",
+                               f"Invalid parameter preconditions for {operation['id']}")
+        resource_profile = operation.get("resource_profile", {})
+        if (not isinstance(resource_profile, dict)
+                or set(resource_profile) - {"default_wall_time_ms"}
+                or ("default_wall_time_ms" in resource_profile
+                    and (type(resource_profile["default_wall_time_ms"]) is not int
+                         or not 1 <= resource_profile["default_wall_time_ms"] <= 86_400_000))):
+            raise InvalidInput("operation_resources", f"Invalid resource profile for {operation['id']}")
         kernel = operation["kernel"]
         if (not isinstance(kernel, dict) or not isinstance(kernel.get("supported"), list)
                 or kernel.get("default") not in kernel.get("supported", [])):
@@ -269,6 +326,17 @@ class OperationRegistry:
         if validation["required"] and (not isinstance(bindings, dict)
                 or any(validator not in bindings for validator in validation["validators"])):
             raise InvalidInput("operation_validation", f"Validator bindings are incomplete for {operation['id']}")
+        required_checks = validation.get("required_report_checks", {})
+        required_fields = validation.get("required_report_fields", [])
+        required_minimum = validation.get("required_report_minimum", {})
+        if (not isinstance(required_checks, dict)
+                or not isinstance(required_fields, list)
+                or not all(isinstance(item, str) for item in required_fields)
+                or not isinstance(required_minimum, dict)
+                or not all(isinstance(key, str)
+                           and isinstance(value, (int, float)) and not isinstance(value, bool)
+                           for key, value in required_minimum.items())):
+            raise InvalidInput("operation_validation", f"Invalid report contract for {operation['id']}")
         license_metadata = operation["license"]
         if (not isinstance(license_metadata, dict)
                 or not isinstance(license_metadata.get("expression"), str)
@@ -390,7 +458,7 @@ class OperationRegistry:
         actual = declared.get(required_operation)
         if actual is None:
             raise InvalidInput("manifest_missing_operation", f"Worker lacks {required_operation}")
-        expected_inputs = [kind for spec in expected["io"]["inputs"] for kind in spec["types"][:1]]
+        expected_inputs = [kind for spec in expected["io"]["inputs"] for kind in spec["types"]]
         expected_output = expected["io"]["outputs"][0]["type"]
         if (actual.get("revision") != expected["revision"]
                 or actual.get("input_types") != expected_inputs

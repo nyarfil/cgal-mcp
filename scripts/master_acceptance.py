@@ -2,16 +2,84 @@
 from __future__ import annotations
 
 import argparse
+import base64
 import hashlib
 import json
 import re
-from dataclasses import dataclass
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
 ORIGINALS = {
     "CGAL_Master_MCP_Design_Spec.md": "44cbb8b0e93abf0216c12f0fd6c9e35b6d04534dff83b9dafe07051625a727fd",
     "CGAL_Master_MCP_Implementation_Plan.md": "4631700c95f72101aef8e417171888f5e52ece7420d2d6f88735e91bfd130183",
+}
+
+WAVE_A_REQUIREMENT_CASES = {
+    "major.7.7.01": frozenset({
+        "policy-lindstrom_turk", "policy-edge_length_midpoint", "policy-gh_plane",
+        "policy-gh_triangle", "policy-gh_plane_line", "policy-gh_probabilistic_plane",
+        "policy-gh_probabilistic_triangle", "stop-edge_count", "stop-edge_ratio",
+        "stop-face_count", "stop-face_ratio", "stop-edge_length", "constraints",
+        "preserve-open-border", "bounded-distance", "bounded-normal", "polyhedral-envelope",
+        "filter-control", "bounded-distance-tight", "polyhedral-envelope-tight",
+        "bounded-normal-control", "bounded-normal-adversarial",
+        "stop-edge_length-below-minimum",
+    }),
+    "major.7.7.02": frozenset({
+        "policy-lindstrom_turk", "stop-edge_count", "stop-edge_ratio",
+        "stop-face_count", "stop-face_ratio", "stop-edge_length",
+        "stop-edge_length-below-minimum",
+    }),
+    "major.7.7.03": frozenset({
+        "policy-gh_plane", "policy-gh_triangle", "policy-gh_plane_line",
+        "policy-gh_probabilistic_plane", "policy-gh_probabilistic_triangle",
+    }),
+    "major.7.7.04": frozenset({
+        "policy-lindstrom_turk", "policy-edge_length_midpoint", "policy-gh_plane",
+        "policy-gh_triangle", "policy-gh_plane_line", "policy-gh_probabilistic_plane",
+        "policy-gh_probabilistic_triangle", "constraints", "preserve-open-border",
+        "bounded-distance", "filter-control", "bounded-distance-tight",
+    }),
+    "major.7.7.05": frozenset({
+        "polyhedral-envelope", "filter-control", "polyhedral-envelope-tight",
+    }),
+    "major.7.7.06": frozenset({
+        "bounded-normal", "bounded-normal-control", "bounded-normal-adversarial",
+    }),
+}
+WAVE_A_TRANSFORM = "mesh.simplify.edge_collapse"
+WAVE_A_VALIDATORS = (
+    "mesh.validate.simplification_integrity",
+    "mesh.distance.symmetric_hausdorff",
+)
+WAVE_A_POLICY_CASES = {
+    **{f"{WAVE_A_TRANSFORM}.cost_placement.{name}": frozenset({f"policy-{name}"}) for name in (
+        "lindstrom_turk", "edge_length_midpoint", "gh_plane", "gh_triangle", "gh_plane_line",
+        "gh_probabilistic_plane", "gh_probabilistic_triangle",
+    )},
+    **{f"{WAVE_A_TRANSFORM}.stop_predicate.{name}": frozenset(
+        {f"stop-{name}", "stop-edge_length-below-minimum"}
+        if name == "edge_length" else {f"stop-{name}"}
+    ) for name in (
+        "edge_count", "edge_ratio", "face_count", "face_ratio", "edge_length",
+    )},
+    f"{WAVE_A_TRANSFORM}.wrapper.constraints": frozenset({"constraints", "preserve-open-border"}),
+    f"{WAVE_A_TRANSFORM}.wrapper.bounded_distance": frozenset({
+        "bounded-distance", "filter-control", "bounded-distance-tight",
+    }),
+    f"{WAVE_A_TRANSFORM}.filter.bounded_normal_change": frozenset({
+        "bounded-normal", "bounded-normal-control", "bounded-normal-adversarial",
+    }),
+    f"{WAVE_A_TRANSFORM}.filter.polyhedral_envelope": frozenset({
+        "polyhedral-envelope", "filter-control", "polyhedral-envelope-tight",
+    }),
+}
+WAVE_A_UNMET_STANDALONE_GATES = {
+    "remaining_major_capability_requirements",
+    "search_and_retrieval_acceptance",
+    "multi_operation_workflow_acceptance",
+    "host_compatibility_matrix",
+    "performance_resource_and_robustness_acceptance",
 }
 
 
@@ -70,34 +138,117 @@ def _canonical_hash(value: object) -> str:
                                      ensure_ascii=False, allow_nan=False).encode("utf-8")).hexdigest()
 
 
+def _source_digest(path: Path, encoding: object) -> str | None:
+    content = path.read_bytes()
+    if encoding == "utf8-lf":
+        content = content.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+    elif encoding is not None:
+        return None
+    return hashlib.sha256(content).hexdigest()
+
+
 def _valid_digest(value: object) -> bool:
     return isinstance(value, str) and bool(re.fullmatch(r"[0-9a-f]{64}", value))
 
 
-@dataclass(frozen=True)
-class ReplayedEvidence:
-    """In-memory result from the trusted acceptance runner, never loaded from JSON.
+def _string_members(value: object) -> set[str] | None:
+    if not isinstance(value, list) or not all(isinstance(item, str) for item in value):
+        return None
+    return set(value)
 
-    A checked-in report is a reproducibility record. Only re-executing its approved
-    harness against this build can establish acceptance. The runner passes the
-    resulting canonical report hash separately; evidence files cannot supply it.
-    """
-    canonical_report_sha256: str
+
+def _verified_blobs(report: dict) -> tuple[set[str], list[str]]:
+    verified: set[str] = set()
+    reasons = []
+    blobs = report.get("blobs")
+    if not isinstance(blobs, dict) or not blobs:
+        return verified, ["Evidence has no portable fixture/output blobs"]
+    for digest, value in blobs.items():
+        if not _valid_digest(digest) or not isinstance(value, dict) or value.get("encoding") != "base64":
+            reasons.append("Evidence contains an invalid portable blob record")
+            continue
+        try:
+            content = base64.b64decode(value.get("content", ""), validate=True)
+        except (ValueError, TypeError):
+            reasons.append(f"Evidence blob is not strict base64: {digest}")
+            continue
+        if (hashlib.sha256(content).hexdigest() != digest or
+                value.get("byte_size") != len(content)):
+            reasons.append(f"Evidence blob hash/size mismatch: {digest}")
+            continue
+        verified.add(digest)
+    return verified, reasons
+
+
+def _verified_reports(report: dict) -> tuple[set[str], list[str]]:
+    verified: set[str] = set()
+    reasons = []
+    reports = report.get("reports")
+    if not isinstance(reports, dict) or not reports:
+        return verified, ["Evidence has no validator reports"]
+    for digest, value in reports.items():
+        if not _valid_digest(digest) or digest != _canonical_hash(value):
+            reasons.append(f"Evidence validator report hash mismatch: {digest}")
+            continue
+        verified.add(digest)
+    return verified, reasons
+
+
+def _hash_bound_exchange(value: dict, label: str) -> list[str]:
+    reasons = []
+    for field in ("request", "response"):
+        content = value.get(field)
+        if not isinstance(content, dict) or value.get(f"{field}_sha256") != _canonical_hash(content):
+            reasons.append(f"Evidence {label} {field} hash mismatch")
+    return reasons
+
+
+def _exchange_blob_hashes(value: object, field: str) -> list[str] | None:
+    if not isinstance(value, dict):
+        return None
+    items = value.get(field)
+    if not isinstance(items, list) or not items or not all(isinstance(item, dict) for item in items):
+        return None
+    hashes = [item.get("blob_sha256") for item in items]
+    if not all(_valid_digest(digest) for digest in hashes):
+        return None
+    return hashes
 
 
 def _evidence_reasons(report: dict, item: dict, operations: dict[str, dict], root: Path,
-                      replay: ReplayedEvidence | None = None) -> list[str]:
+                      replayed_report: dict | None = None) -> list[str]:
     """Tie evidence to a baseline, actual handler build, fixtures and executable tests."""
     reasons = []
-    if replay is None or replay.canonical_report_sha256 != _canonical_hash(report):
+    approved = isinstance(replayed_report, dict) and replayed_report == report
+    if not approved:
         reasons.append("Evidence has not been reproduced by the acceptance runner for this build")
     if report.get("schema_version") != 1 or report.get("generator") != "master-capability-acceptance":
         reasons.append("Unknown acceptance evidence schema/generator")
     if report.get("status") != "pass" or item["id"] not in report.get("requirements", []):
         reasons.append("Evidence does not establish this requirement")
+    if report.get("standalone_accepted") is not False:
+        reasons.append("Capability evidence must not claim full standalone acceptance")
     baseline_path = root / "catalog/baseline.json"
     if not baseline_path.is_file() or report.get("catalog_baseline_sha256") != hashlib.sha256(baseline_path.read_bytes()).hexdigest():
         reasons.append("Evidence catalog baseline mismatch")
+    for field, encoding_field, relative in (
+        ("operation_registry_sha256", "operation_registry_hash_encoding", "cgal_mcp/master/operations.json"),
+        ("policy_catalog_sha256", "policy_catalog_hash_encoding", "cgal_mcp/master/policies.json"),
+    ):
+        path = root / relative
+        if (not path.is_file() or
+                report.get(field) != _source_digest(path, report.get(encoding_field))):
+            reasons.append(f"Evidence checked source mismatch: {relative}")
+    generator_path = (root / str(report.get("generator_source_path", ""))).resolve()
+    if (not generator_path.is_relative_to((root / "scripts").resolve()) or
+            not generator_path.is_file() or
+            report.get("generator_source_sha256") != _source_digest(
+                generator_path, report.get("generator_source_hash_encoding"))):
+        reasons.append("Evidence generator source mismatch")
+    if not _valid_digest(report.get("worker_sha256")):
+        reasons.append("Evidence worker executable hash is missing")
+    if report.get("worker_binary_format") not in {"pe", "elf", "mach-o"}:
+        reasons.append("Evidence worker is not identified as a native executable")
     manifest = report.get("worker_manifest")
     manifest_digest = None
     declared = {}
@@ -107,8 +258,12 @@ def _evidence_reasons(report: dict, item: dict, operations: dict[str, dict], roo
         manifest_digest = _canonical_hash(manifest)
         build = manifest.get("build", {})
         if (manifest.get("actual_cgal_version") != "6.2.1" or
+                manifest.get("worker") != "cgal-master-worker" or
+                manifest.get("request_model") != "one_json_line_per_process" or
                 build.get("source_kind") != "official_release" or
-                build.get("source_sha256") != "b6be77c60765a8456335de991eeaf6ffec55256984e4a9ecc6a97c37bbfe85bf"):
+                build.get("source_sha256") != "b6be77c60765a8456335de991eeaf6ffec55256984e4a9ecc6a97c37bbfe85bf" or
+                build.get("source_attestation") != "configured_pinned_official_archive" or
+                build.get("test_stub") is True or not isinstance(build.get("compiler"), dict)):
             reasons.append("Evidence worker differs from the official CGAL baseline")
         declared = {o.get("id"): o for o in manifest.get("operations", []) if isinstance(o, dict)}
         if report.get("worker_manifest_sha256") != manifest_digest:
@@ -120,11 +275,15 @@ def _evidence_reasons(report: dict, item: dict, operations: dict[str, dict], roo
             continue
         path = (root / str(case.get("source_path", ""))).resolve()
         if (not path.is_relative_to((root / "tests").resolve()) or not path.is_file() or
-                hashlib.sha256(path.read_bytes()).hexdigest() != case.get("source_sha256") or
-                case.get("status") != "pass"):
+                _source_digest(path, case.get("source_hash_encoding")) != case.get("source_sha256") or
+                case.get("status") != "pass" or case.get("exit_code") != 0):
             reasons.append("Evidence test source/result mismatch")
             continue
         tests[case["id"]] = case
+    blob_hashes, blob_reasons = _verified_blobs(report)
+    report_hashes, report_reasons = _verified_reports(report)
+    reasons.extend(blob_reasons)
+    reasons.extend(report_reasons)
     results = report.get("operation_results", [])
     for operation_id in item.get("operation_ids", []):
         operation = operations.get(operation_id, {})
@@ -139,27 +298,130 @@ def _evidence_reasons(report: dict, item: dict, operations: dict[str, dict], roo
                     result.get("worker_manifest_sha256") != manifest_digest or
                     result.get("test_id") not in tests):
                 reasons.append(f"Evidence execution/build/test mismatch: {operation_id}")
+            reasons.extend(_hash_bound_exchange(result, f"execution {result.get('case_id', operation_id)}"))
             for field in ("input_hashes", "output_hashes"):
                 values = result.get(field)
-                if not isinstance(values, list) or not values or not all(_valid_digest(v) for v in values):
+                if (not isinstance(values, list) or not values or
+                        not all(_valid_digest(v) and v in blob_hashes for v in values)):
                     reasons.append(f"Evidence fixture/artifact hash missing: {operation_id}")
+            if (result.get("input_hashes") != _exchange_blob_hashes(result.get("request"), "inputs") or
+                    result.get("output_hashes") != _exchange_blob_hashes(result.get("response"), "outputs")):
+                reasons.append(f"Evidence fixture/artifact exchange binding mismatch: {operation_id}")
             validation = result.get("validation")
             if (not isinstance(validation, dict) or validation.get("status") != "pass" or
                     not isinstance(validation.get("checks"), dict) or not validation["checks"] or
                     not all(c.get("pass") is True for c in validation["checks"].values() if isinstance(c, dict)) or
                     not all(isinstance(c, dict) for c in validation["checks"].values())):
                 reasons.append(f"Evidence validation checks missing/failed: {operation_id}")
+    if item.get("id") in WAVE_A_REQUIREMENT_CASES:
+        expected_cases = WAVE_A_REQUIREMENT_CASES[item["id"]]
+        coverage_map = report.get("requirement_coverage")
+        coverage = coverage_map.get(item["id"], {}) if isinstance(coverage_map, dict) else {}
+        actual_cases = coverage.get("case_ids") if isinstance(coverage, dict) else None
+        if (item.get("operation_ids") != [WAVE_A_TRANSFORM] or
+                _string_members(actual_cases) != expected_cases or
+                len(actual_cases) != len(expected_cases)):
+            reasons.append(f"Evidence case coverage is incomplete: {item['id']}")
+        if _string_members(report.get("requirements")) != set(WAVE_A_REQUIREMENT_CASES):
+            reasons.append("Evidence Wave A requirement set is partial")
+        if _string_members(report.get("standalone_unmet_gates")) != WAVE_A_UNMET_STANDALONE_GATES:
+            reasons.append("Evidence omits unmet standalone acceptance gates")
+        policy_coverage = report.get("policy_coverage")
+        if not isinstance(policy_coverage, dict) or set(policy_coverage) != set(WAVE_A_POLICY_CASES):
+            reasons.append("Evidence non-blocked policy coverage is incomplete")
+        else:
+            for policy_id, expected_policy_cases in WAVE_A_POLICY_CASES.items():
+                value = policy_coverage.get(policy_id)
+                case_ids = value.get("case_ids") if isinstance(value, dict) else None
+                if (_string_members(case_ids) != expected_policy_cases or
+                        len(case_ids) != len(expected_policy_cases)):
+                    reasons.append(f"Evidence policy case coverage is incomplete: {policy_id}")
+        indexed = {result.get("case_id"): result for result in results if isinstance(result, dict)}
+        if len(indexed) != len([result for result in results if isinstance(result, dict)]):
+            reasons.append("Evidence contains duplicate execution case ids")
+        for case_id in expected_cases:
+            result = indexed.get(case_id)
+            if not isinstance(result, dict) or result.get("operation_id") != WAVE_A_TRANSFORM:
+                reasons.append(f"Evidence has no covered execution case: {case_id}")
+                continue
+            validators = result.get("validators")
+            if (not isinstance(validators, list) or
+                    [validator.get("operation_id") for validator in validators if isinstance(validator, dict)] != list(WAVE_A_VALIDATORS) or
+                    len(validators) != len(WAVE_A_VALIDATORS)):
+                reasons.append(f"Evidence mandatory validator chain is incomplete: {case_id}")
+                continue
+            transform_outputs = result.get("output_hashes", [])
+            if not isinstance(transform_outputs, list):
+                transform_outputs = []
+            for validator in validators:
+                validator_id = validator.get("operation_id")
+                operation = operations.get(validator_id, {})
+                handler = declared.get(validator_id, {})
+                if (validator.get("status") != "pass" or
+                        validator.get("revision") != operation.get("revision") or
+                        handler.get("revision") != operation.get("revision")):
+                    reasons.append(f"Evidence validator revision/result mismatch: {case_id}/{validator_id}")
+                for field in ("input_hashes", "output_hashes"):
+                    values = validator.get(field)
+                    if (not isinstance(values, list) or not values or
+                            not all(_valid_digest(value) and value in blob_hashes for value in values)):
+                        reasons.append(f"Evidence validator artifact hash missing: {case_id}/{validator_id}")
+                validator_inputs = validator.get("input_hashes")
+                if (not isinstance(validator_inputs, list) or
+                        not set(transform_outputs).intersection(validator_inputs)):
+                    reasons.append(f"Evidence validator did not consume transform output: {case_id}/{validator_id}")
+                if validator.get("report_sha256") not in report_hashes:
+                    reasons.append(f"Evidence validator report missing: {case_id}/{validator_id}")
+                report_blob_sha256 = validator.get("report_blob_sha256")
+                if report_blob_sha256 not in blob_hashes:
+                    reasons.append(f"Evidence validator report blob missing: {case_id}/{validator_id}")
+                else:
+                    try:
+                        report_blob = json.loads(base64.b64decode(
+                            report["blobs"][report_blob_sha256]["content"], validate=True).decode("utf-8"))
+                    except (KeyError, UnicodeError, ValueError, TypeError):
+                        report_blob = None
+                    if report_blob != report.get("reports", {}).get(validator.get("report_sha256")):
+                        reasons.append(f"Evidence validator stdout/file report mismatch: {case_id}/{validator_id}")
+                if (not _valid_digest(validator.get("request_sha256")) or
+                        not _valid_digest(validator.get("response_sha256"))):
+                    reasons.append(f"Evidence validator exchange hash missing: {case_id}/{validator_id}")
     return reasons
 
 
+def _rerun_replayed_evidence(replay_worker: Path | None, root: Path) -> dict[str, dict]:
+    """Re-execute the fixed harness and index its exact regenerated report.
+
+    Offline JSON evaluation supplies no worker and remains incomplete. The trusted
+    CLI supplies a native worker path; callers cannot substitute report data or a
+    command. Arbitrary mutation by already-trusted Python code is outside this data
+    evidence boundary.
+    """
+    verified: dict[str, dict] = {}
+    if replay_worker is None or root.resolve() != REPO.resolve():
+        return verified
+    # Lazy import avoids a module cycle: the replay module imports this evaluator.
+    from scripts.replay_master_capabilities import replay as rerun_approved_harness
+    try:
+        fresh_report = rerun_approved_harness(Path(replay_worker))
+        content = (json.dumps(
+            fresh_report, ensure_ascii=False, indent=2, allow_nan=False,
+        ) + "\n").encode("utf-8")
+    except Exception:
+        return verified
+    verified[hashlib.sha256(content).hexdigest()] = fresh_report
+    return verified
+
+
 def evaluate_requirements(requirements: dict, operations: dict[str, dict], root: Path = REPO,
-                          *, replayed_evidence: dict[str, ReplayedEvidence] | None = None) -> dict:
+                          *, replay_worker: Path | None = None) -> dict:
     """A requirement needs all declared adapters and nonempty valid evidence files."""
     fresh = extract_requirements(root)
     expected = {r["id"]: r["description"] for f in fresh["families"] for r in f["requirements"]}
     actual = [r for f in requirements.get("families", []) for r in f.get("requirements", [])]
     if len(actual) != len(expected) or {r.get("id"): r.get("description") for r in actual} != expected:
         raise ValueError("Acceptance denominator differs from the original major requirements")
+    rerun_reports = _rerun_replayed_evidence(replay_worker, root)
     rows = []
     for item in actual:
         reasons = []
@@ -196,7 +458,7 @@ def evaluate_requirements(requirements: dict, operations: dict[str, dict], root:
                 reasons.append("Evidence report must be an object")
                 continue
             reasons.extend(_evidence_reasons(report, item, operations, root,
-                           (replayed_evidence or {}).get(digest)))
+                           rerun_reports.get(digest)))
         rows.append({"id": item["id"], "description": item["description"],
                      "status": "VALIDATED" if not reasons else "INCOMPLETE", "reasons": reasons})
     validated = sum(row["status"] == "VALIDATED" for row in rows)

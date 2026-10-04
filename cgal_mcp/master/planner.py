@@ -320,6 +320,26 @@ class PlanBuilder:
     def _preconditions(self, operation: dict[str, Any], bindings: dict[str, dict[str, str]]) -> None:
         artifacts = [self.store.inspect(value["artifact_id"]) for value in bindings.values()]
         for condition in operation.get("preconditions", []):
+            if "worker_check" in condition:
+                continue
+            if "bounds" in condition:
+                contract = condition["bounds"]
+                for artifact in artifacts:
+                    bounds = artifact["metadata"].get("bounds")
+                    if (not isinstance(bounds, list) or not bounds
+                            or any(not isinstance(axis, list) or len(axis) != 2
+                                   or any(not isinstance(value, (int, float))
+                                          or isinstance(value, bool) or not math.isfinite(float(value))
+                                          for value in axis) for axis in bounds)):
+                        raise PreconditionFailure(f"{operation['id']} requires finite coordinate bounds")
+                    maximum = max(abs(float(value)) for axis in bounds for value in axis)
+                    span = max(float(axis[1]) - float(axis[0]) for axis in bounds)
+                    if (maximum > contract["maximum_absolute_coordinate"]
+                            or not math.isfinite(span) or span < contract["minimum_span"]
+                            or maximum / span > contract["maximum_translation_to_span_ratio"]):
+                        raise PreconditionFailure(
+                            f"{operation['id']} coordinates are outside its numeric scale contract")
+                continue
             prop = condition.get("property")
             values = [artifact["properties"].get(prop, artifact["metadata"].get(prop, "unknown"))
                       for artifact in artifacts]
@@ -328,6 +348,41 @@ class PlanBuilder:
             if "minimum" in condition and any(not isinstance(value, (int, float)) or value < condition["minimum"] for value in values):
                 raise PreconditionFailure(f"{operation['id']} requires {prop}>={condition['minimum']}")
 
+    def _parameter_preconditions(self, operation: dict[str, Any],
+                                 bindings: dict[str, dict[str, str]],
+                                 parameters: dict[str, Any]) -> None:
+        for condition in operation.get("parameter_preconditions", []):
+            value: Any = parameters
+            for component in condition["parameter"].split("."):
+                if not isinstance(value, dict) or component not in value:
+                    raise InvalidInput("parameter_precondition",
+                                       f"{operation['id']} lacks parameter {condition['parameter']}")
+                value = value[component]
+            binding = bindings[condition["input"]]
+            artifact_id = binding.get("artifact_id")
+            if not isinstance(artifact_id, str):
+                # The runtime inspects unpublished prior-step bytes and applies
+                # the same registry condition before dispatching this step.
+                continue
+            artifact = self.store.inspect(artifact_id)
+            if "finite_coordinate_ratio_metadata" in condition:
+                bounds = artifact["metadata"].get(condition["finite_coordinate_ratio_metadata"])
+                maximum = (max(abs(float(item)) for axis in bounds for item in axis)
+                           if isinstance(bounds, list) and bounds else math.inf)
+                if (not isinstance(value, (int, float)) or isinstance(value, bool)
+                        or not math.isfinite(float(value)) or value == 0
+                        or not math.isfinite(maximum / float(value))):
+                    raise PreconditionFailure(
+                        f"{operation['id']} requires finite coordinate-to-{condition['parameter']} ratios")
+                continue
+            limit = artifact["metadata"].get(condition["less_than_metadata"])
+            if (not isinstance(value, (int, float)) or isinstance(value, bool)
+                    or not isinstance(limit, (int, float)) or isinstance(limit, bool)
+                    or value >= limit):
+                raise PreconditionFailure(
+                    f"{operation['id']} requires {condition['parameter']} < "
+                    f"{condition['less_than_metadata']}")
+
     def _make_step(self, step_id: str, operation_id: str, bindings: Any,
                    parameters: dict[str, Any], kernel: str | None = None) -> dict[str, Any]:
         operation = self.registry.get(operation_id, executable=True)
@@ -335,6 +390,7 @@ class PlanBuilder:
         input_unit = self.store.inspect(next(iter(normalized.values()))["artifact_id"])["unit"] if normalized else "mm"
         normalized_parameters, normalization_history = _prepare_parameters(
             operation["parameters"], parameters, input_unit)
+        self._parameter_preconditions(operation, normalized, normalized_parameters)
         selected_policies = self.registry.resolve_policies(operation_id, normalized_parameters)
         selected_kernel = kernel or operation["kernel"]["default"]
         if selected_kernel not in operation["kernel"]["supported"]:
@@ -345,7 +401,9 @@ class PlanBuilder:
                 "outputs": operation["io"]["outputs"],
                 "parameter_normalization": normalization_history,
                 "policies": [{key: policy[key] for key in ("id", "revision", "group", "name", "status")}
-                             for policy in selected_policies]}
+                             for policy in selected_policies],
+                "worker_preconditions": [copy.deepcopy(condition) for condition in operation.get("preconditions", [])
+                                         if "worker_check" in condition]}
 
     def _inject_validators(self, steps: list[dict[str, Any]]) -> list[dict[str, Any]]:
         result = list(steps)
@@ -392,6 +450,8 @@ class PlanBuilder:
         for target, recipe in parameter_recipe.items():
             source = recipe.get("parameter") if isinstance(recipe, dict) else None
             if source not in step["parameters"]:
+                if isinstance(recipe, dict) and recipe.get("optional") is True:
+                    continue
                 raise InvalidInput("validator_parameter_binding",
                                    f"{operation['id']} parameter {source!r} is unavailable for {validator_id}")
             parameters[target] = copy.deepcopy(step["parameters"][source])
@@ -452,13 +512,19 @@ class PlanBuilder:
                 raise InvalidInput("input_slots", f"Explicit step {raw['id']} has missing or extra slots")
             if len(input_units) > 1:
                 raise InvalidInput("unit_mismatch", "Operation inputs must use one unit")
+            deferred_preconditions: list[dict[str, Any]] = []
             if operation.get("preconditions"):
-                if not all("artifact_id" in binding for binding in normalized.values()):
-                    raise PreconditionFailure(f"{operation['id']} preconditions cannot be proven for a prior-step output")
-                self._preconditions(operation, normalized)
+                if all("artifact_id" in binding for binding in normalized.values()):
+                    self._preconditions(operation, normalized)
+                else:
+                    # The immutable plan records the unresolved registry facts. The
+                    # runtime resolves them from isolated inspection metadata before
+                    # dispatching this step; it never rewrites the plan.
+                    deferred_preconditions.extend(copy.deepcopy(operation["preconditions"]))
             input_unit = next(iter(input_units), "mm")
             normalized_parameters, normalization_history = _prepare_parameters(
                 operation["parameters"], raw.get("parameters", {}), input_unit)
+            self._parameter_preconditions(operation, normalized, normalized_parameters)
             selected_policies = self.registry.resolve_policies(operation["id"], normalized_parameters)
             step = {"id": raw["id"], "operation": operation["id"], "revision": operation["revision"],
                     "role": operation.get("role", "transform"), "inputs": normalized,
@@ -466,7 +532,18 @@ class PlanBuilder:
                     "outputs": operation["io"]["outputs"],
                     "parameter_normalization": normalization_history,
                     "policies": [{key: policy[key] for key in ("id", "revision", "group", "name", "status")}
-                                 for policy in selected_policies]}
+                                 for policy in selected_policies],
+                    "worker_preconditions": [copy.deepcopy(condition)
+                                             for condition in operation.get("preconditions", [])
+                                             if "worker_check" in condition]}
+            deferred_parameters = [copy.deepcopy(condition)
+                                   for condition in operation.get("parameter_preconditions", [])
+                                   if "artifact_id" not in normalized[condition["input"]]]
+            if deferred_preconditions or deferred_parameters:
+                step["deferred_preconditions"] = {
+                    "artifact_properties": deferred_preconditions,
+                    "parameters": deferred_parameters,
+                    "resolution": "runtime_before_dispatch_from_inspected_candidate"}
             if isinstance(raw.get("validates"), str):
                 step["validates"] = raw["validates"]
             if step["kernel"] not in operation["kernel"]["supported"]:

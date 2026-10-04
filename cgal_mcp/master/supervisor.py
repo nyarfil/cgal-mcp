@@ -12,12 +12,11 @@ from typing import Any
 
 from .errors import InvalidInput, WorkerFailure
 from .registry import OperationRegistry
+from .resources import DEFAULT_MEMORY_MB
 from .util import canonical_json, digest_file, within
 
 
 MAX_PROTOCOL_BYTES = 2 * 1024 * 1024
-DEFAULT_MEMORY_MB = 4096
-
 WORKER_CLASS_MAP = {
     "INVALID_INPUT": "invalid_input", "PRECONDITION_FAILED": "unmet_precondition",
     "UNMET_PRECONDITION": "unmet_precondition", "UNSUPPORTED_ADAPTER": "unsupported_adapter",
@@ -25,6 +24,7 @@ WORKER_CLASS_MAP = {
     "NUMERIC_FAILURE": "numeric_failure", "TIMEOUT": "timeout",
     "WORKER_CRASH": "worker_crash", "RESOURCE_LIMIT": "resource_limit",
     "VALIDATION_FAILED": "validation_failure", "PROTOCOL_ERROR": "worker_protocol",
+    "IO_FAILURE": "worker_io",
 }
 
 
@@ -132,12 +132,16 @@ async def _read_bounded(stream: asyncio.StreamReader, maximum: int) -> tuple[byt
 
 class WorkerSupervisor:
     def __init__(self, registry: OperationRegistry, executable: Path | None = None,
-                 *, require_memory_limit: bool = True):
+                 *, require_memory_limit: bool = True,
+                 max_memory_mb: int = DEFAULT_MEMORY_MB):
+        if type(max_memory_mb) is not int or not 64 <= max_memory_mb <= 1_048_576:
+            raise ValueError("Worker memory ceiling is invalid")
         self.registry = registry
         self.executable = (executable or default_worker_path()).resolve()
         self._manifest: dict[str, Any] | None = None
         self._manifest_stamp: tuple[int, int, str] | None = None
         self.require_memory_limit = require_memory_limit
+        self.max_memory_mb = max_memory_mb
         self.resource_limit_mode = "posix_rlimit_as" if os.name != "nt" else "windows_job_object_pending"
 
     async def manifest(self, required_operation: str) -> dict[str, Any]:
@@ -188,7 +192,7 @@ class WorkerSupervisor:
         limits = request.get("limits", {})
         wall_ms = int(limits.get("wall_time_ms", 120000))
         memory_mb = int(limits.get("memory_mb", DEFAULT_MEMORY_MB))
-        if not 1 <= wall_ms <= 86_400_000 or not 64 <= memory_mb <= DEFAULT_MEMORY_MB:
+        if not 1 <= wall_ms <= 86_400_000 or not 64 <= memory_mb <= self.max_memory_mb:
             raise InvalidInput("worker_limits", "Worker limits are outside allowed bounds")
         kwargs: dict[str, Any] = {}
         if os.name != "nt":

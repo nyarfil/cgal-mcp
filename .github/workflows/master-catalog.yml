@@ -12,6 +12,7 @@ on:
       - 'tests/test_master_harvester.py'
       - 'tests/test_master_acceptance.py'
       - 'tests/test_master_docs_index.py'
+      - 'tests/test_master_inventory.py'
       - 'cgal_mcp/master/catalog/**'
       - 'docs/master/**'
       - '.github/workflows/master-catalog.yml'
@@ -29,7 +30,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Check original document bytes and approved requirement denominator
-        run: python -m unittest tests.test_master_harvester tests.test_master_acceptance tests.test_master_docs_index -v
+        run: python -m unittest tests.test_master_harvester tests.test_master_acceptance tests.test_master_docs_index tests.test_master_inventory -v
       - name: Check installed package snapshot matches canonical catalog
         run: python scripts/sync_master_package_catalog.py --check
       - uses: actions/cache@v4

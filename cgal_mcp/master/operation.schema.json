@@ -2,27 +2,233 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://cgal.org/cgal-master/operation.schema.json",
   "type": "object",
-  "required": ["schema_version", "cgal_version", "operations"],
+  "required": [
+    "schema_version",
+    "cgal_version",
+    "operations"
+  ],
   "properties": {
-    "schema_version": {"const": 1},
-    "cgal_version": {"type": "string"},
+    "schema_version": {
+      "const": 1
+    },
+    "cgal_version": {
+      "type": "string"
+    },
     "operations": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["id", "revision", "status", "summary", "aliases", "package", "sources", "license", "io", "parameters", "preconditions", "kernel", "validation"],
+        "required": [
+          "id",
+          "revision",
+          "status",
+          "summary",
+          "aliases",
+          "package",
+          "sources",
+          "license",
+          "io",
+          "parameters",
+          "preconditions",
+          "kernel",
+          "validation",
+          "role"
+        ],
         "properties": {
-          "id": {"type": "string", "pattern": "^[a-z][a-z0-9_]*(?:\\.[a-z0-9_]+)+$"},
-          "revision": {"type": "integer", "minimum": 1},
-          "status": {"enum": ["DISCOVERED", "CATALOGED", "ADAPTER_PLANNED", "IMPLEMENTED", "VALIDATED", "DEPRECATED", "BLOCKED", "EXCLUDED"]},
-          "aliases": {"type": "array", "items": {"type": "string"}},
-          "sources": {"type": "array", "items": {"type": "object", "required": ["kind", "identifier"]}},
-          "license": {"type": "object", "required": ["expression", "package", "evidence"]},
-          "io": {"type": "object", "required": ["inputs", "outputs"]},
-          "parameters": {"type": "object"},
-          "preconditions": {"type": "array"},
-          "kernel": {"type": "object", "required": ["supported", "default"]},
-          "validation": {"type": "object", "required": ["required", "validators"]}
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*(?:\\.[a-z0-9_]+)+$"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "status": {
+            "enum": [
+              "DISCOVERED",
+              "CATALOGED",
+              "ADAPTER_PLANNED",
+              "IMPLEMENTED",
+              "VALIDATED",
+              "DEPRECATED",
+              "BLOCKED",
+              "EXCLUDED"
+            ]
+          },
+          "aliases": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "sources": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "kind",
+                "identifier"
+              ]
+            }
+          },
+          "license": {
+            "type": "object",
+            "required": [
+              "expression",
+              "package",
+              "evidence"
+            ]
+          },
+          "io": {
+            "type": "object",
+            "required": [
+              "inputs",
+              "outputs"
+            ]
+          },
+          "parameters": {
+            "type": "object"
+          },
+          "preconditions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["id"],
+              "properties": {
+                "id": {"type": "string"},
+                "property": {"type": "string"},
+                "bounds": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["minimum_span", "maximum_absolute_coordinate", "maximum_translation_to_span_ratio"],
+                  "properties": {
+                    "minimum_span": {"type": "number", "exclusiveMinimum": 0},
+                    "maximum_absolute_coordinate": {"type": "number", "exclusiveMinimum": 0},
+                    "maximum_translation_to_span_ratio": {"type": "number", "exclusiveMinimum": 0}
+                  }
+                },
+                "worker_check": {"type": "object"}
+              }
+            }
+          },
+          "resource_profile": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "default_wall_time_ms": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 86400000
+              }
+            }
+          },
+          "kernel": {
+            "type": "object",
+            "required": [
+              "supported",
+              "default"
+            ]
+          },
+          "validation": {
+            "type": "object",
+            "required": [
+              "required",
+              "validators"
+            ],
+            "properties": {
+              "required": {
+                "type": "boolean"
+              },
+              "validators": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "uniqueItems": true
+              },
+              "bindings": {
+                "type": "object"
+              },
+              "required_report_checks": {
+                "type": "object"
+              },
+              "required_report_fields": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "uniqueItems": true
+              },
+              "required_report_minimum": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "number"
+                }
+              }
+            }
+          },
+          "role": {
+            "enum": [
+              "transform",
+              "validator"
+            ]
+          },
+          "dependencies": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true
+          },
+          "parameter_preconditions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "parameter",
+                "input"
+              ],
+              "oneOf": [
+                {"required": ["less_than_metadata"]},
+                {"required": ["finite_coordinate_ratio_metadata"]}
+              ],
+              "properties": {
+                "parameter": {
+                  "type": "string"
+                },
+                "input": {
+                  "type": "string"
+                },
+                "less_than_metadata": {
+                  "type": "string"
+                },
+                "finite_coordinate_ratio_metadata": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "worker_manifest": {
+            "type": "object",
+            "required": [
+              "require_dependencies",
+              "effective_kernel",
+              "info"
+            ],
+            "properties": {
+              "require_dependencies": {
+                "type": "boolean"
+              },
+              "effective_kernel": {
+                "type": "string"
+              },
+              "info": {
+                "type": "object"
+              }
+            },
+            "additionalProperties": false
+          }
         }
       }
     }

@@ -4,11 +4,13 @@ import sqlite3
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from cgal_mcp.master.errors import InvalidInput, PreconditionFailure, UnsupportedOperation, WorkerFailure
 from cgal_mcp.master.formats import inspect_bytes
 from cgal_mcp.master.planner import _acyclic
 from cgal_mcp.master.registry import OperationRegistry
+from cgal_mcp.master.resources import ResourceConfig
 from cgal_mcp.master.runtime import MasterRuntime
 from cgal_mcp.master.server import create_server
 from cgal_mcp.master.store import ArtifactStore
@@ -105,6 +107,60 @@ elif operation == "mesh.validate.simplification_integrity":
 elif operation == "mesh.distance.symmetric_hausdorff":
  verdict="indeterminate" if mode == "indeterminate" else "pass"
  report={{"status":"pass" if verdict == "pass" else "fail","valid":verdict == "pass","verdict":verdict}}
+ path=output/"validation.json"; path.write_text(json.dumps(report))
+ outputs=[{{"slot":"validation","type":"ValidationReport","unit":"none","format":"json","path":str(path.resolve())}}]; metrics=report
+else:
+ raise SystemExit(2)
+print(json.dumps({{"protocol":1,"request_id":request["request_id"],"status":"ok","outputs":outputs,"metrics":metrics,"diagnostics":[]}}))
+'''
+    worker.write_text(source, encoding="utf-8")
+    return worker
+
+
+def make_pointset_worker(directory: Path, mode: str = "pass") -> Path:
+    document = json.loads(Path("cgal_mcp/master/operations.json").read_text(encoding="utf-8"))
+    operations = []
+    for operation in document["operations"]:
+        actual = {"id": operation["id"], "revision": operation["revision"],
+                  "input_types": [kind for item in operation["io"]["inputs"]
+                                  for kind in item["types"]],
+                  "output_type": operation["io"]["outputs"][0]["type"],
+                  "role": operation["role"], "supported_kernels": operation["kernel"]["supported"]}
+        contract = operation.get("worker_manifest", {})
+        if contract:
+            actual.update({"effective_kernel": contract["effective_kernel"],
+                           "dependencies": operation["dependencies"],
+                           "info": dict(contract["info"])})
+            bindings = {validator: {target: binding["parameter"]
+                                    for target, binding in recipe.get("parameters", {}).items()}
+                        for validator, recipe in operation["validation"].get("bindings", {}).items()
+                        if recipe.get("parameters")}
+            if bindings:
+                actual["info"]["validator_parameter_bindings"] = bindings
+        operations.append(actual)
+    manifest = {"protocol": 1, "actual_cgal_version": "6.2.1",
+        "build": {"source_kind": "official_release",
+                  "source_sha256": "b6be77c60765a8456335de991eeaf6ffec55256984e4a9ecc6a97c37bbfe85bf",
+                  "test_stub": True}, "operations": operations}
+    worker = directory / f"pointset_worker_{mode}.py"
+    source = f'''import json, pathlib, shutil, sys
+manifest={manifest!r}
+if "--manifest" in sys.argv:
+ print(json.dumps(manifest)); raise SystemExit(0)
+request=json.loads(sys.stdin.readline()); operation=request["operation"]; mode={mode!r}
+output=pathlib.Path(request["output_dir"])
+if operation == "pointset.simplify.grid":
+ path=output/"points.xyz"; shutil.copyfile(request["inputs"][0]["path"],path)
+ outputs=[{{"slot":"points","type":"PointSet3","unit":request["inputs"][0]["unit"],"format":"xyz","path":str(path.resolve())}}]
+ metrics={{"input_point_count":5,"output_point_count":5}}
+elif operation == "pointset.validate.basic":
+ report={{"status":"pass","finite_coordinates":True,"point_count":5,"affine_rank":3,"normals_present":False,"normal_vectors_nonzero":None,"normal_vectors_unit":None}}
+ if mode == "missing_rank": report.pop("affine_rank")
+ if mode == "nonfinite_rank": report["affine_rank"]=float("nan")
+ path=output/"validation.json"; path.write_text(json.dumps(report))
+ outputs=[{{"slot":"validation","type":"ValidationReport","unit":"none","format":"json","path":str(path.resolve())}}]; metrics=report
+elif operation == "pointset.validate.subset":
+ report={{"status":"pass","finite_coordinates":True,"candidate_is_source_subset":True,"count_not_increased":True,"cgal_reference_match":True,"candidate_point_count":5,"affine_rank":3}}
  path=output/"validation.json"; path.write_text(json.dumps(report))
  outputs=[{{"slot":"validation","type":"ValidationReport","unit":"none","format":"json","path":str(path.resolve())}}]; metrics=report
 else:
@@ -344,6 +400,258 @@ class MasterCoreTest(unittest.TestCase):
                                  ("rejected", "succeeded", "failed"))
                 self.assertEqual(failed_runtime.store.counts()["artifacts"], 1)
                 self.assertFalse(failed.get("outputs"))
+        asyncio.run(scenario())
+
+    def test_wave_b_normals_ply_import_is_typed_strict_and_byte_preserving(self):
+        source = Path("tests/fixtures/master/wave_b/plane_normals_alternating.ply").resolve()
+        runtime = self.runtime()
+        artifact = runtime.artifact_import(str(source), "mm", artifact_type="PointSet3Normals")
+        self.assertEqual((artifact["type"], artifact["format"]), ("PointSet3Normals", "ply"))
+        self.assertEqual(artifact["metadata"]["point_count"], 9)
+        self.assertTrue(artifact["properties"]["normals_nonzero"])
+        exported = self.root / "normals-copy.ply"
+        runtime.artifact_export(artifact["artifact_id"], str(exported))
+        self.assertEqual(exported.read_bytes(), source.read_bytes())
+
+        bodies = {
+            "binary.ply": b"ply\nformat binary_little_endian 1.0\nelement vertex 1\nend_header\n",
+            "faces.ply": (b"ply\nformat ascii 1.0\nelement vertex 1\n"
+                          b"property double x\nproperty double y\nproperty double z\n"
+                          b"property double nx\nproperty double ny\nproperty double nz\n"
+                          b"element face 0\nend_header\n0 0 0 1 0 0\n"),
+            "missing-normal.ply": (b"ply\nformat ascii 1.0\nelement vertex 1\n"
+                                   b"property double x\nproperty double y\nproperty double z\n"
+                                   b"property double nx\nproperty double ny\nend_header\n0 0 0 1 0\n"),
+        }
+        for name, content in bodies.items():
+            path = self.root / name; path.write_bytes(content)
+            with self.assertRaises(InvalidInput, msg=name):
+                runtime.artifact_import(str(path), "mm", artifact_type="PointSet3Normals")
+
+    def test_wave_b_parameter_schemas_units_and_validator_bindings(self):
+        source_path = Path("tests/fixtures/master/wave_b/noisy_plane_with_outlier.xyz").resolve()
+        normals_path = Path("tests/fixtures/master/wave_b/plane_normals_alternating.ply").resolve()
+        runtime = self.runtime()
+        source = runtime.artifact_import(str(source_path), "cm", artifact_type="PointSet3")
+        normals = runtime.artifact_import(str(normals_path), "cm", artifact_type="PointSet3Normals")
+
+        grid = runtime.plan({"operation_id": "pointset.simplify.grid",
+            "inputs": [source["artifact_id"]], "parameters": {
+                "cell_size": {"value": 15, "unit": "mm"}, "min_points_per_cell": 1}})
+        self.assertEqual([step["operation"] for step in grid["steps"]], [
+            "pointset.simplify.grid", "pointset.validate.basic", "pointset.validate.subset"])
+        self.assertEqual(grid["steps"][0]["parameters"]["cell_size"],
+                         {"value": 1.5, "unit": "cm"})
+        self.assertEqual(grid["steps"][0]["parameter_normalization"][0]["source"]["unit"], "mm")
+        self.assertEqual(grid["steps"][1]["inputs"]["points"]["step"], "s1")
+        self.assertEqual(grid["steps"][2]["inputs"]["source"]["artifact_id"], source["artifact_id"])
+        self.assertEqual(grid["steps"][2]["parameters"], {
+            "cell_size": {"value": 1.5, "unit": "cm"}, "min_points_per_cell": 1})
+        with self.assertRaisesRegex(InvalidInput, "non-finite"):
+            runtime.plan({"operation_id": "pointset.simplify.grid",
+                "inputs": [source["artifact_id"]], "parameters": {
+                    "cell_size": {"value": 1e308, "unit": "m"}, "min_points_per_cell": 1}})
+        metre_source = runtime.artifact_import(str(source_path), "m", artifact_type="PointSet3")
+        with self.assertRaisesRegex(InvalidInput, "must exceed"):
+            runtime.plan({"operation_id": "pointset.simplify.grid",
+                "inputs": [metre_source["artifact_id"]], "parameters": {
+                    "cell_size": {"value": 5e-324, "unit": "mm"}, "min_points_per_cell": 1}})
+
+        count = source["metadata"]["point_count"]
+        with self.assertRaisesRegex(PreconditionFailure, "neighbors < point_count"):
+            runtime.plan({"operation_id": "pointset.remove_outliers",
+                "inputs": [source["artifact_id"]], "parameters": {
+                    "neighbors": count, "threshold_percent": 10,
+                    "threshold_distance": {"value": 1, "unit": "cm"}}})
+        random = runtime.plan({"operation_id": "pointset.simplify.random",
+            "inputs": [source["artifact_id"]], "parameters": {
+                "removed_percentage": 25, "seed": 4294967295}})
+        self.assertEqual(random["steps"][0]["parameters"]["seed"], 4294967295)
+        with self.assertRaisesRegex(InvalidInput, "above its maximum"):
+            runtime.plan({"operation_id": "pointset.simplify.random",
+                "inputs": [source["artifact_id"]], "parameters": {
+                    "removed_percentage": 25, "seed": 4294967296}})
+
+        pca = runtime.plan({"operation_id": "pointset.normals.estimate",
+            "inputs": [source["artifact_id"]], "parameters": {"method": "pca", "neighbors": 8}})
+        self.assertEqual([step["operation"] for step in pca["steps"]], [
+            "pointset.normals.estimate", "pointset.validate.basic",
+            "pointset.validate.normals_estimated"])
+        self.assertEqual(pca["steps"][1]["inputs"]["points"]["type"], "PointSet3Normals")
+        with self.assertRaises(InvalidInput):
+            runtime.plan({"operation_id": "pointset.normals.estimate",
+                "inputs": [source["artifact_id"]], "parameters": {
+                    "method": "pca", "neighbors": 8, "degree_fitting": 2}})
+        with self.assertRaises(InvalidInput):
+            runtime.plan({"operation_id": "pointset.normals.estimate",
+                "inputs": [source["artifact_id"]], "parameters": {"method": "jet", "neighbors": 8}})
+
+        orient = runtime.plan({"operation_id": "pointset.normals.orient_mst",
+            "inputs": [normals["artifact_id"]], "parameters": {
+                "neighbors": 4, "drop_unoriented": False}})
+        self.assertEqual(orient["steps"][2]["parameters"], {
+            "neighbors": 4, "drop_unoriented": False})
+        self.assertEqual(orient["steps"][2]["inputs"]["source"]["artifact_id"], normals["artifact_id"])
+        spoofed = [
+            {"id": "orient", "operation": "pointset.normals.orient_mst",
+             "inputs": {"points": normals["artifact_id"]},
+             "parameters": {"neighbors": 4, "drop_unoriented": False}},
+            {"id": "contract", "operation": "pointset.validate.normals_oriented",
+             "inputs": {"candidate": {"step": "orient", "slot": "points"},
+                        "source": normals["artifact_id"]},
+             "parameters": {"neighbors": 4, "drop_unoriented": True}, "validates": "orient"},
+        ]
+        with self.assertRaisesRegex(InvalidInput, "does not bind exactly"):
+            runtime.plan({"steps": spoofed})
+
+        workflow = runtime.plan({"steps": [
+            {"id": "outliers", "operation": "pointset.remove_outliers",
+             "inputs": {"points": source["artifact_id"]},
+             "parameters": {"neighbors": 3, "threshold_percent": 10,
+                            "threshold_distance": {"value": 1, "unit": "cm"}}},
+            {"id": "estimate", "operation": "pointset.normals.estimate",
+             "inputs": {"points": {"step": "outliers", "slot": "points"}},
+             "parameters": {"method": "pca", "neighbors": 3}},
+            {"id": "orient", "operation": "pointset.normals.orient_mst",
+             "inputs": {"points": {"step": "estimate", "slot": "points"}},
+             "parameters": {"neighbors": 3, "drop_unoriented": False}},
+        ]})
+        self.assertEqual([step["operation"] for step in workflow["steps"]], [
+            "pointset.remove_outliers", "pointset.validate.basic", "pointset.validate.subset",
+            "pointset.normals.estimate", "pointset.validate.basic",
+            "pointset.validate.normals_estimated", "pointset.normals.orient_mst",
+            "pointset.validate.basic", "pointset.validate.normals_oriented"])
+        estimate = next(step for step in workflow["steps"] if step["id"] == "estimate")
+        orient_step = next(step for step in workflow["steps"] if step["id"] == "orient")
+        self.assertEqual(estimate["deferred_preconditions"]["parameters"][0]["parameter"],
+                         "neighbors")
+        self.assertEqual(orient_step["deferred_preconditions"]["parameters"][0]["parameter"],
+                         "neighbors")
+        self.assertEqual({item["property"] for item in
+                          orient_step["deferred_preconditions"]["artifact_properties"]
+                          if "property" in item},
+                         {"finite", "point_count", "normals_nonzero", "normals_unit"})
+        self.assertTrue(any("bounds" in item for item in
+                            orient_step["deferred_preconditions"]["artifact_properties"]))
+
+    def test_wave_b_zero_normals_and_manifest_union_fail_closed(self):
+        source = Path("tests/fixtures/master/wave_b/plane_normals_alternating.ply").read_text(encoding="ascii")
+        lines = source.splitlines()
+        body = lines.index("end_header") + 1
+        fields = lines[body].split(); fields[3:] = ["0", "0", "0"]; lines[body] = " ".join(fields)
+        zero = self.root / "zero-normal.ply"; zero.write_text("\n".join(lines) + "\n", encoding="ascii")
+        runtime = self.runtime()
+        artifact = runtime.artifact_import(str(zero), "mm", artifact_type="PointSet3Normals")
+        self.assertFalse(artifact["properties"]["normals_nonzero"])
+        with self.assertRaisesRegex(PreconditionFailure, "normals_nonzero=True"):
+            runtime.plan({"operation_id": "pointset.normals.orient_mst",
+                "inputs": [artifact["artifact_id"]],
+                "parameters": {"neighbors": 4, "drop_unoriented": False}})
+        nonunit_lines = source.splitlines(); nonunit_body = nonunit_lines.index("end_header") + 1
+        nonunit_fields = nonunit_lines[nonunit_body].split(); nonunit_fields[3:] = ["2", "0", "0"]
+        nonunit_lines[nonunit_body] = " ".join(nonunit_fields)
+        nonunit_path = self.root / "nonunit-normal.ply"
+        nonunit_path.write_text("\n".join(nonunit_lines) + "\n", encoding="ascii")
+        nonunit = runtime.artifact_import(str(nonunit_path), "mm", artifact_type="PointSet3Normals")
+        self.assertFalse(nonunit["properties"]["normals_unit"])
+        with self.assertRaisesRegex(PreconditionFailure, "normals_unit=True"):
+            runtime.plan({"operation_id": "pointset.normals.orient_mst",
+                "inputs": [nonunit["artifact_id"]],
+                "parameters": {"neighbors": 4, "drop_unoriented": False}})
+
+        registry = OperationRegistry(); self.resources.append(registry)
+        operation = registry.get("pointset.validate.basic")
+        contract = operation["worker_manifest"]
+        actual = {"id": operation["id"], "revision": 1,
+                  "input_types": ["PointSet3", "PointSet3Normals"],
+                  "output_type": "ValidationReport", "role": "validator",
+                  "supported_kernels": ["package_recommended"],
+                  "effective_kernel": contract["effective_kernel"],
+                  "dependencies": operation["dependencies"], "info": contract["info"]}
+        manifest = {"protocol": 1, "actual_cgal_version": "6.2.1",
+                    "build": {"source_kind": "official_release",
+                              "source_sha256": "b6be77c60765a8456335de991eeaf6ffec55256984e4a9ecc6a97c37bbfe85bf"},
+                    "operations": [actual]}
+        registry.verify_manifest(manifest, operation["id"])
+        actual["input_types"] = ["PointSet3"]
+        with self.assertRaisesRegex(InvalidInput, "manifest disagrees"):
+            registry.verify_manifest(manifest, operation["id"])
+
+    def test_wave_b_numeric_scale_is_preflighted_from_bounds(self):
+        runtime = self.runtime()
+        for name, coordinates in {
+            "too-large.xyz": "0 0 0\n1e101 0 0\n0 1e101 0\n",
+            "too-small.xyz": "0 0 0\n1e-200 0 0\n0 1e-200 0\n",
+        }.items():
+            path = self.root / name; path.write_text(coordinates, encoding="ascii")
+            artifact = runtime.artifact_import(str(path), "mm", artifact_type="PointSet3")
+            with self.assertRaisesRegex(PreconditionFailure, "numeric scale contract"):
+                runtime.plan({"operation_id": "pointset.simplify.hierarchy",
+                    "inputs": [artifact["artifact_id"]],
+                    "parameters": {"cluster_size": 2, "maximum_variation": 0.1}})
+
+        ratio = self.root / "ratio.xyz"
+        ratio.write_text("0 0 0\n1e100 0 0\n0 1e100 0\n", encoding="ascii")
+        artifact = runtime.artifact_import(str(ratio), "mm", artifact_type="PointSet3")
+        with self.assertRaisesRegex(PreconditionFailure, "coordinate-to-cell_size.value"):
+            runtime.plan({"operation_id": "pointset.simplify.grid",
+                "inputs": [artifact["artifact_id"]], "parameters": {
+                    "cell_size": {"value": 1e-300, "unit": "mm"},
+                    "min_points_per_cell": 1}})
+
+        def translated_plane(name: str, offset: float) -> dict:
+            path = self.root / name
+            path.write_text("".join(f"{offset} {y} {z}\n" for y in range(3) for z in range(3)),
+                            encoding="ascii")
+            return runtime.artifact_import(str(path), "mm", artifact_type="PointSet3")
+
+        unsafe_translation = translated_plane("translated-unsafe.xyz", 1e10)
+        with self.assertRaisesRegex(PreconditionFailure, "numeric scale contract"):
+            runtime.plan({"operation_id": "pointset.normals.estimate",
+                "inputs": [unsafe_translation["artifact_id"]],
+                "parameters": {"method": "pca", "neighbors": 4}})
+        supported_translation = translated_plane("translated-supported.xyz", 1e6)
+        supported_plan = runtime.plan({"operation_id": "pointset.normals.estimate",
+            "inputs": [supported_translation["artifact_id"]],
+            "parameters": {"method": "pca", "neighbors": 4}})
+        self.assertEqual(supported_plan["steps"][0]["operation"], "pointset.normals.estimate")
+
+        smooth = runtime.plan({"operation_id": "pointset.smooth.jet",
+            "inputs": [runtime.artifact_import(
+                str(Path("tests/fixtures/master/wave_b/noisy_plane_with_outlier.xyz").resolve()),
+                "mm", artifact_type="PointSet3")["artifact_id"]],
+            "parameters": {"neighbors": 8, "degree_fitting": 2, "degree_monge": 2}})
+        self.assertEqual(smooth["steps"][0]["worker_preconditions"][0]["id"],
+                         "local_neighborhood_rank")
+
+    def test_wave_b_publication_requires_basic_and_operation_contract_reports(self):
+        async def run(mode: str) -> tuple[MasterRuntime, dict]:
+            runtime = MasterRuntime(self.root / f"pointset-{mode}",
+                worker=make_pointset_worker(self.root, mode), require_memory_limit=False)
+            self.resources.append(runtime)
+            source = runtime.artifact_import(
+                str(Path("tests/fixtures/master/wave_b/noisy_plane_with_outlier.xyz").resolve()),
+                "mm", artifact_type="PointSet3")
+            plan = runtime.plan({"operation_id": "pointset.simplify.grid",
+                "inputs": [source["artifact_id"]], "parameters": {
+                    "cell_size": {"value": 1, "unit": "mm"}, "min_points_per_cell": 1}})
+            queued = await runtime.execute(plan["plan_id"])
+            await runtime.tasks[queued["job_id"]]
+            return runtime, runtime.job_status(queued["job_id"])
+
+        async def scenario():
+            passed_runtime, passed = await run("pass")
+            self.assertEqual((passed["state"], passed["validation_status"]),
+                             ("succeeded", "passed"))
+            self.assertEqual({item["operation"] for item in passed["validation"]}, {
+                "pointset.validate.basic", "pointset.validate.subset"})
+            self.assertEqual(passed_runtime.store.counts()["artifacts"], 2)
+            for mode in ("missing_rank", "nonfinite_rank"):
+                failed_runtime, failed = await run(mode)
+                self.assertEqual((failed["state"], failed["execution_status"], failed["validation_status"]),
+                                 ("rejected", "succeeded", "failed"))
+                self.assertFalse(failed.get("outputs"))
+                self.assertEqual(failed_runtime.store.counts()["artifacts"], 1)
         asyncio.run(scenario())
 
     def test_unknown_operation_is_rejected_before_worker(self):
@@ -643,12 +951,57 @@ class MasterCoreTest(unittest.TestCase):
     def test_health_reports_configured_concurrency_without_absolute_roots(self):
         async def scenario():
             runtime = MasterRuntime(self.root / "health", worker=make_worker(self.root),
-                                    concurrency=1, require_memory_limit=False)
+                                    resource_config=ResourceConfig(
+                                        concurrency=3, max_memory_mb=8192,
+                                        default_memory_mb=4096),
+                                    require_memory_limit=False)
             self.resources.append(runtime)
             health = await runtime.system_health()
-            self.assertEqual(health["concurrency"], 1)
+            self.assertEqual(health["concurrency"], 3)
+            self.assertEqual(health["resources"], {
+                "concurrency": 3, "default_memory_mb": 4096,
+                "max_memory_mb": 8192, "default_wall_time_ms": 120000,
+                "max_wall_time_ms": 86400000})
             self.assertNotIn("registry_paths", health)
             self.assertNotIn("roots", health["file_access"])
+        asyncio.run(scenario())
+
+    def test_resource_configuration_defaults_environment_and_ceiling(self):
+        self.assertEqual(ResourceConfig(), ResourceConfig(
+            concurrency=2, max_memory_mb=4096, default_memory_mb=4096,
+            default_wall_time_ms=120000, max_wall_time_ms=86400000))
+        with patch.dict("os.environ", {
+                "CGAL_MASTER_CONCURRENCY": "4",
+                "CGAL_MASTER_MAX_MEMORY_MB": "8192",
+                "CGAL_MASTER_DEFAULT_MEMORY_MB": "2048",
+                "CGAL_MASTER_DEFAULT_WALL_TIME_MS": "600000"}, clear=False):
+            configured = ResourceConfig.from_environment()
+        self.assertEqual((configured.concurrency, configured.max_memory_mb,
+                          configured.default_memory_mb, configured.default_wall_time_ms),
+                         (4, 8192, 2048, 600000))
+        for variable, value in (("CGAL_MASTER_CONCURRENCY", "0"),
+                                ("CGAL_MASTER_MAX_MEMORY_MB", "not-a-number")):
+            with patch.dict("os.environ", {variable: value}, clear=False), self.assertRaises(ValueError):
+                ResourceConfig.from_environment()
+
+        async def scenario():
+            document = json.loads(Path("cgal_mcp/master/operations.json").read_text(encoding="utf-8"))
+            next(operation for operation in document["operations"]
+                 if operation["id"] == "hull.convex_3")["resource_profile"] = {
+                     "default_wall_time_ms": 600000}
+            profiled = self.root / "profiled-operations.json"
+            profiled.write_text(json.dumps(document), encoding="utf-8")
+            runtime = MasterRuntime(self.root / "resource-ceiling", worker=make_worker(self.root),
+                operations=profiled,
+                resource_config=ResourceConfig(max_memory_mb=8192, default_memory_mb=4096),
+                require_memory_limit=False)
+            self.resources.append(runtime)
+            artifact = runtime.artifact_import(str(self.points), "mm")
+            plan = runtime.plan({"operation_id": "hull.convex_3",
+                                 "inputs": [artifact["artifact_id"]], "parameters": {}})
+            self.assertEqual(runtime._default_wall_time(plan), 600000)
+            with self.assertRaisesRegex(InvalidInput, "outside allowed bounds"):
+                await runtime.execute(plan["plan_id"], memory_mb=8193)
         asyncio.run(scenario())
 
     def test_docs_search_uses_generated_pinned_catalog(self):

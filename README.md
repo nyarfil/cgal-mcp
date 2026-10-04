@@ -14,6 +14,8 @@ StellaCADはStandalone受入後に正式統合する利用側です。
 - 点群から3D凸包を生成し、閉鎖性・向き・正体積・凸性・入力点包含を検証する汎用経路。
 - 同じ汎用経路で軽量化の7 cost/placement・5 stop predicateと各constraint/filterを実行。
 - 軽量化の必須検証は、形状・位相・向きの検査と双方向bounded-error Hausdorffの両方。
+- 外れ値除去・3方式の間引き・Jet平滑化・PCA/Jet法線・MST向き統一を専用validator付きで実行。
+- 法線付き点群のASCII PLYと、出力点数を実行時に確認する点群処理DAG。
 - workerの資源制限、失敗した候補の隔離、原本保持、stdioとStreamable HTTP。
 - 版固定のHTML・header・exampleを検索する任意のローカル全文索引。
 
@@ -22,6 +24,9 @@ StellaCADはStandalone受入後に正式統合する利用側です。
 操作・ビルド・区切りの証拠は [Master基盤](docs/master/FOUNDATION_JA.md)、
 完成判定は [実装決定](docs/master/IMPLEMENTATION_DECISIONS_JA.md) を参照してください。
 軽量化の移行範囲と再試験手順は [軽量化マイルストーン](docs/master/WAVE_A_JA.md) に記録しています。
+点群の対応範囲は [点群処理](docs/master/WAVE_B_JA.md)、
+原本要求に対する実計算の判定方法は [主要能力の受入](docs/master/CAPABILITY_ACCEPTANCE_JA.md) を参照してください。
+実PCの凸包測定と資源設定は [性能・資源設定](docs/master/PERFORMANCE_JA.md) に記録しています。
 実PCの接続確認範囲は [ホスト接続](docs/master/HOST_CONNECTION_JA.md) を参照してください。
 
 ## 現在実装済みのv0.1

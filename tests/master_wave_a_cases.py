@@ -7,17 +7,94 @@ against the official-release build.
 
 from __future__ import annotations
 
+import base64
 import hashlib
 import json
 import math
+import os
 import pathlib
 import subprocess
 import sys
 import tempfile
 
+if not __debug__:
+    raise SystemExit("Wave A acceptance harness requires Python assertions")
+
 
 def digest(path: pathlib.Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+TRACE_PATH = os.environ.get("CGAL_MASTER_ACCEPTANCE_TRACE")
+
+
+def canonical_hash(value: object) -> str:
+    return hashlib.sha256(json.dumps(
+        value, sort_keys=True, separators=(",", ":"), ensure_ascii=False,
+        allow_nan=False,
+    ).encode("utf-8")).hexdigest()
+
+
+def portable_blob(path: pathlib.Path, expected_sha256: str | None = None) -> tuple[str, dict]:
+    """Capture only synthetic fixture/output bytes for trusted local replay."""
+    content = path.read_bytes()
+    actual = hashlib.sha256(content).hexdigest()
+    if expected_sha256 is not None:
+        assert actual == expected_sha256, (path.name, expected_sha256, actual)
+    return actual, {
+        "encoding": "base64",
+        "byte_size": len(content),
+        "content": base64.b64encode(content).decode("ascii"),
+    }
+
+
+def trace_exchange(request_value: dict, response_value: dict) -> None:
+    """Append a path-free request/response trace when the approved runner asks.
+
+    The ordinary Wave A harness remains unchanged when the environment variable is
+    absent.  The trusted runner independently decodes and hashes every captured
+    synthetic blob before it can issue in-memory replay evidence.
+    """
+    if TRACE_PATH is None:
+        return
+    blobs: dict[str, dict] = {}
+    portable_inputs = []
+    for item in request_value["inputs"]:
+        sha256, blob = portable_blob(pathlib.Path(item["path"]), item["sha256"])
+        blobs.setdefault(sha256, blob)
+        portable_inputs.append({key: value for key, value in item.items() if key != "path"} |
+                               {"blob_sha256": sha256})
+    portable_request = {
+        key: value for key, value in request_value.items()
+        if key not in {"inputs", "output_dir"}
+    }
+    portable_request["inputs"] = portable_inputs
+
+    portable_outputs = []
+    for item in response_value.get("outputs", []):
+        path = pathlib.Path(item["path"])
+        sha256, blob = portable_blob(path, item.get("sha256"))
+        blobs.setdefault(sha256, blob)
+        portable_outputs.append({key: value for key, value in item.items() if key != "path"} |
+                                {"blob_sha256": sha256})
+    portable_response = {
+        key: value for key, value in response_value.items()
+        if key not in {"outputs", "diagnostics"}
+    }
+    portable_response["outputs"] = portable_outputs
+    record = {
+        "schema_version": 1,
+        "case_id": request_value["request_id"],
+        "operation_id": request_value["operation"],
+        "request": portable_request,
+        "request_sha256": canonical_hash(portable_request),
+        "response": portable_response,
+        "response_sha256": canonical_hash(portable_response),
+        "blobs": blobs,
+    }
+    with pathlib.Path(TRACE_PATH).open("a", encoding="utf-8", newline="\n") as stream:
+        stream.write(json.dumps(record, sort_keys=True, separators=(",", ":"),
+                                ensure_ascii=False, allow_nan=False) + "\n")
 
 
 def artifact(path: pathlib.Path, artifact_id: str, unit: str = "mm") -> dict:
@@ -72,6 +149,7 @@ def run(worker: str, value: dict, timeout: int = 120) -> dict:
     result = json.loads(lines[0])
     assert result["protocol"] == 1
     assert result["request_id"] == value["request_id"]
+    trace_exchange(value, result)
     return result
 
 
@@ -242,6 +320,7 @@ def simplify_fixture(
     parameters: dict,
     integrity_parameters: dict | None = None,
     expected_protected_edges: int | None = None,
+    expect_removal: bool = True,
 ) -> dict:
     result = run(
         worker,
@@ -255,8 +334,12 @@ def simplify_fixture(
     )
     assert result["status"] == "ok", result
     assert result["outputs"][0]["slot"] == "geometry", result
-    assert result["metrics"]["edges_removed"] > 0, result
-    assert result["metrics"]["edges_after"] < result["metrics"]["edges_before"], result
+    if expect_removal:
+        assert result["metrics"]["edges_removed"] > 0, result
+        assert result["metrics"]["edges_after"] < result["metrics"]["edges_before"], result
+    else:
+        assert result["metrics"]["edges_removed"] == 0, result
+        assert result["metrics"]["edges_after"] == result["metrics"]["edges_before"], result
     output = pathlib.Path(result["outputs"][0]["path"])
     assert output.is_file(), result
     validate_candidate(
@@ -336,6 +419,7 @@ with tempfile.TemporaryDirectory() as folder:
         "face_ratio": {"kind": "face_ratio", "value": 0.9},
         "edge_length": {"kind": "edge_length", "value": typed_length(0.45)},
     }
+    stop_results = {}
     for stop_name, stop_value in stop_fixtures.items():
         result = simplify_fixture(
             worker,
@@ -345,6 +429,24 @@ with tempfile.TemporaryDirectory() as folder:
             base_parameters("lindstrom_turk", stop_value),
         )
         assert result["metrics"]["stop_policy"] == stop_name, result
+        stop_results[stop_name] = result
+
+    # Edge-length stopping is a candidate-cost boundary rather than a final
+    # mesh minimum-edge guarantee.  On the identical sphere, a threshold below
+    # every input edge must stop immediately, while 0.45 mm performs collapses.
+    edge_length_below_minimum = simplify_fixture(
+        worker,
+        root,
+        source,
+        "stop-edge_length-below-minimum",
+        base_parameters(
+            "lindstrom_turk",
+            {"kind": "edge_length", "value": typed_length(0.2)},
+        ),
+        expect_removal=False,
+    )
+    assert stop_results["edge_length"]["metrics"]["edges_removed"] > 0
+    assert edge_length_below_minimum["metrics"]["edges_removed"] == 0
 
     # Constraint and optional wrapper/filter branches are independently named.
     protected_edge = [faces[0][0], faces[0][1]]
@@ -406,6 +508,75 @@ with tempfile.TemporaryDirectory() as folder:
         base_parameters("gh_plane_line") | {"polyhedral_envelope": typed_length(0.25)},
     )
     assert envelope["metrics"]["polyhedral_envelope_enabled"] is True, envelope
+
+    # Tight placement/filter thresholds must demonstrably change behavior, not
+    # merely echo an enabled flag.  The shared aggressive control removes most
+    # edges; bounded distance and Polyhedral Envelope independently reject every
+    # proposed collapse at a 1e-6 mm bound.
+    filter_control = simplify_fixture(
+        worker,
+        root,
+        source,
+        "filter-control",
+        base_parameters("gh_plane_line", {"kind": "edge_ratio", "value": 0.1}),
+    )
+    bounded_tight = simplify_fixture(
+        worker,
+        root,
+        source,
+        "bounded-distance-tight",
+        base_parameters("gh_plane_line", {"kind": "edge_ratio", "value": 0.1}) |
+        {"bounded_distance": typed_length(1e-6)},
+        expect_removal=False,
+    )
+    envelope_tight = simplify_fixture(
+        worker,
+        root,
+        source,
+        "polyhedral-envelope-tight",
+        base_parameters("gh_plane_line", {"kind": "edge_ratio", "value": 0.1}) |
+        {"polyhedral_envelope": typed_length(1e-6)},
+        expect_removal=False,
+    )
+    assert digest(pathlib.Path(filter_control["outputs"][0]["path"])) != digest(
+        pathlib.Path(bounded_tight["outputs"][0]["path"])
+    )
+    assert digest(pathlib.Path(filter_control["outputs"][0]["path"])) != digest(
+        pathlib.Path(envelope_tight["outputs"][0]["path"])
+    )
+
+    # A torus gives bounded-normal-change a nontrivial adversarial surface.  Both
+    # runs collapse the same number of edges, but the filter selects a different
+    # valid result; identical outputs would prove only parameter echoing.
+    guard_vertices, guard_faces = torus_fixture()
+    normal_guard = root / "normal-guard-torus.off"
+    write_off(normal_guard, guard_vertices, guard_faces)
+    normal_control = run(
+        worker,
+        request(
+            "mesh.simplify.edge_collapse",
+            [artifact(normal_guard, "bounded-normal-control-input")],
+            stage(root, "bounded-normal-control-simplify"),
+            base_parameters("gh_plane_line", {"kind": "edge_ratio", "value": 0.12}),
+            request_id="bounded-normal-control-simplify",
+        ),
+    )
+    assert normal_control["status"] == "ok", normal_control
+    assert normal_control["metrics"]["edges_removed"] > 0, normal_control
+    normal_control_output = pathlib.Path(normal_control["outputs"][0]["path"])
+    validate_candidate(worker, root, "bounded-normal-control", normal_control_output, normal_guard)
+    normal_adversarial = simplify_fixture(
+        worker,
+        root,
+        normal_guard,
+        "bounded-normal-adversarial",
+        base_parameters("gh_plane_line", {"kind": "edge_ratio", "value": 0.12}) |
+        {"bounded_normal_change": True},
+    )
+    assert normal_control["metrics"]["edges_removed"] == normal_adversarial["metrics"]["edges_removed"]
+    assert digest(normal_control_output) != digest(
+        pathlib.Path(normal_adversarial["outputs"][0]["path"])
+    )
 
     # Identical meshes deterministically exercise pass and indeterminate bounds.
     hausdorff_pass = run(

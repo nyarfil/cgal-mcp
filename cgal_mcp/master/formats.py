@@ -4,12 +4,16 @@ from __future__ import annotations
 
 import json
 import math
+import re
 import struct
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 from .errors import InvalidInput
+
+
+_ASCII_NUMBER = re.compile(r"^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$")
 
 
 @dataclass(frozen=True)
@@ -44,6 +48,8 @@ def parse_xyz(content: bytes) -> Inspection:
         fields = line.split()
         if len(fields) != 3:
             raise InvalidInput("xyz_syntax", f"XYZ line {line_number} must have three coordinates")
+        if any(_ASCII_NUMBER.fullmatch(field) is None for field in fields):
+            raise InvalidInput("xyz_syntax", f"XYZ line {line_number} has a non-number")
         try:
             point = tuple(float(field) for field in fields)
         except ValueError as exc:
@@ -288,6 +294,94 @@ def parse_ply(content: bytes) -> Inspection:
         "encoding": "ascii"})
 
 
+def parse_pointset_normals_ply(content: bytes) -> Inspection:
+    """Parse the strict ASCII PLY interchange used by PointSet3Normals.
+
+    This intentionally accepts vertex data only.  Faces and other elements
+    would change the artifact's meaning and therefore cannot be hidden behind
+    the PointSet3Normals type.
+    """
+    try:
+        lines = content.decode("ascii").splitlines()
+    except UnicodeDecodeError as exc:
+        raise InvalidInput("ply_header", "PointSet3Normals PLY must be ASCII") from exc
+    if len(lines) < 4 or lines[0] != "ply" or lines[1] != "format ascii 1.0":
+        raise InvalidInput("ply_format", "PointSet3Normals requires ASCII PLY 1.0")
+
+    scalar_types = {"char", "uchar", "short", "ushort", "int", "uint",
+                    "int8", "uint8", "int16", "uint16", "int32", "uint32",
+                    "float", "double", "float32", "float64"}
+    vertex_count: int | None = None
+    properties: list[str] = []
+    header_end: int | None = None
+    for index, line in enumerate(lines[2:], 2):
+        fields = line.split()
+        if fields == ["end_header"]:
+            header_end = index
+            break
+        if not fields or fields[0] in {"comment", "obj_info"}:
+            continue
+        if fields[:2] == ["element", "vertex"] and len(fields) == 3:
+            if vertex_count is not None:
+                raise InvalidInput("ply_element", "PLY must contain one vertex element")
+            try:
+                vertex_count = int(fields[2])
+            except ValueError as exc:
+                raise InvalidInput("ply_element", "PLY vertex count is invalid") from exc
+            if vertex_count <= 0 or vertex_count > 10_000_000:
+                raise InvalidInput("ply_element", "PLY vertex count is outside the supported range")
+            continue
+        if fields[:1] == ["element"]:
+            raise InvalidInput("ply_element", "PointSet3Normals does not accept faces or other elements")
+        if fields[:1] == ["property"]:
+            if vertex_count is None or len(fields) != 3 or fields[1] not in scalar_types:
+                raise InvalidInput("ply_properties", "PointSet3Normals requires scalar vertex properties")
+            if fields[2] in properties:
+                raise InvalidInput("ply_properties", "PLY vertex property names must be unique")
+            properties.append(fields[2])
+            continue
+        raise InvalidInput("ply_header", "PointSet3Normals PLY contains an unsupported header line")
+    if header_end is None or vertex_count is None:
+        raise InvalidInput("ply_header", "PLY end_header or vertex element is missing")
+    required = ("x", "y", "z", "nx", "ny", "nz")
+    if any(name not in properties for name in required):
+        raise InvalidInput("ply_properties", "PLY vertices require x, y, z, nx, ny and nz")
+
+    body = lines[header_end + 1:]
+    if len(body) < vertex_count:
+        raise InvalidInput("ply_truncated", "PLY ended before all vertices")
+    if any(line.strip() for line in body[vertex_count:]):
+        raise InvalidInput("ply_trailing", "PointSet3Normals PLY contains trailing data")
+    positions = {name: properties.index(name) for name in required}
+    points: list[tuple[float, float, float]] = []
+    normals_nonzero = True
+    normals_unit = True
+    for offset, line in enumerate(body[:vertex_count], 1):
+        fields = line.split()
+        if len(fields) != len(properties):
+            raise InvalidInput("ply_vertex", f"PLY vertex {offset} property count is invalid")
+        if any(_ASCII_NUMBER.fullmatch(field) is None for field in fields):
+            raise InvalidInput("ply_vertex", f"PLY vertex {offset} has a non-number")
+        try:
+            values = [float(field) for field in fields]
+        except ValueError as exc:
+            raise InvalidInput("ply_vertex", f"PLY vertex {offset} has a non-number") from exc
+        if not _finite(values):
+            raise InvalidInput("nonfinite_coordinate", f"PLY vertex {offset} is non-finite")
+        point = tuple(values[positions[name]] for name in ("x", "y", "z"))
+        normal = tuple(values[positions[name]] for name in ("nx", "ny", "nz"))
+        points.append(point)  # type: ignore[arg-type]
+        normals_nonzero = normals_nonzero and normal != (0.0, 0.0, 0.0)
+        normals_unit = normals_unit and math.isclose(math.hypot(*normal), 1.0,
+                                                     rel_tol=1e-6, abs_tol=1e-6)
+    return Inspection("PointSet3Normals", "ply",
+                      {"finite": True, "normals_nonzero": normals_nonzero,
+                       "normals_unit": normals_unit},
+                      {"point_count": vertex_count, "bounds": _bounds(points),
+                       "encoding": "ascii", "vertex_properties": properties,
+                       "normals_present": True})
+
+
 def parse_json_geometry(content: bytes, requested_type: str | None) -> Inspection:
     try:
         value = json.loads(content)
@@ -320,6 +414,8 @@ def inspect_bytes(content: bytes, format_name: str, requested_type: str | None =
     format_name = format_name.lower().lstrip(".")
     if format_name == "json":
         inspection = parse_json_geometry(content, requested_type)
+    elif format_name == "ply" and requested_type == "PointSet3Normals":
+        inspection = parse_pointset_normals_ply(content)
     elif format_name in PARSERS:
         inspection = PARSERS[format_name](content)
     else:

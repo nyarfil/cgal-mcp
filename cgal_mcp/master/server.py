@@ -50,8 +50,8 @@ def create_server(runtime: MasterRuntime | None = None) -> MCPServer:
     async def execute(plan_id: str, execution: dict[str, Any] | None = None) -> dict[str, Any]:
         """Queue an immutable plan and immediately return its persistent job identity."""
         options = execution or {}
-        return await active.execute(plan_id, wall_time_ms=options.get("wall_time_ms", 120000),
-                                    memory_mb=options.get("memory_mb", 4096))
+        return await active.execute(plan_id, wall_time_ms=options.get("wall_time_ms"),
+                                    memory_mb=options.get("memory_mb"))
 
     @server.tool(name="cgal_validate")
     def validate(artifact_id: str, against: str,

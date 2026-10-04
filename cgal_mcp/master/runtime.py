@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import math
 import os
 import shutil
 import sqlite3
@@ -12,15 +13,20 @@ import uuid
 from pathlib import Path
 from typing import Any
 
-from .errors import InvalidInput, MasterError, WorkerFailure
+from .errors import InvalidInput, MasterError, PreconditionFailure, WorkerFailure
 from .planner import PlanBuilder
 from .registry import OperationRegistry
 from .store import ArtifactStore
-from .supervisor import DEFAULT_MEMORY_MB, WorkerSupervisor, default_worker_path
+from .resources import ResourceConfig
+from .supervisor import WorkerSupervisor, default_worker_path
 from .util import digest_file, within
 
 
 MAX_VALIDATION_REPORT_BYTES = 2 * 1024 * 1024
+
+
+def _reject_json_constant(value: str) -> None:
+    raise ValueError(f"Non-finite JSON number: {value}")
 
 
 def _load_validation_report(path: Path) -> dict[str, Any]:
@@ -35,10 +41,10 @@ def _load_validation_report(path: Path) -> dict[str, Any]:
             raise WorkerFailure("validation_report_too_large",
                                 "Validation report exceeds 2 MiB",
                                 "validation_failure", False)
-        value = json.loads(encoded.decode("utf-8"))
+        value = json.loads(encoded.decode("utf-8"), parse_constant=_reject_json_constant)
     except WorkerFailure:
         raise
-    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError, ValueError) as exc:
         raise WorkerFailure("validation_report_malformed", str(exc),
                             "validation_failure", False) from exc
     if not isinstance(value, dict):
@@ -76,23 +82,27 @@ def _docs_index_path(explicit: Path | None, catalog_root: Path) -> Path | None:
 class MasterRuntime:
     def __init__(self, root: Path, *, operations: Path | list[Path] | None = None,
                  policies: Path | None = None,
-                 worker: Path | None = None, concurrency: int = 2,
+                 worker: Path | None = None, concurrency: int | None = None,
+                 resource_config: ResourceConfig | None = None,
                  require_memory_limit: bool = True, catalog_root: Path | None = None,
                  allowed_file_roots: list[Path] | None = None,
                  docs_index: Path | None = None):
-        if type(concurrency) is not int or not 1 <= concurrency <= 2:
-            raise ValueError("Master worker concurrency must be 1 or 2")
+        resources = resource_config or ResourceConfig()
+        if concurrency is not None:
+            resources = resources.with_concurrency(concurrency)
         self.registry = OperationRegistry(operations, policies=policies)
         self.store = ArtifactStore(root)
         self.planner = PlanBuilder(self.registry, self.store)
         self.supervisor = WorkerSupervisor(self.registry, worker or default_worker_path(),
-                                           require_memory_limit=require_memory_limit)
+                                           require_memory_limit=require_memory_limit,
+                                           max_memory_mb=resources.max_memory_mb)
         self.catalog_root = _catalog_path(catalog_root)
         self.docs_index = _docs_index_path(docs_index, self.catalog_root)
         self.allowed_file_roots = (None if allowed_file_roots is None else
                                    tuple(path.resolve() for path in allowed_file_roots))
-        self.semaphore = asyncio.Semaphore(concurrency)
-        self.concurrency = concurrency
+        self.semaphore = asyncio.Semaphore(resources.concurrency)
+        self.resources = resources
+        self.concurrency = resources.concurrency
         self.tasks: dict[str, asyncio.Task[None]] = {}
         self.started = time.time()
 
@@ -122,12 +132,26 @@ class MasterRuntime:
     def plan(self, request: dict[str, Any]) -> dict[str, Any]:
         return self.planner.build(request)
 
-    async def execute(self, plan_id: str, *, wall_time_ms: int = 120000,
-                      memory_mb: int = DEFAULT_MEMORY_MB) -> dict[str, Any]:
+    def _default_wall_time(self, plan: dict[str, Any]) -> int:
+        return max(
+            [self.resources.default_wall_time_ms]
+            + [int(self.registry.get(step["operation"]).get(
+                "resource_profile", {}).get("default_wall_time_ms",
+                                             self.resources.default_wall_time_ms))
+               for step in plan["steps"]])
+
+    async def execute(self, plan_id: str, *, wall_time_ms: int | None = None,
+                      memory_mb: int | None = None) -> dict[str, Any]:
         plan = self.store.get_plan(plan_id)
         if plan["registry_revision"] != self.registry.revision:
             raise InvalidInput("stale_plan_registry", "Plan registry revision no longer matches")
-        if not 1 <= wall_time_ms <= 86_400_000 or not 64 <= memory_mb <= DEFAULT_MEMORY_MB:
+        if wall_time_ms is None:
+            wall_time_ms = self._default_wall_time(plan)
+        if memory_mb is None:
+            memory_mb = self.resources.default_memory_mb
+        if (type(wall_time_ms) is not int or type(memory_mb) is not int
+                or not 1 <= wall_time_ms <= self.resources.max_wall_time_ms
+                or not 64 <= memory_mb <= self.resources.max_memory_mb):
             raise InvalidInput("execution_limits", "Execution limits are outside allowed bounds")
         job_id = "job_" + uuid.uuid4().hex
         job = self.store.create_job(job_id, plan_id)
@@ -158,6 +182,8 @@ class MasterRuntime:
                     step_dir.mkdir()
                     inputs = self._resolve_inputs(step, produced)
                     self._recheck_inputs(inputs)
+                    self._runtime_preconditions(operation, inputs)
+                    self._runtime_parameter_preconditions(operation, inputs, step["parameters"])
                     request_id = uuid.uuid4().hex
                     request = {"protocol": 1, "request_id": request_id,
                         "operation": operation["id"], "inputs": inputs,
@@ -167,11 +193,18 @@ class MasterRuntime:
                     response, evidence = await self.supervisor.execute(request, step_dir)
                     self._recheck_inputs(inputs)
                     for output in response["outputs"]:
+                        inspection = None
+                        if output["type"] != "ValidationReport":
+                            inspection = self.store.inspect_worker_candidate(
+                                Path(output["path"]), output["format"], output["type"])
                         descriptor = {"artifact_id": f"candidate:{step['id']}:{output['slot']}",
                             "type": output["type"], "unit": output.get("unit", inputs[0]["unit"] if inputs else "none"),
                             "format": output["format"], "path": str(Path(output["path"]).resolve()),
                             "sha256": digest_file(Path(output["path"])),
                             "step": step["id"], "slot": output["slot"]}
+                        if inspection is not None:
+                            descriptor["properties"] = inspection.properties
+                            descriptor["metadata"] = inspection.metadata
                         produced[(step["id"], output["slot"])] = descriptor
                     step_result = {"step_id": step["id"], "operation": operation["id"],
                                    "metrics": response.get("metrics", {}),
@@ -182,6 +215,14 @@ class MasterRuntime:
                         required_checks = operation["validation"].get("required_report_checks", {})
                         missing_or_failed = {key: expected for key, expected in required_checks.items()
                                              if report.get(key) != expected}
+                        for key in operation["validation"].get("required_report_fields", []):
+                            if key not in report:
+                                missing_or_failed[key] = "required"
+                        for key, minimum in operation["validation"].get("required_report_minimum", {}).items():
+                            value = report.get(key)
+                            if (not isinstance(value, (int, float)) or isinstance(value, bool)
+                                    or not math.isfinite(float(value)) or value < minimum):
+                                missing_or_failed[key] = {"minimum": minimum}
                         if report.get("status") != "pass" or missing_or_failed:
                             validation_reports.append({**step_result, "report": report})
                             message = ("Mandatory validator rejected candidate" if not missing_or_failed else
@@ -248,14 +289,82 @@ class MasterRuntime:
                 result.append({"artifact_id": artifact["artifact_id"], "type": artifact["type"],
                                "unit": artifact["unit"], "format": artifact["format"],
                                "path": str(self.store.managed_path(artifact["artifact_id"])),
-                               "sha256": artifact["sha256"]})
+                               "sha256": artifact["sha256"], "properties": artifact["properties"],
+                               "metadata": artifact["metadata"]})
             else:
                 descriptor = produced.get((binding["step"], binding["slot"]))
                 if descriptor is None:
                     raise InvalidInput("missing_step_output", f"Missing output from {binding['step']}")
                 result.append({key: descriptor[key] for key in
-                               ("artifact_id", "type", "unit", "format", "path", "sha256")})
+                               ("artifact_id", "type", "unit", "format", "path", "sha256",
+                                "properties", "metadata")})
         return result
+
+    @staticmethod
+    def _runtime_preconditions(operation: dict[str, Any], inputs: list[dict[str, Any]]) -> None:
+        for condition in operation.get("preconditions", []):
+            if "worker_check" in condition:
+                continue
+            if "bounds" in condition:
+                contract = condition["bounds"]
+                for item in inputs:
+                    bounds = item.get("metadata", {}).get("bounds")
+                    if (not isinstance(bounds, list) or not bounds
+                            or any(not isinstance(axis, list) or len(axis) != 2
+                                   or any(not isinstance(value, (int, float))
+                                          or isinstance(value, bool) or not math.isfinite(float(value))
+                                          for value in axis) for axis in bounds)):
+                        raise PreconditionFailure(f"{operation['id']} requires finite coordinate bounds")
+                    maximum = max(abs(float(value)) for axis in bounds for value in axis)
+                    span = max(float(axis[1]) - float(axis[0]) for axis in bounds)
+                    if (maximum > contract["maximum_absolute_coordinate"]
+                            or not math.isfinite(span) or span < contract["minimum_span"]
+                            or maximum / span > contract["maximum_translation_to_span_ratio"]):
+                        raise PreconditionFailure(
+                            f"{operation['id']} coordinates are outside its numeric scale contract")
+                continue
+            prop = condition.get("property")
+            values = [item.get("properties", {}).get(
+                prop, item.get("metadata", {}).get(prop, "unknown")) for item in inputs]
+            if "equals" in condition and any(value != condition["equals"] for value in values):
+                raise PreconditionFailure(
+                    f"{operation['id']} requires {prop}={condition['equals']}")
+            if "minimum" in condition and any(
+                    not isinstance(value, (int, float)) or isinstance(value, bool)
+                    or not math.isfinite(float(value)) or value < condition["minimum"]
+                    for value in values):
+                raise PreconditionFailure(
+                    f"{operation['id']} requires {prop}>={condition['minimum']}")
+
+    @staticmethod
+    def _runtime_parameter_preconditions(operation: dict[str, Any], inputs: list[dict[str, Any]],
+                                         parameters: dict[str, Any]) -> None:
+        by_slot = {spec["slot"]: value for spec, value in zip(operation["io"]["inputs"], inputs)}
+        for condition in operation.get("parameter_preconditions", []):
+            value: Any = parameters
+            for component in condition["parameter"].split("."):
+                if not isinstance(value, dict) or component not in value:
+                    raise InvalidInput("parameter_precondition",
+                                       f"{operation['id']} lacks parameter {condition['parameter']}")
+                value = value[component]
+            if "finite_coordinate_ratio_metadata" in condition:
+                bounds = by_slot[condition["input"]]["metadata"].get(
+                    condition["finite_coordinate_ratio_metadata"])
+                maximum = (max(abs(float(item)) for axis in bounds for item in axis)
+                           if isinstance(bounds, list) and bounds else math.inf)
+                if (not isinstance(value, (int, float)) or isinstance(value, bool)
+                        or not math.isfinite(float(value)) or value == 0
+                        or not math.isfinite(maximum / float(value))):
+                    raise PreconditionFailure(
+                        f"{operation['id']} requires finite coordinate-to-{condition['parameter']} ratios")
+                continue
+            limit = by_slot[condition["input"]]["metadata"].get(condition["less_than_metadata"])
+            if (not isinstance(value, (int, float)) or isinstance(value, bool)
+                    or not isinstance(limit, (int, float)) or isinstance(limit, bool)
+                    or value >= limit):
+                raise PreconditionFailure(
+                    f"{operation['id']} requires {condition['parameter']} < "
+                    f"{condition['less_than_metadata']}")
 
     @staticmethod
     def _recheck_inputs(inputs: list[dict[str, Any]]) -> None:
@@ -469,7 +578,13 @@ class MasterRuntime:
                 "docs_index": docs_index_health,
                 "file_access": {"mode": "local_unrestricted" if self.allowed_file_roots is None else "allowlist",
                                 "root_count": None if self.allowed_file_roots is None else len(self.allowed_file_roots)},
-                "concurrency": self.concurrency, "max_import_bytes": 512 * 1024 * 1024}
+                "concurrency": self.concurrency,
+                "resources": {"concurrency": self.resources.concurrency,
+                              "default_memory_mb": self.resources.default_memory_mb,
+                              "max_memory_mb": self.resources.max_memory_mb,
+                              "default_wall_time_ms": self.resources.default_wall_time_ms,
+                              "max_wall_time_ms": self.resources.max_wall_time_ms},
+                "max_import_bytes": 512 * 1024 * 1024}
 
     def job_status(self, job_id: str) -> dict[str, Any]:
         return self.store.get_job(job_id)
@@ -496,4 +611,5 @@ class MasterRuntime:
 
 def default_runtime(*, allowed_file_roots: list[Path] | None = None) -> MasterRuntime:
     return MasterRuntime(Path(os.environ.get("CGAL_MASTER_DATA", "work/cgal-master-data")),
-                         allowed_file_roots=allowed_file_roots)
+                         allowed_file_roots=allowed_file_roots,
+                         resource_config=ResourceConfig.from_environment())

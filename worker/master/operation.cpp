@@ -1,5 +1,6 @@
 #include "operation.h"
 #include "wave_a/wave_a_operations.h"
+#include "wave_b/wave_b_operations.h"
 
 #include <CGAL/version.h>
 
@@ -39,7 +40,19 @@ const std::vector<OperationDefinition>& operation_registry() {
       convex_enclosure_validator_operation(),
       wave_a::simplify_edge_collapse_operation(),
       wave_a::simplification_integrity_validator_operation(),
-      wave_a::symmetric_hausdorff_operation()};
+      wave_a::symmetric_hausdorff_operation(),
+      wave_b::remove_outliers_operation(),
+      wave_b::grid_simplify_operation(),
+      wave_b::random_simplify_operation(),
+      wave_b::hierarchy_simplify_operation(),
+      wave_b::jet_smooth_operation(),
+      wave_b::estimate_normals_operation(),
+      wave_b::orient_normals_mst_operation(),
+      wave_b::pointset_basic_validator_operation(),
+      wave_b::pointset_subset_validator_operation(),
+      wave_b::pointset_smoothed_validator_operation(),
+      wave_b::pointset_normals_estimated_validator_operation(),
+      wave_b::pointset_normals_oriented_validator_operation()};
   return registry;
 }
 

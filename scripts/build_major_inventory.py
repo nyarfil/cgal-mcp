@@ -6,11 +6,13 @@ an implemented MCP operation and never executes C++ source or examples.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 from pathlib import Path
 
 from fetch_master_baseline import sha256_file, verified_official_provenance
+from master_acceptance import extract_requirements
 
 
 VERSION = "6.2.1"
@@ -405,9 +407,21 @@ def _fastenvelope_policy(source_root: Path) -> dict:
     }
 
 
+def requirement_description_view(document: dict) -> dict:
+    """Immutable planning input; execution evidence has its own acceptance store."""
+    return {"source": document["source"], "source_sha256": document["source_sha256"],
+        "families": [{"id": family["id"], "title": family["title"],
+            "requirements": [{key: item[key] for key in ("id", "description", "required")}
+                             for item in family["requirements"]]}
+                     for family in document["families"]]}
+
+
 def build_inventory(repository: Path, source_root: Path, docs_root: Path) -> dict:
     requirements_path = repository / "catalog" / "major_requirements.json"
     requirements = _read_json(requirements_path)
+    descriptions = requirement_description_view(requirements)
+    if descriptions != requirement_description_view(extract_requirements(repository)):
+        raise ValueError("Planning inventory denominator differs from the original requirements")
     if sha256_file(repository / requirements["source"]) != requirements["source_sha256"]:
         raise ValueError("major requirements source digest mismatch")
     provenance = verified_official_provenance(source_root, docs_root)
@@ -484,7 +498,13 @@ def build_inventory(repository: Path, source_root: Path, docs_root: Path) -> dic
         raise ValueError("subcapability map does not exactly match major requirements population")
     return {
         "schema_version": 1,
-        "source": {"major_requirements": "catalog/major_requirements.json", "sha256": sha256_file(requirements_path), "requirements_source": requirements["source"], "requirements_source_sha256": requirements["source_sha256"]},
+        "source": {"major_requirements": "catalog/major_requirements.json",
+            "sha256": hashlib.sha256((json.dumps(descriptions, ensure_ascii=False,
+                sort_keys=True, indent=2) + "\n").encode("utf-8")).hexdigest(),
+            "sha256_encoding": "sorted-json-indent2-utf8-lf",
+            "sha256_scope": "original_requirement_descriptions_without_execution_bindings",
+            "requirements_source": requirements["source"],
+            "requirements_source_sha256": requirements["source_sha256"]},
         "cgal": {"version": VERSION, "provenance": provenance},
         "inventory_status": "PLANNING_ONLY_NOT_EXECUTION_EVIDENCE_OR_API_COMPLETENESS_CLAIM",
         "execution_status_source": "cgal_mcp/master/operations.json and trusted capability acceptance reports; not assessed by this inventory",

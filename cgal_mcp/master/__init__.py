@@ -5,7 +5,8 @@ objects are data-driven and do not import or mutate the legacy runtime.
 """
 
 from .registry import OperationRegistry
+from .resources import ResourceConfig
 from .runtime import MasterRuntime
 from .store import ArtifactStore
 
-__all__ = ["ArtifactStore", "MasterRuntime", "OperationRegistry"]
+__all__ = ["ArtifactStore", "MasterRuntime", "OperationRegistry", "ResourceConfig"]

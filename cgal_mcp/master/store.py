@@ -265,6 +265,16 @@ class ArtifactStore:
                 "metadata": inspection.metadata, "producer": producer,
                 "provenance": provenance, "immutable": True, "_source_path": str(source)}
 
+    def inspect_worker_candidate(self, source: Path, format_name: str,
+                                 artifact_type: str) -> Inspection:
+        """Inspect an unpublished worker candidate for typed DAG preconditions."""
+        source = source.resolve(strict=True)
+        if not within(source, self.staging_root):
+            raise InvalidInput("worker_output_path", "Worker output is outside managed staging")
+        if source.stat().st_size > MAX_IMPORT_BYTES:
+            raise InvalidInput("worker_output_too_large", "Worker output exceeds 512 MiB")
+        return _inspect_file_isolated(source, format_name, artifact_type)
+
     def complete_job_success(self, job_id: str, prepared: list[dict[str, Any]],
                              validation: list[dict[str, Any]]) -> dict[str, Any]:
         """Publish all artifacts, provenance and terminal job state in one DB transaction."""
