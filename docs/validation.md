@@ -45,3 +45,31 @@ C++17、CGAL 6.2.1の配布archiveをSHA-256確認して使用。
 - 102件はヘッダー検索索引。実行対象は重点の5能力とその組み合わせ。
 - StellaCAD本体ソースに対するパッチ・実UI/Undo試験は未実施。
 - Windows/macOS、HTTP公開、分散job、再起動時のjob復旧は未検証/対象外。
+
+## Windows引継ぎ・StellaCAD sidecarのローカル検証
+
+確認日: 2026-10-04（日本時間）、元commit `4304894` からのローカル変更。
+環境: Windows x64、Python 3.13.4、MCP SDK 2.3.0、MSVC 19.50、
+CGAL 6.2.1、Eigen 5.0.1、nlohmann-json 3.12.0、trimesh 4.12.2。
+
+- 引継ぎ直後: 23テスト中7件が失敗。Windowsのtext writeによる改行変換が
+  登録時とファイルのハッシュを変えたため。資産をUTF-8 bytesのまま保存・取得して修正。
+- 更新後: unittest 28件成功。LF/CRLFの厳密なhash往復、workerパス、
+  実子プロセスのtimeout/cancel、STLの完全一致頂点接続、上書き拒否、却下時未公開を確認。
+- `worker_smoke.py`: plane+line、Envelope、境界位置保持、不正ratio拒否 PASS。
+- `distance_smoke.py`: 双方向Hausdorff、pass/fail/indeterminate PASS。
+- `worker_cases.py`: 曲面、穴付き平面、自己交差入力拒否 PASS。
+- `tests.mcp_e2e`: in-process、stdio auto、stdio legacyで登録→計画→実worker→
+  独立Hausdorff→受理artifact→単独距離検証 PASS。
+- StellaCADの実Codex設定から隔離workspaceへ起動したsidecar: 12工具の列挙成功。
+  auto/legacyとも200面STL→92面STL。計算結果とSTL書出し後の再読込検証の両方がpass。
+  元ファイルのSHA-256不変、出力SHA-256一致、再実行での上書き拒否を確認。
+
+実PCの証拠:
+`E:/aiwork/Stella_CAD_SYSTEM/integration/cgal/verification/20261004-installed/report.json`。
+ネイティブCADの選択オブジェクト置換・Undo、STEP/F3D直接処理、macOSは未検証/未実装。
+
+追加回帰検証: export後の距離検証がfail/indeterminateの場合に派生ファイルを
+公開しない試験を追加し、2026-10-04にunittest 29件が成功。
+これらはv0.1の証拠であり、Master MCPの受入は
+`master/SCOPE_CORRECTION_JA.md` の差分/基準により別途判定する。

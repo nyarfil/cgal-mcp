@@ -1,13 +1,12 @@
 """Official MCP client → plan → CGAL subprocesses → accepted artifact."""
-import asyncio,json,pathlib,tempfile
-from mcp import Client
+import asyncio,json,os,pathlib,sys,tempfile
+from mcp import Client,StdioServerParameters
 import cgal_mcp.server as server
-from cgal_mcp.runtime import Runtime
+from cgal_mcp.runtime import Runtime,worker_path
 
 async def main():
     with tempfile.TemporaryDirectory() as folder:
-        server._runtime=Runtime(pathlib.Path(folder),pathlib.Path("build/cgal-worker"),
-                                pathlib.Path("build/cgal-distance"))
+        server._runtime=Runtime(pathlib.Path(folder),worker_path("worker"),worker_path("distance"))
         n=10;points=[(x,y,0) for y in range(n+1) for x in range(n+1)]
         faces=[]
         for y in range(n):
@@ -17,7 +16,14 @@ async def main():
         off="OFF\n"+f"{len(points)} {len(faces)} 0\n"+"\n".join(
             " ".join(map(str,p)) for p in points)+"\n"+"\n".join(
             "3 "+" ".join(map(str,f)) for f in faces)+"\n"
-        async with Client(server.mcp) as client:
+        mode=sys.argv[1] if len(sys.argv)>1 else None
+        connection=server.mcp
+        if mode is not None:
+            connection=StdioServerParameters(command=sys.executable,args=["-m","cgal_mcp.server"],
+                env={**os.environ,"CGAL_MCP_DATA":folder,
+                     "CGAL_MCP_WORKER":str(worker_path("worker").resolve()),
+                     "CGAL_MCP_DISTANCE":str(worker_path("distance").resolve())})
+        async with Client(connection,mode=mode or "auto") as client:
             async def call(name,args):
                 result=await client.call_tool(name,args)
                 assert not result.is_error,result
@@ -46,5 +52,5 @@ async def main():
                 if ds["state"] not in ("queued","running"):break
                 await asyncio.sleep(0.1)
             assert ds["state"]=="succeeded",ds
-            print("Official MCP client + CGAL + constraints + Hausdorff + artifact: PASS")
+            print(f"Official MCP client ({mode or 'in-process'}) + CGAL + constraints + Hausdorff + artifact: PASS")
 asyncio.run(main())

@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Any
 from mcp.server import MCPServer
 from cgal_mcp.catalog import discover, describe
-from cgal_mcp.runtime import Runtime, SimplifyParameters, DistanceParameters
+from cgal_mcp.runtime import Runtime, SimplifyParameters, DistanceParameters, worker_path
 
 mcp=MCPServer("CGAL MCP")
 _runtime=None
@@ -13,8 +13,7 @@ def runtime():
     global _runtime
     if _runtime is None:
         _runtime=Runtime(Path(os.environ.get("CGAL_MCP_DATA","work/cgal-mcp-data")),
-            Path(os.environ.get("CGAL_MCP_WORKER","build/cgal-worker")),
-            Path(os.environ.get("CGAL_MCP_DISTANCE","build/cgal-distance")))
+            worker_path("worker"),worker_path("distance"))
     return _runtime
 
 @mcp.tool()

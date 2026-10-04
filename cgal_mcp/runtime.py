@@ -5,6 +5,16 @@ from pydantic import BaseModel, ConfigDict, Field, StrictBool, model_validator
 
 MAX_BYTES = 4 * 1024 * 1024
 
+def worker_path(name: str) -> Path:
+    """Resolve an explicit worker or the local single-/multi-config build."""
+    override=os.environ.get("CGAL_MCP_"+name.upper())
+    if override:
+        return Path(override)
+    filename="cgal-"+name+(".exe" if os.name=="nt" else "")
+    direct=Path("build")/filename
+    release=Path("build")/"Release"/filename
+    return release if not direct.is_file() and release.is_file() else direct
+
 class SimplifyParameters(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
     edge_ratio: float = Field(gt=0, lt=1, allow_inf_nan=False)
@@ -84,7 +94,8 @@ class Runtime:
         digest=hashlib.sha256(content.encode()).hexdigest()
         asset_id=hashlib.sha256((unit+":"+digest).encode()).hexdigest()
         path=self.root / (asset_id+".off")
-        if not path.exists(): path.write_text(content,encoding="utf-8")
+        # Store the hashed bytes exactly; Windows text mode otherwise adds CRs.
+        if not path.exists(): path.write_bytes(content.encode("utf-8"))
         data={"asset_id":asset_id,"sha256":digest,"unit":unit,"path":str(path),
               **{k:v for k,v in info.items() if k!="edge_ids"}}
         self.assets[asset_id]=data
@@ -100,7 +111,7 @@ class Runtime:
     def plan(self, asset_id: str, parameters: dict) -> dict:
         asset=self.asset(asset_id)
         p=SimplifyParameters.model_validate(parameters)
-        edge_ids=parse_off(Path(asset["path"]).read_text())["edge_ids"]
+        edge_ids=parse_off(Path(asset["path"]).read_bytes().decode("utf-8"))["edge_ids"]
         for a,b in p.constrained_edges:
             if a==b or tuple(sorted((a,b))) not in edge_ids:
                 raise ValueError("Constrained edge does not exist in input")
@@ -196,7 +207,7 @@ class Runtime:
                       "input":asset["path"],"output":str(output),**p})
                 if not output.is_file() or output.stat().st_size>MAX_BYTES:
                     raise RuntimeError("Invalid output artifact")
-                candidate=output.read_text(encoding="utf-8");parse_off(candidate)
+                candidate=output.read_bytes().decode("utf-8");parse_off(candidate)
                 verification=await self._call(self.distance,{"version":1,"operation":"hausdorff",
                     "input_a":asset["path"],"input_b":str(output),"error_bound":p["error_bound"],
                     "tolerance":p["tolerance"]})
@@ -223,4 +234,4 @@ class Runtime:
     def artifact(self, asset_id: str) -> dict:
         data=self.asset(asset_id)
         return {"asset_id":asset_id,"unit":data["unit"],"sha256":data["sha256"],
-                "off":Path(data["path"]).read_text(encoding="utf-8")}
+                "off":Path(data["path"]).read_bytes().decode("utf-8")}
