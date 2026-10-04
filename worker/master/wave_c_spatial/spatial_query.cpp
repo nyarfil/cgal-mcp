@@ -785,8 +785,7 @@ OperationDefinition validator_definition(const Profile& producer) {
                                      "package_recommended"};
   definition.effective_kernel =
       (p.id == "spatial.kdtree.range" ||
-       p.id == "spatial.nearest_neighbors" ||
-       p.id == "spatial.bounding_box")
+       p.id == "spatial.nearest_neighbors")
           ? "CGAL::Exact_predicates_inexact_constructions_kernel"
           : "CGAL::Exact_predicates_exact_constructions_kernel";
   definition.dependencies =
