@@ -11,7 +11,8 @@
 #include <CGAL/Orthogonal_k_neighbor_search.h>
 #include <CGAL/Search_traits_3.h>
 #include <CGAL/bounding_box.h>
-#include <CGAL/number_utils.h>\n#include <CGAL/squared_distance_3.h>
+#include <CGAL/number_utils.h>
+#include <CGAL/squared_distance_3.h>
 
 #include <algorithm>
 #include <array>
@@ -380,7 +381,8 @@ Json compute_kdtree_range(const Request& request, const Profile& profile) {
   std::vector<SearchPoint> hits;
   tree.search(std::back_inserter(hits), sphere);
   std::sort(hits.begin(), hits.end(), [](const auto& a, const auto& b) {
-    return std::make_tuple(a.x(), a.y(), a.z()) <\n           std::make_tuple(b.x(), b.y(), b.z());
+    return std::make_tuple(a.x(), a.y(), a.z()) <
+           std::make_tuple(b.x(), b.y(), b.z());
   });
   const auto total = hits.size();
   if (hits.size() > max_results) hits.resize(max_results);
