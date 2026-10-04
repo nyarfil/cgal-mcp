@@ -8,7 +8,7 @@ class MCPTests(unittest.IsolatedAsyncioTestCase):
             tools = await client.list_tools()
             names = {tool.name for tool in tools.tools}
             self.assertTrue({"discover_capabilities", "describe_capability", "search_api", "execute_plan", "cancel_job"} <= names)
-            self.assertLessEqual(len(names), 10)
+            self.assertLessEqual(len(names), 11)
             result = await client.call_tool("discover_capabilities", {"query": "軽量化"})
             self.assertFalse(result.is_error)
             detail = await client.call_tool("describe_capability",

@@ -38,5 +38,13 @@ async def main():
             output=await call("get_artifact",{"asset_id":state["artifact"]["asset_id"]})
             assert output["unit"]=="mm" and output["off"].startswith("OFF")
             assert state["computation"]["edges_after"]<state["computation"]["edges_before"]
+            check=await call("plan_hausdorff",{"asset_a":asset["asset_id"],
+                "asset_b":output["asset_id"],"parameters":{"tolerance":0.1,"error_bound":0.001}})
+            dj=await call("execute_plan",{"plan_id":check["plan_id"]})
+            for _ in range(600):
+                ds=await call("job_status",{"job_id":dj["job_id"]})
+                if ds["state"] not in ("queued","running"):break
+                await asyncio.sleep(0.1)
+            assert ds["state"]=="succeeded",ds
             print("Official MCP client + CGAL + constraints + Hausdorff + artifact: PASS")
 asyncio.run(main())

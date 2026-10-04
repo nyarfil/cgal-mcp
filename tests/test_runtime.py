@@ -60,3 +60,10 @@ class RuntimeTests(unittest.IsolatedAsyncioTestCase):
         await self.runtime.cancel(job["job_id"])
         self.assertEqual(self.runtime.status(job["job_id"])["state"],"cancelled")
         with self.assertRaises(ProcessLookupError): os.kill(int(pidfile.read_text()),0)
+
+    def test_distance_plan_requires_matching_units(self):
+        a=self.runtime.register(TRI,"mm");b=self.runtime.register(TRI,"m")
+        with self.assertRaises(ValueError):
+            self.runtime.plan_distance(a["asset_id"],b["asset_id"],{"tolerance":0.1,"error_bound":0.01})
+        p=self.runtime.plan_distance(a["asset_id"],a["asset_id"],{"tolerance":0.1,"error_bound":0.01})
+        self.assertEqual(p["operation"],"hausdorff")

@@ -22,6 +22,11 @@ class SimplifyParameters(BaseModel):
             raise ValueError("error_bound must be smaller than tolerance")
         return self
 
+class DistanceParameters(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+    tolerance: float = Field(ge=0, allow_inf_nan=False)
+    error_bound: float = Field(gt=0, allow_inf_nan=False)
+
 def parse_off(content: str) -> dict:
     if not isinstance(content,str) or len(content.encode()) > MAX_BYTES:
         raise ValueError("OFF input exceeds 4 MiB")
@@ -107,6 +112,18 @@ class Runtime:
         plan["plan_id"]=plan_id;self.plans[plan_id]=copy.deepcopy(plan)
         return copy.deepcopy(plan)
 
+    def plan_distance(self, asset_a: str, asset_b: str, parameters: dict) -> dict:
+        a=self.asset(asset_a);b=self.asset(asset_b)
+        if a["unit"]!=b["unit"]:raise ValueError("Assets must use matching units")
+        p=DistanceParameters.model_validate(parameters)
+        plan={"operation":"hausdorff","asset_id":asset_a,"second_asset_id":asset_b,
+              "input_sha256":a["sha256"],"second_sha256":b["sha256"],"unit":a["unit"],
+              "parameters":p.model_dump(mode="json"),"schema_version":1,"cgal_version":"6.2.1",
+              "steps":["CGAL preflight","symmetric_hausdorff"]}
+        plan_id=hashlib.sha256(json.dumps(plan,sort_keys=True).encode()).hexdigest()
+        plan["plan_id"]=plan_id;self.plans[plan_id]=copy.deepcopy(plan)
+        return copy.deepcopy(plan)
+
     def execute(self, plan_id: str) -> dict:
         if plan_id not in self.plans: raise KeyError("Unknown plan")
         plan=copy.deepcopy(self.plans[plan_id]);self.asset(plan["asset_id"])
@@ -167,6 +184,14 @@ class Runtime:
             async with self.semaphore:
                 job["state"]="running"
                 plan=job["plan"];asset=self.asset(plan["asset_id"]);p=plan["parameters"]
+                if plan["operation"]=="hausdorff":
+                    second=self.asset(plan["second_asset_id"])
+                    verification=await self._call(self.distance,{"version":1,"operation":"hausdorff",
+                         "input_a":asset["path"],"input_b":second["path"],**p})
+                    self.asset(plan["asset_id"]);self.asset(plan["second_asset_id"])
+                    job["verification"]=verification
+                    job["state"]="succeeded" if verification.get("verdict")=="pass" else "rejected"
+                    return
                 result=await self._call(self.worker,{"version":1,"operation":"simplify",
                       "input":asset["path"],"output":str(output),**p})
                 if not output.is_file() or output.stat().st_size>MAX_BYTES:

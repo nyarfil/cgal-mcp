@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Any
 from mcp.server import MCPServer
 from cgal_mcp.catalog import discover, describe
-from cgal_mcp.runtime import Runtime, SimplifyParameters
+from cgal_mcp.runtime import Runtime, SimplifyParameters, DistanceParameters
 
 mcp=MCPServer("CGAL MCP")
 _runtime=None
@@ -28,7 +28,7 @@ def describe_capability(capability_id: str) -> dict[str, Any]:
     definition=describe(capability_id)
     definition["implementation"]="worker_available" if capability_id in {
         "mesh.simplify","mesh.simplify.plane_line","mesh.envelope","mesh.constraints","mesh.hausdorff"} else "indexed"
-    definition["execution_schema"]=SimplifyParameters.model_json_schema()
+    definition["execution_schema"]=(DistanceParameters if capability_id=="mesh.hausdorff" else SimplifyParameters).model_json_schema()
     definition["execution_recipe"]="register_mesh → plan_simplification → execute_plan → job_status → get_artifact"
     return definition
 
@@ -50,6 +50,11 @@ def plan_simplification(asset_id: str, parameters: dict) -> dict[str, Any]:
     preserve_border and constrained_edges use input vertex indices.
     """
     return runtime().plan(asset_id,parameters)
+
+@mcp.tool()
+def plan_hausdorff(asset_a: str, asset_b: str, parameters: dict) -> dict[str, Any]:
+    """Plan standalone symmetric Hausdorff verification of two matching-unit assets."""
+    return runtime().plan_distance(asset_a,asset_b,parameters)
 
 @mcp.tool()
 def route_goal(goal: str) -> dict[str, Any]:
