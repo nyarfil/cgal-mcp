@@ -54,6 +54,14 @@ class SearchTermsTests(unittest.TestCase):
         self.assertIn("2d", parse_query("create a 2D convex hull").words)
         self.assertIn("3d", parse_query("3D mesh").words)
 
+    def test_spatial_query_concepts_are_bilingual_and_specific(self):
+        self.assertIn("nearest_neighbor", parse_query("メッシュへの最近点").concepts)
+        self.assertIn("nearest_neighbor", parse_query("closest point on mesh").concepts)
+        self.assertIn("range_search", parse_query("点群を半径内で範囲検索").concepts)
+        self.assertIn("range_search", parse_query("radius search in this point cloud").concepts)
+        self.assertIn("aabb", parse_query("点群のバウンディングボックス").concepts)
+        self.assertIn("intersection", parse_query("線分とメッシュの交差候補").concepts)
+
 
 if __name__ == "__main__":
     unittest.main()
