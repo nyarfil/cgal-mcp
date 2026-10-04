@@ -10,6 +10,7 @@
 #include <nlohmann/json.hpp>
 #include <iostream>
 #include <cmath>
+#include <type_traits>
 using K = CGAL::Simple_cartesian<double>;
 using Mesh = CGAL::Surface_mesh<K::Point_3>;
 using Json = nlohmann::json;
@@ -38,7 +39,6 @@ int main() {
     if(request.value("preserve_border", true))
       for(auto e : mesh.edges()) constraints[e] = CGAL::is_border(e, mesh);
     SMS::GarlandHeckbert_plane_and_line_policies<Mesh,K> policies(mesh);
-    using Placement = SMS::Constrained_placement<decltype(policies.get_placement()), decltype(constraints)>;
     // Strip reference from placement type so the wrapper owns a policy value.
     using Base = std::decay_t<decltype(policies.get_placement())>;
     SMS::Constrained_placement<Base,decltype(constraints)> placement(constraints, policies.get_placement());

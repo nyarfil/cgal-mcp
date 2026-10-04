@@ -19,3 +19,6 @@ def capability_definition(capability_id: str) -> str:
     """Read an on-demand capability definition."""
     import json
     return json.dumps(describe(capability_id), ensure_ascii=False)
+
+if __name__ == '__main__':
+    mcp.run(transport='stdio')
