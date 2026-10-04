@@ -48,3 +48,45 @@ CGAL 6.2.1 official documentation:
 - Catalog status is not promoted to VALIDATED until the native worker,
   MCP path, and fixed replay harness pass in CI.
 - Source artifacts are immutable.
+
+## Web implementation history
+
+The following commits are intentionally retained as separate `WEB:` commits.
+Corrections are not squashed so it is possible to audit both the original web
+change and its later fix.
+
+- `e7d39ee` — start audit trail.
+- `6cc91b3` — add Spatial Query operation interface.
+- `83e091b` — first native Spatial Query implementation.
+- `809a4b3` — compile Spatial module in cgal-master-worker.
+- `94b6ff8` — register ten native operations.
+- `6cb0571` — correct CGAL 6.2.1 API usage.
+- `d1039da` — first formatting/iterator correction attempt.
+- `f6be09b` — add bilingual Spatial routing concepts.
+- `4a01568` — enforce precision contracts; KD paths do not silently downgrade exact requests.
+- `0924d33` — align validator kernel metadata.
+- `26d829b` — register Spatial operations as IMPLEMENTED in bundled Master catalog.
+- `834734e` — add dedicated Wave C implementation catalog.
+- `cdf4aee` — remove Boolean test's obsolete exact operation-count assumption.
+- `39310da` — structure producer diagnostics.
+- `b42a6a9` — add native positive/negative acceptance cases.
+- `6b2cc14` — add official MCP client auto/legacy E2E cases.
+- `f576451` — add non-self-certifying replay gate.
+- `5395ebb` — run Spatial replay in Linux and Windows Master CI.
+- `bb620fc` — attempted cleanup of literal newline escape artifacts.
+- `386f6e0` — actual byte-level correction of those literal escape artifacts.
+- `600c625`, `de69f9b`, `2218931` — separate canonical Principal Component Analysis package identity from the LGPL implementation-header provenance.
+- `bf190ba` — add Wave C implementation/acceptance contract.
+
+## CI status policy
+
+Older red runs are deliberately left visible. In particular, pre-`386f6e0`
+native builds exposed literal `\\n` characters introduced by the web update
+path. Those failures remain part of the audit history and are not rewritten.
+
+The current branch must obtain a fresh green run from the post-fix head on both
+Ubuntu and Windows VS2022 before any Spatial operation is promoted from
+`IMPLEMENTED` to `VALIDATED`.
+
+Formal major-requirement progress remains unchanged until that promotion and the
+main acceptance replay independently consume the new evidence.
