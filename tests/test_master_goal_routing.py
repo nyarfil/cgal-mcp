@@ -15,6 +15,20 @@ class GoalRoutingTests(unittest.TestCase):
         points = root / "points.xyz"
         points.write_text("0 0 0\n1 0 0\n0 1 0\n0 0 1\n1 1 1\n", encoding="ascii")
         self.points = self.runtime.artifact_import(str(points), "mm")["artifact_id"]
+        mesh = root / "tetra.off"
+        mesh.write_text("""OFF
+4 4 0
+0 0 0
+1 0 0
+0 1 0
+0 0 1
+3 0 2 1
+3 0 1 3
+3 1 2 3
+3 2 0 3
+""", encoding="ascii")
+        self.mesh = self.runtime.artifact_import(
+            str(mesh), "mm", artifact_type="TriangleSurfaceMesh")["artifact_id"]
 
     def tearDown(self):
         self.runtime.close()
@@ -50,6 +64,38 @@ class GoalRoutingTests(unittest.TestCase):
             self.runtime.plan({"operation_id": "hull.convex_3", "inputs": [self.points],
                                "policy": {"kernel": "inexact"}})
         self.assertEqual(caught.exception.code, "kernel_unsupported")
+
+    def test_spatial_discovery_uses_artifact_type_as_a_hard_gate(self):
+        mesh_nearest = self.runtime.capabilities_search(
+            "メッシュへの最近点", [self.mesh], None, 8)
+        point_nearest = self.runtime.capabilities_search(
+            "点群の最近傍", [self.points], None, 8)
+        mesh_supported = [item["operation_id"] for item in mesh_nearest["candidates"]
+                          if item["route_supported"]]
+        point_supported = [item["operation_id"] for item in point_nearest["candidates"]
+                           if item["route_supported"]]
+        self.assertIn("spatial.aabb.closest_point", mesh_supported)
+        self.assertNotIn("spatial.nearest_neighbors", mesh_supported)
+        self.assertIn("spatial.nearest_neighbors", point_supported)
+        self.assertNotIn("spatial.aabb.closest_point", point_supported)
+
+        ranged = self.runtime.capabilities_search(
+            "点群を半径内で範囲検索", [self.points], None, 8)
+        self.assertIn("spatial.kdtree.range",
+                      [item["operation_id"] for item in ranged["candidates"]
+                       if item["route_supported"]])
+
+        intersections = self.runtime.capabilities_search(
+            "線分とメッシュの交差候補", [self.mesh], None, 8)
+        self.assertIn("spatial.intersection_candidates",
+                      [item["operation_id"] for item in intersections["candidates"]
+                       if item["route_supported"]])
+
+        bounds = self.runtime.capabilities_search(
+            "点群のバウンディングボックス", [self.points], None, 8)
+        self.assertIn("spatial.bounding_box",
+                      [item["operation_id"] for item in bounds["candidates"]
+                       if item["route_supported"]])
 
     def test_requested_pca_method_is_not_silently_replaced_with_jet(self):
         request = {"goal": "estimate PCA normals", "inputs": [self.points],
