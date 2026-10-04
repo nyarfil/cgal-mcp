@@ -545,9 +545,10 @@ with tempfile.TemporaryDirectory() as folder:
         pathlib.Path(envelope_tight["outputs"][0]["path"])
     )
 
-    # A torus gives bounded-normal-change a nontrivial adversarial surface.  Both
-    # runs collapse the same number of edges, but the filter selects a different
-    # valid result; identical outputs would prove only parameter echoing.
+    # A torus gives bounded-normal-change a nontrivial adversarial surface. The
+    # moderate 0.2 ratio retains more geometry than the earlier aggressive control;
+    # the filter selects a different valid result after the same number of collapses.
+    # Identical outputs would prove only parameter echoing.
     guard_vertices, guard_faces = torus_fixture()
     normal_guard = root / "normal-guard-torus.off"
     write_off(normal_guard, guard_vertices, guard_faces)
@@ -557,7 +558,7 @@ with tempfile.TemporaryDirectory() as folder:
             "mesh.simplify.edge_collapse",
             [artifact(normal_guard, "bounded-normal-control-input")],
             stage(root, "bounded-normal-control-simplify"),
-            base_parameters("gh_plane_line", {"kind": "edge_ratio", "value": 0.12}),
+            base_parameters("gh_triangle", {"kind": "edge_ratio", "value": 0.2}),
             request_id="bounded-normal-control-simplify",
         ),
     )
@@ -570,7 +571,7 @@ with tempfile.TemporaryDirectory() as folder:
         root,
         normal_guard,
         "bounded-normal-adversarial",
-        base_parameters("gh_plane_line", {"kind": "edge_ratio", "value": 0.12}) |
+        base_parameters("gh_triangle", {"kind": "edge_ratio", "value": 0.2}) |
         {"bounded_normal_change": True},
     )
     assert normal_control["metrics"]["edges_removed"] == normal_adversarial["metrics"]["edges_removed"]

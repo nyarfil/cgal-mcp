@@ -1,5 +1,6 @@
 import asyncio
 import json
+import math
 import sqlite3
 import tempfile
 import unittest
@@ -8,7 +9,7 @@ from unittest.mock import patch
 
 from cgal_mcp.master.errors import InvalidInput, PreconditionFailure, UnsupportedOperation, WorkerFailure
 from cgal_mcp.master.formats import inspect_bytes
-from cgal_mcp.master.planner import _acyclic
+from cgal_mcp.master.planner import _acyclic, _prepare_parameters
 from cgal_mcp.master.registry import OperationRegistry
 from cgal_mcp.master.resources import ResourceConfig
 from cgal_mcp.master.runtime import MasterRuntime
@@ -250,6 +251,26 @@ class MasterCoreTest(unittest.TestCase):
         self.assertEqual(result.metadata["duplicate_faces"], 1)
         self.assertEqual(result.properties["self_intersections"], "unknown")
 
+        tiny = inspect_bytes(b"OFF\n4 4 0\n0 0 0\n1e-200 0 0\n0 1e-200 0\n"
+                             b"0 0 1e-200\n3 0 2 1\n3 0 1 3\n3 1 2 3\n3 2 0 3\n",
+                             "off")
+        self.assertEqual(tiny.geometry_type, "TriangleSurfaceMesh")
+        self.assertEqual(tiny.metadata["degenerate_faces"], 0)
+        truly_degenerate = inspect_bytes(
+            b"OFF\n3 1 0\n0 0 0\n1e-200 0 0\n2e-200 0 0\n3 0 1 2\n", "off")
+        self.assertEqual(truly_degenerate.geometry_type, "PolygonSoup3")
+        rounded_away = inspect_bytes(
+            b"OFF\n3 1 0\n100000000000000000000 0 0\n"
+            b"100000000000000000001 0 0\n100000000000000000000 1 0\n3 0 1 2\n",
+            "off")
+        self.assertEqual(rounded_away.geometry_type, "PolygonSoup3")
+        self.assertEqual(rounded_away.metadata["degenerate_faces"], 1)
+        same_direction = inspect_bytes(
+            b"OFF\n4 2 0\n0 0 0\n1 0 0\n0 1 0\n0 -1 0\n"
+            b"3 0 1 2\n3 0 1 3\n", "off")
+        self.assertEqual(same_direction.geometry_type, "PolygonSoup3")
+        self.assertFalse(same_direction.properties["surface_mesh_constructible"])
+
     def test_plan_hash_units_and_validator_injection(self):
         runtime = self.runtime()
         artifact = runtime.artifact_import(str(self.points), "mm")
@@ -427,6 +448,161 @@ class MasterCoreTest(unittest.TestCase):
             path = self.root / name; path.write_bytes(content)
             with self.assertRaises(InvalidInput, msg=name):
                 runtime.artifact_import(str(path), "mm", artifact_type="PointSet3Normals")
+
+    def test_geometry_analysis_report_is_strict_bounded_and_byte_preserving(self):
+        runtime = self.runtime()
+        report = {"schema_version": 1, "analysis_kind": "measures",
+            "source": {"artifact_id": "art_source", "type": "TriangleSurfaceMesh",
+                       "format": "off", "unit": "cm", "sha256": "a" * 64},
+            "mesh_summary": {"raw_vertex_count": 4, "raw_face_count": 4,
+                             "finite_coordinates": True, "indices_valid": True,
+                             "triangulated": True, "surface_mesh_constructible": True},
+            "results": {"surface_area": {"available": True, "value": 2.5, "unit": "cm^2"},
+                        "signed_volume": {"available": False, "reason": "open_mesh",
+                                          "unit": "cm^3"},
+                        "absolute_volume": {"available": False, "reason": "open_mesh",
+                                            "unit": "cm^3"},
+                        "volume_centroid": {"available": False, "reason": "open_mesh",
+                                            "unit": "cm"}},
+            "validation": {"validator_id": "mesh.producer_check.measures",
+                           "authoritative": False, "passed": True,
+                           "checks": {"schema_valid": True}}}
+        path = self.root / "analysis.json"
+        encoded = json.dumps(report, separators=(",", ":")).encode()
+        path.write_bytes(encoded)
+        artifact = runtime.artifact_import(
+            str(path), "none", artifact_type="GeometryAnalysisReport")
+        self.assertEqual((artifact["type"], artifact["format"], artifact["unit"]),
+                         ("GeometryAnalysisReport", "json", "none"))
+        self.assertEqual(artifact["metadata"]["analysis_kind"], "measures")
+        self.assertNotIn("results", artifact["metadata"])
+        exported = self.root / "analysis-copy.json"
+        runtime.artifact_export(artifact["artifact_id"], str(exported))
+        self.assertEqual(exported.read_bytes(), encoded)
+        with self.assertRaisesRegex(InvalidInput, "Artifact unit must be none"):
+            runtime.artifact_import(str(path), "mm", artifact_type="GeometryAnalysisReport")
+
+        unavailable = json.loads(json.dumps(report))
+        unavailable["results"]["signed_volume"] = {"available": False}
+        path.write_text(json.dumps(unavailable), encoding="utf-8")
+        with self.assertRaisesRegex(InvalidInput, "Unavailable result requires a reason"):
+            runtime.artifact_import(str(path), "none", artifact_type="GeometryAnalysisReport")
+        path.write_text(json.dumps(report).replace("2.5", "1e999"), encoding="utf-8")
+        with self.assertRaisesRegex(InvalidInput, "non-finite"):
+            runtime.artifact_import(str(path), "none", artifact_type="GeometryAnalysisReport")
+        sparse = json.loads(json.dumps(report))
+        del sparse["results"]["surface_area"]
+        path.write_text(json.dumps(sparse), encoding="utf-8")
+        with self.assertRaisesRegex(InvalidInput, "results lack"):
+            runtime.artifact_import(str(path), "none", artifact_type="GeometryAnalysisReport")
+        untrusted = json.loads(json.dumps(report))
+        untrusted["validation"]["authoritative"] = True
+        path.write_text(json.dumps(untrusted), encoding="utf-8")
+        with self.assertRaisesRegex(InvalidInput, "validation summary"):
+            runtime.artifact_import(str(path), "none", artifact_type="GeometryAnalysisReport")
+        wrong_source_type = json.loads(json.dumps(report))
+        wrong_source_type["source"]["type"] = "PolygonSoup3"
+        path.write_text(json.dumps(wrong_source_type), encoding="utf-8")
+        with self.assertRaisesRegex(InvalidInput, "source identity"):
+            runtime.artifact_import(str(path), "none", artifact_type="GeometryAnalysisReport")
+
+        oversized = self.root / "analysis-oversized.json"
+        oversized.write_bytes(b"{" + b" " * (16 * 1024 * 1024) + b"}")
+        with self.assertRaisesRegex(InvalidInput, "exceeds"):
+            runtime.artifact_import(str(oversized), "none", artifact_type="GeometryAnalysisReport")
+
+    def test_typed_angle_normalizes_to_degrees_with_history(self):
+        schema = {"type": "object", "additionalProperties": False, "required": ["angle"],
+                  "properties": {"angle": {"type": "TypedAngle",
+                                             "minimum_degrees": 0,
+                                             "maximum_degrees": 180}}}
+        normalized, history = _prepare_parameters(
+            schema, {"angle": {"value": math.pi / 2, "unit": "rad"}}, "mm")
+        self.assertAlmostEqual(normalized["angle"]["value"], 90.0)
+        self.assertEqual(normalized["angle"]["unit"], "deg")
+        self.assertEqual(history[0]["dimension"], "angle")
+        self.assertEqual(history[0]["source"]["unit"], "rad")
+        with self.assertRaisesRegex(InvalidInput, "above its maximum"):
+            _prepare_parameters(schema, {"angle": {"value": math.pi + 0.01, "unit": "rad"}}, "mm")
+
+    def test_mesh_analysis_plans_exact_dedicated_validators_and_angle_binding(self):
+        mesh = self.root / "analysis-source.off"
+        mesh.write_text(TETRA, encoding="ascii")
+        other_mesh = self.root / "analysis-other.off"
+        other_mesh.write_text(TETRA.replace("1 0 0", "2 0 0", 1), encoding="ascii")
+        runtime = self.runtime()
+        source = runtime.artifact_import(
+            str(mesh), "cm", artifact_type="TriangleSurfaceMesh")
+        other = runtime.artifact_import(
+            str(other_mesh), "cm", artifact_type="TriangleSurfaceMesh")
+        inconsistent_path = self.root / "same-direction.off"
+        inconsistent_path.write_bytes(
+            b"OFF\n4 2 0\n0 0 0\n1 0 0\n0 1 0\n0 -1 0\n"
+            b"3 0 1 2\n3 0 1 3\n")
+        inconsistent = runtime.artifact_import(str(inconsistent_path), "cm")
+        self.assertEqual(inconsistent["type"], "PolygonSoup3")
+        inspect_plan = runtime.plan({"operation_id": "mesh.inspect.pmp",
+            "inputs": [inconsistent["artifact_id"]], "parameters": {}})
+        self.assertEqual([step["operation"] for step in inspect_plan["steps"]], [
+            "mesh.inspect.pmp", "mesh.validate.pmp_inspection_report"])
+        with self.assertRaisesRegex(InvalidInput, r"requires \['TriangleSurfaceMesh'\]"):
+            runtime.plan({"operation_id": "mesh.analysis.connected_components",
+                "inputs": [inconsistent["artifact_id"]], "parameters": {}})
+        validators = {
+            "mesh.inspect.pmp": "mesh.validate.pmp_inspection_report",
+            "mesh.analysis.connected_components":
+                "mesh.validate.connected_components_report",
+            "mesh.analysis.normals": "mesh.validate.normals_report",
+            "mesh.analysis.measures": "mesh.validate.measures_report",
+            "mesh.analysis.sharp_features": "mesh.validate.sharp_features_report",
+            "mesh.analysis.self_intersections":
+                "mesh.validate.self_intersections_report",
+        }
+        for operation, validator in validators.items():
+            parameters = ({"angle": {"value": math.pi / 2, "unit": "rad"}}
+                          if operation == "mesh.analysis.sharp_features" else {})
+            plan = runtime.plan({"operation_id": operation,
+                "inputs": [source["artifact_id"]], "parameters": parameters})
+            self.assertEqual([step["operation"] for step in plan["steps"]],
+                             [operation, validator])
+            analysis, validation = plan["steps"]
+            self.assertEqual(analysis["role"], "analysis")
+            self.assertEqual(analysis["outputs"][0], {
+                "slot": "analysis", "type": "GeometryAnalysisReport",
+                "format": "json", "unit": "none"})
+            self.assertEqual(validation["inputs"]["candidate"], {
+                "step": analysis["id"], "slot": "analysis",
+                "type": "GeometryAnalysisReport", "format": "json", "unit": "none"})
+            self.assertEqual(validation["inputs"]["source"]["artifact_id"],
+                             source["artifact_id"])
+            self.assertEqual(validation["validates"], analysis["id"])
+            if operation == "mesh.analysis.sharp_features":
+                self.assertAlmostEqual(analysis["parameters"]["angle"]["value"], 90.0)
+                self.assertEqual(analysis["parameters"]["angle"]["unit"], "deg")
+                self.assertEqual(validation["parameters"], analysis["parameters"])
+                self.assertEqual(validation["parameter_normalization"][0]["bound_from"],
+                                 "angle")
+
+        with self.assertRaisesRegex(InvalidInput, "does not bind exactly"):
+            runtime.plan({"steps": [
+                {"id": "analysis", "operation": "mesh.analysis.measures",
+                 "inputs": {"mesh": source["artifact_id"]}, "parameters": {}},
+                {"id": "forged", "operation": "mesh.validate.measures_report",
+                 "inputs": {"candidate": {"step": "analysis", "slot": "analysis"},
+                            "source": other["artifact_id"]},
+                 "parameters": {}, "validates": "analysis"},
+            ]})
+        with self.assertRaisesRegex(InvalidInput, "does not bind exactly"):
+            runtime.plan({"steps": [
+                {"id": "analysis", "operation": "mesh.analysis.sharp_features",
+                 "inputs": {"mesh": source["artifact_id"]},
+                 "parameters": {"angle": {"value": 90, "unit": "deg"}}},
+                {"id": "forged", "operation": "mesh.validate.sharp_features_report",
+                 "inputs": {"candidate": {"step": "analysis", "slot": "analysis"},
+                            "source": source["artifact_id"]},
+                 "parameters": {"angle": {"value": 45, "unit": "deg"}},
+                 "validates": "analysis"},
+            ]})
 
     def test_wave_b_parameter_schemas_units_and_validator_bindings(self):
         source_path = Path("tests/fixtures/master/wave_b/noisy_plane_with_outlier.xyz").resolve()

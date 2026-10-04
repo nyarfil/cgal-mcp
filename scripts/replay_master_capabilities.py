@@ -242,11 +242,11 @@ def _case_expectations() -> dict[str, dict[str, Any]]:
             "metric": ("polyhedral_envelope_enabled", True),
         },
         "bounded-normal-control": {
-            "policy": "gh_plane_line", "stop": "edge_ratio",
+            "policy": "gh_triangle", "stop": "edge_ratio",
             "metric": ("bounded_normal_change_enabled", False),
         },
         "bounded-normal-adversarial": {
-            "policy": "gh_plane_line", "stop": "edge_ratio",
+            "policy": "gh_triangle", "stop": "edge_ratio",
             "metric": ("bounded_normal_change_enabled", True),
         },
     })

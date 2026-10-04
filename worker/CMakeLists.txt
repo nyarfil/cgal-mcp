@@ -45,6 +45,8 @@ add_executable(cgal-master-worker
   master/wave_a/validate_simplification_integrity.cpp
   master/wave_a/symmetric_hausdorff.cpp
   master/wave_b/pointset_processing.cpp
+  master/wave_a_mesh/mesh_analysis.cpp
+  master/wave_a_mesh/report_validators.cpp
 )
 target_compile_features(cgal-master-worker PRIVATE cxx_std_17)
 target_compile_definitions(cgal-master-worker PRIVATE

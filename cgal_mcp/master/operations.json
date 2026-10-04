@@ -1,7 +1,7 @@
 {
   "$schema": "operation.schema.json",
   "schema_version": 1,
-  "catalog_revision": "master-wave-b-validated-1",
+  "catalog_revision": "master-wave-a-mesh-validated-1",
   "cgal_version": "6.2.1",
   "build_requirements": {
     "source_kind": "official_release",
@@ -3512,6 +3512,2709 @@
           "tests/master_wave_b_mcp_e2e.py"
         ],
         "worker_manifest_operation": "pointset.validate.normals_oriented"
+      }
+    },
+    {
+      "id": "mesh.inspect.pmp",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "analysis",
+      "summary": "Inspect raw OFF and constructible polygon-mesh health without repairing or mutating geometry.",
+      "package": "Polygon_mesh_processing",
+      "major_requirements": [
+        "major.7.3.01"
+      ],
+      "dependencies": [
+        "Polygon_mesh_processing",
+        "Surface_mesh"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Polygon_mesh_processing"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::is_valid_polygon_mesh"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::is_closed"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Polygon_mesh_processing::degenerate_faces"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Polygon_mesh_processing::non_manifold_vertices"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/boost/graph/helpers.h"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Polygon_mesh_processing/manifoldness.h"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Polygon_mesh_processing/shape_predicates.h"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Polygon_mesh_processing",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/boost/graph/helpers.h",
+            "sha256": "a9e73905b62e1426775fe77d90aea0a803b50a18a735923062baf7c0beca2767"
+          },
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/manifoldness.h",
+            "sha256": "b7089cd3b24ca28b030da574086e27e051f8092e3b02be8e581828583127a91f"
+          },
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/shape_predicates.h",
+            "sha256": "17b3e211b01ebb6a93df69fca2fa07896976741ad6a5d442770acbe131f3492d"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "mesh",
+            "types": [
+              "TriangleSurfaceMesh",
+              "PolygonSoup3"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "analysis",
+            "type": "GeometryAnalysisReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "maxProperties": 0
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 268435456,
+          "maximum_vertices": 200000,
+          "maximum_faces": 200000,
+          "maximum_face_degree": 100000
+        }
+      ],
+      "kernel": {
+        "supported": [
+          "exact_constructions",
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "input_coordinate_storage": "IEEE-754 binary64 parsed into exact binary-rational EPECK coordinates",
+        "local_frame_normalization": "translation and uniform positive scale before dimensionless PMP calculations",
+        "report_numeric_storage": "IEEE-754 binary64 JSON numbers",
+        "unrepresentable_policy": "explicit unavailable reason or typed PRECONDITION_FAILED; never publish zero/infinity as a valid computed value",
+        "requested_policy": "exact_constructions or package_recommended"
+      },
+      "output_contract": {
+        "schema": "GeometryAnalysisReport/v1",
+        "analysis_kind": "pmp_inspection",
+        "result_fields": {
+          "parse_issues": "string[]",
+          "polygon_mesh_valid": "boolean|null",
+          "closed": "boolean|null",
+          "degenerate_face_count": "integer|null",
+          "non_manifold_vertex_count": "integer|null",
+          "isolated_vertex_count": "integer|null",
+          "count_unit": "count"
+        },
+        "geometry_mutation": false,
+        "source_sha256_preserved": true,
+        "max_report_bytes": 16777216,
+        "enumeration_policy": "atomic_report_or_resource_limit",
+        "source_type_preserved": true
+      },
+      "validation": {
+        "required": true,
+        "validators": [
+          "mesh.validate.pmp_inspection_report"
+        ],
+        "bindings": {
+          "mesh.validate.pmp_inspection_report": {
+            "artifacts": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "source": {
+                "input": "mesh"
+              }
+            }
+          }
+        },
+        "producer_diagnostics_are_non_authoritative": true
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_wave_a_mesh_cases.py",
+          "tests/master_wave_a_mesh_mcp_e2e.py:auto",
+          "tests/master_wave_a_mesh_mcp_e2e.py:legacy"
+        ],
+        "worker_manifest_operation": "mesh.inspect.pmp",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "independent_review": {
+          "result": "High 0 / Medium 0",
+          "reviewed_catalog_revision": "wave-a-mesh-implemented-6",
+          "worker_sha256": "c4a8392b9aeaa3dd9119e8b03b73796ff34278998d3e53fcdbc16dadd82df40a",
+          "review_scope": "native PMP analyses, dedicated validators, PolygonSoup inspection, adversarial report schemas, and self-intersecting volume preconditions"
+        }
+      },
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "info": {
+          "accepted_geometry_types": [
+            "TriangleSurfaceMesh",
+            "PolygonSoup3"
+          ],
+          "analysis_kind": "pmp_inspection",
+          "checks": [
+            "finite_coordinates",
+            "indices_valid",
+            "triangulated",
+            "polygon_mesh_valid",
+            "closed",
+            "degenerate_faces",
+            "non_manifold_vertices",
+            "isolated_vertices"
+          ],
+          "geometry_mutation": false,
+          "input_format": "off",
+          "input_slot": "mesh",
+          "input_units": [
+            "mm",
+            "cm",
+            "m"
+          ],
+          "license_expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+          "max_report_bytes": 16777216,
+          "output_format": "json",
+          "output_slot": "analysis",
+          "output_unit": "none",
+          "producer_diagnostic_id": "mesh.producer_check.pmp_inspection",
+          "report_schema": "GeometryAnalysisReport/v1",
+          "report_schema_version": 1,
+          "result_enumeration": {
+            "max_report_bytes": 16777216,
+            "policy": "atomic_report_or_resource_limit"
+          },
+          "source_header": "CGAL/boost/graph/helpers.h",
+          "source_kind": "official_release",
+          "source_sha256": "a9e73905b62e1426775fe77d90aea0a803b50a18a735923062baf7c0beca2767",
+          "source_version": "6.2.1",
+          "tolerates_unconstructible_graph": true,
+          "validator_artifact_bindings": {
+            "mesh.validate.pmp_inspection_report": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "source": {
+                "input": "mesh"
+              }
+            }
+          },
+          "validators": [
+            "mesh.validate.pmp_inspection_report"
+          ]
+        }
+      },
+      "aliases": [
+        "mesh health inspection",
+        "PMP predicates",
+        "メッシュ健全性検査"
+      ]
+    },
+    {
+      "id": "mesh.analysis.connected_components",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "analysis",
+      "summary": "Partition all source faces into connected components.",
+      "package": "Polygon_mesh_processing",
+      "major_requirements": [
+        "major.7.3.02"
+      ],
+      "dependencies": [
+        "Polygon_mesh_processing",
+        "Surface_mesh"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Polygon_mesh_processing"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Polygon_mesh_processing::connected_components"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Polygon_mesh_processing/connected_components.h"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Polygon_mesh_processing",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/connected_components.h",
+            "sha256": "3f980c0349166a44c80e990fdf83a91086bee637e4850c44c1ff295fda594e70"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "mesh",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "analysis",
+            "type": "GeometryAnalysisReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "maxProperties": 0
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 268435456,
+          "maximum_vertices": 200000,
+          "maximum_faces": 200000,
+          "maximum_face_degree": 100000
+        },
+        {
+          "id": "triangle_surface_mesh",
+          "property": "triangulated",
+          "equals": true
+        },
+        {
+          "id": "constructible_polygon_mesh",
+          "property": "surface_mesh_constructible",
+          "equals": true
+        }
+      ],
+      "kernel": {
+        "supported": [
+          "exact_constructions",
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "input_coordinate_storage": "IEEE-754 binary64 parsed into exact binary-rational EPECK coordinates",
+        "local_frame_normalization": "translation and uniform positive scale before dimensionless PMP calculations",
+        "report_numeric_storage": "IEEE-754 binary64 JSON numbers",
+        "unrepresentable_policy": "explicit unavailable reason or typed PRECONDITION_FAILED; never publish zero/infinity as a valid computed value",
+        "requested_policy": "exact_constructions or package_recommended"
+      },
+      "output_contract": {
+        "schema": "GeometryAnalysisReport/v1",
+        "analysis_kind": "connected_components",
+        "result_fields": {
+          "component_count": "integer",
+          "components": "[{id,face_count,face_indices[]}]",
+          "count_unit": "count"
+        },
+        "geometry_mutation": false,
+        "source_sha256_preserved": true,
+        "max_report_bytes": 16777216,
+        "enumeration_policy": "atomic_report_or_resource_limit"
+      },
+      "validation": {
+        "required": true,
+        "validators": [
+          "mesh.validate.connected_components_report"
+        ],
+        "bindings": {
+          "mesh.validate.connected_components_report": {
+            "artifacts": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "source": {
+                "input": "mesh"
+              }
+            }
+          }
+        },
+        "producer_diagnostics_are_non_authoritative": true
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_wave_a_mesh_cases.py",
+          "tests/master_wave_a_mesh_mcp_e2e.py:auto",
+          "tests/master_wave_a_mesh_mcp_e2e.py:legacy"
+        ],
+        "worker_manifest_operation": "mesh.analysis.connected_components",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "independent_review": {
+          "result": "High 0 / Medium 0",
+          "reviewed_catalog_revision": "wave-a-mesh-implemented-6",
+          "worker_sha256": "c4a8392b9aeaa3dd9119e8b03b73796ff34278998d3e53fcdbc16dadd82df40a",
+          "review_scope": "native PMP analyses, dedicated validators, PolygonSoup inspection, adversarial report schemas, and self-intersecting volume preconditions"
+        }
+      },
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "info": {
+          "analysis_kind": "connected_components",
+          "checks": [
+            "component_ids_contiguous",
+            "all_faces_partitioned_once"
+          ],
+          "geometry_mutation": false,
+          "input_format": "off",
+          "input_slot": "mesh",
+          "input_units": [
+            "mm",
+            "cm",
+            "m"
+          ],
+          "license_expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+          "max_report_bytes": 16777216,
+          "output_format": "json",
+          "output_slot": "analysis",
+          "output_unit": "none",
+          "producer_diagnostic_id": "mesh.producer_check.connected_components",
+          "report_schema": "GeometryAnalysisReport/v1",
+          "report_schema_version": 1,
+          "result_enumeration": {
+            "max_report_bytes": 16777216,
+            "policy": "atomic_report_or_resource_limit"
+          },
+          "source_header": "CGAL/Polygon_mesh_processing/connected_components.h",
+          "source_kind": "official_release",
+          "source_sha256": "3f980c0349166a44c80e990fdf83a91086bee637e4850c44c1ff295fda594e70",
+          "source_version": "6.2.1",
+          "validator_artifact_bindings": {
+            "mesh.validate.connected_components_report": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "source": {
+                "input": "mesh"
+              }
+            }
+          },
+          "validators": [
+            "mesh.validate.connected_components_report"
+          ]
+        }
+      },
+      "aliases": [
+        "mesh components",
+        "face connected components",
+        "メッシュ連結成分"
+      ]
+    },
+    {
+      "id": "mesh.analysis.normals",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "analysis",
+      "summary": "Compute face, vertex, and flat per-corner unit normals.",
+      "package": "Polygon_mesh_processing",
+      "major_requirements": [
+        "major.7.3.03"
+      ],
+      "dependencies": [
+        "Polygon_mesh_processing",
+        "Surface_mesh"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Polygon_mesh_processing"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Polygon_mesh_processing::compute_normals"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Polygon_mesh_processing/compute_normal.h"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Polygon_mesh_processing",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/compute_normal.h",
+            "sha256": "bc53b2e20f93dddaa467bd59d344ff3f7396b41dd280835961159b77711abc40"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "mesh",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "analysis",
+            "type": "GeometryAnalysisReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "maxProperties": 0
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 268435456,
+          "maximum_vertices": 200000,
+          "maximum_faces": 200000,
+          "maximum_face_degree": 100000
+        },
+        {
+          "id": "triangle_surface_mesh",
+          "property": "triangulated",
+          "equals": true
+        },
+        {
+          "id": "constructible_polygon_mesh",
+          "property": "surface_mesh_constructible",
+          "equals": true
+        }
+      ],
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "input_coordinate_storage": "IEEE-754 binary64 parsed into exact binary-rational EPECK coordinates",
+        "local_frame_normalization": "translation and uniform positive scale before dimensionless PMP calculations",
+        "report_numeric_storage": "IEEE-754 binary64 JSON numbers",
+        "unrepresentable_policy": "explicit unavailable reason or typed PRECONDITION_FAILED; never publish zero/infinity as a valid computed value",
+        "requested_policy": "package_recommended only",
+        "exact_constructions_rejection": "OUTPUT_PRECISION_PROFILE_UNSUPPORTED",
+        "output_accuracy": "explicit binary64 approximation/availability contract; exact irrational output is not promised"
+      },
+      "output_contract": {
+        "schema": "GeometryAnalysisReport/v1",
+        "analysis_kind": "normals",
+        "result_fields": {
+          "face_normals": "[{face,normal}]",
+          "vertex_normals": "[{vertex,normal}]",
+          "corner_normals": "[{face,corner,vertex,normal,mode}]",
+          "corner_normal_mode": "flat_face_normal",
+          "degenerate_face_count": "integer",
+          "zero_face_normal_count": "integer",
+          "zero_vertex_normal_count": "integer",
+          "count_unit": "count"
+        },
+        "geometry_mutation": false,
+        "source_sha256_preserved": true,
+        "max_report_bytes": 16777216,
+        "enumeration_policy": "atomic_report_or_resource_limit"
+      },
+      "validation": {
+        "required": true,
+        "validators": [
+          "mesh.validate.normals_report"
+        ],
+        "bindings": {
+          "mesh.validate.normals_report": {
+            "artifacts": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "source": {
+                "input": "mesh"
+              }
+            }
+          }
+        },
+        "producer_diagnostics_are_non_authoritative": true
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_wave_a_mesh_cases.py",
+          "tests/master_wave_a_mesh_mcp_e2e.py:auto",
+          "tests/master_wave_a_mesh_mcp_e2e.py:legacy"
+        ],
+        "worker_manifest_operation": "mesh.analysis.normals",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "independent_review": {
+          "result": "High 0 / Medium 0",
+          "reviewed_catalog_revision": "wave-a-mesh-implemented-6",
+          "worker_sha256": "c4a8392b9aeaa3dd9119e8b03b73796ff34278998d3e53fcdbc16dadd82df40a",
+          "review_scope": "native PMP analyses, dedicated validators, PolygonSoup inspection, adversarial report schemas, and self-intersecting volume preconditions"
+        }
+      },
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "info": {
+          "analysis_kind": "normals",
+          "checks": [
+            "normal_cardinality",
+            "finite_vectors",
+            "unit_or_explicit_zero",
+            "face_degeneracy_consistent"
+          ],
+          "geometry_mutation": false,
+          "input_format": "off",
+          "input_slot": "mesh",
+          "input_units": [
+            "mm",
+            "cm",
+            "m"
+          ],
+          "license_expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+          "max_report_bytes": 16777216,
+          "normal_modes": [
+            "face",
+            "vertex",
+            "corner_flat"
+          ],
+          "output_format": "json",
+          "output_slot": "analysis",
+          "output_unit": "none",
+          "precision_contract": {
+            "exact_irrational_output": false,
+            "internal_kernel": "EPECK",
+            "reported_values": "normalized IEEE-754 binary64 vectors"
+          },
+          "producer_diagnostic_id": "mesh.producer_check.normals",
+          "report_schema": "GeometryAnalysisReport/v1",
+          "report_schema_version": 1,
+          "result_enumeration": {
+            "max_report_bytes": 16777216,
+            "policy": "atomic_report_or_resource_limit"
+          },
+          "source_header": "CGAL/Polygon_mesh_processing/compute_normal.h",
+          "source_kind": "official_release",
+          "source_sha256": "bc53b2e20f93dddaa467bd59d344ff3f7396b41dd280835961159b77711abc40",
+          "source_version": "6.2.1",
+          "validator_artifact_bindings": {
+            "mesh.validate.normals_report": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "source": {
+                "input": "mesh"
+              }
+            }
+          },
+          "validators": [
+            "mesh.validate.normals_report"
+          ]
+        }
+      },
+      "aliases": [
+        "mesh normals",
+        "face vertex corner normals",
+        "メッシュ法線"
+      ]
+    },
+    {
+      "id": "mesh.analysis.measures",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "analysis",
+      "summary": "Compute typed surface area and conditionally available volume and volume centroid.",
+      "package": "Polygon_mesh_processing",
+      "major_requirements": [
+        "major.7.3.04"
+      ],
+      "dependencies": [
+        "Polygon_mesh_processing",
+        "Surface_mesh"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Polygon_mesh_processing"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Polygon_mesh_processing::area"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Polygon_mesh_processing::volume"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Polygon_mesh_processing::centroid"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Polygon_mesh_processing::does_bound_a_volume"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Polygon_mesh_processing/measure.h"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Polygon_mesh_processing/orientation.h"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Polygon_mesh_processing::does_self_intersect"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Polygon_mesh_processing/self_intersections.h"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Polygon_mesh_processing",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/measure.h",
+            "sha256": "ba707292f05045a0c6eea3d73c3b21435673f440f4461b5ac5cf19542f6c540b"
+          },
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/orientation.h",
+            "sha256": "45cb6ca3b95b1877b48878ea82cee895b52ce839d50555609d214e6c0cfc63fe"
+          },
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/self_intersections.h",
+            "sha256": "d459c0e6480a9e1c2cbef291340ae61a0bf4e79ceb182365c1b922dd7e38ae8f"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "mesh",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "analysis",
+            "type": "GeometryAnalysisReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "maxProperties": 0
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 268435456,
+          "maximum_vertices": 200000,
+          "maximum_faces": 200000,
+          "maximum_face_degree": 100000
+        },
+        {
+          "id": "triangle_surface_mesh",
+          "property": "triangulated",
+          "equals": true
+        },
+        {
+          "id": "constructible_polygon_mesh",
+          "property": "surface_mesh_constructible",
+          "equals": true
+        }
+      ],
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "input_coordinate_storage": "IEEE-754 binary64 parsed into exact binary-rational EPECK coordinates",
+        "local_frame_normalization": "translation and uniform positive scale before dimensionless PMP calculations",
+        "report_numeric_storage": "IEEE-754 binary64 JSON numbers",
+        "unrepresentable_policy": "explicit unavailable reason or typed PRECONDITION_FAILED; never publish zero/infinity as a valid computed value",
+        "requested_policy": "package_recommended only",
+        "exact_constructions_rejection": "OUTPUT_PRECISION_PROFILE_UNSUPPORTED",
+        "output_accuracy": "explicit binary64 approximation/availability contract; exact irrational output is not promised"
+      },
+      "output_contract": {
+        "schema": "GeometryAnalysisReport/v1",
+        "analysis_kind": "measures",
+        "result_fields": {
+          "surface_area": "TypedAvailability<length^2>",
+          "signed_volume": "TypedAvailability<length^3>",
+          "absolute_volume": "TypedAvailability<length^3>",
+          "volume_centroid": "TypedAvailability<length>"
+        },
+        "geometry_mutation": false,
+        "source_sha256_preserved": true,
+        "max_report_bytes": 16777216,
+        "enumeration_policy": "atomic_report_or_resource_limit",
+        "volume_unavailable_reasons": [
+          "MESH_NOT_CLOSED",
+          "BINARY64_RESULT_NOT_REPRESENTABLE",
+          "DEGENERATE_FACES",
+          "SELF_INTERSECTING_MESH",
+          "MESH_DOES_NOT_BOUND_A_VOLUME",
+          "NONPOSITIVE_ORIENTATION"
+        ]
+      },
+      "validation": {
+        "required": true,
+        "validators": [
+          "mesh.validate.measures_report"
+        ],
+        "bindings": {
+          "mesh.validate.measures_report": {
+            "artifacts": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "source": {
+                "input": "mesh"
+              }
+            }
+          }
+        },
+        "producer_diagnostics_are_non_authoritative": true
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_wave_a_mesh_cases.py",
+          "tests/master_wave_a_mesh_mcp_e2e.py:auto",
+          "tests/master_wave_a_mesh_mcp_e2e.py:legacy"
+        ],
+        "worker_manifest_operation": "mesh.analysis.measures",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "independent_review": {
+          "result": "High 0 / Medium 0",
+          "reviewed_catalog_revision": "wave-a-mesh-implemented-6",
+          "worker_sha256": "c4a8392b9aeaa3dd9119e8b03b73796ff34278998d3e53fcdbc16dadd82df40a",
+          "review_scope": "native PMP analyses, dedicated validators, PolygonSoup inspection, adversarial report schemas, and self-intersecting volume preconditions"
+        }
+      },
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "info": {
+          "additional_source_headers": [
+            {
+              "header": "CGAL/Polygon_mesh_processing/self_intersections.h",
+              "sha256": "d459c0e6480a9e1c2cbef291340ae61a0bf4e79ceb182365c1b922dd7e38ae8f"
+            }
+          ],
+          "analysis_kind": "measures",
+          "checks": [
+            "typed_dimensions",
+            "availability_reasons",
+            "self_intersection_gate_before_volume",
+            "binary64_precision_gate"
+          ],
+          "geometry_mutation": false,
+          "input_format": "off",
+          "input_slot": "mesh",
+          "input_units": [
+            "mm",
+            "cm",
+            "m"
+          ],
+          "license_expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+          "max_report_bytes": 16777216,
+          "measure_dimensions": {
+            "absolute_volume": "length^3",
+            "signed_volume": "length^3",
+            "surface_area": "length^2",
+            "volume_centroid": "length"
+          },
+          "output_format": "json",
+          "output_slot": "analysis",
+          "output_unit": "none",
+          "precision_contract": {
+            "internal_kernel": "EPECK",
+            "signed_volume": "exact internal rational then binary64",
+            "surface_area": "approximate square root then binary64",
+            "unrepresentable": "explicit unavailable reason",
+            "volume_centroid": "exact internal rational then binary64"
+          },
+          "producer_diagnostic_id": "mesh.producer_check.measures",
+          "report_schema": "GeometryAnalysisReport/v1",
+          "report_schema_version": 1,
+          "result_enumeration": {
+            "max_report_bytes": 16777216,
+            "policy": "atomic_report_or_resource_limit"
+          },
+          "source_header": "CGAL/Polygon_mesh_processing/measure.h",
+          "source_kind": "official_release",
+          "source_sha256": "ba707292f05045a0c6eea3d73c3b21435673f440f4461b5ac5cf19542f6c540b",
+          "source_version": "6.2.1",
+          "validator_artifact_bindings": {
+            "mesh.validate.measures_report": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "source": {
+                "input": "mesh"
+              }
+            }
+          },
+          "validators": [
+            "mesh.validate.measures_report"
+          ],
+          "volume_preconditions": [
+            "closed",
+            "non_degenerate",
+            "non_self_intersecting",
+            "bounds_volume",
+            "positive_orientation"
+          ]
+        }
+      },
+      "aliases": [
+        "mesh area volume centroid",
+        "geometric measures",
+        "メッシュ計量"
+      ]
+    },
+    {
+      "id": "mesh.analysis.sharp_features",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "analysis",
+      "summary": "Detect border and dihedral sharp-feature edges at a typed angle threshold.",
+      "package": "Polygon_mesh_processing",
+      "major_requirements": [
+        "major.7.3.05"
+      ],
+      "dependencies": [
+        "Polygon_mesh_processing",
+        "Surface_mesh"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Polygon_mesh_processing"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Polygon_mesh_processing::detect_sharp_edges"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Polygon_mesh_processing/detect_features.h"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Polygon_mesh_processing",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/detect_features.h",
+            "sha256": "0fda63d13f171d8a107a1cb96db9545fa19802eacae419df0498c9838669724c"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "mesh",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "analysis",
+            "type": "GeometryAnalysisReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "angle"
+        ],
+        "properties": {
+          "angle": {
+            "type": "TypedAngle",
+            "units": [
+              "deg",
+              "rad"
+            ],
+            "minimum_degrees": 0,
+            "maximum_degrees": 180
+          }
+        }
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 268435456,
+          "maximum_vertices": 200000,
+          "maximum_faces": 200000,
+          "maximum_face_degree": 100000
+        },
+        {
+          "id": "triangle_surface_mesh",
+          "property": "triangulated",
+          "equals": true
+        },
+        {
+          "id": "constructible_polygon_mesh",
+          "property": "surface_mesh_constructible",
+          "equals": true
+        }
+      ],
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "input_coordinate_storage": "IEEE-754 binary64 parsed into exact binary-rational EPECK coordinates",
+        "local_frame_normalization": "translation and uniform positive scale before dimensionless PMP calculations",
+        "report_numeric_storage": "IEEE-754 binary64 JSON numbers",
+        "unrepresentable_policy": "explicit unavailable reason or typed PRECONDITION_FAILED; never publish zero/infinity as a valid computed value",
+        "requested_policy": "package_recommended only",
+        "exact_constructions_rejection": "OUTPUT_PRECISION_PROFILE_UNSUPPORTED",
+        "output_accuracy": "explicit binary64 approximation/availability contract; exact irrational output is not promised"
+      },
+      "output_contract": {
+        "schema": "GeometryAnalysisReport/v1",
+        "analysis_kind": "sharp_features",
+        "result_fields": {
+          "angle": "TypedAngle<deg>",
+          "features": "TypedAvailability<{feature_edge_count,border_feature_edge_count,edges[]}>",
+          "count_unit": "count"
+        },
+        "geometry_mutation": false,
+        "source_sha256_preserved": true,
+        "max_report_bytes": 16777216,
+        "enumeration_policy": "atomic_report_or_resource_limit"
+      },
+      "validation": {
+        "required": true,
+        "validators": [
+          "mesh.validate.sharp_features_report"
+        ],
+        "bindings": {
+          "mesh.validate.sharp_features_report": {
+            "artifacts": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "source": {
+                "input": "mesh"
+              }
+            },
+            "parameters": {
+              "angle": {
+                "parameter": "angle"
+              }
+            }
+          }
+        },
+        "producer_diagnostics_are_non_authoritative": true
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_wave_a_mesh_cases.py",
+          "tests/master_wave_a_mesh_mcp_e2e.py:auto",
+          "tests/master_wave_a_mesh_mcp_e2e.py:legacy"
+        ],
+        "worker_manifest_operation": "mesh.analysis.sharp_features",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "independent_review": {
+          "result": "High 0 / Medium 0",
+          "reviewed_catalog_revision": "wave-a-mesh-implemented-6",
+          "worker_sha256": "c4a8392b9aeaa3dd9119e8b03b73796ff34278998d3e53fcdbc16dadd82df40a",
+          "review_scope": "native PMP analyses, dedicated validators, PolygonSoup inspection, adversarial report schemas, and self-intersecting volume preconditions"
+        }
+      },
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "info": {
+          "analysis_kind": "sharp_features",
+          "angle_units": [
+            "deg",
+            "rad"
+          ],
+          "checks": [
+            "canonical_angle_degrees",
+            "feature_edges_belong_to_source"
+          ],
+          "geometry_mutation": false,
+          "input_format": "off",
+          "input_slot": "mesh",
+          "input_units": [
+            "mm",
+            "cm",
+            "m"
+          ],
+          "license_expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+          "max_report_bytes": 16777216,
+          "output_format": "json",
+          "output_slot": "analysis",
+          "output_unit": "none",
+          "precision_contract": {
+            "angle_threshold": "IEEE-754 binary64 degrees",
+            "internal_kernel": "EPECK",
+            "threshold_decision": "CGAL approximate trigonometric comparison"
+          },
+          "producer_diagnostic_id": "mesh.producer_check.sharp_features",
+          "report_schema": "GeometryAnalysisReport/v1",
+          "report_schema_version": 1,
+          "required_parameters": [
+            "angle"
+          ],
+          "result_enumeration": {
+            "max_report_bytes": 16777216,
+            "policy": "atomic_report_or_resource_limit"
+          },
+          "source_header": "CGAL/Polygon_mesh_processing/detect_features.h",
+          "source_kind": "official_release",
+          "source_sha256": "0fda63d13f171d8a107a1cb96db9545fa19802eacae419df0498c9838669724c",
+          "source_version": "6.2.1",
+          "validator_artifact_bindings": {
+            "mesh.validate.sharp_features_report": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "source": {
+                "input": "mesh"
+              }
+            }
+          },
+          "validator_parameter_bindings": {
+            "mesh.validate.sharp_features_report": {
+              "angle": "angle"
+            }
+          },
+          "validators": [
+            "mesh.validate.sharp_features_report"
+          ]
+        }
+      },
+      "aliases": [
+        "sharp edges",
+        "dihedral features",
+        "鋭角特徴線"
+      ]
+    },
+    {
+      "id": "mesh.analysis.self_intersections",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "analysis",
+      "summary": "Collect bounded source-face self-intersection pairs without mesh mutation.",
+      "package": "Polygon_mesh_processing",
+      "major_requirements": [
+        "major.7.3.07"
+      ],
+      "dependencies": [
+        "Polygon_mesh_processing",
+        "Surface_mesh"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Polygon_mesh_processing"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Polygon_mesh_processing::self_intersections"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Polygon_mesh_processing/self_intersections.h"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Polygon_mesh_processing",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/self_intersections.h",
+            "sha256": "d459c0e6480a9e1c2cbef291340ae61a0bf4e79ceb182365c1b922dd7e38ae8f"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "mesh",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "analysis",
+            "type": "GeometryAnalysisReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "maxProperties": 0
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 268435456,
+          "maximum_vertices": 200000,
+          "maximum_faces": 200000,
+          "maximum_face_degree": 100000
+        },
+        {
+          "id": "triangle_surface_mesh",
+          "property": "triangulated",
+          "equals": true
+        },
+        {
+          "id": "constructible_polygon_mesh",
+          "property": "surface_mesh_constructible",
+          "equals": true
+        }
+      ],
+      "kernel": {
+        "supported": [
+          "exact_constructions",
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "input_coordinate_storage": "IEEE-754 binary64 parsed into exact binary-rational EPECK coordinates",
+        "local_frame_normalization": "translation and uniform positive scale before dimensionless PMP calculations",
+        "report_numeric_storage": "IEEE-754 binary64 JSON numbers",
+        "unrepresentable_policy": "explicit unavailable reason or typed PRECONDITION_FAILED; never publish zero/infinity as a valid computed value",
+        "requested_policy": "exact_constructions or package_recommended"
+      },
+      "output_contract": {
+        "schema": "GeometryAnalysisReport/v1",
+        "analysis_kind": "self_intersections",
+        "result_fields": {
+          "available": "boolean",
+          "does_self_intersect": "boolean",
+          "intersection_pair_count": "integer|null",
+          "pair_limit": "10000",
+          "pairs": "[[face,face]]",
+          "reason": "string?",
+          "count_unit": "count"
+        },
+        "geometry_mutation": false,
+        "source_sha256_preserved": true,
+        "max_report_bytes": 16777216,
+        "enumeration_policy": "atomic_report_or_resource_limit"
+      },
+      "validation": {
+        "required": true,
+        "validators": [
+          "mesh.validate.self_intersections_report"
+        ],
+        "bindings": {
+          "mesh.validate.self_intersections_report": {
+            "artifacts": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "source": {
+                "input": "mesh"
+              }
+            }
+          }
+        },
+        "producer_diagnostics_are_non_authoritative": true
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_wave_a_mesh_cases.py",
+          "tests/master_wave_a_mesh_mcp_e2e.py:auto",
+          "tests/master_wave_a_mesh_mcp_e2e.py:legacy"
+        ],
+        "worker_manifest_operation": "mesh.analysis.self_intersections",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "independent_review": {
+          "result": "High 0 / Medium 0",
+          "reviewed_catalog_revision": "wave-a-mesh-implemented-6",
+          "worker_sha256": "c4a8392b9aeaa3dd9119e8b03b73796ff34278998d3e53fcdbc16dadd82df40a",
+          "review_scope": "native PMP analyses, dedicated validators, PolygonSoup inspection, adversarial report schemas, and self-intersecting volume preconditions"
+        }
+      },
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "info": {
+          "analysis_kind": "self_intersections",
+          "checks": [
+            "source_face_pairs",
+            "pair_count_consistent",
+            "bounded_pair_collection"
+          ],
+          "geometry_mutation": false,
+          "input_format": "off",
+          "input_slot": "mesh",
+          "input_units": [
+            "mm",
+            "cm",
+            "m"
+          ],
+          "license_expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+          "max_report_bytes": 16777216,
+          "output_format": "json",
+          "output_slot": "analysis",
+          "output_unit": "none",
+          "pair_limit": 10000,
+          "producer_diagnostic_id": "mesh.producer_check.self_intersections",
+          "report_schema": "GeometryAnalysisReport/v1",
+          "report_schema_version": 1,
+          "result_enumeration": {
+            "max_report_bytes": 16777216,
+            "policy": "atomic_report_or_resource_limit"
+          },
+          "source_header": "CGAL/Polygon_mesh_processing/self_intersections.h",
+          "source_kind": "official_release",
+          "source_sha256": "d459c0e6480a9e1c2cbef291340ae61a0bf4e79ceb182365c1b922dd7e38ae8f",
+          "source_version": "6.2.1",
+          "validator_artifact_bindings": {
+            "mesh.validate.self_intersections_report": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "source": {
+                "input": "mesh"
+              }
+            }
+          },
+          "validators": [
+            "mesh.validate.self_intersections_report"
+          ]
+        }
+      },
+      "aliases": [
+        "mesh self intersections",
+        "intersecting face pairs",
+        "自己交差検査"
+      ]
+    },
+    {
+      "id": "mesh.validate.pmp_inspection_report",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "validator",
+      "summary": "Validate mesh.inspect.pmp output against source identity and an official CGAL replay.",
+      "package": "Polygon_mesh_processing",
+      "major_requirements": [
+        "major.7.3.01"
+      ],
+      "dependencies": [
+        "Polygon_mesh_processing",
+        "Surface_mesh"
+      ],
+      "sources": [
+        {
+          "kind": "operation_reference",
+          "identifier": "mesh.inspect.pmp"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Polygon_mesh_processing",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/boost/graph/helpers.h",
+            "sha256": "a9e73905b62e1426775fe77d90aea0a803b50a18a735923062baf7c0beca2767"
+          },
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/manifoldness.h",
+            "sha256": "b7089cd3b24ca28b030da574086e27e051f8092e3b02be8e581828583127a91f"
+          },
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/shape_predicates.h",
+            "sha256": "17b3e211b01ebb6a93df69fca2fa07896976741ad6a5d442770acbe131f3492d"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "GeometryAnalysisReport"
+            ],
+            "formats": [
+              "json"
+            ],
+            "unit": "none"
+          },
+          {
+            "slot": "source",
+            "types": [
+              "TriangleSurfaceMesh",
+              "PolygonSoup3"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "maxProperties": 0
+      },
+      "preconditions": [],
+      "kernel": {
+        "supported": [
+          "exact_constructions",
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "input_coordinate_storage": "IEEE-754 binary64 parsed into exact binary-rational EPECK coordinates",
+        "local_frame_normalization": "translation and uniform positive scale before dimensionless PMP calculations",
+        "report_numeric_storage": "IEEE-754 binary64 JSON numbers",
+        "unrepresentable_policy": "explicit unavailable reason or typed PRECONDITION_FAILED; never publish zero/infinity as a valid computed value",
+        "requested_policy": "exact_constructions or package_recommended"
+      },
+      "output_contract": {
+        "schema": "ValidationReport/v1",
+        "required": [
+          "schema_version",
+          "validator_id",
+          "candidate_sha256",
+          "source_sha256",
+          "status",
+          "passed",
+          "checks"
+        ],
+        "required_true_checks": [
+          "schema_valid",
+          "source_identity_matches",
+          "analysis_kind_matches",
+          "dimension_units_valid",
+          "result_semantics_valid",
+          "producer_diagnostic_matches",
+          "official_cgal_reference_match"
+        ],
+        "status": "pass"
+      },
+      "validation": {
+        "required": false,
+        "validators": [],
+        "terminal_validator": true,
+        "validates": "mesh.inspect.pmp",
+        "required_report_checks": {
+          "checks.analysis_kind_matches": true,
+          "checks.dimension_units_valid": true,
+          "checks.official_cgal_reference_match": true,
+          "checks.producer_diagnostic_matches": true,
+          "checks.result_semantics_valid": true,
+          "checks.schema_valid": true,
+          "checks.source_identity_matches": true,
+          "passed": true,
+          "schema_version": 1,
+          "status": "pass",
+          "validator_id": "mesh.validate.pmp_inspection_report"
+        }
+      },
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "info": {
+          "artifact_bindings": {
+            "candidate": {
+              "output": "analysis"
+            },
+            "source": {
+              "input": "mesh"
+            }
+          },
+          "candidate_report_schema": "GeometryAnalysisReport/v1",
+          "max_candidate_report_bytes": 16777216,
+          "report_schema": "ValidationReport/v1",
+          "required_checks": [
+            "schema_valid",
+            "source_identity_matches",
+            "analysis_kind_matches",
+            "dimension_units_valid",
+            "result_semantics_valid",
+            "producer_diagnostic_matches",
+            "official_cgal_reference_match"
+          ],
+          "required_report_checks": {
+            "checks.analysis_kind_matches": true,
+            "checks.dimension_units_valid": true,
+            "checks.official_cgal_reference_match": true,
+            "checks.producer_diagnostic_matches": true,
+            "checks.result_semantics_valid": true,
+            "checks.schema_valid": true,
+            "checks.source_identity_matches": true,
+            "passed": true,
+            "schema_version": 1,
+            "status": "pass",
+            "validator_id": "mesh.validate.pmp_inspection_report"
+          },
+          "validates": "mesh.inspect.pmp"
+        }
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_wave_a_mesh_cases.py",
+          "tests/master_wave_a_mesh_mcp_e2e.py:auto",
+          "tests/master_wave_a_mesh_mcp_e2e.py:legacy"
+        ],
+        "worker_manifest_operation": "mesh.validate.pmp_inspection_report",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "independent_review": {
+          "result": "High 0 / Medium 0",
+          "reviewed_catalog_revision": "wave-a-mesh-implemented-6",
+          "worker_sha256": "c4a8392b9aeaa3dd9119e8b03b73796ff34278998d3e53fcdbc16dadd82df40a",
+          "review_scope": "native PMP analyses, dedicated validators, PolygonSoup inspection, adversarial report schemas, and self-intersecting volume preconditions"
+        }
+      },
+      "aliases": [
+        "validate mesh inspection",
+        "inspection report validator",
+        "検査レポート検証"
+      ],
+      "runtime_report_contract": {
+        "schema": "ValidationReport/v1",
+        "required_report_checks": {
+          "checks.analysis_kind_matches": true,
+          "checks.dimension_units_valid": true,
+          "checks.official_cgal_reference_match": true,
+          "checks.producer_diagnostic_matches": true,
+          "checks.result_semantics_valid": true,
+          "checks.schema_valid": true,
+          "checks.source_identity_matches": true,
+          "passed": true,
+          "schema_version": 1,
+          "status": "pass",
+          "validator_id": "mesh.validate.pmp_inspection_report"
+        }
+      }
+    },
+    {
+      "id": "mesh.validate.connected_components_report",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "validator",
+      "summary": "Validate mesh.analysis.connected_components output against source identity and an official CGAL replay.",
+      "package": "Polygon_mesh_processing",
+      "major_requirements": [
+        "major.7.3.02"
+      ],
+      "dependencies": [
+        "Polygon_mesh_processing",
+        "Surface_mesh"
+      ],
+      "sources": [
+        {
+          "kind": "operation_reference",
+          "identifier": "mesh.analysis.connected_components"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Polygon_mesh_processing",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/connected_components.h",
+            "sha256": "3f980c0349166a44c80e990fdf83a91086bee637e4850c44c1ff295fda594e70"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "GeometryAnalysisReport"
+            ],
+            "formats": [
+              "json"
+            ],
+            "unit": "none"
+          },
+          {
+            "slot": "source",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "maxProperties": 0
+      },
+      "preconditions": [],
+      "kernel": {
+        "supported": [
+          "exact_constructions",
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "input_coordinate_storage": "IEEE-754 binary64 parsed into exact binary-rational EPECK coordinates",
+        "local_frame_normalization": "translation and uniform positive scale before dimensionless PMP calculations",
+        "report_numeric_storage": "IEEE-754 binary64 JSON numbers",
+        "unrepresentable_policy": "explicit unavailable reason or typed PRECONDITION_FAILED; never publish zero/infinity as a valid computed value",
+        "requested_policy": "exact_constructions or package_recommended"
+      },
+      "output_contract": {
+        "schema": "ValidationReport/v1",
+        "required": [
+          "schema_version",
+          "validator_id",
+          "candidate_sha256",
+          "source_sha256",
+          "status",
+          "passed",
+          "checks"
+        ],
+        "required_true_checks": [
+          "schema_valid",
+          "source_identity_matches",
+          "analysis_kind_matches",
+          "dimension_units_valid",
+          "result_semantics_valid",
+          "producer_diagnostic_matches",
+          "official_cgal_reference_match"
+        ],
+        "status": "pass"
+      },
+      "validation": {
+        "required": false,
+        "validators": [],
+        "terminal_validator": true,
+        "validates": "mesh.analysis.connected_components",
+        "required_report_checks": {
+          "checks.analysis_kind_matches": true,
+          "checks.dimension_units_valid": true,
+          "checks.official_cgal_reference_match": true,
+          "checks.producer_diagnostic_matches": true,
+          "checks.result_semantics_valid": true,
+          "checks.schema_valid": true,
+          "checks.source_identity_matches": true,
+          "passed": true,
+          "schema_version": 1,
+          "status": "pass",
+          "validator_id": "mesh.validate.connected_components_report"
+        }
+      },
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "info": {
+          "artifact_bindings": {
+            "candidate": {
+              "output": "analysis"
+            },
+            "source": {
+              "input": "mesh"
+            }
+          },
+          "candidate_report_schema": "GeometryAnalysisReport/v1",
+          "max_candidate_report_bytes": 16777216,
+          "report_schema": "ValidationReport/v1",
+          "required_checks": [
+            "schema_valid",
+            "source_identity_matches",
+            "analysis_kind_matches",
+            "dimension_units_valid",
+            "result_semantics_valid",
+            "producer_diagnostic_matches",
+            "official_cgal_reference_match"
+          ],
+          "required_report_checks": {
+            "checks.analysis_kind_matches": true,
+            "checks.dimension_units_valid": true,
+            "checks.official_cgal_reference_match": true,
+            "checks.producer_diagnostic_matches": true,
+            "checks.result_semantics_valid": true,
+            "checks.schema_valid": true,
+            "checks.source_identity_matches": true,
+            "passed": true,
+            "schema_version": 1,
+            "status": "pass",
+            "validator_id": "mesh.validate.connected_components_report"
+          },
+          "validates": "mesh.analysis.connected_components"
+        }
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_wave_a_mesh_cases.py",
+          "tests/master_wave_a_mesh_mcp_e2e.py:auto",
+          "tests/master_wave_a_mesh_mcp_e2e.py:legacy"
+        ],
+        "worker_manifest_operation": "mesh.validate.connected_components_report",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "independent_review": {
+          "result": "High 0 / Medium 0",
+          "reviewed_catalog_revision": "wave-a-mesh-implemented-6",
+          "worker_sha256": "c4a8392b9aeaa3dd9119e8b03b73796ff34278998d3e53fcdbc16dadd82df40a",
+          "review_scope": "native PMP analyses, dedicated validators, PolygonSoup inspection, adversarial report schemas, and self-intersecting volume preconditions"
+        }
+      },
+      "aliases": [
+        "validate mesh components",
+        "component report validator",
+        "連結成分レポート検証"
+      ],
+      "runtime_report_contract": {
+        "schema": "ValidationReport/v1",
+        "required_report_checks": {
+          "checks.analysis_kind_matches": true,
+          "checks.dimension_units_valid": true,
+          "checks.official_cgal_reference_match": true,
+          "checks.producer_diagnostic_matches": true,
+          "checks.result_semantics_valid": true,
+          "checks.schema_valid": true,
+          "checks.source_identity_matches": true,
+          "passed": true,
+          "schema_version": 1,
+          "status": "pass",
+          "validator_id": "mesh.validate.connected_components_report"
+        }
+      }
+    },
+    {
+      "id": "mesh.validate.normals_report",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "validator",
+      "summary": "Validate mesh.analysis.normals output against source identity and an official CGAL replay.",
+      "package": "Polygon_mesh_processing",
+      "major_requirements": [
+        "major.7.3.03"
+      ],
+      "dependencies": [
+        "Polygon_mesh_processing",
+        "Surface_mesh"
+      ],
+      "sources": [
+        {
+          "kind": "operation_reference",
+          "identifier": "mesh.analysis.normals"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Polygon_mesh_processing",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/compute_normal.h",
+            "sha256": "bc53b2e20f93dddaa467bd59d344ff3f7396b41dd280835961159b77711abc40"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "GeometryAnalysisReport"
+            ],
+            "formats": [
+              "json"
+            ],
+            "unit": "none"
+          },
+          {
+            "slot": "source",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "maxProperties": 0
+      },
+      "preconditions": [],
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "input_coordinate_storage": "IEEE-754 binary64 parsed into exact binary-rational EPECK coordinates",
+        "local_frame_normalization": "translation and uniform positive scale before dimensionless PMP calculations",
+        "report_numeric_storage": "IEEE-754 binary64 JSON numbers",
+        "unrepresentable_policy": "explicit unavailable reason or typed PRECONDITION_FAILED; never publish zero/infinity as a valid computed value",
+        "requested_policy": "package_recommended only",
+        "exact_constructions_rejection": "OUTPUT_PRECISION_PROFILE_UNSUPPORTED",
+        "output_accuracy": "explicit binary64 approximation/availability contract; exact irrational output is not promised"
+      },
+      "output_contract": {
+        "schema": "ValidationReport/v1",
+        "required": [
+          "schema_version",
+          "validator_id",
+          "candidate_sha256",
+          "source_sha256",
+          "status",
+          "passed",
+          "checks"
+        ],
+        "required_true_checks": [
+          "schema_valid",
+          "source_identity_matches",
+          "analysis_kind_matches",
+          "dimension_units_valid",
+          "result_semantics_valid",
+          "producer_diagnostic_matches",
+          "official_cgal_reference_match"
+        ],
+        "status": "pass"
+      },
+      "validation": {
+        "required": false,
+        "validators": [],
+        "terminal_validator": true,
+        "validates": "mesh.analysis.normals",
+        "required_report_checks": {
+          "checks.analysis_kind_matches": true,
+          "checks.dimension_units_valid": true,
+          "checks.official_cgal_reference_match": true,
+          "checks.producer_diagnostic_matches": true,
+          "checks.result_semantics_valid": true,
+          "checks.schema_valid": true,
+          "checks.source_identity_matches": true,
+          "passed": true,
+          "schema_version": 1,
+          "status": "pass",
+          "validator_id": "mesh.validate.normals_report"
+        }
+      },
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "info": {
+          "artifact_bindings": {
+            "candidate": {
+              "output": "analysis"
+            },
+            "source": {
+              "input": "mesh"
+            }
+          },
+          "candidate_report_schema": "GeometryAnalysisReport/v1",
+          "independent_fixture_contract": "analytic face-normal direction",
+          "max_candidate_report_bytes": 16777216,
+          "report_schema": "ValidationReport/v1",
+          "required_checks": [
+            "schema_valid",
+            "source_identity_matches",
+            "analysis_kind_matches",
+            "dimension_units_valid",
+            "result_semantics_valid",
+            "producer_diagnostic_matches",
+            "official_cgal_reference_match"
+          ],
+          "required_report_checks": {
+            "checks.analysis_kind_matches": true,
+            "checks.dimension_units_valid": true,
+            "checks.official_cgal_reference_match": true,
+            "checks.producer_diagnostic_matches": true,
+            "checks.result_semantics_valid": true,
+            "checks.schema_valid": true,
+            "checks.source_identity_matches": true,
+            "passed": true,
+            "schema_version": 1,
+            "status": "pass",
+            "validator_id": "mesh.validate.normals_report"
+          },
+          "validates": "mesh.analysis.normals"
+        }
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_wave_a_mesh_cases.py",
+          "tests/master_wave_a_mesh_mcp_e2e.py:auto",
+          "tests/master_wave_a_mesh_mcp_e2e.py:legacy"
+        ],
+        "worker_manifest_operation": "mesh.validate.normals_report",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "independent_review": {
+          "result": "High 0 / Medium 0",
+          "reviewed_catalog_revision": "wave-a-mesh-implemented-6",
+          "worker_sha256": "c4a8392b9aeaa3dd9119e8b03b73796ff34278998d3e53fcdbc16dadd82df40a",
+          "review_scope": "native PMP analyses, dedicated validators, PolygonSoup inspection, adversarial report schemas, and self-intersecting volume preconditions"
+        }
+      },
+      "aliases": [
+        "validate mesh normals",
+        "normal report validator",
+        "法線レポート検証"
+      ],
+      "runtime_report_contract": {
+        "schema": "ValidationReport/v1",
+        "required_report_checks": {
+          "checks.analysis_kind_matches": true,
+          "checks.dimension_units_valid": true,
+          "checks.official_cgal_reference_match": true,
+          "checks.producer_diagnostic_matches": true,
+          "checks.result_semantics_valid": true,
+          "checks.schema_valid": true,
+          "checks.source_identity_matches": true,
+          "passed": true,
+          "schema_version": 1,
+          "status": "pass",
+          "validator_id": "mesh.validate.normals_report"
+        }
+      }
+    },
+    {
+      "id": "mesh.validate.measures_report",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "validator",
+      "summary": "Validate mesh.analysis.measures output against source identity and an official CGAL replay.",
+      "package": "Polygon_mesh_processing",
+      "major_requirements": [
+        "major.7.3.04"
+      ],
+      "dependencies": [
+        "Polygon_mesh_processing",
+        "Surface_mesh"
+      ],
+      "sources": [
+        {
+          "kind": "operation_reference",
+          "identifier": "mesh.analysis.measures"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Polygon_mesh_processing",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/measure.h",
+            "sha256": "ba707292f05045a0c6eea3d73c3b21435673f440f4461b5ac5cf19542f6c540b"
+          },
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/orientation.h",
+            "sha256": "45cb6ca3b95b1877b48878ea82cee895b52ce839d50555609d214e6c0cfc63fe"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "GeometryAnalysisReport"
+            ],
+            "formats": [
+              "json"
+            ],
+            "unit": "none"
+          },
+          {
+            "slot": "source",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "maxProperties": 0
+      },
+      "preconditions": [],
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "input_coordinate_storage": "IEEE-754 binary64 parsed into exact binary-rational EPECK coordinates",
+        "local_frame_normalization": "translation and uniform positive scale before dimensionless PMP calculations",
+        "report_numeric_storage": "IEEE-754 binary64 JSON numbers",
+        "unrepresentable_policy": "explicit unavailable reason or typed PRECONDITION_FAILED; never publish zero/infinity as a valid computed value",
+        "requested_policy": "package_recommended only",
+        "exact_constructions_rejection": "OUTPUT_PRECISION_PROFILE_UNSUPPORTED",
+        "output_accuracy": "explicit binary64 approximation/availability contract; exact irrational output is not promised"
+      },
+      "output_contract": {
+        "schema": "ValidationReport/v1",
+        "required": [
+          "schema_version",
+          "validator_id",
+          "candidate_sha256",
+          "source_sha256",
+          "status",
+          "passed",
+          "checks"
+        ],
+        "required_true_checks": [
+          "schema_valid",
+          "source_identity_matches",
+          "analysis_kind_matches",
+          "dimension_units_valid",
+          "result_semantics_valid",
+          "producer_diagnostic_matches",
+          "official_cgal_reference_match"
+        ],
+        "status": "pass"
+      },
+      "validation": {
+        "required": false,
+        "validators": [],
+        "terminal_validator": true,
+        "validates": "mesh.analysis.measures",
+        "required_report_checks": {
+          "checks.analysis_kind_matches": true,
+          "checks.dimension_units_valid": true,
+          "checks.official_cgal_reference_match": true,
+          "checks.producer_diagnostic_matches": true,
+          "checks.result_semantics_valid": true,
+          "checks.schema_valid": true,
+          "checks.source_identity_matches": true,
+          "passed": true,
+          "schema_version": 1,
+          "status": "pass",
+          "validator_id": "mesh.validate.measures_report"
+        }
+      },
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "info": {
+          "artifact_bindings": {
+            "candidate": {
+              "output": "analysis"
+            },
+            "source": {
+              "input": "mesh"
+            }
+          },
+          "candidate_report_schema": "GeometryAnalysisReport/v1",
+          "independent_fixture_contract": "analytic tetra area-volume-centroid",
+          "max_candidate_report_bytes": 16777216,
+          "report_schema": "ValidationReport/v1",
+          "required_checks": [
+            "schema_valid",
+            "source_identity_matches",
+            "analysis_kind_matches",
+            "dimension_units_valid",
+            "result_semantics_valid",
+            "producer_diagnostic_matches",
+            "official_cgal_reference_match"
+          ],
+          "required_report_checks": {
+            "checks.analysis_kind_matches": true,
+            "checks.dimension_units_valid": true,
+            "checks.official_cgal_reference_match": true,
+            "checks.producer_diagnostic_matches": true,
+            "checks.result_semantics_valid": true,
+            "checks.schema_valid": true,
+            "checks.source_identity_matches": true,
+            "passed": true,
+            "schema_version": 1,
+            "status": "pass",
+            "validator_id": "mesh.validate.measures_report"
+          },
+          "validates": "mesh.analysis.measures"
+        }
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_wave_a_mesh_cases.py",
+          "tests/master_wave_a_mesh_mcp_e2e.py:auto",
+          "tests/master_wave_a_mesh_mcp_e2e.py:legacy"
+        ],
+        "worker_manifest_operation": "mesh.validate.measures_report",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "independent_review": {
+          "result": "High 0 / Medium 0",
+          "reviewed_catalog_revision": "wave-a-mesh-implemented-6",
+          "worker_sha256": "c4a8392b9aeaa3dd9119e8b03b73796ff34278998d3e53fcdbc16dadd82df40a",
+          "review_scope": "native PMP analyses, dedicated validators, PolygonSoup inspection, adversarial report schemas, and self-intersecting volume preconditions"
+        }
+      },
+      "aliases": [
+        "validate mesh measures",
+        "measure report validator",
+        "計量レポート検証"
+      ],
+      "runtime_report_contract": {
+        "schema": "ValidationReport/v1",
+        "required_report_checks": {
+          "checks.analysis_kind_matches": true,
+          "checks.dimension_units_valid": true,
+          "checks.official_cgal_reference_match": true,
+          "checks.producer_diagnostic_matches": true,
+          "checks.result_semantics_valid": true,
+          "checks.schema_valid": true,
+          "checks.source_identity_matches": true,
+          "passed": true,
+          "schema_version": 1,
+          "status": "pass",
+          "validator_id": "mesh.validate.measures_report"
+        }
+      }
+    },
+    {
+      "id": "mesh.validate.sharp_features_report",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "validator",
+      "summary": "Validate mesh.analysis.sharp_features output against source identity and an official CGAL replay.",
+      "package": "Polygon_mesh_processing",
+      "major_requirements": [
+        "major.7.3.05"
+      ],
+      "dependencies": [
+        "Polygon_mesh_processing",
+        "Surface_mesh"
+      ],
+      "sources": [
+        {
+          "kind": "operation_reference",
+          "identifier": "mesh.analysis.sharp_features"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Polygon_mesh_processing",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/detect_features.h",
+            "sha256": "0fda63d13f171d8a107a1cb96db9545fa19802eacae419df0498c9838669724c"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "GeometryAnalysisReport"
+            ],
+            "formats": [
+              "json"
+            ],
+            "unit": "none"
+          },
+          {
+            "slot": "source",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "angle"
+        ],
+        "properties": {
+          "angle": {
+            "type": "TypedAngle",
+            "units": [
+              "deg",
+              "rad"
+            ],
+            "minimum_degrees": 0,
+            "maximum_degrees": 180
+          }
+        }
+      },
+      "preconditions": [],
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "input_coordinate_storage": "IEEE-754 binary64 parsed into exact binary-rational EPECK coordinates",
+        "local_frame_normalization": "translation and uniform positive scale before dimensionless PMP calculations",
+        "report_numeric_storage": "IEEE-754 binary64 JSON numbers",
+        "unrepresentable_policy": "explicit unavailable reason or typed PRECONDITION_FAILED; never publish zero/infinity as a valid computed value",
+        "requested_policy": "package_recommended only",
+        "exact_constructions_rejection": "OUTPUT_PRECISION_PROFILE_UNSUPPORTED",
+        "output_accuracy": "explicit binary64 approximation/availability contract; exact irrational output is not promised"
+      },
+      "output_contract": {
+        "schema": "ValidationReport/v1",
+        "required": [
+          "schema_version",
+          "validator_id",
+          "candidate_sha256",
+          "source_sha256",
+          "status",
+          "passed",
+          "checks"
+        ],
+        "required_true_checks": [
+          "schema_valid",
+          "source_identity_matches",
+          "analysis_kind_matches",
+          "dimension_units_valid",
+          "result_semantics_valid",
+          "producer_diagnostic_matches",
+          "official_cgal_reference_match"
+        ],
+        "status": "pass"
+      },
+      "validation": {
+        "required": false,
+        "validators": [],
+        "terminal_validator": true,
+        "validates": "mesh.analysis.sharp_features",
+        "required_report_checks": {
+          "checks.analysis_kind_matches": true,
+          "checks.dimension_units_valid": true,
+          "checks.official_cgal_reference_match": true,
+          "checks.producer_diagnostic_matches": true,
+          "checks.result_semantics_valid": true,
+          "checks.schema_valid": true,
+          "checks.source_identity_matches": true,
+          "passed": true,
+          "schema_version": 1,
+          "status": "pass",
+          "validator_id": "mesh.validate.sharp_features_report"
+        }
+      },
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "info": {
+          "artifact_bindings": {
+            "candidate": {
+              "output": "analysis"
+            },
+            "source": {
+              "input": "mesh"
+            }
+          },
+          "candidate_report_schema": "GeometryAnalysisReport/v1",
+          "max_candidate_report_bytes": 16777216,
+          "parameter_bindings": {
+            "angle": {
+              "parameter": "angle"
+            }
+          },
+          "report_schema": "ValidationReport/v1",
+          "required_checks": [
+            "schema_valid",
+            "source_identity_matches",
+            "analysis_kind_matches",
+            "dimension_units_valid",
+            "result_semantics_valid",
+            "producer_diagnostic_matches",
+            "official_cgal_reference_match"
+          ],
+          "required_report_checks": {
+            "checks.analysis_kind_matches": true,
+            "checks.dimension_units_valid": true,
+            "checks.official_cgal_reference_match": true,
+            "checks.producer_diagnostic_matches": true,
+            "checks.result_semantics_valid": true,
+            "checks.schema_valid": true,
+            "checks.source_identity_matches": true,
+            "passed": true,
+            "schema_version": 1,
+            "status": "pass",
+            "validator_id": "mesh.validate.sharp_features_report"
+          },
+          "validates": "mesh.analysis.sharp_features"
+        }
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_wave_a_mesh_cases.py",
+          "tests/master_wave_a_mesh_mcp_e2e.py:auto",
+          "tests/master_wave_a_mesh_mcp_e2e.py:legacy"
+        ],
+        "worker_manifest_operation": "mesh.validate.sharp_features_report",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "independent_review": {
+          "result": "High 0 / Medium 0",
+          "reviewed_catalog_revision": "wave-a-mesh-implemented-6",
+          "worker_sha256": "c4a8392b9aeaa3dd9119e8b03b73796ff34278998d3e53fcdbc16dadd82df40a",
+          "review_scope": "native PMP analyses, dedicated validators, PolygonSoup inspection, adversarial report schemas, and self-intersecting volume preconditions"
+        }
+      },
+      "aliases": [
+        "validate sharp features",
+        "feature report validator",
+        "特徴線レポート検証"
+      ],
+      "runtime_report_contract": {
+        "schema": "ValidationReport/v1",
+        "required_report_checks": {
+          "checks.analysis_kind_matches": true,
+          "checks.dimension_units_valid": true,
+          "checks.official_cgal_reference_match": true,
+          "checks.producer_diagnostic_matches": true,
+          "checks.result_semantics_valid": true,
+          "checks.schema_valid": true,
+          "checks.source_identity_matches": true,
+          "passed": true,
+          "schema_version": 1,
+          "status": "pass",
+          "validator_id": "mesh.validate.sharp_features_report"
+        }
+      }
+    },
+    {
+      "id": "mesh.validate.self_intersections_report",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "validator",
+      "summary": "Validate mesh.analysis.self_intersections output against source identity and an official CGAL replay.",
+      "package": "Polygon_mesh_processing",
+      "major_requirements": [
+        "major.7.3.07"
+      ],
+      "dependencies": [
+        "Polygon_mesh_processing",
+        "Surface_mesh"
+      ],
+      "sources": [
+        {
+          "kind": "operation_reference",
+          "identifier": "mesh.analysis.self_intersections"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Polygon_mesh_processing",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/self_intersections.h",
+            "sha256": "d459c0e6480a9e1c2cbef291340ae61a0bf4e79ceb182365c1b922dd7e38ae8f"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "GeometryAnalysisReport"
+            ],
+            "formats": [
+              "json"
+            ],
+            "unit": "none"
+          },
+          {
+            "slot": "source",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "maxProperties": 0
+      },
+      "preconditions": [],
+      "kernel": {
+        "supported": [
+          "exact_constructions",
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "input_coordinate_storage": "IEEE-754 binary64 parsed into exact binary-rational EPECK coordinates",
+        "local_frame_normalization": "translation and uniform positive scale before dimensionless PMP calculations",
+        "report_numeric_storage": "IEEE-754 binary64 JSON numbers",
+        "unrepresentable_policy": "explicit unavailable reason or typed PRECONDITION_FAILED; never publish zero/infinity as a valid computed value",
+        "requested_policy": "exact_constructions or package_recommended"
+      },
+      "output_contract": {
+        "schema": "ValidationReport/v1",
+        "required": [
+          "schema_version",
+          "validator_id",
+          "candidate_sha256",
+          "source_sha256",
+          "status",
+          "passed",
+          "checks"
+        ],
+        "required_true_checks": [
+          "schema_valid",
+          "source_identity_matches",
+          "analysis_kind_matches",
+          "dimension_units_valid",
+          "result_semantics_valid",
+          "producer_diagnostic_matches",
+          "official_cgal_reference_match"
+        ],
+        "status": "pass"
+      },
+      "validation": {
+        "required": false,
+        "validators": [],
+        "terminal_validator": true,
+        "validates": "mesh.analysis.self_intersections",
+        "required_report_checks": {
+          "checks.analysis_kind_matches": true,
+          "checks.dimension_units_valid": true,
+          "checks.official_cgal_reference_match": true,
+          "checks.producer_diagnostic_matches": true,
+          "checks.result_semantics_valid": true,
+          "checks.schema_valid": true,
+          "checks.source_identity_matches": true,
+          "passed": true,
+          "schema_version": 1,
+          "status": "pass",
+          "validator_id": "mesh.validate.self_intersections_report"
+        }
+      },
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "info": {
+          "artifact_bindings": {
+            "candidate": {
+              "output": "analysis"
+            },
+            "source": {
+              "input": "mesh"
+            }
+          },
+          "candidate_report_schema": "GeometryAnalysisReport/v1",
+          "max_candidate_report_bytes": 16777216,
+          "report_schema": "ValidationReport/v1",
+          "required_checks": [
+            "schema_valid",
+            "source_identity_matches",
+            "analysis_kind_matches",
+            "dimension_units_valid",
+            "result_semantics_valid",
+            "producer_diagnostic_matches",
+            "official_cgal_reference_match"
+          ],
+          "required_report_checks": {
+            "checks.analysis_kind_matches": true,
+            "checks.dimension_units_valid": true,
+            "checks.official_cgal_reference_match": true,
+            "checks.producer_diagnostic_matches": true,
+            "checks.result_semantics_valid": true,
+            "checks.schema_valid": true,
+            "checks.source_identity_matches": true,
+            "passed": true,
+            "schema_version": 1,
+            "status": "pass",
+            "validator_id": "mesh.validate.self_intersections_report"
+          },
+          "validates": "mesh.analysis.self_intersections"
+        }
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_wave_a_mesh_cases.py",
+          "tests/master_wave_a_mesh_mcp_e2e.py:auto",
+          "tests/master_wave_a_mesh_mcp_e2e.py:legacy"
+        ],
+        "worker_manifest_operation": "mesh.validate.self_intersections_report",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "independent_review": {
+          "result": "High 0 / Medium 0",
+          "reviewed_catalog_revision": "wave-a-mesh-implemented-6",
+          "worker_sha256": "c4a8392b9aeaa3dd9119e8b03b73796ff34278998d3e53fcdbc16dadd82df40a",
+          "review_scope": "native PMP analyses, dedicated validators, PolygonSoup inspection, adversarial report schemas, and self-intersecting volume preconditions"
+        }
+      },
+      "aliases": [
+        "validate self intersections",
+        "intersection report validator",
+        "自己交差レポート検証"
+      ],
+      "runtime_report_contract": {
+        "schema": "ValidationReport/v1",
+        "required_report_checks": {
+          "checks.analysis_kind_matches": true,
+          "checks.dimension_units_valid": true,
+          "checks.official_cgal_reference_match": true,
+          "checks.producer_diagnostic_matches": true,
+          "checks.result_semantics_valid": true,
+          "checks.schema_valid": true,
+          "checks.source_identity_matches": true,
+          "passed": true,
+          "schema_version": 1,
+          "status": "pass",
+          "validator_id": "mesh.validate.self_intersections_report"
+        }
       }
     }
   ]

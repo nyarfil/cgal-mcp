@@ -7,6 +7,7 @@ import math
 import re
 import struct
 from dataclasses import dataclass
+from fractions import Fraction
 from pathlib import Path
 from typing import Any
 
@@ -85,7 +86,8 @@ def parse_off(content: bytes) -> Inspection:
     points: list[tuple[float, float, float]] = []
     try:
         for _ in range(vertex_count):
-            point = tuple(float(value) for value in tokens[position:position + 3])
+            coordinate_tokens = tuple(tokens[position:position + 3])
+            point = tuple(float(value) for value in coordinate_tokens)
             if len(point) != 3:
                 raise ValueError
             position += 3
@@ -110,6 +112,7 @@ def parse_off(content: bytes) -> Inspection:
         raise InvalidInput("off_trailing", "OFF contains unexpected trailing tokens")
 
     edge_counts: dict[tuple[int, int], int] = {}
+    edge_directions: dict[tuple[int, int], list[int]] = {}
     duplicate_faces = 0
     seen_faces: set[tuple[int, ...]] = set()
     degenerate_faces = 0
@@ -125,22 +128,43 @@ def parse_off(content: bytes) -> Inspection:
             v = tuple(c[i] - a[i] for i in range(3))
             cross = (u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2],
                      u[0] * v[1] - u[1] * v[0])
-            if cross == (0.0, 0.0, 0.0):
-                degenerate_faces += 1
+            if cross == (0.0, 0.0, 0.0) or not _finite(list(cross)):
+                # The native worker parses OFF coordinates as binary64 before
+                # constructing its exact kernel.  Re-evaluate ambiguous cross
+                # products as exact rationals of those same binary64 values so
+                # importer typing and worker geometry agree at every scale.
+                exact = [[Fraction.from_float(value) for value in points[index]]
+                         for index in face]
+                exact_u = [exact[1][i] - exact[0][i] for i in range(3)]
+                exact_v = [exact[2][i] - exact[0][i] for i in range(3)]
+                exact_cross = (
+                    exact_u[1] * exact_v[2] - exact_u[2] * exact_v[1],
+                    exact_u[2] * exact_v[0] - exact_u[0] * exact_v[2],
+                    exact_u[0] * exact_v[1] - exact_u[1] * exact_v[0])
+                if exact_cross == (0, 0, 0):
+                    degenerate_faces += 1
         for first, second in zip(face, face[1:] + face[:1]):
             edge = tuple(sorted((first, second)))
             edge_counts[edge] = edge_counts.get(edge, 0) + 1
+            edge_directions.setdefault(edge, []).append(
+                1 if (first, second) == edge else -1)
     triangular = all(len(face) == 3 for face in faces)
     manifold_edges = all(count <= 2 for count in edge_counts.values())
-    clean_triangle_mesh = triangular and manifold_edges and not duplicate_faces and not degenerate_faces
+    orientation_consistent = all(
+        len(directions) == 1 or sorted(directions) == [-1, 1]
+        for directions in edge_directions.values())
+    clean_triangle_mesh = (triangular and manifold_edges and orientation_consistent
+                           and not duplicate_faces and not degenerate_faces)
     geometry_type = "TriangleSurfaceMesh" if clean_triangle_mesh else "PolygonSoup3"
     return Inspection(geometry_type, "off", {
         "finite": True, "triangulated": triangular, "manifold_edges": manifold_edges,
         "closed": bool(edge_counts) and all(count == 2 for count in edge_counts.values()),
         "self_intersections": "unknown", "oriented": "unknown",
+        "indices_valid": True, "surface_mesh_constructible": clean_triangle_mesh,
     }, {"vertices": vertex_count, "faces": face_count, "edges": len(edge_counts),
         "bounds": _bounds(points), "duplicate_faces": duplicate_faces,
-        "degenerate_faces": degenerate_faces})
+        "degenerate_faces": degenerate_faces,
+        "max_face_degree": max((len(face) for face in faces), default=0)})
 
 
 def parse_obj(content: bytes) -> Inspection:
@@ -383,14 +407,118 @@ def parse_pointset_normals_ply(content: bytes) -> Inspection:
 
 
 def parse_json_geometry(content: bytes, requested_type: str | None) -> Inspection:
+    def reject_constant(value: str) -> None:
+        raise ValueError(f"Non-finite JSON number: {value}")
     try:
-        value = json.loads(content)
-    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        value = json.loads(content, parse_constant=reject_constant)
+    except (UnicodeDecodeError, json.JSONDecodeError, ValueError) as exc:
         raise InvalidInput("json_syntax", "Invalid UTF-8 JSON geometry") from exc
+    def require_finite(item: Any) -> None:
+        if isinstance(item, float) and not math.isfinite(item):
+            raise InvalidInput("json_nonfinite", "JSON report contains a non-finite number")
+        if isinstance(item, list):
+            for child in item:
+                require_finite(child)
+        elif isinstance(item, dict):
+            for child in item.values():
+                require_finite(child)
+    require_finite(value)
     if requested_type == "ValidationReport":
         if not isinstance(value, dict) or value.get("status") not in {"pass", "fail"}:
             raise InvalidInput("validation_report", "ValidationReport status must be pass or fail")
         return Inspection("ValidationReport", "json", {"valid": value["status"] == "pass"}, value)
+    if requested_type == "GeometryAnalysisReport":
+        required = {"schema_version", "analysis_kind", "source", "mesh_summary",
+                    "results", "validation"}
+        if not isinstance(value, dict) or not required.issubset(value):
+            raise InvalidInput("analysis_report", "GeometryAnalysisReport lacks required v1 fields")
+        analysis_kinds = {"pmp_inspection", "connected_components", "normals",
+                          "measures", "sharp_features", "self_intersections"}
+        if value["schema_version"] != 1 or value["analysis_kind"] not in analysis_kinds:
+            raise InvalidInput("analysis_report", "GeometryAnalysisReport version/kind is invalid")
+        source = value["source"]
+        source_required = {"artifact_id", "type", "format", "unit", "sha256"}
+        if (not isinstance(source, dict) or set(source) != source_required
+                or not isinstance(source["artifact_id"], str) or not source["artifact_id"]
+                or source["type"] not in {"TriangleSurfaceMesh", "PolygonSoup3"}
+                or (source["type"] == "PolygonSoup3"
+                    and value["analysis_kind"] != "pmp_inspection")
+                or source["format"] != "off"
+                or source["unit"] not in {"mm", "cm", "m"}
+                or not isinstance(source["sha256"], str)
+                or re.fullmatch(r"[0-9a-f]{64}", source["sha256"]) is None):
+            raise InvalidInput("analysis_report", "GeometryAnalysisReport source identity is invalid")
+        summary = value["mesh_summary"]
+        summary_required = {"raw_vertex_count", "raw_face_count", "finite_coordinates",
+                            "indices_valid", "triangulated", "surface_mesh_constructible"}
+        if (not isinstance(summary, dict) or not summary_required.issubset(summary)
+                or any(type(summary[name]) is not int or summary[name] < 0
+                       for name in ("raw_vertex_count", "raw_face_count"))
+                or any(type(summary[name]) is not bool for name in
+                       ("finite_coordinates", "indices_valid", "triangulated",
+                        "surface_mesh_constructible"))):
+            raise InvalidInput("analysis_report", "GeometryAnalysisReport mesh summary is invalid")
+        if not isinstance(value["results"], dict):
+            raise InvalidInput("analysis_report", "GeometryAnalysisReport results must be an object")
+        results = value["results"]
+        required_results = {
+            "pmp_inspection": {"count_unit", "parse_issues", "polygon_mesh_valid", "closed",
+                               "degenerate_face_count", "non_manifold_vertex_count",
+                               "isolated_vertex_count"},
+            "connected_components": {"component_count", "count_unit", "components"},
+            "normals": {"face_normals", "vertex_normals", "corner_normals",
+                        "corner_normal_mode", "count_unit", "degenerate_face_count",
+                        "zero_face_normal_count", "zero_vertex_normal_count"},
+            "measures": {"surface_area", "signed_volume", "absolute_volume",
+                         "volume_centroid"},
+            "sharp_features": {"angle", "count_unit", "features"},
+            "self_intersections": {"available", "count_unit"},
+        }
+        missing_results = required_results[value["analysis_kind"]] - results.keys()
+        if missing_results:
+            raise InvalidInput("analysis_report", "GeometryAnalysisReport results lack: "
+                               + ", ".join(sorted(missing_results)))
+        if "count_unit" in results and results["count_unit"] != "count":
+            raise InvalidInput("analysis_report", "GeometryAnalysisReport count unit is invalid")
+        if value["analysis_kind"] == "self_intersections" and results["available"] is True:
+            required_available = {"does_self_intersect", "intersection_pair_count",
+                                  "pair_limit", "pairs"}
+            if required_available - results.keys():
+                raise InvalidInput("analysis_report",
+                                   "Available self-intersection results are incomplete")
+        def validate_availability(item: Any) -> None:
+            if isinstance(item, list):
+                for child in item:
+                    validate_availability(child)
+            elif isinstance(item, dict):
+                if "available" in item:
+                    if type(item["available"]) is not bool:
+                        raise InvalidInput("analysis_report", "Result availability must be boolean")
+                    if item["available"] is False and (
+                            not isinstance(item.get("reason"), str) or not item["reason"]):
+                        raise InvalidInput("analysis_report", "Unavailable result requires a reason")
+                for child in item.values():
+                    validate_availability(child)
+        validate_availability(value["results"])
+        validation = value["validation"]
+        if (not isinstance(validation, dict)
+                or not {"validator_id", "authoritative", "passed", "checks"}.issubset(validation)
+                or validation["validator_id"] !=
+                   "mesh.producer_check." + value["analysis_kind"]
+                or validation["authoritative"] is not False
+                or validation["passed"] is not True
+                or not (isinstance(validation["checks"], dict)
+                        or (isinstance(validation["checks"], list)
+                            and all(isinstance(item, str) for item in validation["checks"])))):
+            raise InvalidInput("analysis_report", "GeometryAnalysisReport validation summary is invalid")
+        metadata = {"schema_version": 1, "analysis_kind": value["analysis_kind"],
+                    "source_sha256": source["sha256"], "source_unit": source["unit"],
+                    "raw_vertex_count": summary["raw_vertex_count"],
+                    "raw_face_count": summary["raw_face_count"],
+                    "result_keys": sorted(value["results"]),
+                    "inline_validation_claimed": validation["passed"]}
+        return Inspection("GeometryAnalysisReport", "json",
+                          {"schema_valid": True, "source_identity_present": True}, metadata)
     points_value = value.get("points") if isinstance(value, dict) else value
     if not isinstance(points_value, list) or len(points_value) < 3:
         raise InvalidInput("polygon2_syntax", "Polygon2 JSON requires at least three points")

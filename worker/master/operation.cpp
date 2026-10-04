@@ -1,6 +1,7 @@
 #include "operation.h"
 #include "wave_a/wave_a_operations.h"
 #include "wave_b/wave_b_operations.h"
+#include "wave_a_mesh/wave_a_mesh_operations.h"
 
 #include <CGAL/version.h>
 
@@ -52,7 +53,19 @@ const std::vector<OperationDefinition>& operation_registry() {
       wave_b::pointset_subset_validator_operation(),
       wave_b::pointset_smoothed_validator_operation(),
       wave_b::pointset_normals_estimated_validator_operation(),
-      wave_b::pointset_normals_oriented_validator_operation()};
+      wave_b::pointset_normals_oriented_validator_operation(),
+      wave_a_mesh::inspect_pmp_operation(),
+      wave_a_mesh::connected_components_operation(),
+      wave_a_mesh::normals_operation(),
+      wave_a_mesh::measures_operation(),
+      wave_a_mesh::sharp_features_operation(),
+      wave_a_mesh::self_intersections_operation(),
+      wave_a_mesh::validate_pmp_inspection_report_operation(),
+      wave_a_mesh::validate_connected_components_report_operation(),
+      wave_a_mesh::validate_normals_report_operation(),
+      wave_a_mesh::validate_measures_report_operation(),
+      wave_a_mesh::validate_sharp_features_report_operation(),
+      wave_a_mesh::validate_self_intersections_report_operation()};
   return registry;
 }
 

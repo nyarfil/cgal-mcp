@@ -40,7 +40,7 @@ Operationの実行profileで再構築・volume生成は600秒を指定できま�
 | `CGAL_MASTER_MAX_MEMORY_MB` | 4096 | 64〜1048576MiB |
 | `CGAL_MASTER_DEFAULT_MEMORY_MB` | 上限と4096の小さい方 | 64MiB〜設定上限 |
 | `CGAL_MASTER_DEFAULT_WALL_TIME_MS` | 120000 | 1ms〜設定上限 |
-| `CGAL_MASTER_MAX_WALL_TIME_MS` | 86400000 | 通常初期値以上〜86400000ms |
+| `CGAL_MASTER_MAX_WALL_TIME_MS` | 86400000 | 設定した通常処理時間以上〜86400000ms |
 
 非整数・範囲外・上限と矛盾する設定は起動時に拒否します。各jobの要求も設定上限以下に
 制限します。実際の設定値は`cgal_system_health`で確認できます。

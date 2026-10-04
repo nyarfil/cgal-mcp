@@ -16,7 +16,7 @@ UNIT_SCALE_MM = {"mm": 1.0, "cm": 10.0, "m": 1000.0}
 
 
 def valid_artifact_unit(artifact_type: str | None, unit: str) -> bool:
-    return unit == "none" if artifact_type == "ValidationReport" else unit in UNITS
+    return unit == "none" if artifact_type in {"ValidationReport", "GeometryAnalysisReport"} else unit in UNITS
 
 
 def canonical_json(value: Any) -> bytes:

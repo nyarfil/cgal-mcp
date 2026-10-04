@@ -42,7 +42,7 @@ def _validate_json_schema(schema: Any, operation_id: str, location: str = "param
         raise InvalidInput("operation_parameters", f"{operation_id} {location} schema must be an object")
     kind = schema.get("type")
     if kind is not None and kind not in {"object", "array", "string", "number", "integer", "boolean",
-                                         "TypedLength"}:
+                                         "TypedLength", "TypedAngle"}:
         raise InvalidInput("operation_parameters", f"Unsupported schema type for {operation_id} at {location}")
     if "required" in schema and (not isinstance(schema["required"], list)
             or not all(isinstance(item, str) for item in schema["required"])):
@@ -231,6 +231,8 @@ class OperationRegistry:
         operation["status"] = LEGACY_STATUSES.get(raw_status.lower(), raw_status.upper())
         if operation["status"] not in ALL_STATUSES:
             raise InvalidInput("operation_status", f"Invalid status for {operation['id']}")
+        if operation.get("role", "transform") not in {"transform", "analysis", "validator"}:
+            raise InvalidInput("operation_role", f"Invalid role for {operation['id']}")
         if operation["status"] == "VALIDATED":
             evidence = operation.get("evidence")
             if not isinstance(evidence, dict) or not isinstance(evidence.get("tests"), list) or not evidence["tests"]:
@@ -278,6 +280,13 @@ class OperationRegistry:
         def valid_precondition(item: Any) -> bool:
             if not isinstance(item, dict) or not isinstance(item.get("id"), str):
                 return False
+            if item.get("id") == "bounded_input":
+                allowed = {"id", "maximum_bytes", "maximum_vertices",
+                           "maximum_faces", "maximum_face_degree"}
+                return (not (set(item) - allowed)
+                        and any(key in item for key in allowed - {"id"})
+                        and all(type(value) is int and value > 0
+                                for key, value in item.items() if key != "id"))
             if isinstance(item.get("property"), str) and ("equals" in item or "minimum" in item):
                 return True
             if isinstance(item.get("worker_check"), dict):

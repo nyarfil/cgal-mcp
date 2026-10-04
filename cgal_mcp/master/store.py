@@ -21,6 +21,7 @@ from .util import canonical_json, copy_hash_bounded, digest_file, valid_artifact
 
 
 MAX_IMPORT_BYTES = 512 * 1024 * 1024
+MAX_ANALYSIS_REPORT_BYTES = 16 * 1024 * 1024
 INSPECTION_MEMORY_MB = 1024
 MAX_INSPECTION_RESPONSE_BYTES = 2 * 1024 * 1024
 MAX_INSPECTION_STDERR_BYTES = 64 * 1024
@@ -56,9 +57,11 @@ def _inspect_file_isolated(path: Path, format_name: str,
                 process.kill(); process.wait()
                 raise WorkerFailure("inspection_memory_limit_unavailable", mode,
                                     "resource_limit", True)
+        maximum_bytes = (MAX_ANALYSIS_REPORT_BYTES if artifact_type == "GeometryAnalysisReport"
+                         else MAX_IMPORT_BYTES)
         request = canonical_json({"path": str(path), "format": format_name,
                                   "type": artifact_type,
-                                  "maximum_bytes": MAX_IMPORT_BYTES}) + b"\n"
+                                  "maximum_bytes": maximum_bytes}) + b"\n"
         stdout_result: list[Any] = []
         stderr_result: list[Any] = []
         stdout_overflow = threading.Event()
@@ -227,8 +230,10 @@ class ArtifactStore:
         if not source.is_file():
             raise InvalidInput("import_source", "Import source must be a regular file")
         if not valid_artifact_unit(artifact_type, unit):
-            expected = "none" if artifact_type == "ValidationReport" else "mm, cm or m"
+            expected = "none" if artifact_type in {"ValidationReport", "GeometryAnalysisReport"} else "mm, cm or m"
             raise InvalidInput("artifact_unit", f"Artifact unit must be {expected}")
+        maximum_bytes = (MAX_ANALYSIS_REPORT_BYTES if artifact_type == "GeometryAnalysisReport"
+                         else MAX_IMPORT_BYTES)
         selected_format = (format_name or format_from_path(source)).lower().lstrip(".")
         fd, temporary_name = tempfile.mkstemp(prefix="import-", dir=self.staging_root)
         os.close(fd)
@@ -236,7 +241,7 @@ class ArtifactStore:
         try:
             with source.open("rb") as input_stream, temporary.open("wb") as output_stream:
                 try:
-                    sha256, size = copy_hash_bounded(input_stream, output_stream, MAX_IMPORT_BYTES)
+                    sha256, size = copy_hash_bounded(input_stream, output_stream, maximum_bytes)
                 except ValueError as exc:
                     raise InvalidInput("import_too_large", str(exc)) from exc
                 output_stream.flush(); os.fsync(output_stream.fileno())
@@ -253,8 +258,10 @@ class ArtifactStore:
         source = source.resolve(strict=True)
         if not within(source, self.staging_root):
             raise InvalidInput("worker_output_path", "Worker output is outside managed staging")
-        if source.stat().st_size > MAX_IMPORT_BYTES:
-            raise InvalidInput("worker_output_too_large", "Worker output exceeds 512 MiB")
+        maximum_bytes = (MAX_ANALYSIS_REPORT_BYTES if artifact_type == "GeometryAnalysisReport"
+                         else MAX_IMPORT_BYTES)
+        if source.stat().st_size > maximum_bytes:
+            raise InvalidInput("worker_output_too_large", f"Worker output exceeds {maximum_bytes} bytes")
         inspection = _inspect_file_isolated(source, format_name, artifact_type)
         if not valid_artifact_unit(inspection.geometry_type, unit):
             raise InvalidInput("artifact_unit", f"Unit {unit!r} is invalid for {inspection.geometry_type}")
@@ -271,8 +278,10 @@ class ArtifactStore:
         source = source.resolve(strict=True)
         if not within(source, self.staging_root):
             raise InvalidInput("worker_output_path", "Worker output is outside managed staging")
-        if source.stat().st_size > MAX_IMPORT_BYTES:
-            raise InvalidInput("worker_output_too_large", "Worker output exceeds 512 MiB")
+        maximum_bytes = (MAX_ANALYSIS_REPORT_BYTES if artifact_type == "GeometryAnalysisReport"
+                         else MAX_IMPORT_BYTES)
+        if source.stat().st_size > maximum_bytes:
+            raise InvalidInput("worker_output_too_large", f"Worker output exceeds {maximum_bytes} bytes")
         return _inspect_file_isolated(source, format_name, artifact_type)
 
     def complete_job_success(self, job_id: str, prepared: list[dict[str, Any]],

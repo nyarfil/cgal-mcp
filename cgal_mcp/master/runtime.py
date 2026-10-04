@@ -54,6 +54,15 @@ def _load_validation_report(path: Path) -> dict[str, Any]:
     return value
 
 
+def _report_value(report: dict[str, Any], path: str) -> tuple[bool, Any]:
+    value: Any = report
+    for component in path.split("."):
+        if not isinstance(value, dict) or component not in value:
+            return False, None
+        value = value[component]
+    return True, value
+
+
 def _catalog_path(explicit: Path | None) -> Path:
     if explicit is not None:
         return explicit.resolve()
@@ -201,6 +210,7 @@ class MasterRuntime:
                             "type": output["type"], "unit": output.get("unit", inputs[0]["unit"] if inputs else "none"),
                             "format": output["format"], "path": str(Path(output["path"]).resolve()),
                             "sha256": digest_file(Path(output["path"])),
+                            "size": Path(output["path"]).stat().st_size,
                             "step": step["id"], "slot": output["slot"]}
                         if inspection is not None:
                             descriptor["properties"] = inspection.properties
@@ -214,12 +224,12 @@ class MasterRuntime:
                         report = _load_validation_report(Path(report_descriptor["path"]))
                         required_checks = operation["validation"].get("required_report_checks", {})
                         missing_or_failed = {key: expected for key, expected in required_checks.items()
-                                             if report.get(key) != expected}
+                                             if _report_value(report, key) != (True, expected)}
                         for key in operation["validation"].get("required_report_fields", []):
-                            if key not in report:
+                            if not _report_value(report, key)[0]:
                                 missing_or_failed[key] = "required"
                         for key, minimum in operation["validation"].get("required_report_minimum", {}).items():
-                            value = report.get(key)
+                            _, value = _report_value(report, key)
                             if (not isinstance(value, (int, float)) or isinstance(value, bool)
                                     or not math.isfinite(float(value)) or value < minimum):
                                 missing_or_failed[key] = {"minimum": minimum}
@@ -289,7 +299,8 @@ class MasterRuntime:
                 result.append({"artifact_id": artifact["artifact_id"], "type": artifact["type"],
                                "unit": artifact["unit"], "format": artifact["format"],
                                "path": str(self.store.managed_path(artifact["artifact_id"])),
-                               "sha256": artifact["sha256"], "properties": artifact["properties"],
+                               "sha256": artifact["sha256"], "size": artifact["size"],
+                               "properties": artifact["properties"],
                                "metadata": artifact["metadata"]})
             else:
                 descriptor = produced.get((binding["step"], binding["slot"]))
@@ -297,12 +308,24 @@ class MasterRuntime:
                     raise InvalidInput("missing_step_output", f"Missing output from {binding['step']}")
                 result.append({key: descriptor[key] for key in
                                ("artifact_id", "type", "unit", "format", "path", "sha256",
-                                "properties", "metadata")})
+                                "size", "properties", "metadata")})
         return result
 
     @staticmethod
     def _runtime_preconditions(operation: dict[str, Any], inputs: list[dict[str, Any]]) -> None:
         for condition in operation.get("preconditions", []):
+            if condition.get("id") == "bounded_input":
+                for item in inputs:
+                    metadata = item.get("metadata", {})
+                    limits = (("size", "maximum_bytes", item.get("size")),
+                              ("vertices", "maximum_vertices", metadata.get("vertices")),
+                              ("faces", "maximum_faces", metadata.get("faces")),
+                              ("max_face_degree", "maximum_face_degree", metadata.get("max_face_degree")))
+                    for label, key, actual in limits:
+                        if key in condition and (not isinstance(actual, int) or actual > condition[key]):
+                            raise PreconditionFailure(
+                                f"{operation['id']} requires {label}<={condition[key]}")
+                continue
             if "worker_check" in condition:
                 continue
             if "bounds" in condition:

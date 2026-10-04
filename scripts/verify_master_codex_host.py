@@ -14,6 +14,7 @@ import sys
 import tomllib
 
 REPO = Path(__file__).resolve().parents[1]
+MAX_RPC_LINE_BYTES = 8 * 1024 * 1024
 
 
 async def verify(codex: Path, config_home: Path, output: Path, server_name: str):
@@ -29,21 +30,29 @@ async def verify(codex: Path, config_home: Path, output: Path, server_name: str)
             arguments.extend(['-c', f'mcp_servers.{name}.enabled=false'])
     process = await asyncio.create_subprocess_exec(str(codex), *arguments, 'app-server',
         cwd=REPO, stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE, env={**os.environ, 'CODEX_HOME': str(config_home)})
+        stderr=asyncio.subprocess.PIPE, limit=MAX_RPC_LINE_BYTES,
+        env={**os.environ, 'CODEX_HOME': str(config_home)})
     serial = 0
     pending = {}
     async def read_output():
-        while line := await process.stdout.readline():
-            value = json.loads(line)
-            if 'id' in value and value['id'] in pending:
-                pending.pop(value['id']).set_result(value)
-            elif 'id' in value and 'method' in value:
-                # Unexpected interactive server requests are not automatically approved.
-                process.stdin.write((json.dumps({'id': value['id'], 'error': {
-                    'code': -32601, 'message': 'Unsupported in deterministic host probe'}}) + '\n').encode())
-        for future in list(pending.values()):
-            if not future.done():
-                future.set_exception(RuntimeError('Codex app-server stdout closed before its response'))
+        failure = 'Codex app-server stdout closed before its response'
+        try:
+            while line := await process.stdout.readline():
+                value = json.loads(line)
+                if 'id' in value and value['id'] in pending:
+                    future = pending.pop(value['id'])
+                    if not future.done():
+                        future.set_result(value)
+                elif 'id' in value and 'method' in value:
+                    # Unexpected interactive requests are not automatically approved.
+                    process.stdin.write((json.dumps({'id': value['id'], 'error': {
+                        'code': -32601, 'message': 'Unsupported in deterministic host probe'}}) + '\n').encode())
+        except Exception as error:
+            failure = f'Codex app-server response reader failed: {type(error).__name__}: {error}'
+        finally:
+            for future in list(pending.values()):
+                if not future.done():
+                    future.set_exception(RuntimeError(failure))
     async def drain_stderr():
         while await process.stderr.read(8192):
             pass

@@ -42,6 +42,19 @@ def _validate_value(schema: dict[str, Any], value: Any, path: str) -> None:
         if "exclusiveMinimum" in schema and number <= schema["exclusiveMinimum"]:
             raise InvalidInput("parameter_range", f"{path} must exceed its minimum")
         return
+    if kind == "TypedAngle":
+        if (not isinstance(value, dict) or set(value) != {"value", "unit"}
+                or not isinstance(value["value"], (int, float)) or isinstance(value["value"], bool)
+                or not math.isfinite(float(value["value"])) or value["unit"] != "deg"):
+            raise InvalidInput("parameter_angle", f"{path} must be a normalized TypedAngle in degrees")
+        number = float(value["value"])
+        minimum = schema.get("minimum_degrees", schema.get("minimum"))
+        maximum = schema.get("maximum_degrees", schema.get("maximum"))
+        if minimum is not None and number < minimum:
+            raise InvalidInput("parameter_range", f"{path} is below its minimum")
+        if maximum is not None and number > maximum:
+            raise InvalidInput("parameter_range", f"{path} is above its maximum")
+        return
     valid_type = {
         "object": lambda item: isinstance(item, dict),
         "array": lambda item: isinstance(item, list),
@@ -148,6 +161,24 @@ def _normalize_parameter_value(schema: dict[str, Any], value: Any, input_unit: s
                         "target": {"value": target_value, "unit": input_unit},
                         "factor": factor})
         return {"value": target_value, "unit": input_unit}
+    if schema.get("type") == "TypedAngle":
+        if (not isinstance(value, dict) or set(value) != {"value", "unit"}
+                or not isinstance(value.get("value"), (int, float))
+                or isinstance(value.get("value"), bool)
+                or not math.isfinite(float(value["value"]))):
+            raise InvalidInput("parameter_angle", "TypedAngle requires only finite value and unit")
+        source_unit = value.get("unit")
+        if source_unit not in {"deg", "rad"}:
+            raise InvalidInput("parameter_unit", "TypedAngle requires deg or rad")
+        source_value = float(value["value"])
+        target_value = source_value if source_unit == "deg" else math.degrees(source_value)
+        if not math.isfinite(target_value):
+            raise InvalidInput("parameter_unit_overflow", "TypedAngle conversion produced a non-finite value")
+        history.append({"path": path, "dimension": "angle",
+                        "source": {"value": source_value, "unit": source_unit},
+                        "target": {"value": target_value, "unit": "deg"},
+                        "factor": 1.0 if source_unit == "deg" else 180.0 / math.pi})
+        return {"value": target_value, "unit": "deg"}
     if schema.get("type") == "object" and isinstance(value, dict):
         properties = schema.get("properties", {})
         return {name: _normalize_parameter_value(properties.get(name, {}), item, input_unit,
@@ -312,7 +343,8 @@ class PlanBuilder:
                                         "sha256": artifact["sha256"], "type": artifact["type"],
                                         "format": artifact["format"], "unit": artifact["unit"]}
         self._preconditions(operation, normalized)
-        units = {self.store.inspect(value["artifact_id"])["unit"] for value in normalized.values()}
+        units = {self.store.inspect(value["artifact_id"])["unit"] for value in normalized.values()
+                 if self.store.inspect(value["artifact_id"])["unit"] != "none"}
         if len(units) > 1:
             raise InvalidInput("unit_mismatch", "Operation inputs must use one unit")
         return normalized
@@ -320,6 +352,18 @@ class PlanBuilder:
     def _preconditions(self, operation: dict[str, Any], bindings: dict[str, dict[str, str]]) -> None:
         artifacts = [self.store.inspect(value["artifact_id"]) for value in bindings.values()]
         for condition in operation.get("preconditions", []):
+            if condition.get("id") == "bounded_input":
+                for artifact in artifacts:
+                    metadata = artifact["metadata"]
+                    limits = (("size", "maximum_bytes", artifact["size"]),
+                              ("vertices", "maximum_vertices", metadata.get("vertices")),
+                              ("faces", "maximum_faces", metadata.get("faces")),
+                              ("max_face_degree", "maximum_face_degree", metadata.get("max_face_degree")))
+                    for label, key, actual in limits:
+                        if key in condition and (not isinstance(actual, int) or actual > condition[key]):
+                            raise PreconditionFailure(
+                                f"{operation['id']} requires {label}<={condition[key]}")
+                continue
             if "worker_check" in condition:
                 continue
             if "bounds" in condition:
@@ -495,7 +539,8 @@ class PlanBuilder:
                         raise InvalidInput("dag_format", f"Step reference for {spec['slot']} has incompatible format")
                     normalized[spec["slot"]] = {"step": binding["step"], "slot": binding.get("slot", "geometry"),
                                                 "type": source["type"], "format": source["format"], "unit": source["unit"]}
-                    input_units.add(source["unit"])
+                    if source["unit"] != "none":
+                        input_units.add(source["unit"])
                 else:
                     artifact_id = binding if isinstance(binding, str) else binding.get("artifact_id") if isinstance(binding, dict) else None
                     if not isinstance(artifact_id, str):
@@ -507,7 +552,8 @@ class PlanBuilder:
                         raise InvalidInput("input_format", f"Input {spec['slot']} has incompatible format")
                     normalized[spec["slot"]] = {"artifact_id": artifact_id, "sha256": artifact["sha256"],
                                                 "type": artifact["type"], "format": artifact["format"], "unit": artifact["unit"]}
-                    input_units.add(artifact["unit"])
+                    if artifact["unit"] != "none":
+                        input_units.add(artifact["unit"])
             if set(inputs) != {spec["slot"] for spec in operation["io"]["inputs"]}:
                 raise InvalidInput("input_slots", f"Explicit step {raw['id']} has missing or extra slots")
             if len(input_units) > 1:

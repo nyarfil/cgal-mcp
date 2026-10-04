@@ -1,4 +1,4 @@
-"""Replay synthetic point-set integration, separately from all-major acceptance."""
+"""Replay six mesh analyses and their mandatory dedicated validators."""
 from __future__ import annotations
 
 import argparse
@@ -23,16 +23,16 @@ def verify(worker: Path) -> dict:
         capture_output=True, text=True, encoding="utf-8", timeout=30).stdout)
     assert manifest["actual_cgal_version"] == "6.2.1"
     assert manifest["build"]["source_kind"] == "official_release"
-    catalog = json.loads((REPO / "catalog/operations_wave_b.json").read_text("utf-8"))
+    catalog = json.loads((REPO / "catalog/operations_wave_a_mesh.json").read_text("utf-8"))
     operations = sorted(operation["id"] for operation in catalog["operations"])
     assert len(operations) == 12
     assert all(operation["status"] == "VALIDATED" for operation in catalog["operations"])
     assert set(operations) <= {operation["id"] for operation in manifest["operations"]}
     results = []
     for arguments, source, mode in (
-        (["tests/master_wave_b_cases.py", str(worker)], "tests/master_wave_b_cases.py", "worker"),
-        (["-m", "tests.master_wave_b_mcp_e2e", "auto"], "tests/master_wave_b_mcp_e2e.py", "auto"),
-        (["-m", "tests.master_wave_b_mcp_e2e", "legacy"], "tests/master_wave_b_mcp_e2e.py", "legacy"),
+        (["tests/master_wave_a_mesh_cases.py", str(worker)], "tests/master_wave_a_mesh_cases.py", "worker"),
+        (["-m", "tests.master_wave_a_mesh_mcp_e2e", "auto"], "tests/master_wave_a_mesh_mcp_e2e.py", "auto"),
+        (["-m", "tests.master_wave_a_mesh_mcp_e2e", "legacy"], "tests/master_wave_a_mesh_mcp_e2e.py", "legacy"),
     ):
         try:
             process = subprocess.run([sys.executable, *arguments], cwd=REPO, check=True,
@@ -47,15 +47,15 @@ def verify(worker: Path) -> dict:
         results.append({"test": source, "source_sha256": digest(REPO / source),
                         "mode": mode, "exit_code": process.returncode, "status": "pass"})
     assert digest(worker) == worker_hash, "Worker changed during replay"
-    return {"schema_version": 1, "generator": "master-wave-b-milestone", "status": "pass",
-        "generator_sha256": digest(Path(__file__)), "scope": "seven_pointset_transforms_and_five_validators",
+    return {"schema_version": 1, "generator": "master-wave-a-mesh-milestone", "status": "pass",
+        "generator_sha256": digest(Path(__file__)), "scope": "six_mesh_analyses_and_six_separate_validators",
         "standalone_accepted": False, "requirements": [], "operations": operations,
         "worker_sha256": worker_hash, "worker_manifest": manifest,
         "worker_manifest_sha256": hashlib.sha256(json.dumps(manifest, sort_keys=True,
             separators=(",", ":"), ensure_ascii=False).encode()).hexdigest(),
-        "operation_catalog_sha256": digest(REPO / "catalog/operations_wave_b.json"), "tests": results,
-        "coverage_note": "Registration, bilateral smoothing, other point-set and reconstruction "
-            "requirements remain incomplete. Only the enumerated adapters and contracts were replayed."}
+        "operation_catalog_sha256": digest(REPO / "catalog/operations_wave_a_mesh.json"), "tests": results,
+        "coverage_note": "Repair, Boolean, remeshing and other Polygon Mesh Processing "
+            "requirements remain incomplete. Only these analyses and mandatory contracts were replayed."}
 
 
 def main() -> None:

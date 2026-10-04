@@ -2,7 +2,7 @@
   "schema_version": 1,
   "generator": "master-capability-acceptance",
   "generator_source_path": "scripts/replay_master_capabilities.py",
-  "generator_source_sha256": "e6add026a6d240d20c00ee1c41a6a5d7901e6081e4e9bf08071d44e111d004eb",
+  "generator_source_sha256": "6316f4c110d16ee19e235708b4121ae61e8a3c92bf663fc01b7ac701c032e328",
   "generator_source_hash_encoding": "utf8-lf",
   "status": "pass",
   "scope": "wave_a_surface_mesh_simplification_only",
@@ -192,11 +192,11 @@
     }
   },
   "catalog_baseline_sha256": "143ec18a5b64d506aad60dc24b0a1ea30940c715d1223b3465fa140aeb9d02a7",
-  "operation_registry_sha256": "2a4bc52ac003623041747508fe33d94d6a2a19fa3494b410431cb0ec0ea04146",
+  "operation_registry_sha256": "760e42507826ea9ab285d0f55de14202ad5ea9a27364b9ca0a4a8ffdb25e6d92",
   "operation_registry_hash_encoding": "utf8-lf",
   "policy_catalog_sha256": "45f4be759288aaeb834a3ce97aa64ee7768048b15534618fc8c19512801f9a9f",
   "policy_catalog_hash_encoding": "utf8-lf",
-  "worker_sha256": "b95da2ad3143cbe506b4d8d7ea41599886021146ff217f4e059707c5ca47e971",
+  "worker_sha256": "c4a8392b9aeaa3dd9119e8b03b73796ff34278998d3e53fcdbc16dadd82df40a",
   "worker_binary_format": "pe",
   "worker_manifest": {
     "actual_cgal_version": "6.2.1",
@@ -928,6 +928,781 @@
         "supported_kernels": [
           "package_recommended"
         ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing",
+          "Surface_mesh"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "mesh.inspect.pmp",
+        "info": {
+          "accepted_geometry_types": [
+            "TriangleSurfaceMesh",
+            "PolygonSoup3"
+          ],
+          "analysis_kind": "pmp_inspection",
+          "checks": [
+            "finite_coordinates",
+            "indices_valid",
+            "triangulated",
+            "polygon_mesh_valid",
+            "closed",
+            "degenerate_faces",
+            "non_manifold_vertices",
+            "isolated_vertices"
+          ],
+          "geometry_mutation": false,
+          "input_format": "off",
+          "input_slot": "mesh",
+          "input_units": [
+            "mm",
+            "cm",
+            "m"
+          ],
+          "license_expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+          "max_report_bytes": 16777216,
+          "output_format": "json",
+          "output_slot": "analysis",
+          "output_unit": "none",
+          "producer_diagnostic_id": "mesh.producer_check.pmp_inspection",
+          "report_schema": "GeometryAnalysisReport/v1",
+          "report_schema_version": 1,
+          "result_enumeration": {
+            "max_report_bytes": 16777216,
+            "policy": "atomic_report_or_resource_limit"
+          },
+          "source_header": "CGAL/boost/graph/helpers.h",
+          "source_kind": "official_release",
+          "source_sha256": "a9e73905b62e1426775fe77d90aea0a803b50a18a735923062baf7c0beca2767",
+          "source_version": "6.2.1",
+          "tolerates_unconstructible_graph": true,
+          "validator_artifact_bindings": {
+            "mesh.validate.pmp_inspection_report": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "source": {
+                "input": "mesh"
+              }
+            }
+          },
+          "validators": [
+            "mesh.validate.pmp_inspection_report"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh",
+          "PolygonSoup3"
+        ],
+        "output_type": "GeometryAnalysisReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "exact_constructions",
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing",
+          "Surface_mesh"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "mesh.analysis.connected_components",
+        "info": {
+          "analysis_kind": "connected_components",
+          "checks": [
+            "component_ids_contiguous",
+            "all_faces_partitioned_once"
+          ],
+          "geometry_mutation": false,
+          "input_format": "off",
+          "input_slot": "mesh",
+          "input_units": [
+            "mm",
+            "cm",
+            "m"
+          ],
+          "license_expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+          "max_report_bytes": 16777216,
+          "output_format": "json",
+          "output_slot": "analysis",
+          "output_unit": "none",
+          "producer_diagnostic_id": "mesh.producer_check.connected_components",
+          "report_schema": "GeometryAnalysisReport/v1",
+          "report_schema_version": 1,
+          "result_enumeration": {
+            "max_report_bytes": 16777216,
+            "policy": "atomic_report_or_resource_limit"
+          },
+          "source_header": "CGAL/Polygon_mesh_processing/connected_components.h",
+          "source_kind": "official_release",
+          "source_sha256": "3f980c0349166a44c80e990fdf83a91086bee637e4850c44c1ff295fda594e70",
+          "source_version": "6.2.1",
+          "validator_artifact_bindings": {
+            "mesh.validate.connected_components_report": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "source": {
+                "input": "mesh"
+              }
+            }
+          },
+          "validators": [
+            "mesh.validate.connected_components_report"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "GeometryAnalysisReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "exact_constructions",
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing",
+          "Surface_mesh"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "mesh.analysis.normals",
+        "info": {
+          "analysis_kind": "normals",
+          "checks": [
+            "normal_cardinality",
+            "finite_vectors",
+            "unit_or_explicit_zero",
+            "face_degeneracy_consistent"
+          ],
+          "geometry_mutation": false,
+          "input_format": "off",
+          "input_slot": "mesh",
+          "input_units": [
+            "mm",
+            "cm",
+            "m"
+          ],
+          "license_expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+          "max_report_bytes": 16777216,
+          "normal_modes": [
+            "face",
+            "vertex",
+            "corner_flat"
+          ],
+          "output_format": "json",
+          "output_slot": "analysis",
+          "output_unit": "none",
+          "precision_contract": {
+            "exact_irrational_output": false,
+            "internal_kernel": "EPECK",
+            "reported_values": "normalized IEEE-754 binary64 vectors"
+          },
+          "producer_diagnostic_id": "mesh.producer_check.normals",
+          "report_schema": "GeometryAnalysisReport/v1",
+          "report_schema_version": 1,
+          "result_enumeration": {
+            "max_report_bytes": 16777216,
+            "policy": "atomic_report_or_resource_limit"
+          },
+          "source_header": "CGAL/Polygon_mesh_processing/compute_normal.h",
+          "source_kind": "official_release",
+          "source_sha256": "bc53b2e20f93dddaa467bd59d344ff3f7396b41dd280835961159b77711abc40",
+          "source_version": "6.2.1",
+          "validator_artifact_bindings": {
+            "mesh.validate.normals_report": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "source": {
+                "input": "mesh"
+              }
+            }
+          },
+          "validators": [
+            "mesh.validate.normals_report"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "GeometryAnalysisReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing",
+          "Surface_mesh"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "mesh.analysis.measures",
+        "info": {
+          "additional_source_headers": [
+            {
+              "header": "CGAL/Polygon_mesh_processing/self_intersections.h",
+              "sha256": "d459c0e6480a9e1c2cbef291340ae61a0bf4e79ceb182365c1b922dd7e38ae8f"
+            }
+          ],
+          "analysis_kind": "measures",
+          "checks": [
+            "typed_dimensions",
+            "availability_reasons",
+            "self_intersection_gate_before_volume",
+            "binary64_precision_gate"
+          ],
+          "geometry_mutation": false,
+          "input_format": "off",
+          "input_slot": "mesh",
+          "input_units": [
+            "mm",
+            "cm",
+            "m"
+          ],
+          "license_expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+          "max_report_bytes": 16777216,
+          "measure_dimensions": {
+            "absolute_volume": "length^3",
+            "signed_volume": "length^3",
+            "surface_area": "length^2",
+            "volume_centroid": "length"
+          },
+          "output_format": "json",
+          "output_slot": "analysis",
+          "output_unit": "none",
+          "precision_contract": {
+            "internal_kernel": "EPECK",
+            "signed_volume": "exact internal rational then binary64",
+            "surface_area": "approximate square root then binary64",
+            "unrepresentable": "explicit unavailable reason",
+            "volume_centroid": "exact internal rational then binary64"
+          },
+          "producer_diagnostic_id": "mesh.producer_check.measures",
+          "report_schema": "GeometryAnalysisReport/v1",
+          "report_schema_version": 1,
+          "result_enumeration": {
+            "max_report_bytes": 16777216,
+            "policy": "atomic_report_or_resource_limit"
+          },
+          "source_header": "CGAL/Polygon_mesh_processing/measure.h",
+          "source_kind": "official_release",
+          "source_sha256": "ba707292f05045a0c6eea3d73c3b21435673f440f4461b5ac5cf19542f6c540b",
+          "source_version": "6.2.1",
+          "validator_artifact_bindings": {
+            "mesh.validate.measures_report": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "source": {
+                "input": "mesh"
+              }
+            }
+          },
+          "validators": [
+            "mesh.validate.measures_report"
+          ],
+          "volume_preconditions": [
+            "closed",
+            "non_degenerate",
+            "non_self_intersecting",
+            "bounds_volume",
+            "positive_orientation"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "GeometryAnalysisReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing",
+          "Surface_mesh"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "mesh.analysis.sharp_features",
+        "info": {
+          "analysis_kind": "sharp_features",
+          "angle_units": [
+            "deg",
+            "rad"
+          ],
+          "checks": [
+            "canonical_angle_degrees",
+            "feature_edges_belong_to_source"
+          ],
+          "geometry_mutation": false,
+          "input_format": "off",
+          "input_slot": "mesh",
+          "input_units": [
+            "mm",
+            "cm",
+            "m"
+          ],
+          "license_expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+          "max_report_bytes": 16777216,
+          "output_format": "json",
+          "output_slot": "analysis",
+          "output_unit": "none",
+          "precision_contract": {
+            "angle_threshold": "IEEE-754 binary64 degrees",
+            "internal_kernel": "EPECK",
+            "threshold_decision": "CGAL approximate trigonometric comparison"
+          },
+          "producer_diagnostic_id": "mesh.producer_check.sharp_features",
+          "report_schema": "GeometryAnalysisReport/v1",
+          "report_schema_version": 1,
+          "required_parameters": [
+            "angle"
+          ],
+          "result_enumeration": {
+            "max_report_bytes": 16777216,
+            "policy": "atomic_report_or_resource_limit"
+          },
+          "source_header": "CGAL/Polygon_mesh_processing/detect_features.h",
+          "source_kind": "official_release",
+          "source_sha256": "0fda63d13f171d8a107a1cb96db9545fa19802eacae419df0498c9838669724c",
+          "source_version": "6.2.1",
+          "validator_artifact_bindings": {
+            "mesh.validate.sharp_features_report": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "source": {
+                "input": "mesh"
+              }
+            }
+          },
+          "validator_parameter_bindings": {
+            "mesh.validate.sharp_features_report": {
+              "angle": "angle"
+            }
+          },
+          "validators": [
+            "mesh.validate.sharp_features_report"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "GeometryAnalysisReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing",
+          "Surface_mesh"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "mesh.analysis.self_intersections",
+        "info": {
+          "analysis_kind": "self_intersections",
+          "checks": [
+            "source_face_pairs",
+            "pair_count_consistent",
+            "bounded_pair_collection"
+          ],
+          "geometry_mutation": false,
+          "input_format": "off",
+          "input_slot": "mesh",
+          "input_units": [
+            "mm",
+            "cm",
+            "m"
+          ],
+          "license_expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+          "max_report_bytes": 16777216,
+          "output_format": "json",
+          "output_slot": "analysis",
+          "output_unit": "none",
+          "pair_limit": 10000,
+          "producer_diagnostic_id": "mesh.producer_check.self_intersections",
+          "report_schema": "GeometryAnalysisReport/v1",
+          "report_schema_version": 1,
+          "result_enumeration": {
+            "max_report_bytes": 16777216,
+            "policy": "atomic_report_or_resource_limit"
+          },
+          "source_header": "CGAL/Polygon_mesh_processing/self_intersections.h",
+          "source_kind": "official_release",
+          "source_sha256": "d459c0e6480a9e1c2cbef291340ae61a0bf4e79ceb182365c1b922dd7e38ae8f",
+          "source_version": "6.2.1",
+          "validator_artifact_bindings": {
+            "mesh.validate.self_intersections_report": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "source": {
+                "input": "mesh"
+              }
+            }
+          },
+          "validators": [
+            "mesh.validate.self_intersections_report"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "GeometryAnalysisReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "exact_constructions",
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing",
+          "Surface_mesh"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "mesh.validate.pmp_inspection_report",
+        "info": {
+          "artifact_bindings": {
+            "candidate": {
+              "output": "analysis"
+            },
+            "source": {
+              "input": "mesh"
+            }
+          },
+          "candidate_report_schema": "GeometryAnalysisReport/v1",
+          "max_candidate_report_bytes": 16777216,
+          "report_schema": "ValidationReport/v1",
+          "required_checks": [
+            "schema_valid",
+            "source_identity_matches",
+            "analysis_kind_matches",
+            "dimension_units_valid",
+            "result_semantics_valid",
+            "producer_diagnostic_matches",
+            "official_cgal_reference_match"
+          ],
+          "required_report_checks": {
+            "checks.analysis_kind_matches": true,
+            "checks.dimension_units_valid": true,
+            "checks.official_cgal_reference_match": true,
+            "checks.producer_diagnostic_matches": true,
+            "checks.result_semantics_valid": true,
+            "checks.schema_valid": true,
+            "checks.source_identity_matches": true,
+            "passed": true,
+            "schema_version": 1,
+            "status": "pass",
+            "validator_id": "mesh.validate.pmp_inspection_report"
+          },
+          "validates": "mesh.inspect.pmp"
+        },
+        "input_types": [
+          "GeometryAnalysisReport",
+          "TriangleSurfaceMesh",
+          "PolygonSoup3"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "exact_constructions",
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing",
+          "Surface_mesh"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "mesh.validate.connected_components_report",
+        "info": {
+          "artifact_bindings": {
+            "candidate": {
+              "output": "analysis"
+            },
+            "source": {
+              "input": "mesh"
+            }
+          },
+          "candidate_report_schema": "GeometryAnalysisReport/v1",
+          "max_candidate_report_bytes": 16777216,
+          "report_schema": "ValidationReport/v1",
+          "required_checks": [
+            "schema_valid",
+            "source_identity_matches",
+            "analysis_kind_matches",
+            "dimension_units_valid",
+            "result_semantics_valid",
+            "producer_diagnostic_matches",
+            "official_cgal_reference_match"
+          ],
+          "required_report_checks": {
+            "checks.analysis_kind_matches": true,
+            "checks.dimension_units_valid": true,
+            "checks.official_cgal_reference_match": true,
+            "checks.producer_diagnostic_matches": true,
+            "checks.result_semantics_valid": true,
+            "checks.schema_valid": true,
+            "checks.source_identity_matches": true,
+            "passed": true,
+            "schema_version": 1,
+            "status": "pass",
+            "validator_id": "mesh.validate.connected_components_report"
+          },
+          "validates": "mesh.analysis.connected_components"
+        },
+        "input_types": [
+          "GeometryAnalysisReport",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "exact_constructions",
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing",
+          "Surface_mesh"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "mesh.validate.normals_report",
+        "info": {
+          "artifact_bindings": {
+            "candidate": {
+              "output": "analysis"
+            },
+            "source": {
+              "input": "mesh"
+            }
+          },
+          "candidate_report_schema": "GeometryAnalysisReport/v1",
+          "independent_fixture_contract": "analytic face-normal direction",
+          "max_candidate_report_bytes": 16777216,
+          "report_schema": "ValidationReport/v1",
+          "required_checks": [
+            "schema_valid",
+            "source_identity_matches",
+            "analysis_kind_matches",
+            "dimension_units_valid",
+            "result_semantics_valid",
+            "producer_diagnostic_matches",
+            "official_cgal_reference_match"
+          ],
+          "required_report_checks": {
+            "checks.analysis_kind_matches": true,
+            "checks.dimension_units_valid": true,
+            "checks.official_cgal_reference_match": true,
+            "checks.producer_diagnostic_matches": true,
+            "checks.result_semantics_valid": true,
+            "checks.schema_valid": true,
+            "checks.source_identity_matches": true,
+            "passed": true,
+            "schema_version": 1,
+            "status": "pass",
+            "validator_id": "mesh.validate.normals_report"
+          },
+          "validates": "mesh.analysis.normals"
+        },
+        "input_types": [
+          "GeometryAnalysisReport",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing",
+          "Surface_mesh"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "mesh.validate.measures_report",
+        "info": {
+          "artifact_bindings": {
+            "candidate": {
+              "output": "analysis"
+            },
+            "source": {
+              "input": "mesh"
+            }
+          },
+          "candidate_report_schema": "GeometryAnalysisReport/v1",
+          "independent_fixture_contract": "analytic tetra area-volume-centroid",
+          "max_candidate_report_bytes": 16777216,
+          "report_schema": "ValidationReport/v1",
+          "required_checks": [
+            "schema_valid",
+            "source_identity_matches",
+            "analysis_kind_matches",
+            "dimension_units_valid",
+            "result_semantics_valid",
+            "producer_diagnostic_matches",
+            "official_cgal_reference_match"
+          ],
+          "required_report_checks": {
+            "checks.analysis_kind_matches": true,
+            "checks.dimension_units_valid": true,
+            "checks.official_cgal_reference_match": true,
+            "checks.producer_diagnostic_matches": true,
+            "checks.result_semantics_valid": true,
+            "checks.schema_valid": true,
+            "checks.source_identity_matches": true,
+            "passed": true,
+            "schema_version": 1,
+            "status": "pass",
+            "validator_id": "mesh.validate.measures_report"
+          },
+          "validates": "mesh.analysis.measures"
+        },
+        "input_types": [
+          "GeometryAnalysisReport",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing",
+          "Surface_mesh"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "mesh.validate.sharp_features_report",
+        "info": {
+          "artifact_bindings": {
+            "candidate": {
+              "output": "analysis"
+            },
+            "source": {
+              "input": "mesh"
+            }
+          },
+          "candidate_report_schema": "GeometryAnalysisReport/v1",
+          "max_candidate_report_bytes": 16777216,
+          "parameter_bindings": {
+            "angle": {
+              "parameter": "angle"
+            }
+          },
+          "report_schema": "ValidationReport/v1",
+          "required_checks": [
+            "schema_valid",
+            "source_identity_matches",
+            "analysis_kind_matches",
+            "dimension_units_valid",
+            "result_semantics_valid",
+            "producer_diagnostic_matches",
+            "official_cgal_reference_match"
+          ],
+          "required_report_checks": {
+            "checks.analysis_kind_matches": true,
+            "checks.dimension_units_valid": true,
+            "checks.official_cgal_reference_match": true,
+            "checks.producer_diagnostic_matches": true,
+            "checks.result_semantics_valid": true,
+            "checks.schema_valid": true,
+            "checks.source_identity_matches": true,
+            "passed": true,
+            "schema_version": 1,
+            "status": "pass",
+            "validator_id": "mesh.validate.sharp_features_report"
+          },
+          "validates": "mesh.analysis.sharp_features"
+        },
+        "input_types": [
+          "GeometryAnalysisReport",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing",
+          "Surface_mesh"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "mesh.validate.self_intersections_report",
+        "info": {
+          "artifact_bindings": {
+            "candidate": {
+              "output": "analysis"
+            },
+            "source": {
+              "input": "mesh"
+            }
+          },
+          "candidate_report_schema": "GeometryAnalysisReport/v1",
+          "max_candidate_report_bytes": 16777216,
+          "report_schema": "ValidationReport/v1",
+          "required_checks": [
+            "schema_valid",
+            "source_identity_matches",
+            "analysis_kind_matches",
+            "dimension_units_valid",
+            "result_semantics_valid",
+            "producer_diagnostic_matches",
+            "official_cgal_reference_match"
+          ],
+          "required_report_checks": {
+            "checks.analysis_kind_matches": true,
+            "checks.dimension_units_valid": true,
+            "checks.official_cgal_reference_match": true,
+            "checks.producer_diagnostic_matches": true,
+            "checks.result_semantics_valid": true,
+            "checks.schema_valid": true,
+            "checks.source_identity_matches": true,
+            "passed": true,
+            "schema_version": 1,
+            "status": "pass",
+            "validator_id": "mesh.validate.self_intersections_report"
+          },
+          "validates": "mesh.analysis.self_intersections"
+        },
+        "input_types": [
+          "GeometryAnalysisReport",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "exact_constructions",
+          "package_recommended"
+        ]
       }
     ],
     "protocol": 1,
@@ -939,12 +1714,12 @@
     ],
     "worker": "cgal-master-worker"
   },
-  "worker_manifest_sha256": "0311995fcf502da695de4334aa3810a0472906b9aad86f9be47fd986c51d741a",
+  "worker_manifest_sha256": "f4c2b15bfaa0cdfacc75f31966a4948b409e925a4a24ba1c5fff77face695c09",
   "tests": [
     {
       "id": "wave-a-worker-cases",
       "source_path": "tests/master_wave_a_cases.py",
-      "source_sha256": "890d04a2ab545db88d9e337f934d3a99eb4ffffae966bf27504cb54b13bb664c",
+      "source_sha256": "f8d1847c1e680171bc71b33395099e8ecde397affcc5abf72a537cfb9246448a",
       "source_hash_encoding": "utf8-lf",
       "stdout_sha256": "6bf3e2f861aa21cf5e12e0692ff5a5a200bb67409ab4eeff06a04e4e04766237",
       "exit_code": 0,
@@ -952,6 +1727,11 @@
     }
   ],
   "blobs": {
+    "02aebcfdfd0714cc00bf03c2c510bcb61b8c2d582c7595aa2219773655ffce2d": {
+      "encoding": "base64",
+      "byte_size": 1553,
+      "content": "T0ZGCjE5IDM4IDAKCjEuOTI0Mzg2OTk5MDYwMzExNSAwLjc2MTc5NDA1NzYwOTE4NTczIDAuNjQ2ODYzNDc3MTQ0OTg2MDQKMC45MjgxNTMzODU0Mzk3NjE1NiAyLjMyMzkxNzUxNzQyMjk5NjcgMC40ODU2MTExNDA3NjY4MzU0MwowLjA4ODQ2MzA2NzQ0MjQxMzkwNCAxLjUwMTA1OTI5NDMxOTQxMDUgMC4yNDQ4Mjg0NTkxNDMxMDU4MwoxLjAwNDQ3MzUyMjgyMDI3MTcgMS44Mjc3ODQ4NDk1OTE3NjU3IC0wLjYyMDkxOTE0NDIzOTkwOTI0Ci0wLjQ2NTY0MTgwNDY1NjM4NDMzIDIuNDcwNTcxNzg5OTg0MTk5OSAtMC40ODUzMDU3NDkwMTc2MDc4NwotMS4wMzgyODE3NDMzNTQzNjUgMS4wMjk4ODEyMDg2OTk5Mzc0IC0wLjI2MjIwMTY2MTEzMDM1NTUzCi0xLjkzNjE0NzI4OTI4NTkyNDIgMS45MzYxNDcyODkyODU5MjY2IC0yLjAwNDIxNjE2NzA2MjI5NzFlLTE2Ci0yLjIxODk0MTU1MDIxMDA3NzYgMC43NDQ1NTQ3OTQ3Njk3MjI0MiAwLjU2NTg2MTY5MTMyMTE3NDcKLTIuNTAxNzI5MTQ2MTgzMjY4MiAtMC43MjY3MTczMzY4OTUyMjIyMiAtMC4zOTk5NjAxNjI5NTkzMDM5MgotMS4zNjEwMTgwNDgxNjI5MDY2IC0wLjIxMDA3MzM1NjI5MTY2NjQgLTAuMDMxMTMyOTUwNDY0MDg5MjYKLTEuODEwNDE4MTg0OTIwNzg5IC0xLjA3MDE3OTI5NjYxMTYwODYgMC42MjUxMzkzMDA2NjkzMTk1NQotMC43MzgxOTgzMDQzMTg0Mjc4MSAtMi41NTQ0MTYyNzA4MzE2NjUzIDAuMjM2MTk3MzIwNDM3Nzk3NDUKLTAuMzcyNzYyNDE3OTM3MTg0OTUgLTEuNDE0MTE4OTcwMzgwNDQ0IC0wLjI2MjIwMTY2MTEzMDM1NTMxCi0wLjQ5MzU4OTEzMTI2MjUzMjIzIC0yLjMwNzA1OTQ5NTU4MTA2MjYgLTAuNTc5ODY4MzkwMzg1NTE2NDEKMC45ODM3ODA2Nzg0NDgwNTcxNyAtMS44NDM4NzYxODczNTcxNjcyIDAuNjIyNzQ4MDcxNjEwODcxMzEKMS45MTY1MDY2MTk5ODYxODQ3IC0xLjg0MzA5MDIzMDIyMTMyNDYgLTAuMjM2MTk3MzIwNDM3Nzk4OTIKMS41MzY3NjM1MTExNDY4OTIgLTAuNDMzNzY4MDY3NjgzNDM3MzQgLTAuMjE5NzE0OTA4Mzk2MDA3MjQKMi41NjUzNzY0MTY2MTgwNTA0IC0wLjUwNzk3MDAxNjY5ODk1MjAzIDAuMzE2NjM2NDY3MDk2MDM3OTMKMi4zNTg2NTEyMjIxOTU0MTE1IDAuOTM2MjYzNjU3NTc1Njg0MyAtMC40NDc0ODYzMTQwODEzNTMwOQozICAwIDE3IDE4CjMgIDE2IDMgMTgKMyAgMSAwIDE4CjMgIDAgMSAyCjMgIDAgMiAxNgozICAzIDE2IDIKMyAgMTggMyAxCjMgIDMgNCAxCjMgIDEgNCA2CjMgIDIgNSAzCjMgIDQgMyA1CjMgIDYgNyAxCjMgIDEgNyA5CjMgIDIgMSA5CjMgIDkgNSAyCjMgIDUgOCA0CjMgIDYgNCA4CjMgIDcgNiA4CjMgIDUgOSA4CjMgIDggMTAgNwozICA5IDcgMTAKMyAgOSAxMyA4CjMgIDggMTEgMTAKMyAgOSAxMCAxMgozICA5IDEyIDEzCjMgIDggMTMgMTEKMyAgMTEgMTQgMTAKMyAgMTAgMTQgMTIKMyAgMTQgMTEgMTUKMyAgMTQgMTYgMTIKMyAgMTMgMTIgMTYKMyAgMTEgMTMgMTUKMyAgMTUgMTcgMTQKMyAgMTYgMTggMTMKMyAgMTUgMTMgMTgKMyAgMTQgMTcgMAozICAxNiAxNCAwCjMgIDE4IDE3IDE1Cgo="
+    },
     "09cc16c905d4b57fb634a64b59a8648514a21530a96d6c8840a4386f8ee52f6f": {
       "encoding": "base64",
       "byte_size": 448,
@@ -961,6 +1741,11 @@
       "encoding": "base64",
       "byte_size": 448,
       "content": "eyJkaXN0YW5jZV9lc3RpbWF0ZSI6eyJ1bml0IjoibW0iLCJ2YWx1ZSI6MC4wNDIxMjEzODkzODE0MDE2MTR9LCJlZmZlY3RpdmVfY29uY3VycmVuY3kiOiJzZXF1ZW50aWFsIiwiZWZmZWN0aXZlX2tlcm5lbCI6IkNHQUw6OkV4YWN0X3ByZWRpY2F0ZXNfaW5leGFjdF9jb25zdHJ1Y3Rpb25zX2tlcm5lbCIsImVycm9yX2JvdW5kIjp7InVuaXQiOiJtbSIsInZhbHVlIjowLjAxfSwibG93ZXJfYm91bmQiOnsidW5pdCI6Im1tIiwidmFsdWUiOjAuMDMyMTIxMzg5MzgxNDAxNjF9LCJtZXRob2QiOiJib3VuZGVkX2Vycm9yX3N5bW1ldHJpYyIsInN0YXR1cyI6InBhc3MiLCJ0b2xlcmFuY2UiOnsidW5pdCI6Im1tIiwidmFsdWUiOjIuMH0sInVwcGVyX2JvdW5kIjp7InVuaXQiOiJtbSIsInZhbHVlIjowLjA1MjEyMTM4OTM4MTQwMTYxNn0sInZhbGlkIjp0cnVlLCJ2ZXJkaWN0IjoicGFzcyJ9Cg=="
+    },
+    "2ccf783cee27b4bec03e864d1a9c9ab579e8a30a6309c9406fa00cb07fafa2a9": {
+      "encoding": "base64",
+      "byte_size": 443,
+      "content": "eyJkaXN0YW5jZV9lc3RpbWF0ZSI6eyJ1bml0IjoibW0iLCJ2YWx1ZSI6MC41MDA2OTEzMjE1NjA1NzE3fSwiZWZmZWN0aXZlX2NvbmN1cnJlbmN5Ijoic2VxdWVudGlhbCIsImVmZmVjdGl2ZV9rZXJuZWwiOiJDR0FMOjpFeGFjdF9wcmVkaWNhdGVzX2luZXhhY3RfY29uc3RydWN0aW9uc19rZXJuZWwiLCJlcnJvcl9ib3VuZCI6eyJ1bml0IjoibW0iLCJ2YWx1ZSI6MC4wMX0sImxvd2VyX2JvdW5kIjp7InVuaXQiOiJtbSIsInZhbHVlIjowLjQ5MDY5MTMyMTU2MDU3MTd9LCJtZXRob2QiOiJib3VuZGVkX2Vycm9yX3N5bW1ldHJpYyIsInN0YXR1cyI6InBhc3MiLCJ0b2xlcmFuY2UiOnsidW5pdCI6Im1tIiwidmFsdWUiOjIuMH0sInVwcGVyX2JvdW5kIjp7InVuaXQiOiJtbSIsInZhbHVlIjowLjUxMDY5MTMyMTU2MDU3MTd9LCJ2YWxpZCI6dHJ1ZSwidmVyZGljdCI6InBhc3MifQo="
     },
     "2f320b4b91847729c8dc0c3afe60ef90ea6ec7e6a6d4121ef263ca791d606662": {
       "encoding": "base64",
@@ -986,6 +1771,11 @@
       "encoding": "base64",
       "byte_size": 4191,
       "content": "T0ZGCjU2IDEwOCAwCgowLjE5NDQ0MzY5OTA2NjkwMjU0IDAuOTkzMjQ1Njg3ODczODM1NDkgLTAKLTAuMTk0NDQzNjk5MDY2OTAyNTQgLTAuOTkzMjQ1Njg3ODczODM1NDkgLTAKMCAtMC4xOTQ0NDM2OTkwNjY5MDI4NyAwLjk5MzI0NTY4Nzg3MzgzNTA1CjAuNzA3MTA2NzgxMTg2NTQ3NDYgMC43MDcxMDY3ODExODY1NDc0NiAwCjAgMC43MDcxMDY3ODExODY1NDc0NiAwLjcwNzEwNjc4MTE4NjU0NzQ2Ci0wLjcwNzEwNjc4MTE4NjU0NzQ2IDAuNzA3MTA2NzgxMTg2NTQ3NDYgMAotMC44NjIwNjg5OTA2MTMwNjYwOCAtMS4xOTc3MDgyNTc4Mjk4NDAxZS0xNiAwLjU1MTAwNTk0MzQyMDkwNzcKLTAuNzA3MTA2NzgxMTg2NTQ3NDYgLTAuNzA3MTA2NzgxMTg2NTQ3NDYgMAowIC0wLjcwNzEwNjc4MTE4NjU0NzQ2IDAuNzA3MTA2NzgxMTg2NTQ3NDYKMC43MDcxMDY3ODExODY1NDc0NiAtMC43MDcxMDY3ODExODY1NDc0NiAwCjAuODYyMDY4OTkwNjEzMDY2MDggLTEuMTk3NzA4MjU3ODI5ODQwMWUtMTYgLTAuNTUxMDA1OTQzNDIwOTA3NwowIDAuNzA3MTA2NzgxMTg2NTQ3NDYgLTAuNzA3MTA2NzgxMTg2NTQ3NDYKMCAtMC43MDcxMDY3ODExODY1NDc0NiAtMC43MDcxMDY3ODExODY1NDc0NgowLjk5MzI0NTY4Nzg3MzgzNTQ5IDAuMTk0NDQzNjk5MDY2OTAyNTQgLTAKMC44MTY0OTY1ODA5Mjc3MjYxNSAwLjQwODI0ODI5MDQ2Mzg2MzA3IDAuNDA4MjQ4MjkwNDYzODYzMDcKMC44NjIwNjg5OTA2MTMwNjYwOCAtMS4xOTc3MDgyNTc4Mjk4NDAxZS0xNiAwLjU1MTAwNTk0MzQyMDkwNzcKMCAwLjkyMzg3OTUzMjUxMTI4Njc0IDAuMzgyNjgzNDMyMzY1MDg5NzMKMC40MDgyNDgyOTA0NjM4NjMwNyAwLjgxNjQ5NjU4MDkyNzcyNjE1IDAuNDA4MjQ4MjkwNDYzODYzMDcKMC4zODI2ODM0MzIzNjUwODk3MyAwIDAuOTIzODc5NTMyNTExMjg2NzQKMC40MDgyNDgyOTA0NjM4NjMwNyAwLjQwODI0ODI5MDQ2Mzg2MzA3IDAuODE2NDk2NTgwOTI3NzI2MTUKMCAwLjM4MjY4MzQzMjM2NTA4OTczIDAuOTIzODc5NTMyNTExMjg2NzQKLTAuMzgyNjgzNDMyMzY1MDg5NzMgMC45MjM4Nzk1MzI1MTEyODY3NCAwCi0wLjQwODI0ODI5MDQ2Mzg2MzA3IDAuODE2NDk2NTgwOTI3NzI2MTUgMC40MDgyNDgyOTA0NjM4NjMwNwotMC44MTY0OTY1ODA5Mjc3MjYxNSAwLjQwODI0ODI5MDQ2Mzg2MzA3IDAuNDA4MjQ4MjkwNDYzODYzMDcKLTAuOTIzODc5NTMyNTExMjg2NzQgMC4zODI2ODM0MzIzNjUwODk3MyAwCi0wLjQwODI0ODI5MDQ2Mzg2MzA3IDAuNDA4MjQ4MjkwNDYzODYzMDcgMC44MTY0OTY1ODA5Mjc3MjYxNQotMC4zODI2ODM0MzIzNjUwODk3MyAwIDAuOTIzODc5NTMyNTExMjg2NzQKLTAuOTkzMjQ1Njg3ODczODM1NDkgLTAuMTk0NDQzNjk5MDY2OTAyNTQgLTAKLTAuODE2NDk2NTgwOTI3NzI2MTUgLTAuNDA4MjQ4MjkwNDYzODYzMDcgMC40MDgyNDgyOTA0NjM4NjMwNwowIC0wLjkyMzg3OTUzMjUxMTI4Njc0IDAuMzgyNjgzNDMyMzY1MDg5NzMKLTAuNDA4MjQ4MjkwNDYzODYzMDcgLTAuODE2NDk2NTgwOTI3NzI2MTUgMC40MDgyNDgyOTA0NjM4NjMwNwotMC40MDgyNDgyOTA0NjM4NjMwNyAtMC40MDgyNDgyOTA0NjM4NjMwNyAwLjgxNjQ5NjU4MDkyNzcyNjE1CjAuMzgyNjgzNDMyMzY1MDg5NzMgLTAuOTIzODc5NTMyNTExMjg2NzQgMAowLjQwODI0ODI5MDQ2Mzg2MzA3IC0wLjgxNjQ5NjU4MDkyNzcyNjE1IDAuNDA4MjQ4MjkwNDYzODYzMDcKMC44MTY0OTY1ODA5Mjc3MjYxNSAtMC40MDgyNDgyOTA0NjM4NjMwNyAwLjQwODI0ODI5MDQ2Mzg2MzA3CjAuOTIzODc5NTMyNTExMjg2NzQgLTAuMzgyNjgzNDMyMzY1MDg5NzMgMAowLjQwODI0ODI5MDQ2Mzg2MzA3IC0wLjQwODI0ODI5MDQ2Mzg2MzA3IDAuODE2NDk2NTgwOTI3NzI2MTUKMC40MDgyNDgyOTA0NjM4NjMwNyAwLjgxNjQ5NjU4MDkyNzcyNjE1IC0wLjQwODI0ODI5MDQ2Mzg2MzA3CjAgMC45MjM4Nzk1MzI1MTEyODY3NCAtMC4zODI2ODM0MzIzNjUwODk3MwowLjgxNjQ5NjU4MDkyNzcyNjE1IDAuNDA4MjQ4MjkwNDYzODYzMDcgLTAuNDA4MjQ4MjkwNDYzODYzMDcKMCAwLjM4MjY4MzQzMjM2NTA4OTczIC0wLjkyMzg3OTUzMjUxMTI4Njc0CjAuNDA4MjQ4MjkwNDYzODYzMDcgMC40MDgyNDgyOTA0NjM4NjMwNyAtMC44MTY0OTY1ODA5Mjc3MjYxNQowLjM4MjY4MzQzMjM2NTA4OTczIDAgLTAuOTIzODc5NTMyNTExMjg2NzQKLTAuODE2NDk2NTgwOTI3NzI2MTUgMC40MDgyNDgyOTA0NjM4NjMwNyAtMC40MDgyNDgyOTA0NjM4NjMwNwotMC44NjIwNjg5OTA2MTMwNjYwOCAtMS4xOTc3MDgyNTc4Mjk4NDAxZS0xNiAtMC41NTEwMDU5NDM0MjA5MDc3Ci0wLjQwODI0ODI5MDQ2Mzg2MzA3IDAuODE2NDk2NTgwOTI3NzI2MTUgLTAuNDA4MjQ4MjkwNDYzODYzMDcKLTAuMzgyNjgzNDMyMzY1MDg5NzMgMCAtMC45MjM4Nzk1MzI1MTEyODY3NAotMC40MDgyNDgyOTA0NjM4NjMwNyAwLjQwODI0ODI5MDQ2Mzg2MzA3IC0wLjgxNjQ5NjU4MDkyNzcyNjE1Ci0wLjQwODI0ODI5MDQ2Mzg2MzA3IC0wLjgxNjQ5NjU4MDkyNzcyNjE1IC0wLjQwODI0ODI5MDQ2Mzg2MzA3CjAgLTAuOTIzODc5NTMyNTExMjg2NzQgLTAuMzgyNjgzNDMyMzY1MDg5NzMKLTAuODE2NDk2NTgwOTI3NzI2MTUgLTAuNDA4MjQ4MjkwNDYzODYzMDcgLTAuNDA4MjQ4MjkwNDYzODYzMDcKLTAgLTAuMTk0NDQzNjk5MDY2OTAyODcgLTAuOTkzMjQ1Njg3ODczODM1MDUKLTAuNDA4MjQ4MjkwNDYzODYzMDcgLTAuNDA4MjQ4MjkwNDYzODYzMDcgLTAuODE2NDk2NTgwOTI3NzI2MTUKMC44MTY0OTY1ODA5Mjc3MjYxNSAtMC40MDgyNDgyOTA0NjM4NjMwNyAtMC40MDgyNDgyOTA0NjM4NjMwNwowLjQwODI0ODI5MDQ2Mzg2MzA3IC0wLjgxNjQ5NjU4MDkyNzcyNjE1IC0wLjQwODI0ODI5MDQ2Mzg2MzA3CjAuNDA4MjQ4MjkwNDYzODYzMDcgLTAuNDA4MjQ4MjkwNDYzODYzMDcgLTAuODE2NDk2NTgwOTI3NzI2MTUKMyAgMyAxNCAxMwozICAxMyAxNCAxNQozICA0IDE3IDE2CjMgIDMgMCAxNwozICAwIDE2IDE3CjMgIDIgMTggMjAKMyAgMTUgMTkgMTgKMyAgNCAyMCAxOQozICAxOCAxOSAyMAozICAzIDE3IDE0CjMgIDQgMTkgMTcKMyAgMTUgMTQgMTkKMyAgMTcgMTkgMTQKMyAgMCAyMSAxNgozICA1IDIyIDIxCjMgIDQgMTYgMjIKMyAgMjEgMjIgMTYKMyAgMjcgNiAyNAozICA1IDI0IDIzCjMgIDYgMjMgMjQKMyAgMiAyMCAyNgozICA0IDI1IDIwCjMgIDYgMjYgMjUKMyAgMjAgMjUgMjYKMyAgNSAyMyAyMgozICA2IDI1IDIzCjMgIDQgMjIgMjUKMyAgMjMgMjUgMjIKMyAgNyAyOCAyNwozICAyNyAyOCA2CjMgIDggMzAgMjkKMyAgNyAxIDMwCjMgIDEgMjkgMzAKMyAgNiAzMSAyNgozICA4IDIgMzEKMyAgMiAyNiAzMQozICA3IDMwIDI4CjMgIDggMzEgMzAKMyAgNiAyOCAzMQozICAzMCAzMSAyOAozICAxIDMyIDI5CjMgIDkgMzMgMzIKMyAgOCAyOSAzMwozICAzMiAzMyAyOQozICAxMyAxNSAzNQozICA5IDM1IDM0CjMgIDE1IDM0IDM1CjMgIDggMzYgMgozICAxNSAxOCAzNgozICAyIDM2IDE4CjMgIDkgMzQgMzMKMyAgMTUgMzYgMzQKMyAgOCAzMyAzNgozICAzNCAzNiAzMwozICAzIDM3IDAKMyAgMTEgMzggMzcKMyAgMCAzNyAzOAozICAzIDEzIDM5CjMgIDEwIDM5IDEzCjMgIDUxIDQwIDQyCjMgIDExIDQxIDQwCjMgIDEwIDQyIDQxCjMgIDQwIDQxIDQyCjMgIDMgMzkgMzcKMyAgMTAgNDEgMzkKMyAgMTEgMzcgNDEKMyAgMzkgNDEgMzcKMyAgMjcgMjQgNDQKMyAgNSA0MyAyNAozICAyNCA0MyA0NAozICAwIDM4IDIxCjMgIDExIDQ1IDM4CjMgIDUgMjEgNDUKMyAgMzggNDUgMjEKMyAgNTEgNDYgNDAKMyAgNDQgNDcgNDYKMyAgMTEgNDAgNDcKMyAgNDYgNDcgNDAKMyAgNSA0NSA0MwozICAxMSA0NyA0NQozICA0NCA0MyA0NwozICA0NSA0NyA0MwozICA3IDQ4IDEKMyAgMTIgNDkgNDgKMyAgMSA0OCA0OQozICA3IDI3IDUwCjMgIDQ0IDUwIDI3CjMgIDEyIDUyIDUxCjMgIDQ0IDQ2IDUyCjMgIDUxIDUyIDQ2CjMgIDcgNTAgNDgKMyAgNDQgNTIgNTAKMyAgMTIgNDggNTIKMyAgNTAgNTIgNDgKMyAgMTMgMzUgMTAKMyAgOSA1MyAzNQozICAzNSA1MyAxMAozICAxIDQ5IDMyCjMgIDEyIDU0IDQ5CjMgIDkgMzIgNTQKMyAgNDkgNTQgMzIKMyAgMTAgNTUgNDIKMyAgMTIgNTEgNTUKMyAgNTEgNDIgNTUKMyAgOSA1NCA1MwozICAxMiA1NSA1NAozICAxMCA1MyA1NQozICA1NCA1NSA1MwoK"
+    },
+    "559654995da4d0bbbf4b395b5a5da6cab7fab9eee396fb7b92521b08844ab791": {
+      "encoding": "base64",
+      "byte_size": 443,
+      "content": "eyJkaXN0YW5jZV9lc3RpbWF0ZSI6eyJ1bml0IjoibW0iLCJ2YWx1ZSI6MC41Nzg0MTUzNDQ0MjI1MzI3fSwiZWZmZWN0aXZlX2NvbmN1cnJlbmN5Ijoic2VxdWVudGlhbCIsImVmZmVjdGl2ZV9rZXJuZWwiOiJDR0FMOjpFeGFjdF9wcmVkaWNhdGVzX2luZXhhY3RfY29uc3RydWN0aW9uc19rZXJuZWwiLCJlcnJvcl9ib3VuZCI6eyJ1bml0IjoibW0iLCJ2YWx1ZSI6MC4wMX0sImxvd2VyX2JvdW5kIjp7InVuaXQiOiJtbSIsInZhbHVlIjowLjU2ODQxNTM0NDQyMjUzMjd9LCJtZXRob2QiOiJib3VuZGVkX2Vycm9yX3N5bW1ldHJpYyIsInN0YXR1cyI6InBhc3MiLCJ0b2xlcmFuY2UiOnsidW5pdCI6Im1tIiwidmFsdWUiOjIuMH0sInVwcGVyX2JvdW5kIjp7InVuaXQiOiJtbSIsInZhbHVlIjowLjU4ODQxNTM0NDQyMjUzMjd9LCJ2YWxpZCI6dHJ1ZSwidmVyZGljdCI6InBhc3MifQo="
     },
     "5743e1e72c3cf9cb9292739579f9c415dce3c1e56747bafeb781671bda6a7a58": {
       "encoding": "base64",
@@ -1026,11 +1816,6 @@
       "encoding": "base64",
       "byte_size": 4315,
       "content": "T0ZGCjU2IDEwOCAwCgowLjk5MTYxODE3MDY2MjY2NDg5IDguNTE1ODg1Mjc4ODQ0MDM2OGUtMTcgMC4yMDA4MDg5MTkwOTY5MDE4MgowLjIwMDgwODkxOTA5NjkwMjE4IDAuOTkxNjE4MTcwNjYyNjY0MjIgOC41MTU4ODUyNzg4NDQwMzQzZS0xNwotMC4yMDA4MDg5MTkwOTY5MDIxOCAtMC45OTE2MTgxNzA2NjI2NjQyMiA4LjUxNTg4NTI3ODg0NDAzNDNlLTE3CjAuNzA3MTA2NzgxMTg2NTQ3NDYgMC43MDcxMDY3ODExODY1NDc0NiAwCjAuNzA3MTA2NzgxMTg2NTQ3NDYgMCAwLjcwNzEwNjc4MTE4NjU0NzQ2Ci0wLjcwNzEwNjc4MTE4NjU0NzQ2IDAuNzA3MTA2NzgxMTg2NTQ3NDYgMAotMC43MDcxMDY3ODExODY1NDc0NiAwIDAuNzA3MTA2NzgxMTg2NTQ3NDYKLTAuNzA3MTA2NzgxMTg2NTQ3NDYgLTAuNzA3MTA2NzgxMTg2NTQ3NDYgMAowLjcwNzEwNjc4MTE4NjU0NzQ2IC0wLjcwNzEwNjc4MTE4NjU0NzQ2IDAKMC43MDcxMDY3ODExODY1NDc0NiAwIC0wLjcwNzEwNjc4MTE4NjU0NzQ2Ci0wLjcwNzEwNjc4MTE4NjU0NzQ2IDAgLTAuNzA3MTA2NzgxMTg2NTQ3NDYKMC45MjM4Nzk1MzI1MTEyODY3NCAwLjM4MjY4MzQzMjM2NTA4OTczIDAKMC44MTY0OTY1ODA5Mjc3MjYxNSAwLjQwODI0ODI5MDQ2Mzg2MzA3IDAuNDA4MjQ4MjkwNDYzODYzMDcKMCAwLjkyMzg3OTUzMjUxMTI4Njc0IDAuMzgyNjgzNDMyMzY1MDg5NzMKMC40MDgyNDgyOTA0NjM4NjMwNyAwLjgxNjQ5NjU4MDkyNzcyNjE1IDAuNDA4MjQ4MjkwNDYzODYzMDcKMC4yMDA4MDg5MTkwOTY5MDIxOCA4LjUxNTg4NTI3ODg0NDAzNDNlLTE3IDAuOTkxNjE4MTcwNjYyNjY0MjIKMC40MDgyNDgyOTA0NjM4NjMwNyAwLjQwODI0ODI5MDQ2Mzg2MzA3IDAuODE2NDk2NTgwOTI3NzI2MTUKLTUuMjYyODA0NjY0MjkyMzMwMmUtMTcgMC41NTEyMjE5MDc5MTU1Nzc0NiAwLjg2MjIxMjMzMDUwNzQ5MjI0Ci0wLjM4MjY4MzQzMjM2NTA4OTczIDAuOTIzODc5NTMyNTExMjg2NzQgMAotMC40MDgyNDgyOTA0NjM4NjMwNyAwLjgxNjQ5NjU4MDkyNzcyNjE1IDAuNDA4MjQ4MjkwNDYzODYzMDcKLTAuOTkxNjE4MTcwNjYyNjY0ODkgOC41MTU4ODUyNzg4NDQwMzY4ZS0xNyAwLjIwMDgwODkxOTA5NjkwMTgyCi0wLjgxNjQ5NjU4MDkyNzcyNjE1IDAuNDA4MjQ4MjkwNDYzODYzMDcgMC40MDgyNDgyOTA0NjM4NjMwNwotMC45MjM4Nzk1MzI1MTEyODY3NCAwLjM4MjY4MzQzMjM2NTA4OTczIDAKLTAuNDA4MjQ4MjkwNDYzODYzMDcgMC40MDgyNDgyOTA0NjM4NjMwNyAwLjgxNjQ5NjU4MDkyNzcyNjE1Ci0wLjM4MjY4MzQzMjM2NTA4OTczIDAgMC45MjM4Nzk1MzI1MTEyODY3NAotMC45MjM4Nzk1MzI1MTEyODY3NCAtMC4zODI2ODM0MzIzNjUwODk3MyAwCi0wLjgxNjQ5NjU4MDkyNzcyNjE1IC0wLjQwODI0ODI5MDQ2Mzg2MzA3IDAuNDA4MjQ4MjkwNDYzODYzMDcKMCAtMC45MjM4Nzk1MzI1MTEyODY3NCAwLjM4MjY4MzQzMjM2NTA4OTczCi0wLjQwODI0ODI5MDQ2Mzg2MzA3IC0wLjgxNjQ5NjU4MDkyNzcyNjE1IDAuNDA4MjQ4MjkwNDYzODYzMDcKLTAuNDA4MjQ4MjkwNDYzODYzMDcgLTAuNDA4MjQ4MjkwNDYzODYzMDcgMC44MTY0OTY1ODA5Mjc3MjYxNQo1LjI2MjgwNDY2NDI5MjMzMDJlLTE3IC0wLjU1MTIyMTkwNzkxNTU3NzQ2IDAuODYyMjEyMzMwNTA3NDkyMjQKMC4zODI2ODM0MzIzNjUwODk3MyAtMC45MjM4Nzk1MzI1MTEyODY3NCAwCjAuNDA4MjQ4MjkwNDYzODYzMDcgLTAuODE2NDk2NTgwOTI3NzI2MTUgMC40MDgyNDgyOTA0NjM4NjMwNwowLjgxNjQ5NjU4MDkyNzcyNjE1IC0wLjQwODI0ODI5MDQ2Mzg2MzA3IDAuNDA4MjQ4MjkwNDYzODYzMDcKMC45MjM4Nzk1MzI1MTEyODY3NCAtMC4zODI2ODM0MzIzNjUwODk3MyAwCjAuNDA4MjQ4MjkwNDYzODYzMDcgLTAuNDA4MjQ4MjkwNDYzODYzMDcgMC44MTY0OTY1ODA5Mjc3MjYxNQowLjQwODI0ODI5MDQ2Mzg2MzA3IDAuODE2NDk2NTgwOTI3NzI2MTUgLTAuNDA4MjQ4MjkwNDYzODYzMDcKLTUuMjYyODA0NjY0MjkyMzMwMmUtMTcgMC44NjIyMTIzMzA1MDc0OTIyNCAtMC41NTEyMjE5MDc5MTU1Nzc0NgowLjkyMzg3OTUzMjUxMTI4Njc0IDAgLTAuMzgyNjgzNDMyMzY1MDg5NzMKMC44MTY0OTY1ODA5Mjc3MjYxNSAwLjQwODI0ODI5MDQ2Mzg2MzA3IC0wLjQwODI0ODI5MDQ2Mzg2MzA3CjAgMC4zODI2ODM0MzIzNjUwODk3MyAtMC45MjM4Nzk1MzI1MTEyODY3NAowLjQwODI0ODI5MDQ2Mzg2MzA3IDAuNDA4MjQ4MjkwNDYzODYzMDcgLTAuODE2NDk2NTgwOTI3NzI2MTUKMC4zODI2ODM0MzIzNjUwODk3MyAwIC0wLjkyMzg3OTUzMjUxMTI4Njc0Ci0wLjgxNjQ5NjU4MDkyNzcyNjE1IDAuNDA4MjQ4MjkwNDYzODYzMDcgLTAuNDA4MjQ4MjkwNDYzODYzMDcKLTAuOTIzODc5NTMyNTExMjg2NzQgMCAtMC4zODI2ODM0MzIzNjUwODk3MwotMC40MDgyNDgyOTA0NjM4NjMwNyAwLjgxNjQ5NjU4MDkyNzcyNjE1IC0wLjQwODI0ODI5MDQ2Mzg2MzA3Ci0wLjIwMDgwODkxOTA5NjkwMjE4IDguNTE1ODg1Mjc4ODQ0MDM0M2UtMTcgLTAuOTkxNjE4MTcwNjYyNjY0MjIKLTAuNDA4MjQ4MjkwNDYzODYzMDcgMC40MDgyNDgyOTA0NjM4NjMwNyAtMC44MTY0OTY1ODA5Mjc3MjYxNQotMC40MDgyNDgyOTA0NjM4NjMwNyAtMC44MTY0OTY1ODA5Mjc3MjYxNSAtMC40MDgyNDgyOTA0NjM4NjMwNwo1LjI2MjgwNDY2NDI5MjMzMDJlLTE3IC0wLjg2MjIxMjMzMDUwNzQ5MjI0IC0wLjU1MTIyMTkwNzkxNTU3NzQ2Ci0wLjgxNjQ5NjU4MDkyNzcyNjE1IC0wLjQwODI0ODI5MDQ2Mzg2MzA3IC0wLjQwODI0ODI5MDQ2Mzg2MzA3CjAgLTAuMzgyNjgzNDMyMzY1MDg5NzMgLTAuOTIzODc5NTMyNTExMjg2NzQKLTAuNDA4MjQ4MjkwNDYzODYzMDcgLTAuNDA4MjQ4MjkwNDYzODYzMDcgLTAuODE2NDk2NTgwOTI3NzI2MTUKMC44MTY0OTY1ODA5Mjc3MjYxNSAtMC40MDgyNDgyOTA0NjM4NjMwNyAtMC40MDgyNDgyOTA0NjM4NjMwNwowLjQwODI0ODI5MDQ2Mzg2MzA3IC0wLjgxNjQ5NjU4MDkyNzcyNjE1IC0wLjQwODI0ODI5MDQ2Mzg2MzA3CjAuNDA4MjQ4MjkwNDYzODYzMDcgLTAuNDA4MjQ4MjkwNDYzODYzMDcgLTAuODE2NDk2NTgwOTI3NzI2MTUKMyAgMyAxMiAxMQozICA0IDAgMTIKMyAgMCAxMSAxMgozICAxNyAxNCAxMwozICAzIDEgMTQKMyAgMSAxMyAxNAozICA0IDE2IDE1CjMgIDE1IDE2IDE3CjMgIDMgMTQgMTIKMyAgMTcgMTYgMTQKMyAgNCAxMiAxNgozICAxNCAxNiAxMgozICAxIDE4IDEzCjMgIDUgMTkgMTgKMyAgMTcgMTMgMTkKMyAgMTggMTkgMTMKMyAgNiAyMSAyMAozICA1IDIyIDIxCjMgIDIwIDIxIDIyCjMgIDE1IDE3IDI0CjMgIDYgMjQgMjMKMyAgMTcgMjMgMjQKMyAgNSAyMSAxOQozICA2IDIzIDIxCjMgIDE3IDE5IDIzCjMgIDIxIDIzIDE5CjMgIDcgMjYgMjUKMyAgNiAyMCAyNgozICAyMCAyNSAyNgozICAzMCAyOCAyNwozICA3IDIgMjgKMyAgMiAyNyAyOAozICAxNSAyNCAzMAozICA2IDI5IDI0CjMgIDI0IDI5IDMwCjMgIDcgMjggMjYKMyAgMzAgMjkgMjgKMyAgNiAyNiAyOQozICAyOCAyOSAyNgozICAyIDMxIDI3CjMgIDggMzIgMzEKMyAgMzAgMjcgMzIKMyAgMzEgMzIgMjcKMyAgNCAzMyAwCjMgIDggMzQgMzMKMyAgMCAzMyAzNAozICA0IDE1IDM1CjMgIDMwIDM1IDE1CjMgIDggMzMgMzIKMyAgNCAzNSAzMwozICAzMCAzMiAzNQozICAzMyAzNSAzMgozICAzIDM2IDEKMyAgMSAzNiAzNwozICAwIDM4IDExCjMgIDkgMzkgMzgKMyAgMyAxMSAzOQozICAzOCAzOSAxMQozICA0NiA0MCA0MgozICAzNyA0MSA0MAozICA5IDQyIDQxCjMgIDQwIDQxIDQyCjMgIDMgMzkgMzYKMyAgOSA0MSAzOQozICAzNyAzNiA0MQozICAzOSA0MSAzNgozICAyMCAyMiA0NAozICA1IDQzIDIyCjMgIDEwIDQ0IDQzCjMgIDIyIDQzIDQ0CjMgIDEgMzcgMTgKMyAgNSAxOCA0NQozICAzNyA0NSAxOAozICAxMCA0NyA0NgozICAzNyA0MCA0NwozICA0NiA0NyA0MAozICA1IDQ1IDQzCjMgIDM3IDQ3IDQ1CjMgIDEwIDQzIDQ3CjMgIDQ1IDQ3IDQzCjMgIDcgNDggMgozICAyIDQ4IDQ5CjMgIDIwIDQ0IDI1CjMgIDEwIDUwIDQ0CjMgIDcgMjUgNTAKMyAgNDQgNTAgMjUKMyAgNDkgNTIgNTEKMyAgMTAgNDYgNTIKMyAgNDYgNTEgNTIKMyAgNyA1MCA0OAozICAxMCA1MiA1MAozICA0OSA0OCA1MgozICA1MCA1MiA0OAozICAwIDM0IDM4CjMgIDggNTMgMzQKMyAgOSAzOCA1MwozICAzNCA1MyAzOAozICAyIDQ5IDMxCjMgIDggMzEgNTQKMyAgNDkgNTQgMzEKMyAgNDYgNDIgNTEKMyAgOSA1NSA0MgozICA0OSA1MSA1NQozICA0MiA1NSA1MQozICA4IDU0IDUzCjMgIDQ5IDU1IDU0CjMgIDkgNTMgNTUKMyAgNTQgNTUgNTMKCg=="
-    },
-    "911e33258a94390176b0f46f178d04b3376acd808311eff74fde5bd98074b64b": {
-      "encoding": "base64",
-      "byte_size": 882,
-      "content": "T0ZGCjExIDIyIDAKCjEuNzM0MzIxNzEwMTIzODY0OCAxLjg0OTgzNjE2NTQ3NjAzOTEgMC42NzUxMzIyODU3MjYyMjc0MQoxLjkyMDEzMzU3NjM3NjcwMiAxLjQ2NTkxMTE0NTg0OTE0MDMgLTAuNjA0NjI3MzczODc1NTkzOTUKLTAuOTgxNDc5NTUxMzQyNTUzODIgMi4xODY5NTIwMjAxOTk1ODc2IC0wLjYyOTQ4MDk3OTM4NjA3NDI4Ci0xLjE0OTAwMDA2OTc5MjYyOTcgMS4xMDQwMTE3Mjg1MzEyMzI3IDAuMTk4MTU4OTk5MTA5NzU3ODQKLTIuMjE2NTI4Mjg2MDYwMTEyOCAxLjA1NzU4NzYxMTExMjU5ODQgMC41MTk1NDcyMjc4NjY4NjkyNAotMi4xNzc3OTMwNTE3NDU1OTQzIC0wLjc0ODcyMTc5ODI3NTkxNDU2IC0wLjYwNzIxNzM1Njc2OTk4OTc4Ci0xLjI1MDEyMzg1MTU1MjYxNTYgLTEuOTIyOTczMDQ2NzQyODg5NiAwLjYwNjcwNjI4MzMxODQ1ODMzCi0wLjczODc1OTM1MDE1Mzk4MDMxIC0xLjI3OTU2ODcyOTAzMzI2MDUgLTEuNjA5OTcyOTY3NTc3NjM1OGUtMTYKMS41NDIwNTIwOTczNDUyMTAxIC0yLjM1NjA2NjgzMzgzODI2NDkgMC4yOTM2MTg0NjM2Nzg4MDE4NAowLjM4MTgwNzQ4MzQ0OTMyMzkxIC0yLjI0MTM4MzYwODc5ODQ4MzUgLTAuNjIxNzY3MzYyMjQ1NDM0MjcKMS41NTc5MzgxNjA4MDA4NTkzIDAuMTYwNzYxMzU0MDc0MDQxNjMgMC4wMjU2NjEwOTcwNzc0OTk4NTEKMyAgMTAgOCAwCjMgIDAgMyAxMAozICAwIDEgMgozICAzIDIgMTAKMyAgMiAxIDEwCjMgIDIgNCAwCjMgIDMgMCA0CjMgIDUgMiAzCjMgIDIgNSA0CjMgIDQgNSA2CjMgIDYgNyA0CjMgIDcgMyA0CjMgIDcgNSAzCjMgIDUgOSA2CjMgIDkgNSA3CjMgIDggNiA5CjMgIDcgNiAxMAozICA5IDcgMTAKMyAgMTAgNiA4CjMgIDEwIDEgOQozICA4IDkgMQozICAwIDggMQoK"
     },
     "9715210bf31a8632b3c6e5df826b6aa65ea41e056e8a810083d75feb9d2e5875": {
       "encoding": "base64",
@@ -1082,6 +1867,11 @@
       "byte_size": 447,
       "content": "eyJkaXN0YW5jZV9lc3RpbWF0ZSI6eyJ1bml0IjoibW0iLCJ2YWx1ZSI6MC4wNDYxMjM4MTEzMDkwMzM2OX0sImVmZmVjdGl2ZV9jb25jdXJyZW5jeSI6InNlcXVlbnRpYWwiLCJlZmZlY3RpdmVfa2VybmVsIjoiQ0dBTDo6RXhhY3RfcHJlZGljYXRlc19pbmV4YWN0X2NvbnN0cnVjdGlvbnNfa2VybmVsIiwiZXJyb3JfYm91bmQiOnsidW5pdCI6Im1tIiwidmFsdWUiOjAuMDF9LCJsb3dlcl9ib3VuZCI6eyJ1bml0IjoibW0iLCJ2YWx1ZSI6MC4wMzYxMjM4MTEzMDkwMzM2ODZ9LCJtZXRob2QiOiJib3VuZGVkX2Vycm9yX3N5bW1ldHJpYyIsInN0YXR1cyI6InBhc3MiLCJ0b2xlcmFuY2UiOnsidW5pdCI6Im1tIiwidmFsdWUiOjIuMH0sInVwcGVyX2JvdW5kIjp7InVuaXQiOiJtbSIsInZhbHVlIjowLjA1NjEyMzgxMTMwOTAzMzY5fSwidmFsaWQiOnRydWUsInZlcmRpY3QiOiJwYXNzIn0K"
     },
+    "af444c54dcad1cd6c0157196f44e5c873006102f38d3c6ddb829456f86b5b294": {
+      "encoding": "base64",
+      "byte_size": 1554,
+      "content": "T0ZGCjE5IDM4IDAKCjEuOTI0Mzg2OTk5MDYwMzExNSAwLjc2MTc5NDA1NzYwOTE4NTczIDAuNjQ2ODYzNDc3MTQ0OTg2MDQKMS4zMTEyNTQ5Njk1ODIzNjgxIDIuMjI2ODYyNzAyNjMxNTU3NSAwLjIyNjA2NTQ3NjAwODkxMzMzCjAuMDkzNDc5NTgwNjgzMTM3Nzg5IDIuMjU5NTk2NDU0ODcxODMxNSAwLjU4MzcxMTM1MjU2MTgxMTg0CjEuMDA0NDczNTIyODIwMjcxNyAxLjgyNzc4NDg0OTU5MTc2NTcgLTAuNjIwOTE5MTQ0MjM5OTA5MjQKLTAuNDY1NjQxODA0NjU2Mzg0MzMgMi40NzA1NzE3ODk5ODQxOTk5IC0wLjQ4NTMwNTc0OTAxNzYwNzg3Ci0wLjM1NDgzMjgyNDI4ODExMzA4IDEuNDU0OTU1ODQ5NjIzODkzOSAwLjA2NzM0NTYzNzc3MTYxNDc4NgotMS45MzYxNDcyODkyODU5MjQyIDEuOTM2MTQ3Mjg5Mjg1OTI2NiAtMi4wMDQyMTYxNjcwNjIyOTcxZS0xNgotMi4yMTg5NDE1NTAyMTAwNzc2IDAuNzQ0NTU0Nzk0NzY5NzIyNDIgMC41NjU4NjE2OTEzMjExNzQ3Ci0yLjUwMTcyOTE0NjE4MzI2ODIgLTAuNzI2NzE3MzM2ODk1MjIyMjIgLTAuMzk5OTYwMTYyOTU5MzAzOTIKLTEuMzYxMDE4MDQ4MTYyOTA2NiAtMC4yMTAwNzMzNTYyOTE2NjY0IC0wLjAzMTEzMjk1MDQ2NDA4OTI2Ci0xLjgxMDQxODE4NDkyMDc4OSAtMS4wNzAxNzkyOTY2MTE2MDg2IDAuNjI1MTM5MzAwNjY5MzE5NTUKLTAuNzM4MTk4MzA0MzE4NDI3ODEgLTIuNTU0NDE2MjcwODMxNjY1MyAwLjIzNjE5NzMyMDQzNzc5NzQ1Ci0wLjM3Mjc2MjQxNzkzNzE4NDk1IC0xLjQxNDExODk3MDM4MDQ0NCAtMC4yNjIyMDE2NjExMzAzNTUzMQotMC40OTM1ODkxMzEyNjI1MzIyMyAtMi4zMDcwNTk0OTU1ODEwNjI2IC0wLjU3OTg2ODM5MDM4NTUxNjQxCjAuOTgzNzgwNjc4NDQ4MDU3MTcgLTEuODQzODc2MTg3MzU3MTY3MiAwLjYyMjc0ODA3MTYxMDg3MTMxCjEuOTE2NTA2NjE5OTg2MTg0NyAtMS44NDMwOTAyMzAyMjEzMjQ2IC0wLjIzNjE5NzMyMDQzNzc5ODkyCjEuNTM2NzYzNTExMTQ2ODkyIC0wLjQzMzc2ODA2NzY4MzQzNzM0IC0wLjIxOTcxNDkwODM5NjAwNzI0CjIuNTY1Mzc2NDE2NjE4MDUwNCAtMC41MDc5NzAwMTY2OTg5NTIwMyAwLjMxNjYzNjQ2NzA5NjAzNzkzCjIuMzU4NjUxMjIyMTk1NDExNSAwLjkzNjI2MzY1NzU3NTY4NDMgLTAuNDQ3NDg2MzE0MDgxMzUzMDkKMyAgMCAxNyAxOAozICAxNiAzIDE4CjMgIDE4IDEgMAozICAwIDEgMgozICAwIDIgNQozICAwIDUgMTYKMyAgNSAzIDE2CjMgIDE4IDMgMQozICAyIDEgNAozICAzIDQgMQozICA0IDYgMgozICA0IDMgNQozICA2IDcgMgozICAyIDcgOQozICA1IDIgOQozICA1IDggNAozICA2IDQgOAozICA3IDYgOAozICA1IDkgOAozICA4IDEwIDcKMyAgOSA3IDEwCjMgIDkgMTMgOAozICA4IDExIDEwCjMgIDkgMTAgMTIKMyAgOSAxMiAxMwozICA4IDEzIDExCjMgIDExIDE0IDEwCjMgIDEwIDE0IDEyCjMgIDE0IDExIDE1CjMgIDE0IDE2IDEyCjMgIDEzIDEyIDE2CjMgIDExIDEzIDE1CjMgIDE1IDE3IDE0CjMgIDE2IDE4IDEzCjMgIDE1IDEzIDE4CjMgIDE0IDE3IDAKMyAgMTYgMTQgMAozICAxOCAxNyAxNQoK"
+    },
     "b32ebc7f61357abd71985b8c28230f5684526f537b5d6e444a09d5a4322a451a": {
       "encoding": "base64",
       "byte_size": 400,
@@ -1091,16 +1881,6 @@
       "encoding": "base64",
       "byte_size": 7702,
       "content": "T0ZGDQo5NiAxOTIgMA0KMi42MDAwMDAwMDAwMDAwMDAxIDAgMA0KMi40MjQyNjQwNjg3MTE5Mjg2IDAgMC40MjQyNjQwNjg3MTE5Mjg1MQ0KMiAwIDAuNTk5OTk5OTk5OTk5OTk5OTgNCjEuNTc1NzM1OTMxMjg4MDcxNCAwIDAuNDI0MjY0MDY4NzExOTI4NTENCjEuMzk5OTk5OTk5OTk5OTk5OSAwIDcuMzQ3ODgwNzk0ODg0MTE5ZS0xNw0KMS41NzU3MzU5MzEyODgwNzE0IDAgLTAuNDI0MjY0MDY4NzExOTI4NDUNCjIgMCAtMC41OTk5OTk5OTk5OTk5OTk5OA0KMi40MjQyNjQwNjg3MTE5Mjg2IDAgLTAuNDI0MjY0MDY4NzExOTI4NjINCjIuMjUxNjY2MDQ5ODM5NTQwNyAxLjI5OTk5OTk5OTk5OTk5OTggMA0KMi4wOTk0NzQyNjg5ODYzNTQ0IDEuMjEyMTMyMDM0MzU1OTY0MSAwLjQyNDI2NDA2ODcxMTkyODUxDQoxLjczMjA1MDgwNzU2ODg3NzQgMC45OTk5OTk5OTk5OTk5OTk4OSAwLjU5OTk5OTk5OTk5OTk5OTk4DQoxLjM2NDYyNzM0NjE1MTQwMDcgMC43ODc4Njc5NjU2NDQwMzU2MSAwLjQyNDI2NDA2ODcxMTkyODUxDQoxLjIxMjQzNTU2NTI5ODIxNDIgMC42OTk5OTk5OTk5OTk5OTk4NCA3LjM0Nzg4MDc5NDg4NDExOWUtMTcNCjEuMzY0NjI3MzQ2MTUxNDAwNyAwLjc4Nzg2Nzk2NTY0NDAzNTYxIC0wLjQyNDI2NDA2ODcxMTkyODQ1DQoxLjczMjA1MDgwNzU2ODg3NzQgMC45OTk5OTk5OTk5OTk5OTk4OSAtMC41OTk5OTk5OTk5OTk5OTk5OA0KMi4wOTk0NzQyNjg5ODYzNTQ0IDEuMjEyMTMyMDM0MzU1OTY0MSAtMC40MjQyNjQwNjg3MTE5Mjg2Mg0KMS4zMDAwMDAwMDAwMDAwMDAzIDIuMjUxNjY2MDQ5ODM5NTQwMiAwDQoxLjIxMjEzMjAzNDM1NTk2NDUgMi4wOTk0NzQyNjg5ODYzNTM5IDAuNDI0MjY0MDY4NzExOTI4NTENCjEuMDAwMDAwMDAwMDAwMDAwMiAxLjczMjA1MDgwNzU2ODg3NzIgMC41OTk5OTk5OTk5OTk5OTk5OA0KMC43ODc4Njc5NjU2NDQwMzU5NCAxLjM2NDYyNzM0NjE1MTQwMDUgMC40MjQyNjQwNjg3MTE5Mjg1MQ0KMC43MDAwMDAwMDAwMDAwMDAwNyAxLjIxMjQzNTU2NTI5ODIxMzkgNy4zNDc4ODA3OTQ4ODQxMTllLTE3DQowLjc4Nzg2Nzk2NTY0NDAzNTk0IDEuMzY0NjI3MzQ2MTUxNDAwNSAtMC40MjQyNjQwNjg3MTE5Mjg0NQ0KMS4wMDAwMDAwMDAwMDAwMDAyIDEuNzMyMDUwODA3NTY4ODc3MiAtMC41OTk5OTk5OTk5OTk5OTk5OA0KMS4yMTIxMzIwMzQzNTU5NjQ1IDIuMDk5NDc0MjY4OTg2MzUzOSAtMC40MjQyNjQwNjg3MTE5Mjg2Mg0KMS41OTIwNDA4Mzg4OTE1NTkzZS0xNiAyLjYwMDAwMDAwMDAwMDAwMDEgMA0KMS40ODQ0MzM2MTYwMTgwMDEzZS0xNiAyLjQyNDI2NDA2ODcxMTkyODYgMC40MjQyNjQwNjg3MTE5Mjg1MQ0KMS4yMjQ2NDY3OTkxNDczNTMyZS0xNiAyIDAuNTk5OTk5OTk5OTk5OTk5OTgNCjkuNjQ4NTk5ODIyNzY3MDUxNWUtMTcgMS41NzU3MzU5MzEyODgwNzE0IDAuNDI0MjY0MDY4NzExOTI4NTENCjguNTcyNTI3NTk0MDMxNDcyZS0xNyAxLjM5OTk5OTk5OTk5OTk5OTkgNy4zNDc4ODA3OTQ4ODQxMTllLTE3DQo5LjY0ODU5OTgyMjc2NzA1MTVlLTE3IDEuNTc1NzM1OTMxMjg4MDcxNCAtMC40MjQyNjQwNjg3MTE5Mjg0NQ0KMS4yMjQ2NDY3OTkxNDczNTMyZS0xNiAyIC0wLjU5OTk5OTk5OTk5OTk5OTk4DQoxLjQ4NDQzMzYxNjAxODAwMTNlLTE2IDIuNDI0MjY0MDY4NzExOTI4NiAtMC40MjQyNjQwNjg3MTE5Mjg2Mg0KLTEuMjk5OTk5OTk5OTk5OTk5NCAyLjI1MTY2NjA0OTgzOTU0MDcgMA0KLTEuMjEyMTMyMDM0MzU1OTYzOCAyLjA5OTQ3NDI2ODk4NjM1NDQgMC40MjQyNjQwNjg3MTE5Mjg1MQ0KLTAuOTk5OTk5OTk5OTk5OTk5NTYgMS43MzIwNTA4MDc1Njg4Nzc0IDAuNTk5OTk5OTk5OTk5OTk5OTgNCi0wLjc4Nzg2Nzk2NTY0NDAzNTM4IDEuMzY0NjI3MzQ2MTUxNDAwNyAwLjQyNDI2NDA2ODcxMTkyODUxDQotMC42OTk5OTk5OTk5OTk5OTk2MiAxLjIxMjQzNTU2NTI5ODIxNDIgNy4zNDc4ODA3OTQ4ODQxMTllLTE3DQotMC43ODc4Njc5NjU2NDQwMzUzOCAxLjM2NDYyNzM0NjE1MTQwMDcgLTAuNDI0MjY0MDY4NzExOTI4NDUNCi0wLjk5OTk5OTk5OTk5OTk5OTU2IDEuNzMyMDUwODA3NTY4ODc3NCAtMC41OTk5OTk5OTk5OTk5OTk5OA0KLTEuMjEyMTMyMDM0MzU1OTYzOCAyLjA5OTQ3NDI2ODk4NjM1NDQgLTAuNDI0MjY0MDY4NzExOTI4NjINCi0yLjI1MTY2NjA0OTgzOTU0MDcgMS4yOTk5OTk5OTk5OTk5OTk4IDANCi0yLjA5OTQ3NDI2ODk4NjM1NDQgMS4yMTIxMzIwMzQzNTU5NjQxIDAuNDI0MjY0MDY4NzExOTI4NTENCi0xLjczMjA1MDgwNzU2ODg3NzQgMC45OTk5OTk5OTk5OTk5OTk4OSAwLjU5OTk5OTk5OTk5OTk5OTk4DQotMS4zNjQ2MjczNDYxNTE0MDA3IDAuNzg3ODY3OTY1NjQ0MDM1NjEgMC40MjQyNjQwNjg3MTE5Mjg1MQ0KLTEuMjEyNDM1NTY1Mjk4MjE0MiAwLjY5OTk5OTk5OTk5OTk5OTg0IDcuMzQ3ODgwNzk0ODg0MTE5ZS0xNw0KLTEuMzY0NjI3MzQ2MTUxNDAwNyAwLjc4Nzg2Nzk2NTY0NDAzNTYxIC0wLjQyNDI2NDA2ODcxMTkyODQ1DQotMS43MzIwNTA4MDc1Njg4Nzc0IDAuOTk5OTk5OTk5OTk5OTk5ODkgLTAuNTk5OTk5OTk5OTk5OTk5OTgNCi0yLjA5OTQ3NDI2ODk4NjM1NDQgMS4yMTIxMzIwMzQzNTU5NjQxIC0wLjQyNDI2NDA2ODcxMTkyODYyDQotMi42MDAwMDAwMDAwMDAwMDAxIDMuMTg0MDgxNjc3NzgzMTE4N2UtMTYgMA0KLTIuNDI0MjY0MDY4NzExOTI4NiAyLjk2ODg2NzIzMjAzNjAwMjVlLTE2IDAuNDI0MjY0MDY4NzExOTI4NTENCi0yIDIuNDQ5MjkzNTk4Mjk0NzA2NGUtMTYgMC41OTk5OTk5OTk5OTk5OTk5OA0KLTEuNTc1NzM1OTMxMjg4MDcxNCAxLjkyOTcxOTk2NDU1MzQxMDNlLTE2IDAuNDI0MjY0MDY4NzExOTI4NTENCi0xLjM5OTk5OTk5OTk5OTk5OTkgMS43MTQ1MDU1MTg4MDYyOTQ0ZS0xNiA3LjM0Nzg4MDc5NDg4NDExOWUtMTcNCi0xLjU3NTczNTkzMTI4ODA3MTQgMS45Mjk3MTk5NjQ1NTM0MTAzZS0xNiAtMC40MjQyNjQwNjg3MTE5Mjg0NQ0KLTIgMi40NDkyOTM1OTgyOTQ3MDY0ZS0xNiAtMC41OTk5OTk5OTk5OTk5OTk5OA0KLTIuNDI0MjY0MDY4NzExOTI4NiAyLjk2ODg2NzIzMjAzNjAwMjVlLTE2IC0wLjQyNDI2NDA2ODcxMTkyODYyDQotMi4yNTE2NjYwNDk4Mzk1NDExIC0xLjI5OTk5OTk5OTk5OTk5OTQgMA0KLTIuMDk5NDc0MjY4OTg2MzU0NCAtMS4yMTIxMzIwMzQzNTU5NjM2IDAuNDI0MjY0MDY4NzExOTI4NTENCi0xLjczMjA1MDgwNzU2ODg3NzYgLTAuOTk5OTk5OTk5OTk5OTk5NDQgMC41OTk5OTk5OTk5OTk5OTk5OA0KLTEuMzY0NjI3MzQ2MTUxNDAwOSAtMC43ODc4Njc5NjU2NDQwMzUyNyAwLjQyNDI2NDA2ODcxMTkyODUxDQotMS4yMTI0MzU1NjUyOTgyMTQyIC0wLjY5OTk5OTk5OTk5OTk5OTYyIDcuMzQ3ODgwNzk0ODg0MTE5ZS0xNw0KLTEuMzY0NjI3MzQ2MTUxNDAwOSAtMC43ODc4Njc5NjU2NDQwMzUyNyAtMC40MjQyNjQwNjg3MTE5Mjg0NQ0KLTEuNzMyMDUwODA3NTY4ODc3NiAtMC45OTk5OTk5OTk5OTk5OTk0NCAtMC41OTk5OTk5OTk5OTk5OTk5OA0KLTIuMDk5NDc0MjY4OTg2MzU0NCAtMS4yMTIxMzIwMzQzNTU5NjM2IC0wLjQyNDI2NDA2ODcxMTkyODYyDQotMS4zMDAwMDAwMDAwMDAwMDEyIC0yLjI1MTY2NjA0OTgzOTU0MDIgMA0KLTEuMjEyMTMyMDM0MzU1OTY1NCAtMi4wOTk0NzQyNjg5ODYzNTM1IDAuNDI0MjY0MDY4NzExOTI4NTENCi0xLjAwMDAwMDAwMDAwMDAwMDkgLTEuNzMyMDUwODA3NTY4ODc3IDAuNTk5OTk5OTk5OTk5OTk5OTgNCi0wLjc4Nzg2Nzk2NTY0NDAzNjM4IC0xLjM2NDYyNzM0NjE1MTQwMDIgMC40MjQyNjQwNjg3MTE5Mjg1MQ0KLTAuNzAwMDAwMDAwMDAwMDAwNjIgLTEuMjEyNDM1NTY1Mjk4MjEzNyA3LjM0Nzg4MDc5NDg4NDExOWUtMTcNCi0wLjc4Nzg2Nzk2NTY0NDAzNjM4IC0xLjM2NDYyNzM0NjE1MTQwMDIgLTAuNDI0MjY0MDY4NzExOTI4NDUNCi0xLjAwMDAwMDAwMDAwMDAwMDkgLTEuNzMyMDUwODA3NTY4ODc3IC0wLjU5OTk5OTk5OTk5OTk5OTk4DQotMS4yMTIxMzIwMzQzNTU5NjU0IC0yLjA5OTQ3NDI2ODk4NjM1MzUgLTAuNDI0MjY0MDY4NzExOTI4NjINCi00Ljc3NjEyMjUxNjY3NDY3NzNlLTE2IC0yLjYwMDAwMDAwMDAwMDAwMDEgMA0KLTQuNDUzMzAwODQ4MDU0MDAzMWUtMTYgLTIuNDI0MjY0MDY4NzExOTI4NiAwLjQyNDI2NDA2ODcxMTkyODUxDQotMy42NzM5NDAzOTc0NDIwNTk0ZS0xNiAtMiAwLjU5OTk5OTk5OTk5OTk5OTk4DQotMi44OTQ1Nzk5NDY4MzAxMTUyZS0xNiAtMS41NzU3MzU5MzEyODgwNzE0IDAuNDI0MjY0MDY4NzExOTI4NTENCi0yLjU3MTc1ODI3ODIwOTQ0MTVlLTE2IC0xLjM5OTk5OTk5OTk5OTk5OTkgNy4zNDc4ODA3OTQ4ODQxMTllLTE3DQotMi44OTQ1Nzk5NDY4MzAxMTUyZS0xNiAtMS41NzU3MzU5MzEyODgwNzE0IC0wLjQyNDI2NDA2ODcxMTkyODQ1DQotMy42NzM5NDAzOTc0NDIwNTk0ZS0xNiAtMiAtMC41OTk5OTk5OTk5OTk5OTk5OA0KLTQuNDUzMzAwODQ4MDU0MDAzMWUtMTYgLTIuNDI0MjY0MDY4NzExOTI4NiAtMC40MjQyNjQwNjg3MTE5Mjg2Mg0KMS4zMDAwMDAwMDAwMDAwMDAzIC0yLjI1MTY2NjA0OTgzOTU0MDIgMA0KMS4yMTIxMzIwMzQzNTU5NjQ1IC0yLjA5OTQ3NDI2ODk4NjM1MzkgMC40MjQyNjQwNjg3MTE5Mjg1MQ0KMS4wMDAwMDAwMDAwMDAwMDAyIC0xLjczMjA1MDgwNzU2ODg3NzIgMC41OTk5OTk5OTk5OTk5OTk5OA0KMC43ODc4Njc5NjU2NDQwMzU5NCAtMS4zNjQ2MjczNDYxNTE0MDA1IDAuNDI0MjY0MDY4NzExOTI4NTENCjAuNzAwMDAwMDAwMDAwMDAwMDcgLTEuMjEyNDM1NTY1Mjk4MjEzOSA3LjM0Nzg4MDc5NDg4NDExOWUtMTcNCjAuNzg3ODY3OTY1NjQ0MDM1OTQgLTEuMzY0NjI3MzQ2MTUxNDAwNSAtMC40MjQyNjQwNjg3MTE5Mjg0NQ0KMS4wMDAwMDAwMDAwMDAwMDAyIC0xLjczMjA1MDgwNzU2ODg3NzIgLTAuNTk5OTk5OTk5OTk5OTk5OTgNCjEuMjEyMTMyMDM0MzU1OTY0NSAtMi4wOTk0NzQyNjg5ODYzNTM5IC0wLjQyNDI2NDA2ODcxMTkyODYyDQoyLjI1MTY2NjA0OTgzOTUzOTggLTEuMzAwMDAwMDAwMDAwMDAxMiAwDQoyLjA5OTQ3NDI2ODk4NjM1MzUgLTEuMjEyMTMyMDM0MzU1OTY1NCAwLjQyNDI2NDA2ODcxMTkyODUxDQoxLjczMjA1MDgwNzU2ODg3NjcgLTEuMDAwMDAwMDAwMDAwMDAwOSAwLjU5OTk5OTk5OTk5OTk5OTk4DQoxLjM2NDYyNzM0NjE1MTQgLTAuNzg3ODY3OTY1NjQ0MDM2MzggMC40MjQyNjQwNjg3MTE5Mjg1MQ0KMS4yMTI0MzU1NjUyOTgyMTM3IC0wLjcwMDAwMDAwMDAwMDAwMDYyIDcuMzQ3ODgwNzk0ODg0MTE5ZS0xNw0KMS4zNjQ2MjczNDYxNTE0IC0wLjc4Nzg2Nzk2NTY0NDAzNjM4IC0wLjQyNDI2NDA2ODcxMTkyODQ1DQoxLjczMjA1MDgwNzU2ODg3NjcgLTEuMDAwMDAwMDAwMDAwMDAwOSAtMC41OTk5OTk5OTk5OTk5OTk5OA0KMi4wOTk0NzQyNjg5ODYzNTM1IC0xLjIxMjEzMjAzNDM1NTk2NTQgLTAuNDI0MjY0MDY4NzExOTI4NjINCjMgMCA4IDkNCjMgMCA5IDENCjMgMSA5IDEwDQozIDEgMTAgMg0KMyAyIDEwIDExDQozIDIgMTEgMw0KMyAzIDExIDEyDQozIDMgMTIgNA0KMyA0IDEyIDEzDQozIDQgMTMgNQ0KMyA1IDEzIDE0DQozIDUgMTQgNg0KMyA2IDE0IDE1DQozIDYgMTUgNw0KMyA3IDE1IDgNCjMgNyA4IDANCjMgOCAxNiAxNw0KMyA4IDE3IDkNCjMgOSAxNyAxOA0KMyA5IDE4IDEwDQozIDEwIDE4IDE5DQozIDEwIDE5IDExDQozIDExIDE5IDIwDQozIDExIDIwIDEyDQozIDEyIDIwIDIxDQozIDEyIDIxIDEzDQozIDEzIDIxIDIyDQozIDEzIDIyIDE0DQozIDE0IDIyIDIzDQozIDE0IDIzIDE1DQozIDE1IDIzIDE2DQozIDE1IDE2IDgNCjMgMTYgMjQgMjUNCjMgMTYgMjUgMTcNCjMgMTcgMjUgMjYNCjMgMTcgMjYgMTgNCjMgMTggMjYgMjcNCjMgMTggMjcgMTkNCjMgMTkgMjcgMjgNCjMgMTkgMjggMjANCjMgMjAgMjggMjkNCjMgMjAgMjkgMjENCjMgMjEgMjkgMzANCjMgMjEgMzAgMjINCjMgMjIgMzAgMzENCjMgMjIgMzEgMjMNCjMgMjMgMzEgMjQNCjMgMjMgMjQgMTYNCjMgMjQgMzIgMzMNCjMgMjQgMzMgMjUNCjMgMjUgMzMgMzQNCjMgMjUgMzQgMjYNCjMgMjYgMzQgMzUNCjMgMjYgMzUgMjcNCjMgMjcgMzUgMzYNCjMgMjcgMzYgMjgNCjMgMjggMzYgMzcNCjMgMjggMzcgMjkNCjMgMjkgMzcgMzgNCjMgMjkgMzggMzANCjMgMzAgMzggMzkNCjMgMzAgMzkgMzENCjMgMzEgMzkgMzINCjMgMzEgMzIgMjQNCjMgMzIgNDAgNDENCjMgMzIgNDEgMzMNCjMgMzMgNDEgNDINCjMgMzMgNDIgMzQNCjMgMzQgNDIgNDMNCjMgMzQgNDMgMzUNCjMgMzUgNDMgNDQNCjMgMzUgNDQgMzYNCjMgMzYgNDQgNDUNCjMgMzYgNDUgMzcNCjMgMzcgNDUgNDYNCjMgMzcgNDYgMzgNCjMgMzggNDYgNDcNCjMgMzggNDcgMzkNCjMgMzkgNDcgNDANCjMgMzkgNDAgMzINCjMgNDAgNDggNDkNCjMgNDAgNDkgNDENCjMgNDEgNDkgNTANCjMgNDEgNTAgNDINCjMgNDIgNTAgNTENCjMgNDIgNTEgNDMNCjMgNDMgNTEgNTINCjMgNDMgNTIgNDQNCjMgNDQgNTIgNTMNCjMgNDQgNTMgNDUNCjMgNDUgNTMgNTQNCjMgNDUgNTQgNDYNCjMgNDYgNTQgNTUNCjMgNDYgNTUgNDcNCjMgNDcgNTUgNDgNCjMgNDcgNDggNDANCjMgNDggNTYgNTcNCjMgNDggNTcgNDkNCjMgNDkgNTcgNTgNCjMgNDkgNTggNTANCjMgNTAgNTggNTkNCjMgNTAgNTkgNTENCjMgNTEgNTkgNjANCjMgNTEgNjAgNTINCjMgNTIgNjAgNjENCjMgNTIgNjEgNTMNCjMgNTMgNjEgNjINCjMgNTMgNjIgNTQNCjMgNTQgNjIgNjMNCjMgNTQgNjMgNTUNCjMgNTUgNjMgNTYNCjMgNTUgNTYgNDgNCjMgNTYgNjQgNjUNCjMgNTYgNjUgNTcNCjMgNTcgNjUgNjYNCjMgNTcgNjYgNTgNCjMgNTggNjYgNjcNCjMgNTggNjcgNTkNCjMgNTkgNjcgNjgNCjMgNTkgNjggNjANCjMgNjAgNjggNjkNCjMgNjAgNjkgNjENCjMgNjEgNjkgNzANCjMgNjEgNzAgNjINCjMgNjIgNzAgNzENCjMgNjIgNzEgNjMNCjMgNjMgNzEgNjQNCjMgNjMgNjQgNTYNCjMgNjQgNzIgNzMNCjMgNjQgNzMgNjUNCjMgNjUgNzMgNzQNCjMgNjUgNzQgNjYNCjMgNjYgNzQgNzUNCjMgNjYgNzUgNjcNCjMgNjcgNzUgNzYNCjMgNjcgNzYgNjgNCjMgNjggNzYgNzcNCjMgNjggNzcgNjkNCjMgNjkgNzcgNzgNCjMgNjkgNzggNzANCjMgNzAgNzggNzkNCjMgNzAgNzkgNzENCjMgNzEgNzkgNzINCjMgNzEgNzIgNjQNCjMgNzIgODAgODENCjMgNzIgODEgNzMNCjMgNzMgODEgODINCjMgNzMgODIgNzQNCjMgNzQgODIgODMNCjMgNzQgODMgNzUNCjMgNzUgODMgODQNCjMgNzUgODQgNzYNCjMgNzYgODQgODUNCjMgNzYgODUgNzcNCjMgNzcgODUgODYNCjMgNzcgODYgNzgNCjMgNzggODYgODcNCjMgNzggODcgNzkNCjMgNzkgODcgODANCjMgNzkgODAgNzINCjMgODAgODggODkNCjMgODAgODkgODENCjMgODEgODkgOTANCjMgODEgOTAgODINCjMgODIgOTAgOTENCjMgODIgOTEgODMNCjMgODMgOTEgOTINCjMgODMgOTIgODQNCjMgODQgOTIgOTMNCjMgODQgOTMgODUNCjMgODUgOTMgOTQNCjMgODUgOTQgODYNCjMgODYgOTQgOTUNCjMgODYgOTUgODcNCjMgODcgOTUgODgNCjMgODcgODggODANCjMgODggMCAxDQozIDg4IDEgODkNCjMgODkgMSAyDQozIDg5IDIgOTANCjMgOTAgMiAzDQozIDkwIDMgOTENCjMgOTEgMyA0DQozIDkxIDQgOTINCjMgOTIgNCA1DQozIDkyIDUgOTMNCjMgOTMgNSA2DQozIDkzIDYgOTQNCjMgOTQgNiA3DQozIDk0IDcgOTUNCjMgOTUgNyAwDQozIDk1IDAgODgNCg=="
-    },
-    "b5aafbe87f5b45a60f8261f6cd9b302cb3b2530742c40898b696bbab451b1261": {
-      "encoding": "base64",
-      "byte_size": 443,
-      "content": "eyJkaXN0YW5jZV9lc3RpbWF0ZSI6eyJ1bml0IjoibW0iLCJ2YWx1ZSI6MC44Njc3MzcxNzA2MTk3MDMyfSwiZWZmZWN0aXZlX2NvbmN1cnJlbmN5Ijoic2VxdWVudGlhbCIsImVmZmVjdGl2ZV9rZXJuZWwiOiJDR0FMOjpFeGFjdF9wcmVkaWNhdGVzX2luZXhhY3RfY29uc3RydWN0aW9uc19rZXJuZWwiLCJlcnJvcl9ib3VuZCI6eyJ1bml0IjoibW0iLCJ2YWx1ZSI6MC4wMX0sImxvd2VyX2JvdW5kIjp7InVuaXQiOiJtbSIsInZhbHVlIjowLjg1NzczNzE3MDYxOTcwMzJ9LCJtZXRob2QiOiJib3VuZGVkX2Vycm9yX3N5bW1ldHJpYyIsInN0YXR1cyI6InBhc3MiLCJ0b2xlcmFuY2UiOnsidW5pdCI6Im1tIiwidmFsdWUiOjIuMH0sInVwcGVyX2JvdW5kIjp7InVuaXQiOiJtbSIsInZhbHVlIjowLjg3NzczNzE3MDYxOTcwMzJ9LCJ2YWxpZCI6dHJ1ZSwidmVyZGljdCI6InBhc3MifQo="
-    },
-    "b8517e5d68bb730e08bb1f280cf11772fe3f6efa210f7bd025078586212dcd85": {
-      "encoding": "base64",
-      "byte_size": 440,
-      "content": "eyJkaXN0YW5jZV9lc3RpbWF0ZSI6eyJ1bml0IjoibW0iLCJ2YWx1ZSI6MC44NTQ0OTg1NDQxMDgwNjl9LCJlZmZlY3RpdmVfY29uY3VycmVuY3kiOiJzZXF1ZW50aWFsIiwiZWZmZWN0aXZlX2tlcm5lbCI6IkNHQUw6OkV4YWN0X3ByZWRpY2F0ZXNfaW5leGFjdF9jb25zdHJ1Y3Rpb25zX2tlcm5lbCIsImVycm9yX2JvdW5kIjp7InVuaXQiOiJtbSIsInZhbHVlIjowLjAxfSwibG93ZXJfYm91bmQiOnsidW5pdCI6Im1tIiwidmFsdWUiOjAuODQ0NDk4NTQ0MTA4MDY5fSwibWV0aG9kIjoiYm91bmRlZF9lcnJvcl9zeW1tZXRyaWMiLCJzdGF0dXMiOiJwYXNzIiwidG9sZXJhbmNlIjp7InVuaXQiOiJtbSIsInZhbHVlIjoyLjB9LCJ1cHBlcl9ib3VuZCI6eyJ1bml0IjoibW0iLCJ2YWx1ZSI6MC44NjQ0OTg1NDQxMDgwNjl9LCJ2YWxpZCI6dHJ1ZSwidmVyZGljdCI6InBhc3MifQo="
     },
     "c3e7a0624ca6d9afbb0cd675fa46b5b48e50f1545c0543ff5e20fb4a495aeb44": {
       "encoding": "base64",
@@ -1126,11 +1906,6 @@
       "encoding": "base64",
       "byte_size": 758,
       "content": "eyJib3VuZHNfdm9sdW1lIjp0cnVlLCJjYW5kaWRhdGVfYm9yZGVyX2NvdW50IjowLCJjYW5kaWRhdGVfY29tcG9uZW50X2NvdW50IjoxLCJjYW5kaWRhdGVfY29tcG9uZW50X3RvcG9sb2d5IjpbeyJib3JkZXJfY291bnQiOjAsImNsb3NlZCI6dHJ1ZSwiZXVsZXJfY2hhcmFjdGVyaXN0aWMiOjIsIm5lc3RpbmdfbGV2ZWwiOjAsIm9yaWVudGF0aW9uIjoib3V0d2FyZCJ9XSwiY2xvc2VkbmVzc19wcmVzZXJ2ZWQiOnRydWUsImNvbXBvbmVudF90b3BvbG9neV9wcmVzZXJ2ZWQiOnRydWUsImRlZ2VuZXJhdGVfZmFjZV9jb3VudCI6MCwiZWZmZWN0aXZlX2tlcm5lbCI6IkNHQUw6OkV4YWN0X3ByZWRpY2F0ZXNfaW5leGFjdF9jb25zdHJ1Y3Rpb25zX2tlcm5lbCIsIm5vbl9tYW5pZm9sZF92ZXJ0ZXhfY291bnQiOjAsIm9wZW5fc3VyZmFjZV93aW5kaW5nX3ByZXNlcnZlZCI6dHJ1ZSwicHJvdGVjdGVkX2VkZ2VfY291bnQiOjAsInByb3RlY3RlZF9lZGdlc19wcmVzZXJ2ZWQiOnRydWUsInNlbGZfaW50ZXJzZWN0aW9uIjpmYWxzZSwic291cmNlX2JvcmRlcl9jb3VudCI6MCwic291cmNlX2NvbXBvbmVudF9jb3VudCI6MSwic291cmNlX2NvbXBvbmVudF90b3BvbG9neSI6W3siYm9yZGVyX2NvdW50IjowLCJjbG9zZWQiOnRydWUsImV1bGVyX2NoYXJhY3RlcmlzdGljIjoyLCJuZXN0aW5nX2xldmVsIjowLCJvcmllbnRhdGlvbiI6Im91dHdhcmQifV0sInN0YXR1cyI6InBhc3MiLCJ0cmlhbmd1bGF0ZWQiOnRydWUsInZhbGlkIjp0cnVlfQo="
-    },
-    "defac27b8edf22d9de2542b01ad193b9be242e2f784fdb0191bdd89d1d123753": {
-      "encoding": "base64",
-      "byte_size": 883,
-      "content": "T0ZGCjExIDIyIDAKCjIuMzYzNzg4NDc3MDY2MDgzMSAwLjU4NzAwMzQ5Mzc4MDQxOTk0IDAuNTM5OTg5NDE4ODA2NjExMjIKMS45MjAxMzM1NzYzNzY3MDIgMS40NjU5MTExNDU4NDkxNDAzIC0wLjYwNDYyNzM3Mzg3NTU5Mzk1Ci0xLjA2ODQwNDMzMDMxOTQ3MTcgMi42ODA0NDY2MTQ3MzEzMjQ0IDAuNTYxODQwNzg1MjA5MTAwODYKLTAuOTgxNDc5NTUxMzQyNTUzODIgMi4xODY5NTIwMjAxOTk1ODc2IC0wLjYyOTQ4MDk3OTM4NjA3NDI4Ci0xLjE0OTAwMDA2OTc5MjYyOTcgMS4xMDQwMTE3Mjg1MzEyMzI3IDAuMTk4MTU4OTk5MTA5NzU3ODQKLTIuMTc3NzkzMDUxNzQ1NTk0MyAtMC43NDg3MjE3OTgyNzU5MTQ1NiAtMC42MDcyMTczNTY3Njk5ODk3OAotMS4yNTAxMjM4NTE1NTI2MTU2IC0xLjkyMjk3MzA0Njc0Mjg4OTYgMC42MDY3MDYyODMzMTg0NTgzMwotMC43Mzg3NTkzNTAxNTM5ODAzMSAtMS4yNzk1Njg3MjkwMzMyNjA1IC0xLjYwOTk3Mjk2NzU3NzYzNThlLTE2CjEuNTQyMDUyMDk3MzQ1MjEwMSAtMi4zNTYwNjY4MzM4MzgyNjQ5IDAuMjkzNjE4NDYzNjc4ODAxODQKMC4zODE4MDc0ODM0NDkzMjM5MSAtMi4yNDEzODM2MDg3OTg0ODM1IC0wLjYyMTc2NzM2MjI0NTQzNDI3CjEuNTU3OTM4MTYwODAwODU5MyAwLjE2MDc2MTM1NDA3NDA0MTYzIDAuMDI1NjYxMDk3MDc3NDk5ODUxCjMgIDEwIDggMAozICAxIDIgMAozICAyIDQgMAozICAxMCAwIDQKMyAgMSAzIDIKMyAgNCAzIDEwCjMgIDMgMSAxMAozICA1IDMgNAozICAyIDMgNQozICAyIDUgNgozICA2IDcgMgozICA3IDQgMgozICA3IDUgNAozICA1IDkgNgozICA5IDUgNwozICA4IDYgOQozICA3IDYgMTAKMyAgOSA3IDEwCjMgIDEwIDYgOAozICAxMCAxIDkKMyAgOCA5IDEKMyAgMCA4IDEKCg=="
     },
     "e5c541913ba7c8d7460d03e46686c63f227eba4324b6c3848445cf532c4afc92": {
       "encoding": "base64",
@@ -1651,10 +2426,10 @@
       "triangulated": true,
       "valid": true
     },
-    "9228ecdd2a900303d1a1c0a76ac1512eb8dcf86754f85e88370d617c58a66b75": {
+    "aadfc35afd229c5b69212b6e82d4cd0cccb40cafd963f2b2610935a4597bbe1c": {
       "distance_estimate": {
         "unit": "mm",
-        "value": 0.8677371706197032
+        "value": 0.5006913215605717
       },
       "effective_concurrency": "sequential",
       "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
@@ -1664,7 +2439,7 @@
       },
       "lower_bound": {
         "unit": "mm",
-        "value": 0.8577371706197032
+        "value": 0.4906913215605717
       },
       "method": "bounded_error_symmetric",
       "status": "pass",
@@ -1674,15 +2449,15 @@
       },
       "upper_bound": {
         "unit": "mm",
-        "value": 0.8777371706197032
+        "value": 0.5106913215605717
       },
       "valid": true,
       "verdict": "pass"
     },
-    "5f31f9d517c499f6eeaa98efa4468b2194a1aa21227e7ed03ea43111fbda47c3": {
+    "9b6cfd0005669b45f0615004414f1f73c75f22448f928f5304f0b2bfa344de07": {
       "distance_estimate": {
         "unit": "mm",
-        "value": 0.854498544108069
+        "value": 0.5784153444225327
       },
       "effective_concurrency": "sequential",
       "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
@@ -1692,7 +2467,7 @@
       },
       "lower_bound": {
         "unit": "mm",
-        "value": 0.844498544108069
+        "value": 0.5684153444225327
       },
       "method": "bounded_error_symmetric",
       "status": "pass",
@@ -1702,7 +2477,7 @@
       },
       "upper_bound": {
         "unit": "mm",
-        "value": 0.864498544108069
+        "value": 0.5884153444225327
       },
       "valid": true,
       "verdict": "pass"
@@ -1713,7 +2488,7 @@
       "case_id": "policy-lindstrom_turk",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "0311995fcf502da695de4334aa3810a0472906b9aad86f9be47fd986c51d741a",
+      "worker_manifest_sha256": "f4c2b15bfaa0cdfacc75f31966a4948b409e925a4a24ba1c5fff77face695c09",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -1846,7 +2621,7 @@
       "case_id": "policy-edge_length_midpoint",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "0311995fcf502da695de4334aa3810a0472906b9aad86f9be47fd986c51d741a",
+      "worker_manifest_sha256": "f4c2b15bfaa0cdfacc75f31966a4948b409e925a4a24ba1c5fff77face695c09",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -1979,7 +2754,7 @@
       "case_id": "policy-gh_plane",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "0311995fcf502da695de4334aa3810a0472906b9aad86f9be47fd986c51d741a",
+      "worker_manifest_sha256": "f4c2b15bfaa0cdfacc75f31966a4948b409e925a4a24ba1c5fff77face695c09",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -2112,7 +2887,7 @@
       "case_id": "policy-gh_triangle",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "0311995fcf502da695de4334aa3810a0472906b9aad86f9be47fd986c51d741a",
+      "worker_manifest_sha256": "f4c2b15bfaa0cdfacc75f31966a4948b409e925a4a24ba1c5fff77face695c09",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -2245,7 +3020,7 @@
       "case_id": "policy-gh_plane_line",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "0311995fcf502da695de4334aa3810a0472906b9aad86f9be47fd986c51d741a",
+      "worker_manifest_sha256": "f4c2b15bfaa0cdfacc75f31966a4948b409e925a4a24ba1c5fff77face695c09",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -2378,7 +3153,7 @@
       "case_id": "policy-gh_probabilistic_plane",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "0311995fcf502da695de4334aa3810a0472906b9aad86f9be47fd986c51d741a",
+      "worker_manifest_sha256": "f4c2b15bfaa0cdfacc75f31966a4948b409e925a4a24ba1c5fff77face695c09",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -2511,7 +3286,7 @@
       "case_id": "policy-gh_probabilistic_triangle",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "0311995fcf502da695de4334aa3810a0472906b9aad86f9be47fd986c51d741a",
+      "worker_manifest_sha256": "f4c2b15bfaa0cdfacc75f31966a4948b409e925a4a24ba1c5fff77face695c09",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -2644,7 +3419,7 @@
       "case_id": "stop-edge_count",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "0311995fcf502da695de4334aa3810a0472906b9aad86f9be47fd986c51d741a",
+      "worker_manifest_sha256": "f4c2b15bfaa0cdfacc75f31966a4948b409e925a4a24ba1c5fff77face695c09",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -2780,7 +3555,7 @@
       "case_id": "stop-edge_ratio",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "0311995fcf502da695de4334aa3810a0472906b9aad86f9be47fd986c51d741a",
+      "worker_manifest_sha256": "f4c2b15bfaa0cdfacc75f31966a4948b409e925a4a24ba1c5fff77face695c09",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -2916,7 +3691,7 @@
       "case_id": "stop-face_count",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "0311995fcf502da695de4334aa3810a0472906b9aad86f9be47fd986c51d741a",
+      "worker_manifest_sha256": "f4c2b15bfaa0cdfacc75f31966a4948b409e925a4a24ba1c5fff77face695c09",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -3052,7 +3827,7 @@
       "case_id": "stop-face_ratio",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "0311995fcf502da695de4334aa3810a0472906b9aad86f9be47fd986c51d741a",
+      "worker_manifest_sha256": "f4c2b15bfaa0cdfacc75f31966a4948b409e925a4a24ba1c5fff77face695c09",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -3188,7 +3963,7 @@
       "case_id": "stop-edge_length",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "0311995fcf502da695de4334aa3810a0472906b9aad86f9be47fd986c51d741a",
+      "worker_manifest_sha256": "f4c2b15bfaa0cdfacc75f31966a4948b409e925a4a24ba1c5fff77face695c09",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -3331,7 +4106,7 @@
       "case_id": "stop-edge_length-below-minimum",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "0311995fcf502da695de4334aa3810a0472906b9aad86f9be47fd986c51d741a",
+      "worker_manifest_sha256": "f4c2b15bfaa0cdfacc75f31966a4948b409e925a4a24ba1c5fff77face695c09",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -3474,7 +4249,7 @@
       "case_id": "constraints",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "0311995fcf502da695de4334aa3810a0472906b9aad86f9be47fd986c51d741a",
+      "worker_manifest_sha256": "f4c2b15bfaa0cdfacc75f31966a4948b409e925a4a24ba1c5fff77face695c09",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -3613,7 +4388,7 @@
       "case_id": "preserve-open-border",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "0311995fcf502da695de4334aa3810a0472906b9aad86f9be47fd986c51d741a",
+      "worker_manifest_sha256": "f4c2b15bfaa0cdfacc75f31966a4948b409e925a4a24ba1c5fff77face695c09",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -3746,7 +4521,7 @@
       "case_id": "bounded-distance",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "0311995fcf502da695de4334aa3810a0472906b9aad86f9be47fd986c51d741a",
+      "worker_manifest_sha256": "f4c2b15bfaa0cdfacc75f31966a4948b409e925a4a24ba1c5fff77face695c09",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -3883,7 +4658,7 @@
       "case_id": "bounded-normal",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "0311995fcf502da695de4334aa3810a0472906b9aad86f9be47fd986c51d741a",
+      "worker_manifest_sha256": "f4c2b15bfaa0cdfacc75f31966a4948b409e925a4a24ba1c5fff77face695c09",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -4016,7 +4791,7 @@
       "case_id": "polyhedral-envelope",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "0311995fcf502da695de4334aa3810a0472906b9aad86f9be47fd986c51d741a",
+      "worker_manifest_sha256": "f4c2b15bfaa0cdfacc75f31966a4948b409e925a4a24ba1c5fff77face695c09",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -4153,7 +4928,7 @@
       "case_id": "filter-control",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "0311995fcf502da695de4334aa3810a0472906b9aad86f9be47fd986c51d741a",
+      "worker_manifest_sha256": "f4c2b15bfaa0cdfacc75f31966a4948b409e925a4a24ba1c5fff77face695c09",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -4286,7 +5061,7 @@
       "case_id": "bounded-distance-tight",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "0311995fcf502da695de4334aa3810a0472906b9aad86f9be47fd986c51d741a",
+      "worker_manifest_sha256": "f4c2b15bfaa0cdfacc75f31966a4948b409e925a4a24ba1c5fff77face695c09",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -4427,7 +5202,7 @@
       "case_id": "polyhedral-envelope-tight",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "0311995fcf502da695de4334aa3810a0472906b9aad86f9be47fd986c51d741a",
+      "worker_manifest_sha256": "f4c2b15bfaa0cdfacc75f31966a4948b409e925a4a24ba1c5fff77face695c09",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -4568,7 +5343,7 @@
       "case_id": "bounded-normal-control",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "0311995fcf502da695de4334aa3810a0472906b9aad86f9be47fd986c51d741a",
+      "worker_manifest_sha256": "f4c2b15bfaa0cdfacc75f31966a4948b409e925a4a24ba1c5fff77face695c09",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -4597,38 +5372,38 @@
             "unit": "mm",
             "value": 2.0
           },
-          "policy": "gh_plane_line",
+          "policy": "gh_triangle",
           "preserve_border": true,
           "stop": {
             "kind": "edge_ratio",
-            "value": 0.12
+            "value": 0.2
           }
         },
         "protocol": 1,
         "request_id": "bounded-normal-control-simplify"
       },
-      "request_sha256": "d3a674f50a6897204cda52badfc1dabd755acdfa5e6cf6307ace168001b7aad1",
+      "request_sha256": "7b81a81cdd2f8827e46462c2e89929749dfd1d6fd9799f4a04dce9f793212255",
       "response": {
         "metrics": {
           "bounded_distance_enabled": false,
           "bounded_normal_change_enabled": false,
           "constrained_edge_count": 0,
-          "edges_after": 33,
+          "edges_after": 57,
           "edges_before": 288,
-          "edges_removed": 255,
+          "edges_removed": 231,
           "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
-          "faces_after": 22,
+          "faces_after": 38,
           "faces_before": 192,
-          "policy": "gh_plane_line",
+          "policy": "gh_triangle",
           "polyhedral_envelope_enabled": false,
           "preserve_border": true,
           "stop_policy": "edge_ratio",
-          "vertices_after": 11,
+          "vertices_after": 19,
           "vertices_before": 96
         },
         "outputs": [
           {
-            "blob_sha256": "defac27b8edf22d9de2542b01ad193b9be242e2f784fdb0191bdd89d1d123753",
+            "blob_sha256": "02aebcfdfd0714cc00bf03c2c510bcb61b8c2d582c7595aa2219773655ffce2d",
             "format": "off",
             "slot": "geometry",
             "type": "TriangleSurfaceMesh",
@@ -4639,21 +5414,21 @@
         "request_id": "bounded-normal-control-simplify",
         "status": "ok"
       },
-      "response_sha256": "15671a4657619db5cf4f389e08e409ce8019bfe5bdf3e94e8e63d4fdd75ad4c9",
+      "response_sha256": "56732a0b9f6b6cc2d7447d4a4dc288e18f2d116cd92849601a8b8d9888ce5904",
       "input_hashes": [
         "b5398a38dd3d5690896b53089a66d39853d4243b56a4d95c13aacbca90876867"
       ],
       "output_hashes": [
-        "defac27b8edf22d9de2542b01ad193b9be242e2f784fdb0191bdd89d1d123753"
+        "02aebcfdfd0714cc00bf03c2c510bcb61b8c2d582c7595aa2219773655ffce2d"
       ],
       "validators": [
         {
           "operation_id": "mesh.validate.simplification_integrity",
           "revision": 1,
-          "request_sha256": "0c8b3e8d82505bbbf2c284a3e2f0e6383acd5d2f0330c39443917d0b7bc3e067",
+          "request_sha256": "88d741d8333129d747dc4281f180dc8812656977f31cdf0d39ae1d0ef486d147",
           "response_sha256": "78a32e95ca3d355f86fb5eb9d7e9b6db2ea5a9ff74bb0c3642ad0e2b46ad4c9f",
           "input_hashes": [
-            "defac27b8edf22d9de2542b01ad193b9be242e2f784fdb0191bdd89d1d123753",
+            "02aebcfdfd0714cc00bf03c2c510bcb61b8c2d582c7595aa2219773655ffce2d",
             "b5398a38dd3d5690896b53089a66d39853d4243b56a4d95c13aacbca90876867"
           ],
           "output_hashes": [
@@ -4666,17 +5441,17 @@
         {
           "operation_id": "mesh.distance.symmetric_hausdorff",
           "revision": 1,
-          "request_sha256": "c5bd746477bc70f919338d367a25c6d90345c41c3aec13e5c9184c528eb1f7e7",
-          "response_sha256": "2d688f48e25ddf303bd79744d328097eb3e436da2c7c4fdd38ed325c29d59f2b",
+          "request_sha256": "de0a2f71a404a4b9169fbc91a53551f8b3159c96429075dd1c63abe799d4e3be",
+          "response_sha256": "2284f6cffd419f8bee7a99398f1a52b1e90c29e76552b51cd6f7aa38419945c1",
           "input_hashes": [
             "b5398a38dd3d5690896b53089a66d39853d4243b56a4d95c13aacbca90876867",
-            "defac27b8edf22d9de2542b01ad193b9be242e2f784fdb0191bdd89d1d123753"
+            "02aebcfdfd0714cc00bf03c2c510bcb61b8c2d582c7595aa2219773655ffce2d"
           ],
           "output_hashes": [
-            "b5aafbe87f5b45a60f8261f6cd9b302cb3b2530742c40898b696bbab451b1261"
+            "2ccf783cee27b4bec03e864d1a9c9ab579e8a30a6309c9406fa00cb07fafa2a9"
           ],
-          "report_blob_sha256": "b5aafbe87f5b45a60f8261f6cd9b302cb3b2530742c40898b696bbab451b1261",
-          "report_sha256": "9228ecdd2a900303d1a1c0a76ac1512eb8dcf86754f85e88370d617c58a66b75",
+          "report_blob_sha256": "2ccf783cee27b4bec03e864d1a9c9ab579e8a30a6309c9406fa00cb07fafa2a9",
+          "report_sha256": "aadfc35afd229c5b69212b6e82d4cd0cccb40cafd963f2b2610935a4597bbe1c",
           "status": "pass"
         }
       ],
@@ -4692,7 +5467,7 @@
           },
           "hausdorff_validator": {
             "pass": true,
-            "report_sha256": "9228ecdd2a900303d1a1c0a76ac1512eb8dcf86754f85e88370d617c58a66b75"
+            "report_sha256": "aadfc35afd229c5b69212b6e82d4cd0cccb40cafd963f2b2610935a4597bbe1c"
           }
         }
       }
@@ -4701,7 +5476,7 @@
       "case_id": "bounded-normal-adversarial",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "0311995fcf502da695de4334aa3810a0472906b9aad86f9be47fd986c51d741a",
+      "worker_manifest_sha256": "f4c2b15bfaa0cdfacc75f31966a4948b409e925a4a24ba1c5fff77face695c09",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -4730,38 +5505,38 @@
             "unit": "mm",
             "value": 2.0
           },
-          "policy": "gh_plane_line",
+          "policy": "gh_triangle",
           "preserve_border": true,
           "stop": {
             "kind": "edge_ratio",
-            "value": 0.12
+            "value": 0.2
           }
         },
         "protocol": 1,
         "request_id": "bounded-normal-adversarial-simplify"
       },
-      "request_sha256": "4a3b416af3a9766e191e77a62e24d4e0d4cf2a0ff626a1db13d3a46adc358ae5",
+      "request_sha256": "8fa4e7043cb54ab353fe29cd229c0e45a38ed6cb64c77bb967ecbe756123cedb",
       "response": {
         "metrics": {
           "bounded_distance_enabled": false,
           "bounded_normal_change_enabled": true,
           "constrained_edge_count": 0,
-          "edges_after": 33,
+          "edges_after": 57,
           "edges_before": 288,
-          "edges_removed": 255,
+          "edges_removed": 231,
           "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
-          "faces_after": 22,
+          "faces_after": 38,
           "faces_before": 192,
-          "policy": "gh_plane_line",
+          "policy": "gh_triangle",
           "polyhedral_envelope_enabled": false,
           "preserve_border": true,
           "stop_policy": "edge_ratio",
-          "vertices_after": 11,
+          "vertices_after": 19,
           "vertices_before": 96
         },
         "outputs": [
           {
-            "blob_sha256": "911e33258a94390176b0f46f178d04b3376acd808311eff74fde5bd98074b64b",
+            "blob_sha256": "af444c54dcad1cd6c0157196f44e5c873006102f38d3c6ddb829456f86b5b294",
             "format": "off",
             "slot": "geometry",
             "type": "TriangleSurfaceMesh",
@@ -4772,21 +5547,21 @@
         "request_id": "bounded-normal-adversarial-simplify",
         "status": "ok"
       },
-      "response_sha256": "9318428bb6ed74e06ead9a3e0b0639f239debd5d173f7a35f14fd914f7458222",
+      "response_sha256": "0e6a75d4b5604d2b35fc04543df70d627cbc70b3db1cfc358222a039e83273f8",
       "input_hashes": [
         "b5398a38dd3d5690896b53089a66d39853d4243b56a4d95c13aacbca90876867"
       ],
       "output_hashes": [
-        "911e33258a94390176b0f46f178d04b3376acd808311eff74fde5bd98074b64b"
+        "af444c54dcad1cd6c0157196f44e5c873006102f38d3c6ddb829456f86b5b294"
       ],
       "validators": [
         {
           "operation_id": "mesh.validate.simplification_integrity",
           "revision": 1,
-          "request_sha256": "d11b1110768a362d59dd4b3fb35fae539a7acd6559e770edccfcc0ca8f5891bf",
+          "request_sha256": "c5c70d480022eb7614e63d11b08f9b697b8db198ceea4363dc041b25091cfd38",
           "response_sha256": "ccb25305eab78af87b0972bf07775a46085c564246c8ec4c8ed8896763e44c2a",
           "input_hashes": [
-            "911e33258a94390176b0f46f178d04b3376acd808311eff74fde5bd98074b64b",
+            "af444c54dcad1cd6c0157196f44e5c873006102f38d3c6ddb829456f86b5b294",
             "b5398a38dd3d5690896b53089a66d39853d4243b56a4d95c13aacbca90876867"
           ],
           "output_hashes": [
@@ -4799,17 +5574,17 @@
         {
           "operation_id": "mesh.distance.symmetric_hausdorff",
           "revision": 1,
-          "request_sha256": "da1964d899a4f46561404e95186df1bf29d4a8b339e0fef92e6f9bfe0148a6d0",
-          "response_sha256": "a9df52e6e116c2d7b8c650a4dd398ddcbacbeb463f4b2b9b6ccc41b5215ccf95",
+          "request_sha256": "19e7005a33d4dc8f4a3f263d1cb570af5e680480fb2ea85b6bfc8a5bf4e6b463",
+          "response_sha256": "e751188e985627f136f1e315d9845f6436f470801b9495e0c5aeba37d956b153",
           "input_hashes": [
             "b5398a38dd3d5690896b53089a66d39853d4243b56a4d95c13aacbca90876867",
-            "911e33258a94390176b0f46f178d04b3376acd808311eff74fde5bd98074b64b"
+            "af444c54dcad1cd6c0157196f44e5c873006102f38d3c6ddb829456f86b5b294"
           ],
           "output_hashes": [
-            "b8517e5d68bb730e08bb1f280cf11772fe3f6efa210f7bd025078586212dcd85"
+            "559654995da4d0bbbf4b395b5a5da6cab7fab9eee396fb7b92521b08844ab791"
           ],
-          "report_blob_sha256": "b8517e5d68bb730e08bb1f280cf11772fe3f6efa210f7bd025078586212dcd85",
-          "report_sha256": "5f31f9d517c499f6eeaa98efa4468b2194a1aa21227e7ed03ea43111fbda47c3",
+          "report_blob_sha256": "559654995da4d0bbbf4b395b5a5da6cab7fab9eee396fb7b92521b08844ab791",
+          "report_sha256": "9b6cfd0005669b45f0615004414f1f73c75f22448f928f5304f0b2bfa344de07",
           "status": "pass"
         }
       ],
@@ -4825,7 +5600,7 @@
           },
           "hausdorff_validator": {
             "pass": true,
-            "report_sha256": "5f31f9d517c499f6eeaa98efa4468b2194a1aa21227e7ed03ea43111fbda47c3"
+            "report_sha256": "9b6cfd0005669b45f0615004414f1f73c75f22448f928f5304f0b2bfa344de07"
           },
           "adversarial_filter_effect": {
             "pass": true,
