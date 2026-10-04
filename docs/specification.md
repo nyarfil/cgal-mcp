@@ -5,9 +5,9 @@ PythonはMCP/Router/Planner/job管理、C++17はCGAL 6.2.1の幾何処理。
 v0.1の実行機能は簡略化の5能力。全CGAL APIの実行実装を意味しない。
 102件の長尾索引はヘッダー単位であり実行できないAPIも明示する。
 
-## 入口（常時10ツール）
+## 入口（常時11ツール）
 discover_capabilities、describe_capability、search_api、route_goal、
-register_mesh、plan_simplification、execute_plan、job_status、cancel_job、get_artifact。
+register_mesh、plan_simplification、plan_hausdorff、execute_plan、job_status、cancel_job、get_artifact。
 機能名を100件プロンプトに提示しない。検索の要約→個別定義→明示計画で進める。
 describeのJSON Schemaを読んでparametersを渡す。
 ホスト側の動的ツール登録に依存しない。MCP resourcesでも個別定義を提供する。

@@ -2,7 +2,7 @@
 Python MCP/Router/PlannerとC++17 CGAL 6.2.1 workerによる、検証付きメッシュ簡略化。
 
 ## 提供する機能
-- 常時10ツールだけ提示。日英能力検索、個別Schema取得、Router、型付き計画。
+- 常時11ツールだけ提示。日英能力検索、個別Schema取得、Router、型付き計画。単独比較はplan_hausdorffで計画。
 - 102件の版固定CGALヘッダー索引をオンデマンド検索。102件の実行機能ではありません。
 - plane+line簡略化、任意Envelope、境界/明示辺拘束、Constrained placement。
 - 双方向bounded-error Hausdorff検証。合格した成果物のみ公開。
@@ -29,6 +29,7 @@ cmake --build build -j1
 python -m unittest discover -s tests -v
 python tests/worker_smoke.py build/cgal-worker
 python tests/distance_smoke.py build/cgal-distance
+python tests/worker_cases.py build/cgal-worker
 PYTHONPATH=. python tests/mcp_e2e.py
 ```
 
