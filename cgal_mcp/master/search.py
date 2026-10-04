@@ -64,7 +64,7 @@ VOCABULARY: dict[str, tuple[str, ...]] = {
     "validation": ("validate", "validation", "validator", "verify the result",
                    "check the result", "検証", "結果を確かめ"),
     "distance": ("distance", "distances", "距離", "hausdorff", "ハウスドルフ"),
-    "aabb": ("aabb", "bounding box", "bounding boxes", "境界ボックス", "包囲箱"),
+    "aabb": ("aabb", "bounding box", "bounding boxes", "境界ボックス", "バウンディングボックス", "包囲箱"),
     "nearest_neighbor": ("nearest neighbor", "nearest neighbour", "nearest-neighbor",
                          "nearest point", "closest point", "nearest point on mesh",
                          "近傍検索", "最近傍", "最近点", "kd tree", "kd-tree", "kdtree"),
