@@ -1,4 +1,5 @@
 """Host-neutral integration contract. The real StellaCAD host supplies atomic undo-aware apply."""
+import copy,hashlib,json
 from dataclasses import dataclass
 from typing import Protocol
 from .runtime import Runtime
@@ -24,7 +25,11 @@ class StellaCADAdapter:
         snapshot=self.host.snapshot(object_id)
         asset=self.runtime.register(snapshot.off,snapshot.unit)
         plan=self.runtime.plan(asset["asset_id"],parameters)
-        self.bindings[plan["plan_id"]]=snapshot
+        plan["cad_binding"]={"object_id":snapshot.object_id,"revision":snapshot.revision}
+        bound_id=hashlib.sha256(json.dumps(plan,sort_keys=True).encode()).hexdigest()
+        plan["plan_id"]=bound_id
+        self.runtime.plans[bound_id]=copy.deepcopy(plan)
+        self.bindings[bound_id]=snapshot
         return plan
     def apply(self, job_id: str) -> None:
         job=self.runtime.status(job_id)

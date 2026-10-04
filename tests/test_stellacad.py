@@ -24,3 +24,14 @@ class AdapterTests(unittest.TestCase):
             host.value=Snapshot("object","rev1",TRI,"mm")
             adapter.apply("job");self.assertTrue(host.applied)
             with self.assertRaises(ValueError):adapter.apply("job")
+
+    def test_identical_objects_do_not_share_apply_binding(self):
+        with tempfile.TemporaryDirectory() as folder:
+            rt=Runtime(pathlib.Path(folder),pathlib.Path("/missing"),pathlib.Path("/missing"))
+            host=Host();adapter=StellaCADAdapter(host,rt)
+            first=adapter.prepare("object",PARAM)
+            host.value=Snapshot("other","rev1",TRI,"mm")
+            second=adapter.prepare("other",PARAM)
+            self.assertNotEqual(first["plan_id"],second["plan_id"])
+            self.assertEqual(adapter.bindings[first["plan_id"]].object_id,"object")
+            self.assertEqual(adapter.bindings[second["plan_id"]].object_id,"other")
