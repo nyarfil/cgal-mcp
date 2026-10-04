@@ -126,7 +126,7 @@ double finite_number(const std::string& token, const std::string& code,
   const double result = std::strtod(begin, &end);
   const bool converted = end != begin;
   const bool consumed_all =
-      converted && end == begin + static_cast<std::ptrdiff_t>(token.size());
+      converted && end == begin + token.size();
   const bool underflowed_to_zero = errno == ERANGE && result == 0.0;
   if (!consumed_all || !std::isfinite(result) || underflowed_to_zero) {
     throw WorkerError("INVALID_INPUT", code,
