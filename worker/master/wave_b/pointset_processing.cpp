@@ -19,6 +19,8 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <cerrno>
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
@@ -113,17 +115,22 @@ std::string verified_bytes(const ArtifactInput& input) {
 
 double finite_number(const std::string& token, const std::string& code,
                      std::size_t line) {
-  std::size_t consumed = 0;
-  double result = 0;
-  try {
-    result = std::stod(token, &consumed);
-  } catch (const std::exception&) {
+  // std::stod is specified to throw when the underlying strtod sets ERANGE.
+  // glibc sets ERANGE for representable subnormal values such as 5e-324,
+  // while MSVC accepts the same token.  Parse with strtod directly so that
+  // finite nonzero subnormals remain valid input on both platforms, but still
+  // reject overflow, trailing text, and nonzero values that underflow to zero.
+  errno = 0;
+  char* end = nullptr;
+  const char* begin = token.c_str();
+  const double result = std::strtod(begin, &end);
+  const bool converted = end != begin;
+  const bool consumed_all =
+      converted && end == begin + static_cast<std::ptrdiff_t>(token.size());
+  const bool underflowed_to_zero = errno == ERANGE && result == 0.0;
+  if (!consumed_all || !std::isfinite(result) || underflowed_to_zero) {
     throw WorkerError("INVALID_INPUT", code,
-                      "Invalid numeric value on line " + std::to_string(line));
-  }
-  if (consumed != token.size() || !std::isfinite(result)) {
-    throw WorkerError("INVALID_INPUT", code,
-                      "Finite numeric values are required on line " +
+                      "Finite representable numeric values are required on line " +
                           std::to_string(line));
   }
   return result;
