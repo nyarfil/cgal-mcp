@@ -1,4 +1,7 @@
 # CGAL MCP 設計書 v0.1
+
+これは既存v0.1の構造記録です。汎用Master MCPの設計へ移行する際は
+`master/SCOPE_CORRECTION_JA.md` に従い、軽量化専用構造を全体の完成形として扱わない。
 ## 構成
 catalog.py: 5能力と日英別名。api_index.json/api_search.py: 102件の版固定ヘッダー索引。
 server.py: 公式MCPServerと11個の固定入口。

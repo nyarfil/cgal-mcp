@@ -1,4 +1,7 @@
 # CGAL MCP 設計仕様書 v0.1
+
+これは既存の軽量化v0.1の限定仕様です。CGAL Master MCPの全体仕様は
+`master/CGAL_Master_MCP_Design_Spec.md` と `master/SCOPE_CORRECTION_JA.md` を参照。
 ## 目的と完了境界
 独立MCPが登録済みメッシュを簡略化し、拘束と誤差を検証した成果物を返す。
 PythonはMCP/Router/Planner/job管理、C++17はCGAL 6.2.1の幾何処理。

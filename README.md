@@ -1,4 +1,12 @@
-# CGAL MCP v0.1
+# CGAL Master MCP（開発中）
+
+目標は、CGAL全体の能力を発見・選択・組合せ・実行・検証できる独立MCP。
+**現在のコードは軽量化関連のv0.1で、Master MCPの要求は未達です。**
+ユーザー提供の設計書と現状差分、修正した開発順序は
+[開発基準](docs/master/SCOPE_CORRECTION_JA.md) を参照してください。
+StellaCADはStandalone受入後に正式統合する利用側です。
+
+## 現在実装済みのv0.1
 Python MCP/Router/PlannerとC++17 CGAL 6.2.1 workerによる、検証付きメッシュ簡略化。
 
 ## 提供する機能
@@ -34,7 +42,8 @@ PYTHONPATH=. python tests/mcp_e2e.py
 ```
 
 CGALを含む配布では対象パッケージのGPL/commercial条件を確認してください。
-Windows/macOSのビルドとホスト統合は未検証です。
+Windowsの導入・実計算手順は [Windows導入](docs/windows.md) を参照してください。
+macOSとネイティブCADの置換/Undo統合は未検証です。
 
 ## MCP接続
 MCPホストのstdio設定に、以下のcommand/args/envを登録します。

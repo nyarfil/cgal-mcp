@@ -1,5 +1,9 @@
 # StellaCAD統合設計 v0.1
-StellaCAD本体ソース未提供のためホスト境界を確定。内部APIの架空実装はしない。
+初版ではStellaCAD本体ソース未提供のためホスト境界を定義した。
+2026-10-04に実PCの本体を調査し、補助MCP接続を追加した。
+現在の接続手順は [Windows導入](windows.md) および
+StellaCADの `docs/CGAL_INTEGRATION_JA.md`。下記のatomic apply契約はネイティブ統合の設計であり、
+派生ファイルsidecarの実装済み機能と区別する。
 
 ## 実装した境界
 cgal_mcp.stellacad.CADHost:
@@ -29,4 +33,5 @@ B-repモデルを三角形化する場合は独立のmesh結果として扱う�
 StellaCADの選択取得、メッシュ抽出、revision、Undo、UI非同期処理をCADHostへ実装する。
 Plugin/IPC形式は本体リポジトリで確認後に確定する。
 同梱CGALのライセンス、OS別worker配布、アップデート方式を確定する。
-実際のStellaCADへのパッチは本体ソースが利用可能になってから実施する。
+派生メッシュのsidecarは実PCへ配置・接続試験済み。
+正確な固体正本を保持し、native apply_mesh_atomic/Undoは別の本体実装として残る。
