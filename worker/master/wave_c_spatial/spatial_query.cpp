@@ -85,7 +85,19 @@ void require_kernel(const Request& request) {
       request.kernel != "package_recommended") {
     throw WorkerError("UNSUPPORTED", "UNSUPPORTED_KERNEL",
                       "Spatial Query supports exact_constructions and "
-                      "package_recommended");
+                      "package_recommended where declared by the operation");
+  }
+}
+
+void require_package_recommended(const Request& request,
+                                 const char* operation) {
+  require_kernel(request);
+  if (request.kernel != "package_recommended") {
+    throw WorkerError(
+        "UNSUPPORTED", "OUTPUT_PRECISION_PROFILE_UNSUPPORTED",
+        std::string(operation) +
+            " uses CGAL Spatial_searching with EPICK and does not silently "
+            "downgrade an exact_constructions request");
   }
 }
 
@@ -182,7 +194,17 @@ Json exact_point_json(const Point& point, const std::string& unit) {
                         "Spatial point result is not representable in binary64");
     }
   }
-  return typed_point_json(values, unit);
+  std::array<std::string, 3> exact_values;
+  std::ostringstream x;
+  std::ostringstream y;
+  std::ostringstream z;
+  x << CGAL::exact(point.x());
+  y << CGAL::exact(point.y());
+  z << CGAL::exact(point.z());
+  exact_values = {x.str(), y.str(), z.str()};
+  return {{"value", {values[0], values[1], values[2]}},
+          {"exact", {exact_values[0], exact_values[1], exact_values[2]}},
+          {"unit", unit}};
 }
 
 Json search_point_json(const SearchPoint& point, const std::string& unit) {
@@ -331,7 +353,7 @@ Json compute_aabb_closest(const Request& request, const Profile& profile) {
 }
 
 Json compute_kdtree_range(const Request& request, const Profile& profile) {
-  require_kernel(request);
+  require_package_recommended(request, "spatial.kdtree.range");
   require_parameters(request.parameters,
                      {"center", "radius", "epsilon", "max_results"},
                      {"center", "radius"});
@@ -380,7 +402,7 @@ Json compute_kdtree_range(const Request& request, const Profile& profile) {
 }
 
 Json compute_nearest(const Request& request, const Profile& profile) {
-  require_kernel(request);
+  require_package_recommended(request, "spatial.nearest_neighbors");
   require_parameters(request.parameters,
                      {"query_point", "k", "epsilon"},
                      {"query_point", "k"});
@@ -707,7 +729,12 @@ OperationDefinition analysis_definition(const Profile& profile) {
       "GeometryAnalysisReport",
       "analysis",
       [p](const Request& request) { return write_analysis(request, compute_report(request)); }};
-  definition.supported_kernels = {"exact_constructions", "package_recommended"};
+  definition.supported_kernels =
+      (p.id == "spatial.kdtree.range" ||
+       p.id == "spatial.nearest_neighbors")
+          ? std::vector<std::string>{"package_recommended"}
+          : std::vector<std::string>{"exact_constructions",
+                                     "package_recommended"};
   definition.effective_kernel =
       (p.id == "spatial.kdtree.range" ||
        p.id == "spatial.nearest_neighbors")
@@ -750,7 +777,12 @@ OperationDefinition validator_definition(const Profile& producer) {
       "ValidationReport",
       "validator",
       [p](const Request& request) { return validate(request, p); }};
-  definition.supported_kernels = {"exact_constructions", "package_recommended"};
+  definition.supported_kernels =
+      (p.id == "spatial.kdtree.range" ||
+       p.id == "spatial.nearest_neighbors")
+          ? std::vector<std::string>{"package_recommended"}
+          : std::vector<std::string>{"exact_constructions",
+                                     "package_recommended"};
   definition.effective_kernel =
       (p.id == "spatial.kdtree.range" ||
        p.id == "spatial.nearest_neighbors" ||
