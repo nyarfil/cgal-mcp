@@ -21,7 +21,9 @@ async def main():
             async def call(name,args):
                 result=await client.call_tool(name,args)
                 assert not result.is_error,result
-                return result.structured_content
+                if result.structured_content is not None:
+                    return result.structured_content
+                return json.loads(''.join(block.text for block in result.content if hasattr(block,'text')))
             asset=await call("register_mesh",{"off":off,"unit":"mm"})
             plan=await call("plan_simplification",{"asset_id":asset["asset_id"],
                 "parameters":{"edge_ratio":0.5,"tolerance":0.1,"error_bound":0.001,

@@ -114,6 +114,7 @@ class Runtime:
             raise ValueError("Job queue is full")
         job_id=uuid.uuid4().hex
         self.jobs[job_id]={"job_id":job_id,"state":"queued","plan":plan}
+        self._audit(self.jobs[job_id])
         self.tasks[job_id]=asyncio.create_task(self._run(job_id))
         return {"job_id":job_id,"state":"queued"}
 
@@ -130,6 +131,7 @@ class Runtime:
             except asyncio.CancelledError: pass
             # A queued task might be cancelled before entering _run.
             self.jobs[job_id]["state"]="cancelled"
+            self._audit(self.jobs[job_id])
         return self.status(job_id)
 
     async def _call(self, executable: Path, request: dict) -> dict:
@@ -152,8 +154,14 @@ class Runtime:
             raise RuntimeError(str(result.get("error","Worker failed")))
         return result
 
+    def _audit(self, job: dict):
+        folder=self.root/job["job_id"];folder.mkdir(exist_ok=True)
+        temporary=folder/"audit.tmp"
+        temporary.write_text(json.dumps(job,ensure_ascii=False,indent=2),encoding="utf-8")
+        temporary.replace(folder/"audit.json")
+
     async def _run(self, job_id: str):
-        job=self.jobs[job_id];folder=self.root/job_id;folder.mkdir()
+        job=self.jobs[job_id];folder=self.root/job_id;folder.mkdir(exist_ok=True)
         output=folder/"candidate.off"
         try:
             async with self.semaphore:
@@ -185,10 +193,7 @@ class Runtime:
             job["state"]="failed";job["error"]=str(e)
         finally:
             output.unlink(missing_ok=True)
-            audit=folder/"audit.json"
-            temporary=folder/"audit.tmp"
-            temporary.write_text(json.dumps(job,ensure_ascii=False,indent=2),encoding="utf-8")
-            temporary.replace(audit)
+            self._audit(job)
 
     def artifact(self, asset_id: str) -> dict:
         data=self.asset(asset_id)

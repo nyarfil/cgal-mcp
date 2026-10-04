@@ -1,4 +1,4 @@
-#include <CGAL/Simple_cartesian.h>
+#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Surface_mesh.h>
 #include <CGAL/IO/polygon_mesh_io.h>
 #include <CGAL/Surface_mesh_simplification/edge_collapse.h>
@@ -13,7 +13,7 @@
 #include <type_traits>
 #include <vector>
 #include "preflight.h"
-using K = CGAL::Simple_cartesian<double>;
+using K = CGAL::Exact_predicates_inexact_constructions_kernel;
 using Mesh = CGAL::Surface_mesh<K::Point_3>;
 using Json = nlohmann::json;
 namespace SMS = CGAL::Surface_mesh_simplification;
