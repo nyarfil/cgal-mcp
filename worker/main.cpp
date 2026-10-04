@@ -11,6 +11,8 @@
 #include <iostream>
 #include <cmath>
 #include <type_traits>
+#include <vector>
+#include "preflight.h"
 using K = CGAL::Simple_cartesian<double>;
 using Mesh = CGAL::Surface_mesh<K::Point_3>;
 using Json = nlohmann::json;
@@ -34,10 +36,29 @@ int main() {
       if(!std::isfinite(p.x()) || !std::isfinite(p.y()) || !std::isfinite(p.z()))
         throw std::runtime_error("Nonfinite coordinate");
     }
+    preflight(mesh);
     auto before = mesh.number_of_edges();
     auto constraints = mesh.add_property_map<Mesh::Edge_index, bool>("e:constraints", false).first;
     if(request.value("preserve_border", true))
       for(auto e : mesh.edges()) constraints[e] = CGAL::is_border(e, mesh);
+    if(request.contains("constrained_edges")) {
+      for(const auto& pair : request["constrained_edges"]) {
+        if(!pair.is_array() || pair.size()!=2) throw std::runtime_error("Invalid constraint pair");
+        int a=pair[0].get<int>(),b=pair[1].get<int>();
+        bool found=false;
+        for(auto e:mesh.edges()) {
+          auto h=mesh.halfedge(e);
+          int s=int(mesh.source(h).idx()),t=int(mesh.target(h).idx());
+          if((s==a&&t==b)||(s==b&&t==a)) { constraints[e]=true;found=true;break; }
+        }
+        if(!found) throw std::runtime_error("Constraint edge does not exist");
+      }
+    }
+    std::vector<std::pair<K::Point_3,K::Point_3>> protected_segments;
+    for(auto e:mesh.edges()) if(constraints[e]) {
+      auto h=mesh.halfedge(e);
+      protected_segments.emplace_back(mesh.point(mesh.source(h)),mesh.point(mesh.target(h)));
+    }
     SMS::GarlandHeckbert_plane_and_line_policies<Mesh,K> policies(mesh);
     // Strip reference from placement type so the wrapper owns a policy value.
     using Base = std::decay_t<decltype(policies.get_placement())>;
@@ -56,13 +77,24 @@ int main() {
     }
     if(!CGAL::is_valid_polygon_mesh(mesh) || !CGAL::is_triangle_mesh(mesh))
       throw std::runtime_error("Invalid output mesh");
+    preflight(mesh);
+    for(const auto& segment:protected_segments) {
+      bool found=false;
+      for(auto e:mesh.edges()) {
+        auto h=mesh.halfedge(e);
+        const auto& a=mesh.point(mesh.source(h));const auto& b=mesh.point(mesh.target(h));
+        if((a==segment.first&&b==segment.second)||(b==segment.first&&a==segment.second))
+          {found=true;break;}
+      }
+      if(!found) throw std::runtime_error("Protected segment changed");
+    }
     if(!CGAL::IO::write_polygon_mesh(request.at("output").get<std::string>(), mesh,
                                     CGAL::parameters::stream_precision(17)))
       throw std::runtime_error("Output write failed");
     std::cout << Json{{"version",1},{"ok",true},{"cgal","6.2.1"},
       {"edges_before",before},{"edges_after",mesh.number_of_edges()},
       {"edges_removed",removed},{"target_met",double(mesh.number_of_edges())/before < ratio},
-      {"hausdorff_verified",false}}.dump() << std::endl;
+      {"constraints_preserved",true},{"hausdorff_verified",false}}.dump() << std::endl;
     return 0;
   } catch(const std::exception& e) {
     std::cout << Json{{"version",1},{"ok",false},{"error",e.what()}}.dump() << std::endl;

@@ -5,6 +5,7 @@
 #include <nlohmann/json.hpp>
 #include <iostream>
 #include <cmath>
+#include "preflight.h"
 using K=CGAL::Exact_predicates_inexact_constructions_kernel;
 using Mesh=CGAL::Surface_mesh<K::Point_3>;
 using Json=nlohmann::json;
@@ -29,6 +30,7 @@ int main() {
       }
     };
     read(r.at("input_a").get<std::string>(),a); read(r.at("input_b").get<std::string>(),b);
+    preflight(a);preflight(b);
     double d=CGAL::Polygon_mesh_processing::bounded_error_symmetric_Hausdorff_distance<CGAL::Sequential_tag>(a,b,error);
     if(!std::isfinite(d)) throw std::runtime_error("Nonfinite distance");
     double lower=std::max(0.0,d-error),upper=d+error;
