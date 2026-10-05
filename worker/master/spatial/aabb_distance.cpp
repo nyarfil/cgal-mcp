@@ -33,6 +33,7 @@ using Traits = CGAL::AABB_traits_3<Kernel, Primitive>;
 using Tree = CGAL::AABB_tree<Traits>;
 
 constexpr std::size_t kMaxReportBytes = 1024ULL * 1024ULL;
+constexpr std::size_t kMaxIntersectionCandidates = 100000;
 const std::set<std::string> kLengthUnits = {"mm", "cm", "m"};
 
 double unit_in_metres(const std::string& unit) {
@@ -422,7 +423,14 @@ Json compute_segment_report(const Request& request,
   const Segment segment(start, end);
   Tree tree(faces(mesh).first, faces(mesh).second, mesh);
 
+  const auto counted = tree.number_of_intersected_primitives(segment);
+  if (counted > kMaxIntersectionCandidates) {
+    throw WorkerError(
+        "RESOURCE_LIMIT", "AABB_INTERSECTION_CANDIDATE_LIMIT_EXCEEDED",
+        "AABB segment query exceeds the bounded intersection candidate limit");
+  }
   std::vector<Mesh::Face_index> intersected;
+  intersected.reserve(static_cast<std::size_t>(counted));
   tree.all_intersected_primitives(segment, std::back_inserter(intersected));
   std::vector<std::size_t> face_indices;
   face_indices.reserve(intersected.size());
@@ -432,7 +440,6 @@ Json compute_segment_report(const Request& request,
   face_indices.erase(std::unique(face_indices.begin(), face_indices.end()),
                      face_indices.end());
 
-  const auto counted = tree.number_of_intersected_primitives(segment);
   const bool intersects = tree.do_intersect(segment);
   if (counted != face_indices.size() ||
       intersects != !face_indices.empty()) {
@@ -570,6 +577,7 @@ Json segment_analysis_info() {
         "AABB_tree::number_of_intersected_primitives",
         "AABB_tree::all_intersected_primitives"}},
       {"constructs_intersection_geometry", false},
+      {"max_intersection_candidates", kMaxIntersectionCandidates},
       {"degenerate_primitive_policy", "reject"},
       {"validators", {"spatial.validate.aabb_segment_candidates"}},
       {"validator_parameter_bindings",
