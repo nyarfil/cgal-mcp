@@ -432,9 +432,17 @@ def parse_json_geometry(content: bytes, requested_type: str | None) -> Inspectio
                     "results", "validation"}
         if not isinstance(value, dict) or not required.issubset(value):
             raise InvalidInput("analysis_report", "GeometryAnalysisReport lacks required v1 fields")
-        analysis_kinds = {"pmp_inspection", "connected_components", "normals",
-                          "measures", "sharp_features", "self_intersections"}
-        if value["schema_version"] != 1 or value["analysis_kind"] not in analysis_kinds:
+        producer_validators = {
+            "pmp_inspection": "mesh.producer_check.pmp_inspection",
+            "connected_components": "mesh.producer_check.connected_components",
+            "normals": "mesh.producer_check.normals",
+            "measures": "mesh.producer_check.measures",
+            "sharp_features": "mesh.producer_check.sharp_features",
+            "self_intersections": "mesh.producer_check.self_intersections",
+            "aabb_closest_point": "spatial.producer_check.aabb_closest_point",
+        }
+        if (value["schema_version"] != 1
+                or value["analysis_kind"] not in producer_validators):
             raise InvalidInput("analysis_report", "GeometryAnalysisReport version/kind is invalid")
         source = value["source"]
         source_required = {"artifact_id", "type", "format", "unit", "sha256"}
@@ -473,6 +481,11 @@ def parse_json_geometry(content: bytes, requested_type: str | None) -> Inspectio
                          "volume_centroid"},
             "sharp_features": {"angle", "count_unit", "features"},
             "self_intersections": {"available", "count_unit"},
+            "aabb_closest_point": {
+                "closest_point", "squared_distance", "distance",
+                "closest_face_index", "primitive_count",
+                "distance_acceleration",
+            },
         }
         missing_results = required_results[value["analysis_kind"]] - results.keys()
         if missing_results:
@@ -504,7 +517,7 @@ def parse_json_geometry(content: bytes, requested_type: str | None) -> Inspectio
         if (not isinstance(validation, dict)
                 or not {"validator_id", "authoritative", "passed", "checks"}.issubset(validation)
                 or validation["validator_id"] !=
-                   "mesh.producer_check." + value["analysis_kind"]
+                   producer_validators[value["analysis_kind"]]
                 or validation["authoritative"] is not False
                 or validation["passed"] is not True
                 or not (isinstance(validation["checks"], dict)
