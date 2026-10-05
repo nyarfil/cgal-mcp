@@ -1,0 +1,10 @@
+#pragma once
+
+#include "../operation.h"
+
+namespace cgal_master::spatial {
+
+OperationDefinition aabb_closest_point_operation();
+OperationDefinition validate_aabb_closest_point_operation();
+
+}  // namespace cgal_master::spatial
