@@ -25,6 +25,7 @@ namespace {
 namespace PMP = CGAL::Polygon_mesh_processing;
 using Kernel = wave_a::Kernel;
 using Point = Kernel::Point_3;
+using Segment = Kernel::Segment_3;
 using Mesh = wave_a::Mesh;
 using Primitive = CGAL::AABB_face_graph_triangle_primitive<Mesh>;
 using Traits = CGAL::AABB_traits_3<Kernel, Primitive>;
@@ -345,6 +346,258 @@ Json run_validator(const Request& request) {
        {"source_sha256", source.sha256}});
 }
 
+
+void require_segment_parameters(const Json& parameters) {
+  if (!parameters.is_object() || parameters.size() != 2 ||
+      !parameters.contains("source") || !parameters.contains("target")) {
+    throw WorkerError(
+        "INVALID_INPUT", "INVALID_AABB_SEGMENT_QUERY",
+        "AABB segment query requires only source and target typed points");
+  }
+  for (const char* name : {"source", "target"}) {
+    const auto& point = parameters.at(name);
+    if (point.size() != 2 || !point.contains("value") ||
+        !point.contains("unit") || !point.at("value").is_array() ||
+        point.at("value").size() != 3 || !point.at("unit").is_string()) {
+      throw WorkerError(
+          "INVALID_INPUT", "INVALID_AABB_SEGMENT_QUERY",
+          std::string(name) + " must be {value:[x,y,z],unit}");
+    }
+    for (const auto& coordinate : point.at("value")) {
+      if (!coordinate.is_number() ||
+          !std::isfinite(coordinate.get<double>())) {
+        throw WorkerError("INVALID_INPUT", "INVALID_AABB_SEGMENT_QUERY",
+                          "segment coordinates must be finite numbers");
+      }
+    }
+    if (kLengthUnits.count(point.at("unit").get<std::string>()) == 0) {
+      throw WorkerError("INVALID_INPUT", "UNSUPPORTED_UNIT",
+                        "segment point unit must be mm, cm, or m");
+    }
+  }
+}
+
+Point typed_point(const Json& value, const std::string& mesh_unit,
+                  const char* name) {
+  const auto unit = value.at("unit").get<std::string>();
+  const auto scale = unit_in_metres(unit) / unit_in_metres(mesh_unit);
+  const auto& coordinates = value.at("value");
+  const double x = coordinates.at(0).get<double>() * scale;
+  const double y = coordinates.at(1).get<double>() * scale;
+  const double z = coordinates.at(2).get<double>() * scale;
+  if (!std::isfinite(x) || !std::isfinite(y) || !std::isfinite(z)) {
+    throw WorkerError("INVALID_INPUT", "AABB_QUERY_CONVERSION_OVERFLOW",
+                      std::string(name) +
+                          " is not representable in the mesh unit");
+  }
+  return Point(x, y, z);
+}
+
+void require_segment_request(const Request& request, bool validator) {
+  if (request.kernel != "package_recommended") {
+    throw WorkerError(
+        "UNSUPPORTED", "UNSUPPORTED_KERNEL",
+        "AABB segment candidates use the package_recommended EPICK profile");
+  }
+  const std::size_t expected_inputs = validator ? 2 : 1;
+  if (request.inputs.size() != expected_inputs) {
+    throw WorkerError("INVALID_INPUT", "INPUT_COUNT_MISMATCH",
+                      "AABB segment candidate input count is invalid");
+  }
+  require_segment_parameters(request.parameters);
+}
+
+Json compute_segment_report(const Request& request,
+                            const ArtifactInput& source) {
+  auto mesh = source_mesh(source);
+  const auto start =
+      typed_point(request.parameters.at("source"), source.unit, "source");
+  const auto end =
+      typed_point(request.parameters.at("target"), source.unit, "target");
+  if (start == end) {
+    throw WorkerError("PRECONDITION_FAILED", "ZERO_LENGTH_SEGMENT",
+                      "AABB segment query endpoints must be distinct");
+  }
+  const Segment segment(start, end);
+  Tree tree(faces(mesh).first, faces(mesh).second, mesh);
+
+  std::vector<Mesh::Face_index> intersected;
+  tree.all_intersected_primitives(segment, std::back_inserter(intersected));
+  std::vector<std::size_t> face_indices;
+  face_indices.reserve(intersected.size());
+  for (const auto face : intersected)
+    face_indices.push_back(static_cast<std::size_t>(face.idx()));
+  std::sort(face_indices.begin(), face_indices.end());
+  face_indices.erase(std::unique(face_indices.begin(), face_indices.end()),
+                     face_indices.end());
+
+  const auto counted = tree.number_of_intersected_primitives(segment);
+  const bool intersects = tree.do_intersect(segment);
+  if (counted != face_indices.size() ||
+      intersects != !face_indices.empty()) {
+    throw WorkerError("INTERNAL", "AABB_INTERSECTION_INCONSISTENT",
+                      "CGAL AABB intersection query results disagree");
+  }
+
+  return {
+      {"schema_version", 1},
+      {"analysis_kind", "aabb_segment_candidates"},
+      {"source", source_descriptor(source)},
+      {"mesh_summary",
+       {{"raw_vertex_count", mesh.number_of_vertices()},
+        {"raw_face_count", mesh.number_of_faces()},
+        {"finite_coordinates", true},
+        {"indices_valid", true},
+        {"triangulated", true},
+        {"surface_mesh_constructible", true}}},
+      {"query",
+       {{"source", point_json(start, source.unit)},
+        {"target", point_json(end, source.unit)}}},
+      {"results",
+       {{"intersects", intersects},
+        {"intersection_count", face_indices.size()},
+        {"face_indices", face_indices},
+        {"primitive_count", mesh.number_of_faces()},
+        {"constructs_intersection_geometry", false}}},
+      {"validation",
+       {{"validator_id", "spatial.producer_check.aabb_segment_candidates"},
+        {"authoritative", false},
+        {"passed", true},
+        {"checks",
+         {"typed_segment", "nondegenerate_primitives",
+          "predicate_candidate_query"}}}}};
+}
+
+Json run_segment_analysis(const Request& request) {
+  require_segment_request(request, false);
+  const auto report =
+      compute_segment_report(request, request.inputs.front());
+  const auto path = write_json(request, "analysis.json", report);
+  return success_result(
+      request,
+      Json::array({{{"slot", "analysis"},
+                    {"type", "GeometryAnalysisReport"},
+                    {"unit", "none"},
+                    {"format", "json"},
+                    {"path", portable_path(path)}}}),
+      {{"analysis_kind", "aabb_segment_candidates"},
+       {"source_sha256", request.inputs.front().sha256},
+       {"intersection_count",
+        report.at("results").at("intersection_count")},
+       {"constructs_intersection_geometry", false}});
+}
+
+Json run_segment_validator(const Request& request) {
+  require_segment_request(request, true);
+  const auto& candidate_input = request.inputs.at(0);
+  const auto& source = request.inputs.at(1);
+  const auto candidate = read_candidate(candidate_input);
+  const auto reference = compute_segment_report(request, source);
+  Json checks = {
+      {"schema_valid",
+       candidate.value("schema_version", 0) == 1 &&
+           candidate.value("analysis_kind", "") ==
+               "aabb_segment_candidates" &&
+           candidate.contains("source") && candidate.contains("query") &&
+           candidate.contains("results")},
+      {"source_identity_matches",
+       candidate.contains("source") &&
+           candidate.at("source").value("sha256", "") == source.sha256 &&
+           candidate.at("source").value("unit", "") == source.unit},
+      {"query_matches_reference",
+       candidate.contains("query") &&
+           candidate.at("query") == reference.at("query")},
+      {"intersection_flag_matches_reference",
+       candidate.contains("results") &&
+           candidate.at("results").contains("intersects") &&
+           candidate.at("results").at("intersects") ==
+               reference.at("results").at("intersects")},
+      {"candidate_faces_match_reference",
+       candidate.contains("results") &&
+           candidate.at("results").contains("face_indices") &&
+           candidate.at("results").contains("intersection_count") &&
+           candidate.at("results").at("face_indices") ==
+               reference.at("results").at("face_indices") &&
+           candidate.at("results").at("intersection_count") ==
+               reference.at("results").at("intersection_count")},
+  };
+  bool passed = true;
+  for (auto it = checks.begin(); it != checks.end(); ++it)
+    passed = passed && it.value().is_boolean() && it.value().get<bool>();
+  if (!passed) {
+    throw WorkerError(
+        "VALIDATION_FAILED", "AABB_SEGMENT_REPORT_MISMATCH",
+        "AABB segment candidate report does not match official CGAL replay");
+  }
+  Json report = {
+      {"schema_version", 1},
+      {"schema", "ValidationReport/v1"},
+      {"status", "pass"},
+      {"validator_id", "spatial.validate.aabb_segment_candidates"},
+      {"validates", "spatial.aabb.segment_candidates"},
+      {"passed", true},
+      {"candidate_sha256", candidate_input.sha256},
+      {"source_sha256", source.sha256},
+      {"checks", checks}};
+  const auto path = write_json(request, "validation.json", report);
+  return success_result(
+      request,
+      Json::array({{{"slot", "validation"},
+                    {"type", "ValidationReport"},
+                    {"unit", "none"},
+                    {"format", "json"},
+                    {"path", portable_path(path)}}}),
+      {{"validator_id", "spatial.validate.aabb_segment_candidates"},
+       {"source_sha256", source.sha256}});
+}
+
+Json segment_analysis_info() {
+  return {
+      {"analysis_kind", "aabb_segment_candidates"},
+      {"input_format", "off"},
+      {"input_slot", "mesh"},
+      {"input_units", {"mm", "cm", "m"}},
+      {"output_format", "json"},
+      {"output_slot", "analysis"},
+      {"output_unit", "none"},
+      {"geometry_mutation", false},
+      {"source_header", "CGAL/AABB_tree.h"},
+      {"source_version", "6.2.1"},
+      {"source_kind", "official_release"},
+      {"query_methods",
+       {"AABB_tree::do_intersect",
+        "AABB_tree::number_of_intersected_primitives",
+        "AABB_tree::all_intersected_primitives"}},
+      {"constructs_intersection_geometry", false},
+      {"degenerate_primitive_policy", "reject"},
+      {"validators", {"spatial.validate.aabb_segment_candidates"}},
+      {"validator_parameter_bindings",
+       {{"spatial.validate.aabb_segment_candidates",
+         {{"source", "source"}, {"target", "target"}}}}},
+      {"precision_contract",
+       {{"internal_kernel", "EPICK"},
+        {"input_coordinates", "IEEE-754 binary64"},
+        {"result", "predicate-only primitive ids"},
+        {"exact_constructions", false}}}};
+}
+
+Json segment_validator_info() {
+  return {
+      {"validates", "spatial.aabb.segment_candidates"},
+      {"report_schema", "ValidationReport/v1"},
+      {"artifact_bindings",
+       {{"candidate", {{"output", "analysis"}}},
+        {"source", {{"input", "mesh"}}}}},
+      {"parameter_bindings",
+       {{"source", {{"parameter", "source"}}},
+        {"target", {{"parameter", "target"}}}}},
+      {"required_checks",
+       {"schema_valid", "source_identity_matches", "query_matches_reference",
+        "intersection_flag_matches_reference",
+        "candidate_faces_match_reference"}},
+      {"reference", "fresh official CGAL AABB_tree predicate replay"}};
+}
+
 Json analysis_info() {
   return {
       {"analysis_kind", "aabb_closest_point"},
@@ -418,5 +671,39 @@ OperationDefinition validate_aabb_closest_point_operation() {
   definition.info = validator_info();
   return definition;
 }
+
+
+OperationDefinition aabb_segment_candidates_operation() {
+  OperationDefinition definition{
+      "spatial.aabb.segment_candidates",
+      1,
+      {"TriangleSurfaceMesh"},
+      "GeometryAnalysisReport",
+      "analysis",
+      [](const Request& request) { return run_segment_analysis(request); }};
+  definition.supported_kernels = {"package_recommended"};
+  definition.effective_kernel =
+      "CGAL::Exact_predicates_inexact_constructions_kernel";
+  definition.dependencies = {"AABB_tree", "Surface_mesh"};
+  definition.info = segment_analysis_info();
+  return definition;
+}
+
+OperationDefinition validate_aabb_segment_candidates_operation() {
+  OperationDefinition definition{
+      "spatial.validate.aabb_segment_candidates",
+      1,
+      {"GeometryAnalysisReport", "TriangleSurfaceMesh"},
+      "ValidationReport",
+      "validator",
+      [](const Request& request) { return run_segment_validator(request); }};
+  definition.supported_kernels = {"package_recommended"};
+  definition.effective_kernel =
+      "CGAL::Exact_predicates_inexact_constructions_kernel";
+  definition.dependencies = {"AABB_tree", "Surface_mesh"};
+  definition.info = segment_validator_info();
+  return definition;
+}
+
 
 }  // namespace cgal_master::spatial
