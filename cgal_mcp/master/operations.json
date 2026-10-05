@@ -1,7 +1,7 @@
 {
   "$schema": "operation.schema.json",
   "schema_version": 1,
-  "catalog_revision": "master-core-hull-wave-a-wave-b-mesh-boolean-web-spatial-aabb-implemented-1",
+  "catalog_revision": "master-core-hull-wave-a-wave-b-mesh-boolean-web-spatial-segment-implemented-1",
   "cgal_version": "6.2.1",
   "build_requirements": {
     "source_kind": "official_release",
@@ -7961,7 +7961,7 @@
     {
       "id": "spatial.aabb.closest_point",
       "revision": 1,
-      "status": "IMPLEMENTED",
+      "status": "VALIDATED",
       "role": "analysis",
       "summary": "Find the closest point, closest face, distance and squared distance from a typed 3D point query to a triangle surface mesh using CGAL AABB_tree.",
       "aliases": [
@@ -8174,12 +8174,26 @@
             }
           }
         }
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_spatial_aabb_cases.py",
+          "tests/master_spatial_aabb_mcp_e2e.py:auto",
+          "tests/master_spatial_aabb_mcp_e2e.py:legacy"
+        ],
+        "cgal_version": "6.2.1",
+        "source_kind": "official_release",
+        "ci": {
+          "windows_2022": "pass",
+          "ubuntu_latest": "pass",
+          "run_id": 37267300796
+        }
       }
     },
     {
       "id": "spatial.validate.aabb_closest_point",
       "revision": 1,
-      "status": "IMPLEMENTED",
+      "status": "VALIDATED",
       "role": "validator",
       "summary": "Validate an AABB closest-point analysis report against source identity and a fresh official CGAL AABB_tree replay.",
       "aliases": [
@@ -8359,6 +8373,526 @@
             "distance_matches_reference",
             "primitive_matches_reference"
           ]
+        }
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_spatial_aabb_cases.py",
+          "tests/master_spatial_aabb_mcp_e2e.py:auto",
+          "tests/master_spatial_aabb_mcp_e2e.py:legacy"
+        ],
+        "cgal_version": "6.2.1",
+        "source_kind": "official_release",
+        "ci": {
+          "windows_2022": "pass",
+          "ubuntu_latest": "pass",
+          "run_id": 37267300796
+        }
+      }
+    },
+    {
+      "id": "spatial.aabb.segment_candidates",
+      "revision": 1,
+      "status": "IMPLEMENTED",
+      "role": "analysis",
+      "summary": "Return the triangle face IDs intersected by a typed 3D segment using predicate-only CGAL AABB_tree queries without constructing intersection geometry.",
+      "aliases": [
+        "aabb segment intersections",
+        "segment mesh intersection candidates",
+        "intersected faces",
+        "交差候補",
+        "線分 メッシュ 交差",
+        "AABB交差面"
+      ],
+      "package": "AABB_tree",
+      "major_requirements": [
+        "major.7.2.01",
+        "major.7.2.04"
+      ],
+      "dependencies": [
+        "AABB_tree",
+        "Surface_mesh"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "AABB_tree"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::AABB_tree::do_intersect"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::AABB_tree::number_of_intersected_primitives"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::AABB_tree::all_intersected_primitives"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/AABB_tree.h"
+        },
+        {
+          "kind": "manual",
+          "identifier": "AABB_tree/index.html"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "AABB_tree",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/AABB_face_graph_triangle_primitive.h",
+            "sha256": "1ab0b9373671480e948eea3a2288cf4f5c4cc93d3c0ec5fa23b9a2dd3b3799a7"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "mesh",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "analysis",
+            "type": "GeometryAnalysisReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "source",
+          "target"
+        ],
+        "properties": {
+          "source": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "value",
+              "unit"
+            ],
+            "properties": {
+              "value": {
+                "type": "array",
+                "minItems": 3,
+                "maxItems": 3,
+                "items": {
+                  "type": "number"
+                }
+              },
+              "unit": {
+                "type": "string",
+                "enum": [
+                  "mm",
+                  "cm",
+                  "m"
+                ]
+              }
+            }
+          },
+          "target": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "value",
+              "unit"
+            ],
+            "properties": {
+              "value": {
+                "type": "array",
+                "minItems": 3,
+                "maxItems": 3,
+                "items": {
+                  "type": "number"
+                }
+              },
+              "unit": {
+                "type": "string",
+                "enum": [
+                  "mm",
+                  "cm",
+                  "m"
+                ]
+              }
+            }
+          }
+        }
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 536870912
+        },
+        {
+          "id": "triangle_surface_mesh",
+          "property": "triangulated",
+          "equals": true
+        },
+        {
+          "id": "nondegenerate_aabb_primitives",
+          "worker_check": {
+            "degenerate_triangles": false
+          }
+        },
+        {
+          "id": "nonzero_segment",
+          "worker_check": {
+            "distinct_endpoints": true
+          }
+        }
+      ],
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "input_coordinate_storage": "IEEE-754 binary64",
+        "result_storage": "sorted face indices and booleans",
+        "requested_policy": "package_recommended only",
+        "exact_constructions_rejection": "UNSUPPORTED_KERNEL"
+      },
+      "output_contract": {
+        "schema": "GeometryAnalysisReport/v1",
+        "analysis_kind": "aabb_segment_candidates",
+        "geometry_mutation": false,
+        "source_sha256_preserved": true,
+        "constructs_intersection_geometry": false,
+        "result_fields": [
+          "intersects",
+          "intersection_count",
+          "face_indices",
+          "primitive_count",
+          "constructs_intersection_geometry"
+        ]
+      },
+      "validation": {
+        "required": true,
+        "validators": [
+          "spatial.validate.aabb_segment_candidates"
+        ],
+        "bindings": {
+          "spatial.validate.aabb_segment_candidates": {
+            "artifacts": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "source": {
+                "input": "mesh"
+              }
+            },
+            "parameters": {
+              "source": {
+                "parameter": "source"
+              },
+              "target": {
+                "parameter": "target"
+              }
+            }
+          }
+        },
+        "required_report_checks": {
+          "checks.schema_valid": true,
+          "checks.source_identity_matches": true,
+          "checks.query_matches_reference": true,
+          "checks.intersection_flag_matches_reference": true,
+          "checks.candidate_faces_match_reference": true,
+          "passed": true,
+          "schema": "ValidationReport/v1",
+          "schema_version": 1,
+          "status": "pass",
+          "validates": "spatial.aabb.segment_candidates",
+          "validator_id": "spatial.validate.aabb_segment_candidates"
+        }
+      },
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "analysis_kind": "aabb_segment_candidates",
+          "input_format": "off",
+          "input_slot": "mesh",
+          "input_units": [
+            "mm",
+            "cm",
+            "m"
+          ],
+          "output_format": "json",
+          "output_slot": "analysis",
+          "output_unit": "none",
+          "geometry_mutation": false,
+          "source_header": "CGAL/AABB_tree.h",
+          "source_version": "6.2.1",
+          "source_kind": "official_release",
+          "query_methods": [
+            "AABB_tree::do_intersect",
+            "AABB_tree::number_of_intersected_primitives",
+            "AABB_tree::all_intersected_primitives"
+          ],
+          "constructs_intersection_geometry": false,
+          "degenerate_primitive_policy": "reject",
+          "validators": [
+            "spatial.validate.aabb_segment_candidates"
+          ],
+          "validator_parameter_bindings": {
+            "spatial.validate.aabb_segment_candidates": {
+              "source": "source",
+              "target": "target"
+            }
+          },
+          "precision_contract": {
+            "internal_kernel": "EPICK",
+            "input_coordinates": "IEEE-754 binary64",
+            "result": "predicate-only primitive ids",
+            "exact_constructions": false
+          }
+        }
+      }
+    },
+    {
+      "id": "spatial.validate.aabb_segment_candidates",
+      "revision": 1,
+      "status": "IMPLEMENTED",
+      "role": "validator",
+      "summary": "Validate AABB segment intersection candidate face IDs against source identity and a fresh official CGAL AABB_tree predicate replay.",
+      "aliases": [
+        "validate aabb segment candidates",
+        "segment intersection validator",
+        "AABB交差候補検証"
+      ],
+      "package": "AABB_tree",
+      "major_requirements": [
+        "major.7.2.01",
+        "major.7.2.04"
+      ],
+      "dependencies": [
+        "AABB_tree",
+        "Surface_mesh"
+      ],
+      "sources": [
+        {
+          "kind": "operation_reference",
+          "identifier": "spatial.aabb.segment_candidates"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::AABB_tree::all_intersected_primitives"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/AABB_tree.h"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "AABB_tree",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/AABB_face_graph_triangle_primitive.h",
+            "sha256": "1ab0b9373671480e948eea3a2288cf4f5c4cc93d3c0ec5fa23b9a2dd3b3799a7"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "GeometryAnalysisReport"
+            ],
+            "formats": [
+              "json"
+            ],
+            "unit": "none"
+          },
+          {
+            "slot": "source",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "source",
+          "target"
+        ],
+        "properties": {
+          "source": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "value",
+              "unit"
+            ],
+            "properties": {
+              "value": {
+                "type": "array",
+                "minItems": 3,
+                "maxItems": 3,
+                "items": {
+                  "type": "number"
+                }
+              },
+              "unit": {
+                "type": "string",
+                "enum": [
+                  "mm",
+                  "cm",
+                  "m"
+                ]
+              }
+            }
+          },
+          "target": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "value",
+              "unit"
+            ],
+            "properties": {
+              "value": {
+                "type": "array",
+                "minItems": 3,
+                "maxItems": 3,
+                "items": {
+                  "type": "number"
+                }
+              },
+              "unit": {
+                "type": "string",
+                "enum": [
+                  "mm",
+                  "cm",
+                  "m"
+                ]
+              }
+            }
+          }
+        }
+      },
+      "preconditions": [
+        {
+          "id": "exact_bindings",
+          "worker_check": {
+            "candidate": true,
+            "source": true,
+            "segment_parameters": true
+          }
+        }
+      ],
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "validation": {
+        "required": false,
+        "validators": [],
+        "bindings": {},
+        "terminal_validator": true,
+        "validates": "spatial.aabb.segment_candidates",
+        "required_report_checks": {
+          "checks.schema_valid": true,
+          "checks.source_identity_matches": true,
+          "checks.query_matches_reference": true,
+          "checks.intersection_flag_matches_reference": true,
+          "checks.candidate_faces_match_reference": true,
+          "passed": true,
+          "schema": "ValidationReport/v1",
+          "schema_version": 1,
+          "status": "pass",
+          "validates": "spatial.aabb.segment_candidates",
+          "validator_id": "spatial.validate.aabb_segment_candidates"
+        }
+      },
+      "output_contract": {
+        "schema": "ValidationReport/v1",
+        "required_true_checks": [
+          "schema_valid",
+          "source_identity_matches",
+          "query_matches_reference",
+          "intersection_flag_matches_reference",
+          "candidate_faces_match_reference"
+        ],
+        "status": "pass"
+      },
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "validates": "spatial.aabb.segment_candidates",
+          "report_schema": "ValidationReport/v1",
+          "artifact_bindings": {
+            "candidate": {
+              "output": "analysis"
+            },
+            "source": {
+              "input": "mesh"
+            }
+          },
+          "parameter_bindings": {
+            "source": {
+              "parameter": "source"
+            },
+            "target": {
+              "parameter": "target"
+            }
+          },
+          "required_checks": [
+            "schema_valid",
+            "source_identity_matches",
+            "query_matches_reference",
+            "intersection_flag_matches_reference",
+            "candidate_faces_match_reference"
+          ],
+          "reference": "fresh official CGAL AABB_tree predicate replay"
         }
       }
     }
