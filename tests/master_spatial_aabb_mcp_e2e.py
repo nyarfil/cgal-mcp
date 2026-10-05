@@ -16,6 +16,8 @@ from tests.master_mcp_e2e import worker_path
 
 ANALYSIS = "spatial.aabb.closest_point"
 VALIDATOR = "spatial.validate.aabb_closest_point"
+SEGMENT_ANALYSIS = "spatial.aabb.segment_candidates"
+SEGMENT_VALIDATOR = "spatial.validate.aabb_segment_candidates"
 
 
 def write_square(path: Path) -> None:
@@ -169,13 +171,84 @@ async def main() -> None:
             assert tampered_status["state"] in {"rejected", "failed"},                 tampered_status
             assert not tampered_status.get("outputs"), tampered_status
 
+
+            segment_search = await call("cgal_capabilities_search", {
+                "query": "segment mesh intersection candidates",
+                "artifact_ids": [source["artifact_id"]],
+                "constraints": {"kernel": "package_recommended"},
+                "limit": 5,
+            })
+            assert SEGMENT_ANALYSIS in [
+                item["operation_id"] for item in segment_search["candidates"]
+            ], segment_search
+
+            segment_japanese = await call("cgal_capabilities_search", {
+                "query": "線分 メッシュ 交差候補",
+                "artifact_ids": [source["artifact_id"]],
+                "limit": 5,
+            })
+            assert SEGMENT_ANALYSIS in [
+                item["operation_id"] for item in segment_japanese["candidates"]
+            ], segment_japanese
+
+            segment_source = {"value": [7.5, 2.5, -10.0], "unit": "mm"}
+            segment_target = {"value": [7.5, 2.5, 10.0], "unit": "mm"}
+            segment_plan = await call("cgal_plan", {"request": {
+                "operation_id": SEGMENT_ANALYSIS,
+                "inputs": {"mesh": source["artifact_id"]},
+                "parameters": {
+                    "source": segment_source,
+                    "target": segment_target,
+                },
+            }})
+            assert [step["operation"] for step in segment_plan["steps"]] == [
+                SEGMENT_ANALYSIS, SEGMENT_VALIDATOR], segment_plan
+            segment_transform, segment_validation = segment_plan["steps"]
+            assert segment_validation["validates"] == segment_transform["id"]
+            assert segment_validation["inputs"]["candidate"]["step"] == \
+                segment_transform["id"]
+            assert segment_validation["inputs"]["source"]["artifact_id"] == \
+                source["artifact_id"]
+            assert segment_validation["parameters"] == {
+                "source": segment_source, "target": segment_target}
+
+            segment_queued = await call(
+                "cgal_execute", {"plan_id": segment_plan["plan_id"]})
+            segment_status = await wait_job(segment_queued["job_id"])
+            assert segment_status["state"] == "succeeded", segment_status
+            assert segment_status["validation_status"] == "passed", segment_status
+            segment_validation_report = \
+                segment_status["validation"][0]["report"]
+            assert segment_validation_report["validator_id"] == SEGMENT_VALIDATOR
+            assert segment_validation_report["validates"] == SEGMENT_ANALYSIS
+            assert all(segment_validation_report["checks"].values()), \
+                segment_validation_report
+
+            segment_artifact = await call("cgal_artifact_inspect", {
+                "artifact_id": segment_status["outputs"][0]["artifact_id"]})
+            assert (segment_artifact["type"], segment_artifact["format"],
+                    segment_artifact["unit"]) == (
+                        "GeometryAnalysisReport", "json", "none")
+            segment_exported = root / "segment-analysis.json"
+            await call("cgal_artifact_export", {
+                "artifact_id": segment_artifact["artifact_id"],
+                "path": str(segment_exported),
+            })
+            segment_report = json.loads(
+                segment_exported.read_text(encoding="utf-8"))
+            assert segment_report["results"]["intersects"] is True
+            assert segment_report["results"]["intersection_count"] == 1
+            assert segment_report["results"]["face_indices"] == [0]
+            assert segment_report["results"][
+                "constructs_intersection_geometry"] is False
+
             after = await call("cgal_artifact_inspect", {
                 "artifact_id": source["artifact_id"]})
             assert after["sha256"] == source["sha256"]
 
             print(
                 f"CGAL Master Spatial AABB MCP ({mode}) + search + "
-                "mandatory replay validator: PASS")
+                "distance + segment candidate mandatory replay validators: PASS")
 
 
 if __name__ == "__main__":
