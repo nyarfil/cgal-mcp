@@ -1,7 +1,7 @@
 {
   "$schema": "operation.schema.json",
   "schema_version": 1,
-  "catalog_revision": "master-core-hull-wave-a-wave-b-mesh-boolean-validated-1",
+  "catalog_revision": "master-core-hull-wave-a-wave-b-mesh-boolean-web-spatial-aabb-implemented-1",
   "cgal_version": "6.2.1",
   "build_requirements": {
     "source_kind": "official_release",
@@ -1226,7 +1226,7 @@
           "bounds": {
             "minimum_span": 1e-100,
             "maximum_absolute_coordinate": 1e+100,
-            "maximum_translation_to_span_ratio": 1000000.0
+            "maximum_translation_to_span_ratio": 1000000
           }
         }
       ],
@@ -1284,7 +1284,7 @@
           "input_format": "xyz",
           "numeric_scale_contract": {
             "maximum_absolute_coordinate": 1e+100,
-            "maximum_translation_to_span_ratio": 1000000.0,
+            "maximum_translation_to_span_ratio": 1000000,
             "minimum_span": 1e-100
           },
           "output_format": "xyz",
@@ -1428,7 +1428,7 @@
           "bounds": {
             "minimum_span": 1e-100,
             "maximum_absolute_coordinate": 1e+100,
-            "maximum_translation_to_span_ratio": 1000000.0
+            "maximum_translation_to_span_ratio": 1000000
           }
         }
       ],
@@ -1484,7 +1484,7 @@
           "numeric_scale_contract": {
             "finite_coordinate_to_cell_ratio": true,
             "maximum_absolute_coordinate": 1e+100,
-            "maximum_translation_to_span_ratio": 1000000.0,
+            "maximum_translation_to_span_ratio": 1000000,
             "minimum_span": 1e-100
           },
           "output_format": "xyz",
@@ -1808,7 +1808,7 @@
           "bounds": {
             "minimum_span": 1e-100,
             "maximum_absolute_coordinate": 1e+100,
-            "maximum_translation_to_span_ratio": 1000000.0
+            "maximum_translation_to_span_ratio": 1000000
           }
         }
       ],
@@ -1863,7 +1863,7 @@
           "input_format": "xyz",
           "numeric_scale_contract": {
             "maximum_absolute_coordinate": 1e+100,
-            "maximum_translation_to_span_ratio": 1000000.0,
+            "maximum_translation_to_span_ratio": 1000000,
             "minimum_span": 1e-100
           },
           "output_format": "xyz",
@@ -2005,7 +2005,7 @@
           "bounds": {
             "minimum_span": 1e-100,
             "maximum_absolute_coordinate": 1e+100,
-            "maximum_translation_to_span_ratio": 1000000.0
+            "maximum_translation_to_span_ratio": 1000000
           }
         },
         {
@@ -2076,7 +2076,7 @@
           },
           "numeric_scale_contract": {
             "maximum_absolute_coordinate": 1e+100,
-            "maximum_translation_to_span_ratio": 1000000.0,
+            "maximum_translation_to_span_ratio": 1000000,
             "minimum_span": 1e-100
           },
           "output_format": "xyz",
@@ -2270,7 +2270,7 @@
           "bounds": {
             "minimum_span": 1e-100,
             "maximum_absolute_coordinate": 1e+100,
-            "maximum_translation_to_span_ratio": 1000000.0
+            "maximum_translation_to_span_ratio": 1000000
           }
         },
         {
@@ -2346,7 +2346,7 @@
           ],
           "numeric_scale_contract": {
             "maximum_absolute_coordinate": 1e+100,
-            "maximum_translation_to_span_ratio": 1000000.0,
+            "maximum_translation_to_span_ratio": 1000000,
             "minimum_span": 1e-100
           },
           "output_format": "ascii_ply_with_x_y_z_nx_ny_nz",
@@ -2507,7 +2507,7 @@
           "bounds": {
             "minimum_span": 1e-100,
             "maximum_absolute_coordinate": 1e+100,
-            "maximum_translation_to_span_ratio": 1000000.0
+            "maximum_translation_to_span_ratio": 1000000
           }
         }
       ],
@@ -2562,7 +2562,7 @@
           "input_format": "ascii_ply_with_x_y_z_nx_ny_nz",
           "numeric_scale_contract": {
             "maximum_absolute_coordinate": 1e+100,
-            "maximum_translation_to_span_ratio": 1000000.0,
+            "maximum_translation_to_span_ratio": 1000000,
             "minimum_span": 1e-100
           },
           "output_format": "ascii_ply_with_x_y_z_nx_ny_nz",
@@ -7956,6 +7956,410 @@
         "reference_comparison": "exact EPECK Boolean replay, exact signed volume, and mutual exact set difference",
         "report_numeric_storage": "booleans and exact rational strings; no approximate tolerance",
         "requested_policy": "exact_constructions or package_recommended"
+      }
+    },
+    {
+      "id": "spatial.aabb.closest_point",
+      "revision": 1,
+      "status": "IMPLEMENTED",
+      "role": "analysis",
+      "summary": "Find the closest point, closest face, distance and squared distance from a typed 3D point query to a triangle surface mesh using CGAL AABB_tree.",
+      "aliases": [
+        "aabb closest point",
+        "mesh nearest point",
+        "point to mesh distance",
+        "最近傍点",
+        "メッシュまでの距離",
+        "AABB距離検索"
+      ],
+      "package": "AABB_tree",
+      "major_requirements": [
+        "major.7.2.01"
+      ],
+      "dependencies": [
+        "AABB_tree",
+        "Surface_mesh"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "AABB_tree"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::AABB_tree"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::AABB_face_graph_triangle_primitive"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/AABB_tree.h"
+        },
+        {
+          "kind": "manual",
+          "identifier": "AABB_tree/index.html"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "AABB_tree",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/AABB_face_graph_triangle_primitive.h",
+            "sha256": "1ab0b9373671480e948eea3a2288cf4f5c4cc93d3c0ec5fa23b9a2dd3b3799a7"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "mesh",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "analysis",
+            "type": "GeometryAnalysisReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "query"
+        ],
+        "properties": {
+          "query": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "value",
+              "unit"
+            ],
+            "properties": {
+              "value": {
+                "type": "array",
+                "minItems": 3,
+                "maxItems": 3,
+                "items": {
+                  "type": "number"
+                }
+              },
+              "unit": {
+                "type": "string",
+                "enum": [
+                  "mm",
+                  "cm",
+                  "m"
+                ]
+              }
+            }
+          }
+        }
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 536870912
+        },
+        {
+          "id": "triangle_surface_mesh",
+          "property": "triangulated",
+          "equals": true
+        },
+        {
+          "id": "nondegenerate_aabb_primitives",
+          "worker_check": {
+            "degenerate_triangles": false
+          }
+        }
+      ],
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "input_coordinate_storage": "IEEE-754 binary64",
+        "report_numeric_storage": "IEEE-754 binary64",
+        "requested_policy": "package_recommended only",
+        "exact_constructions_rejection": "UNSUPPORTED_KERNEL"
+      },
+      "output_contract": {
+        "schema": "GeometryAnalysisReport/v1",
+        "analysis_kind": "aabb_closest_point",
+        "geometry_mutation": false,
+        "source_sha256_preserved": true,
+        "result_fields": [
+          "closest_point",
+          "distance",
+          "squared_distance",
+          "closest_face_index",
+          "primitive_count",
+          "distance_acceleration"
+        ]
+      },
+      "validation": {
+        "required": true,
+        "validators": [
+          "spatial.validate.aabb_closest_point"
+        ],
+        "bindings": {
+          "spatial.validate.aabb_closest_point": {
+            "artifacts": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "source": {
+                "input": "mesh"
+              }
+            },
+            "parameters": {
+              "query": {
+                "parameter": "query"
+              }
+            }
+          }
+        },
+        "required_report_checks": {
+          "checks.schema_valid": true,
+          "checks.source_identity_matches": true,
+          "checks.query_matches_reference": true,
+          "checks.closest_point_matches_reference": true,
+          "checks.distance_matches_reference": true,
+          "checks.primitive_matches_reference": true,
+          "passed": true,
+          "schema": "ValidationReport/v1",
+          "schema_version": 1,
+          "status": "pass",
+          "validates": "spatial.aabb.closest_point",
+          "validator_id": "spatial.validate.aabb_closest_point"
+        }
+      },
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "analysis_kind": "aabb_closest_point",
+          "source_header": "CGAL/AABB_tree.h",
+          "source_version": "6.2.1",
+          "distance_acceleration": "AABB_tree::accelerate_distance_queries",
+          "degenerate_primitive_policy": "reject",
+          "validators": [
+            "spatial.validate.aabb_closest_point"
+          ],
+          "validator_parameter_bindings": {
+            "spatial.validate.aabb_closest_point": {
+              "query": "query"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "spatial.validate.aabb_closest_point",
+      "revision": 1,
+      "status": "IMPLEMENTED",
+      "role": "validator",
+      "summary": "Validate an AABB closest-point analysis report against source identity and a fresh official CGAL AABB_tree replay.",
+      "aliases": [
+        "validate aabb closest point",
+        "aabb distance validator",
+        "AABB最近傍検証"
+      ],
+      "package": "AABB_tree",
+      "major_requirements": [
+        "major.7.2.01"
+      ],
+      "dependencies": [
+        "AABB_tree",
+        "Surface_mesh"
+      ],
+      "sources": [
+        {
+          "kind": "operation_reference",
+          "identifier": "spatial.aabb.closest_point"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::AABB_tree::closest_point_and_primitive"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::AABB_tree::squared_distance"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/AABB_tree.h"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "AABB_tree",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/AABB_face_graph_triangle_primitive.h",
+            "sha256": "1ab0b9373671480e948eea3a2288cf4f5c4cc93d3c0ec5fa23b9a2dd3b3799a7"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "GeometryAnalysisReport"
+            ],
+            "formats": [
+              "json"
+            ],
+            "unit": "none"
+          },
+          {
+            "slot": "source",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "query"
+        ],
+        "properties": {
+          "query": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "value",
+              "unit"
+            ],
+            "properties": {
+              "value": {
+                "type": "array",
+                "minItems": 3,
+                "maxItems": 3,
+                "items": {
+                  "type": "number"
+                }
+              },
+              "unit": {
+                "type": "string",
+                "enum": [
+                  "mm",
+                  "cm",
+                  "m"
+                ]
+              }
+            }
+          }
+        }
+      },
+      "preconditions": [
+        {
+          "id": "exact_bindings",
+          "worker_check": {
+            "candidate": true,
+            "source": true,
+            "query_parameter": true
+          }
+        }
+      ],
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "validation": {
+        "required": false,
+        "validators": [],
+        "bindings": {},
+        "terminal_validator": true,
+        "validates": "spatial.aabb.closest_point",
+        "required_report_checks": {
+          "checks.schema_valid": true,
+          "checks.source_identity_matches": true,
+          "checks.query_matches_reference": true,
+          "checks.closest_point_matches_reference": true,
+          "checks.distance_matches_reference": true,
+          "checks.primitive_matches_reference": true,
+          "passed": true,
+          "schema": "ValidationReport/v1",
+          "schema_version": 1,
+          "status": "pass",
+          "validates": "spatial.aabb.closest_point",
+          "validator_id": "spatial.validate.aabb_closest_point"
+        }
+      },
+      "output_contract": {
+        "schema": "ValidationReport/v1",
+        "required_true_checks": [
+          "schema_valid",
+          "source_identity_matches",
+          "query_matches_reference",
+          "closest_point_matches_reference",
+          "distance_matches_reference",
+          "primitive_matches_reference"
+        ],
+        "status": "pass"
+      },
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "validates": "spatial.aabb.closest_point",
+          "report_schema": "ValidationReport/v1",
+          "required_checks": [
+            "schema_valid",
+            "source_identity_matches",
+            "query_matches_reference",
+            "closest_point_matches_reference",
+            "distance_matches_reference",
+            "primitive_matches_reference"
+          ]
+        }
       }
     }
   ]
