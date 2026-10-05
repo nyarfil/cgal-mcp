@@ -11,6 +11,7 @@ on:
       - 'scripts/verify_master_wave_a_mesh.py'
       - 'scripts/verify_master_wave_a_boolean.py'
       - 'scripts/verify_master_wave_b.py'
+      - 'scripts/verify_master_spatial.py'
       - 'scripts/master_acceptance.py'
       - 'scripts/replay_master_capabilities.py'
       - 'tests/**master**'
@@ -78,22 +79,17 @@ jobs:
       - run: cmake --build build-master --config Release --target cgal-master-worker --parallel 1
       - name: Actual generic hull, validation and restart acceptance
         run: python scripts/verify_master_foundation.py --output work/master-foundation-ci.json
-      - name: Spatial AABB closest-point acceptance (Linux)
+      - name: Spatial AABB acceptance (Linux)
         if: runner.os == 'Linux'
-        run: |
-          python tests/master_spatial_aabb_cases.py build-master/cgal-master-worker
-          CGAL_MASTER_WORKER="$PWD/build-master/cgal-master-worker" python -m tests.master_spatial_aabb_mcp_e2e auto
-          CGAL_MASTER_WORKER="$PWD/build-master/cgal-master-worker" python -m tests.master_spatial_aabb_mcp_e2e legacy
-      - name: Spatial AABB closest-point acceptance (Windows)
+        run: >-
+          python scripts/verify_master_spatial.py
+          --worker build-master/cgal-master-worker
+          --output work/master-spatial-ci.json
+      - name: Spatial AABB acceptance (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          python tests/master_spatial_aabb_cases.py build-master/Release/cgal-master-worker.exe
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          $env:CGAL_MASTER_WORKER = (Resolve-Path build-master/Release/cgal-master-worker.exe)
-          python -m tests.master_spatial_aabb_mcp_e2e auto
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          python -m tests.master_spatial_aabb_mcp_e2e legacy
+          python scripts/verify_master_spatial.py --worker build-master/Release/cgal-master-worker.exe --output work/master-spatial-ci.json
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Linux worker geometry and failure cases
         if: runner.os == 'Linux'
@@ -145,3 +141,4 @@ jobs:
             work/master-wave-a-mesh-ci.json
             work/master-wave-a-boolean-ci.json
             work/master-capability-ci.json
+            work/master-spatial-ci.json
