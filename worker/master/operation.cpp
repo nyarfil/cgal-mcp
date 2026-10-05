@@ -75,7 +75,9 @@ const std::vector<OperationDefinition>& operation_registry() {
       wave_a_boolean::validate_boolean_intersection_operation(),
       wave_a_boolean::validate_boolean_difference_operation(),
       spatial::aabb_closest_point_operation(),
-      spatial::validate_aabb_closest_point_operation()};
+      spatial::validate_aabb_closest_point_operation(),
+      spatial::aabb_segment_candidates_operation(),
+      spatial::validate_aabb_segment_candidates_operation()};
   return registry;
 }
 
