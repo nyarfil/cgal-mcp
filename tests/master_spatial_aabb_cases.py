@@ -244,6 +244,7 @@ def main(worker: str) -> None:
         assert segment_manifest["supported_kernels"] == ["package_recommended"]
         assert segment_manifest["dependencies"] == ["AABB_tree", "Surface_mesh"]
         assert segment_manifest["info"]["constructs_intersection_geometry"] is False
+        assert segment_manifest["info"]["max_intersection_candidates"] == 100000
         assert segment_manifest["info"]["validators"] == [SEGMENT_VALIDATOR]
         assert operations[SEGMENT_VALIDATOR]["info"]["validates"] == SEGMENT_ANALYSIS
 
@@ -281,6 +282,19 @@ def main(worker: str) -> None:
             segment_validation["outputs"][0]["path"]).read_text(encoding="utf-8"))
         assert segment_validation_report["passed"] is True
         assert all(segment_validation_report["checks"].values())
+
+        shared_edge_dir = root / "segment-shared-edge"
+        shared_edge_dir.mkdir()
+        shared_edge_result = run(worker, segment_request(
+            SEGMENT_ANALYSIS, [source], shared_edge_dir,
+            {"value": [5, 5, -10], "unit": "mm"},
+            {"value": [5, 5, 10], "unit": "mm"},
+            "aabb-segment-shared-edge"))
+        shared_edge_report = json.loads(pathlib.Path(
+            shared_edge_result["outputs"][0]["path"]).read_text(encoding="utf-8"))
+        assert shared_edge_report["results"]["intersects"] is True
+        assert shared_edge_report["results"]["intersection_count"] == 2
+        assert shared_edge_report["results"]["face_indices"] == [0, 1]
 
         miss_dir = root / "segment-miss"
         miss_dir.mkdir()
