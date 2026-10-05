@@ -12,6 +12,8 @@ import tempfile
 
 ANALYSIS = "spatial.aabb.closest_point"
 VALIDATOR = "spatial.validate.aabb_closest_point"
+SEGMENT_ANALYSIS = "spatial.aabb.segment_candidates"
+SEGMENT_VALIDATOR = "spatial.validate.aabb_segment_candidates"
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 
 
@@ -55,6 +57,21 @@ def request(operation: str, inputs: list[dict], output: pathlib.Path,
     }
 
 
+def segment_request(operation: str, inputs: list[dict], output: pathlib.Path,
+                    source: dict, target: dict, request_id: str,
+                    *, kernel: str = "package_recommended") -> dict:
+    return {
+        "protocol": 1,
+        "request_id": request_id,
+        "operation": operation,
+        "inputs": inputs,
+        "parameters": {"source": source, "target": target},
+        "output_dir": str(output.resolve()),
+        "kernel": kernel,
+        "limits": {"wall_time_ms": 120_000, "memory_mb": 2048},
+    }
+
+
 def run(worker: str, value: dict) -> dict:
     process = subprocess.run(
         [worker], input=json.dumps(value) + "\n",
@@ -90,7 +107,8 @@ def main(worker: str) -> None:
     assert manifest_process.stderr == ""
     manifest = json.loads(manifest_process.stdout)
     operations = {item["id"]: item for item in manifest["operations"]}
-    assert {ANALYSIS, VALIDATOR} <= set(operations), operations.keys()
+    assert {ANALYSIS, VALIDATOR, SEGMENT_ANALYSIS, SEGMENT_VALIDATOR} <= \
+        set(operations), operations.keys()
 
     analysis_manifest = operations[ANALYSIS]
     assert analysis_manifest["role"] == "analysis"
@@ -114,7 +132,8 @@ def main(worker: str) -> None:
     catalog = json.loads(
         (ROOT / "catalog" / "operations_spatial.json").read_text(encoding="utf-8"))
     catalog_operations = {item["id"]: item for item in catalog["operations"]}
-    assert {ANALYSIS, VALIDATOR} == set(catalog_operations)
+    assert {ANALYSIS, VALIDATOR, SEGMENT_ANALYSIS, SEGMENT_VALIDATOR} == \
+        set(catalog_operations)
     assert {item["status"] for item in catalog["operations"]} <= {
         "IMPLEMENTED", "VALIDATED"}
     assert catalog_operations[ANALYSIS]["major_requirements"] == [
@@ -217,6 +236,96 @@ def main(worker: str) -> None:
         expect_error(worker, invalid, "INVALID_AABB_QUERY", "INVALID_INPUT")
         assert list(invalid_dir.iterdir()) == []
 
+
+        segment_manifest = operations[SEGMENT_ANALYSIS]
+        assert segment_manifest["role"] == "analysis"
+        assert segment_manifest["input_types"] == ["TriangleSurfaceMesh"]
+        assert segment_manifest["output_type"] == "GeometryAnalysisReport"
+        assert segment_manifest["supported_kernels"] == ["package_recommended"]
+        assert segment_manifest["dependencies"] == ["AABB_tree", "Surface_mesh"]
+        assert segment_manifest["info"]["constructs_intersection_geometry"] is False
+        assert segment_manifest["info"]["validators"] == [SEGMENT_VALIDATOR]
+        assert operations[SEGMENT_VALIDATOR]["info"]["validates"] == SEGMENT_ANALYSIS
+
+        segment_source = {"value": [7.5, 2.5, -10.0], "unit": "mm"}
+        segment_target = {"value": [7.5, 2.5, 10.0], "unit": "mm"}
+        segment_dir = root / "segment"
+        segment_dir.mkdir()
+        segment_result = run(worker, segment_request(
+            SEGMENT_ANALYSIS, [source], segment_dir,
+            segment_source, segment_target, "aabb-segment"))
+        assert segment_result["status"] == "ok", segment_result
+        segment_path = pathlib.Path(segment_result["outputs"][0]["path"])
+        segment_report = json.loads(segment_path.read_text(encoding="utf-8"))
+        assert segment_report["analysis_kind"] == "aabb_segment_candidates"
+        assert segment_report["query"] == {
+            "source": {"value": [0.75, 0.25, -1.0], "unit": "cm"},
+            "target": {"value": [0.75, 0.25, 1.0], "unit": "cm"},
+        }
+        assert segment_report["results"]["intersects"] is True
+        assert segment_report["results"]["intersection_count"] == 1
+        assert segment_report["results"]["face_indices"] == [0]
+        assert segment_report["results"]["constructs_intersection_geometry"] is False
+
+        segment_validate_dir = root / "segment-validate"
+        segment_validate_dir.mkdir()
+        segment_candidate = artifact(
+            segment_path, "segment-report", unit="none",
+            geometry_type="GeometryAnalysisReport", fmt="json")
+        segment_validation = run(worker, segment_request(
+            SEGMENT_VALIDATOR, [segment_candidate, source],
+            segment_validate_dir, segment_source, segment_target,
+            "aabb-segment-validate"))
+        assert segment_validation["status"] == "ok", segment_validation
+        segment_validation_report = json.loads(pathlib.Path(
+            segment_validation["outputs"][0]["path"]).read_text(encoding="utf-8"))
+        assert segment_validation_report["passed"] is True
+        assert all(segment_validation_report["checks"].values())
+
+        miss_dir = root / "segment-miss"
+        miss_dir.mkdir()
+        miss_result = run(worker, segment_request(
+            SEGMENT_ANALYSIS, [source], miss_dir,
+            {"value": [20, 20, -10], "unit": "mm"},
+            {"value": [20, 20, 10], "unit": "mm"},
+            "aabb-segment-miss"))
+        miss_report = json.loads(pathlib.Path(
+            miss_result["outputs"][0]["path"]).read_text(encoding="utf-8"))
+        assert miss_report["results"]["intersects"] is False
+        assert miss_report["results"]["intersection_count"] == 0
+        assert miss_report["results"]["face_indices"] == []
+
+        forged_segment = json.loads(segment_path.read_text(encoding="utf-8"))
+        forged_segment["results"]["face_indices"] = [1]
+        forged_segment_path = root / "forged-segment.json"
+        forged_segment_path.write_text(
+            json.dumps(forged_segment) + "\n", encoding="utf-8")
+        forged_segment_dir = root / "forged-segment-validate"
+        forged_segment_dir.mkdir()
+        expect_error(
+            worker,
+            segment_request(
+                SEGMENT_VALIDATOR,
+                [artifact(forged_segment_path, "forged-segment", unit="none",
+                          geometry_type="GeometryAnalysisReport", fmt="json"),
+                 source],
+                forged_segment_dir, segment_source, segment_target,
+                "aabb-forged-segment"),
+            "AABB_SEGMENT_REPORT_MISMATCH", "VALIDATION_FAILED")
+        assert list(forged_segment_dir.iterdir()) == []
+
+        zero_dir = root / "segment-zero"
+        zero_dir.mkdir()
+        expect_error(
+            worker,
+            segment_request(
+                SEGMENT_ANALYSIS, [source], zero_dir,
+                {"value": [1, 1, 1], "unit": "cm"},
+                {"value": [1, 1, 1], "unit": "cm"},
+                "aabb-zero-segment"),
+            "ZERO_LENGTH_SEGMENT", "PRECONDITION_FAILED")
+        assert list(zero_dir.iterdir()) == []
+
         degenerate = root / "degenerate.off"
         write_off(
             degenerate,
@@ -234,7 +343,7 @@ def main(worker: str) -> None:
             "DEGENERATE_AABB_PRIMITIVE", "PRECONDITION_FAILED")
         assert list(degenerate_dir.iterdir()) == []
 
-    print("CGAL Master Spatial AABB closest-point native + validator: PASS")
+    print("CGAL Master Spatial AABB closest-point + segment candidates + validators: PASS")
 
 
 if __name__ == "__main__":
