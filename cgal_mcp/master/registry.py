@@ -7,6 +7,7 @@ import json
 import math
 import os
 import sqlite3
+import threading
 from pathlib import Path
 from typing import Any, Iterable
 
@@ -123,7 +124,11 @@ class OperationRegistry:
             "operations": {key: self.operations[key] for key in sorted(self.operations)},
             "policy_revision": self.policy_registry.revision,
         })).hexdigest()
-        self._search = sqlite3.connect(":memory:")
+        # MCPServer may execute synchronous tools in worker threads.
+        # The in-memory FTS index is immutable after construction; serialize
+        # shared connection use explicitly instead of relying on SQLite mode.
+        self._search_lock = threading.RLock()
+        self._search = sqlite3.connect(":memory:", check_same_thread=False)
         self._build_index()
 
     def _validate_links(self) -> None:
@@ -184,7 +189,8 @@ class OperationRegistry:
                         raise InvalidInput("validator_binding", f"Parameter binding type mismatch for {operation['id']}:{target}")
 
     def close(self) -> None:
-        self._search.close()
+        with self._search_lock:
+            self._search.close()
 
     def _load(self, path: Path) -> None:
         try:
@@ -413,9 +419,11 @@ class OperationRegistry:
         if fts_terms:
             expression = " OR ".join('"' + term.replace('"', '""') + '"' for term in fts_terms)
             try:
-                for operation_id, rank in self._search.execute(
+                with self._search_lock:
+                    rows = self._search.execute(
                         "SELECT id,bm25(operation_fts) FROM operation_fts WHERE text MATCH ?",
-                        (expression,)).fetchall():
+                        (expression,)).fetchall()
+                for operation_id, rank in rows:
                     fts_scores[operation_id] = 8.0 / (1.0 + abs(float(rank)))
             except sqlite3.OperationalError:
                 fts_scores = {}
