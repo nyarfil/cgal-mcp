@@ -3,6 +3,7 @@
 #include "wave_b/wave_b_operations.h"
 #include "wave_a_mesh/wave_a_mesh_operations.h"
 #include "wave_a_boolean/wave_a_boolean_operations.h"
+#include "spatial/spatial_operations.h"
 
 #include <CGAL/version.h>
 
@@ -72,7 +73,9 @@ const std::vector<OperationDefinition>& operation_registry() {
       wave_a_boolean::boolean_difference_operation(),
       wave_a_boolean::validate_boolean_union_operation(),
       wave_a_boolean::validate_boolean_intersection_operation(),
-      wave_a_boolean::validate_boolean_difference_operation()};
+      wave_a_boolean::validate_boolean_difference_operation(),
+      spatial::aabb_closest_point_operation(),
+      spatial::validate_aabb_closest_point_operation()};
   return registry;
 }
 
