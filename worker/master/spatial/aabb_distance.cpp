@@ -162,6 +162,13 @@ Json compute_report(const Request& request, const ArtifactInput& source) {
       {"schema_version", 1},
       {"analysis_kind", "aabb_closest_point"},
       {"source", source_descriptor(source)},
+      {"mesh_summary",
+       {{"raw_vertex_count", mesh.number_of_vertices()},
+        {"raw_face_count", mesh.number_of_faces()},
+        {"finite_coordinates", true},
+        {"indices_valid", true},
+        {"triangulated", true},
+        {"surface_mesh_constructible", true}}},
       {"query", canonical_query_json(query, source.unit)},
       {"results",
        {{"closest_point", point_json(closest.first, source.unit)},
@@ -174,7 +181,10 @@ Json compute_report(const Request& request, const ArtifactInput& source) {
       {"validation",
        {{"validator_id", "spatial.producer_check.aabb_closest_point"},
         {"authoritative", false},
-        {"passed", true}}}};
+        {"passed", true},
+        {"checks",
+         {"typed_query", "nondegenerate_primitives",
+          "distance_acceleration_enabled"}}}}};
 }
 
 std::filesystem::path write_json(const Request& request,
