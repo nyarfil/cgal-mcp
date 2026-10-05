@@ -440,6 +440,7 @@ def parse_json_geometry(content: bytes, requested_type: str | None) -> Inspectio
             "sharp_features": "mesh.producer_check.sharp_features",
             "self_intersections": "mesh.producer_check.self_intersections",
             "aabb_closest_point": "spatial.producer_check.aabb_closest_point",
+            "aabb_segment_candidates": "spatial.producer_check.aabb_segment_candidates",
         }
         if (value["schema_version"] != 1
                 or value["analysis_kind"] not in producer_validators):
@@ -485,6 +486,10 @@ def parse_json_geometry(content: bytes, requested_type: str | None) -> Inspectio
                 "closest_point", "squared_distance", "distance",
                 "closest_face_index", "primitive_count",
                 "distance_acceleration",
+            },
+            "aabb_segment_candidates": {
+                "intersects", "intersection_count", "face_indices",
+                "primitive_count", "constructs_intersection_geometry",
             },
         }
         missing_results = required_results[value["analysis_kind"]] - results.keys()
