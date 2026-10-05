@@ -11,6 +11,7 @@
 #include <CGAL/boost/graph/helpers.h>
 #include <CGAL/number_utils.h>
 
+#include <algorithm>
 #include <cmath>
 #include <filesystem>
 #include <fstream>
