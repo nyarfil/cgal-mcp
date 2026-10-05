@@ -189,9 +189,7 @@ def main(worker: str) -> None:
         "mesh.boolean.difference", "mesh.validate.boolean_union",
         "mesh.validate.boolean_intersection", "mesh.validate.boolean_difference",
     }
-    assert len(operations) == 35, operations.keys()
-    assert expected <= set(operations)
-    for item in (operations[operation] for operation in expected):
+    # Master MCP is intentionally extensible; Boolean acceptance must not pin\n    # the global operation count as new validated capability slices are added.\n    assert expected <= set(operations), operations.keys()\n    for item in (operations[operation] for operation in expected):
         assert item["revision"] == 1
         assert item["supported_kernels"] == [
             "exact_constructions", "package_recommended"]
