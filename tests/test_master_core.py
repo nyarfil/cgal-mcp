@@ -4,6 +4,7 @@ import math
 import sqlite3
 import tempfile
 import unittest
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from unittest.mock import patch
 
@@ -204,6 +205,22 @@ class MasterCoreTest(unittest.TestCase):
         self.assertIn("FTS5 registry index matched", found["candidates"][0]["why"])
         blocked = registry.search("3d convex hull", input_types=["Polygon2"], limit=2)
         self.assertEqual(blocked["candidates"], [])
+
+    def test_registry_search_is_safe_from_mcp_worker_threads(self):
+        registry = OperationRegistry()
+        self.resources.append(registry)
+
+        def search_once(_: int):
+            return registry.search("3d convex hull", input_types=["PointSet3"],
+                                   kernel="package_recommended", limit=2)
+
+        with ThreadPoolExecutor(max_workers=8) as executor:
+            results = list(executor.map(search_once, range(32)))
+        self.assertEqual(len(results), 32)
+        for result in results:
+            self.assertTrue(result["candidates"])
+            self.assertEqual(result["candidates"][0]["operation_id"],
+                             "hull.convex_3")
 
     def test_registry_rejects_malformed_output_at_load(self):
         source = Path("cgal_mcp/master/operations.json")
