@@ -45,7 +45,7 @@ VOCABULARY: dict[str, tuple[str, ...]] = {
     "face_triangulation": ("non-triangular face", "non-triangular faces",
                            "triangulate every supported face", "triangulate faces",
                            "triangulate each face", "非三角形面", "各面を三角形分割"),
-    "clipping": ("clip the surface", "clipping plane", "clip mesh", "cut-boundary",
+    "clipping": ("clip the surface", "clip a surface", "clip a mesh", "clipping plane", "clip mesh", "cut-boundary",
                  "mesh clipping", "メッシュをクリップ", "切断面"),
     "remeshing": ("remesh", "remeshing", "リメッシュ", "再メッシュ", "再メッシュ化"),
     "boolean": ("boolean", "ブーリアン", "集合演算", "solid set operation"),
