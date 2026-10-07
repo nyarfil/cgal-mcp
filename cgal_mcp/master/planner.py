@@ -302,6 +302,20 @@ class PlanBuilder:
             if parameters[name] != expected:
                 raise InvalidInput("route_parameter_conflict",
                                    f"Parameter {name} contradicts the method requested by the goal")
+        for name, requirement in analysis.get(
+                "required_parameter_features", {}).items():
+            if name not in parameters:
+                raise InvalidInput("route_parameter_missing",
+                                   f"Goal requires explicit parameter {name}")
+            if requirement == "nonempty":
+                value = parameters[name]
+                if not isinstance(value, (list, dict, str)) or not value:
+                    raise InvalidInput(
+                        "route_parameter_feature_conflict",
+                        f"Parameter {name} must be non-empty for the requested feature")
+            else:
+                raise InvalidInput("route_parameter_feature_contract",
+                                   f"Unsupported route parameter feature {requirement!r}")
         return selected, {"mode": "registry_route", "selected": selected,
                           "why": selected_candidate["why"], "candidates": candidates,
                           "query_analysis": analysis}

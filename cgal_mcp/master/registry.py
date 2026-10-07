@@ -12,7 +12,8 @@ from typing import Any, Iterable
 
 from .errors import InvalidInput, UnsupportedOperation
 from .policies import PolicyRegistry
-from .search import (METHOD_CONCEPTS, enriched_text, match_operation, parse_query,
+from .search import (DIRECT_VALIDATOR_CONTRACTS, METHOD_CONCEPTS, enriched_text,
+                     match_operation, parse_query, requested_parameter_features,
                      requested_parameter_values)
 from .util import ID_RE, canonical_json
 
@@ -405,7 +406,8 @@ class OperationRegistry:
             raise InvalidInput("search_limit", "Search limit must be between 1 and 100")
         parsed = parse_query(query)
         candidates: list[tuple[bool, float, dict[str, Any], list[str], Any,
-                               dict[str, Any], dict[str, list[str]]]] = []
+                               dict[str, Any], dict[str, list[Any]],
+                               dict[str, str]]] = []
         fts_scores: dict[str, float] = {}
         fts_terms = list(parsed.words)
         for concept in sorted(parsed.concepts):
@@ -441,9 +443,10 @@ class OperationRegistry:
             if allowed_licenses is not None and expression not in allowed_licenses:
                 continue
             aliases = tuple(operation.get("aliases", []))
+            schema_parameters = _schema_properties(operation["parameters"])
             primary_text = " ".join([
                 operation["id"], operation["summary"], operation["package"],
-                *aliases,
+                *aliases, *schema_parameters,
             ])
             evidence = match_operation(parsed, primary_text, aliases=aliases)
             fts_score = fts_scores.get(operation["id"], 0.0)
@@ -462,11 +465,18 @@ class OperationRegistry:
                 reasons.append("registry alias/text matched")
             route_supported = evidence.route_supported
             if operation.get("role", "transform") == "validator" and "validation" not in parsed.concepts:
-                route_supported = False
-                reasons.append("validator requires explicit validation intent")
-            schema_parameters = _schema_properties(operation["parameters"])
+                direct_contract = any(
+                    concept in evidence.covered_primary_concepts
+                    and required.issubset(schema_parameters)
+                    for concept, required in DIRECT_VALIDATOR_CONTRACTS.items()
+                    if concept in parsed.concepts)
+                if direct_contract:
+                    reasons.append("registered validator exposes a complete direct measurement contract")
+                else:
+                    route_supported = False
+                    reasons.append("validator requires explicit validation intent")
             required_parameters: dict[str, Any] = {}
-            parameter_conflicts: dict[str, list[str]] = {}
+            parameter_conflicts: dict[str, list[Any]] = {}
             for parameter, values in requested_parameter_values(parsed.concepts).items():
                 if parameter not in schema_parameters:
                     continue
@@ -477,23 +487,31 @@ class OperationRegistry:
             if parameter_conflicts:
                 route_supported = False
                 reasons.append("query requests conflicting parameter values")
+            required_features = {
+                parameter: requirement
+                for parameter, requirement in requested_parameter_features(
+                    parsed.concepts).items()
+                if parameter in schema_parameters
+            }
             if operation["status"] in EXECUTABLE_STATUSES:
                 score += 1.0
                 reasons.append("registered adapter available")
             candidates.append((route_supported, score, operation,
                                reasons, evidence, required_parameters,
-                               parameter_conflicts))
+                               parameter_conflicts, required_features))
         candidates.sort(key=lambda item: (not item[0], -item[1], item[2]["id"]))
         safe = [item for item in candidates if item[0]]
         route_confidence = "none"
         recommended: str | None = None
         recommended_parameters: dict[str, Any] = {}
+        recommended_features: dict[str, str] = {}
         if safe:
             gap = math.inf if len(safe) == 1 else safe[0][1] - safe[1][1]
             if safe[0][4].confidence == "high" and gap > 2.0:
                 route_confidence = "high"
                 recommended = safe[0][2]["id"]
                 recommended_parameters = safe[0][5]
+                recommended_features = safe[0][7]
             else:
                 route_confidence = "ambiguous" if gap <= 2.0 else safe[0][4].confidence
         primary = sorted(parsed.concepts)
@@ -507,11 +525,13 @@ class OperationRegistry:
              "covered_method_concepts": sorted(evidence.covered_method_concepts),
              "uncovered_method_concepts": sorted(evidence.uncovered_method_concepts),
              "required_parameters": required_parameters,
+             "required_parameter_features": required_features,
              "parameter_conflicts": parameter_conflicts,
              "input_types": [kind for spec in operation["io"]["inputs"] for kind in spec.get("types", [])],
              "output_types": [spec.get("type") for spec in operation["io"]["outputs"]]}
             for (route_supported, score, operation, reasons, evidence,
-                 required_parameters, parameter_conflicts) in candidates[:limit]
+                 required_parameters, parameter_conflicts,
+                 required_features) in candidates[:limit]
         ], "query_analysis": {
             "normalized": parsed.normalized,
             "primary_concepts": primary,
@@ -519,6 +539,7 @@ class OperationRegistry:
             "routing_confidence": route_confidence,
             "recommended_operation": recommended,
             "required_parameters": recommended_parameters,
+            "required_parameter_features": recommended_features,
             "automatic_route_supported": recommended is not None,
         }}
 

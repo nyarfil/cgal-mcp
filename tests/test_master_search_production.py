@@ -54,6 +54,21 @@ class ProductionOperationSearchTests(unittest.TestCase):
         self.assert_route("Find every pair of faces where the surface crosses itself",
                           ["TriangleSurfaceMesh"],
                           "mesh.analysis.self_intersections")
+        self.assert_route("Enumerate self-intersecting face pairs",
+                          ["TriangleSurfaceMesh"],
+                          "mesh.analysis.self_intersections")
+        self.assert_route("Estimate local surface normals for this 3D point set",
+                          ["PointSet3"], "pointset.normals.estimate")
+        self.assert_route("Collapse edges until the requested ratio makes a lighter mesh",
+                          ["TriangleSurfaceMesh"],
+                          "mesh.simplify.edge_collapse")
+        self.assert_route("Detect sharp edges and label them for downstream remeshing",
+                          ["TriangleSurfaceMesh"],
+                          "mesh.analysis.sharp_features")
+        self.assert_route("向き付き三角形メッシュの面法線と頂点法線を計算する",
+                          ["TriangleSurfaceMesh"], "mesh.analysis.normals")
+        self.assert_route("点群の閉じた向き付き凸包を構築する", ["PointSet3"],
+                          "hull.convex_3")
         self.assert_route("Keep only the overlapping volume of these two solids",
                           ["TriangleSurfaceMesh", "TriangleSurfaceMesh"],
                           "mesh.boolean.intersection")
@@ -104,14 +119,17 @@ class ProductionOperationSearchTests(unittest.TestCase):
              ["TriangleSurfaceMesh"]),
             ("clip a surface against a box and label the cut boundary",
              ["TriangleSurfaceMesh"]),
-            ("simplify with protected edge constraints", ["TriangleSurfaceMesh"]),
             ("simplify inside an external geometric envelope",
              ["TriangleSurfaceMesh"]),
             ("simplify using Fast Envelope", ["TriangleSurfaceMesh"]),
-            ("reject collapses by bounded normal rotation",
-             ["TriangleSurfaceMesh"]),
             ("segment the shape with a shape diameter field",
              ["TriangleSurfaceMesh"]),
+            ("co-refine two surfaces into matching intersection faces",
+             ["TriangleSurfaceMesh", "TriangleSurfaceMesh"]),
+            ("split surface faces along cutter intersections and retain provenance",
+             ["TriangleSurfaceMesh", "TriangleSurfaceMesh"]),
+            ("交差曲線に沿って両表面を共細分する",
+             ["TriangleSurfaceMesh", "TriangleSurfaceMesh"]),
             ("florble the totally unrelated nonsense", ["PointSet3"]),
         ]
         for query, input_types in cases:
@@ -129,6 +147,34 @@ class ProductionOperationSearchTests(unittest.TestCase):
                          {"method": "pca"})
         self.assertEqual(pca["candidates"][0]["required_parameters"],
                          {"method": "pca"})
+
+    def test_direct_measurement_requires_the_registered_bounded_contract(self):
+        self.assert_route(
+            "Measure symmetric Hausdorff distance with a tolerance verdict",
+            ["TriangleSurfaceMesh", "TriangleSurfaceMesh"],
+            "mesh.distance.symmetric_hausdorff")
+        for query in ("measure directed Hausdorff distance",
+                      "compute a one-sided Hausdorff bound",
+                      "measure Chamfer distance"):
+            with self.subTest(query=query):
+                result = self.search(
+                    query, ["TriangleSurfaceMesh", "TriangleSurfaceMesh"])
+                self.assertFalse(result["query_analysis"][
+                    "automatic_route_supported"], result)
+
+    def test_parameterized_simplification_features_are_explicit(self):
+        protected = self.search(
+            "Simplify this mesh while retaining protected edges",
+            ["TriangleSurfaceMesh"])
+        self.assertEqual(protected["query_analysis"]["recommended_operation"],
+                         "mesh.simplify.edge_collapse", protected)
+        self.assertEqual(protected["query_analysis"][
+            "required_parameter_features"], {"constrained_edges": "nonempty"})
+        bounded = self.search(
+            "Simplify while rejecting collapses by bounded normal change",
+            ["TriangleSurfaceMesh"])
+        self.assertEqual(bounded["query_analysis"]["required_parameters"],
+                         {"bounded_normal_change": True}, bounded)
 
     def test_generic_point_reduction_discovers_variants_without_guessing_policy(self):
         result = self.search(
@@ -183,6 +229,88 @@ class ProductionOperationSearchTests(unittest.TestCase):
                 for goal, inputs in rejected:
                     with self.subTest(goal=goal), self.assertRaises(UnsupportedOperation):
                         runtime.plan({"goal": goal, "inputs": inputs, "parameters": {}})
+            finally:
+                runtime.close()
+
+    def test_goal_planner_distinguishes_boolean_volume_from_surface_corefinement(self):
+        with tempfile.TemporaryDirectory() as directory:
+            runtime = MasterRuntime(Path(directory), require_memory_limit=False)
+            try:
+                meshes = [runtime.artifact_import(
+                    str(ROOT / f"tests/fixtures/master/wave_a_boolean/{name}.off"),
+                    "mm")["artifact_id"] for name in ("cube_a", "cube_overlap")]
+                supported = runtime.plan({
+                    "goal": "keep only the overlapping volume of both solids",
+                    "inputs": meshes,
+                    "parameters": {"operation": "intersection"},
+                })
+                self.assertEqual(supported["route"]["selected"],
+                                 "mesh.boolean.intersection")
+                unsupported = (
+                    "co-refine the two surfaces into matching intersection faces",
+                    "split surface faces along every cutter intersection",
+                    "交差曲線に沿って両表面を共細分する",
+                )
+                for goal in unsupported:
+                    with self.subTest(goal=goal), self.assertRaises(UnsupportedOperation):
+                        runtime.plan({"goal": goal, "inputs": meshes,
+                                      "parameters": {}})
+            finally:
+                runtime.close()
+
+    def test_goal_planner_enforces_direct_measurement_and_feature_parameters(self):
+        with tempfile.TemporaryDirectory() as directory:
+            runtime = MasterRuntime(Path(directory), require_memory_limit=False)
+            try:
+                mesh = runtime.artifact_import(
+                    str(ROOT / "tests/fixtures/master/wave_a_boolean/cube_a.off"),
+                    "mm")["artifact_id"]
+                other = runtime.artifact_import(
+                    str(ROOT / "tests/fixtures/master/wave_a_boolean/cube_overlap.off"),
+                    "mm")["artifact_id"]
+                distance = runtime.plan({
+                    "goal": "measure symmetric Hausdorff distance with tolerance",
+                    "inputs": [mesh, other],
+                    "parameters": {
+                        "tolerance": {"value": 2.0, "unit": "mm"},
+                        "error_bound": {"value": 0.01, "unit": "mm"},
+                    },
+                })
+                self.assertEqual(distance["route"]["selected"],
+                                 "mesh.distance.symmetric_hausdorff")
+
+                base = {
+                    "stop": {"kind": "edge_ratio", "value": 0.8},
+                    "policy": "gh_plane_line",
+                    "max_symmetric_deviation": {"value": 2.0, "unit": "mm"},
+                    "hausdorff_error_bound": {"value": 0.01, "unit": "mm"},
+                }
+                protected_goal = "simplify while retaining protected edges"
+                with self.assertRaises(InvalidInput) as caught:
+                    runtime.plan({"goal": protected_goal, "inputs": [mesh],
+                                  "parameters": {**base, "constrained_edges": []}})
+                self.assertEqual(caught.exception.code,
+                                 "route_parameter_feature_conflict")
+                protected = runtime.plan({
+                    "goal": protected_goal, "inputs": [mesh],
+                    "parameters": {**base, "constrained_edges": [[0, 1]]},
+                })
+                self.assertEqual(protected["route"]["selected"],
+                                 "mesh.simplify.edge_collapse")
+
+                bounded_goal = "simplify with bounded normal change"
+                with self.assertRaises(InvalidInput) as caught:
+                    runtime.plan({"goal": bounded_goal, "inputs": [mesh],
+                                  "parameters": {**base,
+                                                 "bounded_normal_change": False}})
+                self.assertEqual(caught.exception.code,
+                                 "route_parameter_conflict")
+                bounded = runtime.plan({
+                    "goal": bounded_goal, "inputs": [mesh],
+                    "parameters": {**base, "bounded_normal_change": True},
+                })
+                self.assertEqual(bounded["route"]["selected"],
+                                 "mesh.simplify.edge_collapse")
             finally:
                 runtime.close()
 

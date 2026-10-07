@@ -9,6 +9,15 @@ on:
       - 'scripts/build_master_docs_index.py'
       - 'scripts/sync_master_package_catalog.py'
       - 'scripts/master_acceptance.py'
+      - 'scripts/evaluate_master_search.py'
+      - 'cgal_mcp/master/search.py'
+      - 'cgal_mcp/master/registry.py'
+      - 'cgal_mcp/master/planner.py'
+      - 'cgal_mcp/master/runtime.py'
+      - 'tests/test_master_search*.py'
+      - 'tests/test_master_goal_routing.py'
+      - 'tests/fixtures/master/search_intents.json'
+      - 'tests/fixtures/master/package_discovery_cases.json'
       - 'tests/test_master_harvester.py'
       - 'tests/test_master_acceptance.py'
       - 'tests/test_master_docs_index.py'
@@ -47,3 +56,13 @@ jobs:
         run: |
           python scripts/build_major_inventory.py --output work/reproduced-major-inventory.json
           python -c "from pathlib import Path; assert Path('catalog/major_capability_inventory.json').read_bytes()==Path('work/reproduced-major-inventory.json').read_bytes(), 'Planning inventory differs from pinned source and original requirements'"
+      - name: Build the full pinned documentation search index
+        run: python scripts/build_master_docs_index.py build --output work/master-docs-index.sqlite
+      - name: Verify bilingual retrieval and actual goal-planning contracts
+        run: python -m unittest tests.test_master_search_terms tests.test_master_search_production tests.test_master_goal_routing tests.test_master_search_acceptance -v
+      - name: Measure search without granting standalone acceptance
+        run: python scripts/evaluate_master_search.py --output work/master-search-ci.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: master-search-measurement
+          path: work/master-search-ci.json

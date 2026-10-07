@@ -9,6 +9,7 @@ from __future__ import annotations
 import re
 import unicodedata
 from dataclasses import dataclass
+from typing import Any
 
 
 STOP_WORDS = frozenset("""
@@ -28,6 +29,7 @@ VOCABULARY: dict[str, tuple[str, ...]] = {
     "convex_decomposition": ("convex decomposition", "凸分解", "凸部分に分割"),
     "simplification": ("simplify", "simplification", "decimation", "decimate",
                        "simplified", "edge collapse", "edge decimation",
+                       "collapse edges", "lighter mesh",
                        "軽量化", "軽量メッシュ", "簡略化", "辺縮約", "辺を縮約",
                        "ポリゴンを減", "面数を減", "辺数を減"),
     "repair": ("repair", "修復", "修正", "穴埋め", "hole filling", "fill holes"),
@@ -38,11 +40,24 @@ VOCABULARY: dict[str, tuple[str, ...]] = {
                  "mesh clipping", "メッシュをクリップ", "切断面"),
     "remeshing": ("remesh", "remeshing", "リメッシュ", "再メッシュ", "再メッシュ化"),
     "boolean": ("boolean", "ブーリアン", "集合演算", "solid set operation"),
+    # These operations may be internal steps of a Boolean algorithm, but their
+    # requested outputs are refined/split source surfaces rather than a set
+    # operation volume.  They therefore remain distinct routing concepts.
+    "common_refinement": ("common refinement", "shared refinement",
+                          "co-refine", "co-refinement", "co refinement",
+                          "corefinement",
+                          "intersection-conforming refinement", "共細分",
+                          "対応した細分面", "交差曲線に沿って両表面"),
+    "face_splitting": ("split faces", "face splitting", "split surface faces",
+                       "split mesh faces", "cutter intersections",
+                       "shared-cut provenance", "面を分割", "面分割",
+                       "分離メッシュ", "切断由来情報"),
     "union": ("union", "unite", "merge solids", "combine solids", "和集合", "合体", "結合"),
     "intersection": ("intersection", "intersect", "overlap volume", "overlapping volume", "common volume",
                      "交差", "共通部分", "積集合", "重なった体積"),
     "difference": ("difference", "subtract", "cut away", "carve out", "差集合", "引き算", "くり抜"),
     "self_intersection": ("self intersection", "self-intersection", "self intersecting",
+                          "self-intersecting",
                           "self crossing", "crosses itself", "surface crosses itself",
                           "faces cross", "自己交差", "自分自身と交差", "自分自身を貫"),
     "connected_components": ("connected component", "connected components",
@@ -64,6 +79,9 @@ VOCABULARY: dict[str, tuple[str, ...]] = {
     "validation": ("validate", "validation", "validator", "verify the result",
                    "check the result", "検証", "結果を確かめ"),
     "distance": ("distance", "distances", "距離", "hausdorff", "ハウスドルフ"),
+    "directed_distance": ("directed hausdorff", "one-sided hausdorff",
+                          "one sided hausdorff", "chamfer distance",
+                          "片方向ハウスドルフ", "片側ハウスドルフ"),
     "aabb": ("aabb", "bounding box", "bounding boxes", "境界ボックス", "包囲箱"),
     "nearest_neighbor": ("nearest neighbor", "nearest neighbour", "nearest-neighbor",
                          "近傍検索", "最近傍", "kd tree", "kd-tree", "kdtree"),
@@ -118,13 +136,15 @@ VOCABULARY: dict[str, tuple[str, ...]] = {
     "predicates": ("predicate", "predicates", "述語", "頑健な判定"),
     "constructions": ("construction", "constructions", "作図", "幾何構成"),
     "kernel": ("kernel", "kernels", "カーネル", "正確な演算"),
-    "protected_edges": ("protected edges", "edge constraints", "retain protected geometry",
+    "protected_edges": ("protected edges", "edge constraints", "constrained edges",
+                        "retain protected geometry",
                         "保護辺", "拘束辺"),
     "external_envelope": ("strict geometric envelope", "external envelope",
                           "external geometric envelope",
                           "mesh and an envelope", "幾何包絡", "包絡外へ出る"),
     "bounded_normal_change": ("bounded normal rotation", "allowed normal change",
-                              "bounded normal change", "法線変化を制限", "法線回転を制限"),
+                              "bounded normal change", "法線変化を制限",
+                              "許容法線変化", "法線回転を制限", "法線回転が制限"),
     "fast_envelope": ("fast envelope", "fast-envelopes", "fast envelopes"),
     "dimension_2d": ("2d",),
 }
@@ -139,12 +159,24 @@ METHOD_CONCEPTS = frozenset({
     "fast_envelope",
 })
 
-METHOD_PARAMETER_REQUIREMENTS: dict[str, tuple[str, str]] = {
+METHOD_PARAMETER_REQUIREMENTS: dict[str, tuple[str, Any]] = {
     "pca": ("method", "pca"),
     "jet": ("method", "jet"),
     "union": ("operation", "union"),
     "intersection": ("operation", "intersection"),
     "difference": ("operation", "difference"),
+    "bounded_normal_change": ("bounded_normal_change", True),
+}
+
+PARAMETER_FEATURE_REQUIREMENTS: dict[str, tuple[str, str]] = {
+    "protected_edges": ("constrained_edges", "nonempty"),
+}
+
+# Validator-role operations normally require explicit validation language.
+# A registered bounded measurement may be selected directly only when its
+# schema proves the complete named measurement contract.
+DIRECT_VALIDATOR_CONTRACTS: dict[str, frozenset[str]] = {
+    "distance": frozenset({"tolerance", "error_bound"}),
 }
 
 
@@ -210,6 +242,10 @@ def parse_query(text: str) -> QueryTerms:
                 if not any(other != concept and phrase != longer and phrase in longer
                            for other, longer in matches)]
     concepts = {concept for concept, _ in retained}
+    if "self_intersection" in concepts:
+        concepts.discard("intersection")
+    if "bounded_normal_change" in concepts:
+        concepts.discard("normals")
     explicit_mesh_normal = any(_contains(normalized, phrase) for phrase in (
         "face normals", "vertex normals", "corner normals", "mesh normals",
         "頂点法線", "コーナー法線", "メッシュ法線"))
@@ -219,10 +255,21 @@ def parse_query(text: str) -> QueryTerms:
     # the standalone face-normal expression requests a mesh entity.
     explicit_mesh_normal = explicit_mesh_normal or (
         "面法線" in normalized and "表面法線" not in normalized)
-    if ("point cloud" in normalized or "点群" in normalized) and not explicit_mesh_normal:
+    if ("point cloud" in normalized or "point set" in normalized
+            or "点群" in normalized) and not explicit_mesh_normal:
         if concepts & {"normals", "mesh_normals", "point_normals"}:
             concepts.discard("mesh_normals")
             concepts.add("point_normals")
+    # Adjectival input/output qualifications do not request a second action.
+    # They remain searchable words, while routing follows the requested verb.
+    if "向き付き" in normalized:
+        concepts.discard("orientation")
+    if "検証済み" in normalized:
+        concepts.discard("validation")
+    if ("for downstream remeshing" in normalized
+            or "for later remeshing" in normalized
+            or re.search(r"再メッシュ(?:処理)?向け", normalized)):
+        concepts.discard("remeshing")
     concepts = frozenset(concepts)
     words = tuple(dict.fromkeys(_stem(word) for word in re.findall(r"[a-z][a-z0-9]*|[23]d", normalized)
                                 if word not in STOP_WORDS and (len(word) >= 3 or word in {"2d", "3d"})))
@@ -315,12 +362,21 @@ def enriched_text(text: str) -> str:
     return " ".join((text, *aliases))
 
 
-def requested_parameter_values(concepts: frozenset[str]) -> dict[str, frozenset[str]]:
+def requested_parameter_values(concepts: frozenset[str]) -> dict[str, frozenset[Any]]:
     """Map named methods to parameter values for planner conflict checks."""
-    result: dict[str, set[str]] = {}
+    result: dict[str, set[Any]] = {}
     for concept in concepts:
         requirement = METHOD_PARAMETER_REQUIREMENTS.get(concept)
         if requirement is not None:
             parameter, value = requirement
             result.setdefault(parameter, set()).add(value)
     return {parameter: frozenset(values) for parameter, values in result.items()}
+
+
+def requested_parameter_features(concepts: frozenset[str]) -> dict[str, str]:
+    """Return structural parameter requirements implied by the goal."""
+    return {parameter: requirement
+            for concept in concepts
+            for parameter, requirement in [PARAMETER_FEATURE_REQUIREMENTS.get(
+                concept, ("", ""))]
+            if parameter}
