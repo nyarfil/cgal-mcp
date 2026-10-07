@@ -57,7 +57,13 @@ add_executable(cgal-master-worker
   master/wave_c/planar.cpp
   master/wave_c/triangulation.cpp
   master/wave_c/spatial.cpp
+  master/wave_d/wave_d_common.cpp
+  master/wave_d/remesh_operations.cpp
+  master/wave_d/remesh_validators.cpp
 )
+# smooth_shape needs CGAL's Eigen sparse solver; enable it only where used.
+set_source_files_properties(master/wave_d/remesh_operations.cpp PROPERTIES
+  COMPILE_DEFINITIONS CGAL_EIGEN3_ENABLED)
 target_compile_features(cgal-master-worker PRIVATE cxx_std_17)
 target_compile_definitions(cgal-master-worker PRIVATE
   CGAL_MASTER_SOURCE_KIND="${CGAL_MASTER_SOURCE_KIND}"
