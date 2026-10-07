@@ -1,23 +1,46 @@
 # 原本の主要能力を実計算で判定する
 
-原本7.1〜7.15の15分野・80要求を固定母数とし、軽量化の7.7に列挙された6要求を
-実計算の再試験へ結び付けました。現在の合格範囲は6/80です。
+原本7.1〜7.15の15分野・80要求を固定母数とし、実計算の再試験へ結び付けた要求は
+17/80です（7.7軽量化6、7.3解析3、7.4修復5、7.5 Boolean 1、7.9点群2）。
 点群処理の個別Operationや凸包の基盤受入を、未完了の要求全体の達成へ加算しません。
+今回の11要求は、各要求の説明に列挙された全variantと台帳の全subcapability symbolを、
+検証済みOperationと必須validatorを通る再試験ケースで網羅した場合だけ結び付けています。
+一部だけ満たす要求は未結合のまま、不足を[主要能力台帳](MAJOR_INVENTORY_JA.md)へ記録します。
 
-対応する正式workerで、固定harnessを実行してから要求判定します。
+対応する正式workerで、全familyの固定harnessを実行してから要求判定します。
 
 ```powershell
 .venv/Scripts/python.exe scripts/replay_master_capabilities.py `
   --worker build-master/Release/cgal-master-worker.exe `
-  --output work/master-capability-local.json
+  --work-dir work/master-capability-local
 ```
+
+`--work-dir`は`family-<id>.json`をfamilyごとに書きます。`--family 7.4 --output work/x.json`で
+単一familyだけを再試験できます。両方を省くと公開snapshot（`docs/master/evidence/`）を
+更新しますが、catalogに承認済みのhashと一致しない場合は書き込む前に失敗します。
+
+## family再試験の仕組み
+
+7.7は従来の専用harness・契約をそのまま使います。7.3/7.4/7.5/7.9は
+`scripts/master_replay_families.py`にデータとして宣言し、共通harness
+`tests/master_family_replay_cases.py`で実行します。各familyは、固定fixture（sha256付き）、
+Operation・parameter、behaviour assertion（閉じた比較演算子と選択子のみ）、同一入力の
+比較ペア、拒否されるべきnegative controlを持ちます。validator要求はregistryの
+`validation.bindings`から導出し、要求したreport check・field・最小値を検査します。
+判定側（`scripts/master_acceptance.py`）は契約hash・契約source hash・harness記録・
+ケース集合・assertion・validator連鎖・negative controlを再計算して照合し、
+契約に無いfamily、未結合要求、他familyのreportを拒否します。
+
+7.7のreportは内容を変えず、生成source変更に伴う`generator_source_sha256`だけを再生成しました。
+7.8（surface reconstruction）と7.13（hull/alpha/wrap等）は、検証済みOperationが要求全体を
+満たさないためfamilyを作っていません。
 
 Linuxではworkerを`build-master/cgal-master-worker`へ置き換えます。
 checked-in reportを読むだけの`scripts/master_acceptance.py`は、再計算による確認が
 ないため未完了を返します。JSON内の`pass`、hash、自己申告の完成表示だけを承認しません。
 公開snapshotは当該buildの履歴資料です。CIはその環境で再試験し、別reportを保存します。
 
-試験は7 cost/placement、5 stop predicate、constraint、bounded distance、normal-change、
+7.7の試験は7 cost/placement、5 stop predicate、constraint、bounded distance、normal-change、
 Polyhedral Envelopeを含みます。同一入力でfilterの有無・厳しさを比較し、
 stop条件は出力の計測値で確認します。22の合格ケースと44のvalidator実行について、
 request・response・入力・出力・validator report・source・workerのhashを照合します。
