@@ -3,6 +3,7 @@
 #include "wave_b/wave_b_operations.h"
 #include "wave_a_mesh/wave_a_mesh_operations.h"
 #include "wave_a_boolean/wave_a_boolean_operations.h"
+#include "wave_a_repair/repair_operations.h"
 
 #include <CGAL/version.h>
 
@@ -37,7 +38,8 @@ Json compiler_manifest() {
 }  // namespace
 
 const std::vector<OperationDefinition>& operation_registry() {
-  static const std::vector<OperationDefinition> registry = {
+  static const std::vector<OperationDefinition> registry = [] {
+  std::vector<OperationDefinition> operations = {
       convex_hull_operation(),
       convex_enclosure_validator_operation(),
       wave_a::simplify_edge_collapse_operation(),
@@ -73,6 +75,14 @@ const std::vector<OperationDefinition>& operation_registry() {
       wave_a_boolean::validate_boolean_union_operation(),
       wave_a_boolean::validate_boolean_intersection_operation(),
       wave_a_boolean::validate_boolean_difference_operation()};
+  for (auto& operation : wave_a_repair::repair_operations()) {
+    operations.push_back(std::move(operation));
+  }
+  for (auto& operation : wave_a_repair::repair_validators()) {
+    operations.push_back(std::move(operation));
+  }
+  return operations;
+  }();
   return registry;
 }
 

@@ -62,11 +62,22 @@ bool is_subbag(const TriangleBag& subset, const TriangleBag& superset) {
   return true;
 }
 
+bool points_are_subset(const Soup& subset, const Soup& superset) {
+  std::set<std::string> keys;
+  for (const auto& point : superset.points) keys.insert(point_key(point));
+  for (const auto& point : subset.points) {
+    if (keys.find(point_key(point)) == keys.end()) return false;
+  }
+  return true;
+}
+
 bool geometry_preserved(RepairKind kind, const Soup& source, const Soup& candidate) {
   const auto source_bag = triangle_bag(source);
   const auto candidate_bag = triangle_bag(candidate);
-  if (kind == RepairKind::kRemoveDegenerate || kind == RepairKind::kPolygonSoup)
-    return is_subbag(candidate_bag, source_bag);
+  // CGAL repairs collinear caps by flipping edges, which creates triangles that
+  // are not in the source; only vertex positions are guaranteed to be preserved.
+  if (kind == RepairKind::kRemoveDegenerate) return points_are_subset(candidate, source);
+  if (kind == RepairKind::kPolygonSoup) return is_subbag(candidate_bag, source_bag);
   if (kind == RepairKind::kFillHoles) return is_subbag(source_bag, candidate_bag);
   return source_bag == candidate_bag;
 }
@@ -75,8 +86,32 @@ std::size_t integer(const Json& value, const char* key) {
   return value.at(key).get<std::size_t>();
 }
 
-bool invariant(RepairKind kind, const Json& source_stats,
-               const Json& candidate_stats, const RepairResult& reference) {
+std::size_t repeated_index_faces(const Soup& soup) {
+  std::size_t count = 0;
+  for (const auto& face : soup.faces) {
+    if (face.size() != 3 || face[0] == face[1] || face[1] == face[2] || face[2] == face[0]) ++count;
+  }
+  return count;
+}
+
+std::size_t duplicate_polygons(const Soup& soup, bool same_orientation_only) {
+  std::set<std::array<std::size_t, 3>> seen;
+  std::size_t count = 0;
+  for (const auto& face : soup.faces) {
+    if (face.size() != 3) continue;
+    std::array<std::size_t, 3> key = {face[0], face[1], face[2]};
+    if (same_orientation_only) {
+      while (key[0] > key[1] || key[0] > key[2]) std::rotate(key.begin(), key.begin() + 1, key.end());
+    } else {
+      std::sort(key.begin(), key.end());
+    }
+    if (!seen.insert(key).second) ++count;
+  }
+  return count;
+}
+
+bool invariant(RepairKind kind, const Json& source_stats, const Json& candidate_stats,
+               const RepairResult& reference, const Json& parameters, const Soup& candidate) {
   if (kind == RepairKind::kOrient) {
     if (!candidate_stats.at("polygon_mesh_constructible").get<bool>()) return false;
     const auto& mesh = candidate_stats.at("mesh");
@@ -98,8 +133,11 @@ bool invariant(RepairKind kind, const Json& source_stats,
                reference.metrics.at("skipped_hole_count").get<std::size_t>();
   }
   if (kind == RepairKind::kPolygonSoup) {
-    return integer(candidate_stats, "degenerate_face_count") == 0 &&
-           integer(candidate_stats, "duplicate_face_count") == 0 &&
+    // repair_polygon_soup removes combinatorially degenerate polygons and
+    // duplicate polygons (same orientation only when require_same_orientation
+    // is true); geometrically collinear triangles are intentionally kept.
+    return repeated_index_faces(candidate) == 0 &&
+           duplicate_polygons(candidate, parameters.at("require_same_orientation").get<bool>()) == 0 &&
            integer(candidate_stats, "duplicate_point_count") == 0 &&
            integer(candidate_stats, "unused_point_count") == 0;
   }
@@ -125,7 +163,8 @@ Json validate(const Request& request, RepairKind kind) {
   const auto source_stats = soup_statistics(source);
   const auto candidate_stats = soup_statistics(candidate);
   const bool replay_match = soup_equal(candidate, reference.soup);
-  const bool invariant_valid = replay_match && invariant(kind, source_stats, candidate_stats, reference);
+  const bool invariant_valid = replay_match && invariant(kind, source_stats, candidate_stats, reference,
+                                                  request.parameters, candidate);
   const bool preserved = geometry_preserved(kind, source, candidate);
   if (!replay_match || !invariant_valid || !preserved) {
     throw WorkerError("VALIDATION_FAILED", "REPAIR_VALIDATION_FAILED",
@@ -161,7 +200,7 @@ Json validate(const Request& request, RepairKind kind) {
 }
 
 OperationDefinition definition(RepairKind kind) {
-  auto types = std::vector<std::string>{"ValidationReport"};
+  auto types = std::vector<std::string>{output_type(kind)};  // candidate slot first, then source slot
   const auto accepted = source_types(kind);
   types.insert(types.end(), accepted.begin(), accepted.end());
   OperationDefinition operation{

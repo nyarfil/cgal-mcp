@@ -50,6 +50,9 @@ add_executable(cgal-master-worker
   master/wave_a_boolean/boolean_common.cpp
   master/wave_a_boolean/pmp_boolean.cpp
   master/wave_a_boolean/validate_boolean.cpp
+  master/wave_a_repair/repair_common.cpp
+  master/wave_a_repair/repair_operations.cpp
+  master/wave_a_repair/repair_validators.cpp
 )
 target_compile_features(cgal-master-worker PRIVATE cxx_std_17)
 target_compile_definitions(cgal-master-worker PRIVATE

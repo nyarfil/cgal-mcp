@@ -1,19 +1,19 @@
 {
   "schema_version": 1,
-  "catalog_revision": "wave-a-repair-implemented-1",
+  "catalog_revision": "wave-a-repair-validated-1",
   "cgal_version": "6.2.1",
   "build_requirements": {
     "source_kind": "official_release",
     "source_sha256": "b6be77c60765a8456335de991eeaf6ffec55256984e4a9ecc6a97c37bbfe85bf"
   },
-  "status_note": "Six bounded mesh-repair adapters and six dedicated validators are implemented in an isolated harness pending independent review and formal-worker integration. This does not claim all Mesh Repair variants or original family completion.",
+  "status_note": "Six bounded mesh-repair adapters and six dedicated validators are VALIDATED in the formal official-CGAL 6.2.1 worker and MCP auto/legacy publication paths, after independent native review whose blocking findings (orient hang, unbounded hole filling, validator false rejections, deep-recursion crash at large knotted holes) were fixed and re-verified. This does not claim all Mesh Repair variants or original family completion.",
   "operations": [
     {
       "id": "mesh.repair.orient",
       "revision": 1,
-      "status": "IMPLEMENTED",
+      "status": "VALIDATED",
       "role": "transform",
-      "summary": "Orient a bounded triangle polygon soup into a constructible outward-oriented surface mesh.",
+      "summary": "Orient a bounded triangle polygon soup into a constructible consistently oriented surface mesh (outward for closed meshes).",
       "aliases": [
         "mesh.repair.orientation"
       ],
@@ -93,7 +93,7 @@
       },
       "preconditions": [
         {
-          "id": "bounded_triangle_ascii_off",
+          "id": "bounded_input",
           "maximum_bytes": 67108864,
           "maximum_vertices": 1000000,
           "maximum_faces": 2000000
@@ -240,18 +240,24 @@
       },
       "evidence": {
         "tests": [
-          "tests/master_wave_a_repair_cases.py"
+          "tests/master_wave_a_repair_cases.py",
+          "tests/master_wave_a_repair_mcp_e2e.py:auto",
+          "tests/master_wave_a_repair_mcp_e2e.py:legacy"
         ],
-        "build": "isolated work/wave-a-repair-harness",
+        "build": "build-master/Release/cgal-master-worker.exe",
         "source_kind": "official_release",
         "cgal_version": "6.2.1",
-        "review_status": "pending_independent_review"
+        "independent_review": {
+          "result": "blocking findings fixed; final pass found only a registry max_hole_edges sync issue, since corrected",
+          "reviewed_catalog_revision": "wave-a-repair-validated-1",
+          "review_scope": "native repair adapters, dedicated validators, hole-filling bounds, orientation of polygon soups, degenerate-face removal"
+        }
       }
     },
     {
       "id": "mesh.validate.repair_orientation",
       "revision": 1,
-      "status": "IMPLEMENTED",
+      "status": "VALIDATED",
       "role": "validator",
       "summary": "Replay mesh.repair.orient from the immutable source and validate operation-specific repair invariants.",
       "aliases": [],
@@ -346,7 +352,7 @@
       },
       "preconditions": [
         {
-          "id": "bounded_triangle_ascii_off",
+          "id": "bounded_input",
           "maximum_bytes": 67108864,
           "maximum_vertices": 1000000,
           "maximum_faces": 2000000
@@ -495,12 +501,18 @@
       },
       "evidence": {
         "tests": [
-          "tests/master_wave_a_repair_cases.py"
+          "tests/master_wave_a_repair_cases.py",
+          "tests/master_wave_a_repair_mcp_e2e.py:auto",
+          "tests/master_wave_a_repair_mcp_e2e.py:legacy"
         ],
-        "build": "isolated work/wave-a-repair-harness",
+        "build": "build-master/Release/cgal-master-worker.exe",
         "source_kind": "official_release",
         "cgal_version": "6.2.1",
-        "review_status": "pending_independent_review"
+        "independent_review": {
+          "result": "blocking findings fixed; final pass found only a registry max_hole_edges sync issue, since corrected",
+          "reviewed_catalog_revision": "wave-a-repair-validated-1",
+          "review_scope": "native repair adapters, dedicated validators, hole-filling bounds, orientation of polygon soups, degenerate-face removal"
+        }
       },
       "runtime_report_contract": {
         "schema": "ValidationReport/v1",
@@ -522,9 +534,9 @@
     {
       "id": "mesh.repair.stitch_borders",
       "revision": 1,
-      "status": "IMPLEMENTED",
+      "status": "VALIDATED",
       "role": "transform",
-      "summary": "Stitch exactly coincident compatible border halfedges in a triangle surface mesh.",
+      "summary": "Stitch (weld) exactly coincident compatible border halfedges, such as duplicated seam vertices of a polygon soup imported as a triangle surface mesh.",
       "aliases": [
         "mesh.repair.stitch"
       ],
@@ -600,7 +612,7 @@
       },
       "preconditions": [
         {
-          "id": "bounded_triangle_ascii_off",
+          "id": "bounded_input",
           "maximum_bytes": 67108864,
           "maximum_vertices": 1000000,
           "maximum_faces": 2000000
@@ -746,18 +758,24 @@
       },
       "evidence": {
         "tests": [
-          "tests/master_wave_a_repair_cases.py"
+          "tests/master_wave_a_repair_cases.py",
+          "tests/master_wave_a_repair_mcp_e2e.py:auto",
+          "tests/master_wave_a_repair_mcp_e2e.py:legacy"
         ],
-        "build": "isolated work/wave-a-repair-harness",
+        "build": "build-master/Release/cgal-master-worker.exe",
         "source_kind": "official_release",
         "cgal_version": "6.2.1",
-        "review_status": "pending_independent_review"
+        "independent_review": {
+          "result": "blocking findings fixed; final pass found only a registry max_hole_edges sync issue, since corrected",
+          "reviewed_catalog_revision": "wave-a-repair-validated-1",
+          "review_scope": "native repair adapters, dedicated validators, hole-filling bounds, orientation of polygon soups, degenerate-face removal"
+        }
       }
     },
     {
       "id": "mesh.validate.repair_stitch_borders",
       "revision": 1,
-      "status": "IMPLEMENTED",
+      "status": "VALIDATED",
       "role": "validator",
       "summary": "Replay mesh.repair.stitch_borders from the immutable source and validate operation-specific repair invariants.",
       "aliases": [],
@@ -848,7 +866,7 @@
       },
       "preconditions": [
         {
-          "id": "bounded_triangle_ascii_off",
+          "id": "bounded_input",
           "maximum_bytes": 67108864,
           "maximum_vertices": 1000000,
           "maximum_faces": 2000000
@@ -996,12 +1014,18 @@
       },
       "evidence": {
         "tests": [
-          "tests/master_wave_a_repair_cases.py"
+          "tests/master_wave_a_repair_cases.py",
+          "tests/master_wave_a_repair_mcp_e2e.py:auto",
+          "tests/master_wave_a_repair_mcp_e2e.py:legacy"
         ],
-        "build": "isolated work/wave-a-repair-harness",
+        "build": "build-master/Release/cgal-master-worker.exe",
         "source_kind": "official_release",
         "cgal_version": "6.2.1",
-        "review_status": "pending_independent_review"
+        "independent_review": {
+          "result": "blocking findings fixed; final pass found only a registry max_hole_edges sync issue, since corrected",
+          "reviewed_catalog_revision": "wave-a-repair-validated-1",
+          "review_scope": "native repair adapters, dedicated validators, hole-filling bounds, orientation of polygon soups, degenerate-face removal"
+        }
       },
       "runtime_report_contract": {
         "schema": "ValidationReport/v1",
@@ -1023,9 +1047,9 @@
     {
       "id": "mesh.repair.remove_degenerate",
       "revision": 1,
-      "status": "IMPLEMENTED",
+      "status": "VALIDATED",
       "role": "transform",
-      "summary": "Remove combinatorial and geometric degenerate triangles and edges from repairable triangle OFF.",
+      "summary": "Remove degenerate (zero-area, collapsed) combinatorial and geometric triangles and edges from repairable triangle OFF.",
       "aliases": [
         "mesh.repair.remove_degenerate_faces"
       ],
@@ -1106,7 +1130,7 @@
       },
       "preconditions": [
         {
-          "id": "bounded_triangle_ascii_off",
+          "id": "bounded_input",
           "maximum_bytes": 67108864,
           "maximum_vertices": 1000000,
           "maximum_faces": 2000000
@@ -1253,18 +1277,24 @@
       },
       "evidence": {
         "tests": [
-          "tests/master_wave_a_repair_cases.py"
+          "tests/master_wave_a_repair_cases.py",
+          "tests/master_wave_a_repair_mcp_e2e.py:auto",
+          "tests/master_wave_a_repair_mcp_e2e.py:legacy"
         ],
-        "build": "isolated work/wave-a-repair-harness",
+        "build": "build-master/Release/cgal-master-worker.exe",
         "source_kind": "official_release",
         "cgal_version": "6.2.1",
-        "review_status": "pending_independent_review"
+        "independent_review": {
+          "result": "blocking findings fixed; final pass found only a registry max_hole_edges sync issue, since corrected",
+          "reviewed_catalog_revision": "wave-a-repair-validated-1",
+          "review_scope": "native repair adapters, dedicated validators, hole-filling bounds, orientation of polygon soups, degenerate-face removal"
+        }
       }
     },
     {
       "id": "mesh.validate.repair_remove_degenerate",
       "revision": 1,
-      "status": "IMPLEMENTED",
+      "status": "VALIDATED",
       "role": "validator",
       "summary": "Replay mesh.repair.remove_degenerate from the immutable source and validate operation-specific repair invariants.",
       "aliases": [],
@@ -1360,7 +1390,7 @@
       },
       "preconditions": [
         {
-          "id": "bounded_triangle_ascii_off",
+          "id": "bounded_input",
           "maximum_bytes": 67108864,
           "maximum_vertices": 1000000,
           "maximum_faces": 2000000
@@ -1509,12 +1539,18 @@
       },
       "evidence": {
         "tests": [
-          "tests/master_wave_a_repair_cases.py"
+          "tests/master_wave_a_repair_cases.py",
+          "tests/master_wave_a_repair_mcp_e2e.py:auto",
+          "tests/master_wave_a_repair_mcp_e2e.py:legacy"
         ],
-        "build": "isolated work/wave-a-repair-harness",
+        "build": "build-master/Release/cgal-master-worker.exe",
         "source_kind": "official_release",
         "cgal_version": "6.2.1",
-        "review_status": "pending_independent_review"
+        "independent_review": {
+          "result": "blocking findings fixed; final pass found only a registry max_hole_edges sync issue, since corrected",
+          "reviewed_catalog_revision": "wave-a-repair-validated-1",
+          "review_scope": "native repair adapters, dedicated validators, hole-filling bounds, orientation of polygon soups, degenerate-face removal"
+        }
       },
       "runtime_report_contract": {
         "schema": "ValidationReport/v1",
@@ -1536,9 +1572,9 @@
     {
       "id": "mesh.repair.fill_holes",
       "revision": 1,
-      "status": "IMPLEMENTED",
+      "status": "VALIDATED",
       "role": "transform",
-      "summary": "Triangulate every boundary cycle within an explicit edge-count bound.",
+      "summary": "Fill holes: triangulate every boundary hole cycle within an explicit edge-count bound, producing interpolating patches (補間).",
       "aliases": [
         "mesh.repair.triangulate_holes"
       ],
@@ -1614,7 +1650,7 @@
           "max_hole_edges": {
             "type": "integer",
             "minimum": 3,
-            "maximum": 100000
+            "maximum": 2000
           }
         },
         "required": [
@@ -1623,7 +1659,7 @@
       },
       "preconditions": [
         {
-          "id": "bounded_triangle_ascii_off",
+          "id": "bounded_input",
           "maximum_bytes": 67108864,
           "maximum_vertices": 1000000,
           "maximum_faces": 2000000
@@ -1639,7 +1675,10 @@
         {
           "id": "bounded_holes",
           "parameter": "max_hole_edges",
-          "behavior": "fill every cycle at or below the bound; report every remaining cycle"
+          "behavior": "fill every cycle at or below the bound; report every remaining cycle",
+          "worker_check": {
+            "max_hole_edges": true
+          }
         }
       ],
       "kernel": {
@@ -1741,7 +1780,7 @@
             "additionalProperties": false,
             "properties": {
               "max_hole_edges": {
-                "maximum": 100000,
+                "maximum": 2000,
                 "minimum": 3,
                 "type": "integer"
               }
@@ -1789,18 +1828,24 @@
       },
       "evidence": {
         "tests": [
-          "tests/master_wave_a_repair_cases.py"
+          "tests/master_wave_a_repair_cases.py",
+          "tests/master_wave_a_repair_mcp_e2e.py:auto",
+          "tests/master_wave_a_repair_mcp_e2e.py:legacy"
         ],
-        "build": "isolated work/wave-a-repair-harness",
+        "build": "build-master/Release/cgal-master-worker.exe",
         "source_kind": "official_release",
         "cgal_version": "6.2.1",
-        "review_status": "pending_independent_review"
+        "independent_review": {
+          "result": "blocking findings fixed; final pass found only a registry max_hole_edges sync issue, since corrected",
+          "reviewed_catalog_revision": "wave-a-repair-validated-1",
+          "review_scope": "native repair adapters, dedicated validators, hole-filling bounds, orientation of polygon soups, degenerate-face removal"
+        }
       }
     },
     {
       "id": "mesh.validate.repair_fill_holes",
       "revision": 1,
-      "status": "IMPLEMENTED",
+      "status": "VALIDATED",
       "role": "validator",
       "summary": "Replay mesh.repair.fill_holes from the immutable source and validate operation-specific repair invariants.",
       "aliases": [],
@@ -1891,7 +1936,7 @@
           "max_hole_edges": {
             "type": "integer",
             "minimum": 3,
-            "maximum": 100000
+            "maximum": 2000
           }
         },
         "required": [
@@ -1900,7 +1945,7 @@
       },
       "preconditions": [
         {
-          "id": "bounded_triangle_ascii_off",
+          "id": "bounded_input",
           "maximum_bytes": 67108864,
           "maximum_vertices": 1000000,
           "maximum_faces": 2000000
@@ -1916,7 +1961,10 @@
         {
           "id": "bounded_holes",
           "parameter": "max_hole_edges",
-          "behavior": "fill every cycle at or below the bound; report every remaining cycle"
+          "behavior": "fill every cycle at or below the bound; report every remaining cycle",
+          "worker_check": {
+            "max_hole_edges": true
+          }
         },
         {
           "id": "exact_bindings",
@@ -2016,7 +2064,7 @@
             "additionalProperties": false,
             "properties": {
               "max_hole_edges": {
-                "maximum": 100000,
+                "maximum": 2000,
                 "minimum": 3,
                 "type": "integer"
               }
@@ -2062,12 +2110,18 @@
       },
       "evidence": {
         "tests": [
-          "tests/master_wave_a_repair_cases.py"
+          "tests/master_wave_a_repair_cases.py",
+          "tests/master_wave_a_repair_mcp_e2e.py:auto",
+          "tests/master_wave_a_repair_mcp_e2e.py:legacy"
         ],
-        "build": "isolated work/wave-a-repair-harness",
+        "build": "build-master/Release/cgal-master-worker.exe",
         "source_kind": "official_release",
         "cgal_version": "6.2.1",
-        "review_status": "pending_independent_review"
+        "independent_review": {
+          "result": "blocking findings fixed; final pass found only a registry max_hole_edges sync issue, since corrected",
+          "reviewed_catalog_revision": "wave-a-repair-validated-1",
+          "review_scope": "native repair adapters, dedicated validators, hole-filling bounds, orientation of polygon soups, degenerate-face removal"
+        }
       },
       "runtime_report_contract": {
         "schema": "ValidationReport/v1",
@@ -2089,7 +2143,7 @@
     {
       "id": "mesh.repair.polygon_soup",
       "revision": 1,
-      "status": "IMPLEMENTED",
+      "status": "VALIDATED",
       "role": "transform",
       "summary": "Repair duplicate points, duplicate/degenerate polygons, and unused points in a triangle polygon soup.",
       "aliases": [
@@ -2183,7 +2237,7 @@
       },
       "preconditions": [
         {
-          "id": "bounded_triangle_ascii_off",
+          "id": "bounded_input",
           "maximum_bytes": 67108864,
           "maximum_vertices": 1000000,
           "maximum_faces": 2000000
@@ -2355,18 +2409,24 @@
       },
       "evidence": {
         "tests": [
-          "tests/master_wave_a_repair_cases.py"
+          "tests/master_wave_a_repair_cases.py",
+          "tests/master_wave_a_repair_mcp_e2e.py:auto",
+          "tests/master_wave_a_repair_mcp_e2e.py:legacy"
         ],
-        "build": "isolated work/wave-a-repair-harness",
+        "build": "build-master/Release/cgal-master-worker.exe",
         "source_kind": "official_release",
         "cgal_version": "6.2.1",
-        "review_status": "pending_independent_review"
+        "independent_review": {
+          "result": "blocking findings fixed; final pass found only a registry max_hole_edges sync issue, since corrected",
+          "reviewed_catalog_revision": "wave-a-repair-validated-1",
+          "review_scope": "native repair adapters, dedicated validators, hole-filling bounds, orientation of polygon soups, degenerate-face removal"
+        }
       }
     },
     {
       "id": "mesh.validate.repair_polygon_soup",
       "revision": 1,
-      "status": "IMPLEMENTED",
+      "status": "VALIDATED",
       "role": "validator",
       "summary": "Replay mesh.repair.polygon_soup from the immutable source and validate operation-specific repair invariants.",
       "aliases": [],
@@ -2473,7 +2533,7 @@
       },
       "preconditions": [
         {
-          "id": "bounded_triangle_ascii_off",
+          "id": "bounded_input",
           "maximum_bytes": 67108864,
           "maximum_vertices": 1000000,
           "maximum_faces": 2000000
@@ -2637,12 +2697,18 @@
       },
       "evidence": {
         "tests": [
-          "tests/master_wave_a_repair_cases.py"
+          "tests/master_wave_a_repair_cases.py",
+          "tests/master_wave_a_repair_mcp_e2e.py:auto",
+          "tests/master_wave_a_repair_mcp_e2e.py:legacy"
         ],
-        "build": "isolated work/wave-a-repair-harness",
+        "build": "build-master/Release/cgal-master-worker.exe",
         "source_kind": "official_release",
         "cgal_version": "6.2.1",
-        "review_status": "pending_independent_review"
+        "independent_review": {
+          "result": "blocking findings fixed; final pass found only a registry max_hole_edges sync issue, since corrected",
+          "reviewed_catalog_revision": "wave-a-repair-validated-1",
+          "review_scope": "native repair adapters, dedicated validators, hole-filling bounds, orientation of polygon soups, degenerate-face removal"
+        }
       },
       "runtime_report_contract": {
         "schema": "ValidationReport/v1",
@@ -2664,9 +2730,9 @@
     {
       "id": "mesh.repair.manifold_preprocess",
       "revision": 1,
-      "status": "IMPLEMENTED",
+      "status": "VALIDATED",
       "role": "transform",
-      "summary": "Duplicate non-manifold vertices while preserving triangle geometry and face count.",
+      "summary": "Split non-manifold neighborhoods by duplicating non-manifold vertices into manifold-compatible components while preserving triangle geometry and face count.",
       "aliases": [
         "mesh.repair.duplicate_non_manifold_vertices"
       ],
@@ -2746,7 +2812,7 @@
       },
       "preconditions": [
         {
-          "id": "bounded_triangle_ascii_off",
+          "id": "bounded_input",
           "maximum_bytes": 67108864,
           "maximum_vertices": 1000000,
           "maximum_faces": 2000000
@@ -2893,18 +2959,24 @@
       },
       "evidence": {
         "tests": [
-          "tests/master_wave_a_repair_cases.py"
+          "tests/master_wave_a_repair_cases.py",
+          "tests/master_wave_a_repair_mcp_e2e.py:auto",
+          "tests/master_wave_a_repair_mcp_e2e.py:legacy"
         ],
-        "build": "isolated work/wave-a-repair-harness",
+        "build": "build-master/Release/cgal-master-worker.exe",
         "source_kind": "official_release",
         "cgal_version": "6.2.1",
-        "review_status": "pending_independent_review"
+        "independent_review": {
+          "result": "blocking findings fixed; final pass found only a registry max_hole_edges sync issue, since corrected",
+          "reviewed_catalog_revision": "wave-a-repair-validated-1",
+          "review_scope": "native repair adapters, dedicated validators, hole-filling bounds, orientation of polygon soups, degenerate-face removal"
+        }
       }
     },
     {
       "id": "mesh.validate.repair_manifold_preprocess",
       "revision": 1,
-      "status": "IMPLEMENTED",
+      "status": "VALIDATED",
       "role": "validator",
       "summary": "Replay mesh.repair.manifold_preprocess from the immutable source and validate operation-specific repair invariants.",
       "aliases": [],
@@ -2999,7 +3071,7 @@
       },
       "preconditions": [
         {
-          "id": "bounded_triangle_ascii_off",
+          "id": "bounded_input",
           "maximum_bytes": 67108864,
           "maximum_vertices": 1000000,
           "maximum_faces": 2000000
@@ -3148,12 +3220,18 @@
       },
       "evidence": {
         "tests": [
-          "tests/master_wave_a_repair_cases.py"
+          "tests/master_wave_a_repair_cases.py",
+          "tests/master_wave_a_repair_mcp_e2e.py:auto",
+          "tests/master_wave_a_repair_mcp_e2e.py:legacy"
         ],
-        "build": "isolated work/wave-a-repair-harness",
+        "build": "build-master/Release/cgal-master-worker.exe",
         "source_kind": "official_release",
         "cgal_version": "6.2.1",
-        "review_status": "pending_independent_review"
+        "independent_review": {
+          "result": "blocking findings fixed; final pass found only a registry max_hole_edges sync issue, since corrected",
+          "reviewed_catalog_revision": "wave-a-repair-validated-1",
+          "review_scope": "native repair adapters, dedicated validators, hole-filling bounds, orientation of polygon soups, degenerate-face removal"
+        }
       },
       "runtime_report_contract": {
         "schema": "ValidationReport/v1",

@@ -296,9 +296,9 @@ std::size_t required_hole_limit(const Json& parameters) {
                       "max_hole_edges must be an unsigned integer");
   }
   const auto value = parameters["max_hole_edges"].get<std::uint64_t>();
-  if (value < 3 || value > 100000) {
+  if (value < 3 || value > 2000) {
     throw WorkerError("INVALID_INPUT", "INVALID_MAX_HOLE_EDGES",
-                      "max_hole_edges must be in [3, 100000]");
+                      "max_hole_edges must be in [3, 2000]");
   }
   return static_cast<std::size_t>(value);
 }
@@ -425,6 +425,14 @@ RepairResult compute_repair(RepairKind kind, const Soup& source,
   if (kind == RepairKind::kOrient) {
     require_empty_parameters(parameters);
     result.soup = source;
+    for (const auto& face : source.faces) {
+      // orient_polygon_soup does not terminate on repeated-index polygons.
+      if (face[0] == face[1] || face[1] == face[2] || face[2] == face[0]) {
+        throw WorkerError("PRECONDITION_FAILED", "COMBINATORIALLY_DEGENERATE_FACE",
+                          "Orientation requires faces without repeated vertex indices; "
+                          "run mesh.repair.remove_degenerate first");
+      }
+    }
     const bool orientable = PMP::orient_polygon_soup(result.soup.points, result.soup.faces);
     if (!orientable || !PMP::is_polygon_soup_a_polygon_mesh(result.soup.faces)) {
       throw WorkerError("PRECONDITION_FAILED", "POLYGON_SOUP_NOT_ORIENTABLE",
@@ -452,6 +460,10 @@ RepairResult compute_repair(RepairKind kind, const Soup& source,
     PMP::remove_isolated_vertices(mesh);
     if (mesh.number_of_faces() == 0) throw WorkerError("PRECONDITION_FAILED", "REPAIR_WOULD_EMPTY_MESH", "Degenerate repair removed every face");
     result.soup = soup_from_mesh(mesh);
+    if (degenerate_faces(result.soup) != 0) {
+      throw WorkerError("PRECONDITION_FAILED", "DEGENERATE_REPAIR_INCOMPLETE",
+                        "CGAL could not remove every degenerate face; no candidate is published");
+    }
     result.metrics["remove_degenerate_faces_complete"] = faces_removed;
     result.metrics["remove_degenerate_edges_complete"] = edges_removed;
   } else if (kind == RepairKind::kFillHoles) {
@@ -468,7 +480,9 @@ RepairResult compute_repair(RepairKind kind, const Soup& source,
       do { ++length; cursor = next(cursor, mesh); } while (cursor != halfedge && length <= kMaximumFaces);
       if (length > limit) { ++skipped; continue; }
       std::vector<RepairMesh::Face_index> patch;
-      PMP::triangulate_hole(mesh, halfedge, CGAL::parameters::face_output_iterator(std::back_inserter(patch)));
+      // Disable the cubic-time fallback so run time stays bounded by max_hole_edges.
+      PMP::triangulate_hole(mesh, halfedge, CGAL::parameters::face_output_iterator(std::back_inserter(patch))
+                                                 .do_not_use_cubic_algorithm(true));
       if (patch.empty()) throw WorkerError("PRECONDITION_FAILED", "HOLE_TRIANGULATION_FAILED", "CGAL did not create a hole patch");
       ++filled;
       added_faces += patch.size();

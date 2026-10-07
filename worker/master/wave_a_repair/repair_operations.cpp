@@ -60,7 +60,7 @@ Json parameter_schema(RepairKind kind) {
     return {{"type", "object"},
             {"required", {"max_hole_edges"}},
             {"additionalProperties", false},
-            {"properties", {{"max_hole_edges", {{"type", "integer"}, {"minimum", 3}, {"maximum", 100000}}}}}};
+            {"properties", {{"max_hole_edges", {{"type", "integer"}, {"minimum", 3}, {"maximum", 2000}}}}}};
   }
   if (kind == RepairKind::kPolygonSoup) {
     return {{"type", "object"},

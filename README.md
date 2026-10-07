@@ -29,6 +29,7 @@ StellaCADはStandalone受入後に正式統合する利用側です。
 点群の対応範囲は [点群処理](docs/master/WAVE_B_JA.md)、
 メッシュ検査の対応範囲は [検査・計測](docs/master/WAVE_A_MESH_JA.md)、
 Booleanの対応範囲は [Boolean](docs/master/WAVE_A_BOOLEAN_JA.md)、
+メッシュ修復の対応範囲は [修復](docs/master/WAVE_A_REPAIR_JA.md)、
 原本要求に対する実計算の判定方法は [主要能力の受入](docs/master/CAPABILITY_ACCEPTANCE_JA.md) を参照してください。
 実PCの凸包測定と資源設定は [性能・資源設定](docs/master/PERFORMANCE_JA.md) に記録しています。
 実PCの接続確認範囲は [ホスト接続](docs/master/HOST_CONNECTION_JA.md) を参照してください。

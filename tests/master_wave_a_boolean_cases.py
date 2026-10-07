@@ -189,7 +189,7 @@ def main(worker: str) -> None:
         "mesh.boolean.difference", "mesh.validate.boolean_union",
         "mesh.validate.boolean_intersection", "mesh.validate.boolean_difference",
     }
-    assert len(operations) == 35, operations.keys()
+    assert len(operations) >= 35, operations.keys()
     assert expected <= set(operations)
     for item in (operations[operation] for operation in expected):
         assert item["revision"] == 1
@@ -456,4 +456,4 @@ def main(worker: str) -> None:
 if __name__ == "__main__":
     if len(sys.argv) != 2:
         raise SystemExit("usage: master_wave_a_boolean_cases.py WORKER")
-    main(sys.argv[1])
+    main(str(pathlib.Path(sys.argv[1]).resolve()))
