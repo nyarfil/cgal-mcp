@@ -422,6 +422,48 @@ with tempfile.TemporaryDirectory() as directory:
         error_class="VALIDATION_FAILED",
     )
 
+    # A representable binary64 subnormal is valid numeric syntax on every
+    # platform.  The dedicated geometry validator must reject its magnitude,
+    # rather than a locale/runtime-dependent stod range exception rejecting PLY.
+    for index, token in enumerate((
+        "+4.9406564584124654e-324", "-4.9406564584124654e-324",
+        "2.2250738585072014e-308",
+    )):
+        candidate = root / f"finite-small-normal-{index}.ply"
+        lines = pca_path.read_text(encoding="ascii").splitlines()
+        first = lines.index("end_header") + 1
+        fields = lines[first].split()
+        fields[3:] = [token, "0", "0"]
+        lines[first] = " ".join(fields)
+        candidate.write_text("\n".join(lines) + "\n", encoding="ascii")
+        expect_error(
+            "pointset.validate.normals_estimated",
+            [artifact(candidate, "PointSet3Normals", "ply", f"small-normal-{index}"),
+             artifact(outlier_path, "PointSet3", "xyz", f"small-source-{index}")],
+            root / f"finite-small-normal-check-{index}", {"method": "pca", "neighbors": 8},
+            f"finite-small-normal-check-{index}", code="NON_UNIT_NORMAL",
+            error_class="VALIDATION_FAILED",
+        )
+
+    # Values outside binary64 and non-decimal tokens fail before calculation;
+    # an underflowing token must not silently become a zero normal component.
+    for index, token in enumerate(("1e-400", "1e400", "+-1", "0x1p0", "nan")):
+        candidate = root / f"invalid-numeric-normal-{index}.ply"
+        lines = pca_path.read_text(encoding="ascii").splitlines()
+        first = lines.index("end_header") + 1
+        fields = lines[first].split()
+        fields[3] = token
+        lines[first] = " ".join(fields)
+        candidate.write_text("\n".join(lines) + "\n", encoding="ascii")
+        expect_error(
+            "pointset.validate.normals_estimated",
+            [artifact(candidate, "PointSet3Normals", "ply", f"invalid-normal-{index}"),
+             artifact(outlier_path, "PointSet3", "xyz", f"invalid-source-{index}")],
+            root / f"invalid-numeric-normal-check-{index}", {"method": "pca", "neighbors": 8},
+            f"invalid-numeric-normal-check-{index}", code="MALFORMED_PLY",
+            error_class="INVALID_INPUT",
+        )
+
     changed_oriented = root / "changed-oriented.ply"
     def change_normal_magnitude(values: list[float]) -> list[float]:
         for index in range(3, 6):

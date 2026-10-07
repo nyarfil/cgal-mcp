@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generator": "master-wave-a-milestone",
-  "generator_sha256": "11dcb9ab868528e67ca2786b42e0c7cf1f2b9f995c23764468242a7008bd2c21",
+  "generator_sha256": "5c68e49a10365d29f47d711cc5817bf79a17e676ec4046666e3216b5ed581431",
   "status": "pass",
   "scope": "mesh_simplification_policies_and_dual_validation",
   "standalone_accepted": false,
@@ -11,7 +11,7 @@
     "mesh.validate.simplification_integrity",
     "mesh.distance.symmetric_hausdorff"
   ],
-  "worker_sha256": "a4d1941bbb7472a1cf7da42960ca859d38ae90a717573f9b464ac698e5186316",
+  "worker_sha256": "c1586ddf470044997f03c238f0e9f97a51feb05b6627bdd739205002ad8ef19b",
   "worker_manifest": {
     "actual_cgal_version": "6.2.1",
     "build": {
@@ -203,6 +203,1800 @@
         "supported_kernels": [
           "package_recommended"
         ]
+      },
+      {
+        "dependencies": [
+          "Point_set_processing_3",
+          "Eigen3"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "pointset.remove_outliers",
+        "info": {
+          "input_format": "xyz",
+          "numeric_scale_contract": {
+            "maximum_absolute_coordinate": 1e+100,
+            "maximum_translation_to_span_ratio": 1000000.0,
+            "minimum_span": 1e-100
+          },
+          "output_format": "xyz",
+          "required_parameters": [
+            "neighbors",
+            "threshold_percent",
+            "threshold_distance"
+          ],
+          "source_header": "CGAL/remove_outliers.h",
+          "validator_parameter_bindings": {
+            "pointset.validate.subset": {
+              "neighbors": "neighbors",
+              "threshold_distance": "threshold_distance",
+              "threshold_percent": "threshold_percent"
+            }
+          },
+          "validators": [
+            "pointset.validate.basic",
+            "pointset.validate.subset"
+          ]
+        },
+        "input_types": [
+          "PointSet3"
+        ],
+        "output_type": "PointSet3",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Point_set_processing_3",
+          "Eigen3"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "pointset.simplify.grid",
+        "info": {
+          "input_format": "xyz",
+          "numeric_scale_contract": {
+            "finite_coordinate_to_cell_ratio": true,
+            "maximum_absolute_coordinate": 1e+100,
+            "maximum_translation_to_span_ratio": 1000000.0,
+            "minimum_span": 1e-100
+          },
+          "output_format": "xyz",
+          "required_parameters": [
+            "cell_size",
+            "min_points_per_cell"
+          ],
+          "source_header": "CGAL/grid_simplify_point_set.h",
+          "validator_parameter_bindings": {
+            "pointset.validate.subset": {
+              "cell_size": "cell_size",
+              "min_points_per_cell": "min_points_per_cell"
+            }
+          },
+          "validators": [
+            "pointset.validate.basic",
+            "pointset.validate.subset"
+          ]
+        },
+        "input_types": [
+          "PointSet3"
+        ],
+        "output_type": "PointSet3",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Point_set_processing_3",
+          "Eigen3"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "pointset.simplify.random",
+        "info": {
+          "input_format": "xyz",
+          "output_format": "xyz",
+          "reproducible_random_seed": true,
+          "required_parameters": [
+            "removed_percentage",
+            "seed"
+          ],
+          "seed_type": "uint32",
+          "source_header": "CGAL/random_simplify_point_set.h",
+          "validator_parameter_bindings": {
+            "pointset.validate.subset": {
+              "removed_percentage": "removed_percentage",
+              "seed": "seed"
+            }
+          },
+          "validators": [
+            "pointset.validate.basic",
+            "pointset.validate.subset"
+          ]
+        },
+        "input_types": [
+          "PointSet3"
+        ],
+        "output_type": "PointSet3",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Point_set_processing_3",
+          "Eigen3"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "pointset.simplify.hierarchy",
+        "info": {
+          "input_format": "xyz",
+          "numeric_scale_contract": {
+            "maximum_absolute_coordinate": 1e+100,
+            "maximum_translation_to_span_ratio": 1000000.0,
+            "minimum_span": 1e-100
+          },
+          "output_format": "xyz",
+          "required_parameters": [
+            "cluster_size",
+            "maximum_variation"
+          ],
+          "source_header": "CGAL/hierarchy_simplify_point_set.h",
+          "validator_parameter_bindings": {
+            "pointset.validate.subset": {
+              "cluster_size": "cluster_size",
+              "maximum_variation": "maximum_variation"
+            }
+          },
+          "validators": [
+            "pointset.validate.basic",
+            "pointset.validate.subset"
+          ]
+        },
+        "input_types": [
+          "PointSet3"
+        ],
+        "output_type": "PointSet3",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Point_set_processing_3",
+          "Eigen3"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "pointset.smooth.jet",
+        "info": {
+          "input_format": "xyz",
+          "local_neighborhood_contract": {
+            "minimum_affine_rank": 2,
+            "neighbor_parameter": "neighbors"
+          },
+          "numeric_scale_contract": {
+            "maximum_absolute_coordinate": 1e+100,
+            "maximum_translation_to_span_ratio": 1000000.0,
+            "minimum_span": 1e-100
+          },
+          "output_format": "xyz",
+          "required_parameters": [
+            "neighbors",
+            "degree_fitting",
+            "degree_monge"
+          ],
+          "source_header": "CGAL/jet_smooth_point_set.h",
+          "validator_parameter_bindings": {
+            "pointset.validate.smoothed": {
+              "degree_fitting": "degree_fitting",
+              "degree_monge": "degree_monge",
+              "neighbors": "neighbors"
+            }
+          },
+          "validators": [
+            "pointset.validate.basic",
+            "pointset.validate.smoothed"
+          ]
+        },
+        "input_types": [
+          "PointSet3"
+        ],
+        "output_type": "PointSet3",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Point_set_processing_3",
+          "Eigen3"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "pointset.normals.estimate",
+        "info": {
+          "input_format": "xyz",
+          "local_neighborhood_contract": {
+            "minimum_affine_rank": 2,
+            "neighbor_parameter": "neighbors"
+          },
+          "methods": [
+            "pca",
+            "jet"
+          ],
+          "numeric_scale_contract": {
+            "maximum_absolute_coordinate": 1e+100,
+            "maximum_translation_to_span_ratio": 1000000.0,
+            "minimum_span": 1e-100
+          },
+          "output_format": "ascii_ply_with_x_y_z_nx_ny_nz",
+          "source_headers": [
+            "CGAL/pca_estimate_normals.h",
+            "CGAL/jet_estimate_normals.h"
+          ],
+          "validator_parameter_bindings": {
+            "pointset.validate.normals_estimated": {
+              "degree_fitting": "degree_fitting",
+              "method": "method",
+              "neighbors": "neighbors"
+            }
+          },
+          "validators": [
+            "pointset.validate.basic",
+            "pointset.validate.normals_estimated"
+          ]
+        },
+        "input_types": [
+          "PointSet3"
+        ],
+        "output_type": "PointSet3Normals",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Point_set_processing_3",
+          "Eigen3"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "pointset.normals.orient_mst",
+        "info": {
+          "input_format": "ascii_ply_with_x_y_z_nx_ny_nz",
+          "numeric_scale_contract": {
+            "maximum_absolute_coordinate": 1e+100,
+            "maximum_translation_to_span_ratio": 1000000.0,
+            "minimum_span": 1e-100
+          },
+          "output_format": "ascii_ply_with_x_y_z_nx_ny_nz",
+          "required_parameters": [
+            "neighbors",
+            "drop_unoriented"
+          ],
+          "source_header": "CGAL/mst_orient_normals.h",
+          "validator_parameter_bindings": {
+            "pointset.validate.normals_oriented": {
+              "drop_unoriented": "drop_unoriented",
+              "neighbors": "neighbors"
+            }
+          },
+          "validators": [
+            "pointset.validate.basic",
+            "pointset.validate.normals_oriented"
+          ]
+        },
+        "input_types": [
+          "PointSet3Normals"
+        ],
+        "output_type": "PointSet3Normals",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Point_set_processing_3",
+          "Eigen3"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "pointset.validate.basic",
+        "info": {
+          "accepted_formats": [
+            "PointSet3/xyz",
+            "PointSet3Normals/ascii_ply"
+          ],
+          "checks": [
+            "finite_coordinates",
+            "point_count",
+            "affine_rank",
+            "normal_vectors_nonzero",
+            "normal_vectors_unit"
+          ],
+          "input_slots": [
+            "points"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "PointSet3",
+          "PointSet3Normals"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Point_set_processing_3",
+          "Eigen3"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "pointset.validate.subset",
+        "info": {
+          "bound_parameters": [
+            "neighbors",
+            "threshold_percent",
+            "threshold_distance",
+            "cell_size",
+            "min_points_per_cell",
+            "removed_percentage",
+            "seed",
+            "cluster_size",
+            "maximum_variation"
+          ],
+          "checks": [
+            "finite_coordinates",
+            "candidate_is_source_subset",
+            "count_not_increased",
+            "affine_rank",
+            "cgal_reference_match",
+            "random_sample_count_matches"
+          ],
+          "input_formats": [
+            "xyz",
+            "xyz"
+          ],
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "optional_parameters": [
+            "neighbors",
+            "threshold_percent",
+            "threshold_distance",
+            "cell_size",
+            "min_points_per_cell",
+            "removed_percentage",
+            "seed",
+            "cluster_size",
+            "maximum_variation"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "PointSet3",
+          "PointSet3"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Point_set_processing_3",
+          "Eigen3"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "pointset.validate.smoothed",
+        "info": {
+          "bound_parameters": [
+            "neighbors",
+            "degree_fitting",
+            "degree_monge"
+          ],
+          "checks": [
+            "finite_coordinates",
+            "point_count_preserved",
+            "affine_rank",
+            "cgal_reference_match",
+            "coordinates_modified"
+          ],
+          "input_formats": [
+            "xyz",
+            "xyz"
+          ],
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation",
+          "required_parameters": [
+            "neighbors",
+            "degree_fitting",
+            "degree_monge"
+          ]
+        },
+        "input_types": [
+          "PointSet3",
+          "PointSet3"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Point_set_processing_3",
+          "Eigen3"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "pointset.validate.normals_estimated",
+        "info": {
+          "bound_parameters": [
+            "method",
+            "neighbors",
+            "degree_fitting"
+          ],
+          "checks": [
+            "finite_coordinates",
+            "point_count_preserved",
+            "positions_preserved",
+            "normal_vectors_nonzero",
+            "normal_vectors_unit",
+            "local_surface_neighborhoods_valid",
+            "cgal_reference_direction_match",
+            "affine_rank"
+          ],
+          "input_formats": [
+            "ply",
+            "xyz"
+          ],
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "optional_parameters": [
+            "degree_fitting"
+          ],
+          "output_slot": "validation",
+          "required_parameters": [
+            "method",
+            "neighbors"
+          ]
+        },
+        "input_types": [
+          "PointSet3Normals",
+          "PointSet3"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Point_set_processing_3",
+          "Eigen3"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "pointset.validate.normals_oriented",
+        "info": {
+          "bound_parameters": [
+            "neighbors",
+            "drop_unoriented"
+          ],
+          "checks": [
+            "finite_coordinates",
+            "positions_preserved_or_subset",
+            "normal_directions_preserved_up_to_sign",
+            "normal_vectors_nonzero",
+            "normal_vectors_unit",
+            "drop_policy_honored",
+            "cgal_mst_reference_match",
+            "affine_rank"
+          ],
+          "input_formats": [
+            "ply",
+            "ply"
+          ],
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation",
+          "required_parameters": [
+            "neighbors",
+            "drop_unoriented"
+          ]
+        },
+        "input_types": [
+          "PointSet3Normals",
+          "PointSet3Normals"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing",
+          "Surface_mesh"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "mesh.inspect.pmp",
+        "info": {
+          "accepted_geometry_types": [
+            "TriangleSurfaceMesh",
+            "PolygonSoup3"
+          ],
+          "analysis_kind": "pmp_inspection",
+          "checks": [
+            "finite_coordinates",
+            "indices_valid",
+            "triangulated",
+            "polygon_mesh_valid",
+            "closed",
+            "degenerate_faces",
+            "non_manifold_vertices",
+            "isolated_vertices"
+          ],
+          "geometry_mutation": false,
+          "input_format": "off",
+          "input_slot": "mesh",
+          "input_units": [
+            "mm",
+            "cm",
+            "m"
+          ],
+          "license_expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+          "max_report_bytes": 16777216,
+          "output_format": "json",
+          "output_slot": "analysis",
+          "output_unit": "none",
+          "producer_diagnostic_id": "mesh.producer_check.pmp_inspection",
+          "report_schema": "GeometryAnalysisReport/v1",
+          "report_schema_version": 1,
+          "result_enumeration": {
+            "max_report_bytes": 16777216,
+            "policy": "atomic_report_or_resource_limit"
+          },
+          "source_header": "CGAL/boost/graph/helpers.h",
+          "source_kind": "official_release",
+          "source_sha256": "a9e73905b62e1426775fe77d90aea0a803b50a18a735923062baf7c0beca2767",
+          "source_version": "6.2.1",
+          "tolerates_unconstructible_graph": true,
+          "validator_artifact_bindings": {
+            "mesh.validate.pmp_inspection_report": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "source": {
+                "input": "mesh"
+              }
+            }
+          },
+          "validators": [
+            "mesh.validate.pmp_inspection_report"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh",
+          "PolygonSoup3"
+        ],
+        "output_type": "GeometryAnalysisReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "exact_constructions",
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing",
+          "Surface_mesh"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "mesh.analysis.connected_components",
+        "info": {
+          "analysis_kind": "connected_components",
+          "checks": [
+            "component_ids_contiguous",
+            "all_faces_partitioned_once"
+          ],
+          "geometry_mutation": false,
+          "input_format": "off",
+          "input_slot": "mesh",
+          "input_units": [
+            "mm",
+            "cm",
+            "m"
+          ],
+          "license_expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+          "max_report_bytes": 16777216,
+          "output_format": "json",
+          "output_slot": "analysis",
+          "output_unit": "none",
+          "producer_diagnostic_id": "mesh.producer_check.connected_components",
+          "report_schema": "GeometryAnalysisReport/v1",
+          "report_schema_version": 1,
+          "result_enumeration": {
+            "max_report_bytes": 16777216,
+            "policy": "atomic_report_or_resource_limit"
+          },
+          "source_header": "CGAL/Polygon_mesh_processing/connected_components.h",
+          "source_kind": "official_release",
+          "source_sha256": "3f980c0349166a44c80e990fdf83a91086bee637e4850c44c1ff295fda594e70",
+          "source_version": "6.2.1",
+          "validator_artifact_bindings": {
+            "mesh.validate.connected_components_report": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "source": {
+                "input": "mesh"
+              }
+            }
+          },
+          "validators": [
+            "mesh.validate.connected_components_report"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "GeometryAnalysisReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "exact_constructions",
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing",
+          "Surface_mesh"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "mesh.analysis.normals",
+        "info": {
+          "analysis_kind": "normals",
+          "checks": [
+            "normal_cardinality",
+            "finite_vectors",
+            "unit_or_explicit_zero",
+            "face_degeneracy_consistent"
+          ],
+          "geometry_mutation": false,
+          "input_format": "off",
+          "input_slot": "mesh",
+          "input_units": [
+            "mm",
+            "cm",
+            "m"
+          ],
+          "license_expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+          "max_report_bytes": 16777216,
+          "normal_modes": [
+            "face",
+            "vertex",
+            "corner_flat"
+          ],
+          "output_format": "json",
+          "output_slot": "analysis",
+          "output_unit": "none",
+          "precision_contract": {
+            "exact_irrational_output": false,
+            "internal_kernel": "EPECK",
+            "reported_values": "normalized IEEE-754 binary64 vectors"
+          },
+          "producer_diagnostic_id": "mesh.producer_check.normals",
+          "report_schema": "GeometryAnalysisReport/v1",
+          "report_schema_version": 1,
+          "result_enumeration": {
+            "max_report_bytes": 16777216,
+            "policy": "atomic_report_or_resource_limit"
+          },
+          "source_header": "CGAL/Polygon_mesh_processing/compute_normal.h",
+          "source_kind": "official_release",
+          "source_sha256": "bc53b2e20f93dddaa467bd59d344ff3f7396b41dd280835961159b77711abc40",
+          "source_version": "6.2.1",
+          "validator_artifact_bindings": {
+            "mesh.validate.normals_report": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "source": {
+                "input": "mesh"
+              }
+            }
+          },
+          "validators": [
+            "mesh.validate.normals_report"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "GeometryAnalysisReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing",
+          "Surface_mesh"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "mesh.analysis.measures",
+        "info": {
+          "additional_source_headers": [
+            {
+              "header": "CGAL/Polygon_mesh_processing/self_intersections.h",
+              "sha256": "d459c0e6480a9e1c2cbef291340ae61a0bf4e79ceb182365c1b922dd7e38ae8f"
+            }
+          ],
+          "analysis_kind": "measures",
+          "checks": [
+            "typed_dimensions",
+            "availability_reasons",
+            "self_intersection_gate_before_volume",
+            "binary64_precision_gate"
+          ],
+          "geometry_mutation": false,
+          "input_format": "off",
+          "input_slot": "mesh",
+          "input_units": [
+            "mm",
+            "cm",
+            "m"
+          ],
+          "license_expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+          "max_report_bytes": 16777216,
+          "measure_dimensions": {
+            "absolute_volume": "length^3",
+            "signed_volume": "length^3",
+            "surface_area": "length^2",
+            "volume_centroid": "length"
+          },
+          "output_format": "json",
+          "output_slot": "analysis",
+          "output_unit": "none",
+          "precision_contract": {
+            "internal_kernel": "EPECK",
+            "signed_volume": "exact internal rational then binary64",
+            "surface_area": "approximate square root then binary64",
+            "unrepresentable": "explicit unavailable reason",
+            "volume_centroid": "exact internal rational then binary64"
+          },
+          "producer_diagnostic_id": "mesh.producer_check.measures",
+          "report_schema": "GeometryAnalysisReport/v1",
+          "report_schema_version": 1,
+          "result_enumeration": {
+            "max_report_bytes": 16777216,
+            "policy": "atomic_report_or_resource_limit"
+          },
+          "source_header": "CGAL/Polygon_mesh_processing/measure.h",
+          "source_kind": "official_release",
+          "source_sha256": "ba707292f05045a0c6eea3d73c3b21435673f440f4461b5ac5cf19542f6c540b",
+          "source_version": "6.2.1",
+          "validator_artifact_bindings": {
+            "mesh.validate.measures_report": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "source": {
+                "input": "mesh"
+              }
+            }
+          },
+          "validators": [
+            "mesh.validate.measures_report"
+          ],
+          "volume_preconditions": [
+            "closed",
+            "non_degenerate",
+            "non_self_intersecting",
+            "bounds_volume",
+            "positive_orientation"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "GeometryAnalysisReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing",
+          "Surface_mesh"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "mesh.analysis.sharp_features",
+        "info": {
+          "analysis_kind": "sharp_features",
+          "angle_units": [
+            "deg",
+            "rad"
+          ],
+          "checks": [
+            "canonical_angle_degrees",
+            "feature_edges_belong_to_source"
+          ],
+          "geometry_mutation": false,
+          "input_format": "off",
+          "input_slot": "mesh",
+          "input_units": [
+            "mm",
+            "cm",
+            "m"
+          ],
+          "license_expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+          "max_report_bytes": 16777216,
+          "output_format": "json",
+          "output_slot": "analysis",
+          "output_unit": "none",
+          "precision_contract": {
+            "angle_threshold": "IEEE-754 binary64 degrees",
+            "internal_kernel": "EPECK",
+            "threshold_decision": "CGAL approximate trigonometric comparison"
+          },
+          "producer_diagnostic_id": "mesh.producer_check.sharp_features",
+          "report_schema": "GeometryAnalysisReport/v1",
+          "report_schema_version": 1,
+          "required_parameters": [
+            "angle"
+          ],
+          "result_enumeration": {
+            "max_report_bytes": 16777216,
+            "policy": "atomic_report_or_resource_limit"
+          },
+          "source_header": "CGAL/Polygon_mesh_processing/detect_features.h",
+          "source_kind": "official_release",
+          "source_sha256": "0fda63d13f171d8a107a1cb96db9545fa19802eacae419df0498c9838669724c",
+          "source_version": "6.2.1",
+          "validator_artifact_bindings": {
+            "mesh.validate.sharp_features_report": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "source": {
+                "input": "mesh"
+              }
+            }
+          },
+          "validator_parameter_bindings": {
+            "mesh.validate.sharp_features_report": {
+              "angle": "angle"
+            }
+          },
+          "validators": [
+            "mesh.validate.sharp_features_report"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "GeometryAnalysisReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing",
+          "Surface_mesh"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "mesh.analysis.self_intersections",
+        "info": {
+          "analysis_kind": "self_intersections",
+          "checks": [
+            "source_face_pairs",
+            "pair_count_consistent",
+            "bounded_pair_collection"
+          ],
+          "geometry_mutation": false,
+          "input_format": "off",
+          "input_slot": "mesh",
+          "input_units": [
+            "mm",
+            "cm",
+            "m"
+          ],
+          "license_expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+          "max_report_bytes": 16777216,
+          "output_format": "json",
+          "output_slot": "analysis",
+          "output_unit": "none",
+          "pair_limit": 10000,
+          "producer_diagnostic_id": "mesh.producer_check.self_intersections",
+          "report_schema": "GeometryAnalysisReport/v1",
+          "report_schema_version": 1,
+          "result_enumeration": {
+            "max_report_bytes": 16777216,
+            "policy": "atomic_report_or_resource_limit"
+          },
+          "source_header": "CGAL/Polygon_mesh_processing/self_intersections.h",
+          "source_kind": "official_release",
+          "source_sha256": "d459c0e6480a9e1c2cbef291340ae61a0bf4e79ceb182365c1b922dd7e38ae8f",
+          "source_version": "6.2.1",
+          "validator_artifact_bindings": {
+            "mesh.validate.self_intersections_report": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "source": {
+                "input": "mesh"
+              }
+            }
+          },
+          "validators": [
+            "mesh.validate.self_intersections_report"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "GeometryAnalysisReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "exact_constructions",
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing",
+          "Surface_mesh"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "mesh.validate.pmp_inspection_report",
+        "info": {
+          "artifact_bindings": {
+            "candidate": {
+              "output": "analysis"
+            },
+            "source": {
+              "input": "mesh"
+            }
+          },
+          "candidate_report_schema": "GeometryAnalysisReport/v1",
+          "max_candidate_report_bytes": 16777216,
+          "report_schema": "ValidationReport/v1",
+          "required_checks": [
+            "schema_valid",
+            "source_identity_matches",
+            "analysis_kind_matches",
+            "dimension_units_valid",
+            "result_semantics_valid",
+            "producer_diagnostic_matches",
+            "official_cgal_reference_match"
+          ],
+          "required_report_checks": {
+            "checks.analysis_kind_matches": true,
+            "checks.dimension_units_valid": true,
+            "checks.official_cgal_reference_match": true,
+            "checks.producer_diagnostic_matches": true,
+            "checks.result_semantics_valid": true,
+            "checks.schema_valid": true,
+            "checks.source_identity_matches": true,
+            "passed": true,
+            "schema_version": 1,
+            "status": "pass",
+            "validator_id": "mesh.validate.pmp_inspection_report"
+          },
+          "validates": "mesh.inspect.pmp"
+        },
+        "input_types": [
+          "GeometryAnalysisReport",
+          "TriangleSurfaceMesh",
+          "PolygonSoup3"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "exact_constructions",
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing",
+          "Surface_mesh"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "mesh.validate.connected_components_report",
+        "info": {
+          "artifact_bindings": {
+            "candidate": {
+              "output": "analysis"
+            },
+            "source": {
+              "input": "mesh"
+            }
+          },
+          "candidate_report_schema": "GeometryAnalysisReport/v1",
+          "max_candidate_report_bytes": 16777216,
+          "report_schema": "ValidationReport/v1",
+          "required_checks": [
+            "schema_valid",
+            "source_identity_matches",
+            "analysis_kind_matches",
+            "dimension_units_valid",
+            "result_semantics_valid",
+            "producer_diagnostic_matches",
+            "official_cgal_reference_match"
+          ],
+          "required_report_checks": {
+            "checks.analysis_kind_matches": true,
+            "checks.dimension_units_valid": true,
+            "checks.official_cgal_reference_match": true,
+            "checks.producer_diagnostic_matches": true,
+            "checks.result_semantics_valid": true,
+            "checks.schema_valid": true,
+            "checks.source_identity_matches": true,
+            "passed": true,
+            "schema_version": 1,
+            "status": "pass",
+            "validator_id": "mesh.validate.connected_components_report"
+          },
+          "validates": "mesh.analysis.connected_components"
+        },
+        "input_types": [
+          "GeometryAnalysisReport",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "exact_constructions",
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing",
+          "Surface_mesh"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "mesh.validate.normals_report",
+        "info": {
+          "artifact_bindings": {
+            "candidate": {
+              "output": "analysis"
+            },
+            "source": {
+              "input": "mesh"
+            }
+          },
+          "candidate_report_schema": "GeometryAnalysisReport/v1",
+          "independent_fixture_contract": "analytic face-normal direction",
+          "max_candidate_report_bytes": 16777216,
+          "report_schema": "ValidationReport/v1",
+          "required_checks": [
+            "schema_valid",
+            "source_identity_matches",
+            "analysis_kind_matches",
+            "dimension_units_valid",
+            "result_semantics_valid",
+            "producer_diagnostic_matches",
+            "official_cgal_reference_match"
+          ],
+          "required_report_checks": {
+            "checks.analysis_kind_matches": true,
+            "checks.dimension_units_valid": true,
+            "checks.official_cgal_reference_match": true,
+            "checks.producer_diagnostic_matches": true,
+            "checks.result_semantics_valid": true,
+            "checks.schema_valid": true,
+            "checks.source_identity_matches": true,
+            "passed": true,
+            "schema_version": 1,
+            "status": "pass",
+            "validator_id": "mesh.validate.normals_report"
+          },
+          "validates": "mesh.analysis.normals"
+        },
+        "input_types": [
+          "GeometryAnalysisReport",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing",
+          "Surface_mesh"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "mesh.validate.measures_report",
+        "info": {
+          "artifact_bindings": {
+            "candidate": {
+              "output": "analysis"
+            },
+            "source": {
+              "input": "mesh"
+            }
+          },
+          "candidate_report_schema": "GeometryAnalysisReport/v1",
+          "independent_fixture_contract": "analytic tetra area-volume-centroid",
+          "max_candidate_report_bytes": 16777216,
+          "report_schema": "ValidationReport/v1",
+          "required_checks": [
+            "schema_valid",
+            "source_identity_matches",
+            "analysis_kind_matches",
+            "dimension_units_valid",
+            "result_semantics_valid",
+            "producer_diagnostic_matches",
+            "official_cgal_reference_match"
+          ],
+          "required_report_checks": {
+            "checks.analysis_kind_matches": true,
+            "checks.dimension_units_valid": true,
+            "checks.official_cgal_reference_match": true,
+            "checks.producer_diagnostic_matches": true,
+            "checks.result_semantics_valid": true,
+            "checks.schema_valid": true,
+            "checks.source_identity_matches": true,
+            "passed": true,
+            "schema_version": 1,
+            "status": "pass",
+            "validator_id": "mesh.validate.measures_report"
+          },
+          "validates": "mesh.analysis.measures"
+        },
+        "input_types": [
+          "GeometryAnalysisReport",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing",
+          "Surface_mesh"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "mesh.validate.sharp_features_report",
+        "info": {
+          "artifact_bindings": {
+            "candidate": {
+              "output": "analysis"
+            },
+            "source": {
+              "input": "mesh"
+            }
+          },
+          "candidate_report_schema": "GeometryAnalysisReport/v1",
+          "max_candidate_report_bytes": 16777216,
+          "parameter_bindings": {
+            "angle": {
+              "parameter": "angle"
+            }
+          },
+          "report_schema": "ValidationReport/v1",
+          "required_checks": [
+            "schema_valid",
+            "source_identity_matches",
+            "analysis_kind_matches",
+            "dimension_units_valid",
+            "result_semantics_valid",
+            "producer_diagnostic_matches",
+            "official_cgal_reference_match"
+          ],
+          "required_report_checks": {
+            "checks.analysis_kind_matches": true,
+            "checks.dimension_units_valid": true,
+            "checks.official_cgal_reference_match": true,
+            "checks.producer_diagnostic_matches": true,
+            "checks.result_semantics_valid": true,
+            "checks.schema_valid": true,
+            "checks.source_identity_matches": true,
+            "passed": true,
+            "schema_version": 1,
+            "status": "pass",
+            "validator_id": "mesh.validate.sharp_features_report"
+          },
+          "validates": "mesh.analysis.sharp_features"
+        },
+        "input_types": [
+          "GeometryAnalysisReport",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing",
+          "Surface_mesh"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "mesh.validate.self_intersections_report",
+        "info": {
+          "artifact_bindings": {
+            "candidate": {
+              "output": "analysis"
+            },
+            "source": {
+              "input": "mesh"
+            }
+          },
+          "candidate_report_schema": "GeometryAnalysisReport/v1",
+          "max_candidate_report_bytes": 16777216,
+          "report_schema": "ValidationReport/v1",
+          "required_checks": [
+            "schema_valid",
+            "source_identity_matches",
+            "analysis_kind_matches",
+            "dimension_units_valid",
+            "result_semantics_valid",
+            "producer_diagnostic_matches",
+            "official_cgal_reference_match"
+          ],
+          "required_report_checks": {
+            "checks.analysis_kind_matches": true,
+            "checks.dimension_units_valid": true,
+            "checks.official_cgal_reference_match": true,
+            "checks.producer_diagnostic_matches": true,
+            "checks.result_semantics_valid": true,
+            "checks.schema_valid": true,
+            "checks.source_identity_matches": true,
+            "passed": true,
+            "schema_version": 1,
+            "status": "pass",
+            "validator_id": "mesh.validate.self_intersections_report"
+          },
+          "validates": "mesh.analysis.self_intersections"
+        },
+        "input_types": [
+          "GeometryAnalysisReport",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "exact_constructions",
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing",
+          "Surface_mesh",
+          "AABB_tree"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "mesh.boolean.union",
+        "info": {
+          "boolean_operation": "union",
+          "empty_output": "canonical ASCII OFF with zero vertices and faces",
+          "input_format": "off",
+          "input_slots": [
+            "source_a",
+            "source_b"
+          ],
+          "input_units": [
+            "mm",
+            "cm",
+            "m"
+          ],
+          "license_expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+          "output_format": "off",
+          "output_slot": "geometry",
+          "output_unit_from": "source_a",
+          "precision_contract": {
+            "input_coordinate_storage": "IEEE-754 binary64 converted to exact binary-rational coordinates",
+            "internal_kernel": "EPECK",
+            "output_coordinate_storage": "IEEE-754 binary64 ASCII OFF",
+            "unrepresentable_policy": "NUMERIC_FAILURE/OUTPUT_BINARY64_LOSS; no silent rounding"
+          },
+          "same_unit_inputs": true,
+          "source_header": "CGAL/Polygon_mesh_processing/corefinement.h",
+          "source_kind": "official_release",
+          "source_mutation": false,
+          "source_sha256": "16db532539a0fa937ef8ee41409785fa6d97ee7cfaec856aaa424a09981654c5",
+          "source_version": "6.2.1",
+          "validator_artifact_bindings": {
+            "mesh.validate.boolean_union": {
+              "candidate": {
+                "output": "geometry"
+              },
+              "source_a": {
+                "input": "source_a"
+              },
+              "source_b": {
+                "input": "source_b"
+              }
+            }
+          },
+          "validator_parameter_bindings": {
+            "mesh.validate.boolean_union": {
+              "operation": "operation"
+            }
+          },
+          "validators": [
+            "mesh.validate.boolean_union"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "TriangleSurfaceMesh",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "exact_constructions",
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing",
+          "Surface_mesh",
+          "AABB_tree"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "mesh.boolean.intersection",
+        "info": {
+          "boolean_operation": "intersection",
+          "empty_output": "canonical ASCII OFF with zero vertices and faces",
+          "input_format": "off",
+          "input_slots": [
+            "source_a",
+            "source_b"
+          ],
+          "input_units": [
+            "mm",
+            "cm",
+            "m"
+          ],
+          "license_expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+          "output_format": "off",
+          "output_slot": "geometry",
+          "output_unit_from": "source_a",
+          "precision_contract": {
+            "input_coordinate_storage": "IEEE-754 binary64 converted to exact binary-rational coordinates",
+            "internal_kernel": "EPECK",
+            "output_coordinate_storage": "IEEE-754 binary64 ASCII OFF",
+            "unrepresentable_policy": "NUMERIC_FAILURE/OUTPUT_BINARY64_LOSS; no silent rounding"
+          },
+          "same_unit_inputs": true,
+          "source_header": "CGAL/Polygon_mesh_processing/corefinement.h",
+          "source_kind": "official_release",
+          "source_mutation": false,
+          "source_sha256": "16db532539a0fa937ef8ee41409785fa6d97ee7cfaec856aaa424a09981654c5",
+          "source_version": "6.2.1",
+          "validator_artifact_bindings": {
+            "mesh.validate.boolean_intersection": {
+              "candidate": {
+                "output": "geometry"
+              },
+              "source_a": {
+                "input": "source_a"
+              },
+              "source_b": {
+                "input": "source_b"
+              }
+            }
+          },
+          "validator_parameter_bindings": {
+            "mesh.validate.boolean_intersection": {
+              "operation": "operation"
+            }
+          },
+          "validators": [
+            "mesh.validate.boolean_intersection"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "TriangleSurfaceMesh",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "exact_constructions",
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing",
+          "Surface_mesh",
+          "AABB_tree"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "mesh.boolean.difference",
+        "info": {
+          "boolean_operation": "difference",
+          "empty_output": "canonical ASCII OFF with zero vertices and faces",
+          "input_format": "off",
+          "input_slots": [
+            "source_a",
+            "source_b"
+          ],
+          "input_units": [
+            "mm",
+            "cm",
+            "m"
+          ],
+          "license_expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+          "output_format": "off",
+          "output_slot": "geometry",
+          "output_unit_from": "source_a",
+          "precision_contract": {
+            "input_coordinate_storage": "IEEE-754 binary64 converted to exact binary-rational coordinates",
+            "internal_kernel": "EPECK",
+            "output_coordinate_storage": "IEEE-754 binary64 ASCII OFF",
+            "unrepresentable_policy": "NUMERIC_FAILURE/OUTPUT_BINARY64_LOSS; no silent rounding"
+          },
+          "same_unit_inputs": true,
+          "source_header": "CGAL/Polygon_mesh_processing/corefinement.h",
+          "source_kind": "official_release",
+          "source_mutation": false,
+          "source_sha256": "16db532539a0fa937ef8ee41409785fa6d97ee7cfaec856aaa424a09981654c5",
+          "source_version": "6.2.1",
+          "validator_artifact_bindings": {
+            "mesh.validate.boolean_difference": {
+              "candidate": {
+                "output": "geometry"
+              },
+              "source_a": {
+                "input": "source_a"
+              },
+              "source_b": {
+                "input": "source_b"
+              }
+            }
+          },
+          "validator_parameter_bindings": {
+            "mesh.validate.boolean_difference": {
+              "operation": "operation"
+            }
+          },
+          "validators": [
+            "mesh.validate.boolean_difference"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "TriangleSurfaceMesh",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "exact_constructions",
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing",
+          "Surface_mesh",
+          "AABB_tree"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "mesh.validate.boolean_union",
+        "info": {
+          "artifact_bindings": {
+            "candidate": {
+              "output": "geometry"
+            },
+            "source_a": {
+              "input": "source_a"
+            },
+            "source_b": {
+              "input": "source_b"
+            }
+          },
+          "boolean_operation": "union",
+          "license_expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+          "parameter_bindings": {
+            "operation": {
+              "parameter": "operation"
+            }
+          },
+          "precision_contract": {
+            "input_coordinate_storage": "IEEE-754 binary64 converted to exact binary-rational coordinates",
+            "internal_kernel": "EPECK",
+            "reference_comparison": "exact EPECK Boolean replay, exact signed volume, and mutual exact set difference",
+            "report_numeric_storage": "booleans and exact rational strings; no approximate tolerance"
+          },
+          "report_schema": "ValidationReport/v1",
+          "required_checks": [
+            "topology_valid",
+            "closed_or_canonical_empty",
+            "volume_boundary_orientation_valid",
+            "self_intersection_free",
+            "operation_parameter_bound",
+            "result_status_matches_reference",
+            "exact_volume_matches_reference",
+            "mutual_exact_difference_empty",
+            "operation_classification_matches"
+          ],
+          "required_report_checks": {
+            "bindings.operation_parameter": "union",
+            "checks.closed_or_canonical_empty": true,
+            "checks.exact_volume_matches_reference": true,
+            "checks.mutual_exact_difference_empty": true,
+            "checks.operation_classification_matches": true,
+            "checks.operation_parameter_bound": true,
+            "checks.result_status_matches_reference": true,
+            "checks.self_intersection_free": true,
+            "checks.topology_valid": true,
+            "checks.volume_boundary_orientation_valid": true,
+            "operation": "union",
+            "passed": true,
+            "schema": "ValidationReport/v1",
+            "schema_version": 1,
+            "status": "pass",
+            "validates": "mesh.boolean.union",
+            "validator_id": "mesh.validate.boolean_union"
+          },
+          "source_headers": [
+            "CGAL/Polygon_mesh_processing/corefinement.h",
+            "CGAL/Side_of_triangle_mesh.h"
+          ],
+          "source_kind": "official_release",
+          "source_sha256": {
+            "CGAL/Polygon_mesh_processing/corefinement.h": "16db532539a0fa937ef8ee41409785fa6d97ee7cfaec856aaa424a09981654c5",
+            "CGAL/Side_of_triangle_mesh.h": "3c0b35fa40276bfa70c20a710b7321ba935b228e3e4f657181233e936fbe77a4"
+          },
+          "source_version": "6.2.1",
+          "validates": "mesh.boolean.union"
+        },
+        "input_types": [
+          "TriangleSurfaceMesh",
+          "TriangleSurfaceMesh",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "exact_constructions",
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing",
+          "Surface_mesh",
+          "AABB_tree"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "mesh.validate.boolean_intersection",
+        "info": {
+          "artifact_bindings": {
+            "candidate": {
+              "output": "geometry"
+            },
+            "source_a": {
+              "input": "source_a"
+            },
+            "source_b": {
+              "input": "source_b"
+            }
+          },
+          "boolean_operation": "intersection",
+          "license_expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+          "parameter_bindings": {
+            "operation": {
+              "parameter": "operation"
+            }
+          },
+          "precision_contract": {
+            "input_coordinate_storage": "IEEE-754 binary64 converted to exact binary-rational coordinates",
+            "internal_kernel": "EPECK",
+            "reference_comparison": "exact EPECK Boolean replay, exact signed volume, and mutual exact set difference",
+            "report_numeric_storage": "booleans and exact rational strings; no approximate tolerance"
+          },
+          "report_schema": "ValidationReport/v1",
+          "required_checks": [
+            "topology_valid",
+            "closed_or_canonical_empty",
+            "volume_boundary_orientation_valid",
+            "self_intersection_free",
+            "operation_parameter_bound",
+            "result_status_matches_reference",
+            "exact_volume_matches_reference",
+            "mutual_exact_difference_empty",
+            "operation_classification_matches"
+          ],
+          "required_report_checks": {
+            "bindings.operation_parameter": "intersection",
+            "checks.closed_or_canonical_empty": true,
+            "checks.exact_volume_matches_reference": true,
+            "checks.mutual_exact_difference_empty": true,
+            "checks.operation_classification_matches": true,
+            "checks.operation_parameter_bound": true,
+            "checks.result_status_matches_reference": true,
+            "checks.self_intersection_free": true,
+            "checks.topology_valid": true,
+            "checks.volume_boundary_orientation_valid": true,
+            "operation": "intersection",
+            "passed": true,
+            "schema": "ValidationReport/v1",
+            "schema_version": 1,
+            "status": "pass",
+            "validates": "mesh.boolean.intersection",
+            "validator_id": "mesh.validate.boolean_intersection"
+          },
+          "source_headers": [
+            "CGAL/Polygon_mesh_processing/corefinement.h",
+            "CGAL/Side_of_triangle_mesh.h"
+          ],
+          "source_kind": "official_release",
+          "source_sha256": {
+            "CGAL/Polygon_mesh_processing/corefinement.h": "16db532539a0fa937ef8ee41409785fa6d97ee7cfaec856aaa424a09981654c5",
+            "CGAL/Side_of_triangle_mesh.h": "3c0b35fa40276bfa70c20a710b7321ba935b228e3e4f657181233e936fbe77a4"
+          },
+          "source_version": "6.2.1",
+          "validates": "mesh.boolean.intersection"
+        },
+        "input_types": [
+          "TriangleSurfaceMesh",
+          "TriangleSurfaceMesh",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "exact_constructions",
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing",
+          "Surface_mesh",
+          "AABB_tree"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "mesh.validate.boolean_difference",
+        "info": {
+          "artifact_bindings": {
+            "candidate": {
+              "output": "geometry"
+            },
+            "source_a": {
+              "input": "source_a"
+            },
+            "source_b": {
+              "input": "source_b"
+            }
+          },
+          "boolean_operation": "difference",
+          "license_expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+          "parameter_bindings": {
+            "operation": {
+              "parameter": "operation"
+            }
+          },
+          "precision_contract": {
+            "input_coordinate_storage": "IEEE-754 binary64 converted to exact binary-rational coordinates",
+            "internal_kernel": "EPECK",
+            "reference_comparison": "exact EPECK Boolean replay, exact signed volume, and mutual exact set difference",
+            "report_numeric_storage": "booleans and exact rational strings; no approximate tolerance"
+          },
+          "report_schema": "ValidationReport/v1",
+          "required_checks": [
+            "topology_valid",
+            "closed_or_canonical_empty",
+            "volume_boundary_orientation_valid",
+            "self_intersection_free",
+            "operation_parameter_bound",
+            "result_status_matches_reference",
+            "exact_volume_matches_reference",
+            "mutual_exact_difference_empty",
+            "operation_classification_matches"
+          ],
+          "required_report_checks": {
+            "bindings.operation_parameter": "difference",
+            "checks.closed_or_canonical_empty": true,
+            "checks.exact_volume_matches_reference": true,
+            "checks.mutual_exact_difference_empty": true,
+            "checks.operation_classification_matches": true,
+            "checks.operation_parameter_bound": true,
+            "checks.result_status_matches_reference": true,
+            "checks.self_intersection_free": true,
+            "checks.topology_valid": true,
+            "checks.volume_boundary_orientation_valid": true,
+            "operation": "difference",
+            "passed": true,
+            "schema": "ValidationReport/v1",
+            "schema_version": 1,
+            "status": "pass",
+            "validates": "mesh.boolean.difference",
+            "validator_id": "mesh.validate.boolean_difference"
+          },
+          "source_headers": [
+            "CGAL/Polygon_mesh_processing/corefinement.h",
+            "CGAL/Side_of_triangle_mesh.h"
+          ],
+          "source_kind": "official_release",
+          "source_sha256": {
+            "CGAL/Polygon_mesh_processing/corefinement.h": "16db532539a0fa937ef8ee41409785fa6d97ee7cfaec856aaa424a09981654c5",
+            "CGAL/Side_of_triangle_mesh.h": "3c0b35fa40276bfa70c20a710b7321ba935b228e3e4f657181233e936fbe77a4"
+          },
+          "source_version": "6.2.1",
+          "validates": "mesh.boolean.difference"
+        },
+        "input_types": [
+          "TriangleSurfaceMesh",
+          "TriangleSurfaceMesh",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "exact_constructions",
+          "package_recommended"
+        ]
       }
     ],
     "protocol": 1,
@@ -214,13 +2008,13 @@
     ],
     "worker": "cgal-master-worker"
   },
-  "worker_manifest_sha256": "a22f52af39aed6c8629ea19b5fc3fca7824ad7c7f8898d7981bc2a48a492207f",
+  "worker_manifest_sha256": "c6fafa61362d03b43e3fcf72aa3ff57894836b73fe6e118522e13598afe7221c",
   "operation_catalog_sha256": "109bdf1128d1882bbbaa1e9e04f7de051ab09de7c0f0c9c68f26e6e70d2453c9",
   "policy_catalog_sha256": "1f9aa3c8988c8ed486a7c48171c212f89905263a576a7cbb1e7f10d1aab721c8",
   "tests": [
     {
       "test": "tests/master_wave_a_cases.py",
-      "sha256": "ab6afac2484e808053d4b9a24f34bb1eaecf741eb03347bd8a66c746d3f2bd14",
+      "sha256": "f7b8209d1506a6365a4370a6c56c61d5753a5370dac0fb97bf6528d4b8dd9234",
       "mode": "worker",
       "exit_code": 0,
       "status": "pass"

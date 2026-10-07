@@ -28,6 +28,12 @@ Artifactを公開します。専用validatorはsourceと固定parameterから公
 計算前に理由付きで拒否します。範囲を黙って丸めたり精度を下げたりしません。
 詳細な数値条件はOperation metadataへ記録しています。
 
+数値tokenの読込みはlocaleに依存しない`std::from_chars`でbinary64へ変換します。
+表現可能な極小値は構文として受け入れ、非unit法線は幾何validatorで拒否します。
+binary64の範囲外、非有限値、十六進表記、余分な符号やsuffixは計算前に拒否します。
+Linuxの`std::stod`が表現可能なsubnormalにもrange例外を出す差異を解消し、
+同じ入力に対する分類をWindowsと揃えています。
+
 独立レビューの残存High/Mediumは0。公式6.2.1 worker、各algorithm・偽候補・
 数値境界の直接試験、MCP auto/legacy、型付きDAGが合格しています。
 

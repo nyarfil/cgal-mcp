@@ -18,6 +18,7 @@
 
 #include <algorithm>
 #include <array>
+#include <charconv>
 #include <cmath>
 #include <filesystem>
 #include <fstream>
@@ -113,15 +114,19 @@ std::string verified_bytes(const ArtifactInput& input) {
 
 double finite_number(const std::string& token, const std::string& code,
                      std::size_t line) {
-  std::size_t consumed = 0;
   double result = 0;
-  try {
-    result = std::stod(token, &consumed);
-  } catch (const std::exception&) {
-    throw WorkerError("INVALID_INPUT", code,
-                      "Invalid numeric value on line " + std::to_string(line));
-  }
-  if (consumed != token.size() || !std::isfinite(result)) {
+  const char* begin = token.data();
+  const char* end = begin + token.size();
+  // Floating from_chars accepts representable subnormals without the
+  // platform-specific ERANGE exception raised by stod on glibc.  It is also
+  // locale-independent.  Permit the explicit '+' accepted by XYZ/PLY decimal
+  // syntax; reject underflow to zero, overflow, suffixes, and hex literals.
+  const bool explicit_plus = begin != end && *begin == '+';
+  if (explicit_plus) ++begin;
+  const auto parsed = std::from_chars(begin, end, result, std::chars_format::general);
+  if (begin == end || (explicit_plus && (*begin == '-' || *begin == '+')) ||
+      parsed.ec != std::errc{} || parsed.ptr != end ||
+      !std::isfinite(result)) {
     throw WorkerError("INVALID_INPUT", code,
                       "Finite numeric values are required on line " +
                           std::to_string(line));
