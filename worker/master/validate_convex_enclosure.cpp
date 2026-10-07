@@ -10,6 +10,7 @@
 
 #include <filesystem>
 #include <fstream>
+#include <set>
 
 namespace cgal_master {
 namespace {
@@ -54,6 +55,16 @@ Json run_convex_enclosure_validator(const Request& request) {
   if (!CGAL::is_strongly_convex_3(mesh)) {
     throw WorkerError("VALIDATION_FAILED", "HULL_NOT_CONVEX",
                       "Hull mesh is not strongly convex");
+  }
+
+  {
+    std::set<Kernel::Point_3, Kernel::Less_xyz_3> source(points.begin(), points.end());
+    for (const auto vertex : mesh.vertices()) {
+      if (source.find(mesh.point(vertex)) == source.end()) {
+        throw WorkerError("VALIDATION_FAILED", "HULL_VERTEX_NOT_IN_SOURCE",
+                          "A hull vertex is not an original source point");
+      }
+    }
   }
 
   CGAL::Side_of_triangle_mesh<Mesh, Kernel> side(mesh);

@@ -533,6 +533,7 @@ CLOUD = {"fixture": "wave_c/cloud_points.xyz", "sha256": "6eefbc923c71e53120312c
 QUERY_POINTS = {"fixture": "wave_c/query_points.xyz", "sha256": "49d0b7c67d716f111f324a49918d9561d46e5b2d3bf03ec1c934c071f5ee1070"}
 MESH_QUERIES = {"fixture": "wave_c/mesh_queries.xyz", "sha256": "6c4bc044e35ca94f3c9dd5f91cea6282a85aaf3818420222dbc8c8b819925277"}
 CUBE_RAYS = {"fixture": "wave_c/cube_rays.json", "sha256": "1c9d3a1e32f7100ac8ce54f14a2b27016543ab2f52d7f8d98444c69c8dd5d523"}
+HULL_INNER = {"fixture": "wave_c/hull_inner_points.xyz", "sha256": "c668facce23117d1339896b004d624f7188fdc8104b3fe7b695308bc07d02b19"}
 CUBE_WITH_INTERIOR = {"fixture": "cube_with_interior.xyz", "sha256": "299fc3e1e6363388d7fa80fcc86a297dde4740fd59f7d2fc628bdb0d27ae7a39"}
 
 
@@ -590,6 +591,9 @@ FAMILY_7_13 = {
         {"id": "hull2-collinear-rejected", "operation": "hull.convex_2",
          "inputs": [_json_input(COLLINEAR, "PointSet2")], "parameters": {},
          "expect_error_class": "PRECONDITION_FAILED"},
+        {"id": "hull3-oversized-shell-rejected", "operation": "hull.validate.convex_enclosure",
+         "inputs": [_mesh(CUBE_A), _points(HULL_INNER)], "parameters": {},
+         "expect_error_class": "VALIDATION_FAILED"},
     ],
 }
 

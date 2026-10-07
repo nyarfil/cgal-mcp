@@ -378,6 +378,9 @@ Json run_bbox_2(const Request& request) {
   require_input_count(request, 1, "spatial.bbox_2");
   require_parameters(request, {});
   const auto points = read_point_set2(request.inputs[0]);
+  if (points.empty()) {
+    throw WorkerError("PRECONDITION_FAILED", "EMPTY_POINT_SET", "spatial.bbox_2 requires at least one point");
+  }
   std::vector<P2> values;
   for (const auto& point : points) values.emplace_back(point[0], point[1]);
   const CGAL::Bbox_2 box = CGAL::bbox_2(values.begin(), values.end());
@@ -402,6 +405,9 @@ Json run_bbox_3(const Request& request) {
   require_input_count(request, 1, "spatial.bbox_3");
   require_parameters(request, {});
   const auto points = points_of_3d_source(request.inputs[0]);
+  if (points.empty()) {
+    throw WorkerError("PRECONDITION_FAILED", "EMPTY_POINT_SET", "spatial.bbox_3 requires at least one point");
+  }
   std::vector<P3> values;
   for (const auto& point : points) values.push_back(p3(point));
   const CGAL::Bbox_3 box = CGAL::bbox_3(values.begin(), values.end());

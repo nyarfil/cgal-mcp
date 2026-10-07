@@ -294,6 +294,15 @@ def main() -> None:
                               "spatial.validate.bbox_report", [cube])
         assert box3["results"] == {"dimension": 3, "min": [0, 0, 0], "max": [2, 2, 2]}, box3
         run_pair(scratch, "spatial.bbox_3", [cloud], {}, "spatial.validate.bbox_report", [cloud])
+        empty3 = scratch / "empty3.xyz"
+        empty3.write_bytes(b"")
+        error(invoke(scratch, "spatial.bbox_3", [artifact(empty3, "PointSet3")]),
+              "EMPTY_POINT_SET", "PRECONDITION_FAILED")
+        # Oversized convex shell: a valid closed convex outward mesh enclosing the points, but
+        # whose vertices are not source points, must be rejected.
+        inner = artifact(FIXTURES / "hull_inner_points.xyz", "PointSet3")
+        oversized = invoke(scratch, "hull.validate.convex_enclosure", [cube, inner])
+        error(oversized, "HULL_VERTEX_NOT_IN_SOURCE", "VALIDATION_FAILED")
         bad = artifact(tampered(scratch, box2_path,
                                 lambda v: v["results"]["max"].__setitem__(0, 3.5)),
                        "SpatialQueryReport", unit="none")
