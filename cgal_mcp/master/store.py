@@ -17,7 +17,8 @@ from typing import Any
 from .errors import InvalidInput, WorkerFailure
 from .formats import Inspection, format_from_path
 from .supervisor import _assign_windows_job, _close_windows_job, _posix_limit
-from .util import canonical_json, copy_hash_bounded, digest_file, valid_artifact_unit, within
+from .util import (ANALYSIS_REPORT_TYPES, REPORT_TYPES, canonical_json, copy_hash_bounded,
+                   digest_file, valid_artifact_unit, within)
 
 
 MAX_IMPORT_BYTES = 512 * 1024 * 1024
@@ -57,7 +58,7 @@ def _inspect_file_isolated(path: Path, format_name: str,
                 process.kill(); process.wait()
                 raise WorkerFailure("inspection_memory_limit_unavailable", mode,
                                     "resource_limit", True)
-        maximum_bytes = (MAX_ANALYSIS_REPORT_BYTES if artifact_type == "GeometryAnalysisReport"
+        maximum_bytes = (MAX_ANALYSIS_REPORT_BYTES if artifact_type in ANALYSIS_REPORT_TYPES
                          else MAX_IMPORT_BYTES)
         request = canonical_json({"path": str(path), "format": format_name,
                                   "type": artifact_type,
@@ -230,9 +231,9 @@ class ArtifactStore:
         if not source.is_file():
             raise InvalidInput("import_source", "Import source must be a regular file")
         if not valid_artifact_unit(artifact_type, unit):
-            expected = "none" if artifact_type in {"ValidationReport", "GeometryAnalysisReport"} else "mm, cm or m"
+            expected = "none" if artifact_type in REPORT_TYPES else "mm, cm or m"
             raise InvalidInput("artifact_unit", f"Artifact unit must be {expected}")
-        maximum_bytes = (MAX_ANALYSIS_REPORT_BYTES if artifact_type == "GeometryAnalysisReport"
+        maximum_bytes = (MAX_ANALYSIS_REPORT_BYTES if artifact_type in ANALYSIS_REPORT_TYPES
                          else MAX_IMPORT_BYTES)
         selected_format = (format_name or format_from_path(source)).lower().lstrip(".")
         fd, temporary_name = tempfile.mkstemp(prefix="import-", dir=self.staging_root)
@@ -258,7 +259,7 @@ class ArtifactStore:
         source = source.resolve(strict=True)
         if not within(source, self.staging_root):
             raise InvalidInput("worker_output_path", "Worker output is outside managed staging")
-        maximum_bytes = (MAX_ANALYSIS_REPORT_BYTES if artifact_type == "GeometryAnalysisReport"
+        maximum_bytes = (MAX_ANALYSIS_REPORT_BYTES if artifact_type in ANALYSIS_REPORT_TYPES
                          else MAX_IMPORT_BYTES)
         if source.stat().st_size > maximum_bytes:
             raise InvalidInput("worker_output_too_large", f"Worker output exceeds {maximum_bytes} bytes")
@@ -278,7 +279,7 @@ class ArtifactStore:
         source = source.resolve(strict=True)
         if not within(source, self.staging_root):
             raise InvalidInput("worker_output_path", "Worker output is outside managed staging")
-        maximum_bytes = (MAX_ANALYSIS_REPORT_BYTES if artifact_type == "GeometryAnalysisReport"
+        maximum_bytes = (MAX_ANALYSIS_REPORT_BYTES if artifact_type in ANALYSIS_REPORT_TYPES
                          else MAX_IMPORT_BYTES)
         if source.stat().st_size > maximum_bytes:
             raise InvalidInput("worker_output_too_large", f"Worker output exceeds {maximum_bytes} bytes")

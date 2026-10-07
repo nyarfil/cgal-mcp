@@ -519,19 +519,120 @@ def parse_json_geometry(content: bytes, requested_type: str | None) -> Inspectio
                     "inline_validation_claimed": validation["passed"]}
         return Inspection("GeometryAnalysisReport", "json",
                           {"schema_valid": True, "source_identity_present": True}, metadata)
-    points_value = value.get("points") if isinstance(value, dict) else value
-    if not isinstance(points_value, list) or len(points_value) < 3:
-        raise InvalidInput("polygon2_syntax", "Polygon2 JSON requires at least three points")
-    points: list[tuple[float, float]] = []
-    for item in points_value:
-        if not isinstance(item, list) or len(item) != 2 or not all(isinstance(x, (int, float)) for x in item):
-            raise InvalidInput("polygon2_syntax", "Each Polygon2 point must contain two numbers")
-        point = (float(item[0]), float(item[1]))
-        if not _finite(list(point)):
-            raise InvalidInput("nonfinite_coordinate", "Polygon2 contains non-finite coordinates")
-        points.append(point)
-    return Inspection("Polygon2", "json", {"finite": True, "simple": "unknown"},
-                      {"point_count": len(points), "bounds": _bounds(points)})
+    return _parse_typed_json(value, requested_type)
+
+
+MAX_TYPED_JSON_ELEMENTS = 1_000_000
+MAX_EXACT_JSON_INTEGER = 2 ** 53
+REPORT_JSON_TYPES = {
+    "Polygon2AnalysisReport": "analysis_kind",
+    "SpatialQueryReport": "query_kind",
+}
+
+
+def _object(value: Any, type_name: str, keys: set[str]) -> dict[str, Any]:
+    if not isinstance(value, dict) or set(value) != keys:
+        raise InvalidInput("schema_mismatch",
+                           f"{type_name} JSON must be an object with exactly: {', '.join(sorted(keys))}")
+    return value
+
+
+def _coordinates(item: Any, dimension: int, type_name: str) -> tuple[float, ...]:
+    if (not isinstance(item, list) or len(item) != dimension
+            or not all(isinstance(x, (int, float)) and not isinstance(x, bool) for x in item)):
+        raise InvalidInput("schema_mismatch", f"{type_name} coordinates must have {dimension} numbers")
+    if any(isinstance(x, int) and abs(x) > MAX_EXACT_JSON_INTEGER for x in item):
+        raise InvalidInput("inexact_integer", f"{type_name} integer coordinate is not exact in binary64")
+    point = tuple(float(x) for x in item)
+    if not _finite(list(point)):
+        raise InvalidInput("nonfinite_coordinate", f"{type_name} contains non-finite coordinates")
+    return point
+
+
+def _points(items: Any, dimension: int, type_name: str, minimum: int) -> list[tuple[float, ...]]:
+    if not isinstance(items, list) or len(items) < minimum:
+        raise InvalidInput("insufficient_elements", f"{type_name} requires at least {minimum} points")
+    if len(items) > MAX_TYPED_JSON_ELEMENTS:
+        raise InvalidInput("resource_limit", f"{type_name} exceeds the element limit")
+    return [_coordinates(item, dimension, type_name) for item in items]
+
+
+def _indices(items: Any, arity: int, bound: int, type_name: str, field: str) -> list[tuple[int, ...]]:
+    if not isinstance(items, list) or len(items) > MAX_TYPED_JSON_ELEMENTS:
+        raise InvalidInput("schema_mismatch", f"{type_name} {field} must be a bounded array")
+    result = []
+    for item in items:
+        if (not isinstance(item, list) or len(item) != arity
+                or not all(isinstance(x, int) and not isinstance(x, bool) and 0 <= x < bound
+                           for x in item)):
+            raise InvalidInput("index_out_of_range",
+                               f"{type_name} {field} entries need {arity} valid vertex indices")
+        result.append(tuple(item))
+    return result
+
+
+def _geometry(type_name: str, points: list[tuple[float, ...]], properties: dict[str, Any],
+              metadata: dict[str, Any]) -> Inspection:
+    return Inspection(type_name, "json", {"finite": True, **properties},
+                      {"point_count": len(points), "bounds": _bounds(points), **metadata})
+
+
+def _parse_typed_json(value: Any, requested_type: str | None) -> Inspection:
+    """Strict JSON encodings of the 2D, triangulation, ray and query-report types."""
+    if requested_type in REPORT_JSON_TYPES:
+        kind_key = REPORT_JSON_TYPES[requested_type]
+        if (not isinstance(value, dict) or value.get("schema_version") != 1
+                or value.get("report_type") != requested_type
+                or not isinstance(value.get(kind_key), str) or "results" not in value
+                or not isinstance(value.get("source"), dict)):
+            raise InvalidInput("analysis_report", f"{requested_type} lacks required v1 fields")
+        return Inspection(requested_type, "json", {"schema_valid": True},
+                          {kind_key: value[kind_key], "operation": value.get("operation"),
+                           "source": value["source"]})
+    if requested_type == "PointSet2":
+        points = _points(_object(value, "PointSet2", {"points"})["points"], 2, "PointSet2", 1)
+        return _geometry("PointSet2", points, {}, {})
+    if requested_type in (None, "Polygon2"):
+        points = _points(_object(value, "Polygon2", {"points"})["points"], 2, "Polygon2", 3)
+        return _geometry("Polygon2", points, {"simple": "unknown"}, {})
+    if requested_type == "PolygonWithHoles2":
+        data = _object(value, "PolygonWithHoles2", {"outer", "holes"})
+        outer = _points(data["outer"], 2, "PolygonWithHoles2", 3)
+        if not isinstance(data["holes"], list):
+            raise InvalidInput("schema_mismatch", "PolygonWithHoles2 holes must be an array")
+        holes = [_points(hole, 2, "PolygonWithHoles2", 3) for hole in data["holes"]]
+        return _geometry("PolygonWithHoles2", outer + [p for hole in holes for p in hole],
+                         {"simple": "unknown"}, {"hole_count": len(holes)})
+    if requested_type == "SegmentGraph2":
+        data = _object(value, "SegmentGraph2", {"points", "segments"})
+        points = _points(data["points"], 2, "SegmentGraph2", 2)
+        segments = _indices(data["segments"], 2, len(points), "SegmentGraph2", "segments")
+        return _geometry("SegmentGraph2", points, {}, {"segment_count": len(segments)})
+    if requested_type == "Triangulation2":
+        data = _object(value, "Triangulation2", {"vertices", "triangles", "constrained_edges"})
+        points = _points(data["vertices"], 2, "Triangulation2", 3)
+        triangles = _indices(data["triangles"], 3, len(points), "Triangulation2", "triangles")
+        edges = _indices(data["constrained_edges"], 2, len(points), "Triangulation2",
+                         "constrained_edges")
+        return _geometry("Triangulation2", points, {},
+                         {"triangle_count": len(triangles), "constrained_edge_count": len(edges)})
+    if requested_type == "Triangulation3":
+        data = _object(value, "Triangulation3", {"vertices", "tetrahedra"})
+        points = _points(data["vertices"], 3, "Triangulation3", 4)
+        cells = _indices(data["tetrahedra"], 4, len(points), "Triangulation3", "tetrahedra")
+        return _geometry("Triangulation3", points, {}, {"tetrahedron_count": len(cells)})
+    if requested_type == "RayBatch3":
+        rays = _object(value, "RayBatch3", {"rays"})["rays"]
+        if not isinstance(rays, list) or not rays or len(rays) > MAX_TYPED_JSON_ELEMENTS:
+            raise InvalidInput("schema_mismatch", "RayBatch3 rays must be a nonempty bounded array")
+        origins = []
+        for ray in rays:
+            data = _object(ray, "RayBatch3 ray", {"origin", "direction"})
+            origins.append(_coordinates(data["origin"], 3, "RayBatch3"))
+            if not any(_coordinates(data["direction"], 3, "RayBatch3")):
+                raise InvalidInput("degenerate_ray", "RayBatch3 direction must be nonzero")
+        return _geometry("RayBatch3", origins, {}, {"ray_count": len(rays)})
+    raise InvalidInput("unsupported_format", f"JSON is not a supported encoding for {requested_type}")
 
 
 PARSERS = {"xyz": parse_xyz, "off": parse_off, "obj": parse_obj,
