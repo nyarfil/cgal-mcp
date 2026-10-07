@@ -32,7 +32,8 @@ EXECUTABLE = frozenset({"IMPLEMENTED", "VALIDATED"})
 LANGUAGES = frozenset({"ja", "en"})
 EXECUTION_EXPECTATIONS = frozenset({"eligible", "documentation_only"})
 KNOWN_INPUT_TYPES = frozenset({
-    "PointSet3", "PointSet3Normals", "PolygonSoup3", "TriangleSurfaceMesh"})
+    "PointSet2", "PointSet3", "PointSet3Normals", "Polygon2", "PolygonSoup3", "PolygonWithHoles2",
+    "RayBatch3", "SegmentGraph2", "TriangleSurfaceMesh", "Triangulation2", "Triangulation3"})
 SIMPLIFICATION_REQUIREMENTS = frozenset(
     {f"major.7.7.{index:02d}" for index in range(1, 7)} | {"major.7.9.04"})
 MAX_STRUCTURAL_SKELETON_REUSE = 12

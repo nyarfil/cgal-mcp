@@ -39,13 +39,16 @@ CIは台帳を公式配布物から再生成してバイト一致を検査しま
 
 | 分野 | 結合/全体 | 結合済み要求 |
 |---|---|---|
+| 7.2 空間問合せ | 4/5 | 7.2.01 AABB、.02 Kd木、.03 k近傍、.05 bbox |
 | 7.3 解析 | 3/8 | 7.3.01 検査・自己交差、7.3.03 法線、7.3.04 計測 |
 | 7.4 修復 | 5/6 | 7.4.01 向き、.02 境界縫合、.03 退化除去、.05 polygon soup、.06 非多様体前処理 |
 | 7.5 Boolean | 1/5 | 7.5.02 union/intersection/difference |
 | 7.7 軽量化 | 6/6 | 7.7.01〜06 |
 | 7.8 再構成 | 0/6 | なし（検証済みOperationなし） |
 | 7.9 点群 | 2/6 | 7.9.01 法線推定・MST向き付け、7.9.04 grid/random/hierarchy簡略化 |
-| 7.13 凸包等 | 0/5 | なし |
+| 7.11 三角形分割 | 2/5 | 7.11.01 Delaunay 2D/3D、.02 制約付き |
+| 7.12 多角形 | 1/7 | 7.12.01 Polygon_2/with_holesの性質・内外判定 |
+| 7.13 凸包等 | 1/5 | 7.13.01 2D/3D凸包 |
 
 未結合要求の不足:
 
@@ -61,8 +64,10 @@ CIは台帳を公式配布物から再生成してバイト一致を検査しま
 - 7.9.03: bilateral等のsmoothingがない。
 - 7.9.05: registration がない。
 - 7.8.01〜06: 再構成Operationがない。
-- 7.13.01: 検証済みは3D凸包のみで2D凸包がない。7.13.02〜05: alpha shape、wrap、
-  bounding volume、barycentric座標がない。
+- 7.2.04: do_intersect・any/all_intersected_primitiveを公開していない（ray最初の交点のみ）。
+- 7.11.03〜05: regular、periodic・on-sphere、Voronoiがない。
+- 7.12.02〜07: Arrangement、overlay、Polygon_set Boolean、skeleton、offset、Minkowskiがない。
+- 7.13.02〜05: alpha shape、wrap、bounding volume、barycentric座標がない。
 
 注記 (7.3): 7.3.03 法線は、軸整列立方体(外向き/内向き巻きの2ケース)の各面法線・各頂点法線を
 手計算の定数と照合して束縛している。必須validatorは同一workerコードを再実行する整合性チェックであり、
