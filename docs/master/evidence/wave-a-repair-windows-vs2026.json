@@ -20,7 +20,7 @@
     "mesh.validate.repair_remove_degenerate",
     "mesh.validate.repair_stitch_borders"
   ],
-  "worker_sha256": "19975075d685af12cc71e4a849bcc3e3b8c7d37f23db437b1b10c55e1175d616",
+  "worker_sha256": "ff1dc70ff4ac638fa2ac251684906eb27d6b72a70662423031c79ea1f5352ad8",
   "worker_manifest": {
     "actual_cgal_version": "6.2.1",
     "build": {
@@ -3041,6 +3041,711 @@
         "supported_kernels": [
           "package_recommended"
         ]
+      },
+      {
+        "dependencies": [
+          "Convex_hull_2"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "hull.convex_2",
+        "info": {
+          "input_format": "json",
+          "maximum_points": 200000,
+          "output_format": "json",
+          "source_header": "CGAL/convex_hull_2.h",
+          "validators": [
+            "hull.validate.convex_enclosure_2"
+          ]
+        },
+        "input_types": [
+          "PointSet2"
+        ],
+        "output_type": "Polygon2",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Convex_hull_2"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "hull.validate.convex_enclosure_2",
+        "info": {
+          "checks": [
+            "vertices_are_source_points",
+            "strictly_convex_counterclockwise",
+            "simple_ring",
+            "all_source_points_enclosed",
+            "minimal_convex_enclosure"
+          ],
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "maximum_brute_force_pairs": 20000000,
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "Polygon2",
+          "PointSet2"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "polygon.analysis.properties",
+        "info": {
+          "input_format": "json",
+          "maximum_vertices": 5000,
+          "output_format": "json",
+          "source_header": "CGAL/Polygon_with_holes_2.h",
+          "validators": [
+            "polygon.validate.properties_report"
+          ]
+        },
+        "input_types": [
+          "PolygonWithHoles2"
+        ],
+        "output_type": "Polygon2AnalysisReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "polygon.validate.properties_report",
+        "info": {
+          "checks": [
+            "ring_properties_match",
+            "validity_matches",
+            "area_matches",
+            "centroid_matches",
+            "bbox_matches"
+          ],
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "Polygon2AnalysisReport",
+          "PolygonWithHoles2"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "polygon.query.containment",
+        "info": {
+          "input_format": "json",
+          "maximum_brute_force_pairs": 20000000,
+          "maximum_queries": 100000,
+          "output_format": "json",
+          "source_header": "CGAL/Polygon_2.h",
+          "validators": [
+            "polygon.validate.containment_report"
+          ]
+        },
+        "input_types": [
+          "PolygonWithHoles2",
+          "PointSet2"
+        ],
+        "output_type": "Polygon2AnalysisReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "polygon.validate.containment_report",
+        "info": {
+          "checks": [
+            "every_query_classified",
+            "locations_match"
+          ],
+          "input_slots": [
+            "candidate",
+            "polygon",
+            "queries"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "Polygon2AnalysisReport",
+          "PolygonWithHoles2",
+          "PointSet2"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Triangulation_2"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "triangulation.delaunay_2",
+        "info": {
+          "input_format": "json",
+          "maximum_points": 200000,
+          "output_format": "json",
+          "source_header": "CGAL/Delaunay_triangulation_2.h",
+          "validators": [
+            "triangulation.validate.delaunay_2"
+          ]
+        },
+        "input_types": [
+          "PointSet2"
+        ],
+        "output_type": "Triangulation2",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Triangulation_2"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "triangulation.validate.delaunay_2",
+        "info": {
+          "checks": [
+            "vertex_set_matches_source",
+            "triangles_counterclockwise",
+            "edge_manifold",
+            "boundary_is_convex_hull",
+            "area_covers_convex_hull",
+            "euler_count",
+            "delaunay"
+          ],
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "Triangulation2",
+          "PointSet2"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Triangulation_2"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "triangulation.constrained_2",
+        "info": {
+          "input_format": "json",
+          "intersection_tag": "CGAL::No_constraint_intersection_requiring_constructions_tag",
+          "maximum_segments": 4000,
+          "output_format": "json",
+          "required_parameters": [
+            "delaunay"
+          ],
+          "source_header": "CGAL/Constrained_Delaunay_triangulation_2.h",
+          "validator_parameter_bindings": {
+            "triangulation.validate.constrained_2": {
+              "delaunay": "delaunay"
+            }
+          },
+          "validators": [
+            "triangulation.validate.constrained_2"
+          ]
+        },
+        "input_types": [
+          "SegmentGraph2"
+        ],
+        "output_type": "Triangulation2",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Triangulation_2"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "triangulation.validate.constrained_2",
+        "info": {
+          "bound_parameters": [
+            "delaunay"
+          ],
+          "checks": [
+            "vertex_set_matches_source",
+            "triangles_counterclockwise",
+            "edge_manifold",
+            "boundary_is_convex_hull",
+            "area_covers_convex_hull",
+            "euler_count",
+            "constraints_preserved",
+            "constrained_delaunay"
+          ],
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "Triangulation2",
+          "SegmentGraph2"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Triangulation_3"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "triangulation.delaunay_3",
+        "info": {
+          "input_format": "xyz",
+          "maximum_points": 200000,
+          "output_format": "json",
+          "source_header": "CGAL/Delaunay_triangulation_3.h",
+          "validators": [
+            "triangulation.validate.delaunay_3"
+          ]
+        },
+        "input_types": [
+          "PointSet3"
+        ],
+        "output_type": "Triangulation3",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Triangulation_3",
+          "Convex_hull_3"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "triangulation.validate.delaunay_3",
+        "info": {
+          "checks": [
+            "vertex_set_matches_source",
+            "tetrahedra_positive",
+            "facet_manifold",
+            "boundary_is_convex_hull",
+            "volume_covers_convex_hull",
+            "delaunay"
+          ],
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "Triangulation3",
+          "PointSet3"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Spatial_searching"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "spatial.knn_3",
+        "info": {
+          "input_slots": [
+            "points",
+            "queries"
+          ],
+          "maximum_brute_force_pairs": 20000000,
+          "maximum_neighbors": 1000,
+          "required_parameters": [
+            "k",
+            "search"
+          ],
+          "source_header": "CGAL/Orthogonal_k_neighbor_search.h",
+          "validator_parameter_bindings": {
+            "spatial.validate.knn_report": {
+              "k": "k",
+              "search": "search"
+            }
+          },
+          "validators": [
+            "spatial.validate.knn_report"
+          ]
+        },
+        "input_types": [
+          "PointSet3",
+          "PointSet3"
+        ],
+        "output_type": "SpatialQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Spatial_searching"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "spatial.validate.knn_report",
+        "info": {
+          "bound_parameters": [
+            "k",
+            "search"
+          ],
+          "checks": [
+            "every_query_answered",
+            "neighbor_count_matches",
+            "exact_k_nearest",
+            "sorted_by_exact_distance",
+            "distances_match"
+          ],
+          "input_slots": [
+            "candidate",
+            "points",
+            "queries"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "SpatialQueryReport",
+          "PointSet3",
+          "PointSet3"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Spatial_searching"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "spatial.range_search_3",
+        "info": {
+          "input_slots": [
+            "points",
+            "queries"
+          ],
+          "maximum_brute_force_pairs": 20000000,
+          "membership": "exact_closed_ball",
+          "required_parameters": [
+            "radius"
+          ],
+          "source_header": "CGAL/Fuzzy_sphere.h",
+          "validator_parameter_bindings": {
+            "spatial.validate.range_report": {
+              "radius": "radius"
+            }
+          },
+          "validators": [
+            "spatial.validate.range_report"
+          ]
+        },
+        "input_types": [
+          "PointSet3",
+          "PointSet3"
+        ],
+        "output_type": "SpatialQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Spatial_searching"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "spatial.validate.range_report",
+        "info": {
+          "bound_parameters": [
+            "radius"
+          ],
+          "checks": [
+            "every_query_answered",
+            "exact_closed_ball_membership",
+            "distances_match"
+          ],
+          "input_slots": [
+            "candidate",
+            "points",
+            "queries"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "SpatialQueryReport",
+          "PointSet3",
+          "PointSet3"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Kernel_23"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "spatial.bbox_2",
+        "info": {
+          "source_header": "CGAL/Bbox_2.h",
+          "validators": [
+            "spatial.validate.bbox_report"
+          ]
+        },
+        "input_types": [
+          "PointSet2"
+        ],
+        "output_type": "SpatialQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Kernel_23"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "spatial.bbox_3",
+        "info": {
+          "source_header": "CGAL/Bbox_3.h",
+          "validators": [
+            "spatial.validate.bbox_report"
+          ]
+        },
+        "input_types": [
+          "PointSet3",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "SpatialQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Kernel_23"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "spatial.validate.bbox_report",
+        "info": {
+          "checks": [
+            "bbox_matches_extrema",
+            "all_points_inside"
+          ],
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "SpatialQueryReport",
+          "PointSet2",
+          "PointSet3",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "AABB_tree"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "spatial.aabb.closest_points",
+        "info": {
+          "input_slots": [
+            "mesh",
+            "queries"
+          ],
+          "maximum_brute_force_pairs": 20000000,
+          "primitive": "CGAL::AABB_face_graph_triangle_primitive",
+          "source_header": "CGAL/AABB_tree.h",
+          "traits": "CGAL::AABB_traits_3",
+          "validators": [
+            "spatial.validate.closest_points_report"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh",
+          "PointSet3"
+        ],
+        "output_type": "SpatialQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "AABB_tree"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "spatial.validate.closest_points_report",
+        "info": {
+          "checks": [
+            "every_query_answered",
+            "closest_face_matches_brute_force",
+            "point_on_reported_face",
+            "distances_match"
+          ],
+          "input_slots": [
+            "candidate",
+            "mesh",
+            "queries"
+          ],
+          "output_slot": "validation",
+          "relative_tolerance": 1e-09
+        },
+        "input_types": [
+          "SpatialQueryReport",
+          "TriangleSurfaceMesh",
+          "PointSet3"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "AABB_tree"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "spatial.aabb.ray_first_hits",
+        "info": {
+          "input_slots": [
+            "mesh",
+            "rays"
+          ],
+          "maximum_brute_force_pairs": 20000000,
+          "primitive": "CGAL::AABB_face_graph_triangle_primitive",
+          "source_header": "CGAL/AABB_tree.h",
+          "traits": "CGAL::AABB_traits_3",
+          "validators": [
+            "spatial.validate.ray_hits_report"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh",
+          "RayBatch3"
+        ],
+        "output_type": "SpatialQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "AABB_tree"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "spatial.validate.ray_hits_report",
+        "info": {
+          "checks": [
+            "every_ray_answered",
+            "hit_status_exact",
+            "first_hit_matches_brute_force",
+            "point_on_reported_face"
+          ],
+          "input_slots": [
+            "candidate",
+            "mesh",
+            "rays"
+          ],
+          "output_slot": "validation",
+          "relative_tolerance": 1e-09
+        },
+        "input_types": [
+          "SpatialQueryReport",
+          "TriangleSurfaceMesh",
+          "RayBatch3"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
       }
     ],
     "protocol": 1,
@@ -3052,7 +3757,7 @@
     ],
     "worker": "cgal-master-worker"
   },
-  "worker_manifest_sha256": "8d6a95d6a13862441d895d2d6f7e2b4c5feaf5950a121fec7e6c81411bef1248",
+  "worker_manifest_sha256": "fc3776ffc41b498e8b6e6e8737b7420653c8593001f689f97c14eae7d1a30d0a",
   "operation_catalog_sha256": "ffa51948fed46cd545362f7dd0e0f3d6882dfc981409b015d8baecc51c3dd177",
   "tests": [
     {
