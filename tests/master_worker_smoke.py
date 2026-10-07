@@ -51,7 +51,7 @@ def request(request_id: str, operation: str, inputs: list[dict], output_dir: pat
     }
 
 
-worker = sys.argv[1]
+worker = str(pathlib.Path(sys.argv[1]).resolve())
 manifest_process = subprocess.run(
     [worker, "--manifest"], text=True, encoding="utf-8",
     capture_output=True, timeout=20
@@ -60,7 +60,16 @@ assert manifest_process.returncode == 0, manifest_process.stderr
 assert manifest_process.stderr == "", manifest_process.stderr
 manifest = json.loads(manifest_process.stdout)
 assert manifest["protocol"] == 1
-assert manifest["actual_cgal_version"] == "6.2.1", manifest
+# The registry pins the official CGAL 6.2.1 release archive. A worker linked
+# against another tree (for example the vcpkg "6.2.1-I-900" internal-release
+# snapshot, source_kind "unspecified") is a different, unattested CGAL and must
+# not be accepted as release-equivalent; rebuild build-master with
+# -DCGAL_MASTER_SOURCE_KIND=official_release and the pinned archive instead.
+assert manifest["actual_cgal_version"] == "6.2.1", (
+    "worker links CGAL %r (source_kind=%r, version_nr=%r), not the pinned official "
+    "6.2.1 release; use the build-master worker" % (
+        manifest["actual_cgal_version"], manifest["build"].get("source_kind"),
+        manifest["build"].get("cgal_version_nr")))
 assert manifest["build"]["source_kind"] == "official_release", manifest
 assert manifest["build"]["source_sha256"] == (
     "b6be77c60765a8456335de991eeaf6ffec55256984e4a9ecc6a97c37bbfe85bf"

@@ -165,16 +165,21 @@ def main() -> None:
     assert manifest_process.returncode == 0 and manifest_process.stderr == ""
     manifest = json.loads(manifest_process.stdout)
     assert manifest["protocol"] == 1
-    assert manifest["actual_cgal_version"] == "6.2.1"
-    assert manifest["build"]["source_kind"] == "official_release"
+    assert manifest["actual_cgal_version"] == "6.2.1", (
+        "worker CGAL version %r is not the pinned 6.2.1 release" % manifest["actual_cgal_version"])
+    assert manifest["build"]["source_kind"] == "official_release", (
+        "worker source_kind %r is not official_release" % manifest["build"]["source_kind"])
     manifest_operations = {item["id"]: item for item in manifest["operations"]}
-    assert OPS <= manifest_operations.keys()
+    assert OPS <= manifest_operations.keys(), (
+        "worker lacks mesh operations (stale binary?): %s" % sorted(OPS - manifest_operations.keys()))
     for item in (manifest_operations[operation] for operation in OPS):
         if item["role"] == "analysis":
             expected = (["TriangleSurfaceMesh", "PolygonSoup3"]
                         if item["id"] == "mesh.inspect.pmp"
                         else ["TriangleSurfaceMesh"])
-            assert item["input_types"] == expected
+            assert item["input_types"] == expected, (
+                "%s input_types %r != %r (stale or non-matching worker binary?)" % (
+                    item["id"], item["input_types"], expected))
             assert item["output_type"] == "GeometryAnalysisReport"
             assert item["info"]["geometry_mutation"] is False
             assert item["info"]["validators"] == \
@@ -187,7 +192,9 @@ def main() -> None:
                         if item["id"] ==
                         "mesh.validate.pmp_inspection_report"
                         else ["GeometryAnalysisReport", "TriangleSurfaceMesh"])
-            assert item["input_types"] == expected
+            assert item["input_types"] == expected, (
+                "%s input_types %r != %r (stale or non-matching worker binary?)" % (
+                    item["id"], item["input_types"], expected))
             assert item["output_type"] == "ValidationReport"
     approximate_output_ops = {
         "mesh.analysis.normals", "mesh.analysis.measures",
