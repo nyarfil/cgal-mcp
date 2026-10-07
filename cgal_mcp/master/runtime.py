@@ -16,6 +16,7 @@ from typing import Any
 from .errors import InvalidInput, MasterError, PreconditionFailure, WorkerFailure
 from .planner import PlanBuilder
 from .registry import OperationRegistry
+from .package_terms import PACKAGE_REFERENCE_TERMS, package_reference_score
 from .search import QueryTerms, fts_expression, lexical_score, parse_query
 from .store import ArtifactStore
 from .resources import ResourceConfig
@@ -489,7 +490,8 @@ class MasterRuntime:
                 identifier_score, identifier_shared = lexical_score(
                     parsed, " ".join(identifiers))
                 shared = title_shared | identifier_shared
-                score = 3.0 * title_score + 0.25 * identifier_score
+                score = (3.0 * title_score + 0.25 * identifier_score
+                         + package_reference_score(parsed.normalized, package))
                 if score <= 0:
                     continue
                 records.append({"title": title, "source": jsonl.name,
@@ -546,7 +548,9 @@ class MasterRuntime:
         assert self.docs_index is not None
         parsed = parse_query(query)
         expression = fts_expression(parsed)
-        if expression is None:
+        reference_packages = [package for package in PACKAGE_REFERENCE_TERMS
+                              if package_reference_score(parsed.normalized, package) > 0]
+        if expression is None and not reference_packages:
             return {"query": query, "index_scope": "pinned_generated_catalog",
                     "index_available": True, "index_backend": "sqlite-fts5-trigram",
                     "catalog_version": metadata["catalog_version"],
@@ -556,14 +560,24 @@ class MasterRuntime:
         try:
             connection = sqlite3.connect(f"file:{self.docs_index.as_posix()}?mode=ro&immutable=1", uri=True)
             try:
-                rows = connection.execute("""SELECT d.kind,d.package_id,d.status,d.title,d.source_path,
-                    d.source_sha256,d.aliases,
-                    snippet(documents_fts,2,'[',']','…',14),
-                    bm25(documents_fts,10.0,6.0,0.2)
-                    FROM documents_fts JOIN documents d ON d.id=documents_fts.rowid
-                    WHERE documents_fts MATCH ?
-                    ORDER BY bm25(documents_fts,10.0,6.0,0.2) LIMIT ?""",
-                    (expression, candidate_limit)).fetchall()
+                rows = []
+                if expression is not None:
+                    rows = connection.execute("""SELECT d.kind,d.package_id,d.status,d.title,d.source_path,
+                        d.source_sha256,d.aliases,
+                        snippet(documents_fts,2,'[',']','…',14),
+                        bm25(documents_fts,10.0,6.0,0.2)
+                        FROM documents_fts JOIN documents d ON d.id=documents_fts.rowid
+                        WHERE documents_fts MATCH ?
+                        ORDER BY bm25(documents_fts,10.0,6.0,0.2) LIMIT ?""",
+                        (expression, candidate_limit)).fetchall()
+                if reference_packages:
+                    # Package reference vocabulary adds package-level candidates
+                    # that language-specific FTS may miss (e.g. Japanese wording).
+                    marks = ",".join("?" for _ in reference_packages)
+                    rows += connection.execute(f"""SELECT d.kind,d.package_id,d.status,d.title,
+                        d.source_path,d.source_sha256,d.aliases,'',0.0
+                        FROM documents d WHERE d.kind='package' AND d.package_id IN ({marks})""",
+                        reference_packages).fetchall()
             finally:
                 connection.close()
         except sqlite3.Error as exc:
@@ -578,6 +592,7 @@ class MasterRuntime:
                 f"{result['title']} {result['package'] or ''} {result['aliases'] or ''}",
                 aliases=(str(result["title"]), str(result["package"] or "")))
             rank = abs(float(result.pop("fts_rank")))
+            lexical += package_reference_score(parsed.normalized, str(result["package"] or ""))
             result["score"] = round(4.0 * lexical + 8.0 / (1.0 + rank), 6)
             result["matched_concepts"] = sorted(shared)
             result["scope"] = "reference"
