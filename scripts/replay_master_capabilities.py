@@ -1,6 +1,9 @@
-"""Trusted local replay for the six original Wave A major requirements.
+"""Trusted local replay for original major-capability families.
 
-The runner invokes one fixed, checked-in Python harness. It never executes a
+One mechanism replays every family: Wave A simplification (7.7) through its
+bespoke harness and contract, and the data-declared families in
+``scripts/master_replay_families.py`` through one generic harness.
+For each family the runner invokes one fixed, checked-in Python harness. It never executes a
 command supplied by an evidence report. The evaluator independently reruns this
 harness for the selected native worker before it can approve the JSON report.
 """
@@ -24,6 +27,7 @@ SCRIPT_REPO = Path(__file__).resolve().parents[1]
 if str(SCRIPT_REPO) not in sys.path:
     sys.path.insert(0, str(SCRIPT_REPO))
 
+from scripts import master_replay_families as families
 from scripts.master_acceptance import (
     REPO,
     WAVE_A_BOUNDED_NORMAL_ANALYTIC_PROOF,
@@ -41,6 +45,10 @@ OFFICIAL_SOURCE_SHA256 = "b6be77c60765a8456335de991eeaf6ffec55256984e4a9ecc6a97c
 CASE_SOURCE = REPO / "tests/master_wave_a_cases.py"
 DEFAULT_OUTPUT = REPO / "docs/master/evidence/wave-a-capabilities.json"
 WORK_OUTPUT_ROOT = REPO / "work"
+FAMILY_HARNESS = REPO / families.FAMILY_HARNESS_PATH
+FAMILY_CONTRACT_SOURCE = REPO / families.FAMILY_CONTRACT_PATH
+WAVE_A_FAMILY = "7.7"
+REPLAY_FAMILIES = (WAVE_A_FAMILY, *families.GENERIC_FAMILIES)
 TRANSFORM = "mesh.simplify.edge_collapse"
 INTEGRITY = "mesh.validate.simplification_integrity"
 HAUSDORFF = "mesh.distance.symmetric_hausdorff"
@@ -666,8 +674,8 @@ def _build_results(records: dict[str, dict], blobs: dict[str, dict], declared: d
     )
 
 
-def replay(worker: Path) -> dict:
-    """Execute and verify the fixed Wave A harness, returning its portable report."""
+def _attest_worker(worker: Path) -> dict[str, Any]:
+    """Hash and identify the native worker and read its pinned official manifest."""
     if not __debug__ or sys.flags.optimize:
         raise ValueError("Trusted acceptance replay requires Python assertions")
     worker = worker.resolve(strict=True)
@@ -675,10 +683,6 @@ def replay(worker: Path) -> dict:
         raise ValueError("Worker path must name a regular file")
     worker_binary_format = _native_binary_format(worker)
     worker_sha256 = _digest(worker)
-    source_sha256 = _source_digest(CASE_SOURCE)
-    generator_sha256 = _source_digest(Path(__file__))
-    source_bytes_sha256 = _digest(CASE_SOURCE)
-    generator_bytes_sha256 = _digest(Path(__file__))
     manifest_process = subprocess.run(
         [str(worker), "--manifest"], cwd=REPO, check=True, capture_output=True,
         text=True, encoding="utf-8", timeout=30,
@@ -697,25 +701,29 @@ def replay(worker: Path) -> dict:
             build.get("source_attestation") != "configured_pinned_official_archive" or
             build.get("test_stub") is True or not isinstance(build.get("compiler"), dict)):
         raise ValueError("Worker is not bound to the pinned official CGAL 6.2.1 source")
+    return {"worker": worker, "worker_sha256": worker_sha256,
+            "worker_binary_format": worker_binary_format, "manifest": manifest}
 
+
+def _load_registry_operations() -> tuple[Path, list[dict]]:
     operation_path = REPO / "cgal_mcp/master/operations.json"
     operation_data = _load_json_object(operation_path.read_text(encoding="utf-8"), "operation registry")
     operations = operation_data.get("operations", [])
     if not isinstance(operations, list):
         raise ValueError("Operation registry has no operations list")
-    declared, _registered = _operation_index(manifest, operations)
-    policy_path = REPO / "cgal_mcp/master/policies.json"
-    _verify_policy_catalog(policy_path)
-    manifest_sha256 = _canonical_hash(manifest)
+    return operation_path, operations
 
+
+def _run_traced_harness(harness_args: list[str], label: str) -> tuple[
+        str, int, dict[str, dict], dict[str, dict]]:
+    """Run one fixed checked-in harness and return its verified portable trace."""
     with tempfile.TemporaryDirectory(prefix="master-capability-replay-") as folder:
-        trace_path = Path(folder) / "wave-a-trace.jsonl"
+        trace_path = Path(folder) / "replay-trace.jsonl"
         environment = dict(os.environ)
         environment.pop("PYTHONOPTIMIZE", None)
         environment["CGAL_MASTER_ACCEPTANCE_TRACE"] = str(trace_path)
-        harness_args = (sys.executable, str(CASE_SOURCE), str(worker))
         process = subprocess.Popen(
-            list(harness_args), cwd=REPO, env=environment,
+            harness_args, cwd=REPO, env=environment,
             stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding="utf-8",
         )
         try:
@@ -725,12 +733,36 @@ def replay(worker: Path) -> dict:
             process.communicate()
             raise
         if process.returncode != 0:
-            raise RuntimeError(f"Wave A harness failed ({process.returncode}):\n{stdout}\n{stderr}")
+            raise RuntimeError(f"{label} harness failed ({process.returncode}):\n{stdout}\n{stderr}")
         if stderr or not stdout.rstrip().endswith(": PASS"):
-            raise ValueError("Wave A harness did not finish cleanly")
+            raise ValueError(f"{label} harness did not finish cleanly")
         if not trace_path.is_file():
-            raise ValueError("Wave A harness did not produce its requested execution trace")
+            raise ValueError(f"{label} harness did not produce its requested execution trace")
         records, blobs = _read_verified_trace(trace_path)
+    return stdout, process.returncode, records, blobs
+
+
+def _replay_wave_a(worker: Path) -> dict:
+    """Execute and verify the fixed Wave A harness, returning its portable report."""
+    attested = _attest_worker(worker)
+    worker = attested["worker"]
+    worker_sha256 = attested["worker_sha256"]
+    worker_binary_format = attested["worker_binary_format"]
+    manifest = attested["manifest"]
+    source_sha256 = _source_digest(CASE_SOURCE)
+    generator_sha256 = _source_digest(Path(__file__))
+    source_bytes_sha256 = _digest(CASE_SOURCE)
+    generator_bytes_sha256 = _digest(Path(__file__))
+
+    operation_path, operations = _load_registry_operations()
+    declared, _registered = _operation_index(manifest, operations)
+    policy_path = REPO / "cgal_mcp/master/policies.json"
+    _verify_policy_catalog(policy_path)
+    manifest_sha256 = _canonical_hash(manifest)
+
+    stdout, returncode, records, blobs = _run_traced_harness(
+        [sys.executable, str(CASE_SOURCE), str(worker)], "Wave A",
+    )
 
     _require_unchanged(worker, worker_sha256, "Worker binary")
     _require_unchanged(CASE_SOURCE, source_bytes_sha256, "Wave A test source")
@@ -751,13 +783,7 @@ def replay(worker: Path) -> dict:
         "status": "pass",
         "scope": "wave_a_surface_mesh_simplification_only",
         "standalone_accepted": False,
-        "standalone_unmet_gates": [
-            "remaining_major_capability_requirements",
-            "search_and_retrieval_acceptance",
-            "multi_operation_workflow_acceptance",
-            "host_compatibility_matrix",
-            "performance_resource_and_robustness_acceptance",
-        ],
+        "standalone_unmet_gates": list(families.STANDALONE_UNMET_GATES),
         "requirements": list(WAVE_A_REQUIREMENT_CASES),
         "requirement_coverage": {
             requirement_id: {"case_ids": sorted(case_ids)}
@@ -782,7 +808,7 @@ def replay(worker: Path) -> dict:
             "source_sha256": source_sha256,
             "source_hash_encoding": "utf8-lf",
             "stdout_sha256": hashlib.sha256(stdout.encode("utf-8")).hexdigest(),
-            "exit_code": process.returncode,
+            "exit_code": returncode,
             "status": "pass",
         }],
         "blobs": blobs,
@@ -796,6 +822,275 @@ def replay(worker: Path) -> dict:
     }
     _require_unchanged(worker, worker_sha256, "Worker binary")
     return report
+
+
+def _generic_operation_index(manifest: dict, registry: dict[str, dict],
+                             operation_ids: set[str]) -> dict[str, dict]:
+    declared = {item.get("id"): item for item in manifest.get("operations", [])
+                if isinstance(item, dict) and isinstance(item.get("id"), str)}
+    for operation_id in sorted(operation_ids):
+        registered = registry.get(operation_id)
+        if operation_id not in declared or registered is None:
+            raise ValueError(f"Required family operation is missing: {operation_id}")
+        if registered.get("status") != "VALIDATED":
+            raise ValueError(f"Required family operation is not VALIDATED: {operation_id}")
+        if declared[operation_id].get("revision") != registered.get("revision"):
+            raise ValueError(f"Worker/registry revision mismatch: {operation_id}")
+    return declared
+
+
+def _family_operation_ids(family: dict, registry: dict[str, dict]) -> set[str]:
+    operation_ids = {case["operation"] for case in family["cases"]}
+    operation_ids |= {control["operation"] for control in family["negative_controls"]}
+    for case in family["cases"]:
+        if case["operation"] not in registry:
+            raise ValueError(f"Family case names an unregistered operation: {case['operation']}")
+        operation_ids.update(families.mandatory_validators(registry[case["operation"]]))
+    return operation_ids
+
+
+def _expected_request_inputs(items: list[dict], record_inputs: object, label: str) -> list[str]:
+    if not isinstance(record_inputs, list) or len(record_inputs) != len(items):
+        raise ValueError(f"Traced inputs differ from the family contract: {label}")
+    hashes = []
+    for declared_input, traced in zip(items, record_inputs):
+        if (not isinstance(traced, dict) or traced.get("sha256") != declared_input["sha256"] or
+                traced.get("blob_sha256") != declared_input["sha256"] or
+                any(traced.get(key) != declared_input[key] for key in ("type", "format", "unit"))):
+            raise ValueError(f"Traced input differs from the declared fixture: {label}")
+        hashes.append(declared_input["sha256"])
+    return hashes
+
+
+def _build_generic_results(family: dict, records: dict[str, dict], blobs: dict[str, dict],
+                           registry: dict[str, dict], declared: dict[str, dict],
+                           manifest_sha256: str) -> tuple[
+                               list[dict], dict[str, object], dict[str, dict], set[str]]:
+    """Independently re-check every traced family exchange against the contract."""
+    content = families.blob_bytes(blobs)
+    results: list[dict] = []
+    reports: dict[str, object] = {}
+    used_blobs: set[str] = set()
+    expected_records: set[str] = set()
+    for case in family["cases"]:
+        case_id = case["id"]
+        operation = registry[case["operation"]]
+        record = records.get(case_id)
+        if not isinstance(record, dict) or record.get("operation_id") != case["operation"]:
+            raise ValueError(f"Family case trace is missing: {case_id}")
+        expected_records.add(case_id)
+        request, response = record["request"], record["response"]
+        if (request.get("parameters") != case["parameters"] or
+                request.get("kernel") != "package_recommended" or
+                response.get("status") != "ok"):
+            raise ValueError(f"Family transform request/result differs from the contract: {case_id}")
+        input_hashes = _expected_request_inputs(case["inputs"], request.get("inputs"), case_id)
+        output_hashes = _blob_hashes(response.get("outputs"))
+        declared_outputs = {slot["slot"]: slot for slot in operation["io"]["outputs"]}
+        output_slots = [item.get("slot") for item in response["outputs"]]
+        if (sorted(output_slots) != sorted(declared_outputs) or
+                any(item.get("type") != declared_outputs[item.get("slot")]["type"]
+                    for item in response["outputs"])):
+            raise ValueError(f"Family transform outputs differ from the registry: {case_id}")
+        view = families.CaseView(operation, request, response, content)
+        failures = families.assertion_failures(case, view)
+        if failures:
+            raise ValueError("Family behaviour assertions failed: " + "; ".join(failures))
+        validator_records = []
+        checks: dict[str, dict] = {
+            "transform_executed": {"pass": True},
+            "behaviour_assertions": {"pass": True, "count": len(case["assertions"])},
+        }
+        for validator_id in families.mandatory_validators(operation):
+            validator = registry[validator_id]
+            plan, parameters = families.derive_validator_plan(operation, validator, case["parameters"])
+            expected_inputs = [
+                (view.inputs if kind == "input" else view.outputs)[slot]["blob_sha256"]
+                for kind, slot in plan
+            ]
+            validator_record = records.get(f"{case_id}--{validator_id}")
+            if (not isinstance(validator_record, dict) or
+                    validator_record.get("operation_id") != validator_id):
+                raise ValueError(f"Mandatory validator trace is missing: {case_id}/{validator_id}")
+            expected_records.add(f"{case_id}--{validator_id}")
+            validator_request = validator_record["request"]
+            validator_response = validator_record["response"]
+            if (_blob_hashes(validator_request.get("inputs")) != expected_inputs or
+                    validator_request.get("parameters") != parameters or
+                    validator_response.get("status") != "ok"):
+                raise ValueError("Validator request is not derived from registry bindings: "
+                                 f"{case_id}/{validator_id}")
+            report_outputs = _blob_hashes(validator_response.get("outputs"))
+            if (len(report_outputs) != 1 or
+                    validator_response["outputs"][0].get("slot") != "validation" or
+                    validator_response["outputs"][0].get("type") != "ValidationReport"):
+                raise ValueError(f"Validator must produce exactly one report: {case_id}/{validator_id}")
+            try:
+                report_value = json.loads(content[report_outputs[0]].decode("utf-8"))
+            except (KeyError, UnicodeError, ValueError) as error:
+                raise ValueError(f"Validator report is not UTF-8 JSON: {case_id}/{validator_id}") from error
+            failed = families.validator_report_failures(validator, report_value, case["operation"])
+            if failed:
+                raise ValueError(f"Validator report failed {failed}: {case_id}/{validator_id}")
+            report_sha256 = _canonical_hash(report_value)
+            reports[report_sha256] = report_value
+            validator_records.append({
+                "operation_id": validator_id,
+                "revision": declared[validator_id]["revision"],
+                "request": validator_request,
+                "request_sha256": validator_record["request_sha256"],
+                "response": validator_response,
+                "response_sha256": validator_record["response_sha256"],
+                "input_hashes": expected_inputs,
+                "output_hashes": report_outputs,
+                "report_blob_sha256": report_outputs[0],
+                "report_sha256": report_sha256,
+                "status": "pass",
+            })
+            checks[f"validator:{validator_id}"] = {"pass": True, "report_sha256": report_sha256}
+            used_blobs.update(expected_inputs + report_outputs)
+        used_blobs.update(input_hashes + output_hashes)
+        results.append({
+            "case_id": case_id,
+            "operation_id": case["operation"],
+            "revision": declared[case["operation"]]["revision"],
+            "worker_manifest_sha256": manifest_sha256,
+            "test_id": family["test_id"],
+            "request": request,
+            "request_sha256": record["request_sha256"],
+            "response": response,
+            "response_sha256": record["response_sha256"],
+            "input_hashes": input_hashes,
+            "output_hashes": output_hashes,
+            "validators": validator_records,
+            "validation": {"status": "pass", "checks": checks},
+        })
+    indexed = {result["case_id"]: result for result in results}
+    for pair in family["pairs"]:
+        first, second = (indexed[case_id] for case_id in pair["cases"])
+        equal = first["output_hashes"] == second["output_hashes"]
+        if (first["input_hashes"] != second["input_hashes"] or
+                equal != (pair["kind"] == "equal_outputs")):
+            raise ValueError(f"Paired-case check failed: {pair}")
+        for this, other in ((first, second), (second, first)):
+            this["validation"]["checks"][f"pair:{pair['kind']}:{other['case_id']}"] = {"pass": True}
+    proofs: dict[str, dict] = {}
+    for control in family["negative_controls"]:
+        record = records.get(control["id"])
+        if not isinstance(record, dict) or record.get("operation_id") != control["operation"]:
+            raise ValueError(f"Negative control trace is missing: {control['id']}")
+        expected_records.add(control["id"])
+        request, response = record["request"], record["response"]
+        input_hashes = _expected_request_inputs(control["inputs"], request.get("inputs"), control["id"])
+        error = response.get("error")
+        if (request.get("parameters") != control["parameters"] or
+                response.get("status") != "error" or response.get("outputs") != [] or
+                not isinstance(error, dict) or error.get("class") != control["expect_error_class"]):
+            raise ValueError(f"Negative control was not rejected as declared: {control['id']}")
+        used_blobs.update(input_hashes)
+        proofs[control["id"]] = {
+            "case_id": control["id"],
+            "operation_id": control["operation"],
+            "revision": declared[control["operation"]]["revision"],
+            "worker_manifest_sha256": manifest_sha256,
+            "test_id": family["test_id"],
+            "request": request,
+            "request_sha256": record["request_sha256"],
+            "response": response,
+            "response_sha256": record["response_sha256"],
+            "input_hashes": input_hashes,
+            "output_hashes": [],
+            "expected_error_class": control["expect_error_class"],
+            "status": "expected_rejection",
+        }
+    if set(records) != expected_records:
+        raise ValueError("Family trace contains exchanges outside the declared contract")
+    return results, reports, proofs, used_blobs
+
+
+def _replay_generic_family(worker: Path, family_id: str) -> dict:
+    family = families.GENERIC_FAMILIES[family_id]
+    families.validate_contract(family)
+    attested = _attest_worker(worker)
+    worker = attested["worker"]
+    manifest = attested["manifest"]
+    worker_sha256 = attested["worker_sha256"]
+    operation_path, operations = _load_registry_operations()
+    registry = families.registry_index(operations)
+    declared = _generic_operation_index(manifest, registry, _family_operation_ids(family, registry))
+    policy_path = REPO / "cgal_mcp/master/policies.json"
+    manifest_sha256 = _canonical_hash(manifest)
+    tracked = (FAMILY_HARNESS, Path(__file__), FAMILY_CONTRACT_SOURCE, operation_path)
+    before = {path: _digest(path) for path in tracked}
+    stdout, returncode, records, blobs = _run_traced_harness(
+        [sys.executable, str(FAMILY_HARNESS), str(worker), family_id], f"Family {family_id}",
+    )
+    _require_unchanged(worker, worker_sha256, "Worker binary")
+    for path, value in before.items():
+        _require_unchanged(path, value, f"Family replay source {path.name}")
+    results, reports, proofs, used_blobs = _build_generic_results(
+        family, records, blobs, registry, declared, manifest_sha256,
+    )
+    if not used_blobs.issubset(blobs):
+        raise ValueError("A verified result refers to a blob absent from the trace")
+    report = {
+        "schema_version": 1,
+        "generator": "master-capability-acceptance",
+        "generator_source_path": "scripts/replay_master_capabilities.py",
+        "generator_source_sha256": _source_digest(Path(__file__)),
+        "generator_source_hash_encoding": "utf8-lf",
+        "status": "pass",
+        "scope": family["scope"],
+        "family": family_id,
+        "standalone_accepted": False,
+        "standalone_unmet_gates": list(families.STANDALONE_UNMET_GATES),
+        "binding_rule": families.BINDING_RULE,
+        "requirements": list(family["requirements"]),
+        "requirement_coverage": families.requirement_coverage(family),
+        "unbound_requirements": dict(family["unbound"]),
+        "family_contract_sha256": families.contract_digest(family),
+        "family_contract_source_path": families.FAMILY_CONTRACT_PATH,
+        "family_contract_source_sha256": _source_digest(FAMILY_CONTRACT_SOURCE),
+        "family_contract_source_hash_encoding": "utf8-lf",
+        "catalog_baseline_sha256": _digest(REPO / "catalog/baseline.json"),
+        "operation_registry_sha256": _source_digest(operation_path),
+        "operation_registry_hash_encoding": "utf8-lf",
+        "policy_catalog_sha256": _source_digest(policy_path),
+        "policy_catalog_hash_encoding": "utf8-lf",
+        "worker_sha256": worker_sha256,
+        "worker_binary_format": attested["worker_binary_format"],
+        "worker_manifest": manifest,
+        "worker_manifest_sha256": manifest_sha256,
+        "tests": [{
+            "id": family["test_id"],
+            "source_path": families.FAMILY_HARNESS_PATH,
+            "source_sha256": _source_digest(FAMILY_HARNESS),
+            "source_hash_encoding": "utf8-lf",
+            "stdout_sha256": hashlib.sha256(stdout.encode("utf-8")).hexdigest(),
+            "exit_code": returncode,
+            "status": "pass",
+        }],
+        "blobs": {digest: blobs[digest] for digest in sorted(used_blobs)},
+        "reports": reports,
+        "operation_results": results,
+        "negative_control_proofs": proofs,
+        "coverage_note": f"Family {family_id}: {len(family['requirements'])} requirement(s) bound by "
+                         f"{len(results)} replayed cases with registry-derived mandatory validators; "
+                         f"{len(family['unbound'])} requirement(s) remain unbound with recorded gaps. "
+                         "The immutable 80-requirement denominator and full standalone acceptance "
+                         "remain incomplete.",
+    }
+    _require_unchanged(worker, worker_sha256, "Worker binary")
+    return report
+
+
+def replay(worker: Path, family: str = WAVE_A_FAMILY) -> dict:
+    """Execute and verify one family's fixed harness, returning its portable report."""
+    if family == WAVE_A_FAMILY:
+        return _replay_wave_a(worker)
+    if family in families.GENERIC_FAMILIES:
+        return _replay_generic_family(worker, family)
+    raise ValueError(f"No replay contract is declared for family {family!r}")
 
 
 def _load_requirements_and_operations() -> tuple[dict, dict[str, dict]]:
@@ -812,8 +1107,22 @@ def _load_requirements_and_operations() -> tuple[dict, dict[str, dict]]:
     return requirements, operations
 
 
+def published_output(family: str) -> Path:
+    if family == WAVE_A_FAMILY:
+        return DEFAULT_OUTPUT
+    return REPO / families.GENERIC_FAMILIES[family]["evidence_path"]
+
+
+def family_bindings(family: str) -> dict[str, list[str]]:
+    """Requirement id -> operation ids that the family's replay report may establish."""
+    if family == WAVE_A_FAMILY:
+        return {requirement_id: [TRANSFORM] for requirement_id in WAVE_A_REQUIREMENT_CASES}
+    return {requirement_id: list(binding["operation_ids"]) for requirement_id, binding in
+            families.GENERIC_FAMILIES[family]["requirements"].items()}
+
+
 def _requirements_for_replayed_report(requirements: dict, output: Path,
-                                      report_sha256: str) -> dict:
+                                      report_sha256: str, family: str = WAVE_A_FAMILY) -> dict:
     """Point only a process-local catalog copy at this freshly replayed report.
 
     Build-specific worker/compiler hashes make replay reports intentionally vary
@@ -829,30 +1138,31 @@ def _requirements_for_replayed_report(requirements: dict, output: Path,
             any(character not in "0123456789abcdef" for character in report_sha256)):
         raise ValueError("Fresh acceptance report digest is invalid")
     copied = copy.deepcopy(requirements)
-    published_output = DEFAULT_OUTPUT.resolve()
+    published = published_output(family)
+    published_output_path = published.resolve()
     indexed = {
         item.get("id"): item
-        for family in copied.get("families", []) if isinstance(family, dict)
-        for item in family.get("requirements", []) if isinstance(item, dict)
+        for family_item in copied.get("families", []) if isinstance(family_item, dict)
+        for item in family_item.get("requirements", []) if isinstance(item, dict)
     }
-    for requirement_id in WAVE_A_REQUIREMENT_CASES:
+    for requirement_id, operation_ids in family_bindings(family).items():
         item = indexed.get(requirement_id)
-        if (not isinstance(item, dict) or item.get("operation_ids") != [TRANSFORM] or
+        if (not isinstance(item, dict) or item.get("operation_ids") != operation_ids or
                 not isinstance(item.get("evidence"), list) or len(item["evidence"]) != 1 or
                 not isinstance(item["evidence"][0], dict) or
-                item["evidence"][0].get("path") != DEFAULT_OUTPUT.relative_to(REPO).as_posix()):
-            raise ValueError(f"Checked Wave A catalog binding changed: {requirement_id}")
-        if output == published_output:
+                item["evidence"][0].get("path") != published.relative_to(REPO).as_posix()):
+            raise ValueError(f"Checked family {family} catalog binding changed: {requirement_id}")
+        if output == published_output_path:
             if item["evidence"][0].get("sha256") != report_sha256:
-                raise ValueError(f"Published Wave A evidence hash is stale: {requirement_id}")
+                raise ValueError(f"Published family {family} evidence hash is stale: {requirement_id}")
         else:
             item["evidence"][0] = {"path": relative_output, "sha256": report_sha256}
     return copied
 
 
-def _approved_output_path(value: Path) -> Path:
+def _approved_output_path(value: Path, family: str = WAVE_A_FAMILY) -> Path:
     output = value.resolve()
-    default = DEFAULT_OUTPUT.resolve()
+    default = published_output(family).resolve()
     work_root = WORK_OUTPUT_ROOT.resolve()
     if output != default and (not output.is_relative_to(work_root) or output.suffix != ".json"):
         raise ValueError(
@@ -861,68 +1171,97 @@ def _approved_output_path(value: Path) -> Path:
     return output
 
 
+def _encode_report(report: dict) -> bytes:
+    return (json.dumps(report, ensure_ascii=False, indent=2, allow_nan=False) + "\n").encode("utf-8")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--worker", type=Path, required=True)
-    parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
+    parser.add_argument("--family", choices=("all", *REPLAY_FAMILIES), default="all")
+    parser.add_argument("--output", type=Path,
+                        help="report path for a single --family (published snapshot or work/*.json)")
+    parser.add_argument("--work-dir", type=Path,
+                        help="directory under work/ receiving family-<id>.json for each family")
     args = parser.parse_args()
+    selected = list(REPLAY_FAMILIES) if args.family == "all" else [args.family]
+    if args.output is not None and (len(selected) != 1 or args.work_dir is not None):
+        raise SystemExit("--output requires one --family and excludes --work-dir")
     try:
-        output = _approved_output_path(args.output)
+        outputs = {}
+        for family in selected:
+            if args.output is not None:
+                candidate = args.output
+            elif args.work_dir is not None:
+                candidate = args.work_dir / f"family-{family}.json"
+            else:
+                candidate = published_output(family)
+            outputs[family] = _approved_output_path(candidate, family)
     except ValueError as error:
         raise SystemExit(str(error)) from error
-    report = replay(args.worker)
-    content = (json.dumps(report, ensure_ascii=False, indent=2, allow_nan=False) + "\n").encode("utf-8")
-    report_digest = hashlib.sha256(content).hexdigest()
     requirements, operations = _load_requirements_and_operations()
-    # A published snapshot must already have its digest approved in the checked
-    # catalog. Fail before touching it when a different platform/build is used.
-    if output == DEFAULT_OUTPUT.resolve():
-        _requirements_for_replayed_report(requirements, output, report_digest)
+    contents: dict[str, bytes] = {}
+    reports: dict[str, dict] = {}
+    for family in selected:
+        reports[family] = replay(args.worker, family)
+        contents[family] = _encode_report(reports[family])
+        digest = hashlib.sha256(contents[family]).hexdigest()
+        # A published snapshot must already have its digest approved in the checked
+        # catalog. Fail before touching it when a different platform/build is used.
+        if outputs[family] == published_output(family).resolve():
+            _requirements_for_replayed_report(requirements, outputs[family], digest, family)
     WORK_OUTPUT_ROOT.mkdir(parents=True, exist_ok=True)
-    staging: Path | None = None
+    staged_paths: dict[str, Path] = {}
     try:
-        with tempfile.NamedTemporaryFile(
-            prefix="wave-a-acceptance-", suffix=".json", dir=WORK_OUTPUT_ROOT,
-            delete=False,
-        ) as staged:
-            staged.write(content)
-            staged.flush()
-            os.fsync(staged.fileno())
-            staging = Path(staged.name).resolve()
-        replay_requirements = _requirements_for_replayed_report(
-            requirements, staging, report_digest,
-        )
+        replay_requirements = requirements
+        for family in selected:
+            with tempfile.NamedTemporaryFile(
+                prefix=f"family-{family}-acceptance-", suffix=".json", dir=WORK_OUTPUT_ROOT,
+                delete=False,
+            ) as staged:
+                staged.write(contents[family])
+                staged.flush()
+                os.fsync(staged.fileno())
+                staged_paths[family] = Path(staged.name).resolve()
+            replay_requirements = _requirements_for_replayed_report(
+                replay_requirements, staged_paths[family],
+                hashlib.sha256(contents[family]).hexdigest(), family,
+            )
         evaluated = evaluate_requirements(
             replay_requirements, operations, REPO,
             replay_worker=args.worker,
         )
-        wave_rows = [
-            row for row in evaluated["requirements"]
-            if row["id"] in WAVE_A_REQUIREMENT_CASES
-        ]
-        if (len(wave_rows) != len(WAVE_A_REQUIREMENT_CASES) or
-                any(row["status"] != "VALIDATED" for row in wave_rows)):
-            details = {row["id"]: row["reasons"] for row in wave_rows}
+        expected_ids = {requirement_id for family in selected for requirement_id in family_bindings(family)}
+        family_rows = [row for row in evaluated["requirements"] if row["id"] in expected_ids]
+        if (len(family_rows) != len(expected_ids) or
+                any(row["status"] != "VALIDATED" for row in family_rows)):
+            details = {row["id"]: row["reasons"] for row in family_rows if row["status"] != "VALIDATED"}
             raise SystemExit(
                 "Report replay passed, but checked-in catalog bindings are incomplete: " +
                 json.dumps(details, ensure_ascii=False)
             )
-        _require_unchanged(
-            args.worker.resolve(strict=True), report["worker_sha256"], "Worker binary",
-        )
-        output.parent.mkdir(parents=True, exist_ok=True)
-        os.replace(staging, output)
-        staging = None
+        for family in selected:
+            _require_unchanged(
+                args.worker.resolve(strict=True), reports[family]["worker_sha256"], "Worker binary",
+            )
+            outputs[family].parent.mkdir(parents=True, exist_ok=True)
+            os.replace(staged_paths.pop(family), outputs[family])
     finally:
-        if staging is not None and staging.is_file():
-            staging.unlink()
+        for staging in staged_paths.values():
+            if staging.is_file():
+                staging.unlink()
     print(json.dumps({
         "status": "pass",
-        "report": output.relative_to(REPO).as_posix(),
-        "report_sha256": report_digest,
-        "worker_sha256": report["worker_sha256"],
-        "worker_manifest_sha256": report["worker_manifest_sha256"],
-        "requirements_validated": len(wave_rows),
+        "families": {
+            family: {
+                "report": outputs[family].relative_to(REPO).as_posix(),
+                "report_sha256": hashlib.sha256(contents[family]).hexdigest(),
+                "requirements_validated": len(family_bindings(family)),
+            } for family in selected
+        },
+        "worker_sha256": reports[selected[0]]["worker_sha256"],
+        "worker_manifest_sha256": reports[selected[0]]["worker_manifest_sha256"],
+        "requirements_validated": len(family_rows),
         "major_requirements_validated": evaluated["validated"],
         "major_requirements_required": evaluated["required"],
         "standalone_accepted": False,

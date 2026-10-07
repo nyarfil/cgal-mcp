@@ -14,6 +14,8 @@ on:
       - 'scripts/verify_master_wave_b.py'
       - 'scripts/master_acceptance.py'
       - 'scripts/replay_master_capabilities.py'
+      - 'scripts/master_replay_families.py'
+      - 'docs/master/evidence/**'
       - 'tests/**master**'
       - 'pyproject.toml'
       - '.github/workflows/master-worker.yml'
@@ -89,7 +91,7 @@ jobs:
           python scripts/verify_master_wave_a_mesh.py --worker build-master/cgal-master-worker --output work/master-wave-a-mesh-ci.json
           python scripts/verify_master_wave_a_boolean.py --worker build-master/cgal-master-worker --output work/master-wave-a-boolean-ci.json
           python scripts/verify_master_wave_a_repair.py --worker build-master/cgal-master-worker --output work/master-wave-a-repair-ci.json
-          python scripts/replay_master_capabilities.py --worker build-master/cgal-master-worker --output work/master-capability-ci.json
+          python scripts/replay_master_capabilities.py --worker build-master/cgal-master-worker --work-dir work/master-capability-ci
           python -m tests.master_mcp_e2e auto
           python -m tests.master_mcp_e2e legacy
           python -m tests.master_http_e2e auto
@@ -112,7 +114,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python scripts/verify_master_wave_a_repair.py --worker build-master/Release/cgal-master-worker.exe --output work/master-wave-a-repair-ci.json
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          python scripts/replay_master_capabilities.py --worker build-master/Release/cgal-master-worker.exe --output work/master-capability-ci.json
+          python scripts/replay_master_capabilities.py --worker build-master/Release/cgal-master-worker.exe --work-dir work/master-capability-ci
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python -m tests.master_mcp_e2e auto
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -132,4 +134,4 @@ jobs:
             work/master-wave-a-mesh-ci.json
             work/master-wave-a-boolean-ci.json
             work/master-wave-a-repair-ci.json
-            work/master-capability-ci.json
+            work/master-capability-ci/

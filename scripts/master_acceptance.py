@@ -8,6 +8,8 @@ import json
 import re
 from pathlib import Path
 
+from scripts import master_replay_families as replay_families
+
 REPO = Path(__file__).resolve().parents[1]
 ORIGINALS = {
     "CGAL_Master_MCP_Design_Spec.md": "44cbb8b0e93abf0216c12f0fd6c9e35b6d04534dff83b9dafe07051625a727fd",
@@ -404,6 +406,146 @@ def _bounded_normal_negative_control_reasons(
     return reasons
 
 
+def _generic_family_reasons(report: dict, item: dict, operations: dict[str, dict],
+                            declared: dict[str, dict], tests: dict[str, dict],
+                            blob_hashes: set[str], report_hashes: set[str], root: Path) -> list[str]:
+    """Check a data-declared family report against its checked-in contract."""
+    requirement_id = item.get("id", "")
+    family_id = ".".join(requirement_id.split(".")[1:3]) if requirement_id.count(".") >= 3 else ""
+    family = replay_families.GENERIC_FAMILIES.get(family_id)
+    if family is None:
+        return [f"No replay family contract declares this requirement: {requirement_id}"]
+    reasons: list[str] = []
+    binding = family["requirements"].get(requirement_id)
+    if binding is None:
+        reasons.append(f"Family contract leaves this requirement unbound: {requirement_id}")
+    elif item.get("operation_ids") != binding["operation_ids"]:
+        reasons.append(f"Requirement operation binding differs from the family contract: {requirement_id}")
+    if report.get("family") != family_id or report.get("scope") != family["scope"]:
+        reasons.append("Evidence family/scope differs from the requirement family")
+    if report.get("family_contract_sha256") != replay_families.contract_digest(family):
+        reasons.append("Evidence family contract hash mismatch")
+    contract_path = root / replay_families.FAMILY_CONTRACT_PATH
+    if (report.get("family_contract_source_path") != replay_families.FAMILY_CONTRACT_PATH or
+            not contract_path.is_file() or
+            report.get("family_contract_source_sha256") != _source_digest(
+                contract_path, report.get("family_contract_source_hash_encoding"))):
+        reasons.append("Evidence family contract source mismatch")
+    if (report.get("requirements") != list(family["requirements"]) or
+            report.get("requirement_coverage") != replay_families.requirement_coverage(family) or
+            report.get("unbound_requirements") != family["unbound"] or
+            report.get("binding_rule") != replay_families.BINDING_RULE):
+        reasons.append("Evidence family requirement coverage differs from the contract")
+    if _string_members(report.get("standalone_unmet_gates")) != WAVE_A_UNMET_STANDALONE_GATES:
+        reasons.append("Evidence omits unmet standalone acceptance gates")
+    test = tests.get(family["test_id"])
+    if not isinstance(test, dict) or test.get("source_path") != replay_families.FAMILY_HARNESS_PATH:
+        reasons.append("Evidence family harness test record is missing")
+    try:
+        content = replay_families.blob_bytes(
+            {digest: report["blobs"][digest] for digest in blob_hashes})
+    except (KeyError, ValueError, TypeError):
+        return reasons + ["Evidence family blobs cannot be decoded"]
+    results = [result for result in report.get("operation_results", []) if isinstance(result, dict)]
+    indexed = {result.get("case_id"): result for result in results}
+    expected_cases = {case["id"]: case for case in family["cases"]}
+    if len(indexed) != len(results) or set(indexed) != set(expected_cases):
+        reasons.append("Evidence family case set differs from the contract")
+    for case_id, case in expected_cases.items():
+        result = indexed.get(case_id)
+        operation = operations.get(case["operation"])
+        if not isinstance(result, dict) or not isinstance(operation, dict):
+            reasons.append(f"Evidence has no covered family case: {case_id}")
+            continue
+        request, response = result.get("request"), result.get("response")
+        if (result.get("operation_id") != case["operation"] or
+                result.get("test_id") != family["test_id"] or
+                not isinstance(request, dict) or not isinstance(response, dict) or
+                request.get("parameters") != case["parameters"] or
+                response.get("status") != "ok" or
+                result.get("input_hashes") != [entry["sha256"] for entry in case["inputs"]]):
+            reasons.append(f"Evidence family case differs from the contract: {case_id}")
+            continue
+        try:
+            view = replay_families.CaseView(operation, request, response, content)
+            failures = replay_families.assertion_failures(case, view)
+            validator_ids = replay_families.mandatory_validators(operation)
+        except (KeyError, ValueError, TypeError) as error:
+            reasons.append(f"Evidence family case cannot be re-checked: {case_id}: {error}")
+            continue
+        if failures:
+            reasons.append(f"Evidence family behaviour assertions fail: {case_id}")
+        validators = result.get("validators")
+        if (not isinstance(validators, list) or
+                [entry.get("operation_id") for entry in validators if isinstance(entry, dict)] != validator_ids or
+                len(validators) != len(validator_ids)):
+            reasons.append(f"Evidence mandatory validator chain is incomplete: {case_id}")
+            continue
+        for validator_id, entry in zip(validator_ids, validators):
+            validator = operations.get(validator_id, {})
+            try:
+                plan, parameters = replay_families.derive_validator_plan(
+                    operation, validator, case["parameters"])
+                expected_inputs = [(view.inputs if kind == "input" else view.outputs)[slot]["blob_sha256"]
+                                   for kind, slot in plan]
+            except (KeyError, ValueError, TypeError):
+                reasons.append(f"Evidence validator binding cannot be derived: {case_id}/{validator_id}")
+                continue
+            reasons.extend(_hash_bound_exchange(entry, f"validator {case_id}/{validator_id}"))
+            validator_request = entry.get("request") if isinstance(entry.get("request"), dict) else {}
+            if (entry.get("status") != "pass" or
+                    entry.get("revision") != validator.get("revision") or
+                    declared.get(validator_id, {}).get("revision") != validator.get("revision") or
+                    entry.get("input_hashes") != expected_inputs or
+                    _exchange_blob_hashes(validator_request, "inputs") != expected_inputs or
+                    validator_request.get("operation") != validator_id or
+                    validator_request.get("parameters") != parameters or
+                    entry.get("output_hashes") != _exchange_blob_hashes(entry.get("response"), "outputs") or
+                    entry.get("output_hashes") != [entry.get("report_blob_sha256")]):
+                reasons.append(f"Evidence validator exchange is not registry-derived: {case_id}/{validator_id}")
+                continue
+            report_value = report.get("reports", {}).get(entry.get("report_sha256"))
+            try:
+                report_blob = json.loads(content[entry["report_blob_sha256"]].decode("utf-8"))
+            except (KeyError, UnicodeError, ValueError, TypeError):
+                report_blob = None
+            if (entry.get("report_sha256") not in report_hashes or report_blob != report_value or
+                    replay_families.validator_report_failures(validator, report_blob, case["operation"])):
+                reasons.append(f"Evidence validator report missing/failed: {case_id}/{validator_id}")
+    for pair in family["pairs"]:
+        first, second = (indexed.get(case_id, {}) for case_id in pair["cases"])
+        equal = first.get("output_hashes") == second.get("output_hashes")
+        if (first.get("input_hashes") != second.get("input_hashes") or
+                equal != (pair["kind"] == "equal_outputs")):
+            reasons.append(f"Evidence paired-case check fails: {pair['cases']}")
+    proofs = report.get("negative_control_proofs")
+    expected_controls = {control["id"]: control for control in family["negative_controls"]}
+    if not isinstance(proofs, dict) or set(proofs) != set(expected_controls):
+        reasons.append("Evidence family negative controls differ from the contract")
+    else:
+        for control_id, control in expected_controls.items():
+            proof = proofs[control_id]
+            response = proof.get("response") if isinstance(proof, dict) else None
+            request = proof.get("request") if isinstance(proof, dict) else None
+            if (not isinstance(proof, dict) or not isinstance(response, dict) or
+                    not isinstance(request, dict) or
+                    proof.get("status") != "expected_rejection" or
+                    proof.get("operation_id") != control["operation"] or
+                    request.get("operation") != control["operation"] or
+                    request.get("parameters") != control["parameters"] or
+                    proof.get("input_hashes") != [entry["sha256"] for entry in control["inputs"]] or
+                    proof.get("input_hashes") != _exchange_blob_hashes(request, "inputs") or
+                    proof.get("output_hashes") != [] or response.get("outputs") != [] or
+                    response.get("status") != "error" or
+                    not isinstance(response.get("error"), dict) or
+                    response["error"].get("class") != control["expect_error_class"] or
+                    control_id in indexed):
+                reasons.append(f"Evidence family negative control mismatch: {control_id}")
+                continue
+            reasons.extend(_hash_bound_exchange(proof, f"negative control {control_id}"))
+    return reasons
+
+
 def _evidence_reasons(report: dict, item: dict, operations: dict[str, dict], root: Path,
                       replayed_report: dict | None = None) -> list[str]:
     """Tie evidence to a baseline, actual handler build, fixtures and executable tests."""
@@ -581,6 +723,10 @@ def _evidence_reasons(report: dict, item: dict, operations: dict[str, dict], roo
         reasons.extend(_bounded_normal_negative_control_reasons(
             report, indexed, operations, declared, tests, blob_hashes, manifest_digest,
         ))
+    else:
+        reasons.extend(_generic_family_reasons(
+            report, item, operations, declared, tests, blob_hashes, report_hashes, root,
+        ))
     return reasons
 
 
@@ -596,15 +742,17 @@ def _rerun_replayed_evidence(replay_worker: Path | None, root: Path) -> dict[str
     if replay_worker is None or root.resolve() != REPO.resolve():
         return verified
     # Lazy import avoids a module cycle: the replay module imports this evaluator.
+    from scripts.replay_master_capabilities import REPLAY_FAMILIES
     from scripts.replay_master_capabilities import replay as rerun_approved_harness
-    try:
-        fresh_report = rerun_approved_harness(Path(replay_worker))
-        content = (json.dumps(
-            fresh_report, ensure_ascii=False, indent=2, allow_nan=False,
-        ) + "\n").encode("utf-8")
-    except Exception:
-        return verified
-    verified[hashlib.sha256(content).hexdigest()] = fresh_report
+    for family in REPLAY_FAMILIES:
+        try:
+            fresh_report = rerun_approved_harness(Path(replay_worker), family)
+            content = (json.dumps(
+                fresh_report, ensure_ascii=False, indent=2, allow_nan=False,
+            ) + "\n").encode("utf-8")
+        except Exception:
+            continue
+        verified[hashlib.sha256(content).hexdigest()] = fresh_report
     return verified
 
 

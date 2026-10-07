@@ -25,7 +25,11 @@ from scripts.master_acceptance import (
     extract_requirements,
     verify_originals,
 )
+from scripts import master_replay_families as replay_families
 from scripts.replay_master_capabilities import (
+    REPLAY_FAMILIES,
+    family_bindings,
+    published_output,
     _approved_output_path,
     _digest,
     _native_binary_format,
@@ -452,14 +456,147 @@ class AcceptanceContractTests(unittest.TestCase):
                 requirements, operations, REPO,
                 replay_worker=REPO / "build-master/Release/cgal-master-worker.exe",
             )
-        rerun.assert_called_once()
-        wave_rows = [
-            row for row in evaluated["requirements"]
-            if row["id"].startswith("major.7.7.")
-        ]
-        self.assertEqual(len(wave_rows), 6)
-        self.assertTrue(all(row["status"] == "INCOMPLETE" for row in wave_rows))
+        self.assertEqual([call.args[1] for call in rerun.call_args_list], list(REPLAY_FAMILIES))
+        bound = {requirement_id for family in REPLAY_FAMILIES
+                 for requirement_id in family_bindings(family)}
+        replay_rows = [row for row in evaluated["requirements"] if row["id"] in bound]
+        self.assertEqual(len(replay_rows), 17)
+        self.assertTrue(all(row["status"] == "INCOMPLETE" for row in replay_rows))
 
+
+NOT_REPLAYED = "Evidence has not been reproduced by the acceptance runner for this build"
+
+
+def family_context(requirement_id: str) -> tuple[dict, dict, dict[str, dict]]:
+    family = ".".join(requirement_id.split(".")[1:3])
+    report = json.loads(published_output(family).read_text(encoding="utf-8"))
+    _wave_report, item, operations = wave_context(requirement_id)
+    return report, item, operations
+
+
+def rehash(exchange: dict) -> None:
+    for field in ("request", "response"):
+        exchange[f"{field}_sha256"] = _canonical_hash(exchange[field])
+
+
+GENERIC_BOUND = sorted(requirement_id for family in replay_families.GENERIC_FAMILIES.values()
+                       for requirement_id in family["requirements"])
+
+
+class GenericFamilyReplayTests(unittest.TestCase):
+    def test_published_family_reports_fail_only_for_missing_replay(self):
+        for requirement_id in GENERIC_BOUND:
+            with self.subTest(requirement_id):
+                report, item, operations = family_context(requirement_id)
+                self.assertEqual(_evidence_reasons(report, item, operations, REPO), [NOT_REPLAYED])
+
+    def test_bound_and_unbound_partition_the_family_requirements(self):
+        requirements = json.loads((REPO / "catalog/major_requirements.json").read_text(encoding="utf-8"))
+        items = {item["id"]: item for family in requirements["families"]
+                 for item in family["requirements"]}
+        for family_id, family in replay_families.GENERIC_FAMILIES.items():
+            ids = {rid for rid in items if rid.startswith(f"major.{family_id}.")}
+            self.assertEqual(set(family["requirements"]) | set(family["unbound"]), ids)
+            self.assertFalse(set(family["requirements"]) & set(family["unbound"]))
+            for requirement_id in family["unbound"]:
+                self.assertEqual(items[requirement_id]["evidence"], [])
+
+    def test_family_report_contains_no_repository_host_path(self):
+        roots = {str(REPO).lower(), REPO.as_posix().lower()}
+        for family in replay_families.GENERIC_FAMILIES:
+            report = json.loads(published_output(family).read_text(encoding="utf-8"))
+            self.assertFalse(any(any(root in value.lower() for root in roots)
+                                 for value in string_values(report)), family)
+
+    def test_unbound_requirement_cannot_borrow_family_evidence(self):
+        report, item, operations = family_context("major.7.4.01")
+        item = copy.deepcopy(item)
+        item["id"] = "major.7.4.04"
+        reasons = _evidence_reasons(report, item, operations, REPO)
+        self.assertIn("Family contract leaves this requirement unbound: major.7.4.04", reasons)
+
+    def test_other_family_report_cannot_establish_requirement(self):
+        report, _item, operations = family_context("major.7.3.01")
+        _report, item, _operations = family_context("major.7.4.01")
+        reasons = _evidence_reasons(report, item, operations, REPO)
+        self.assertIn("Evidence family/scope differs from the requirement family", reasons)
+
+    def test_family_without_contract_is_rejected(self):
+        report, item, operations = family_context("major.7.3.01")
+        item = copy.deepcopy(item)
+        item["id"] = "major.7.8.01"
+        reasons = _evidence_reasons(report, item, operations, REPO)
+        self.assertIn("No replay family contract declares this requirement: major.7.8.01", reasons)
+
+    def test_missing_family_mandatory_validator_is_rejected(self):
+        report, item, operations = family_context("major.7.9.01")
+        result = next(r for r in report["operation_results"] if r["validators"])
+        result["validators"].pop()
+        reasons = _evidence_reasons(report, item, operations, REPO)
+        self.assertIn(f"Evidence mandatory validator chain is incomplete: {result['case_id']}", reasons)
+
+    def test_rehashed_behaviour_tamper_is_rejected(self):
+        report, item, operations = family_context("major.7.3.04")
+        result = next(r for r in report["operation_results"]
+                      if any(a[0].startswith("metrics.") for a in
+                             next(c for c in replay_families.GENERIC_FAMILIES["7.3"]["cases"]
+                                  if c["id"] == r["case_id"])["assertions"]))
+        case = next(c for c in replay_families.GENERIC_FAMILIES["7.3"]["cases"]
+                    if c["id"] == result["case_id"])
+        selector = next(a[0] for a in case["assertions"] if a[0].startswith("metrics."))
+        target = result["response"]["metrics"]
+        keys = selector.split(".")[1:]
+        for key in keys[:-1]:
+            target = target[key]
+        target[keys[-1]] = "tampered"
+        rehash(result)
+        reasons = _evidence_reasons(report, item, operations, REPO)
+        self.assertIn(f"Evidence family behaviour assertions fail: {result['case_id']}", reasons)
+
+    def test_validator_parameter_tamper_is_rejected(self):
+        report, item, operations = family_context("major.7.4.05")
+        result = next(r for r in report["operation_results"] if r["validators"])
+        validator = result["validators"][0]
+        validator["request"]["parameters"]["tampered"] = True
+        rehash(validator)
+        reasons = _evidence_reasons(report, item, operations, REPO)
+        self.assertIn("Evidence validator exchange is not registry-derived: "
+                      f"{result['case_id']}/{validator['operation_id']}", reasons)
+
+    def test_dropped_family_case_is_rejected(self):
+        report, item, operations = family_context("major.7.3.04")
+        report["operation_results"].pop()
+        reasons = _evidence_reasons(report, item, operations, REPO)
+        self.assertIn("Evidence family case set differs from the contract", reasons)
+
+    def test_negative_control_tamper_is_rejected(self):
+        report, item, operations = family_context("major.7.5.02")
+        control_id, proof = next(iter(report["negative_control_proofs"].items()))
+        proof["response"]["error"]["class"] = "TAMPERED"
+        rehash(proof)
+        reasons = _evidence_reasons(report, item, operations, REPO)
+        self.assertIn(f"Evidence family negative control mismatch: {control_id}", reasons)
+
+    def test_contract_change_invalidates_published_family_report(self):
+        report, item, operations = family_context("major.7.3.01")
+        changed = copy.deepcopy(replay_families.GENERIC_FAMILIES["7.3"])
+        changed["cases"][0]["assertions"].pop()
+        with mock.patch.dict(replay_families.GENERIC_FAMILIES, {"7.3": changed}):
+            reasons = _evidence_reasons(report, item, operations, REPO)
+        self.assertIn("Evidence family contract hash mismatch", reasons)
+
+    def test_contract_rejects_bound_requirement_without_cases(self):
+        changed = copy.deepcopy(replay_families.GENERIC_FAMILIES["7.4"])
+        first = next(iter(changed["requirements"]))
+        changed["requirements"][first]["case_ids"] = []
+        with self.assertRaises(ValueError):
+            replay_families.validate_contract(changed)
+
+    def test_assertion_vocabulary_is_closed(self):
+        changed = copy.deepcopy(replay_families.GENERIC_FAMILIES["7.3"])
+        changed["cases"][0]["assertions"].append(["metrics.x", "eval", "1"])
+        with self.assertRaises(ValueError):
+            replay_families.validate_contract(changed)
 
 if __name__ == "__main__":
     unittest.main()
