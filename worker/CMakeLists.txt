@@ -53,6 +53,10 @@ add_executable(cgal-master-worker
   master/wave_a_repair/repair_common.cpp
   master/wave_a_repair/repair_operations.cpp
   master/wave_a_repair/repair_validators.cpp
+  master/wave_c/wave_c_common.cpp
+  master/wave_c/planar.cpp
+  master/wave_c/triangulation.cpp
+  master/wave_c/spatial.cpp
 )
 target_compile_features(cgal-master-worker PRIVATE cxx_std_17)
 target_compile_definitions(cgal-master-worker PRIVATE

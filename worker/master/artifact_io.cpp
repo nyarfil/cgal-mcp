@@ -92,6 +92,10 @@ std::string read_verified_bytes(const ArtifactInput& input) {
 
 }  // namespace
 
+std::string read_verified_input_bytes(const ArtifactInput& input) {
+  return read_verified_bytes(input);
+}
+
 void require_input_shape(const ArtifactInput& input,
                          const std::string& expected_type,
                          const std::string& expected_format) {

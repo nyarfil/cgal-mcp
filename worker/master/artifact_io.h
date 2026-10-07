@@ -12,6 +12,8 @@ namespace cgal_master {
 void require_input_shape(const ArtifactInput& input,
                          const std::string& expected_type,
                          const std::string& expected_format);
+// Reads the artifact bytes and verifies the request sha256 and size limit.
+std::string read_verified_input_bytes(const ArtifactInput& input);
 std::vector<Point> read_xyz_points(const ArtifactInput& input);
 Mesh read_off_mesh(const ArtifactInput& input);
 std::filesystem::path checked_output_dir(const Request& request);

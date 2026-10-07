@@ -4,6 +4,7 @@
 #include "wave_a_mesh/wave_a_mesh_operations.h"
 #include "wave_a_boolean/wave_a_boolean_operations.h"
 #include "wave_a_repair/repair_operations.h"
+#include "wave_c/wave_c_operations.h"
 
 #include <CGAL/version.h>
 
@@ -79,6 +80,9 @@ const std::vector<OperationDefinition>& operation_registry() {
     operations.push_back(std::move(operation));
   }
   for (auto& operation : wave_a_repair::repair_validators()) {
+    operations.push_back(std::move(operation));
+  }
+  for (auto& operation : wave_c::operations()) {
     operations.push_back(std::move(operation));
   }
   return operations;
