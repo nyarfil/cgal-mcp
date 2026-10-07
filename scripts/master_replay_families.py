@@ -518,8 +518,382 @@ FAMILY_7_9 = {
     "negative_controls": [],
 }
 
+# ---- Wave C families (fixtures under tests/fixtures/master/wave_c) ----------
+PLANAR = {"fixture": "wave_c/planar_points.json", "sha256": "2edb3017cdb0e39e041a75284cf208f42b847c91ad938fab0eaafcfca219fbae"}
+COLLINEAR = {"fixture": "wave_c/collinear_points.json", "sha256": "087f7019a38d090185c7819a8218e88b0d5be18c4636bf558534818186ae14f5"}
+POLYGON_HOLE = {"fixture": "wave_c/polygon_with_hole.json", "sha256": "b88fd8eeacddaa021697227ce5caa3a2fe22bd026592f9676a97bf17963d7959"}
+POLYGON_L = {"fixture": "wave_c/polygon_l_shape.json", "sha256": "dec71795a9fc825548732ea647003420ad0b4fd1419443f4440308bdbe7f4b4d"}
+POLYGON_BOWTIE = {"fixture": "wave_c/polygon_bowtie.json", "sha256": "44351418b0b2c4af582cf01a32eda634860b502b0026459e767f0924ba4cc71f"}
+CONTAINMENT_QUERIES = {"fixture": "wave_c/containment_queries.json",
+                       "sha256": "d01fce2f49091c170b8a6da5b10c44a374dc9f89d4e6ac9647e88c167fced48b"}
+CONSTRAINT_GRAPH = {"fixture": "wave_c/constraint_graph.json", "sha256": "ddfd2a733ff2bddc32857ba5cf1ed8d5ebed2cf6c89ea63ae9fd7b92256c49fb"}
+CONSTRAINT_CROSSING = {"fixture": "wave_c/constraint_crossing.json",
+                       "sha256": "2b9d0ae7e96b5b1bc6702ae78f6cfac0bf825ac57cc768dc1d876144fc942059"}
+CLOUD = {"fixture": "wave_c/cloud_points.xyz", "sha256": "6eefbc923c71e53120312cdbdd30e283ae07850e5fb650ecb958f16b7c1e0dae"}
+QUERY_POINTS = {"fixture": "wave_c/query_points.xyz", "sha256": "49d0b7c67d716f111f324a49918d9561d46e5b2d3bf03ec1c934c071f5ee1070"}
+MESH_QUERIES = {"fixture": "wave_c/mesh_queries.xyz", "sha256": "6c4bc044e35ca94f3c9dd5f91cea6282a85aaf3818420222dbc8c8b819925277"}
+CUBE_RAYS = {"fixture": "wave_c/cube_rays.json", "sha256": "1c9d3a1e32f7100ac8ce54f14a2b27016543ab2f52d7f8d98444c69c8dd5d523"}
+CUBE_WITH_INTERIOR = {"fixture": "cube_with_interior.xyz", "sha256": "299fc3e1e6363388d7fa80fcc86a297dde4740fd59f7d2fc628bdb0d27ae7a39"}
+
+
+def _json_input(fixture: dict, type_: str, unit: str = "mm") -> dict:
+    return {**fixture, "type": type_, "format": "json", "unit": unit}
+
+
+SQRT2 = math.sqrt(2.0)
+SQRT3 = math.sqrt(3.0)
+
+FAMILY_7_13 = {
+    "family": "7.13",
+    "scope": "family_7_13_hulls_partial",
+    "evidence_path": "docs/master/evidence/family-7.13-capabilities.json",
+    "test_id": "family-7.13-replay-cases",
+    "requirements": {
+        "major.7.13.01": {
+            "operation_ids": ["hull.convex_2", "hull.convex_3"],
+            "symbols": ["convex_hull_2", "convex_hull_3"],
+            "symbol_notes": "The 2D case is a 21-point set with interior points whose hull is the "
+                            "hand-derived 3x3 square (area 9); the 3D case is the cube corners plus "
+                            "the centre, whose hull is the cube of volume 8 with 8 vertices and 12 "
+                            "triangles. Each hull is also checked by its independent enclosure "
+                            "validator.",
+            "case_ids": ["hull2-grid", "hull3-cube"],
+        },
+    },
+    "unbound": {
+        "major.7.13.02": "No alpha shape operation (Alpha_shape_2, Alpha_shape_3).",
+        "major.7.13.03": "No alpha wrapping operation (alpha_wrap_3).",
+        "major.7.13.04": "No bounding-volume operation (Min_sphere_of_spheres_d, Min_circle_2); "
+                         "spatial.bbox_2/3 are axis-aligned boxes only.",
+        "major.7.13.05": "No barycentric coordinate operation (mean_value_coordinates_2, "
+                         "wachspress_coordinates_2).",
+    },
+    "cases": [
+        _case("hull2-grid", "hull.convex_2", [_json_input(PLANAR, "PointSet2")], {}, [
+            ["output:polygon:json:points", "==", [[0.0, 0.0], [3.0, 0.0], [3.0, 3.0], [0.0, 3.0]]],
+            ["metrics.hull_vertex_count", "==", 4],
+            ["metrics.input_point_count", "==", 21],
+            ["metrics.orientation", "==", "counterclockwise"],
+            ["metrics.area.exact", "==", "9"],
+            ["metrics.algorithm", "==", "CGAL::convex_hull_2"],
+        ]),
+        _case("hull3-cube", "hull.convex_3", [_points(CUBE_WITH_INTERIOR)], {}, [
+            ["input:points:measure:points.count", "==", 9],
+            ["output:geometry:measure:off.vertex_count", "==", 8],
+            ["output:geometry:measure:off.face_count", "==", 12],
+            ["output:geometry:measure:off.boundary_edge_count", "==", 0],
+            ["output:geometry:measure:off.signed_volume", "approx", [8.0, 1e-12]],
+        ]),
+    ],
+    "pairs": [],
+    "negative_controls": [
+        {"id": "hull2-collinear-rejected", "operation": "hull.convex_2",
+         "inputs": [_json_input(COLLINEAR, "PointSet2")], "parameters": {},
+         "expect_error_class": "PRECONDITION_FAILED"},
+    ],
+}
+
+FAMILY_7_11 = {
+    "family": "7.11",
+    "scope": "family_7_11_triangulations_partial",
+    "evidence_path": "docs/master/evidence/family-7.11-capabilities.json",
+    "test_id": "family-7.11-replay-cases",
+    "requirements": {
+        "major.7.11.01": {
+            "operation_ids": ["triangulation.delaunay_2", "triangulation.delaunay_3"],
+            "symbols": ["Delaunay_triangulation_2", "Delaunay_triangulation_3"],
+            "symbol_notes": "dt2-grid: 20 distinct vertices (one duplicate input merged) with 13 hull "
+                            "vertices give 2n-2-h = 25 triangles by Euler's relation; dt3-cube: every "
+                            "Delaunay tetrahedron of the cube corners plus centre contains the centre, "
+                            "giving 12 tetrahedra. The dt3-cloud tetrahedron count is a regression pin "
+                            "checked by the exact independent validator, not a hand-derived value.",
+            "case_ids": ["dt2-grid", "dt3-cube", "dt3-cloud"],
+        },
+        "major.7.11.02": {
+            "operation_ids": ["triangulation.constrained_2"],
+            "symbols": ["Constrained_Delaunay_triangulation_2", "Constrained_triangulation_2"],
+            "symbol_notes": "delaunay=true runs Constrained_Delaunay_triangulation_2 and delaunay=false "
+                            "runs Constrained_triangulation_2 (asserted through the reported algorithm); "
+                            "both preserve the three input constraints.",
+            "case_ids": ["cdt-delaunay", "ct-plain"],
+        },
+    },
+    "unbound": {
+        "major.7.11.03": "No Regular_triangulation_2/3 operation.",
+        "major.7.11.04": "No periodic or on-sphere triangulation operation.",
+        "major.7.11.05": "No Voronoi_diagram_2 / Voronoi dual operation.",
+    },
+    "cases": [
+        _case("dt2-grid", "triangulation.delaunay_2", [_json_input(PLANAR, "PointSet2")], {}, [
+            ["metrics.algorithm", "==", "CGAL::Delaunay_triangulation_2"],
+            ["metrics.input_point_count", "==", 21],
+            ["metrics.duplicate_points_merged", "==", 1],
+            ["metrics.vertex_count", "==", 20],
+            ["metrics.triangle_count", "==", 25],
+            ["output:triangulation:json:constrained_edges", "==", []],
+        ]),
+        _case("dt3-cube", "triangulation.delaunay_3", [_points(CUBE_WITH_INTERIOR)], {}, [
+            ["metrics.algorithm", "==", "CGAL::Delaunay_triangulation_3"],
+            ["metrics.vertex_count", "==", 9],
+            ["metrics.tetrahedron_count", "==", 12],
+        ]),
+        _case("dt3-cloud", "triangulation.delaunay_3", [_points(CLOUD)], {}, [
+            ["metrics.algorithm", "==", "CGAL::Delaunay_triangulation_3"],
+            ["metrics.input_point_count", "==", 168],
+            ["metrics.vertex_count", "==", 168],
+        ]),
+        _case("cdt-delaunay", "triangulation.constrained_2",
+              [_json_input(CONSTRAINT_GRAPH, "SegmentGraph2")], {"delaunay": True}, [
+            ["metrics.algorithm", "==", "CGAL::Constrained_Delaunay_triangulation_2"],
+            ["metrics.vertex_count", "==", 10],
+            ["output:triangulation:json:constrained_edges", "==", [[0, 6], [3, 7], [4, 5]]],
+        ]),
+        _case("ct-plain", "triangulation.constrained_2",
+              [_json_input(CONSTRAINT_GRAPH, "SegmentGraph2")], {"delaunay": False}, [
+            ["metrics.algorithm", "==", "CGAL::Constrained_triangulation_2"],
+            ["metrics.vertex_count", "==", 10],
+            ["output:triangulation:json:constrained_edges", "==", [[0, 6], [3, 7], [4, 5]]],
+        ]),
+    ],
+    "pairs": [],
+    "negative_controls": [
+        {"id": "dt2-collinear-rejected", "operation": "triangulation.delaunay_2",
+         "inputs": [_json_input(COLLINEAR, "PointSet2")], "parameters": {},
+         "expect_error_class": "PRECONDITION_FAILED"},
+        {"id": "cdt-crossing-constraints-rejected", "operation": "triangulation.constrained_2",
+         "inputs": [_json_input(CONSTRAINT_CROSSING, "SegmentGraph2")], "parameters": {"delaunay": True},
+         "expect_error_class": "PRECONDITION_FAILED"},
+    ],
+}
+
+FAMILY_7_12 = {
+    "family": "7.12",
+    "scope": "family_7_12_polygons_partial",
+    "evidence_path": "docs/master/evidence/family-7.12-capabilities.json",
+    "test_id": "family-7.12-replay-cases",
+    "requirements": {
+        "major.7.12.01": {
+            "operation_ids": ["polygon.analysis.properties", "polygon.query.containment"],
+            "symbols": ["Polygon_2", "Polygon_with_holes_2", "is_simple"],
+            "symbol_notes": "Replayed 2D polygon operations are ring orientation, simplicity "
+                            "(Polygon_2::is_simple), convexity, exact area and centroid, bounding box, "
+                            "polygon-with-holes validity and exact point location, asserted against "
+                            "hand-derived values (100-9=91, centroid 919/182, L-shape 7 and 19/14). "
+                            "Boolean, offset, skeleton and Minkowski operations are separate "
+                            "requirements and stay unbound.",
+            "case_ids": ["polygon-with-hole", "polygon-l-shape", "polygon-bowtie", "containment-with-hole"],
+        },
+    },
+    "unbound": {
+        "major.7.12.02": "No Arrangement_2 operation.",
+        "major.7.12.03": "No overlay operation.",
+        "major.7.12.04": "No Polygon_set_2 Boolean operation.",
+        "major.7.12.05": "No straight-skeleton operation.",
+        "major.7.12.06": "No skeleton-offset operation.",
+        "major.7.12.07": "No Minkowski sum operation.",
+    },
+    "cases": [
+        _case("polygon-with-hole", "polygon.analysis.properties",
+              [_json_input(POLYGON_HOLE, "PolygonWithHoles2")], {}, [
+            ["output:analysis:json:results.valid_polygon_with_holes", "==", True],
+            ["output:analysis:json:results.hole_count", "==", 1],
+            ["output:analysis:json:results.area.exact", "==", "91"],
+            ["output:analysis:json:results.centroid.exact", "==", ["919/182", "919/182"]],
+            ["output:analysis:json:results.bbox.min", "approx", [[0.0, 0.0], 1e-12]],
+            ["output:analysis:json:results.bbox.max", "approx", [[10.0, 10.0], 1e-12]],
+            ["output:analysis:json:results.rings[*].role", "==", ["outer", "hole"]],
+            ["output:analysis:json:results.rings[*].orientation", "==", ["counterclockwise", "clockwise"]],
+            ["output:analysis:json:results.rings[*].simple", "==", [True, True]],
+            ["output:analysis:json:results.rings[*].convex", "==", [True, True]],
+            ["output:analysis:json:results.rings[*].signed_area.exact", "==", ["100", "-9"]],
+        ]),
+        _case("polygon-l-shape", "polygon.analysis.properties",
+              [_json_input(POLYGON_L, "PolygonWithHoles2")], {}, [
+            ["output:analysis:json:results.valid_polygon_with_holes", "==", True],
+            ["output:analysis:json:results.area.exact", "==", "7"],
+            ["output:analysis:json:results.centroid.exact", "==", ["19/14", "19/14"]],
+            ["output:analysis:json:results.rings[*].simple", "==", [True]],
+            ["output:analysis:json:results.rings[*].convex", "==", [False]],
+            ["output:analysis:json:results.rings[*].orientation", "==", ["counterclockwise"]],
+        ]),
+        _case("polygon-bowtie", "polygon.analysis.properties",
+              [_json_input(POLYGON_BOWTIE, "PolygonWithHoles2")], {}, [
+            ["output:analysis:json:results.valid_polygon_with_holes", "==", False],
+            ["output:analysis:json:results.rings[*].simple", "==", [False]],
+        ]),
+        _case("containment-with-hole", "polygon.query.containment",
+              [_json_input(POLYGON_HOLE, "PolygonWithHoles2"),
+               _json_input(CONTAINMENT_QUERIES, "PointSet2")], {}, [
+            ["output:analysis:json:results[*].location", "==",
+             ["inside", "outside", "boundary", "boundary", "outside", "boundary", "boundary", "inside"]],
+            ["output:analysis:json:summary.inside", "==", 2],
+            ["output:analysis:json:summary.outside", "==", 2],
+            ["output:analysis:json:summary.boundary", "==", 4],
+        ]),
+    ],
+    "pairs": [],
+    "negative_controls": [
+        {"id": "containment-bowtie-rejected", "operation": "polygon.query.containment",
+         "inputs": [_json_input(POLYGON_BOWTIE, "PolygonWithHoles2"),
+                    _json_input(CONTAINMENT_QUERIES, "PointSet2")], "parameters": {},
+         "expect_error_class": "PRECONDITION_FAILED"},
+    ],
+}
+
+# Query 1 coincides with cloud point 167 (1,1,1); query 5 is (3,3,3), 2*sqrt(3) away from it.
+_KNN_COMMON = [
+    ["metrics.tree", "==", "CGAL::Kd_tree"],
+    ["metrics.query_count", "==", 6],
+    ["output:analysis:json:results.1.neighbors.0.index", "==", 167],
+    ["output:analysis:json:results.1.neighbors.0.distance", "==", 0.0],
+    ["output:analysis:json:results.5.neighbors.0.index", "==", 167],
+    ["output:analysis:json:results.5.neighbors.0.distance", "approx", [2.0 * SQRT3, 1e-12]],
+]
+
+FAMILY_7_2 = {
+    "family": "7.2",
+    "scope": "family_7_2_spatial_queries_partial",
+    "evidence_path": "docs/master/evidence/family-7.2-capabilities.json",
+    "test_id": "family-7.2-replay-cases",
+    "requirements": {
+        "major.7.2.01": {
+            "operation_ids": ["spatial.aabb.closest_points", "spatial.aabb.ray_first_hits"],
+            "symbols": ["AABB_tree", "AABB_traits", "AABB_face_graph_triangle_primitive"],
+            "symbol_notes": "The worker uses AABB_tree with AABB_face_graph_triangle_primitive and the "
+                            "AABB_traits_3 traits class (the CGAL 6.x name of the inventory's "
+                            "AABB_traits). Closest-point distances and ray hits on the axis-aligned "
+                            "cube are hand-derived; closest points are asserted only where the nearest "
+                            "face is unique. Intersection-candidate queries are 7.2.04.",
+            "case_ids": ["aabb-closest-cube", "aabb-rays-cube"],
+        },
+        "major.7.2.02": {
+            "operation_ids": ["spatial.knn_3", "spatial.range_search_3"],
+            "symbols": ["Kd_tree", "Search_traits_3"],
+            "symbol_notes": "Both operations build a CGAL::Kd_tree over Search_traits_3 (through "
+                            "Search_traits_adapter). Radius search is replayed with radius 0 (exactly "
+                            "the coincident point 167) and radius 0.5 (total confirmed by the exact "
+                            "brute-force validator; queries 2 and 5 are empty because their nearest "
+                            "neighbours are 1.60 and 3.46 away).",
+            "case_ids": ["knn-orthogonal", "knn-general", "range-zero-radius", "range-half-radius"],
+        },
+        "major.7.2.03": {
+            "operation_ids": ["spatial.knn_3"],
+            "symbols": ["K_neighbor_search", "Orthogonal_k_neighbor_search"],
+            "case_ids": ["knn-orthogonal", "knn-general", "knn-nearest-single"],
+        },
+        "major.7.2.05": {
+            "operation_ids": ["spatial.bbox_2", "spatial.bbox_3"],
+            "symbols": ["Bbox_2", "Bbox_3", "bbox_2", "bbox_3"],
+            "symbol_notes": "Boxes of a planar point set, a triangle mesh and a 3D point set are "
+                            "asserted against hand-derived extrema.",
+            "case_ids": ["bbox-planar", "bbox-cube-mesh", "bbox-point-set"],
+        },
+    },
+    "unbound": {
+        "major.7.2.04": "No intersection-candidate operation (do_intersect, any_intersected_primitive, "
+                        "all_intersected_primitives); only AABB first-hit ray queries are exposed.",
+    },
+    "cases": [
+        _case("aabb-closest-cube", "spatial.aabb.closest_points",
+              [_mesh(CUBE_A), _points(MESH_QUERIES)], {}, [
+            ["metrics.algorithm", "==", "CGAL::AABB_tree::closest_point_and_primitive"],
+            ["metrics.face_count", "==", 12],
+            ["metrics.query_count", "==", 6],
+            ["output:analysis:json:results[*].distance", "approx",
+             [[1.0, 1.0, 2.0, SQRT3 / 2.0, 0.25, SQRT2], 1e-12]],
+            ["output:analysis:json:results.1.point", "approx", [[2.0, 1.0, 1.0], 1e-12]],
+            ["output:analysis:json:results.2.point", "approx", [[1.0, 1.0, 0.0], 1e-12]],
+            ["output:analysis:json:results.3.point", "approx", [[2.0, 2.0, 2.0], 1e-12]],
+            ["output:analysis:json:results.4.point", "approx", [[1.0, 0.5, 0.0], 1e-12]],
+            ["output:analysis:json:results.5.point", "approx", [[0.0, 2.0, 1.0], 1e-12]],
+        ]),
+        _case("aabb-rays-cube", "spatial.aabb.ray_first_hits",
+              [_mesh(CUBE_A), _json_input(CUBE_RAYS, "RayBatch3")], {}, [
+            ["metrics.algorithm", "==", "CGAL::AABB_tree::first_intersection"],
+            ["metrics.ray_count", "==", 6],
+            ["metrics.hit_count", "==", 5],
+            ["output:analysis:json:results[*].hit", "==", [True, False, True, True, True, True]],
+            ["output:analysis:json:results.0.distance", "approx", [1.0, 1e-12]],
+            ["output:analysis:json:results.0.point", "approx", [[1.0, 1.0, 0.0], 1e-12]],
+            ["output:analysis:json:results.2.distance", "approx", [math.sqrt(1.13), 1e-12]],
+            ["output:analysis:json:results.2.point", "approx", [[2.0, 1.3, 1.2], 1e-12]],
+            ["output:analysis:json:results.3.distance", "approx", [1.0, 1e-12]],
+            ["output:analysis:json:results.3.point", "approx", [[0.0, 0.5, 0.0], 1e-12]],
+            ["output:analysis:json:results.4.distance", "approx", [SQRT3, 1e-12]],
+            ["output:analysis:json:results.4.point", "approx", [[0.0, 0.0, 0.0], 1e-12]],
+            ["output:analysis:json:results.5.distance", "approx", [1.0, 1e-12]],
+            ["output:analysis:json:results.5.point", "approx", [[0.5, 0.5, 2.0], 1e-12]],
+        ]),
+        _case("knn-orthogonal", "spatial.knn_3", [_points(CLOUD), _points(QUERY_POINTS)],
+              {"k": 5, "search": "orthogonal"}, [
+            ["metrics.algorithm", "==", "CGAL::Orthogonal_k_neighbor_search"],
+            ["metrics.k", "==", 5],
+            *_KNN_COMMON,
+        ]),
+        _case("knn-general", "spatial.knn_3", [_points(CLOUD), _points(QUERY_POINTS)],
+              {"k": 5, "search": "general"}, [
+            ["metrics.algorithm", "==", "CGAL::K_neighbor_search"],
+            ["metrics.k", "==", 5],
+            *_KNN_COMMON,
+        ]),
+        _case("knn-nearest-single", "spatial.knn_3", [_points(CLOUD), _points(QUERY_POINTS)],
+              {"k": 1, "search": "orthogonal"}, [
+            ["metrics.k", "==", 1],
+            ["output:analysis:json:results.1.neighbors.0.index", "==", 167],
+            ["output:analysis:json:results.5.neighbors.0.index", "==", 167],
+        ]),
+        _case("range-zero-radius", "spatial.range_search_3", [_points(CLOUD), _points(QUERY_POINTS)],
+              {"radius": {"value": 0.0, "unit": "mm"}}, [
+            ["output:analysis:json:results.1.neighbors.0.index", "==", 167],
+            ["output:analysis:json:results.1.neighbors.0.distance", "==", 0.0],
+            ["output:analysis:json:results.0.neighbors", "==", []],
+        ]),
+        _case("range-half-radius", "spatial.range_search_3", [_points(CLOUD), _points(QUERY_POINTS)],
+              {"radius": {"value": 0.5, "unit": "mm"}}, [
+            ["output:analysis:json:results.2.neighbors", "==", []],
+            ["output:analysis:json:results.5.neighbors", "==", []],
+        ]),
+        _case("bbox-planar", "spatial.bbox_2", [_json_input(PLANAR, "PointSet2")], {}, [
+            ["output:analysis:json:results.dimension", "==", 2],
+            ["output:analysis:json:results.min", "approx", [[0.0, 0.0], 1e-12]],
+            ["output:analysis:json:results.max", "approx", [[3.0, 3.0], 1e-12]],
+            ["output:analysis:json:summary.point_count", "==", 21],
+        ]),
+        _case("bbox-cube-mesh", "spatial.bbox_3", [_mesh(CUBE_A)], {}, [
+            ["output:analysis:json:source.geometry_type", "==", "TriangleSurfaceMesh"],
+            ["output:analysis:json:results.dimension", "==", 3],
+            ["output:analysis:json:results.min", "approx", [[0.0, 0.0, 0.0], 1e-12]],
+            ["output:analysis:json:results.max", "approx", [[2.0, 2.0, 2.0], 1e-12]],
+        ]),
+        _case("bbox-point-set", "spatial.bbox_3", [_points(QUERY_POINTS)], {}, [
+            ["output:analysis:json:source.geometry_type", "==", "PointSet3"],
+            ["output:analysis:json:results.min", "approx", [[-0.3, -0.5, -0.9], 1e-12]],
+            ["output:analysis:json:results.max", "approx", [[3.0, 3.0, 3.0], 1e-12]],
+            ["output:analysis:json:summary.point_count", "==", 6],
+        ]),
+    ],
+    "pairs": [
+        {"kind": "different_outputs", "cases": ["range-zero-radius", "range-half-radius"]},
+        {"kind": "different_outputs", "cases": ["knn-orthogonal", "knn-nearest-single"]},
+    ],
+    "negative_controls": [
+        {"id": "knn-zero-k-rejected", "operation": "spatial.knn_3",
+         "inputs": [_points(CLOUD), _points(QUERY_POINTS)],
+         "parameters": {"k": 0, "search": "general"}, "expect_error_class": "INVALID_REQUEST"},
+        {"id": "range-unit-mismatch-rejected", "operation": "spatial.range_search_3",
+         "inputs": [_points(CLOUD), _points(QUERY_POINTS)],
+         "parameters": {"radius": {"value": 0.5, "unit": "cm"}}, "expect_error_class": "TYPE_ERROR"},
+        {"id": "rays-unit-mismatch-rejected", "operation": "spatial.aabb.ray_first_hits",
+         "inputs": [_mesh(CUBE_A), {**_json_input(CUBE_RAYS, "RayBatch3"), "unit": "cm"}],
+         "parameters": {}, "expect_error_class": "TYPE_ERROR"},
+        {"id": "bbox2-rejects-3d-points", "operation": "spatial.bbox_2",
+         "inputs": [_points(CLOUD)], "parameters": {}, "expect_error_class": "TYPE_ERROR"},
+    ],
+}
+
 GENERIC_FAMILIES: dict[str, dict] = {
-    family["family"]: family for family in (FAMILY_7_3, FAMILY_7_4, FAMILY_7_5, FAMILY_7_9)
+    family["family"]: family for family in (FAMILY_7_2, FAMILY_7_3, FAMILY_7_4, FAMILY_7_5, FAMILY_7_9, FAMILY_7_11,
+                   FAMILY_7_12, FAMILY_7_13)
 }
 
 
@@ -600,9 +974,10 @@ def derive_validator_plan(operation: dict, validator: dict, transform_parameters
         list[tuple[str, str]], dict]:
     """Return ([(kind, slot)...] in validator input order, parameters) from bindings."""
     binding = operation["validation"].get("bindings", {}).get(validator["id"])
-    if not isinstance(binding, dict) or not isinstance(binding.get("artifacts"), dict):
+    # Legacy bindings (hull.convex_3) list the slot references directly, without an "artifacts" wrapper.
+    artifacts = binding.get("artifacts") if isinstance(binding, dict) and "artifacts" in binding else binding
+    if not isinstance(binding, dict) or not isinstance(artifacts, dict):
         raise ValueError(f"Registry lacks a validator binding: {operation['id']}/{validator['id']}")
-    artifacts = binding["artifacts"]
     plan = []
     for slot in validator["io"]["inputs"]:
         reference = artifacts.get(slot["slot"])
@@ -642,6 +1017,8 @@ def _report_value(report: object, dotted: str) -> tuple[bool, object]:
             return True, projected
         if isinstance(value, dict) and part in value:
             value = value[part]
+        elif isinstance(value, list) and part.isdigit() and int(part) < len(value):
+            value = value[int(part)]
         else:
             return False, None
     return True, value

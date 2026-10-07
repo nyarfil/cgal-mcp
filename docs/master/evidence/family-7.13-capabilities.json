@@ -5,8 +5,8 @@
   "generator_source_sha256": "b09bfe95011d3cc14975db8c578c72b634c579162259fd60039af1e85c1d2670",
   "generator_source_hash_encoding": "utf8-lf",
   "status": "pass",
-  "scope": "family_7_5_boolean_operations_partial",
-  "family": "7.5",
+  "scope": "family_7_13_hulls_partial",
+  "family": "7.13",
   "standalone_accepted": false,
   "standalone_unmet_gates": [
     "remaining_major_capability_requirements",
@@ -17,37 +17,31 @@
   ],
   "binding_rule": "A requirement is bound only when replayed cases exercise every enumerated variant in its original description and every subcapability symbol listed for it in catalog/major_capability_inventory.json, each through a VALIDATED operation whose registry-mandated validators pass.",
   "requirements": [
-    "major.7.5.02"
+    "major.7.13.01"
   ],
   "requirement_coverage": {
-    "major.7.5.02": {
+    "major.7.13.01": {
       "case_ids": [
-        "difference-contained",
-        "difference-overlap",
-        "intersection-contained",
-        "intersection-overlap",
-        "union-disjoint",
-        "union-overlap"
+        "hull2-grid",
+        "hull3-cube"
       ],
       "operation_ids": [
-        "mesh.boolean.union",
-        "mesh.boolean.intersection",
-        "mesh.boolean.difference"
+        "hull.convex_2",
+        "hull.convex_3"
       ],
       "symbols": [
-        "corefine_and_compute_union",
-        "corefine_and_compute_intersection",
-        "corefine_and_compute_difference"
+        "convex_hull_2",
+        "convex_hull_3"
       ]
     }
   },
   "unbound_requirements": {
-    "major.7.5.01": "corefine and autorefine are used only inside the three Boolean operations; standalone corefinement output is not an operation.",
-    "major.7.5.03": "No validated clip operation.",
-    "major.7.5.04": "No validated split operation.",
-    "major.7.5.05": "No validated Polygon_mesh_slicer operation."
+    "major.7.13.02": "No alpha shape operation (Alpha_shape_2, Alpha_shape_3).",
+    "major.7.13.03": "No alpha wrapping operation (alpha_wrap_3).",
+    "major.7.13.04": "No bounding-volume operation (Min_sphere_of_spheres_d, Min_circle_2); spatial.bbox_2/3 are axis-aligned boxes only.",
+    "major.7.13.05": "No barycentric coordinate operation (mean_value_coordinates_2, wachspress_coordinates_2)."
   },
-  "family_contract_sha256": "1ffe41cb50743ac04cf406c9e73a5c1751a989a203bd54dd674da0e3950c0d29",
+  "family_contract_sha256": "064d359e3ce74720d81d5d895b39bd3e786d37e28e80e0f1b203d1014e789707",
   "family_contract_source_path": "scripts/master_replay_families.py",
   "family_contract_source_sha256": "fa69e5daca44cf69329c44d1e560cda1dc51575a29e2243c2c2038ac798ef47c",
   "family_contract_source_hash_encoding": "utf8-lf",
@@ -3797,313 +3791,109 @@
   "worker_manifest_sha256": "fc3776ffc41b498e8b6e6e8737b7420653c8593001f689f97c14eae7d1a30d0a",
   "tests": [
     {
-      "id": "family-7.5-replay-cases",
+      "id": "family-7.13-replay-cases",
       "source_path": "tests/master_family_replay_cases.py",
       "source_sha256": "69b3216bf60de8b908dcf6f82e4fee3ffc438ee2a29cf2d756c4b558c6ce3e65",
       "source_hash_encoding": "utf8-lf",
-      "stdout_sha256": "be57df3934163d2415933f257f1b1e57bdcf4789237bd49f054679444bf84e5d",
+      "stdout_sha256": "8436c984410dae4b50df3fc295f6fb22d1fa879e9a5f033792b31e5b02054910",
       "exit_code": 0,
       "status": "pass"
     }
   ],
   "blobs": {
-    "0b823c20cc4f837d99f3b6d066b8433a39688017d61e0825f9dcb5cb6214fbf2": {
+    "087f7019a38d090185c7819a8218e88b0d5be18c4636bf558534818186ae14f5": {
       "encoding": "base64",
-      "byte_size": 918,
-      "content": "eyJiaW5kaW5ncyI6eyJjYW5kaWRhdGVfc2hhMjU2IjoiODc2MWZmYjc2YmM0YWQ1ZWY5NThiZjZkNWM4ZDE4ZTEwMDBlN2E1ODUxYTVkMDY0OTlmZWYwOTM5MGNmYTFhNSIsIm9wZXJhdGlvbl9wYXJhbWV0ZXIiOiJ1bmlvbiIsInNvdXJjZV9hX3NoYTI1NiI6IjcyN2JlZGQ1ZDEzNzEyZTc1MDZlMTVhZWIxZWEzNWI1ZGE2NjBiZjIxNDNiZjI4ZThmMjU3YjBhYTdlYjIxNjQiLCJzb3VyY2VfYl9zaGEyNTYiOiI3Njc3MzAxM2IxNjVlNDRiYTRmNzY2ODE0NGE3NGVhMzFjYjQzZmM2MWJkMTAyZDNkMzY4ZjE2Y2E0YWRjN2M5IiwidW5pdCI6Im1tIn0sImNoZWNrcyI6eyJjYW5kaWRhdGVfZXhhY3Rfdm9sdW1lIjoiMTIiLCJjbG9zZWRfb3JfY2Fub25pY2FsX2VtcHR5Ijp0cnVlLCJlbXB0eV9yZWFzb24iOiIiLCJleGFjdF92b2x1bWVfbWF0Y2hlc19yZWZlcmVuY2UiOnRydWUsIm11dHVhbF9leGFjdF9kaWZmZXJlbmNlX2VtcHR5Ijp0cnVlLCJvcGVyYXRpb25fY2xhc3NpZmljYXRpb25fbWF0Y2hlcyI6dHJ1ZSwib3BlcmF0aW9uX3BhcmFtZXRlcl9ib3VuZCI6dHJ1ZSwicmVmZXJlbmNlX2V4YWN0X3ZvbHVtZSI6IjEyIiwicmVzdWx0X3N0YXR1cyI6InZvbHVtZSIsInJlc3VsdF9zdGF0dXNfbWF0Y2hlc19yZWZlcmVuY2UiOnRydWUsInNlbGZfaW50ZXJzZWN0aW9uX2ZyZWUiOnRydWUsInRvcG9sb2d5X3ZhbGlkIjp0cnVlLCJ2b2x1bWVfYm91bmRhcnlfb3JpZW50YXRpb25fdmFsaWQiOnRydWV9LCJvcGVyYXRpb24iOiJ1bmlvbiIsInBhc3NlZCI6dHJ1ZSwic2NoZW1hIjoiVmFsaWRhdGlvblJlcG9ydC92MSIsInNjaGVtYV92ZXJzaW9uIjoxLCJzdGF0dXMiOiJwYXNzIiwidmFsaWRhdGVzIjoibWVzaC5ib29sZWFuLnVuaW9uIiwidmFsaWRhdG9yX2lkIjoibWVzaC52YWxpZGF0ZS5ib29sZWFuX3VuaW9uIn0K"
+      "byte_size": 37,
+      "content": "eyJwb2ludHMiOltbMCwwXSxbMSwxXSxbMiwyXSxbMywzXV19Cg=="
     },
-    "20867ab3412e14319a83b45874f40a2ce5e7d85117b58529c159d97d02e4f2cb": {
+    "299fc3e1e6363388d7fa80fcc86a297dde4740fd59f7d2fc628bdb0d27ae7a39": {
       "encoding": "base64",
-      "byte_size": 203,
-      "content": "T0ZGCjggMTIgMAowLjUgMC41IDAuNQoxLjUgMC41IDEuNQowLjUgMS41IDEuNQoxLjUgMS41IDEuNQoxLjUgMC41IDAuNQoxLjUgMS41IDAuNQowLjUgMS41IDAuNQowLjUgMC41IDEuNQozIDAgNiA1CjMgMCA1IDQKMyA3IDEgMwozIDcgMyAyCjMgMCA0IDEKMyAwIDEgNwozIDQgNSAzCjMgNCAzIDEKMyA1IDYgMgozIDUgMiAzCjMgNiAwIDcKMyA2IDcgMgo="
+      "byte_size": 66,
+      "content": "LTEgLTEgLTEKMSAtMSAtMQotMSAxIC0xCjEgMSAtMQotMSAtMSAxCjEgLTEgMQotMSAxIDEKMSAxIDEKMCAwIDAK"
     },
-    "2f7710059f0eb6849083bcf0c91d52e97b524b49fc88bba06bd5e47b115dfe60": {
+    "2d00fc5801c798e52cdfd7f4b1ef79db1395fa517810c85b03ffeaea78d17118": {
       "encoding": "base64",
-      "byte_size": 918,
-      "content": "eyJiaW5kaW5ncyI6eyJjYW5kaWRhdGVfc2hhMjU2IjoiM2E1Nzg5YzZiNGZjNTczNDBlYTA5YTVhNjZjN2RiZjE2YzI5ZjMyYTExZjRjN2EzMzZlYWRlNjc2OWFiYjkxMyIsIm9wZXJhdGlvbl9wYXJhbWV0ZXIiOiJ1bmlvbiIsInNvdXJjZV9hX3NoYTI1NiI6IjcyN2JlZGQ1ZDEzNzEyZTc1MDZlMTVhZWIxZWEzNWI1ZGE2NjBiZjIxNDNiZjI4ZThmMjU3YjBhYTdlYjIxNjQiLCJzb3VyY2VfYl9zaGEyNTYiOiI2NjYzYWIwY2EzZThiMmNiZjY5NjVlYjIyZjI5Yjg0ZWY0N2ZhMjExNGExODAyODM3MjBkNzNjZWJkYTlmZGNlIiwidW5pdCI6Im1tIn0sImNoZWNrcyI6eyJjYW5kaWRhdGVfZXhhY3Rfdm9sdW1lIjoiMTYiLCJjbG9zZWRfb3JfY2Fub25pY2FsX2VtcHR5Ijp0cnVlLCJlbXB0eV9yZWFzb24iOiIiLCJleGFjdF92b2x1bWVfbWF0Y2hlc19yZWZlcmVuY2UiOnRydWUsIm11dHVhbF9leGFjdF9kaWZmZXJlbmNlX2VtcHR5Ijp0cnVlLCJvcGVyYXRpb25fY2xhc3NpZmljYXRpb25fbWF0Y2hlcyI6dHJ1ZSwib3BlcmF0aW9uX3BhcmFtZXRlcl9ib3VuZCI6dHJ1ZSwicmVmZXJlbmNlX2V4YWN0X3ZvbHVtZSI6IjE2IiwicmVzdWx0X3N0YXR1cyI6InZvbHVtZSIsInJlc3VsdF9zdGF0dXNfbWF0Y2hlc19yZWZlcmVuY2UiOnRydWUsInNlbGZfaW50ZXJzZWN0aW9uX2ZyZWUiOnRydWUsInRvcG9sb2d5X3ZhbGlkIjp0cnVlLCJ2b2x1bWVfYm91bmRhcnlfb3JpZW50YXRpb25fdmFsaWQiOnRydWV9LCJvcGVyYXRpb24iOiJ1bmlvbiIsInBhc3NlZCI6dHJ1ZSwic2NoZW1hIjoiVmFsaWRhdGlvblJlcG9ydC92MSIsInNjaGVtYV92ZXJzaW9uIjoxLCJzdGF0dXMiOiJwYXNzIiwidmFsaWRhdGVzIjoibWVzaC5ib29sZWFuLnVuaW9uIiwidmFsaWRhdG9yX2lkIjoibWVzaC52YWxpZGF0ZS5ib29sZWFuX3VuaW9uIn0K"
+      "byte_size": 181,
+      "content": "T0ZGCjggMTIgMAoKMSAtMSAxCi0xIDEgLTEKLTEgLTEgLTEKLTEgLTEgMQoxIDEgMQoxIDEgLTEKLTEgMSAxCjEgLTEgLTEKMyAgNyA1IDAKMyAgMiA2IDEKMyAgMyAwIDYKMyAgMyA2IDIKMyAgMCA1IDQKMyAgNiA1IDEKMyAgNiAwIDQKMyAgNCA1IDYKMyAgMiAwIDMKMyAgNyAwIDIKMyAgMiA1IDcKMyAgMSA1IDIKCg=="
     },
-    "3a5789c6b4fc57340ea09a5a66c7dbf16c29f32a11f4c7a336eade6769abb913": {
+    "2edb3017cdb0e39e041a75284cf208f42b847c91ad938fab0eaafcfca219fbae": {
       "encoding": "base64",
-      "byte_size": 327,
-      "content": "T0ZGCjE2IDI0IDAKMCAwIDAKMiAwIDIKMCAyIDIKMiAyIDIKMiAwIDAKMiAyIDAKMCAyIDAKMCAwIDIKNCAwIDAKNiAwIDIKNCAyIDIKNiAyIDIKNiAwIDAKNiAyIDAKNCAyIDAKNCAwIDIKMyAwIDYgNQozIDAgNSA0CjMgNyAxIDMKMyA3IDMgMgozIDAgNCAxCjMgMCAxIDcKMyA0IDUgMwozIDQgMyAxCjMgNSA2IDIKMyA1IDIgMwozIDYgMCA3CjMgNiA3IDIKMyA4IDE0IDEzCjMgOCAxMyAxMgozIDE1IDkgMTEKMyAxNSAxMSAxMAozIDggMTIgOQozIDggOSAxNQozIDEyIDEzIDExCjMgMTIgMTEgOQozIDEzIDE0IDEwCjMgMTMgMTAgMTEKMyAxNCA4IDE1CjMgMTQgMTUgMTAK"
+      "byte_size": 159,
+      "content": "eyJwb2ludHMiOltbMCwwXSxbMSwwXSxbMiwwXSxbMywwXSxbMCwxXSxbMSwxXSxbMiwxXSxbMywxXSxbMCwyXSxbMSwyXSxbMiwyXSxbMywyXSxbMCwzXSxbMSwzXSxbMiwzXSxbMywzXSxbMC41LDAuNV0sWzIuMjUsMS43NV0sWzEuNSwwXSxbMywzXSxbMC4xMjUsMi44NzVdXX0K"
     },
-    "482b576b9d8ea479ec86794aed6eb3540920afe3c8f75156b1d898f502a6e620": {
+    "7f594ce10b265c535f21e5a534542a32447060270fa83853e2b1362cc2b89792": {
       "encoding": "base64",
-      "byte_size": 936,
-      "content": "eyJiaW5kaW5ncyI6eyJjYW5kaWRhdGVfc2hhMjU2IjoiYmNmYjNlZDExZDM4ZjQwYzc4OTlhNDA4MjlmOWE0MmY5YjY0OGI4MzZhMzYxNGIyY2I4NTI2N2MzOGZkZmVhYyIsIm9wZXJhdGlvbl9wYXJhbWV0ZXIiOiJkaWZmZXJlbmNlIiwic291cmNlX2Ffc2hhMjU2IjoiNzI3YmVkZDVkMTM3MTJlNzUwNmUxNWFlYjFlYTM1YjVkYTY2MGJmMjE0M2JmMjhlOGYyNTdiMGFhN2ViMjE2NCIsInNvdXJjZV9iX3NoYTI1NiI6Ijc2NzczMDEzYjE2NWU0NGJhNGY3NjY4MTQ0YTc0ZWEzMWNiNDNmYzYxYmQxMDJkM2QzNjhmMTZjYTRhZGM3YzkiLCJ1bml0IjoibW0ifSwiY2hlY2tzIjp7ImNhbmRpZGF0ZV9leGFjdF92b2x1bWUiOiI0IiwiY2xvc2VkX29yX2Nhbm9uaWNhbF9lbXB0eSI6dHJ1ZSwiZW1wdHlfcmVhc29uIjoiIiwiZXhhY3Rfdm9sdW1lX21hdGNoZXNfcmVmZXJlbmNlIjp0cnVlLCJtdXR1YWxfZXhhY3RfZGlmZmVyZW5jZV9lbXB0eSI6dHJ1ZSwib3BlcmF0aW9uX2NsYXNzaWZpY2F0aW9uX21hdGNoZXMiOnRydWUsIm9wZXJhdGlvbl9wYXJhbWV0ZXJfYm91bmQiOnRydWUsInJlZmVyZW5jZV9leGFjdF92b2x1bWUiOiI0IiwicmVzdWx0X3N0YXR1cyI6InZvbHVtZSIsInJlc3VsdF9zdGF0dXNfbWF0Y2hlc19yZWZlcmVuY2UiOnRydWUsInNlbGZfaW50ZXJzZWN0aW9uX2ZyZWUiOnRydWUsInRvcG9sb2d5X3ZhbGlkIjp0cnVlLCJ2b2x1bWVfYm91bmRhcnlfb3JpZW50YXRpb25fdmFsaWQiOnRydWV9LCJvcGVyYXRpb24iOiJkaWZmZXJlbmNlIiwicGFzc2VkIjp0cnVlLCJzY2hlbWEiOiJWYWxpZGF0aW9uUmVwb3J0L3YxIiwic2NoZW1hX3ZlcnNpb24iOjEsInN0YXR1cyI6InBhc3MiLCJ2YWxpZGF0ZXMiOiJtZXNoLmJvb2xlYW4uZGlmZmVyZW5jZSIsInZhbGlkYXRvcl9pZCI6Im1lc2gudmFsaWRhdGUuYm9vbGVhbl9kaWZmZXJlbmNlIn0K"
+      "byte_size": 53,
+      "content": "eyJwb2ludHMiOltbMC4wLDAuMF0sWzMuMCwwLjBdLFszLjAsMy4wXSxbMC4wLDMuMF1dfQo="
     },
-    "5c669be2b742cc2cfe3626a43dcf42dcf2875956a688d06ba031c8d413c82bfa": {
+    "9562981785738be43d066ae2f6264ac6d4124bf9059c7c9b2169cb2b4c1bf7e5": {
       "encoding": "base64",
-      "byte_size": 936,
-      "content": "eyJiaW5kaW5ncyI6eyJjYW5kaWRhdGVfc2hhMjU2IjoiZWE5ZjM0YjNiOTFjN2Y1MTQ0Y2JkMjhlY2E4ODhkMzRlYmMyMzgwNTNiNWY0NTYzYjk4YjhhNmUzM2M3OGJmZSIsIm9wZXJhdGlvbl9wYXJhbWV0ZXIiOiJkaWZmZXJlbmNlIiwic291cmNlX2Ffc2hhMjU2IjoiNzI3YmVkZDVkMTM3MTJlNzUwNmUxNWFlYjFlYTM1YjVkYTY2MGJmMjE0M2JmMjhlOGYyNTdiMGFhN2ViMjE2NCIsInNvdXJjZV9iX3NoYTI1NiI6Ijg1NzM5OGRjMWFmMGZmN2M5MzhjMDhjMmViZGI3ZTAwMzUyZjczYTU3MWQ2ZjZmYmFhM2FkNDkxM2MwMWE1ZmEiLCJ1bml0IjoibW0ifSwiY2hlY2tzIjp7ImNhbmRpZGF0ZV9leGFjdF92b2x1bWUiOiI3IiwiY2xvc2VkX29yX2Nhbm9uaWNhbF9lbXB0eSI6dHJ1ZSwiZW1wdHlfcmVhc29uIjoiIiwiZXhhY3Rfdm9sdW1lX21hdGNoZXNfcmVmZXJlbmNlIjp0cnVlLCJtdXR1YWxfZXhhY3RfZGlmZmVyZW5jZV9lbXB0eSI6dHJ1ZSwib3BlcmF0aW9uX2NsYXNzaWZpY2F0aW9uX21hdGNoZXMiOnRydWUsIm9wZXJhdGlvbl9wYXJhbWV0ZXJfYm91bmQiOnRydWUsInJlZmVyZW5jZV9leGFjdF92b2x1bWUiOiI3IiwicmVzdWx0X3N0YXR1cyI6InZvbHVtZSIsInJlc3VsdF9zdGF0dXNfbWF0Y2hlc19yZWZlcmVuY2UiOnRydWUsInNlbGZfaW50ZXJzZWN0aW9uX2ZyZWUiOnRydWUsInRvcG9sb2d5X3ZhbGlkIjp0cnVlLCJ2b2x1bWVfYm91bmRhcnlfb3JpZW50YXRpb25fdmFsaWQiOnRydWV9LCJvcGVyYXRpb24iOiJkaWZmZXJlbmNlIiwicGFzc2VkIjp0cnVlLCJzY2hlbWEiOiJWYWxpZGF0aW9uUmVwb3J0L3YxIiwic2NoZW1hX3ZlcnNpb24iOjEsInN0YXR1cyI6InBhc3MiLCJ2YWxpZGF0ZXMiOiJtZXNoLmJvb2xlYW4uZGlmZmVyZW5jZSIsInZhbGlkYXRvcl9pZCI6Im1lc2gudmFsaWRhdGUuYm9vbGVhbl9kaWZmZXJlbmNlIn0K"
+      "byte_size": 510,
+      "content": "eyJhcmVhIjp7ImFwcHJveGltYXRlIjo5LjAsImV4YWN0IjoiOSIsInVuaXQiOiJtbV4yIn0sImJvdW5kYXJ5X3BvaW50X2NvdW50IjoxNCwiY2hlY2tzIjp7ImFsbF9zb3VyY2VfcG9pbnRzX2VuY2xvc2VkIjp0cnVlLCJtaW5pbWFsX2NvbnZleF9lbmNsb3N1cmUiOnRydWUsInNpbXBsZV9yaW5nIjp0cnVlLCJzdHJpY3RseV9jb252ZXhfY291bnRlcmNsb2Nrd2lzZSI6dHJ1ZSwidmVydGljZXNfYXJlX3NvdXJjZV9wb2ludHMiOnRydWV9LCJkaXN0aW5jdF9zb3VyY2VfcG9pbnRfY291bnQiOjIwLCJodWxsX3ZlcnRleF9jb3VudCI6NCwiaW5kZXBlbmRlbmNlIjoiZXhhY3Qgb3JpZW50YXRpb24gcHJlZGljYXRlcyBhbmQgb3JkZXItY2hhbmdlIHRlc3Q7IENHQUw6OmNvbnZleF9odWxsXzIgaXMgbm90IGNhbGxlZCIsInBhc3NlZCI6dHJ1ZSwic291cmNlX3BvaW50X2NvdW50IjoyMSwic3RhdHVzIjoicGFzcyIsInZhbGlkYXRvciI6Imh1bGwudmFsaWRhdGUuY29udmV4X2VuY2xvc3VyZV8yIn0K"
     },
-    "6663ab0ca3e8b2cbf6965eb22f29b84ef47fa2114a180283720d73cebda9fdce": {
+    "beb076dd222cc589655d9150102dd79a211351e2ae23b87b89dee7d84730a236": {
       "encoding": "base64",
-      "byte_size": 155,
-      "content": "T0ZGCjggMTIgMAo0IDAgMAo2IDAgMAo2IDIgMAo0IDIgMAo0IDAgMgo2IDAgMgo2IDIgMgo0IDIgMgozIDAgMyAyCjMgMCAyIDEKMyA0IDUgNgozIDQgNiA3CjMgMCAxIDUKMyAwIDUgNAozIDEgMiA2CjMgMSA2IDUKMyAyIDMgNwozIDIgNyA2CjMgMyAwIDQKMyAzIDQgNwo="
-    },
-    "727bedd5d13712e7506e15aeb1ea35b5da660bf2143bf28e8f257b0aa7eb2164": {
-      "encoding": "base64",
-      "byte_size": 155,
-      "content": "T0ZGCjggMTIgMAowIDAgMAoyIDAgMAoyIDIgMAowIDIgMAowIDAgMgoyIDAgMgoyIDIgMgowIDIgMgozIDAgMyAyCjMgMCAyIDEKMyA0IDUgNgozIDQgNiA3CjMgMCAxIDUKMyAwIDUgNAozIDEgMiA2CjMgMSA2IDUKMyAyIDMgNwozIDIgNyA2CjMgMyAwIDQKMyAzIDQgNwo="
-    },
-    "76773013b165e44ba4f7668144a74ea31cb43fc61bd102d3d368f16ca4adc7c9": {
-      "encoding": "base64",
-      "byte_size": 155,
-      "content": "T0ZGCjggMTIgMAoxIDAgMAozIDAgMAozIDIgMAoxIDIgMAoxIDAgMgozIDAgMgozIDIgMgoxIDIgMgozIDAgMyAyCjMgMCAyIDEKMyA0IDUgNgozIDQgNiA3CjMgMCAxIDUKMyAwIDUgNAozIDEgMiA2CjMgMSA2IDUKMyAyIDMgNwozIDIgNyA2CjMgMyAwIDQKMyAzIDQgNwo="
-    },
-    "857398dc1af0ff7c938c08c2ebdb7e00352f73a571d6f6fbaa3ad4913c01a5fa": {
-      "encoding": "base64",
-      "byte_size": 203,
-      "content": "T0ZGCjggMTIgMAowLjUgMC41IDAuNQoxLjUgMC41IDAuNQoxLjUgMS41IDAuNQowLjUgMS41IDAuNQowLjUgMC41IDEuNQoxLjUgMC41IDEuNQoxLjUgMS41IDEuNQowLjUgMS41IDEuNQozIDAgMyAyCjMgMCAyIDEKMyA0IDUgNgozIDQgNiA3CjMgMCAxIDUKMyAwIDUgNAozIDEgMiA2CjMgMSA2IDUKMyAyIDMgNwozIDIgNyA2CjMgMyAwIDQKMyAzIDQgNwo="
-    },
-    "8761ffb76bc4ad5ef958bf6d5c8d18e1000e7a5851a5d06499fef09390cfa1a5": {
-      "encoding": "base64",
-      "byte_size": 584,
-      "content": "T0ZGCjI0IDQ0IDAKMSAxIDAKMSAyIDAKMSAwIDAKMSAyIDEKMiAyIDAKMiAxIDAKMiAyIDEKMiAwIDAKMSAwIDEKMiAwIDEKMiAxIDIKMiAwIDIKMiAyIDIKMSAwIDIKMSAxIDIKMSAyIDIKMCAwIDAKMCAyIDAKMCAwIDIKMCAyIDIKMyAyIDAKMyAyIDIKMyAwIDAKMyAwIDIKMyAwIDE3IDEKMyAxNCAxOSAxOAozIDE2IDIgOAozIDEzIDE4IDgKMyAxIDE3IDMKMyAxOSAxNSAzCjMgMTcgMTYgMTgKMyAxNyAxOCAxOQozIDE5IDMgMTcKMyAxNyAwIDE2CjMgMTYgMCAyCjMgMTQgMTggMTMKMyAxNiA4IDE4CjMgMTUgMTkgMTQKMyAwIDUgMgozIDE0IDEwIDEyCjMgNCAxIDMKMyA0IDAgMQozIDUgMCA0CjMgNSA3IDIKMyA5IDExIDgKMyA5IDggMgozIDIgNyA5CjMgMTMgMTEgMTAKMyAxMCAxNCAxMwozIDExIDEzIDgKMyAxNSAxNCAxMgozIDYgNCAzCjMgNiAzIDE1CjMgMTUgMTIgNgozIDUgMjIgNwozIDEwIDIzIDIxCjMgMjEgMTIgMTAKMyA3IDIyIDkKMyAyMyAxMSA5CjMgMjIgMjAgMjEKMyAyMiAyMSAyMwozIDIwIDQgNgozIDEyIDIxIDYKMyAyMiA1IDIwCjMgMjAgNiAyMQozIDQgMjAgNQozIDIzIDkgMjIKMyAxMSAyMyAxMAo="
-    },
-    "8d4361aaa4b58509192dd35df2ddc7f0a735f84339825532f2c0ba22be0bc242": {
-      "encoding": "base64",
-      "byte_size": 139,
-      "content": "T0ZGCjggMTAgMAowIDAgMAoyIDAgMAoyIDIgMAowIDIgMAowIDAgMgoyIDAgMgoyIDIgMgowIDIgMgozIDAgMyAyCjMgMCAyIDEKMyAwIDEgNQozIDAgNSA0CjMgMSAyIDYKMyAxIDYgNQozIDIgMyA3CjMgMiA3IDYKMyAzIDAgNAozIDMgNCA3Cg=="
-    },
-    "98faf277f83e8429826e64f513222129ddb31952575c2f25d865860126c27324": {
-      "encoding": "base64",
-      "byte_size": 944,
-      "content": "eyJiaW5kaW5ncyI6eyJjYW5kaWRhdGVfc2hhMjU2IjoiYzM5ZWIyZmFjNWYwMTM5MzlmNDY0NDEzMjE0NDgzN2YwY2FkY2JlNWQ1YzM2ZjA0ZjZhMTAwMDU0Yzk2ZDI2OCIsIm9wZXJhdGlvbl9wYXJhbWV0ZXIiOiJpbnRlcnNlY3Rpb24iLCJzb3VyY2VfYV9zaGEyNTYiOiI3MjdiZWRkNWQxMzcxMmU3NTA2ZTE1YWViMWVhMzViNWRhNjYwYmYyMTQzYmYyOGU4ZjI1N2IwYWE3ZWIyMTY0Iiwic291cmNlX2Jfc2hhMjU2IjoiNzY3NzMwMTNiMTY1ZTQ0YmE0Zjc2NjgxNDRhNzRlYTMxY2I0M2ZjNjFiZDEwMmQzZDM2OGYxNmNhNGFkYzdjOSIsInVuaXQiOiJtbSJ9LCJjaGVja3MiOnsiY2FuZGlkYXRlX2V4YWN0X3ZvbHVtZSI6IjQiLCJjbG9zZWRfb3JfY2Fub25pY2FsX2VtcHR5Ijp0cnVlLCJlbXB0eV9yZWFzb24iOiIiLCJleGFjdF92b2x1bWVfbWF0Y2hlc19yZWZlcmVuY2UiOnRydWUsIm11dHVhbF9leGFjdF9kaWZmZXJlbmNlX2VtcHR5Ijp0cnVlLCJvcGVyYXRpb25fY2xhc3NpZmljYXRpb25fbWF0Y2hlcyI6dHJ1ZSwib3BlcmF0aW9uX3BhcmFtZXRlcl9ib3VuZCI6dHJ1ZSwicmVmZXJlbmNlX2V4YWN0X3ZvbHVtZSI6IjQiLCJyZXN1bHRfc3RhdHVzIjoidm9sdW1lIiwicmVzdWx0X3N0YXR1c19tYXRjaGVzX3JlZmVyZW5jZSI6dHJ1ZSwic2VsZl9pbnRlcnNlY3Rpb25fZnJlZSI6dHJ1ZSwidG9wb2xvZ3lfdmFsaWQiOnRydWUsInZvbHVtZV9ib3VuZGFyeV9vcmllbnRhdGlvbl92YWxpZCI6dHJ1ZX0sIm9wZXJhdGlvbiI6ImludGVyc2VjdGlvbiIsInBhc3NlZCI6dHJ1ZSwic2NoZW1hIjoiVmFsaWRhdGlvblJlcG9ydC92MSIsInNjaGVtYV92ZXJzaW9uIjoxLCJzdGF0dXMiOiJwYXNzIiwidmFsaWRhdGVzIjoibWVzaC5ib29sZWFuLmludGVyc2VjdGlvbiIsInZhbGlkYXRvcl9pZCI6Im1lc2gudmFsaWRhdGUuYm9vbGVhbl9pbnRlcnNlY3Rpb24ifQo="
-    },
-    "bcfb3ed11d38f40c7899a40829f9a42f9b648b836a3614b2cb85267c38fdfeac": {
-      "encoding": "base64",
-      "byte_size": 255,
-      "content": "T0ZGCjEyIDIwIDAKMSAxIDAKMSAyIDAKMSAwIDAKMSAyIDEKMSAwIDEKMSAwIDIKMSAxIDIKMSAyIDIKMCAwIDAKMCAyIDAKMCAwIDIKMCAyIDIKMyAwIDkgMQozIDYgMTEgMTAKMyA4IDIgNAozIDUgMTAgNAozIDEgOSAzCjMgMTEgNyAzCjMgOSA4IDEwCjMgOSAxMCAxMQozIDExIDMgOQozIDkgMCA4CjMgOCAwIDIKMyA2IDEwIDUKMyA4IDQgMTAKMyA3IDExIDYKMyAxIDQgMAozIDUgMyA2CjMgNyA2IDMKMyA1IDEgMwozIDIgMCA0CjMgMSA1IDQK"
-    },
-    "c39eb2fac5f013939f4644132144837f0cadcbe5d5c36f04f6a100054c96d268": {
-      "encoding": "base64",
-      "byte_size": 362,
-      "content": "T0ZGCjE2IDI4IDAKMSAxIDAKMSAyIDAKMSAwIDAKMSAyIDEKMiAyIDAKMiAxIDAKMiAyIDEKMiAwIDAKMSAwIDEKMiAwIDEKMiAxIDIKMiAwIDIKMiAyIDIKMSAwIDIKMSAxIDIKMSAyIDIKMyAwIDUgMgozIDE0IDEwIDEyCjMgNCAxIDMKMyA0IDAgMQozIDUgMCA0CjMgNSA3IDIKMyA5IDExIDgKMyA5IDggMgozIDIgNyA5CjMgMTMgMTEgMTAKMyAxMCAxNCAxMwozIDExIDEzIDgKMyAxNSAxNCAxMgozIDYgNCAzCjMgNiAzIDE1CjMgMTUgMTIgNgozIDUgNiA3CjMgMTAgOSAxMgozIDYgNSA0CjMgNiAxMiA3CjMgOSAxMCAxMQozIDkgNyAxMgozIDAgOCAxCjMgMTQgMyAxMwozIDMgMTQgMTUKMyAzIDEgMTMKMyA4IDAgMgozIDggMTMgMQo="
-    },
-    "ea9f34b3b91c7f5144cbd28eca888d34ebc238053b5f4563b98b8a6e33c78bfe": {
-      "encoding": "base64",
-      "byte_size": 375,
-      "content": "T0ZGCjE2IDI0IDAKMCAwIDAKMiAwIDIKMCAyIDIKMiAyIDIKMiAwIDAKMiAyIDAKMCAyIDAKMCAwIDIKMC41IDAuNSAwLjUKMS41IDAuNSAxLjUKMC41IDEuNSAxLjUKMS41IDEuNSAxLjUKMS41IDAuNSAwLjUKMS41IDEuNSAwLjUKMC41IDEuNSAwLjUKMC41IDAuNSAxLjUKMyAwIDYgNQozIDAgNSA0CjMgNyAxIDMKMyA3IDMgMgozIDAgNCAxCjMgMCAxIDcKMyA0IDUgMwozIDQgMyAxCjMgNSA2IDIKMyA1IDIgMwozIDYgMCA3CjMgNiA3IDIKMyAxMyAxNCA4CjMgMTIgMTMgOAozIDExIDkgMTUKMyAxMCAxMSAxNQozIDkgMTIgOAozIDE1IDkgOAozIDExIDEzIDEyCjMgOSAxMSAxMgozIDEwIDE0IDEzCjMgMTEgMTAgMTMKMyAxNSA4IDE0CjMgMTAgMTUgMTQK"
-    },
-    "fb2f1370c0c77210374d75f08547ca9f42a5a15faf892a38fd4ee7673a92b00a": {
-      "encoding": "base64",
-      "byte_size": 944,
-      "content": "eyJiaW5kaW5ncyI6eyJjYW5kaWRhdGVfc2hhMjU2IjoiMjA4NjdhYjM0MTJlMTQzMTlhODNiNDU4NzRmNDBhMmNlNWU3ZDg1MTE3YjU4NTI5YzE1OWQ5N2QwMmU0ZjJjYiIsIm9wZXJhdGlvbl9wYXJhbWV0ZXIiOiJpbnRlcnNlY3Rpb24iLCJzb3VyY2VfYV9zaGEyNTYiOiI3MjdiZWRkNWQxMzcxMmU3NTA2ZTE1YWViMWVhMzViNWRhNjYwYmYyMTQzYmYyOGU4ZjI1N2IwYWE3ZWIyMTY0Iiwic291cmNlX2Jfc2hhMjU2IjoiODU3Mzk4ZGMxYWYwZmY3YzkzOGMwOGMyZWJkYjdlMDAzNTJmNzNhNTcxZDZmNmZiYWEzYWQ0OTEzYzAxYTVmYSIsInVuaXQiOiJtbSJ9LCJjaGVja3MiOnsiY2FuZGlkYXRlX2V4YWN0X3ZvbHVtZSI6IjEiLCJjbG9zZWRfb3JfY2Fub25pY2FsX2VtcHR5Ijp0cnVlLCJlbXB0eV9yZWFzb24iOiIiLCJleGFjdF92b2x1bWVfbWF0Y2hlc19yZWZlcmVuY2UiOnRydWUsIm11dHVhbF9leGFjdF9kaWZmZXJlbmNlX2VtcHR5Ijp0cnVlLCJvcGVyYXRpb25fY2xhc3NpZmljYXRpb25fbWF0Y2hlcyI6dHJ1ZSwib3BlcmF0aW9uX3BhcmFtZXRlcl9ib3VuZCI6dHJ1ZSwicmVmZXJlbmNlX2V4YWN0X3ZvbHVtZSI6IjEiLCJyZXN1bHRfc3RhdHVzIjoidm9sdW1lIiwicmVzdWx0X3N0YXR1c19tYXRjaGVzX3JlZmVyZW5jZSI6dHJ1ZSwic2VsZl9pbnRlcnNlY3Rpb25fZnJlZSI6dHJ1ZSwidG9wb2xvZ3lfdmFsaWQiOnRydWUsInZvbHVtZV9ib3VuZGFyeV9vcmllbnRhdGlvbl92YWxpZCI6dHJ1ZX0sIm9wZXJhdGlvbiI6ImludGVyc2VjdGlvbiIsInBhc3NlZCI6dHJ1ZSwic2NoZW1hIjoiVmFsaWRhdGlvblJlcG9ydC92MSIsInNjaGVtYV92ZXJzaW9uIjoxLCJzdGF0dXMiOiJwYXNzIiwidmFsaWRhdGVzIjoibWVzaC5ib29sZWFuLmludGVyc2VjdGlvbiIsInZhbGlkYXRvcl9pZCI6Im1lc2gudmFsaWRhdGUuYm9vbGVhbl9pbnRlcnNlY3Rpb24ifQo="
+      "byte_size": 299,
+      "content": "eyJhbGxfb3JpZ2luYWxfcG9pbnRzX2VuY2xvc2VkIjp0cnVlLCJib3VuZGFyeV9wb2ludF9jb3VudCI6OCwiY2xvc2VkIjp0cnVlLCJpbnNpZGVfcG9pbnRfY291bnQiOjEsIm9yaWdpbmFsX3BvaW50X2NvdW50Ijo5LCJvdXR3YXJkX29yaWVudGVkIjp0cnVlLCJwb3NpdGl2ZV92b2x1bWUiOnRydWUsInN0YXR1cyI6InBhc3MiLCJzdHJvbmdseV9jb252ZXgiOnRydWUsInRyaWFuZ3VsYXRlZCI6dHJ1ZSwidmFsaWQiOnRydWUsInZvbHVtZSI6eyJhcHByb3hpbWF0ZSI6OC4wLCJleGFjdCI6IjgiLCJ1bml0IjoibW1eMyJ9fQo="
     }
   },
   "reports": {
-    "fdf396c645b9e67378f4bbfe99a56695d804783c1171124fda435fffbdc7421e": {
-      "bindings": {
-        "candidate_sha256": "8761ffb76bc4ad5ef958bf6d5c8d18e1000e7a5851a5d06499fef09390cfa1a5",
-        "operation_parameter": "union",
-        "source_a_sha256": "727bedd5d13712e7506e15aeb1ea35b5da660bf2143bf28e8f257b0aa7eb2164",
-        "source_b_sha256": "76773013b165e44ba4f7668144a74ea31cb43fc61bd102d3d368f16ca4adc7c9",
-        "unit": "mm"
+    "cf3cc07096e6491cd551d551c9f5ecdc7e20ac99ca624885b55cee006773913f": {
+      "area": {
+        "approximate": 9.0,
+        "exact": "9",
+        "unit": "mm^2"
       },
+      "boundary_point_count": 14,
       "checks": {
-        "candidate_exact_volume": "12",
-        "closed_or_canonical_empty": true,
-        "empty_reason": "",
-        "exact_volume_matches_reference": true,
-        "mutual_exact_difference_empty": true,
-        "operation_classification_matches": true,
-        "operation_parameter_bound": true,
-        "reference_exact_volume": "12",
-        "result_status": "volume",
-        "result_status_matches_reference": true,
-        "self_intersection_free": true,
-        "topology_valid": true,
-        "volume_boundary_orientation_valid": true
+        "all_source_points_enclosed": true,
+        "minimal_convex_enclosure": true,
+        "simple_ring": true,
+        "strictly_convex_counterclockwise": true,
+        "vertices_are_source_points": true
       },
-      "operation": "union",
+      "distinct_source_point_count": 20,
+      "hull_vertex_count": 4,
+      "independence": "exact orientation predicates and order-change test; CGAL::convex_hull_2 is not called",
       "passed": true,
-      "schema": "ValidationReport/v1",
-      "schema_version": 1,
+      "source_point_count": 21,
       "status": "pass",
-      "validates": "mesh.boolean.union",
-      "validator_id": "mesh.validate.boolean_union"
+      "validator": "hull.validate.convex_enclosure_2"
     },
-    "25c595826cfbbb63caaa233e5316f0d3d257e9087f5278bf8378349c64726ef6": {
-      "bindings": {
-        "candidate_sha256": "c39eb2fac5f013939f4644132144837f0cadcbe5d5c36f04f6a100054c96d268",
-        "operation_parameter": "intersection",
-        "source_a_sha256": "727bedd5d13712e7506e15aeb1ea35b5da660bf2143bf28e8f257b0aa7eb2164",
-        "source_b_sha256": "76773013b165e44ba4f7668144a74ea31cb43fc61bd102d3d368f16ca4adc7c9",
-        "unit": "mm"
-      },
-      "checks": {
-        "candidate_exact_volume": "4",
-        "closed_or_canonical_empty": true,
-        "empty_reason": "",
-        "exact_volume_matches_reference": true,
-        "mutual_exact_difference_empty": true,
-        "operation_classification_matches": true,
-        "operation_parameter_bound": true,
-        "reference_exact_volume": "4",
-        "result_status": "volume",
-        "result_status_matches_reference": true,
-        "self_intersection_free": true,
-        "topology_valid": true,
-        "volume_boundary_orientation_valid": true
-      },
-      "operation": "intersection",
-      "passed": true,
-      "schema": "ValidationReport/v1",
-      "schema_version": 1,
+    "8ed57de16bb602e647790f7c3b1b6394ebb3ee2f0556a021c2cd68b4fbc2532c": {
+      "all_original_points_enclosed": true,
+      "boundary_point_count": 8,
+      "closed": true,
+      "inside_point_count": 1,
+      "original_point_count": 9,
+      "outward_oriented": true,
+      "positive_volume": true,
       "status": "pass",
-      "validates": "mesh.boolean.intersection",
-      "validator_id": "mesh.validate.boolean_intersection"
-    },
-    "8b022423165662c214758225740a80093557fa8fb3b475a39ade1767af03e610": {
-      "bindings": {
-        "candidate_sha256": "bcfb3ed11d38f40c7899a40829f9a42f9b648b836a3614b2cb85267c38fdfeac",
-        "operation_parameter": "difference",
-        "source_a_sha256": "727bedd5d13712e7506e15aeb1ea35b5da660bf2143bf28e8f257b0aa7eb2164",
-        "source_b_sha256": "76773013b165e44ba4f7668144a74ea31cb43fc61bd102d3d368f16ca4adc7c9",
-        "unit": "mm"
-      },
-      "checks": {
-        "candidate_exact_volume": "4",
-        "closed_or_canonical_empty": true,
-        "empty_reason": "",
-        "exact_volume_matches_reference": true,
-        "mutual_exact_difference_empty": true,
-        "operation_classification_matches": true,
-        "operation_parameter_bound": true,
-        "reference_exact_volume": "4",
-        "result_status": "volume",
-        "result_status_matches_reference": true,
-        "self_intersection_free": true,
-        "topology_valid": true,
-        "volume_boundary_orientation_valid": true
-      },
-      "operation": "difference",
-      "passed": true,
-      "schema": "ValidationReport/v1",
-      "schema_version": 1,
-      "status": "pass",
-      "validates": "mesh.boolean.difference",
-      "validator_id": "mesh.validate.boolean_difference"
-    },
-    "39344b095c83e9592c5d5392d87a8f1147710d42c278388e4aaa8958be4716cc": {
-      "bindings": {
-        "candidate_sha256": "3a5789c6b4fc57340ea09a5a66c7dbf16c29f32a11f4c7a336eade6769abb913",
-        "operation_parameter": "union",
-        "source_a_sha256": "727bedd5d13712e7506e15aeb1ea35b5da660bf2143bf28e8f257b0aa7eb2164",
-        "source_b_sha256": "6663ab0ca3e8b2cbf6965eb22f29b84ef47fa2114a180283720d73cebda9fdce",
-        "unit": "mm"
-      },
-      "checks": {
-        "candidate_exact_volume": "16",
-        "closed_or_canonical_empty": true,
-        "empty_reason": "",
-        "exact_volume_matches_reference": true,
-        "mutual_exact_difference_empty": true,
-        "operation_classification_matches": true,
-        "operation_parameter_bound": true,
-        "reference_exact_volume": "16",
-        "result_status": "volume",
-        "result_status_matches_reference": true,
-        "self_intersection_free": true,
-        "topology_valid": true,
-        "volume_boundary_orientation_valid": true
-      },
-      "operation": "union",
-      "passed": true,
-      "schema": "ValidationReport/v1",
-      "schema_version": 1,
-      "status": "pass",
-      "validates": "mesh.boolean.union",
-      "validator_id": "mesh.validate.boolean_union"
-    },
-    "87ca40c29f4f93fa3520b2e86601475544277bf2233458c635f0735e0f3446af": {
-      "bindings": {
-        "candidate_sha256": "20867ab3412e14319a83b45874f40a2ce5e7d85117b58529c159d97d02e4f2cb",
-        "operation_parameter": "intersection",
-        "source_a_sha256": "727bedd5d13712e7506e15aeb1ea35b5da660bf2143bf28e8f257b0aa7eb2164",
-        "source_b_sha256": "857398dc1af0ff7c938c08c2ebdb7e00352f73a571d6f6fbaa3ad4913c01a5fa",
-        "unit": "mm"
-      },
-      "checks": {
-        "candidate_exact_volume": "1",
-        "closed_or_canonical_empty": true,
-        "empty_reason": "",
-        "exact_volume_matches_reference": true,
-        "mutual_exact_difference_empty": true,
-        "operation_classification_matches": true,
-        "operation_parameter_bound": true,
-        "reference_exact_volume": "1",
-        "result_status": "volume",
-        "result_status_matches_reference": true,
-        "self_intersection_free": true,
-        "topology_valid": true,
-        "volume_boundary_orientation_valid": true
-      },
-      "operation": "intersection",
-      "passed": true,
-      "schema": "ValidationReport/v1",
-      "schema_version": 1,
-      "status": "pass",
-      "validates": "mesh.boolean.intersection",
-      "validator_id": "mesh.validate.boolean_intersection"
-    },
-    "155377732c80ae8faf60d718741a44e297d4ef3be977e57fdd423600e1e2fcc4": {
-      "bindings": {
-        "candidate_sha256": "ea9f34b3b91c7f5144cbd28eca888d34ebc238053b5f4563b98b8a6e33c78bfe",
-        "operation_parameter": "difference",
-        "source_a_sha256": "727bedd5d13712e7506e15aeb1ea35b5da660bf2143bf28e8f257b0aa7eb2164",
-        "source_b_sha256": "857398dc1af0ff7c938c08c2ebdb7e00352f73a571d6f6fbaa3ad4913c01a5fa",
-        "unit": "mm"
-      },
-      "checks": {
-        "candidate_exact_volume": "7",
-        "closed_or_canonical_empty": true,
-        "empty_reason": "",
-        "exact_volume_matches_reference": true,
-        "mutual_exact_difference_empty": true,
-        "operation_classification_matches": true,
-        "operation_parameter_bound": true,
-        "reference_exact_volume": "7",
-        "result_status": "volume",
-        "result_status_matches_reference": true,
-        "self_intersection_free": true,
-        "topology_valid": true,
-        "volume_boundary_orientation_valid": true
-      },
-      "operation": "difference",
-      "passed": true,
-      "schema": "ValidationReport/v1",
-      "schema_version": 1,
-      "status": "pass",
-      "validates": "mesh.boolean.difference",
-      "validator_id": "mesh.validate.boolean_difference"
+      "strongly_convex": true,
+      "triangulated": true,
+      "valid": true,
+      "volume": {
+        "approximate": 8.0,
+        "exact": "8",
+        "unit": "mm^3"
+      }
     }
   },
   "operation_results": [
     {
-      "case_id": "union-overlap",
-      "operation_id": "mesh.boolean.union",
+      "case_id": "hull2-grid",
+      "operation_id": "hull.convex_2",
       "revision": 1,
       "worker_manifest_sha256": "fc3776ffc41b498e8b6e6e8737b7420653c8593001f689f97c14eae7d1a30d0a",
-      "test_id": "family-7.5-replay-cases",
+      "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
           {
             "artifact_id": "input-0",
-            "blob_sha256": "727bedd5d13712e7506e15aeb1ea35b5da660bf2143bf28e8f257b0aa7eb2164",
-            "format": "off",
-            "sha256": "727bedd5d13712e7506e15aeb1ea35b5da660bf2143bf28e8f257b0aa7eb2164",
-            "type": "TriangleSurfaceMesh",
-            "unit": "mm"
-          },
-          {
-            "artifact_id": "input-1",
-            "blob_sha256": "76773013b165e44ba4f7668144a74ea31cb43fc61bd102d3d368f16ca4adc7c9",
-            "format": "off",
-            "sha256": "76773013b165e44ba4f7668144a74ea31cb43fc61bd102d3d368f16ca4adc7c9",
-            "type": "TriangleSurfaceMesh",
+            "blob_sha256": "2edb3017cdb0e39e041a75284cf208f42b847c91ad938fab0eaafcfca219fbae",
+            "format": "json",
+            "sha256": "2edb3017cdb0e39e041a75284cf208f42b847c91ad938fab0eaafcfca219fbae",
+            "type": "PointSet2",
             "unit": "mm"
           }
         ],
@@ -4112,76 +3902,65 @@
           "memory_mb": 2048,
           "wall_time_ms": 120000
         },
-        "operation": "mesh.boolean.union",
-        "parameters": {
-          "operation": "union"
-        },
+        "operation": "hull.convex_2",
+        "parameters": {},
         "protocol": 1,
-        "request_id": "union-overlap"
+        "request_id": "hull2-grid"
       },
-      "request_sha256": "73f7bc9f8e00de59d7cae49011ce8ee0365ff834c194c05ee325c55b443a89d1",
+      "request_sha256": "9b5a87033961b6baef3a24b45e70226c5d1d82c7f70fb3dfe5dbc203e8d4b392",
       "response": {
         "metrics": {
-          "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
-          "empty_reason": "",
-          "exact_volume": "12",
-          "operation": "union",
-          "output_coordinate_storage": "IEEE-754 binary64 exact-only",
-          "output_faces": 44,
-          "output_vertices": 24,
-          "result_status": "volume",
-          "surfaces_contact": true,
-          "volume_unit": "mm^3"
+          "algorithm": "CGAL::convex_hull_2",
+          "area": {
+            "approximate": 9.0,
+            "exact": "9",
+            "unit": "mm^2"
+          },
+          "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+          "hull_vertex_count": 4,
+          "input_point_count": 21,
+          "orientation": "counterclockwise"
         },
         "outputs": [
           {
-            "blob_sha256": "8761ffb76bc4ad5ef958bf6d5c8d18e1000e7a5851a5d06499fef09390cfa1a5",
-            "format": "off",
-            "slot": "geometry",
-            "type": "TriangleSurfaceMesh",
+            "blob_sha256": "7f594ce10b265c535f21e5a534542a32447060270fa83853e2b1362cc2b89792",
+            "format": "json",
+            "slot": "polygon",
+            "type": "Polygon2",
             "unit": "mm"
           }
         ],
         "protocol": 1,
-        "request_id": "union-overlap",
+        "request_id": "hull2-grid",
         "status": "ok"
       },
-      "response_sha256": "a0965e142f3d727a4c6eabf744333878a187400d0824577b58e40d823696825a",
+      "response_sha256": "8e75d33e87c2ef489091caab95be9789a92cb8eaf48a0f6fbc70d6c3401353c8",
       "input_hashes": [
-        "727bedd5d13712e7506e15aeb1ea35b5da660bf2143bf28e8f257b0aa7eb2164",
-        "76773013b165e44ba4f7668144a74ea31cb43fc61bd102d3d368f16ca4adc7c9"
+        "2edb3017cdb0e39e041a75284cf208f42b847c91ad938fab0eaafcfca219fbae"
       ],
       "output_hashes": [
-        "8761ffb76bc4ad5ef958bf6d5c8d18e1000e7a5851a5d06499fef09390cfa1a5"
+        "7f594ce10b265c535f21e5a534542a32447060270fa83853e2b1362cc2b89792"
       ],
       "validators": [
         {
-          "operation_id": "mesh.validate.boolean_union",
+          "operation_id": "hull.validate.convex_enclosure_2",
           "revision": 1,
           "request": {
             "inputs": [
               {
-                "artifact_id": "union-overlap-geometry-0",
-                "blob_sha256": "8761ffb76bc4ad5ef958bf6d5c8d18e1000e7a5851a5d06499fef09390cfa1a5",
-                "format": "off",
-                "sha256": "8761ffb76bc4ad5ef958bf6d5c8d18e1000e7a5851a5d06499fef09390cfa1a5",
-                "type": "TriangleSurfaceMesh",
+                "artifact_id": "hull2-grid-polygon-0",
+                "blob_sha256": "7f594ce10b265c535f21e5a534542a32447060270fa83853e2b1362cc2b89792",
+                "format": "json",
+                "sha256": "7f594ce10b265c535f21e5a534542a32447060270fa83853e2b1362cc2b89792",
+                "type": "Polygon2",
                 "unit": "mm"
               },
               {
                 "artifact_id": "input-0",
-                "blob_sha256": "727bedd5d13712e7506e15aeb1ea35b5da660bf2143bf28e8f257b0aa7eb2164",
-                "format": "off",
-                "sha256": "727bedd5d13712e7506e15aeb1ea35b5da660bf2143bf28e8f257b0aa7eb2164",
-                "type": "TriangleSurfaceMesh",
-                "unit": "mm"
-              },
-              {
-                "artifact_id": "input-1",
-                "blob_sha256": "76773013b165e44ba4f7668144a74ea31cb43fc61bd102d3d368f16ca4adc7c9",
-                "format": "off",
-                "sha256": "76773013b165e44ba4f7668144a74ea31cb43fc61bd102d3d368f16ca4adc7c9",
-                "type": "TriangleSurfaceMesh",
+                "blob_sha256": "2edb3017cdb0e39e041a75284cf208f42b847c91ad938fab0eaafcfca219fbae",
+                "format": "json",
+                "sha256": "2edb3017cdb0e39e041a75284cf208f42b847c91ad938fab0eaafcfca219fbae",
+                "type": "PointSet2",
                 "unit": "mm"
               }
             ],
@@ -4190,26 +3969,38 @@
               "memory_mb": 2048,
               "wall_time_ms": 120000
             },
-            "operation": "mesh.validate.boolean_union",
-            "parameters": {
-              "operation": "union"
-            },
+            "operation": "hull.validate.convex_enclosure_2",
+            "parameters": {},
             "protocol": 1,
-            "request_id": "union-overlap--mesh.validate.boolean_union"
+            "request_id": "hull2-grid--hull.validate.convex_enclosure_2"
           },
-          "request_sha256": "2f3a4de032d15f6109ca8bfbc7dea2728e92db4822a447ab45480fe7a76cc95a",
+          "request_sha256": "70512592fa606f863c1d4aba70b6614d17792e46abd84550f7d1f5aeb56b6373",
           "response": {
             "metrics": {
-              "candidate_sha256": "8761ffb76bc4ad5ef958bf6d5c8d18e1000e7a5851a5d06499fef09390cfa1a5",
+              "area": {
+                "approximate": 9.0,
+                "exact": "9",
+                "unit": "mm^2"
+              },
+              "boundary_point_count": 14,
+              "checks": {
+                "all_source_points_enclosed": true,
+                "minimal_convex_enclosure": true,
+                "simple_ring": true,
+                "strictly_convex_counterclockwise": true,
+                "vertices_are_source_points": true
+              },
+              "distinct_source_point_count": 20,
+              "hull_vertex_count": 4,
+              "independence": "exact orientation predicates and order-change test; CGAL::convex_hull_2 is not called",
               "passed": true,
-              "result_status": "volume",
-              "source_a_sha256": "727bedd5d13712e7506e15aeb1ea35b5da660bf2143bf28e8f257b0aa7eb2164",
-              "source_b_sha256": "76773013b165e44ba4f7668144a74ea31cb43fc61bd102d3d368f16ca4adc7c9",
-              "validator_id": "mesh.validate.boolean_union"
+              "source_point_count": 21,
+              "status": "pass",
+              "validator": "hull.validate.convex_enclosure_2"
             },
             "outputs": [
               {
-                "blob_sha256": "0b823c20cc4f837d99f3b6d066b8433a39688017d61e0825f9dcb5cb6214fbf2",
+                "blob_sha256": "9562981785738be43d066ae2f6264ac6d4124bf9059c7c9b2169cb2b4c1bf7e5",
                 "format": "json",
                 "slot": "validation",
                 "type": "ValidationReport",
@@ -4217,20 +4008,19 @@
               }
             ],
             "protocol": 1,
-            "request_id": "union-overlap--mesh.validate.boolean_union",
+            "request_id": "hull2-grid--hull.validate.convex_enclosure_2",
             "status": "ok"
           },
-          "response_sha256": "d85cd2db5f9a0a8100edfe216e65b31fe8b62b64d013e5e05078d67bc7a2fd3f",
+          "response_sha256": "2d0e304439616d1f9611c4fcf97df5f822ffa03154ef0a8f153865b361a28018",
           "input_hashes": [
-            "8761ffb76bc4ad5ef958bf6d5c8d18e1000e7a5851a5d06499fef09390cfa1a5",
-            "727bedd5d13712e7506e15aeb1ea35b5da660bf2143bf28e8f257b0aa7eb2164",
-            "76773013b165e44ba4f7668144a74ea31cb43fc61bd102d3d368f16ca4adc7c9"
+            "7f594ce10b265c535f21e5a534542a32447060270fa83853e2b1362cc2b89792",
+            "2edb3017cdb0e39e041a75284cf208f42b847c91ad938fab0eaafcfca219fbae"
           ],
           "output_hashes": [
-            "0b823c20cc4f837d99f3b6d066b8433a39688017d61e0825f9dcb5cb6214fbf2"
+            "9562981785738be43d066ae2f6264ac6d4124bf9059c7c9b2169cb2b4c1bf7e5"
           ],
-          "report_blob_sha256": "0b823c20cc4f837d99f3b6d066b8433a39688017d61e0825f9dcb5cb6214fbf2",
-          "report_sha256": "fdf396c645b9e67378f4bbfe99a56695d804783c1171124fda435fffbdc7421e",
+          "report_blob_sha256": "9562981785738be43d066ae2f6264ac6d4124bf9059c7c9b2169cb2b4c1bf7e5",
+          "report_sha256": "cf3cc07096e6491cd551d551c9f5ecdc7e20ac99ca624885b55cee006773913f",
           "status": "pass"
         }
       ],
@@ -4242,37 +4032,29 @@
           },
           "behaviour_assertions": {
             "pass": true,
-            "count": 4
+            "count": 6
           },
-          "validator:mesh.validate.boolean_union": {
+          "validator:hull.validate.convex_enclosure_2": {
             "pass": true,
-            "report_sha256": "fdf396c645b9e67378f4bbfe99a56695d804783c1171124fda435fffbdc7421e"
+            "report_sha256": "cf3cc07096e6491cd551d551c9f5ecdc7e20ac99ca624885b55cee006773913f"
           }
         }
       }
     },
     {
-      "case_id": "intersection-overlap",
-      "operation_id": "mesh.boolean.intersection",
+      "case_id": "hull3-cube",
+      "operation_id": "hull.convex_3",
       "revision": 1,
       "worker_manifest_sha256": "fc3776ffc41b498e8b6e6e8737b7420653c8593001f689f97c14eae7d1a30d0a",
-      "test_id": "family-7.5-replay-cases",
+      "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
           {
             "artifact_id": "input-0",
-            "blob_sha256": "727bedd5d13712e7506e15aeb1ea35b5da660bf2143bf28e8f257b0aa7eb2164",
-            "format": "off",
-            "sha256": "727bedd5d13712e7506e15aeb1ea35b5da660bf2143bf28e8f257b0aa7eb2164",
-            "type": "TriangleSurfaceMesh",
-            "unit": "mm"
-          },
-          {
-            "artifact_id": "input-1",
-            "blob_sha256": "76773013b165e44ba4f7668144a74ea31cb43fc61bd102d3d368f16ca4adc7c9",
-            "format": "off",
-            "sha256": "76773013b165e44ba4f7668144a74ea31cb43fc61bd102d3d368f16ca4adc7c9",
-            "type": "TriangleSurfaceMesh",
+            "blob_sha256": "299fc3e1e6363388d7fa80fcc86a297dde4740fd59f7d2fc628bdb0d27ae7a39",
+            "format": "xyz",
+            "sha256": "299fc3e1e6363388d7fa80fcc86a297dde4740fd59f7d2fc628bdb0d27ae7a39",
+            "type": "PointSet3",
             "unit": "mm"
           }
         ],
@@ -4281,30 +4063,27 @@
           "memory_mb": 2048,
           "wall_time_ms": 120000
         },
-        "operation": "mesh.boolean.intersection",
-        "parameters": {
-          "operation": "intersection"
-        },
+        "operation": "hull.convex_3",
+        "parameters": {},
         "protocol": 1,
-        "request_id": "intersection-overlap"
+        "request_id": "hull3-cube"
       },
-      "request_sha256": "cb02594533e37b291351456217c2922992be63ca4450fa10bba671b7f8845eb0",
+      "request_sha256": "b4fea850ca52b5ae7b3c160953cc3e1a6b06bdc272ed43d02b4607550354d19e",
       "response": {
         "metrics": {
           "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
-          "empty_reason": "",
-          "exact_volume": "4",
-          "operation": "intersection",
-          "output_coordinate_storage": "IEEE-754 binary64 exact-only",
-          "output_faces": 28,
-          "output_vertices": 16,
-          "result_status": "volume",
-          "surfaces_contact": true,
-          "volume_unit": "mm^3"
+          "hull_face_count": 12,
+          "hull_vertex_count": 8,
+          "input_point_count": 9,
+          "volume": {
+            "approximate": 8.0,
+            "exact": "8",
+            "unit": "mm^3"
+          }
         },
         "outputs": [
           {
-            "blob_sha256": "c39eb2fac5f013939f4644132144837f0cadcbe5d5c36f04f6a100054c96d268",
+            "blob_sha256": "2d00fc5801c798e52cdfd7f4b1ef79db1395fa517810c85b03ffeaea78d17118",
             "format": "off",
             "slot": "geometry",
             "type": "TriangleSurfaceMesh",
@@ -4312,45 +4091,36 @@
           }
         ],
         "protocol": 1,
-        "request_id": "intersection-overlap",
+        "request_id": "hull3-cube",
         "status": "ok"
       },
-      "response_sha256": "2abe0cc33269b60a2a2bdfe5893545c2befe5646a5ca3efcc2df719ddce27c78",
+      "response_sha256": "2ba585f1d763794e1d0befc5ed38d6021c85bef4e59b0f2d478a461baceccf1d",
       "input_hashes": [
-        "727bedd5d13712e7506e15aeb1ea35b5da660bf2143bf28e8f257b0aa7eb2164",
-        "76773013b165e44ba4f7668144a74ea31cb43fc61bd102d3d368f16ca4adc7c9"
+        "299fc3e1e6363388d7fa80fcc86a297dde4740fd59f7d2fc628bdb0d27ae7a39"
       ],
       "output_hashes": [
-        "c39eb2fac5f013939f4644132144837f0cadcbe5d5c36f04f6a100054c96d268"
+        "2d00fc5801c798e52cdfd7f4b1ef79db1395fa517810c85b03ffeaea78d17118"
       ],
       "validators": [
         {
-          "operation_id": "mesh.validate.boolean_intersection",
+          "operation_id": "hull.validate.convex_enclosure",
           "revision": 1,
           "request": {
             "inputs": [
               {
-                "artifact_id": "intersection-overlap-geometry-0",
-                "blob_sha256": "c39eb2fac5f013939f4644132144837f0cadcbe5d5c36f04f6a100054c96d268",
+                "artifact_id": "hull3-cube-geometry-0",
+                "blob_sha256": "2d00fc5801c798e52cdfd7f4b1ef79db1395fa517810c85b03ffeaea78d17118",
                 "format": "off",
-                "sha256": "c39eb2fac5f013939f4644132144837f0cadcbe5d5c36f04f6a100054c96d268",
+                "sha256": "2d00fc5801c798e52cdfd7f4b1ef79db1395fa517810c85b03ffeaea78d17118",
                 "type": "TriangleSurfaceMesh",
                 "unit": "mm"
               },
               {
                 "artifact_id": "input-0",
-                "blob_sha256": "727bedd5d13712e7506e15aeb1ea35b5da660bf2143bf28e8f257b0aa7eb2164",
-                "format": "off",
-                "sha256": "727bedd5d13712e7506e15aeb1ea35b5da660bf2143bf28e8f257b0aa7eb2164",
-                "type": "TriangleSurfaceMesh",
-                "unit": "mm"
-              },
-              {
-                "artifact_id": "input-1",
-                "blob_sha256": "76773013b165e44ba4f7668144a74ea31cb43fc61bd102d3d368f16ca4adc7c9",
-                "format": "off",
-                "sha256": "76773013b165e44ba4f7668144a74ea31cb43fc61bd102d3d368f16ca4adc7c9",
-                "type": "TriangleSurfaceMesh",
+                "blob_sha256": "299fc3e1e6363388d7fa80fcc86a297dde4740fd59f7d2fc628bdb0d27ae7a39",
+                "format": "xyz",
+                "sha256": "299fc3e1e6363388d7fa80fcc86a297dde4740fd59f7d2fc628bdb0d27ae7a39",
+                "type": "PointSet3",
                 "unit": "mm"
               }
             ],
@@ -4359,26 +4129,34 @@
               "memory_mb": 2048,
               "wall_time_ms": 120000
             },
-            "operation": "mesh.validate.boolean_intersection",
-            "parameters": {
-              "operation": "intersection"
-            },
+            "operation": "hull.validate.convex_enclosure",
+            "parameters": {},
             "protocol": 1,
-            "request_id": "intersection-overlap--mesh.validate.boolean_intersection"
+            "request_id": "hull3-cube--hull.validate.convex_enclosure"
           },
-          "request_sha256": "600634d514d26c790fcfa8ec2d98349bdbeb2bef4b55fbc4eb09b031eb6e109d",
+          "request_sha256": "ac81c70f93f538784a464c696b4f4d8e88c20627e07f999ed8bd5598ba750c59",
           "response": {
             "metrics": {
-              "candidate_sha256": "c39eb2fac5f013939f4644132144837f0cadcbe5d5c36f04f6a100054c96d268",
-              "passed": true,
-              "result_status": "volume",
-              "source_a_sha256": "727bedd5d13712e7506e15aeb1ea35b5da660bf2143bf28e8f257b0aa7eb2164",
-              "source_b_sha256": "76773013b165e44ba4f7668144a74ea31cb43fc61bd102d3d368f16ca4adc7c9",
-              "validator_id": "mesh.validate.boolean_intersection"
+              "all_original_points_enclosed": true,
+              "boundary_point_count": 8,
+              "closed": true,
+              "inside_point_count": 1,
+              "original_point_count": 9,
+              "outward_oriented": true,
+              "positive_volume": true,
+              "status": "pass",
+              "strongly_convex": true,
+              "triangulated": true,
+              "valid": true,
+              "volume": {
+                "approximate": 8.0,
+                "exact": "8",
+                "unit": "mm^3"
+              }
             },
             "outputs": [
               {
-                "blob_sha256": "98faf277f83e8429826e64f513222129ddb31952575c2f25d865860126c27324",
+                "blob_sha256": "beb076dd222cc589655d9150102dd79a211351e2ae23b87b89dee7d84730a236",
                 "format": "json",
                 "slot": "validation",
                 "type": "ValidationReport",
@@ -4386,20 +4164,19 @@
               }
             ],
             "protocol": 1,
-            "request_id": "intersection-overlap--mesh.validate.boolean_intersection",
+            "request_id": "hull3-cube--hull.validate.convex_enclosure",
             "status": "ok"
           },
-          "response_sha256": "4aca8c82079af321239c420f006b729bad3990d753d4ab91880f9f2dd8bcc087",
+          "response_sha256": "46fed2c4f766665d6c9e23919c759fe7f5ccd4ef8ecfa7a8fb382cccffb1b5bf",
           "input_hashes": [
-            "c39eb2fac5f013939f4644132144837f0cadcbe5d5c36f04f6a100054c96d268",
-            "727bedd5d13712e7506e15aeb1ea35b5da660bf2143bf28e8f257b0aa7eb2164",
-            "76773013b165e44ba4f7668144a74ea31cb43fc61bd102d3d368f16ca4adc7c9"
+            "2d00fc5801c798e52cdfd7f4b1ef79db1395fa517810c85b03ffeaea78d17118",
+            "299fc3e1e6363388d7fa80fcc86a297dde4740fd59f7d2fc628bdb0d27ae7a39"
           ],
           "output_hashes": [
-            "98faf277f83e8429826e64f513222129ddb31952575c2f25d865860126c27324"
+            "beb076dd222cc589655d9150102dd79a211351e2ae23b87b89dee7d84730a236"
           ],
-          "report_blob_sha256": "98faf277f83e8429826e64f513222129ddb31952575c2f25d865860126c27324",
-          "report_sha256": "25c595826cfbbb63caaa233e5316f0d3d257e9087f5278bf8378349c64726ef6",
+          "report_blob_sha256": "beb076dd222cc589655d9150102dd79a211351e2ae23b87b89dee7d84730a236",
+          "report_sha256": "8ed57de16bb602e647790f7c3b1b6394ebb3ee2f0556a021c2cd68b4fbc2532c",
           "status": "pass"
         }
       ],
@@ -4411,715 +4188,31 @@
           },
           "behaviour_assertions": {
             "pass": true,
-            "count": 3
+            "count": 5
           },
-          "validator:mesh.validate.boolean_intersection": {
+          "validator:hull.validate.convex_enclosure": {
             "pass": true,
-            "report_sha256": "25c595826cfbbb63caaa233e5316f0d3d257e9087f5278bf8378349c64726ef6"
-          }
-        }
-      }
-    },
-    {
-      "case_id": "difference-overlap",
-      "operation_id": "mesh.boolean.difference",
-      "revision": 1,
-      "worker_manifest_sha256": "fc3776ffc41b498e8b6e6e8737b7420653c8593001f689f97c14eae7d1a30d0a",
-      "test_id": "family-7.5-replay-cases",
-      "request": {
-        "inputs": [
-          {
-            "artifact_id": "input-0",
-            "blob_sha256": "727bedd5d13712e7506e15aeb1ea35b5da660bf2143bf28e8f257b0aa7eb2164",
-            "format": "off",
-            "sha256": "727bedd5d13712e7506e15aeb1ea35b5da660bf2143bf28e8f257b0aa7eb2164",
-            "type": "TriangleSurfaceMesh",
-            "unit": "mm"
-          },
-          {
-            "artifact_id": "input-1",
-            "blob_sha256": "76773013b165e44ba4f7668144a74ea31cb43fc61bd102d3d368f16ca4adc7c9",
-            "format": "off",
-            "sha256": "76773013b165e44ba4f7668144a74ea31cb43fc61bd102d3d368f16ca4adc7c9",
-            "type": "TriangleSurfaceMesh",
-            "unit": "mm"
-          }
-        ],
-        "kernel": "package_recommended",
-        "limits": {
-          "memory_mb": 2048,
-          "wall_time_ms": 120000
-        },
-        "operation": "mesh.boolean.difference",
-        "parameters": {
-          "operation": "difference"
-        },
-        "protocol": 1,
-        "request_id": "difference-overlap"
-      },
-      "request_sha256": "a8b046bc81d8f79b66fe18b68e0943a9d71d79d7004cb46866333a55b73b1578",
-      "response": {
-        "metrics": {
-          "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
-          "empty_reason": "",
-          "exact_volume": "4",
-          "operation": "difference",
-          "output_coordinate_storage": "IEEE-754 binary64 exact-only",
-          "output_faces": 20,
-          "output_vertices": 12,
-          "result_status": "volume",
-          "surfaces_contact": true,
-          "volume_unit": "mm^3"
-        },
-        "outputs": [
-          {
-            "blob_sha256": "bcfb3ed11d38f40c7899a40829f9a42f9b648b836a3614b2cb85267c38fdfeac",
-            "format": "off",
-            "slot": "geometry",
-            "type": "TriangleSurfaceMesh",
-            "unit": "mm"
-          }
-        ],
-        "protocol": 1,
-        "request_id": "difference-overlap",
-        "status": "ok"
-      },
-      "response_sha256": "8bb304bdbb3ff38b7c660e29a2d2426a95b0639258a28594bc113ac0ad290a8e",
-      "input_hashes": [
-        "727bedd5d13712e7506e15aeb1ea35b5da660bf2143bf28e8f257b0aa7eb2164",
-        "76773013b165e44ba4f7668144a74ea31cb43fc61bd102d3d368f16ca4adc7c9"
-      ],
-      "output_hashes": [
-        "bcfb3ed11d38f40c7899a40829f9a42f9b648b836a3614b2cb85267c38fdfeac"
-      ],
-      "validators": [
-        {
-          "operation_id": "mesh.validate.boolean_difference",
-          "revision": 1,
-          "request": {
-            "inputs": [
-              {
-                "artifact_id": "difference-overlap-geometry-0",
-                "blob_sha256": "bcfb3ed11d38f40c7899a40829f9a42f9b648b836a3614b2cb85267c38fdfeac",
-                "format": "off",
-                "sha256": "bcfb3ed11d38f40c7899a40829f9a42f9b648b836a3614b2cb85267c38fdfeac",
-                "type": "TriangleSurfaceMesh",
-                "unit": "mm"
-              },
-              {
-                "artifact_id": "input-0",
-                "blob_sha256": "727bedd5d13712e7506e15aeb1ea35b5da660bf2143bf28e8f257b0aa7eb2164",
-                "format": "off",
-                "sha256": "727bedd5d13712e7506e15aeb1ea35b5da660bf2143bf28e8f257b0aa7eb2164",
-                "type": "TriangleSurfaceMesh",
-                "unit": "mm"
-              },
-              {
-                "artifact_id": "input-1",
-                "blob_sha256": "76773013b165e44ba4f7668144a74ea31cb43fc61bd102d3d368f16ca4adc7c9",
-                "format": "off",
-                "sha256": "76773013b165e44ba4f7668144a74ea31cb43fc61bd102d3d368f16ca4adc7c9",
-                "type": "TriangleSurfaceMesh",
-                "unit": "mm"
-              }
-            ],
-            "kernel": "package_recommended",
-            "limits": {
-              "memory_mb": 2048,
-              "wall_time_ms": 120000
-            },
-            "operation": "mesh.validate.boolean_difference",
-            "parameters": {
-              "operation": "difference"
-            },
-            "protocol": 1,
-            "request_id": "difference-overlap--mesh.validate.boolean_difference"
-          },
-          "request_sha256": "6a30928a75db72ddec4c776a9f5b0242c313013204af67edb81f198bee478c87",
-          "response": {
-            "metrics": {
-              "candidate_sha256": "bcfb3ed11d38f40c7899a40829f9a42f9b648b836a3614b2cb85267c38fdfeac",
-              "passed": true,
-              "result_status": "volume",
-              "source_a_sha256": "727bedd5d13712e7506e15aeb1ea35b5da660bf2143bf28e8f257b0aa7eb2164",
-              "source_b_sha256": "76773013b165e44ba4f7668144a74ea31cb43fc61bd102d3d368f16ca4adc7c9",
-              "validator_id": "mesh.validate.boolean_difference"
-            },
-            "outputs": [
-              {
-                "blob_sha256": "482b576b9d8ea479ec86794aed6eb3540920afe3c8f75156b1d898f502a6e620",
-                "format": "json",
-                "slot": "validation",
-                "type": "ValidationReport",
-                "unit": "none"
-              }
-            ],
-            "protocol": 1,
-            "request_id": "difference-overlap--mesh.validate.boolean_difference",
-            "status": "ok"
-          },
-          "response_sha256": "44acbb0ed979f4125bb4faaf9cb0f12f78a16d5036200af122a202b627ec3cb7",
-          "input_hashes": [
-            "bcfb3ed11d38f40c7899a40829f9a42f9b648b836a3614b2cb85267c38fdfeac",
-            "727bedd5d13712e7506e15aeb1ea35b5da660bf2143bf28e8f257b0aa7eb2164",
-            "76773013b165e44ba4f7668144a74ea31cb43fc61bd102d3d368f16ca4adc7c9"
-          ],
-          "output_hashes": [
-            "482b576b9d8ea479ec86794aed6eb3540920afe3c8f75156b1d898f502a6e620"
-          ],
-          "report_blob_sha256": "482b576b9d8ea479ec86794aed6eb3540920afe3c8f75156b1d898f502a6e620",
-          "report_sha256": "8b022423165662c214758225740a80093557fa8fb3b475a39ade1767af03e610",
-          "status": "pass"
-        }
-      ],
-      "validation": {
-        "status": "pass",
-        "checks": {
-          "transform_executed": {
-            "pass": true
-          },
-          "behaviour_assertions": {
-            "pass": true,
-            "count": 3
-          },
-          "validator:mesh.validate.boolean_difference": {
-            "pass": true,
-            "report_sha256": "8b022423165662c214758225740a80093557fa8fb3b475a39ade1767af03e610"
-          }
-        }
-      }
-    },
-    {
-      "case_id": "union-disjoint",
-      "operation_id": "mesh.boolean.union",
-      "revision": 1,
-      "worker_manifest_sha256": "fc3776ffc41b498e8b6e6e8737b7420653c8593001f689f97c14eae7d1a30d0a",
-      "test_id": "family-7.5-replay-cases",
-      "request": {
-        "inputs": [
-          {
-            "artifact_id": "input-0",
-            "blob_sha256": "727bedd5d13712e7506e15aeb1ea35b5da660bf2143bf28e8f257b0aa7eb2164",
-            "format": "off",
-            "sha256": "727bedd5d13712e7506e15aeb1ea35b5da660bf2143bf28e8f257b0aa7eb2164",
-            "type": "TriangleSurfaceMesh",
-            "unit": "mm"
-          },
-          {
-            "artifact_id": "input-1",
-            "blob_sha256": "6663ab0ca3e8b2cbf6965eb22f29b84ef47fa2114a180283720d73cebda9fdce",
-            "format": "off",
-            "sha256": "6663ab0ca3e8b2cbf6965eb22f29b84ef47fa2114a180283720d73cebda9fdce",
-            "type": "TriangleSurfaceMesh",
-            "unit": "mm"
-          }
-        ],
-        "kernel": "package_recommended",
-        "limits": {
-          "memory_mb": 2048,
-          "wall_time_ms": 120000
-        },
-        "operation": "mesh.boolean.union",
-        "parameters": {
-          "operation": "union"
-        },
-        "protocol": 1,
-        "request_id": "union-disjoint"
-      },
-      "request_sha256": "4e13a53d90e70569eec9ac8d3f8721fed3943505e69104eba78557c75b22661b",
-      "response": {
-        "metrics": {
-          "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
-          "empty_reason": "",
-          "exact_volume": "16",
-          "operation": "union",
-          "output_coordinate_storage": "IEEE-754 binary64 exact-only",
-          "output_faces": 24,
-          "output_vertices": 16,
-          "result_status": "volume",
-          "surfaces_contact": false,
-          "volume_unit": "mm^3"
-        },
-        "outputs": [
-          {
-            "blob_sha256": "3a5789c6b4fc57340ea09a5a66c7dbf16c29f32a11f4c7a336eade6769abb913",
-            "format": "off",
-            "slot": "geometry",
-            "type": "TriangleSurfaceMesh",
-            "unit": "mm"
-          }
-        ],
-        "protocol": 1,
-        "request_id": "union-disjoint",
-        "status": "ok"
-      },
-      "response_sha256": "c7396fa60e064fae100973ddbdcb8af55b3b9657e94634b6b7131eee13f2ffd0",
-      "input_hashes": [
-        "727bedd5d13712e7506e15aeb1ea35b5da660bf2143bf28e8f257b0aa7eb2164",
-        "6663ab0ca3e8b2cbf6965eb22f29b84ef47fa2114a180283720d73cebda9fdce"
-      ],
-      "output_hashes": [
-        "3a5789c6b4fc57340ea09a5a66c7dbf16c29f32a11f4c7a336eade6769abb913"
-      ],
-      "validators": [
-        {
-          "operation_id": "mesh.validate.boolean_union",
-          "revision": 1,
-          "request": {
-            "inputs": [
-              {
-                "artifact_id": "union-disjoint-geometry-0",
-                "blob_sha256": "3a5789c6b4fc57340ea09a5a66c7dbf16c29f32a11f4c7a336eade6769abb913",
-                "format": "off",
-                "sha256": "3a5789c6b4fc57340ea09a5a66c7dbf16c29f32a11f4c7a336eade6769abb913",
-                "type": "TriangleSurfaceMesh",
-                "unit": "mm"
-              },
-              {
-                "artifact_id": "input-0",
-                "blob_sha256": "727bedd5d13712e7506e15aeb1ea35b5da660bf2143bf28e8f257b0aa7eb2164",
-                "format": "off",
-                "sha256": "727bedd5d13712e7506e15aeb1ea35b5da660bf2143bf28e8f257b0aa7eb2164",
-                "type": "TriangleSurfaceMesh",
-                "unit": "mm"
-              },
-              {
-                "artifact_id": "input-1",
-                "blob_sha256": "6663ab0ca3e8b2cbf6965eb22f29b84ef47fa2114a180283720d73cebda9fdce",
-                "format": "off",
-                "sha256": "6663ab0ca3e8b2cbf6965eb22f29b84ef47fa2114a180283720d73cebda9fdce",
-                "type": "TriangleSurfaceMesh",
-                "unit": "mm"
-              }
-            ],
-            "kernel": "package_recommended",
-            "limits": {
-              "memory_mb": 2048,
-              "wall_time_ms": 120000
-            },
-            "operation": "mesh.validate.boolean_union",
-            "parameters": {
-              "operation": "union"
-            },
-            "protocol": 1,
-            "request_id": "union-disjoint--mesh.validate.boolean_union"
-          },
-          "request_sha256": "db1e03b3e2a385634f674846f4ae50409410bf65a48daf64bc9b69dcdba601fe",
-          "response": {
-            "metrics": {
-              "candidate_sha256": "3a5789c6b4fc57340ea09a5a66c7dbf16c29f32a11f4c7a336eade6769abb913",
-              "passed": true,
-              "result_status": "volume",
-              "source_a_sha256": "727bedd5d13712e7506e15aeb1ea35b5da660bf2143bf28e8f257b0aa7eb2164",
-              "source_b_sha256": "6663ab0ca3e8b2cbf6965eb22f29b84ef47fa2114a180283720d73cebda9fdce",
-              "validator_id": "mesh.validate.boolean_union"
-            },
-            "outputs": [
-              {
-                "blob_sha256": "2f7710059f0eb6849083bcf0c91d52e97b524b49fc88bba06bd5e47b115dfe60",
-                "format": "json",
-                "slot": "validation",
-                "type": "ValidationReport",
-                "unit": "none"
-              }
-            ],
-            "protocol": 1,
-            "request_id": "union-disjoint--mesh.validate.boolean_union",
-            "status": "ok"
-          },
-          "response_sha256": "878121e634f7a002c38a781772abb99aba9f3d7d9b4386e29f362a1bf916e175",
-          "input_hashes": [
-            "3a5789c6b4fc57340ea09a5a66c7dbf16c29f32a11f4c7a336eade6769abb913",
-            "727bedd5d13712e7506e15aeb1ea35b5da660bf2143bf28e8f257b0aa7eb2164",
-            "6663ab0ca3e8b2cbf6965eb22f29b84ef47fa2114a180283720d73cebda9fdce"
-          ],
-          "output_hashes": [
-            "2f7710059f0eb6849083bcf0c91d52e97b524b49fc88bba06bd5e47b115dfe60"
-          ],
-          "report_blob_sha256": "2f7710059f0eb6849083bcf0c91d52e97b524b49fc88bba06bd5e47b115dfe60",
-          "report_sha256": "39344b095c83e9592c5d5392d87a8f1147710d42c278388e4aaa8958be4716cc",
-          "status": "pass"
-        }
-      ],
-      "validation": {
-        "status": "pass",
-        "checks": {
-          "transform_executed": {
-            "pass": true
-          },
-          "behaviour_assertions": {
-            "pass": true,
-            "count": 2
-          },
-          "validator:mesh.validate.boolean_union": {
-            "pass": true,
-            "report_sha256": "39344b095c83e9592c5d5392d87a8f1147710d42c278388e4aaa8958be4716cc"
-          }
-        }
-      }
-    },
-    {
-      "case_id": "intersection-contained",
-      "operation_id": "mesh.boolean.intersection",
-      "revision": 1,
-      "worker_manifest_sha256": "fc3776ffc41b498e8b6e6e8737b7420653c8593001f689f97c14eae7d1a30d0a",
-      "test_id": "family-7.5-replay-cases",
-      "request": {
-        "inputs": [
-          {
-            "artifact_id": "input-0",
-            "blob_sha256": "727bedd5d13712e7506e15aeb1ea35b5da660bf2143bf28e8f257b0aa7eb2164",
-            "format": "off",
-            "sha256": "727bedd5d13712e7506e15aeb1ea35b5da660bf2143bf28e8f257b0aa7eb2164",
-            "type": "TriangleSurfaceMesh",
-            "unit": "mm"
-          },
-          {
-            "artifact_id": "input-1",
-            "blob_sha256": "857398dc1af0ff7c938c08c2ebdb7e00352f73a571d6f6fbaa3ad4913c01a5fa",
-            "format": "off",
-            "sha256": "857398dc1af0ff7c938c08c2ebdb7e00352f73a571d6f6fbaa3ad4913c01a5fa",
-            "type": "TriangleSurfaceMesh",
-            "unit": "mm"
-          }
-        ],
-        "kernel": "package_recommended",
-        "limits": {
-          "memory_mb": 2048,
-          "wall_time_ms": 120000
-        },
-        "operation": "mesh.boolean.intersection",
-        "parameters": {
-          "operation": "intersection"
-        },
-        "protocol": 1,
-        "request_id": "intersection-contained"
-      },
-      "request_sha256": "85b80c237ffcc9fa9caccef2c7a15c25d36a355ca1572c7b7108876cfc0453c7",
-      "response": {
-        "metrics": {
-          "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
-          "empty_reason": "",
-          "exact_volume": "1",
-          "operation": "intersection",
-          "output_coordinate_storage": "IEEE-754 binary64 exact-only",
-          "output_faces": 12,
-          "output_vertices": 8,
-          "result_status": "volume",
-          "surfaces_contact": false,
-          "volume_unit": "mm^3"
-        },
-        "outputs": [
-          {
-            "blob_sha256": "20867ab3412e14319a83b45874f40a2ce5e7d85117b58529c159d97d02e4f2cb",
-            "format": "off",
-            "slot": "geometry",
-            "type": "TriangleSurfaceMesh",
-            "unit": "mm"
-          }
-        ],
-        "protocol": 1,
-        "request_id": "intersection-contained",
-        "status": "ok"
-      },
-      "response_sha256": "8853da286b8d65a51751ef7d18c0fd8f3ae2433f937967d31a827740ee6ded3c",
-      "input_hashes": [
-        "727bedd5d13712e7506e15aeb1ea35b5da660bf2143bf28e8f257b0aa7eb2164",
-        "857398dc1af0ff7c938c08c2ebdb7e00352f73a571d6f6fbaa3ad4913c01a5fa"
-      ],
-      "output_hashes": [
-        "20867ab3412e14319a83b45874f40a2ce5e7d85117b58529c159d97d02e4f2cb"
-      ],
-      "validators": [
-        {
-          "operation_id": "mesh.validate.boolean_intersection",
-          "revision": 1,
-          "request": {
-            "inputs": [
-              {
-                "artifact_id": "intersection-contained-geometry-0",
-                "blob_sha256": "20867ab3412e14319a83b45874f40a2ce5e7d85117b58529c159d97d02e4f2cb",
-                "format": "off",
-                "sha256": "20867ab3412e14319a83b45874f40a2ce5e7d85117b58529c159d97d02e4f2cb",
-                "type": "TriangleSurfaceMesh",
-                "unit": "mm"
-              },
-              {
-                "artifact_id": "input-0",
-                "blob_sha256": "727bedd5d13712e7506e15aeb1ea35b5da660bf2143bf28e8f257b0aa7eb2164",
-                "format": "off",
-                "sha256": "727bedd5d13712e7506e15aeb1ea35b5da660bf2143bf28e8f257b0aa7eb2164",
-                "type": "TriangleSurfaceMesh",
-                "unit": "mm"
-              },
-              {
-                "artifact_id": "input-1",
-                "blob_sha256": "857398dc1af0ff7c938c08c2ebdb7e00352f73a571d6f6fbaa3ad4913c01a5fa",
-                "format": "off",
-                "sha256": "857398dc1af0ff7c938c08c2ebdb7e00352f73a571d6f6fbaa3ad4913c01a5fa",
-                "type": "TriangleSurfaceMesh",
-                "unit": "mm"
-              }
-            ],
-            "kernel": "package_recommended",
-            "limits": {
-              "memory_mb": 2048,
-              "wall_time_ms": 120000
-            },
-            "operation": "mesh.validate.boolean_intersection",
-            "parameters": {
-              "operation": "intersection"
-            },
-            "protocol": 1,
-            "request_id": "intersection-contained--mesh.validate.boolean_intersection"
-          },
-          "request_sha256": "59b4471e4816d4b23a165cca0ed6ab467af84463d3201fdaf5bb31915d5f27e6",
-          "response": {
-            "metrics": {
-              "candidate_sha256": "20867ab3412e14319a83b45874f40a2ce5e7d85117b58529c159d97d02e4f2cb",
-              "passed": true,
-              "result_status": "volume",
-              "source_a_sha256": "727bedd5d13712e7506e15aeb1ea35b5da660bf2143bf28e8f257b0aa7eb2164",
-              "source_b_sha256": "857398dc1af0ff7c938c08c2ebdb7e00352f73a571d6f6fbaa3ad4913c01a5fa",
-              "validator_id": "mesh.validate.boolean_intersection"
-            },
-            "outputs": [
-              {
-                "blob_sha256": "fb2f1370c0c77210374d75f08547ca9f42a5a15faf892a38fd4ee7673a92b00a",
-                "format": "json",
-                "slot": "validation",
-                "type": "ValidationReport",
-                "unit": "none"
-              }
-            ],
-            "protocol": 1,
-            "request_id": "intersection-contained--mesh.validate.boolean_intersection",
-            "status": "ok"
-          },
-          "response_sha256": "107bd8cdaecfde4a8b0ea4076b55c4424c19af724d50090bd5fb5ea3b10afcc4",
-          "input_hashes": [
-            "20867ab3412e14319a83b45874f40a2ce5e7d85117b58529c159d97d02e4f2cb",
-            "727bedd5d13712e7506e15aeb1ea35b5da660bf2143bf28e8f257b0aa7eb2164",
-            "857398dc1af0ff7c938c08c2ebdb7e00352f73a571d6f6fbaa3ad4913c01a5fa"
-          ],
-          "output_hashes": [
-            "fb2f1370c0c77210374d75f08547ca9f42a5a15faf892a38fd4ee7673a92b00a"
-          ],
-          "report_blob_sha256": "fb2f1370c0c77210374d75f08547ca9f42a5a15faf892a38fd4ee7673a92b00a",
-          "report_sha256": "87ca40c29f4f93fa3520b2e86601475544277bf2233458c635f0735e0f3446af",
-          "status": "pass"
-        }
-      ],
-      "validation": {
-        "status": "pass",
-        "checks": {
-          "transform_executed": {
-            "pass": true
-          },
-          "behaviour_assertions": {
-            "pass": true,
-            "count": 2
-          },
-          "validator:mesh.validate.boolean_intersection": {
-            "pass": true,
-            "report_sha256": "87ca40c29f4f93fa3520b2e86601475544277bf2233458c635f0735e0f3446af"
-          }
-        }
-      }
-    },
-    {
-      "case_id": "difference-contained",
-      "operation_id": "mesh.boolean.difference",
-      "revision": 1,
-      "worker_manifest_sha256": "fc3776ffc41b498e8b6e6e8737b7420653c8593001f689f97c14eae7d1a30d0a",
-      "test_id": "family-7.5-replay-cases",
-      "request": {
-        "inputs": [
-          {
-            "artifact_id": "input-0",
-            "blob_sha256": "727bedd5d13712e7506e15aeb1ea35b5da660bf2143bf28e8f257b0aa7eb2164",
-            "format": "off",
-            "sha256": "727bedd5d13712e7506e15aeb1ea35b5da660bf2143bf28e8f257b0aa7eb2164",
-            "type": "TriangleSurfaceMesh",
-            "unit": "mm"
-          },
-          {
-            "artifact_id": "input-1",
-            "blob_sha256": "857398dc1af0ff7c938c08c2ebdb7e00352f73a571d6f6fbaa3ad4913c01a5fa",
-            "format": "off",
-            "sha256": "857398dc1af0ff7c938c08c2ebdb7e00352f73a571d6f6fbaa3ad4913c01a5fa",
-            "type": "TriangleSurfaceMesh",
-            "unit": "mm"
-          }
-        ],
-        "kernel": "package_recommended",
-        "limits": {
-          "memory_mb": 2048,
-          "wall_time_ms": 120000
-        },
-        "operation": "mesh.boolean.difference",
-        "parameters": {
-          "operation": "difference"
-        },
-        "protocol": 1,
-        "request_id": "difference-contained"
-      },
-      "request_sha256": "8841bd2bca0e1e913f4a17a9f1a89d70240795d21159b4cd949a0a3ddc62fa3e",
-      "response": {
-        "metrics": {
-          "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
-          "empty_reason": "",
-          "exact_volume": "7",
-          "operation": "difference",
-          "output_coordinate_storage": "IEEE-754 binary64 exact-only",
-          "output_faces": 24,
-          "output_vertices": 16,
-          "result_status": "volume",
-          "surfaces_contact": false,
-          "volume_unit": "mm^3"
-        },
-        "outputs": [
-          {
-            "blob_sha256": "ea9f34b3b91c7f5144cbd28eca888d34ebc238053b5f4563b98b8a6e33c78bfe",
-            "format": "off",
-            "slot": "geometry",
-            "type": "TriangleSurfaceMesh",
-            "unit": "mm"
-          }
-        ],
-        "protocol": 1,
-        "request_id": "difference-contained",
-        "status": "ok"
-      },
-      "response_sha256": "5a74dc360eb4b62deb6f4265484fe015881ba506f2325d524f0ba4025f96e82c",
-      "input_hashes": [
-        "727bedd5d13712e7506e15aeb1ea35b5da660bf2143bf28e8f257b0aa7eb2164",
-        "857398dc1af0ff7c938c08c2ebdb7e00352f73a571d6f6fbaa3ad4913c01a5fa"
-      ],
-      "output_hashes": [
-        "ea9f34b3b91c7f5144cbd28eca888d34ebc238053b5f4563b98b8a6e33c78bfe"
-      ],
-      "validators": [
-        {
-          "operation_id": "mesh.validate.boolean_difference",
-          "revision": 1,
-          "request": {
-            "inputs": [
-              {
-                "artifact_id": "difference-contained-geometry-0",
-                "blob_sha256": "ea9f34b3b91c7f5144cbd28eca888d34ebc238053b5f4563b98b8a6e33c78bfe",
-                "format": "off",
-                "sha256": "ea9f34b3b91c7f5144cbd28eca888d34ebc238053b5f4563b98b8a6e33c78bfe",
-                "type": "TriangleSurfaceMesh",
-                "unit": "mm"
-              },
-              {
-                "artifact_id": "input-0",
-                "blob_sha256": "727bedd5d13712e7506e15aeb1ea35b5da660bf2143bf28e8f257b0aa7eb2164",
-                "format": "off",
-                "sha256": "727bedd5d13712e7506e15aeb1ea35b5da660bf2143bf28e8f257b0aa7eb2164",
-                "type": "TriangleSurfaceMesh",
-                "unit": "mm"
-              },
-              {
-                "artifact_id": "input-1",
-                "blob_sha256": "857398dc1af0ff7c938c08c2ebdb7e00352f73a571d6f6fbaa3ad4913c01a5fa",
-                "format": "off",
-                "sha256": "857398dc1af0ff7c938c08c2ebdb7e00352f73a571d6f6fbaa3ad4913c01a5fa",
-                "type": "TriangleSurfaceMesh",
-                "unit": "mm"
-              }
-            ],
-            "kernel": "package_recommended",
-            "limits": {
-              "memory_mb": 2048,
-              "wall_time_ms": 120000
-            },
-            "operation": "mesh.validate.boolean_difference",
-            "parameters": {
-              "operation": "difference"
-            },
-            "protocol": 1,
-            "request_id": "difference-contained--mesh.validate.boolean_difference"
-          },
-          "request_sha256": "35ee2189749303c3570b087b0a9d00b489b9952f36143fea14d4a7b53d551819",
-          "response": {
-            "metrics": {
-              "candidate_sha256": "ea9f34b3b91c7f5144cbd28eca888d34ebc238053b5f4563b98b8a6e33c78bfe",
-              "passed": true,
-              "result_status": "volume",
-              "source_a_sha256": "727bedd5d13712e7506e15aeb1ea35b5da660bf2143bf28e8f257b0aa7eb2164",
-              "source_b_sha256": "857398dc1af0ff7c938c08c2ebdb7e00352f73a571d6f6fbaa3ad4913c01a5fa",
-              "validator_id": "mesh.validate.boolean_difference"
-            },
-            "outputs": [
-              {
-                "blob_sha256": "5c669be2b742cc2cfe3626a43dcf42dcf2875956a688d06ba031c8d413c82bfa",
-                "format": "json",
-                "slot": "validation",
-                "type": "ValidationReport",
-                "unit": "none"
-              }
-            ],
-            "protocol": 1,
-            "request_id": "difference-contained--mesh.validate.boolean_difference",
-            "status": "ok"
-          },
-          "response_sha256": "2d4d32295c2db2ba3bdedfd97bb3dbe0420782043bca3e8c6754b2f354818d72",
-          "input_hashes": [
-            "ea9f34b3b91c7f5144cbd28eca888d34ebc238053b5f4563b98b8a6e33c78bfe",
-            "727bedd5d13712e7506e15aeb1ea35b5da660bf2143bf28e8f257b0aa7eb2164",
-            "857398dc1af0ff7c938c08c2ebdb7e00352f73a571d6f6fbaa3ad4913c01a5fa"
-          ],
-          "output_hashes": [
-            "5c669be2b742cc2cfe3626a43dcf42dcf2875956a688d06ba031c8d413c82bfa"
-          ],
-          "report_blob_sha256": "5c669be2b742cc2cfe3626a43dcf42dcf2875956a688d06ba031c8d413c82bfa",
-          "report_sha256": "155377732c80ae8faf60d718741a44e297d4ef3be977e57fdd423600e1e2fcc4",
-          "status": "pass"
-        }
-      ],
-      "validation": {
-        "status": "pass",
-        "checks": {
-          "transform_executed": {
-            "pass": true
-          },
-          "behaviour_assertions": {
-            "pass": true,
-            "count": 2
-          },
-          "validator:mesh.validate.boolean_difference": {
-            "pass": true,
-            "report_sha256": "155377732c80ae8faf60d718741a44e297d4ef3be977e57fdd423600e1e2fcc4"
+            "report_sha256": "8ed57de16bb602e647790f7c3b1b6394ebb3ee2f0556a021c2cd68b4fbc2532c"
           }
         }
       }
     }
   ],
   "negative_control_proofs": {
-    "union-open-input-rejected": {
-      "case_id": "union-open-input-rejected",
-      "operation_id": "mesh.boolean.union",
+    "hull2-collinear-rejected": {
+      "case_id": "hull2-collinear-rejected",
+      "operation_id": "hull.convex_2",
       "revision": 1,
       "worker_manifest_sha256": "fc3776ffc41b498e8b6e6e8737b7420653c8593001f689f97c14eae7d1a30d0a",
-      "test_id": "family-7.5-replay-cases",
+      "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
           {
             "artifact_id": "input-0",
-            "blob_sha256": "8d4361aaa4b58509192dd35df2ddc7f0a735f84339825532f2c0ba22be0bc242",
-            "format": "off",
-            "sha256": "8d4361aaa4b58509192dd35df2ddc7f0a735f84339825532f2c0ba22be0bc242",
-            "type": "TriangleSurfaceMesh",
-            "unit": "mm"
-          },
-          {
-            "artifact_id": "input-1",
-            "blob_sha256": "76773013b165e44ba4f7668144a74ea31cb43fc61bd102d3d368f16ca4adc7c9",
-            "format": "off",
-            "sha256": "76773013b165e44ba4f7668144a74ea31cb43fc61bd102d3d368f16ca4adc7c9",
-            "type": "TriangleSurfaceMesh",
+            "blob_sha256": "087f7019a38d090185c7819a8218e88b0d5be18c4636bf558534818186ae14f5",
+            "format": "json",
+            "sha256": "087f7019a38d090185c7819a8218e88b0d5be18c4636bf558534818186ae14f5",
+            "type": "PointSet2",
             "unit": "mm"
           }
         ],
@@ -5128,37 +4221,34 @@
           "memory_mb": 2048,
           "wall_time_ms": 120000
         },
-        "operation": "mesh.boolean.union",
-        "parameters": {
-          "operation": "union"
-        },
+        "operation": "hull.convex_2",
+        "parameters": {},
         "protocol": 1,
-        "request_id": "union-open-input-rejected"
+        "request_id": "hull2-collinear-rejected"
       },
-      "request_sha256": "7b55050386a5d719c1656132e6a92fd7daac19d1fc502350b2d74522429da685",
+      "request_sha256": "9f5d3d6b28ef9908bae221db40ed4cfb30b7bca9481b6207602b72fd548e9cee",
       "response": {
         "error": {
           "class": "PRECONDITION_FAILED",
-          "code": "MESH_NOT_CLOSED",
-          "message": "Boolean source A must be closed",
+          "code": "AFFINE_RANK_LT_2",
+          "message": "Point set has affine rank at most 1",
           "recoverable": false,
           "suggested_operations": []
         },
         "metrics": {},
         "outputs": [],
         "protocol": 1,
-        "request_id": "union-open-input-rejected",
+        "request_id": "hull2-collinear-rejected",
         "status": "error"
       },
-      "response_sha256": "179e6ad80a33d1ae39a8d8fa25b83ee7284088b98faf2e816b01a5afc3bb713f",
+      "response_sha256": "8d450e6478256e82111d1a52dce632a8cb416132a004a88b81a44eb99eadbeac",
       "input_hashes": [
-        "8d4361aaa4b58509192dd35df2ddc7f0a735f84339825532f2c0ba22be0bc242",
-        "76773013b165e44ba4f7668144a74ea31cb43fc61bd102d3d368f16ca4adc7c9"
+        "087f7019a38d090185c7819a8218e88b0d5be18c4636bf558534818186ae14f5"
       ],
       "output_hashes": [],
       "expected_error_class": "PRECONDITION_FAILED",
       "status": "expected_rejection"
     }
   },
-  "coverage_note": "Family 7.5: 1 requirement(s) bound by 6 replayed cases with registry-derived mandatory validators; 4 requirement(s) remain unbound with recorded gaps. The immutable 80-requirement denominator and full standalone acceptance remain incomplete."
+  "coverage_note": "Family 7.13: 1 requirement(s) bound by 2 replayed cases with registry-derived mandatory validators; 4 requirement(s) remain unbound with recorded gaps. The immutable 80-requirement denominator and full standalone acceptance remain incomplete."
 }
