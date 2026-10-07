@@ -6,6 +6,7 @@ import copy
 import json
 import math
 import os
+import re
 import sqlite3
 from pathlib import Path
 from typing import Any, Iterable
@@ -444,7 +445,10 @@ class OperationRegistry:
                 continue
             aliases = tuple(operation.get("aliases", []))
             schema_parameters = _schema_properties(operation["parameters"])
-            primary_text = " ".join([
+            # Planar artifact types (PointSet2, Polygon2, ...) make the operation 2D.
+            dimension_tag = ["2d"] if any(re.fullmatch(r"[A-Za-z]+2", kind)
+                                          for kind in accepted_types) else []
+            primary_text = " ".join([*dimension_tag,
                 operation["id"], operation["summary"], operation["package"],
                 *aliases, *schema_parameters,
             ])

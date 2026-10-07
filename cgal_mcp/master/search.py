@@ -156,6 +156,13 @@ VOCABULARY: dict[str, tuple[str, ...]] = {
                               "許容法線変化", "法線回転を制限", "法線回転が制限"),
     "fast_envelope": ("fast envelope", "fast-envelopes", "fast envelopes"),
     "dimension_2d": ("2d",),
+    "planar_meshing": ("quality 2d mesh", "2d mesh", "planar mesh", "2d mesh generation",
+                       "2d メッシュ", "2dメッシュ", "平面メッシュ"),
+    "ray_casting": ("ray casting", "ray cast", "cast rays", "cast the supplied probe rays",
+                    "probe rays", "ray shooting", "first hit", "first-hit",
+                    "first ray hit", "ray mesh intersection", "レイキャスト",
+                    "レイを", "レイの", "レイと", "多数のレイ", "照射", "光線",
+                    "最初の交点"),
 }
 
 # Every explicitly requested concept in these sets must be represented by an
@@ -269,6 +276,11 @@ def parse_query(text: str) -> QueryTerms:
         if concepts & {"normals", "mesh_normals", "point_normals"}:
             concepts.discard("mesh_normals")
             concepts.add("point_normals")
+    # "polygon with holes" / "holed polygon" qualifies the input; it is not a
+    # request to fill holes.
+    if "hole_filling" in concepts and "polygon" in concepts and re.search(
+            r"(?:with|having|containing) holes|holed|穴付き|穴あき|穴を持つ", normalized)             and not re.search(r"fill|穴埋め|塞", normalized):
+        concepts.discard("hole_filling")
     # Adjectival input/output qualifications do not request a second action.
     # They remain searchable words, while routing follows the requested verb.
     # A valid/healthy mesh as the stated result of a repair, or "target of
@@ -281,6 +293,12 @@ def parse_query(text: str) -> QueryTerms:
         if not asks_inspection or "検査対象" in normalized and not re.search(
                 r"検査して|検査し、|検査を|検査結果|健全性", normalized):
             concepts.discard("integrity")
+    # Validating an input property (orientation, polygon) is an integrity
+    # check of that input, not a request for a separate validator operation.
+    if "validation" in concepts and re.search(
+            r"validat\w*\s+(?:the\s+|its\s+|their\s+)?(?:orientation|polygon|input)", normalized):
+        concepts.discard("validation")
+        concepts.add("integrity")
     if "向き付き" in normalized:
         concepts.discard("orientation")
     if "検証済み" in normalized:

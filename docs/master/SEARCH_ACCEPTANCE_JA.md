@@ -23,7 +23,8 @@ documentation-only intentでは`docs_search`を呼び、期待packageが結果�
 
 goal routing は、現在のartifact modelで入力意味を忠実に表現できるintentについて production の`plan(goal=...)`を呼ぶ。PointSet3、法線付き点群、TriangleSurfaceMesh、PolygonSoup3の合成fixtureを用い、二入力処理には二つのartifact bindingを渡す。検索候補のoperation schemaから有効なparametersを構成するため、入力不足やparameter不足による後段エラーを安全な拒否の証拠にはしない。
 
-2D polygonのring/hole、拘束線分、weighted site、ray batchなどを既存artifact型で表現できないintentは`unmeasured_input_model`として明示し、planner拒否の成功件数へ含めない。これらのintentも300件の分母に残り、goal-routing判定を失敗させる。
+入力型の表現可否は現在のtyped artifact（PointSet2、Polygon2、PolygonWithHoles2、SegmentGraph2、Triangulation2、Triangulation3、RayBatch3を含む）で判定する。ring/hole付きpolygon、拘束線分、ray batch、Delaunay三角形分割はこれらの型で表現できるため`measured`とし、validated operationがあるものは`eligible`としてtop-1ルーティングを、無いものは`unsupported_operation`または`ambiguous_route`によるfail-closedを要求する。
+weighted site、周期・球面domain、曲線arrangement・overlay、複数成分polygon set、平面・box・plane stack、幾何primitive、移動segment、混在collection、曲面/3D meshing domain、最適化変数、scalar sample、matrix-search問題など、現行artifact型で表現できないintentだけを`unmeasured_input_model`として明示し、planner拒否の成功件数へ含めない。これらも300件の分母に残り、goal-routing判定を失敗させる。
 
 - eligible intentは期待operationがtop-1で選ばれることを要求する。`ambiguous_route`は明示的な曖昧性として別計上する。
 - method指定を追加で求める`route_parameter_missing`、矛盾した指定を示す`route_parameter_conflict`、その他の後段エラーは失敗として記録する。
@@ -57,3 +58,12 @@ planner hard gateはnatural intentから分離した4件で測る。有効な`Po
 ```
 
 reportはcorpus、package smoke、generator、test source、operation registry、package catalog、major requirements、inventoryのSHA-256を記録する。また、言語別・family別retrieval、全300件のrouting分類と実際に呼んだplanner件数、4 planner gates、126 package smoke、自動実行を呼ばなかった事実を含む。reportは`work/`の生成物であり、native workerの幾何計算、MCP transport、実行結果の正しさを証明しない。
+
+## Wave C 後の測定状況（2026-10-08、report再生成値）
+
+- `unmeasured_input_model`: 104件 → 64件。40件を再分類した。
+- 再分類の内訳: 12件は`eligible`化（ray first hits 4件 -> `spatial.aabb.ray_first_hits`、制約付きDelaunay 4件 -> `triangulation.constrained_2`、polygon特性 4件 -> `polygon.analysis.properties`/`polygon.query.containment`）。28件はvalidated operationが無いためfail-closedを要求する`documentation_only`のまま測定対象化（Voronoi、arrangement、straight skeleton、offset、Minkowski、barycentric、Mesh_2）。
+- 残る64件の不足artifact: 幾何primitive/plane/box/plane stack/moving segment（Kernel_23、AABB、clipping、slicing）、weighted site、周期・球面domain、arrangement overlay、複数成分polygon set、曲面・3D meshing domain、QP変数、scalar sample、matrix-search。
+- eligible top-3 recall: 89/89 (100%)、documentation discovery: 211/211 (100%)。goal routingは未測定64件のため`passes=false`のまま。
+- `execute`は呼ばず、`passes_acceptance=false`、`overall_standalone_ready=false`を維持する。
+

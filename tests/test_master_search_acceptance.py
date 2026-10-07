@@ -107,8 +107,13 @@ class MasterSearchAcceptanceTests(unittest.TestCase):
         by_requirement={}
         for item in self.corpus["intents"]:
             by_requirement.setdefault(item["requirement_ids"][0],[]).append(item)
-        self.assertTrue(all(item["input_types"]==["TriangleSurfaceMesh"]
+        # Ray-batch goals carry the typed RayBatch3 artifact beside the mesh.
+        self.assertTrue(all(item["input_types"] in (["TriangleSurfaceMesh"],
+                                                    ["TriangleSurfaceMesh","RayBatch3"])
                             for item in by_requirement["major.7.2.01"]))
+        self.assertTrue(all(item["input_types"]==["TriangleSurfaceMesh","RayBatch3"]
+                            for item in by_requirement["major.7.2.01"]
+                            if item["expected_operations"]==["spatial.aabb.ray_first_hits"]))
         self.assertTrue(all(item["input_types"]==["TriangleSurfaceMesh"]
                             for item in by_requirement["major.7.4.02"]))
         self.assertTrue(all(item["input_types"]==["TriangleSurfaceMesh"]*2
