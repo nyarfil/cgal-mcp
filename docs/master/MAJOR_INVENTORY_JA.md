@@ -63,3 +63,8 @@ CIは台帳を公式配布物から再生成してバイト一致を検査しま
 - 7.8.01〜06: 再構成Operationがない。
 - 7.13.01: 検証済みは3D凸包のみで2D凸包がない。7.13.02〜05: alpha shape、wrap、
   bounding volume、barycentric座標がない。
+
+注記 (7.3): 7.3.03 法線は、軸整列立方体(外向き/内向き巻きの2ケース)の各面法線・各頂点法線を
+手計算の定数と照合して束縛している。必須validatorは同一workerコードを再実行する整合性チェックであり、
+独立オラクルではない。7.3.01の `triangulated` はworker内の面次数フラグ由来で、CGAL::is_triangle_mesh
+直接ではない(worker変更は全evidence再生成を要するため未対応、TODO)。

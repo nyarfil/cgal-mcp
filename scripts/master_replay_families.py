@@ -102,6 +102,36 @@ def _case(case_id: str, operation: str, inputs: list[dict], parameters: dict,
 
 SQRT3_HALF = math.sqrt(3.0) / 2.0
 
+SQRT3_INV = 1.0 / math.sqrt(3.0)
+# Hand-derived from the cube_a.off geometry (0..2 axis-aligned cube, outward winding):
+# per-face outward axis normals in file order, and vertex normals along the corner diagonals.
+CUBE_FACE_NORMALS = [
+    [0.0, 0.0, -1.0],
+    [0.0, 0.0, -1.0],
+    [0.0, 0.0, 1.0],
+    [0.0, 0.0, 1.0],
+    [0.0, -1.0, 0.0],
+    [0.0, -1.0, 0.0],
+    [1.0, 0.0, 0.0],
+    [1.0, 0.0, 0.0],
+    [0.0, 1.0, 0.0],
+    [0.0, 1.0, 0.0],
+    [-1.0, 0.0, 0.0],
+    [-1.0, 0.0, 0.0],
+]
+CUBE_VERTEX_NORMALS = [[c * SQRT3_INV for c in corner] for corner in [
+    [-1.0, -1.0, -1.0],
+    [1.0, -1.0, -1.0],
+    [1.0, 1.0, -1.0],
+    [-1.0, 1.0, -1.0],
+    [-1.0, -1.0, 1.0],
+    [1.0, -1.0, 1.0],
+    [1.0, 1.0, 1.0],
+    [-1.0, 1.0, 1.0],
+]]
+INWARD_FACE_NORMALS = [[-c if c else 0.0 for c in normal] for normal in CUBE_FACE_NORMALS]
+INWARD_VERTEX_NORMALS = [[-c if c else 0.0 for c in normal] for normal in CUBE_VERTEX_NORMALS]
+
 FAMILY_7_3 = {
     "family": "7.3",
     "scope": "family_7_3_polygon_mesh_processing_core_partial",
@@ -118,9 +148,13 @@ FAMILY_7_3 = {
             "operation_ids": ["mesh.analysis.normals"],
             "symbols": ["compute_face_normals", "compute_vertex_normals", "compute_normals"],
             "symbol_notes": "CGAL 6.2.1 compute_normal.h compute_normals() calls "
-                            "compute_face_normals() and compute_vertex_normals(); both counts are "
-                            "asserted and independently replayed by the validator.",
-            "case_ids": ["normals-tetra", "normals-cube"],
+                            "compute_face_normals() and compute_vertex_normals(); counts and the "
+                            "exact per-face/per-vertex values on the axis-aligned cube (and the "
+                            "negated values on its inward-wound twin) are asserted by the replay "
+                            "harness against hand-derived constants. The mandatory validator "
+                            "re-runs the same worker code and is a consistency check only, not "
+                            "an independent oracle.",
+            "case_ids": ["normals-tetra", "normals-cube", "normals-inward-cube"],
         },
         "major.7.3.04": {
             "operation_ids": ["mesh.analysis.measures"],
@@ -181,6 +215,20 @@ FAMILY_7_3 = {
             ["metrics.vertex_normal_count", "==", 8],
             ["metrics.zero_face_normal_count", "==", 0],
             ["metrics.zero_vertex_normal_count", "==", 0],
+            ["output:analysis:json:results.face_normals[*].normal.value", "approx",
+             [CUBE_FACE_NORMALS, 1e-9]],
+            ["output:analysis:json:results.vertex_normals[*].normal.value", "approx",
+             [CUBE_VERTEX_NORMALS, 1e-9]],
+            ["input:mesh:measure:off.signed_volume", "approx", [8.0, 1e-12]],
+        ]),
+        # Orientation negative control: the same cube with inward winding must report the
+        # exactly negated normals, so flipped or sign-wrong normals cannot satisfy both cases.
+        _case("normals-inward-cube", "mesh.analysis.normals", [_mesh(INWARD_CUBE)], {}, [
+            ["input:mesh:measure:off.signed_volume", "approx", [-8.0, 1e-12]],
+            ["output:analysis:json:results.face_normals[*].normal.value", "approx",
+             [INWARD_FACE_NORMALS, 1e-9]],
+            ["output:analysis:json:results.vertex_normals[*].normal.value", "approx",
+             [INWARD_VERTEX_NORMALS, 1e-9]],
         ]),
         _case("measures-tetra", "mesh.analysis.measures", [_mesh(TETRA)], {}, [
             ["output:analysis:json:results.surface_area.value", "approx", [1.5 + SQRT3_HALF, 1e-12]],
@@ -578,7 +626,20 @@ def derive_validator_plan(operation: dict, validator: dict, transform_parameters
 
 def _report_value(report: object, dotted: str) -> tuple[bool, object]:
     value = report
-    for part in dotted.split("."):
+    parts = dotted.split(".")
+    for position, part in enumerate(parts):
+        if part.endswith("[*]"):
+            # Closed projection: map the remaining path over every element of a list.
+            head = part[:-3]
+            if not (isinstance(value, dict) and head in value and isinstance(value[head], list)):
+                return False, None
+            projected = []
+            for element in value[head]:
+                found, item = _report_value(element, ".".join(parts[position + 1:]))                     if position + 1 < len(parts) else (True, element)
+                if not found:
+                    return False, None
+                projected.append(item)
+            return True, projected
         if isinstance(value, dict) and part in value:
             value = value[part]
         else:
