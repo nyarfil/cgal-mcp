@@ -109,7 +109,7 @@ class MasterSearchAcceptanceTests(unittest.TestCase):
             by_requirement.setdefault(item["requirement_ids"][0],[]).append(item)
         self.assertTrue(all(item["input_types"]==["TriangleSurfaceMesh"]
                             for item in by_requirement["major.7.2.01"]))
-        self.assertTrue(all(item["input_types"]==["PolygonSoup3"]
+        self.assertTrue(all(item["input_types"]==["TriangleSurfaceMesh"]
                             for item in by_requirement["major.7.4.02"]))
         self.assertTrue(all(item["input_types"]==["TriangleSurfaceMesh"]*2
                             for item in by_requirement["major.7.5.02"]))

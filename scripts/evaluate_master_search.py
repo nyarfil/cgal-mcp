@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 from difflib import SequenceMatcher
 import hashlib
+import copy
 import json
 import re
 import sys
@@ -527,8 +528,22 @@ def _routing_probe(intent: dict[str, Any], *, runtime: Any,
         if matched is None:
             raise ValueError(f"Preview operation {predicted} does not match probe artifacts")
         input_types = matched
-        parameters = _ROUTING_PARAMETERS.get(
-            predicted, _sample_schema_value(operation["parameters"]))
+        parameters = copy.deepcopy(_ROUTING_PARAMETERS.get(
+            predicted, _sample_schema_value(operation["parameters"])))
+        # A goal that names a structural requirement (protected edges, bounded
+        # normal change) is only plannable when the request supplies it, exactly
+        # as a real caller must.  Supply schema-valid placeholders for planning.
+        if isinstance(parameters, dict):
+            for name, value in analysis.get("required_parameters", {}).items():
+                parameters[name] = value
+            for name, requirement in analysis.get("required_parameter_features", {}).items():
+                schema = operation["parameters"].get("properties", {}).get(name, {})
+                if requirement == "nonempty" and schema.get("type") == "array":
+                    item = schema.get("items", {})
+                    if item.get("type") == "array" and item.get("items", {}).get("type") == "integer":
+                        parameters[name] = [list(range(item.get("minItems", 2)))]
+                    else:
+                        parameters[name] = [_sample_schema_value(item)]
     request = {
         "goal": intent["query"],
         "inputs": [artifact_ids_by_type[item] for item in input_types],

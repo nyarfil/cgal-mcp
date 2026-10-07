@@ -98,6 +98,12 @@ class ProductionOperationSearchTests(unittest.TestCase):
             allowed_licenses=["MIT"])
         self.assertEqual(license_blocked["candidates"], [])
 
+    def test_non_manifold_split_goal_routes_to_validated_repair(self):
+        result = self.search("split non-manifold neighborhoods into repairable shells",
+                             ["TriangleSurfaceMesh"])
+        self.assertEqual(result["query_analysis"]["recommended_operation"],
+                         "mesh.repair.manifold_preprocess", result)
+
     def test_unsupported_specific_and_multioperation_goals_signal_fail_closed(self):
         cases = [
             ("Poisson reconstruction from oriented samples", ["PointSet3Normals"]),
@@ -115,8 +121,6 @@ class ProductionOperationSearchTests(unittest.TestCase):
             ("cleanup the point cloud and estimate normals", ["PointSet3"]),
             ("clean up the point cloud and estimate normals", ["PointSet3"]),
             ("点群のノイズを除去して法線を推定", ["PointSet3"]),
-            ("split non-manifold neighborhoods into repairable shells",
-             ["TriangleSurfaceMesh"]),
             ("clip a surface against a box and label the cut boundary",
              ["TriangleSurfaceMesh"]),
             ("simplify inside an external geometric envelope",

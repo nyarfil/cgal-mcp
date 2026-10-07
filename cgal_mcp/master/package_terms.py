@@ -24,10 +24,11 @@ PACKAGE_REFERENCE_TERMS: dict[str, tuple[str, ...]] = {
     "AABB_tree": (
         "ray shooting", "first hit", "first intersection", "acceleration structure",
         "bounding volume hierarchy", "axis-aligned bounding box tree", "intersection query",
-        "closest point query", "broad phase", "collision candidate", "probe ray", "ray cast",
+        "closest point query", "broad phase", "collision candidate", "broad-phase", "candidate pairs", "probe ray", "ray cast",
         "加速構造", "レイ", "光線", "最初の交点", "広域判定", "交差候補", "最近点", "衝突候補",
         "バウンディングボリューム階層", "射線"),
     "Polygon_mesh_processing": (
+        "locate", "closest mesh faces", "query points near", "face ids", "最近傍面", "面id", "位置特定",
         "mesh validity", "mesh health", "mesh inspection", "closed mesh", "manifold", "orientation",
         "point location", "locate point", "containing face", "nearest face", "barycentric coordinates",
         "face normals", "vertex normals", "surface area", "volume", "self intersection",
@@ -40,12 +41,14 @@ PACKAGE_REFERENCE_TERMS: dict[str, tuple[str, ...]] = {
         "orient polygon soup", "isolate singular vertices", "manifold components",
         "修復", "穴", "穴埋め", "縫合", "非多様体", "重複頂点", "退化", "ポリゴンスープ", "多様体互換"),
     "PMP_Boolean_operations": (
+        "split faces", "cutter", "cutter mesh", "intersecting mesh", "contour polyline", "section contour", "輪郭ポリライン", "断面平面", "複数断面", "カッター",
         "boolean", "union", "difference", "intersection volume", "clipping", "clip", "cut plane",
         "slice", "slicing", "cross section", "section plane", "corefinement", "co-refinement",
         "split mesh", "cut mesh",
         "ブーリアン", "和集合", "差集合", "積集合", "クリップ", "切り詰め", "切断", "スライス", "断面",
         "共細分", "切断面"),
     "PMP_Remeshing": (
+        "non-triangular faces", "triangulate every", "vertex smoothing", "protected features", "mesh quality optimization", "平滑化して最適化", "高品質メッシュ", "保護特徴", "特徴辺", "頂点位置",
         "remesh", "remeshing", "isotropic remeshing", "triangulate faces", "triangulate polygon faces",
         "triangulate non-triangular faces", "refine", "subdivide", "adaptive density", "graded mesh",
         "target edge length", "edge length field", "curvature adaptive", "local sizing", "mesh refinement",
@@ -79,6 +82,21 @@ PACKAGE_REFERENCE_TERMS: dict[str, tuple[str, ...]] = {
         "matrix search", "monotone matrix", "totally monotone", "row maxima", "extremal element",
         "feasible extremum", "selection index", "geometric matrix search",
         "行列探索", "単調行列", "単調性", "極値", "比較履歴", "選択インデックス"),
+    "Convex_decomposition_3": (
+        "convex decomposition", "convex parts", "approximately convex", "concave", "convex components",
+        "凸成分", "凹形状", "近似凸部品", "凸分解", "凸部品"),
+    "Surface_mesh_parameterization": (
+        "parameterize", "parameterization", "parametrization", "texture coordinates", "disk-like", "distortion", "planar domain",
+        "パラメータ化", "テクスチャ座標", "歪み", "円盤状", "平面領域へ"),
+    "Alpha_wrap_3": (
+        "alpha wrap", "wrap", "wrapping", "offset", "gap", "watertight envelope",
+        "包む", "包絡", "隙間", "オフセット", "アルファラップ"),
+    "Surface_mesher": (
+        "implicit surface", "parametric surface", "conforming surface mesh", "approximation guarantee", "surface domain",
+        "陰関数", "パラメトリック表面", "適合する表面メッシュ", "近似保証", "表面領域"),
+    "QP_solver": (
+        "quadratic program", "linear program", "constraints", "optimization problem", "feasibility", "optimal value",
+        "二次制約", "線形制約", "最適化問題", "実行可能性", "最適値", "二次計画", "線形計画"),
 }
 
 

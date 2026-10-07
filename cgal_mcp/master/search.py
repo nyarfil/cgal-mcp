@@ -32,10 +32,19 @@ VOCABULARY: dict[str, tuple[str, ...]] = {
                        "collapse edges", "lighter mesh",
                        "軽量化", "軽量メッシュ", "簡略化", "辺縮約", "辺を縮約",
                        "ポリゴンを減", "面数を減", "辺数を減"),
-    "repair": ("repair", "修復", "修正", "穴埋め", "hole filling", "fill holes"),
+    "repair": ("repair", "修復", "修正"),
     "non_manifold_repair": ("repair non manifold", "repair non-manifold",
                             "non-manifold neighborhoods", "non manifold neighborhoods",
-                            "manifold-compatible components", "非多様体を分離", "非多様体修復"),
+                            "manifold-compatible components", "非多様体を分離", "非多様体修復",
+                            "非多様体近傍", "多様体互換"),
+    "degenerate_elements": ("degenerate", "zero-area", "zero area", "退化", "面積ゼロ"),
+    "hole_filling": ("hole", "holes", "hole filling", "fill holes", "穴", "穴埋め"),
+    "stitching": ("stitch", "stitching", "stitched", "weld", "welded", "welding",
+                  "縫合", "貼り合わせ"),
+    # Triangulating whole faces is distinct from triangulating holes.
+    "face_triangulation": ("non-triangular face", "non-triangular faces",
+                           "triangulate every supported face", "triangulate faces",
+                           "triangulate each face", "非三角形面", "各面を三角形分割"),
     "clipping": ("clip the surface", "clipping plane", "clip mesh", "cut-boundary",
                  "mesh clipping", "メッシュをクリップ", "切断面"),
     "remeshing": ("remesh", "remeshing", "リメッシュ", "再メッシュ", "再メッシュ化"),
@@ -262,6 +271,16 @@ def parse_query(text: str) -> QueryTerms:
             concepts.add("point_normals")
     # Adjectival input/output qualifications do not request a second action.
     # They remain searchable words, while routing follows the requested verb.
+    # A valid/healthy mesh as the stated result of a repair, or "target of
+    # inspection" as a noun qualifier, does not request a separate inspection.
+    repair_like = {"repair", "degenerate_elements", "hole_filling", "stitching",
+                   "non_manifold_repair"}
+    if "integrity" in concepts and concepts & repair_like:
+        asks_inspection = re.search(
+            r"inspect|check|report on|health report|検査して|検査し、|検査を|検査結果|健全性", normalized)
+        if not asks_inspection or "検査対象" in normalized and not re.search(
+                r"検査して|検査し、|検査を|検査結果|健全性", normalized):
+            concepts.discard("integrity")
     if "向き付き" in normalized:
         concepts.discard("orientation")
     if "検証済み" in normalized:
