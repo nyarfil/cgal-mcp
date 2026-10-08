@@ -54,6 +54,15 @@ class SearchTermsTests(unittest.TestCase):
         self.assertIn("2d", parse_query("create a 2D convex hull").words)
         self.assertIn("3d", parse_query("3D mesh").words)
 
+    def test_remeshing_vocabulary_is_bilingual_and_hole_stages_are_not_global_refinement(self):
+        for text, concept in (("isotropic remeshing", "isotropic"), ("等方的に再メッシュ", "isotropic"),
+                              ("refine the mesh", "mesh_refinement"), ("メッシュを細分", "mesh_refinement"),
+                              ("split long edges", "split_long_edges"), ("長い辺を分割", "split_long_edges"),
+                              ("adaptive sizing field", "adaptive_sizing"), ("曲率に応じて適応", "adaptive_sizing")):
+            self.assertIn(concept, parse_query(text).concepts, text)
+        self.assertNotIn("mesh_refinement", parse_query("triangulate and refine every hole").concepts)
+        self.assertEqual(parse_query("頂点位置を平滑化して最適化").concepts, {"smoothing"})
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -67,3 +67,10 @@ reportはcorpus、package smoke、generator、test source、operation registry�
 - eligible top-3 recall: 89/89 (100%)、documentation discovery: 211/211 (100%)。goal routingは未測定64件のため`passes=false`のまま。
 - `execute`は呼ばず、`passes_acceptance=false`、`overall_standalone_ready=false`を維持する。
 
+
+## Wave D 後の測定状況（2026-10-08、report再生成値）
+
+- 7.6の20件（面の三角形分割・細分・等方remesh・平滑化最適化・適応remesh）を`documentation_only`から`eligible`へ再分類した。期待Operationは`mesh.triangulate.faces`、`mesh.refine.local`、`mesh.remesh.isotropic`、`mesh.smooth.tangential_relaxation`、`mesh.remesh.adaptive`。非三角形面の入力は実際の入力型である`PolygonSoup3`へ修正した。
+- 語彙は幾何概念として追加した（細分、等方、適応サイズ場、長辺分割、フェアリング、メッシュ品質）。穴埋めの一段階としてのrefine／fair、平滑化と併記された最適化・固定特徴辺は独立要求としない。Operation IDが明示する概念を要約中の言及より優先する加点を加えた。
+- eligible top-3 recall: 109/109 (100%)、documentation discovery: 191/191 (100%)。eligibleのtop-1は99件、明示的曖昧は10件（従前14件）。誤route・未分類エラーは0。
+- `unmeasured_input_model`は64件のまま。goal routingは未測定64件のため`passes=false`、`execute`は呼ばず`passes_acceptance=false`、`overall_standalone_ready=false`を維持する。

@@ -48,6 +48,20 @@ VOCABULARY: dict[str, tuple[str, ...]] = {
     "clipping": ("clip the surface", "clip a surface", "clip a mesh", "clipping plane", "clip mesh", "cut-boundary",
                  "mesh clipping", "メッシュをクリップ", "切断面"),
     "remeshing": ("remesh", "remeshing", "リメッシュ", "再メッシュ", "再メッシュ化"),
+    # Surface mesh generation/improvement concepts.  Each is a geometry idea,
+    # not an Operation ID; routing still needs a registered operation covering it.
+    "mesh_refinement": ("refine", "refinement", "refining", "densify", "denser mesh",
+                        "細分", "高密度メッシュ", "リファイン"),
+    "mesh_quality": ("mesh quality", "triangle quality", "improve quality", "improved quality",
+                     "improved-quality", "high quality mesh", "高品質メッシュ", "品質改善",
+                     "メッシュ形状改善"),
+    "isotropic": ("isotropic", "isotropically", "uniform edge length",
+                  "uniform target edge length", "等方", "均一な辺長", "一様な辺長"),
+    "adaptive_sizing": ("adaptive", "adaptively", "adapt element", "adapt the mesh",
+                        "sizing field", "graded mesh", "適応", "段階的メッシュ"),
+    "split_long_edges": ("split long edges", "split every long edge", "long edge splitting",
+                         "split edges longer", "長い辺を分割", "長辺を分割", "長辺分割"),
+    "fairing": ("fairing", "fair the", "fair surface", "フェアリング", "フェアリング"),
     "boolean": ("boolean", "ブーリアン", "集合演算", "solid set operation"),
     # These operations may be internal steps of a Boolean algorithm, but their
     # requested outputs are refined/split source surfaces rather than a set
@@ -299,6 +313,22 @@ def parse_query(text: str) -> QueryTerms:
             r"validat\w*\s+(?:the\s+|its\s+|their\s+)?(?:orientation|polygon|input)", normalized):
         concepts.discard("validation")
         concepts.add("integrity")
+    # Triangulate/refine/fair are the stages of one hole-filling task; they do
+    # not request a separate global refinement or fairing operation.
+    if "hole_filling" in concepts:
+        concepts.discard("mesh_refinement")
+        concepts.discard("fairing")
+    # "Smooth and optimize vertex positions" is a single mesh-quality task, and
+    # fixed/protected feature edges qualify the input constraints of smoothing;
+    # neither requests a separate programming solve or feature detection.
+    if "smoothing" in concepts:
+        if "optimization" in concepts and not re.search(
+                r"二次計画|線形計画|quadratic|linear program", normalized):
+            concepts.discard("optimization")
+        if "sharp_features" in concepts and re.search(
+                r"固定|保護|protected|fixed|constrained", normalized) and not re.search(
+                r"detect|検出|抽出|find|extract|識別", normalized):
+            concepts.discard("sharp_features")
     if "向き付き" in normalized:
         concepts.discard("orientation")
     if "検証済み" in normalized:

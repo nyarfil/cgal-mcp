@@ -14,7 +14,7 @@ from typing import Any, Iterable
 from .errors import InvalidInput, UnsupportedOperation
 from .policies import PolicyRegistry
 from .search import (DIRECT_VALIDATOR_CONTRACTS, METHOD_CONCEPTS, enriched_text,
-                     match_operation, parse_query, requested_parameter_features,
+                     document_terms, match_operation, parse_query, requested_parameter_features,
                      requested_parameter_values)
 from .util import ID_RE, canonical_json
 
@@ -455,6 +455,10 @@ class OperationRegistry:
             evidence = match_operation(parsed, primary_text, aliases=aliases)
             fts_score = fts_scores.get(operation["id"], 0.0)
             score = evidence.score + fts_score
+            # A concept named by the Operation ID itself is its primary identity;
+            # an incidental mention in the summary must not tie with it.
+            score += 6.0 * len(evidence.covered_primary_concepts
+                               & document_terms(operation["id"]).concepts)
             if fts_score:
                 reasons.append("FTS5 registry index matched")
             if score <= 0:

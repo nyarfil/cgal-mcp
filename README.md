@@ -26,6 +26,7 @@ StellaCADはStandalone受入後に正式統合する利用側です。
 操作・ビルド・区切りの証拠は [Master基盤](docs/master/FOUNDATION_JA.md)、
 完成判定は [実装決定](docs/master/IMPLEMENTATION_DECISIONS_JA.md) を参照してください。
 軽量化の移行範囲と再試験手順は [軽量化マイルストーン](docs/master/WAVE_A_JA.md) に記録しています。
+メッシュの三角形分割・細分・再メッシュ・平滑化の対応範囲は [Wave D](docs/master/WAVE_D_JA.md)、
 2D・三角形分割・空間問合せの対応範囲は [Wave C](docs/master/WAVE_C_JA.md)、
 点群の対応範囲は [点群処理](docs/master/WAVE_B_JA.md)、
 メッシュ検査の対応範囲は [検査・計測](docs/master/WAVE_A_MESH_JA.md)、
