@@ -310,6 +310,32 @@ Triangulation3Data read_triangulation3(const ArtifactInput& input) {
   return result;
 }
 
+TetrahedralMeshData read_tetrahedral_mesh(const ArtifactInput& input) {
+  const auto value =
+      parse_object(input, "TetrahedralMesh", true, {"vertices", "tetrahedra", "subdomains"});
+  TetrahedralMeshData result;
+  result.vertices = coordinate_list<3>(value.at("vertices"), "TetrahedralMesh vertex", 4,
+                                       kMaximumPlanarPoints);
+  const auto& cells = value.at("tetrahedra");
+  if (cells.is_array() && (cells.empty() || cells.size() > kMaximumTetrahedra)) {
+    throw WorkerError("RESOURCE_LIMIT", "TETRAHEDRON_LIMIT_EXCEEDED",
+                      "TetrahedralMesh needs between 1 and 1000000 tetrahedra");
+  }
+  result.tetrahedra = index_list<4>(cells, result.vertices.size(), "TetrahedralMesh tetrahedron");
+  const auto& subdomains = value.at("subdomains");
+  if (!subdomains.is_array() || subdomains.size() != result.tetrahedra.size()) {
+    input_error("SCHEMA_MISMATCH", "TetrahedralMesh subdomains must hold one index per tetrahedron");
+  }
+  for (const auto& item : subdomains) {
+    if (!item.is_number_integer() || (!item.is_number_unsigned() && item.get<std::int64_t>() < 1) ||
+        item.get<std::uint64_t>() < 1 || item.get<std::uint64_t>() > 2147483647ULL) {
+      input_error("SCHEMA_MISMATCH", "TetrahedralMesh subdomain indices must be integers in [1, 2^31)");
+    }
+    result.subdomains.push_back(static_cast<std::size_t>(item.get<std::uint64_t>()));
+  }
+  return result;
+}
+
 std::vector<XYZ> read_point_set3(const ArtifactInput& input) {
   const auto points = read_xyz_points(input);
   if (points.size() > kMaximumSpatialPoints) {

@@ -34,7 +34,7 @@ EXECUTION_EXPECTATIONS = frozenset({"eligible", "documentation_only"})
 KNOWN_INPUT_TYPES = frozenset({
     "PointSet2", "PointSet3", "PointSet3Normals", "Polygon2", "PolygonSoup3", "PolygonWithHoles2",
     "RayBatch3", "SegmentGraph2", "TriangleSurfaceMesh", "Triangulation2", "Triangulation3",
-    "ImplicitSurfaceDomain"})
+    "ImplicitSurfaceDomain", "TetrahedralMesh"})
 WAVE_C_FIXTURES = Path(__file__).resolve().parents[1] / "tests" / "fixtures" / "master" / "wave_c"
 WAVE_E_FIXTURES = Path(__file__).resolve().parents[1] / "tests" / "fixtures" / "master" / "wave_e"
 WAVE_C_SYNTHETIC = {"PointSet2": "planar_points.json", "PolygonWithHoles2": "polygon_with_hole.json",

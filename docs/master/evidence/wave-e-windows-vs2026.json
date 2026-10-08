@@ -2,7 +2,7 @@
   "schema_version": 1,
   "generator": "master-wave-e-milestone",
   "status": "pass",
-  "generator_sha256": "eadb346be1830755a0ddc4275bd069f0d7f9dcbb4b56e2a5a9b01f9dfe299755",
+  "generator_sha256": "673d1bc6ab2c0121f3210fe1f3d98d4e159844ae02ea71aec3a3aabac215afa1",
   "scope": "one_wave_e_mesh2_operation_and_independent_validator",
   "standalone_accepted": false,
   "requirements": [],
@@ -10,9 +10,10 @@
     "mesh.surface.generate",
     "mesh.validate.delaunay_refinement_2",
     "mesh.validate.surface_mesh",
+    "mesh.validate.tetrahedral_mesh",
     "mesh2.refine.delaunay"
   ],
-  "worker_sha256": "c950e007e39927eed9b0b1413d491aa1346fb2a457a005c53c6038470fa7c10a",
+  "worker_sha256": "efa6fd7e8199d5ca5856629b869a51264273ee0770f12586df12bc6cd21e0b93",
   "worker_manifest": {
     "actual_cgal_version": "6.2.1",
     "build": {
@@ -4457,6 +4458,49 @@
         "supported_kernels": [
           "package_recommended"
         ]
+      },
+      {
+        "dependencies": [
+          "Kernel_23"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "mesh.validate.tetrahedral_mesh",
+        "info": {
+          "checks": [
+            "vertices_distinct",
+            "no_unused_vertices",
+            "subdomain_indices_valid",
+            "tetrahedra_nondegenerate",
+            "tetrahedra_positively_oriented",
+            "face_adjacency_valid",
+            "interior_faces_shared_by_two",
+            "single_connected_component",
+            "boundary_closed_surface",
+            "single_boundary_surface",
+            "boundary_volume_consistent",
+            "vertex_links_are_manifold"
+          ],
+          "input_slots": [
+            "candidate"
+          ],
+          "optional_parameters": [
+            "domain_volume",
+            "volume_relative_tolerance",
+            "minimum_dihedral_angle",
+            "maximum_radius_edge_ratio",
+            "minimum_tetrahedron_volume"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "TetrahedralMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
       }
     ],
     "protocol": 1,
@@ -4468,12 +4512,12 @@
     ],
     "worker": "cgal-master-worker"
   },
-  "worker_manifest_sha256": "6c7d45aa49d38eb84d3e5e94c9bac7bffd49997586b5e9f8a7ce669ca2d21da2",
-  "operation_catalog_sha256": "d4f8e623e8069c2f135fb778555b4667e17cf99cfa428110f59b155ec1c11cae",
+  "worker_manifest_sha256": "07ff74bde9abd4f6e8240971f9ee525fc136b1142f8bbcc6bf72597eb59a9f42",
+  "operation_catalog_sha256": "27dd57ce613fc32af098c1830d4d7435093c2d2df501c9b3a1a30cd6744967d9",
   "tests": [
     {
       "test": "tests/master_wave_e_cases.py",
-      "source_sha256": "7fca038fe760509e6e5ddb607e44200c431b04c46f735c1a2a1409cc6613b4b7",
+      "source_sha256": "b876b2a127e101b92fb2f000b05ad369acf006da104a69c9eeebb9c0e1da1d3d",
       "mode": "worker",
       "exit_code": 0,
       "status": "pass"

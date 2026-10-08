@@ -25,7 +25,7 @@ def verify(worker: Path) -> dict:
     assert manifest["build"]["source_kind"] == "official_release"
     catalog = json.loads((REPO / "catalog/operations_wave_e.json").read_text("utf-8"))
     operations = sorted(operation["id"] for operation in catalog["operations"])
-    assert len(operations) == 4
+    assert len(operations) == 5
     assert all(operation["status"] == "VALIDATED" for operation in catalog["operations"])
     assert set(operations) <= {operation["id"] for operation in manifest["operations"]}
     results = []

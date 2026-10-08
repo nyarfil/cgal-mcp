@@ -370,6 +370,7 @@ def main() -> None:
         error(invoke(scratch, TRANSFORM, [square], params(0.01)),
               "MESH_SIZE_LIMIT_EXCEEDED", "RESOURCE_LIMIT")
         surface_cases(scratch)
+        tetrahedral_cases(scratch)
     print("PASS master Wave E worker cases")
 
 
@@ -635,6 +636,223 @@ def surface_cases(scratch: pathlib.Path) -> None:
           "INPUT_TYPE_MISMATCH", "TYPE_ERROR")
     error(invoke(scratch, SURF_GENERATE, [sphere], surface_params(25.0, 0.01, 0.0001)),
           "MESH_SIZE_LIMIT_EXCEEDED", "RESOURCE_LIMIT")
+
+
+# ---------------------------------------------------------------------------
+# TetrahedralMesh artifact and its independent validator (foundation for 7.14.03 Mesh_3)
+# ---------------------------------------------------------------------------
+
+TET_VALIDATOR = "mesh.validate.tetrahedral_mesh"
+TET_TYPE = "TetrahedralMesh"
+
+
+def tet_fixture(name: str) -> dict:
+    return artifact(FIXTURES / name, TET_TYPE)
+
+
+def load_tet(name: str) -> dict:
+    return json.loads((FIXTURES / name).read_text("utf-8"))
+
+
+def write_tet(scratch: pathlib.Path, vertices, tetrahedra, subdomains=None, raw=None) -> dict:
+    COUNTER[0] += 1
+    path = scratch / f"tet{COUNTER[0]:03d}.json"
+    value = raw if raw is not None else {
+        "vertices": vertices, "tetrahedra": tetrahedra,
+        "subdomains": subdomains if subdomains is not None else [1] * len(tetrahedra)}
+    path.write_text(json.dumps(value, separators=(",", ":")) + "\n", encoding="utf-8", newline="\n")
+    return artifact(path, TET_TYPE)
+
+
+def det3(p):
+    a, b, c = ([Fraction(p[i][k]) - Fraction(p[0][k]) for k in range(3)] for i in (1, 2, 3))
+    return (a[0] * (b[1] * c[2] - b[2] * c[1]) - a[1] * (b[0] * c[2] - b[2] * c[0])
+            + a[2] * (b[0] * c[1] - b[1] * c[0]))
+
+
+def tet_reference(vertices, tetrahedra) -> dict:
+    """Independent recomputation: exact volume, dihedral extremes, radius-edge maximum."""
+    volume = Fraction(0)
+    smallest, largest, ratio = 180.0, 0.0, 0.0
+    for cell in tetrahedra:
+        p = [vertices[i] for i in cell]
+        volume += det3(p) / 6
+        for i, j in ((0, 1), (0, 2), (0, 3), (1, 2), (1, 3), (2, 3)):
+            k, m = [t for t in range(4) if t not in (i, j)]
+            axis = [p[j][t] - p[i][t] for t in range(3)]
+
+            def perp(index):
+                w = [p[index][t] - p[i][t] for t in range(3)]
+                f = sum(w[t] * axis[t] for t in range(3)) / sum(a * a for a in axis)
+                return [w[t] - f * axis[t] for t in range(3)]
+            u, w = perp(k), perp(m)
+            cosine = sum(u[t] * w[t] for t in range(3)) / (math.hypot(*u) * math.hypot(*w))
+            angle = math.degrees(math.acos(max(-1.0, min(1.0, cosine))))
+            smallest, largest = min(smallest, angle), max(largest, angle)
+        # circumradius from the circumcentre linear system (Cramer's rule in floats)
+        a, b, c = ([p[i][t] - p[0][t] for t in range(3)] for i in (1, 2, 3))
+        rows = [[2 * x for x in v] for v in (a, b, c)]
+        rhs = [sum(x * x for x in v) for v in (a, b, c)]
+
+        def det(m):
+            return (m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1])
+                    - m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0])
+                    + m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0]))
+
+        def column(index):
+            m = [r[:] for r in rows]
+            for r in range(3):
+                m[r][index] = rhs[r]
+            return det(m)
+        d = det(rows)
+        radius = math.hypot(column(0) / d, column(1) / d, column(2) / d)
+        shortest = min(math.dist(p[i], p[j]) for i in range(4) for j in range(i + 1, 4))
+        ratio = max(ratio, radius / shortest)
+    return {"volume": float(volume), "min_dihedral": smallest, "max_dihedral": largest,
+            "radius_edge": ratio}
+
+
+def tet_validate(scratch, candidate, parameters=None):
+    return invoke(scratch, TET_VALIDATOR, [candidate], parameters or {})
+
+
+def tet_report(result) -> dict:
+    _, path = ok(result)
+    report = json.loads(path.read_text("utf-8"))
+    assert report["status"] == "pass" and report["passed"] is True, report
+    assert report["validator"] == TET_VALIDATOR and all(report["checks"].values()), report
+    return report
+
+
+def fix_orientation(vertices, cell):
+    cell = list(cell)
+    if det3([vertices[i] for i in cell]) < 0:
+        cell[2], cell[3] = cell[3], cell[2]
+    return cell
+
+
+def tetrahedral_cases(scratch: pathlib.Path) -> None:
+    def near(a, b, tol=1e-9):
+        return abs(a - b) <= tol * max(1.0, abs(b))
+    # Known-value fixtures: (name, volume, tetrahedron count, vertex count, boundary face count).
+    known = [("tet_single.json", Fraction(1, 6), 1, 4, 4),
+             ("tet_cube6.json", Fraction(1), 6, 8, 12),
+             ("tet_cube5.json", Fraction(1), 5, 8, 12),
+             ("tet_octahedron.json", Fraction(4, 3), 8, 7, 8)]
+    for name, volume, cells, vertex_count, boundary in known:
+        data = load_tet(name)
+        reference = tet_reference(data["vertices"], data["tetrahedra"])
+        assert reference["volume"] == float(volume), (name, reference)
+        report = tet_report(tet_validate(scratch, tet_fixture(name), {"domain_volume": float(volume)}))
+        assert report["tetrahedron_count"] == cells and report["vertex_count"] == vertex_count, report
+        assert report["boundary_face_count"] == boundary, report
+        assert near(report["volume"]["value"], float(volume)), report
+        assert report["volume"]["relative_error"] < 1e-12, report
+        assert report["boundary_euler_characteristic"] == 2 and report["boundary_genus"] == 0, report
+        assert report["euler_characteristic"] == 1, report
+        assert near(report["minimum_dihedral_angle_degrees"], reference["min_dihedral"], 1e-7), (name, report, reference)
+        assert near(report["maximum_dihedral_angle_degrees"], reference["max_dihedral"], 1e-7), (name, report, reference)
+        assert near(report["maximum_radius_edge_ratio"], reference["radius_edge"], 1e-7), (name, report, reference)
+        assert "domain_volume" in report["criteria_enforced"], report
+    # Single corner tetrahedron: dihedral angles 90 and acos(1/sqrt(3)), radius-edge sqrt(3)/2.
+    single = tet_report(tet_validate(scratch, tet_fixture("tet_single.json")))
+    assert near(single["minimum_dihedral_angle_degrees"], math.degrees(math.acos(1 / math.sqrt(3))), 1e-9)
+    assert near(single["maximum_dihedral_angle_degrees"], 90.0, 1e-9)
+    assert near(single["maximum_radius_edge_ratio"], math.sqrt(3) / 2, 1e-9)
+    assert single["criteria_enforced"] == [] and "domain_volume_matches" not in single["checks"], single
+    # Subdomain bookkeeping.
+    two = tet_report(tet_validate(scratch, tet_fixture("tet_cube6_two_subdomains.json"),
+                                  {"domain_volume": 1.0}))
+    assert two["subdomains"]["1"]["cell_count"] == 3 and two["subdomains"]["2"]["cell_count"] == 3, two
+    assert near(two["subdomains"]["1"]["volume"], 0.5) and near(two["subdomains"]["2"]["volume"], 0.5)
+    # Optional criteria: enforced when requested, rejected when violated.
+    tet_report(tet_validate(scratch, tet_fixture("tet_single.json"),
+                            {"minimum_dihedral_angle": 54.0, "maximum_radius_edge_ratio": 0.87,
+                             "minimum_tetrahedron_volume": 0.16}))
+    for bad, code in (({"minimum_dihedral_angle": 55.0}, "DIHEDRAL_ANGLE_VIOLATED"),
+                      ({"maximum_radius_edge_ratio": 0.8}, "RADIUS_EDGE_VIOLATED"),
+                      ({"minimum_tetrahedron_volume": 0.17}, "MINIMUM_VOLUME_VIOLATED"),
+                      ({"domain_volume": 1.0 / 6.0 * 1.001}, "DOMAIN_VOLUME_MISMATCH")):
+        rejected(tet_validate(scratch, tet_fixture("tet_single.json"), bad), code)
+    tet_report(tet_validate(scratch, tet_fixture("tet_single.json"),
+                            {"domain_volume": 1.0 / 6.0 * 1.001, "volume_relative_tolerance": 0.01}))
+    rejected(tet_validate(scratch, tet_fixture("tet_cube6.json"), {"domain_volume": 1.1}),
+             "DOMAIN_VOLUME_MISMATCH")
+
+    cube = load_tet("tet_cube6.json")
+    cv, ct = cube["vertices"], cube["tetrahedra"]
+    octa = load_tet("tet_octahedron.json")
+    # Inverted and degenerate cells.
+    swapped = [list(t) for t in ct]
+    swapped[2][1], swapped[2][2] = swapped[2][2], swapped[2][1]
+    rejected(tet_validate(scratch, write_tet(scratch, cv, swapped)), "INVERTED_TETRAHEDRON")
+    flat = [list(v) for v in cv]
+    flat[7] = [0.5, 0.5, 0.0]  # every tetrahedron through vertex 7 becomes coplanar
+    rejected(tet_validate(scratch, write_tet(scratch, flat, ct)), "DEGENERATE_TETRAHEDRON")
+    repeated = [list(t) for t in ct]
+    repeated[0][3] = repeated[0][0]
+    rejected(tet_validate(scratch, write_tet(scratch, cv, repeated)), "DEGENERATE_TETRAHEDRON")
+    # Hole: removing one tetrahedron leaves a valid manifold that no longer fills the domain.
+    notched = ct[:5]
+    tet_report(tet_validate(scratch, write_tet(scratch, cv, notched)))
+    rejected(tet_validate(scratch, write_tet(scratch, cv, notched), {"domain_volume": 1.0}),
+             "DOMAIN_VOLUME_MISMATCH")
+    hole = octa["tetrahedra"][:-1]
+    rejected(tet_validate(scratch, write_tet(scratch, octa["vertices"], hole), {"domain_volume": 4 / 3}),
+             "DOMAIN_VOLUME_MISMATCH")
+    # A detached inner body (cavity wall not face-connected to the outer body) is rejected.
+    cavity_vertices = [[0, 0, 0], [4, 0, 0], [0, 4, 0], [0, 0, 4], [1, 1, 1],
+                       [2, 1, 1], [1, 2, 1], [1, 1, 2]]
+    cavity_cells = [fix_orientation(cavity_vertices, t) for t in
+                    ([0, 1, 2, 4], [0, 1, 3, 4], [0, 2, 3, 4], [1, 2, 3, 4], [5, 6, 7, 4])]
+    rejected(tet_validate(scratch, write_tet(scratch, cavity_vertices, cavity_cells)), "MULTIPLE_COMPONENTS")
+    # T-junction: a large tetrahedron meets two small ones across a face whose edge carries a vertex.
+    tj_vertices = [[0, 0, 0], [2, 0, 0], [0, 2, 0], [0, 0, 2], [0, 0, -2], [1, 0, 0]]
+    tj_cells = [fix_orientation(tj_vertices, t) for t in ([0, 1, 2, 3], [0, 5, 2, 4], [5, 1, 2, 4])]
+    rejected(tet_validate(scratch, write_tet(scratch, tj_vertices, tj_cells)), "BOUNDARY_NOT_CLOSED")
+    # Duplicate and unused vertices.
+    duplicate = [list(v) for v in cv] + [list(cv[0])]
+    reroute = [list(t) for t in ct]
+    reroute[0] = [8 if i == 0 else i for i in reroute[0]]
+    rejected(tet_validate(scratch, write_tet(scratch, duplicate, reroute)), "REPEATED_VERTEX")
+    rejected(tet_validate(scratch, write_tet(scratch, cv + [[5, 5, 5]], ct)), "UNUSED_VERTEX")
+    # Overlap: a repeated cell, and a cell glued on the same side of a shared face.
+    rejected(tet_validate(scratch, write_tet(scratch, cv, ct + [ct[0]])), "NON_MANIFOLD_FACE")
+    same_side_vertices = [[0, 0, 0], [1, 0, 0], [0, 1, 0], [0, 0, 1], [0.1, 0.1, 0.1]]
+    same_side = [fix_orientation(same_side_vertices, t) for t in ([0, 1, 2, 3], [1, 2, 3, 4])]
+    rejected(tet_validate(scratch, write_tet(scratch, same_side_vertices, same_side)),
+             "FACE_ORIENTATION_CONFLICT")
+    # Cells joined only at a vertex are separate bodies.
+    pinch_vertices = [[0, 0, 0], [1, 0, 0], [0, 1, 0], [0, 0, 1], [-1, 0, 0], [0, -1, 0], [0, 0, -1]]
+    pinch = [fix_orientation(pinch_vertices, t) for t in ([0, 1, 2, 3], [0, 4, 5, 6])]
+    rejected(tet_validate(scratch, write_tet(scratch, pinch_vertices, pinch)), "MULTIPLE_COMPONENTS")
+    # Schema and request errors.
+    good = {"vertices": cv, "tetrahedra": ct, "subdomains": [1] * 6}
+    for bad_raw in (dict(good, subdomains=[1] * 5), dict(good, subdomains=[0] * 6),
+                    dict(good, subdomains=[1.5] * 6), dict(good, subdomains=[True] * 6),
+                    {key: good[key] for key in ("vertices", "tetrahedra")}, dict(good, extra=1)):
+        error(tet_validate(scratch, write_tet(scratch, None, None, raw=bad_raw)), "SCHEMA_MISMATCH",
+              "INPUT_ERROR")
+    error(tet_validate(scratch, write_tet(scratch, None, None,
+                                          raw=dict(good, tetrahedra=[], subdomains=[]))),
+          "TETRAHEDRON_LIMIT_EXCEEDED", "RESOURCE_LIMIT")
+    error(tet_validate(scratch, write_tet(scratch, None, None,
+                                          raw=dict(good, tetrahedra=[[0, 1, 2, 99]] * 6))),
+          "INDEX_OUT_OF_RANGE", "INPUT_ERROR")
+    error(tet_validate(scratch, dict(tet_fixture("tet_single.json"), unit="inch")), "UNSUPPORTED_UNIT",
+          "TYPE_ERROR")
+    good_input = tet_fixture("tet_cube6.json")
+    error(invoke(scratch, TET_VALIDATOR, [good_input, good_input]), "INPUT_COUNT_MISMATCH", "TYPE_ERROR")
+    error(invoke(scratch, TET_VALIDATOR, [artifact(WAVE_C / "planar_points.json", "PointSet2")]),
+          "INPUT_TYPE_MISMATCH", "TYPE_ERROR")
+    error(tet_validate(scratch, good_input, {"volume_relative_tolerance": 0.01}), "INVALID_PARAMETER",
+          "INVALID_REQUEST")
+    for bad in ({"domain_volume": -1.0}, {"domain_volume": "1"}, {"minimum_dihedral_angle": 80.0},
+                {"maximum_radius_edge_ratio": 0.5}):
+        error(tet_validate(scratch, good_input, bad), "INVALID_PARAMETER", "INVALID_REQUEST")
+    error(tet_validate(scratch, good_input, {"level_set": "x"}), "UNSUPPORTED_PARAMETER", "INVALID_REQUEST")
+    # An artifact whose bytes no longer match its pinned hash is refused.
+    assert tet_validate(scratch, dict(good_input, sha256="0" * 64))["status"] == "error"
 
 
 def on_boundary(vertex) -> bool:

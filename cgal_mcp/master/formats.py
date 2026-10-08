@@ -583,6 +583,7 @@ IMPLICIT_DOMAIN_KEYS = {
     "torus": {"major_radius", "minor_radius"},
 }
 MAX_IMPLICIT_DIMENSION = 1e6
+MAX_TETRAHEDRAL_VERTICES = 200_000
 MAX_ELLIPSOID_RATIO = 8.0
 MAX_TORUS_RATIO = 0.75
 
@@ -658,6 +659,22 @@ def _parse_typed_json(value: Any, requested_type: str | None) -> Inspection:
         points = _points(data["vertices"], 3, "Triangulation3", 4)
         cells = _indices(data["tetrahedra"], 4, len(points), "Triangulation3", "tetrahedra")
         return _geometry("Triangulation3", points, {}, {"tetrahedron_count": len(cells)})
+    if requested_type == "TetrahedralMesh":
+        data = _object(value, "TetrahedralMesh", {"vertices", "tetrahedra", "subdomains"})
+        points = _points(data["vertices"], 3, "TetrahedralMesh", 4)
+        if len(points) > MAX_TETRAHEDRAL_VERTICES:
+            raise InvalidInput("resource_limit", "TetrahedralMesh exceeds the vertex limit")
+        cells = _indices(data["tetrahedra"], 4, len(points), "TetrahedralMesh", "tetrahedra")
+        subdomains = data["subdomains"]
+        if not cells:
+            raise InvalidInput("insufficient_elements", "TetrahedralMesh requires at least one tetrahedron")
+        if (not isinstance(subdomains, list) or len(subdomains) != len(cells)
+                or not all(isinstance(x, int) and not isinstance(x, bool) and 1 <= x < 2 ** 31
+                           for x in subdomains)):
+            raise InvalidInput("schema_mismatch",
+                               "TetrahedralMesh subdomains need one integer in [1, 2^31) per tetrahedron")
+        return _geometry("TetrahedralMesh", points, {},
+                         {"tetrahedron_count": len(cells), "subdomain_count": len(set(subdomains))})
     if requested_type == "RayBatch3":
         rays = _object(value, "RayBatch3", {"rays"})["rays"]
         if not isinstance(rays, list) or not rays or len(rays) > MAX_TYPED_JSON_ELEMENTS:

@@ -59,6 +59,25 @@ Surface_mesherはCGAL 6.2.1で非推奨のパッケージです。陰関数ド�
 Mesh_2のconforming専用、局所サイズ基準、Lloyd最適化も未実装です。
 全体の未結合は[主要能力台帳](MAJOR_INVENTORY_JA.md)を参照。
 
+## TetrahedralMesh と独立validator（7.14.03の基盤、Mesh_3は未呼出）
+
+型付き成果物`TetrahedralMesh`（JSON：`vertices`、`tetrahedra`（4頂点index）、`subdomains`（各セルの1以上の整数）、長さ単位mm/cm/m）。
+Operation `mesh.validate.tetrahedral_mesh`はMesh_3を呼ばず、生JSONから次を再計算します。
+
+| 検査 | 内容 |
+|---|---|
+| 頂点・セル | 位置重複なし、未使用頂点なし、全セルが正確な向き述語で正の向き・非退化 |
+| 面隣接 | 内部面はちょうど2セルが共有し向きが逆、3セル以上や同側重なりは拒否 |
+| 境界 | 全境界面が閉じた向き付き単一曲面（穴・T接合・空洞を拒否）、境界発散体積とセル体積和が一致 |
+| 頂点リンク | 内部頂点は球面、境界頂点は円板（3-多様体）、面連結は1本体 |
+| 統計 | 体積、二面角の最小・最大、外接半径／最短辺比、サブドメイン別体積 |
+| 任意基準 | `domain_volume`（＋`volume_relative_tolerance`）、`minimum_dihedral_angle`、`maximum_radius_edge_ratio`、`minimum_tetrahedron_volume`は指定時のみ強制 |
+
+fixtureは単一四面体、立方体の6分割・5分割、2サブドメイン、八面体（球状、体積4/3）。
+陰性対照は反転、退化、穴（体積不一致）、T接合、重複・未使用頂点、重複セル、同側重なり、分離した内部体です。
+セル同士のグローバルな貫入は、`domain_volume`指定時の体積比較以外では除外できません（既知の限界）。
+7.14.03は、Mesh_3の`make_mesh_3`生産Operationとdomain基準の結合が揃うまで未結合のままです。
+
 ```powershell
 .venv/Scripts/python.exe scripts/verify_master_wave_e.py `
   --worker build-master/Release/cgal-master-worker.exe `

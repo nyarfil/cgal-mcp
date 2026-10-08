@@ -1,7 +1,7 @@
 {
   "$schema": "operation.schema.json",
   "schema_version": 1,
-  "catalog_revision": "master-core-hull-wave-a-wave-b-mesh-boolean-repair-wave-c-wave-d-wave-e-validated-2",
+  "catalog_revision": "master-core-hull-wave-a-wave-b-mesh-boolean-repair-wave-c-wave-d-wave-e-validated-3",
   "cgal_version": "6.2.1",
   "build_requirements": {
     "source_kind": "official_release",
@@ -18832,6 +18832,208 @@
           "tests/master_wave_e_mcp_e2e.py:legacy"
         ],
         "worker_manifest_operation": "mesh.validate.surface_mesh",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "mesh.validate.tetrahedral_mesh",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "validator",
+      "summary": "Independent check that a TetrahedralMesh (vertices, tetrahedra, per-cell subdomain index) is a valid volume mesh: distinct and used vertices, exactly oriented non-degenerate tetrahedra, face adjacency with every interior face shared by exactly two opposite-facing cells, a single closed boundary surface, 3-manifold vertex links, face connectivity, cell-sum versus boundary-divergence volume, an optional declared domain volume, and dihedral-angle / radius-edge statistics with optional bounds. It never calls Mesh_3.",
+      "package": "Kernel_23",
+      "aliases": [
+        "validate tetrahedral mesh",
+        "validate volume mesh",
+        "tetrahedral mesh validator",
+        "\u56db\u9762\u4f53\u30e1\u30c3\u30b7\u30e5\u691c\u8a3c"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Kernel_23"
+        }
+      ],
+      "license": {
+        "expression": "LGPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Kernel_23",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Exact_predicates_inexact_constructions_kernel.h",
+            "sha256": "a0440aa2c090f4cd66ded7bd6bb7072e079952e0902913fbdcb79b1cc5af44a1"
+          },
+          {
+            "path": "LICENSE.LGPL",
+            "sha256": "374a43f625a1b877f6f13719d1bab4ca8791ede604da3e009c3ceda1f6f85489"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "TetrahedralMesh"
+            ],
+            "formats": [
+              "json"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [],
+        "properties": {
+          "domain_volume": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 1e+18,
+            "description": "Declared domain volume in the candidate unit cubed; when given the total tetrahedron volume must match it."
+          },
+          "volume_relative_tolerance": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 0.5,
+            "description": "Relative tolerance for domain_volume (default 1e-6); only valid together with domain_volume."
+          },
+          "minimum_dihedral_angle": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 70.5,
+            "description": "Smallest dihedral angle in degrees every tetrahedron must satisfy."
+          },
+          "maximum_radius_edge_ratio": {
+            "type": "number",
+            "exclusiveMinimum": 0.6123,
+            "maximum": 1000000.0,
+            "description": "Largest circumradius to shortest-edge ratio every tetrahedron may have (regular tetrahedron: 0.6124)."
+          },
+          "minimum_tetrahedron_volume": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 1e+18,
+            "description": "Smallest tetrahedron volume in the candidate unit cubed."
+          }
+        }
+      },
+      "preconditions": [],
+      "validation": {
+        "required": false,
+        "validators": [],
+        "bindings": {},
+        "terminal_validator": true,
+        "required_report_checks": {
+          "status": "pass",
+          "passed": true,
+          "validator": "mesh.validate.tetrahedral_mesh",
+          "checks.vertices_distinct": true,
+          "checks.no_unused_vertices": true,
+          "checks.subdomain_indices_valid": true,
+          "checks.tetrahedra_nondegenerate": true,
+          "checks.tetrahedra_positively_oriented": true,
+          "checks.face_adjacency_valid": true,
+          "checks.interior_faces_shared_by_two": true,
+          "checks.single_connected_component": true,
+          "checks.boundary_closed_surface": true,
+          "checks.single_boundary_surface": true,
+          "checks.boundary_volume_consistent": true,
+          "checks.vertex_links_are_manifold": true
+        }
+      },
+      "output_contract": {
+        "schema": "ValidationReport/v1",
+        "required_true_checks": [
+          "vertices_distinct",
+          "no_unused_vertices",
+          "subdomain_indices_valid",
+          "tetrahedra_nondegenerate",
+          "tetrahedra_positively_oriented",
+          "face_adjacency_valid",
+          "interior_faces_shared_by_two",
+          "single_connected_component",
+          "boundary_closed_surface",
+          "single_boundary_surface",
+          "boundary_volume_consistent",
+          "vertex_links_are_manifold"
+        ],
+        "status": "pass",
+        "failure_or_indeterminate_publish": false,
+        "independence": "validator does not call CGAL Mesh_3 (make_mesh_3) or any mesher; it uses only the exact orientation predicate and its own combinatorics and arithmetic"
+      },
+      "dependencies": [
+        "Kernel_23"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "checks": [
+            "vertices_distinct",
+            "no_unused_vertices",
+            "subdomain_indices_valid",
+            "tetrahedra_nondegenerate",
+            "tetrahedra_positively_oriented",
+            "face_adjacency_valid",
+            "interior_faces_shared_by_two",
+            "single_connected_component",
+            "boundary_closed_surface",
+            "single_boundary_surface",
+            "boundary_volume_consistent",
+            "vertex_links_are_manifold"
+          ],
+          "input_slots": [
+            "candidate"
+          ],
+          "optional_parameters": [
+            "domain_volume",
+            "volume_relative_tolerance",
+            "minimum_dihedral_angle",
+            "maximum_radius_edge_ratio",
+            "minimum_tetrahedron_volume"
+          ],
+          "output_slot": "validation"
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "CGAL filtered-exact orientation predicate on binary64 vertices; volumes, angles and radius-edge ratios use binary64 arithmetic with long double volume accumulation",
+        "exact_constructions": "unsupported_fail_closed",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_wave_e_cases.py",
+          "tests/master_wave_e_mcp_e2e.py:auto",
+          "tests/master_wave_e_mcp_e2e.py:legacy"
+        ],
+        "worker_manifest_operation": "mesh.validate.tetrahedral_mesh",
         "build": "build-master/Release/cgal-master-worker.exe",
         "source_kind": "official_release",
         "cgal_version": "6.2.1",

@@ -32,6 +32,7 @@ inline constexpr const char* kEpick =
 // mandatory validation would exceed the validator budget, so no candidate is
 // produced that cannot be validated.
 inline constexpr std::size_t kMaximumPlanarPoints = 200000;
+inline constexpr std::size_t kMaximumTetrahedra = 1000000;
 inline constexpr std::size_t kMaximumSpatialPoints = 1000000;
 inline constexpr std::size_t kMaximumConstraintSegments = 4000;
 inline constexpr std::size_t kMaximumPolygonVertices = 5000;
@@ -58,6 +59,12 @@ struct Triangulation2Data {
 struct Triangulation3Data {
   std::vector<XYZ> vertices;
   std::vector<Index4> tetrahedra;
+};
+
+struct TetrahedralMeshData {
+  std::vector<XYZ> vertices;
+  std::vector<Index4> tetrahedra;
+  std::vector<std::size_t> subdomains;  // one positive cell subdomain index per tetrahedron
 };
 
 struct RayData {
@@ -92,6 +99,7 @@ PolygonWithHolesData read_polygon_with_holes2(const ArtifactInput& input);
 SegmentGraphData read_segment_graph2(const ArtifactInput& input);
 Triangulation2Data read_triangulation2(const ArtifactInput& input);
 Triangulation3Data read_triangulation3(const ArtifactInput& input);
+TetrahedralMeshData read_tetrahedral_mesh(const ArtifactInput& input);
 std::vector<XYZ> read_point_set3(const ArtifactInput& input);
 std::vector<RayData> read_ray_batch3(const ArtifactInput& input);
 TriangleMeshData read_triangle_mesh(const ArtifactInput& input);
