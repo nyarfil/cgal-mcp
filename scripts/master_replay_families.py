@@ -1210,19 +1210,21 @@ DOM_NEGATIVE_RADIUS = _fx("domain_negative_radius.json", "40ef4479ff98b887c02795
 DOM_EXTRA_PARAMETER = _fx("domain_extra_parameter.json", "5b01da327554bd849b695d003e3a0d6b20bef63ca4b1708da1c809a2e188fa42")
 DOM_THICK_TORUS = _fx("domain_thick_torus.json", "1c93cbf031ad545809fbd9ba43073e83f23d1be3a27cc753f5074a1a4d8cdebb")
 DOM_NEEDLE_ELLIPSOID = _fx("domain_needle_ellipsoid.json", "14561aba29339e7d769642cce1c5e82d79db217de0a6cd577c15612b5defa180")
-SURF_SPHERE_MESH = _fx("surface_sphere_r2_mesh.off", "a38143b10d50280fe2ecd3a9d78f0666f2adf2cebcfd9ea9032eef2ef47f7d22")
-SURF_MISSING = _fx("surface_sphere_missing_triangle.off", "81459d76b732eb0b15bd12e1d2c19fa670b879cbc83140da604c1b188e004b4e")
-SURF_FLIPPED_ALL = _fx("surface_sphere_flipped_all.off", "2f60d5567fbba72909fb4524d1410cf65809d03af6a7745a73f932fb8b414670")
-SURF_FLIPPED_ONE = _fx("surface_sphere_flipped_one.off", "fa35721b3a61b6e15a32e147fea079d30ec56bdb7181d63bfa12fe8439182ed4")
-SURF_DUPLICATE = _fx("surface_sphere_duplicate_face.off", "a6ead538d0b1565e64c8f98671e04ddee6322911b1fddf8cb61a9060244a107c")
-SURF_SCALED = _fx("surface_sphere_scaled.off", "006d5623a3f155e2b8d3bf00e10a0cad019af631d8eedc30a8c94e0f76df0997")
-SURF_OCTAHEDRON = _fx("surface_octahedron_r2.off", "def4f60cd272c68dd283bb2ecb6ab34b7243676726d61afda6207fe944efc2d0")
-SURF_TORUS_MESH = _fx("surface_torus_mesh.off", "2be23395ea7b788b8c49a86df2d0a6a520950d62dd70b3e7b76881f41f28ffa7")
-SURF_ELLIPSOID_MESH = _fx("surface_ellipsoid_mesh.off", "bfe2bd399d614779d1dd3fdad182805966e7b6b00a07dc9299726ace90d89321")
+SURF_SPHERE_MESH = _fx("surface_sphere_r2_mesh.off", "128b742b0aea3c0da348cbe856bb5a611aba590743cc718edfeee7121542f750")
+SURF_MISSING = _fx("surface_sphere_missing_triangle.off", "2f89f887201ed532235528999a624b5b76a0293fd6a491ceb0c72568fdc1532f")
+SURF_FLIPPED_ALL = _fx("surface_sphere_flipped_all.off", "326b7a0e0c0ae264cd474619b0216bcaf4e0fccc1f919e2f2cf42ab1060a64b2")
+SURF_FLIPPED_ONE = _fx("surface_sphere_flipped_one.off", "0efe1df86efcd3a70565ca731afb87e6ec7a31652606b11b83b0327f42adad5f")
+SURF_DUPLICATE = _fx("surface_sphere_duplicate_face.off", "a18539731c0aaaf41edeb6e7d9c8422b71080043214854e4d1acdd26b8deb4cd")
+SURF_SCALED = _fx("surface_sphere_scaled.off", "31c68fac197cf56d032b2fa5e28547de5e96211bffb85f1efdba72a81fd4e883")
+SURF_OCTAHEDRON = _fx("surface_octahedron_r2.off", "61089e4b1f1f2475529b65641a4a0fa7f3f67534391cf5d950b94208918d2555")
+SURF_TORUS_MESH = _fx("surface_torus_mesh.off", "8a5e1dc8db3e21e561eca23e8d26891850c5dead694fdf3734f176bab3e1a56d")
+SURF_ELLIPSOID_MESH = _fx("surface_ellipsoid_mesh.off", "fb02c088721b20ac3c828dea43e62e564687da5bd6b3515c518421f905f10b9f")
 
 SURF_GEN = "mesh.surface.generate"
 SURF_VAL = "mesh.validate.surface_mesh"
 PI = math.pi
+ELLIPSOID_AREA = 4.0 * PI * (((3.0 * 2.0) ** 1.6075 + (3.0 * 1.5) ** 1.6075 +
+                              (2.0 * 1.5) ** 1.6075) / 3.0) ** (1 / 1.6075)
 
 
 def _surf(angle: float, size: float, distance: float) -> dict:
@@ -1396,6 +1398,9 @@ FAMILY_7_14 = {
             ["metrics.domain_kind", "==", "ellipsoid"],
             ["metrics.euler_characteristic", "==", 2],
             ["output:geometry:measure:off.max_ellipsoid_residual(3,2,1.5)", "approx", [0.0, 1e-5]],
+            # Knud Thomsen's approximation of the ellipsoid area (error <= 1.1 percent) plus the
+            # inscribed-facet sampling loss gives a 4 percent bound.
+            ["output:geometry:measure:off.area", "approx", [ELLIPSOID_AREA, 0.04 * ELLIPSOID_AREA]],
             ["output:geometry:measure:off.signed_volume", "approx", [4.0 / 3.0 * PI * 9.0,
                                                                   0.06 * 4.0 / 3.0 * PI * 9.0]],
             ["output:geometry:measure:off.min_angle_degrees", ">=", 25.0],
