@@ -1,7 +1,7 @@
 {
   "$schema": "operation.schema.json",
   "schema_version": 1,
-  "catalog_revision": "master-core-hull-wave-a-wave-b-mesh-boolean-repair-wave-c-validated-1",
+  "catalog_revision": "master-core-hull-wave-a-wave-b-mesh-boolean-repair-wave-c-wave-d-validated-1",
   "cgal_version": "6.2.1",
   "build_requirements": {
     "source_kind": "official_release",
@@ -15164,6 +15164,2780 @@
           "tests/master_wave_c_mcp_e2e.py:legacy"
         ],
         "worker_manifest_operation": "spatial.validate.ray_hits_report",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "mesh.triangulate.faces",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "transform",
+      "summary": "Triangulate every polygon face of a polygon mesh (triangulate_faces or per-face triangulate_face).",
+      "package": "PMP_Remeshing",
+      "major_requirements": [
+        "major.7.6.01"
+      ],
+      "aliases": [
+        "triangulate faces",
+        "triangulate polygon mesh",
+        "quad to triangle",
+        "convert polygons to triangles",
+        "\u9762\u306e\u4e09\u89d2\u5f62\u5206\u5272",
+        "\u30dd\u30ea\u30b4\u30f3\u3092\u4e09\u89d2\u5f62\u5316"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "PMP_Remeshing"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Polygon_mesh_processing::triangulate_faces"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Polygon_mesh_processing::triangulate_face"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Polygon_mesh_processing/triangulate_faces.h"
+        },
+        {
+          "kind": "manual",
+          "identifier": "PMP_Remeshing/index.html"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Polygon_mesh_processing",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/triangulate_faces.h",
+            "sha256": "c3b07fb7896ae6a8276f18744c21ba44614081e632b5701c0f67033005d06edb"
+          },
+          {
+            "path": "include/CGAL/license/gpl_package_list.txt",
+            "sha256": "efb290ee3ef3d8b7675896bc037f1c9359f583543ca9e38bcb425fe34a8995db"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "source",
+            "types": [
+              "PolygonSoup3"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "geometry",
+            "type": "TriangleSurfaceMesh",
+            "format": "off",
+            "unit_from": "source"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "method"
+        ],
+        "properties": {
+          "method": {
+            "type": "string",
+            "enum": [
+              "triangulate_faces",
+              "triangulate_face"
+            ],
+            "default": "triangulate_faces"
+          }
+        }
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 268435456,
+          "maximum_faces": 20000,
+          "maximum_face_degree": 64
+        }
+      ],
+      "validation": {
+        "required": true,
+        "validators": [
+          "mesh.validate.triangulated_faces"
+        ],
+        "bindings": {
+          "mesh.validate.triangulated_faces": {
+            "artifacts": {
+              "candidate": {
+                "output": "geometry"
+              },
+              "source": {
+                "input": "source"
+              }
+            }
+          }
+        }
+      },
+      "output_contract": {
+        "geometry_mutation": true,
+        "source_sha256_preserved": true,
+        "candidate_published_only_after_validation": true,
+        "producer_diagnostics_are_non_authoritative": true
+      },
+      "dependencies": [
+        "PMP_Remeshing"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "input_slots": [
+            "source"
+          ],
+          "maximum_input_faces": 20000,
+          "required_parameters": [
+            "method"
+          ],
+          "source_header": "CGAL/Polygon_mesh_processing/triangulate_faces.h",
+          "symbols": [
+            "triangulate_faces",
+            "triangulate_face"
+          ],
+          "validators": [
+            "mesh.validate.triangulated_faces"
+          ]
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "CGAL filtered-exact predicates (EPICK); validators re-derive combinatorics from raw OFF, use exact CGAL orientation for per-face triangulation orientation and a certified lattice-sampled Hausdorff bound",
+        "exact_constructions": "unsupported_fail_closed",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_wave_d_cases.py",
+          "tests/master_wave_d_mcp_e2e.py:auto",
+          "tests/master_wave_d_mcp_e2e.py:legacy"
+        ],
+        "worker_manifest_operation": "mesh.triangulate.faces",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "mesh.validate.triangulated_faces",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "validator",
+      "summary": "Independently checks each candidate triangle lies in exactly one source face, per-face counts, boundary cycles and exact per-face orientation.",
+      "package": "PMP_Remeshing",
+      "aliases": [
+        "validate triangulation of faces",
+        "\u4e09\u89d2\u5f62\u5206\u5272\u691c\u8a3c"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "PMP_Remeshing"
+        },
+        {
+          "kind": "operation_reference",
+          "identifier": "mesh.triangulate.faces"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Polygon_mesh_processing",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/triangulate_faces.h",
+            "sha256": "c3b07fb7896ae6a8276f18744c21ba44614081e632b5701c0f67033005d06edb"
+          },
+          {
+            "path": "include/CGAL/license/gpl_package_list.txt",
+            "sha256": "efb290ee3ef3d8b7675896bc037f1c9359f583543ca9e38bcb425fe34a8995db"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          },
+          {
+            "slot": "source",
+            "types": [
+              "PolygonSoup3"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [],
+        "properties": {}
+      },
+      "preconditions": [],
+      "validation": {
+        "required": false,
+        "validators": [],
+        "bindings": {},
+        "terminal_validator": true,
+        "validates": "mesh.triangulate.faces",
+        "validates_all": [
+          "mesh.triangulate.faces"
+        ],
+        "required_report_checks": {
+          "status": "pass",
+          "passed": true,
+          "validator": "mesh.validate.triangulated_faces",
+          "validates": "mesh.triangulate.faces",
+          "checks.candidate_valid_triangle_mesh": true,
+          "checks.vertices_identical_to_source": true,
+          "checks.every_triangle_in_exactly_one_source_face": true,
+          "checks.triangle_count_per_face_is_degree_minus_two": true,
+          "checks.face_boundary_cycles_reproduced": true,
+          "checks.triangles_consistently_oriented_with_face": true,
+          "checks.boundary_edges_preserved": true,
+          "checks.topology_preserved": true
+        }
+      },
+      "output_contract": {
+        "schema": "ValidationReport/v1",
+        "required_true_checks": [
+          "candidate_valid_triangle_mesh",
+          "vertices_identical_to_source",
+          "every_triangle_in_exactly_one_source_face",
+          "triangle_count_per_face_is_degree_minus_two",
+          "face_boundary_cycles_reproduced",
+          "triangles_consistently_oriented_with_face",
+          "boundary_edges_preserved",
+          "topology_preserved"
+        ],
+        "status": "pass",
+        "failure_or_indeterminate_publish": false,
+        "independence": "validator does not call the CGAL meshing/remeshing/smoothing/triangulation function under test"
+      },
+      "dependencies": [
+        "PMP_Remeshing"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "checks": [
+            "candidate_valid_triangle_mesh",
+            "vertices_identical_to_source",
+            "every_triangle_in_exactly_one_source_face",
+            "triangle_count_per_face_is_degree_minus_two",
+            "face_boundary_cycles_reproduced",
+            "triangles_consistently_oriented_with_face",
+            "boundary_edges_preserved",
+            "topology_preserved"
+          ],
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "CGAL filtered-exact predicates (EPICK); validators re-derive combinatorics from raw OFF, use exact CGAL orientation for per-face triangulation orientation and a certified lattice-sampled Hausdorff bound",
+        "exact_constructions": "unsupported_fail_closed",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_wave_d_cases.py",
+          "tests/master_wave_d_mcp_e2e.py:auto",
+          "tests/master_wave_d_mcp_e2e.py:legacy"
+        ],
+        "worker_manifest_operation": "mesh.validate.triangulated_faces",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "mesh.refine.local",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "transform",
+      "summary": "Refine a triangle mesh by inserting interior vertices (Polygon_mesh_processing::refine) with fixed boundary and source vertices.",
+      "package": "PMP_Remeshing",
+      "major_requirements": [
+        "major.7.6.02"
+      ],
+      "aliases": [
+        "refine mesh",
+        "mesh refinement",
+        "densify triangles",
+        "\u30e1\u30c3\u30b7\u30e5\u7d30\u5206\u5316",
+        "\u30e1\u30c3\u30b7\u30e5\u30ea\u30d5\u30a1\u30a4\u30f3"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "PMP_Remeshing"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Polygon_mesh_processing::refine"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Polygon_mesh_processing/refine.h"
+        },
+        {
+          "kind": "manual",
+          "identifier": "PMP_Remeshing/index.html"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Polygon_mesh_processing",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/refine.h",
+            "sha256": "083f771c153522470a77146970113ad8a3b8833fac049c7f421da6ea1eedda1c"
+          },
+          {
+            "path": "include/CGAL/license/gpl_package_list.txt",
+            "sha256": "efb290ee3ef3d8b7675896bc037f1c9359f583543ca9e38bcb425fe34a8995db"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "source",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "geometry",
+            "type": "TriangleSurfaceMesh",
+            "format": "off",
+            "unit_from": "source"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "density_control_factor",
+          "max_deviation"
+        ],
+        "properties": {
+          "density_control_factor": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 10,
+            "default": 1.4142135623730951
+          },
+          "max_deviation": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Certified two-sided sampled Hausdorff bound the independent validator enforces between source and candidate."
+          }
+        }
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 268435456,
+          "maximum_faces": 20000
+        }
+      ],
+      "validation": {
+        "required": true,
+        "validators": [
+          "mesh.validate.refinement"
+        ],
+        "bindings": {
+          "mesh.validate.refinement": {
+            "artifacts": {
+              "candidate": {
+                "output": "geometry"
+              },
+              "source": {
+                "input": "source"
+              }
+            },
+            "parameters": {
+              "max_deviation": {
+                "parameter": "max_deviation"
+              }
+            }
+          }
+        }
+      },
+      "output_contract": {
+        "geometry_mutation": true,
+        "source_sha256_preserved": true,
+        "candidate_published_only_after_validation": true,
+        "producer_diagnostics_are_non_authoritative": true
+      },
+      "dependencies": [
+        "PMP_Remeshing"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "input_slots": [
+            "source"
+          ],
+          "maximum_input_faces": 20000,
+          "required_parameters": [
+            "density_control_factor",
+            "max_deviation"
+          ],
+          "source_header": "CGAL/Polygon_mesh_processing/refine.h",
+          "symbols": [
+            "refine"
+          ],
+          "validator_parameter_bindings": {
+            "mesh.validate.refinement": {
+              "max_deviation": "max_deviation"
+            }
+          },
+          "validators": [
+            "mesh.validate.refinement"
+          ]
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "CGAL filtered-exact predicates (EPICK); validators re-derive combinatorics from raw OFF, use exact CGAL orientation for per-face triangulation orientation and a certified lattice-sampled Hausdorff bound",
+        "exact_constructions": "unsupported_fail_closed",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_wave_d_cases.py",
+          "tests/master_wave_d_mcp_e2e.py:auto",
+          "tests/master_wave_d_mcp_e2e.py:legacy"
+        ],
+        "worker_manifest_operation": "mesh.refine.local",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "mesh.validate.refinement",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "validator",
+      "summary": "Independently checks preserved source vertices/boundary, insertion count relation, topology, orientation, certified Hausdorff bound and self-intersections.",
+      "package": "PMP_Remeshing",
+      "aliases": [
+        "validate refinement",
+        "\u7d30\u5206\u5316\u691c\u8a3c"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "PMP_Remeshing"
+        },
+        {
+          "kind": "operation_reference",
+          "identifier": "mesh.refine.local"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Polygon_mesh_processing",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/refine.h",
+            "sha256": "083f771c153522470a77146970113ad8a3b8833fac049c7f421da6ea1eedda1c"
+          },
+          {
+            "path": "include/CGAL/license/gpl_package_list.txt",
+            "sha256": "efb290ee3ef3d8b7675896bc037f1c9359f583543ca9e38bcb425fe34a8995db"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          },
+          {
+            "slot": "source",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "max_deviation"
+        ],
+        "properties": {
+          "max_deviation": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Certified two-sided sampled Hausdorff bound the independent validator enforces between source and candidate."
+          }
+        }
+      },
+      "preconditions": [],
+      "validation": {
+        "required": false,
+        "validators": [],
+        "bindings": {},
+        "terminal_validator": true,
+        "validates": "mesh.refine.local",
+        "validates_all": [
+          "mesh.refine.local"
+        ],
+        "required_report_checks": {
+          "status": "pass",
+          "passed": true,
+          "validator": "mesh.validate.refinement",
+          "validates": "mesh.refine.local",
+          "checks.candidate_valid_triangle_mesh": true,
+          "checks.source_vertices_preserved": true,
+          "checks.boundary_edges_preserved": true,
+          "checks.interior_insertion_count_relation": true,
+          "checks.topology_preserved": true,
+          "checks.orientation_preserved": true,
+          "checks.hausdorff_within_max_deviation": true,
+          "checks.no_self_intersections": true
+        }
+      },
+      "output_contract": {
+        "schema": "ValidationReport/v1",
+        "required_true_checks": [
+          "candidate_valid_triangle_mesh",
+          "source_vertices_preserved",
+          "boundary_edges_preserved",
+          "interior_insertion_count_relation",
+          "topology_preserved",
+          "orientation_preserved",
+          "hausdorff_within_max_deviation",
+          "no_self_intersections"
+        ],
+        "status": "pass",
+        "failure_or_indeterminate_publish": false,
+        "independence": "validator does not call the CGAL meshing/remeshing/smoothing/triangulation function under test"
+      },
+      "dependencies": [
+        "PMP_Remeshing"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "bound_parameters": [
+            "max_deviation"
+          ],
+          "checks": [
+            "candidate_valid_triangle_mesh",
+            "source_vertices_preserved",
+            "boundary_edges_preserved",
+            "interior_insertion_count_relation",
+            "topology_preserved",
+            "orientation_preserved",
+            "hausdorff_within_max_deviation",
+            "no_self_intersections"
+          ],
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "CGAL filtered-exact predicates (EPICK); validators re-derive combinatorics from raw OFF, use exact CGAL orientation for per-face triangulation orientation and a certified lattice-sampled Hausdorff bound",
+        "exact_constructions": "unsupported_fail_closed",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_wave_d_cases.py",
+          "tests/master_wave_d_mcp_e2e.py:auto",
+          "tests/master_wave_d_mcp_e2e.py:legacy"
+        ],
+        "worker_manifest_operation": "mesh.validate.refinement",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "mesh.remesh.isotropic",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "transform",
+      "summary": "Uniform isotropic remeshing of a triangle mesh to a target edge length (Polygon_mesh_processing::isotropic_remeshing).",
+      "package": "PMP_Remeshing",
+      "major_requirements": [
+        "major.7.6.03"
+      ],
+      "aliases": [
+        "isotropic remeshing",
+        "uniform remesh",
+        "remesh to target edge length",
+        "\u7b49\u65b9\u30ea\u30e1\u30c3\u30b7\u30e5",
+        "\u30ea\u30e1\u30c3\u30b7\u30e5"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "PMP_Remeshing"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Polygon_mesh_processing::isotropic_remeshing"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Polygon_mesh_processing/remesh.h"
+        },
+        {
+          "kind": "manual",
+          "identifier": "PMP_Remeshing/index.html"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Polygon_mesh_processing",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/remesh.h",
+            "sha256": "05fa7984340fe16b81e809392c5a95f38bda9239a780b8c4ad079e67eabaf585"
+          },
+          {
+            "path": "include/CGAL/license/gpl_package_list.txt",
+            "sha256": "efb290ee3ef3d8b7675896bc037f1c9359f583543ca9e38bcb425fe34a8995db"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "source",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "geometry",
+            "type": "TriangleSurfaceMesh",
+            "format": "off",
+            "unit_from": "source"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "target_edge_length",
+          "number_of_iterations",
+          "number_of_relaxation_steps",
+          "max_deviation"
+        ],
+        "properties": {
+          "target_edge_length": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Uniform target edge length."
+          },
+          "number_of_iterations": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 50,
+            "default": 1
+          },
+          "number_of_relaxation_steps": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10,
+            "default": 1
+          },
+          "max_deviation": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Certified two-sided sampled Hausdorff bound the independent validator enforces between source and candidate."
+          }
+        }
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 268435456,
+          "maximum_faces": 20000
+        }
+      ],
+      "validation": {
+        "required": true,
+        "validators": [
+          "mesh.validate.isotropic_remesh"
+        ],
+        "bindings": {
+          "mesh.validate.isotropic_remesh": {
+            "artifacts": {
+              "candidate": {
+                "output": "geometry"
+              },
+              "source": {
+                "input": "source"
+              }
+            },
+            "parameters": {
+              "target_edge_length": {
+                "parameter": "target_edge_length"
+              },
+              "max_deviation": {
+                "parameter": "max_deviation"
+              }
+            }
+          }
+        }
+      },
+      "output_contract": {
+        "geometry_mutation": true,
+        "source_sha256_preserved": true,
+        "candidate_published_only_after_validation": true,
+        "producer_diagnostics_are_non_authoritative": true
+      },
+      "dependencies": [
+        "PMP_Remeshing"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "input_slots": [
+            "source"
+          ],
+          "maximum_input_faces": 20000,
+          "maximum_output_faces": 60000,
+          "required_parameters": [
+            "target_edge_length",
+            "number_of_iterations",
+            "number_of_relaxation_steps",
+            "max_deviation"
+          ],
+          "source_header": "CGAL/Polygon_mesh_processing/remesh.h",
+          "symbols": [
+            "isotropic_remeshing"
+          ],
+          "validator_parameter_bindings": {
+            "mesh.validate.isotropic_remesh": {
+              "max_deviation": "max_deviation",
+              "target_edge_length": "target_edge_length"
+            }
+          },
+          "validators": [
+            "mesh.validate.isotropic_remesh"
+          ]
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "CGAL filtered-exact predicates (EPICK); validators re-derive combinatorics from raw OFF, use exact CGAL orientation for per-face triangulation orientation and a certified lattice-sampled Hausdorff bound",
+        "exact_constructions": "unsupported_fail_closed",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_wave_d_cases.py",
+          "tests/master_wave_d_mcp_e2e.py:auto",
+          "tests/master_wave_d_mcp_e2e.py:legacy"
+        ],
+        "worker_manifest_operation": "mesh.remesh.isotropic",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "mesh.validate.isotropic_remesh",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "validator",
+      "summary": "Independently checks topology, orientation, boundary placement, target edge-length band, certified Hausdorff bound and self-intersections.",
+      "package": "PMP_Remeshing",
+      "aliases": [
+        "validate isotropic remesh",
+        "\u30ea\u30e1\u30c3\u30b7\u30e5\u691c\u8a3c"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "PMP_Remeshing"
+        },
+        {
+          "kind": "operation_reference",
+          "identifier": "mesh.remesh.isotropic"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Polygon_mesh_processing",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/remesh.h",
+            "sha256": "05fa7984340fe16b81e809392c5a95f38bda9239a780b8c4ad079e67eabaf585"
+          },
+          {
+            "path": "include/CGAL/license/gpl_package_list.txt",
+            "sha256": "efb290ee3ef3d8b7675896bc037f1c9359f583543ca9e38bcb425fe34a8995db"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          },
+          {
+            "slot": "source",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "target_edge_length",
+          "max_deviation"
+        ],
+        "properties": {
+          "target_edge_length": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Uniform target edge length."
+          },
+          "max_deviation": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Certified two-sided sampled Hausdorff bound the independent validator enforces between source and candidate."
+          }
+        }
+      },
+      "preconditions": [],
+      "validation": {
+        "required": false,
+        "validators": [],
+        "bindings": {},
+        "terminal_validator": true,
+        "validates": "mesh.remesh.isotropic",
+        "validates_all": [
+          "mesh.remesh.isotropic"
+        ],
+        "required_report_checks": {
+          "status": "pass",
+          "passed": true,
+          "validator": "mesh.validate.isotropic_remesh",
+          "validates": "mesh.remesh.isotropic",
+          "checks.candidate_valid_triangle_mesh": true,
+          "checks.topology_preserved": true,
+          "checks.orientation_preserved": true,
+          "checks.boundary_on_source_boundary": true,
+          "checks.edge_lengths_within_target_band": true,
+          "checks.hausdorff_within_max_deviation": true,
+          "checks.no_self_intersections": true
+        }
+      },
+      "output_contract": {
+        "schema": "ValidationReport/v1",
+        "required_true_checks": [
+          "candidate_valid_triangle_mesh",
+          "topology_preserved",
+          "orientation_preserved",
+          "boundary_on_source_boundary",
+          "edge_lengths_within_target_band",
+          "hausdorff_within_max_deviation",
+          "no_self_intersections"
+        ],
+        "status": "pass",
+        "failure_or_indeterminate_publish": false,
+        "independence": "validator does not call the CGAL meshing/remeshing/smoothing/triangulation function under test"
+      },
+      "dependencies": [
+        "PMP_Remeshing"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "bound_parameters": [
+            "target_edge_length",
+            "max_deviation"
+          ],
+          "checks": [
+            "candidate_valid_triangle_mesh",
+            "topology_preserved",
+            "orientation_preserved",
+            "boundary_on_source_boundary",
+            "edge_lengths_within_target_band",
+            "hausdorff_within_max_deviation",
+            "no_self_intersections"
+          ],
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "CGAL filtered-exact predicates (EPICK); validators re-derive combinatorics from raw OFF, use exact CGAL orientation for per-face triangulation orientation and a certified lattice-sampled Hausdorff bound",
+        "exact_constructions": "unsupported_fail_closed",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_wave_d_cases.py",
+          "tests/master_wave_d_mcp_e2e.py:auto",
+          "tests/master_wave_d_mcp_e2e.py:legacy"
+        ],
+        "worker_manifest_operation": "mesh.validate.isotropic_remesh",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "mesh.remesh.split_long_edges",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "transform",
+      "summary": "Split every edge longer than a maximum length (Polygon_mesh_processing::split_long_edges); geometry is unchanged.",
+      "package": "PMP_Remeshing",
+      "major_requirements": [
+        "major.7.6.03"
+      ],
+      "aliases": [
+        "split long edges",
+        "subdivide long edges",
+        "maximum edge length",
+        "\u9577\u3044\u8fba\u3092\u5206\u5272",
+        "\u8fba\u5206\u5272"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "PMP_Remeshing"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Polygon_mesh_processing::split_long_edges"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Polygon_mesh_processing/remesh.h"
+        },
+        {
+          "kind": "manual",
+          "identifier": "PMP_Remeshing/index.html"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Polygon_mesh_processing",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/remesh.h",
+            "sha256": "05fa7984340fe16b81e809392c5a95f38bda9239a780b8c4ad079e67eabaf585"
+          },
+          {
+            "path": "include/CGAL/license/gpl_package_list.txt",
+            "sha256": "efb290ee3ef3d8b7675896bc037f1c9359f583543ca9e38bcb425fe34a8995db"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "source",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "geometry",
+            "type": "TriangleSurfaceMesh",
+            "format": "off",
+            "unit_from": "source"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "max_length"
+        ],
+        "properties": {
+          "max_length": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Maximum edge length after splitting."
+          }
+        }
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 268435456,
+          "maximum_faces": 20000
+        }
+      ],
+      "validation": {
+        "required": true,
+        "validators": [
+          "mesh.validate.split_long_edges"
+        ],
+        "bindings": {
+          "mesh.validate.split_long_edges": {
+            "artifacts": {
+              "candidate": {
+                "output": "geometry"
+              },
+              "source": {
+                "input": "source"
+              }
+            },
+            "parameters": {
+              "max_length": {
+                "parameter": "max_length"
+              }
+            }
+          }
+        }
+      },
+      "output_contract": {
+        "geometry_mutation": true,
+        "source_sha256_preserved": true,
+        "candidate_published_only_after_validation": true,
+        "producer_diagnostics_are_non_authoritative": true
+      },
+      "dependencies": [
+        "PMP_Remeshing"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "input_slots": [
+            "source"
+          ],
+          "maximum_input_faces": 20000,
+          "maximum_output_faces": 60000,
+          "required_parameters": [
+            "max_length"
+          ],
+          "source_header": "CGAL/Polygon_mesh_processing/remesh.h",
+          "symbols": [
+            "split_long_edges"
+          ],
+          "validator_parameter_bindings": {
+            "mesh.validate.split_long_edges": {
+              "max_length": "max_length"
+            }
+          },
+          "validators": [
+            "mesh.validate.split_long_edges"
+          ]
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "CGAL filtered-exact predicates (EPICK); validators re-derive combinatorics from raw OFF, use exact CGAL orientation for per-face triangulation orientation and a certified lattice-sampled Hausdorff bound",
+        "exact_constructions": "unsupported_fail_closed",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_wave_d_cases.py",
+          "tests/master_wave_d_mcp_e2e.py:auto",
+          "tests/master_wave_d_mcp_e2e.py:legacy"
+        ],
+        "worker_manifest_operation": "mesh.remesh.split_long_edges",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "mesh.validate.split_long_edges",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "validator",
+      "summary": "Independently checks that every source edge is subdivided on-edge into pieces within the maximum length and per-face area is preserved.",
+      "package": "PMP_Remeshing",
+      "aliases": [
+        "validate split long edges",
+        "\u8fba\u5206\u5272\u691c\u8a3c"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "PMP_Remeshing"
+        },
+        {
+          "kind": "operation_reference",
+          "identifier": "mesh.remesh.split_long_edges"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Polygon_mesh_processing",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/remesh.h",
+            "sha256": "05fa7984340fe16b81e809392c5a95f38bda9239a780b8c4ad079e67eabaf585"
+          },
+          {
+            "path": "include/CGAL/license/gpl_package_list.txt",
+            "sha256": "efb290ee3ef3d8b7675896bc037f1c9359f583543ca9e38bcb425fe34a8995db"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          },
+          {
+            "slot": "source",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "max_length"
+        ],
+        "properties": {
+          "max_length": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Maximum edge length after splitting."
+          }
+        }
+      },
+      "preconditions": [],
+      "validation": {
+        "required": false,
+        "validators": [],
+        "bindings": {},
+        "terminal_validator": true,
+        "validates": "mesh.remesh.split_long_edges",
+        "validates_all": [
+          "mesh.remesh.split_long_edges"
+        ],
+        "required_report_checks": {
+          "status": "pass",
+          "passed": true,
+          "validator": "mesh.validate.split_long_edges",
+          "validates": "mesh.remesh.split_long_edges",
+          "checks.candidate_valid_triangle_mesh": true,
+          "checks.source_vertices_preserved": true,
+          "checks.new_vertices_on_source_edges": true,
+          "checks.source_edges_fully_subdivided": true,
+          "checks.subdivided_pieces_within_max_length": true,
+          "checks.every_triangle_inside_one_source_face": true,
+          "checks.per_face_area_preserved": true,
+          "checks.every_source_face_covered": true,
+          "checks.topology_preserved": true
+        }
+      },
+      "output_contract": {
+        "schema": "ValidationReport/v1",
+        "required_true_checks": [
+          "candidate_valid_triangle_mesh",
+          "source_vertices_preserved",
+          "new_vertices_on_source_edges",
+          "source_edges_fully_subdivided",
+          "subdivided_pieces_within_max_length",
+          "every_triangle_inside_one_source_face",
+          "per_face_area_preserved",
+          "every_source_face_covered",
+          "topology_preserved"
+        ],
+        "status": "pass",
+        "failure_or_indeterminate_publish": false,
+        "independence": "validator does not call the CGAL meshing/remeshing/smoothing/triangulation function under test"
+      },
+      "dependencies": [
+        "PMP_Remeshing"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "bound_parameters": [
+            "max_length"
+          ],
+          "checks": [
+            "candidate_valid_triangle_mesh",
+            "source_vertices_preserved",
+            "new_vertices_on_source_edges",
+            "source_edges_fully_subdivided",
+            "subdivided_pieces_within_max_length",
+            "every_triangle_inside_one_source_face",
+            "per_face_area_preserved",
+            "every_source_face_covered",
+            "topology_preserved"
+          ],
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "CGAL filtered-exact predicates (EPICK); validators re-derive combinatorics from raw OFF, use exact CGAL orientation for per-face triangulation orientation and a certified lattice-sampled Hausdorff bound",
+        "exact_constructions": "unsupported_fail_closed",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_wave_d_cases.py",
+          "tests/master_wave_d_mcp_e2e.py:auto",
+          "tests/master_wave_d_mcp_e2e.py:legacy"
+        ],
+        "worker_manifest_operation": "mesh.validate.split_long_edges",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "mesh.smooth.tangential_relaxation",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "transform",
+      "summary": "Tangential relaxation of interior vertices with fixed boundary and connectivity (Polygon_mesh_processing::tangential_relaxation).",
+      "package": "PMP_Remeshing",
+      "major_requirements": [
+        "major.7.6.04"
+      ],
+      "aliases": [
+        "tangential relaxation",
+        "mesh relaxation",
+        "improve triangle quality",
+        "\u63a5\u7dda\u7de9\u548c",
+        "\u30e1\u30c3\u30b7\u30e5\u5f62\u72b6\u6539\u5584"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "PMP_Remeshing"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Polygon_mesh_processing::tangential_relaxation"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Polygon_mesh_processing/tangential_relaxation.h"
+        },
+        {
+          "kind": "manual",
+          "identifier": "PMP_Remeshing/index.html"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Polygon_mesh_processing",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/tangential_relaxation.h",
+            "sha256": "c34f849ae1d4dcf9d9a759b82a4134affdb9309b4c992efc7c6b3f71760fb342"
+          },
+          {
+            "path": "include/CGAL/license/gpl_package_list.txt",
+            "sha256": "efb290ee3ef3d8b7675896bc037f1c9359f583543ca9e38bcb425fe34a8995db"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "source",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "geometry",
+            "type": "TriangleSurfaceMesh",
+            "format": "off",
+            "unit_from": "source"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "number_of_iterations",
+          "max_deviation"
+        ],
+        "properties": {
+          "number_of_iterations": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 50,
+            "default": 1
+          },
+          "max_deviation": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Certified two-sided sampled Hausdorff bound the independent validator enforces between source and candidate."
+          }
+        }
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 268435456,
+          "maximum_faces": 20000
+        }
+      ],
+      "validation": {
+        "required": true,
+        "validators": [
+          "mesh.validate.tangential_relaxation"
+        ],
+        "bindings": {
+          "mesh.validate.tangential_relaxation": {
+            "artifacts": {
+              "candidate": {
+                "output": "geometry"
+              },
+              "source": {
+                "input": "source"
+              }
+            },
+            "parameters": {
+              "max_deviation": {
+                "parameter": "max_deviation"
+              }
+            }
+          }
+        }
+      },
+      "output_contract": {
+        "geometry_mutation": true,
+        "source_sha256_preserved": true,
+        "candidate_published_only_after_validation": true,
+        "producer_diagnostics_are_non_authoritative": true
+      },
+      "dependencies": [
+        "PMP_Remeshing"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "input_slots": [
+            "source"
+          ],
+          "maximum_input_faces": 20000,
+          "required_parameters": [
+            "number_of_iterations",
+            "max_deviation"
+          ],
+          "source_header": "CGAL/Polygon_mesh_processing/tangential_relaxation.h",
+          "symbols": [
+            "tangential_relaxation"
+          ],
+          "validator_parameter_bindings": {
+            "mesh.validate.tangential_relaxation": {
+              "max_deviation": "max_deviation"
+            }
+          },
+          "validators": [
+            "mesh.validate.tangential_relaxation"
+          ]
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "CGAL filtered-exact predicates (EPICK); validators re-derive combinatorics from raw OFF, use exact CGAL orientation for per-face triangulation orientation and a certified lattice-sampled Hausdorff bound",
+        "exact_constructions": "unsupported_fail_closed",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_wave_d_cases.py",
+          "tests/master_wave_d_mcp_e2e.py:auto",
+          "tests/master_wave_d_mcp_e2e.py:legacy"
+        ],
+        "worker_manifest_operation": "mesh.smooth.tangential_relaxation",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "mesh.validate.tangential_relaxation",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "validator",
+      "summary": "Independently checks identical connectivity, fixed boundary, no inverted face, non-decreasing minimum angle and certified Hausdorff bound.",
+      "package": "PMP_Remeshing",
+      "aliases": [
+        "validate tangential relaxation",
+        "\u63a5\u7dda\u7de9\u548c\u691c\u8a3c"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "PMP_Remeshing"
+        },
+        {
+          "kind": "operation_reference",
+          "identifier": "mesh.smooth.tangential_relaxation"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Polygon_mesh_processing",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/tangential_relaxation.h",
+            "sha256": "c34f849ae1d4dcf9d9a759b82a4134affdb9309b4c992efc7c6b3f71760fb342"
+          },
+          {
+            "path": "include/CGAL/license/gpl_package_list.txt",
+            "sha256": "efb290ee3ef3d8b7675896bc037f1c9359f583543ca9e38bcb425fe34a8995db"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          },
+          {
+            "slot": "source",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "max_deviation"
+        ],
+        "properties": {
+          "max_deviation": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Certified two-sided sampled Hausdorff bound the independent validator enforces between source and candidate."
+          }
+        }
+      },
+      "preconditions": [],
+      "validation": {
+        "required": false,
+        "validators": [],
+        "bindings": {},
+        "terminal_validator": true,
+        "validates": "mesh.smooth.tangential_relaxation",
+        "validates_all": [
+          "mesh.smooth.tangential_relaxation"
+        ],
+        "required_report_checks": {
+          "status": "pass",
+          "passed": true,
+          "validator": "mesh.validate.tangential_relaxation",
+          "validates": "mesh.smooth.tangential_relaxation",
+          "checks.candidate_valid_triangle_mesh": true,
+          "checks.connectivity_identical": true,
+          "checks.boundary_vertices_fixed": true,
+          "checks.no_face_inverted": true,
+          "checks.min_angle_not_decreased": true,
+          "checks.hausdorff_within_max_deviation": true,
+          "checks.no_self_intersections": true
+        }
+      },
+      "output_contract": {
+        "schema": "ValidationReport/v1",
+        "required_true_checks": [
+          "candidate_valid_triangle_mesh",
+          "connectivity_identical",
+          "boundary_vertices_fixed",
+          "no_face_inverted",
+          "min_angle_not_decreased",
+          "hausdorff_within_max_deviation",
+          "no_self_intersections"
+        ],
+        "status": "pass",
+        "failure_or_indeterminate_publish": false,
+        "independence": "validator does not call the CGAL meshing/remeshing/smoothing/triangulation function under test"
+      },
+      "dependencies": [
+        "PMP_Remeshing"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "bound_parameters": [
+            "max_deviation"
+          ],
+          "checks": [
+            "candidate_valid_triangle_mesh",
+            "connectivity_identical",
+            "boundary_vertices_fixed",
+            "no_face_inverted",
+            "min_angle_not_decreased",
+            "hausdorff_within_max_deviation",
+            "no_self_intersections"
+          ],
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "CGAL filtered-exact predicates (EPICK); validators re-derive combinatorics from raw OFF, use exact CGAL orientation for per-face triangulation orientation and a certified lattice-sampled Hausdorff bound",
+        "exact_constructions": "unsupported_fail_closed",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_wave_d_cases.py",
+          "tests/master_wave_d_mcp_e2e.py:auto",
+          "tests/master_wave_d_mcp_e2e.py:legacy"
+        ],
+        "worker_manifest_operation": "mesh.validate.tangential_relaxation",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "mesh.smooth.shape",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "transform",
+      "summary": "Curvature-flow shape smoothing with constrained boundary and optional volume preservation (Polygon_mesh_processing::smooth_shape).",
+      "package": "PMP_Remeshing",
+      "major_requirements": [
+        "major.7.6.04"
+      ],
+      "aliases": [
+        "smooth shape",
+        "mesh smoothing",
+        "curvature flow smoothing",
+        "fair surface",
+        "\u5f62\u72b6\u30b9\u30e0\u30fc\u30b8\u30f3\u30b0",
+        "\u30e1\u30c3\u30b7\u30e5\u5e73\u6ed1\u5316"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "PMP_Remeshing"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Polygon_mesh_processing::smooth_shape"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Polygon_mesh_processing/smooth_shape.h"
+        },
+        {
+          "kind": "manual",
+          "identifier": "PMP_Remeshing/index.html"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Polygon_mesh_processing",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/smooth_shape.h",
+            "sha256": "cbd2be0ab3402b8b71980039f2260a262b331496dd5bb8e6094c3a3e7ba853bd"
+          },
+          {
+            "path": "include/CGAL/license/gpl_package_list.txt",
+            "sha256": "efb290ee3ef3d8b7675896bc037f1c9359f583543ca9e38bcb425fe34a8995db"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "source",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "geometry",
+            "type": "TriangleSurfaceMesh",
+            "format": "off",
+            "unit_from": "source"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "time_step",
+          "number_of_iterations",
+          "preserve_volume",
+          "max_deviation"
+        ],
+        "properties": {
+          "time_step": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 1000000,
+            "description": "Curvature-flow time step in squared input-artifact length units (not unit-normalized)."
+          },
+          "number_of_iterations": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 50,
+            "default": 1
+          },
+          "preserve_volume": {
+            "type": "boolean",
+            "default": false
+          },
+          "max_deviation": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Certified two-sided sampled Hausdorff bound the independent validator enforces between source and candidate."
+          }
+        }
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 268435456,
+          "maximum_faces": 20000
+        }
+      ],
+      "validation": {
+        "required": true,
+        "validators": [
+          "mesh.validate.shape_smoothing"
+        ],
+        "bindings": {
+          "mesh.validate.shape_smoothing": {
+            "artifacts": {
+              "candidate": {
+                "output": "geometry"
+              },
+              "source": {
+                "input": "source"
+              }
+            },
+            "parameters": {
+              "max_deviation": {
+                "parameter": "max_deviation"
+              },
+              "preserve_volume": {
+                "parameter": "preserve_volume"
+              }
+            }
+          }
+        }
+      },
+      "output_contract": {
+        "geometry_mutation": true,
+        "source_sha256_preserved": true,
+        "candidate_published_only_after_validation": true,
+        "producer_diagnostics_are_non_authoritative": true
+      },
+      "dependencies": [
+        "PMP_Remeshing",
+        "Eigen"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "boundary_policy": "boundary vertices constrained",
+          "input_slots": [
+            "source"
+          ],
+          "maximum_input_faces": 20000,
+          "required_parameters": [
+            "time_step",
+            "number_of_iterations",
+            "preserve_volume",
+            "max_deviation"
+          ],
+          "source_header": "CGAL/Polygon_mesh_processing/smooth_shape.h",
+          "symbols": [
+            "smooth_shape"
+          ],
+          "time_step_dimension": "squared artifact length unit",
+          "validator_parameter_bindings": {
+            "mesh.validate.shape_smoothing": {
+              "max_deviation": "max_deviation",
+              "preserve_volume": "preserve_volume"
+            }
+          },
+          "validators": [
+            "mesh.validate.shape_smoothing"
+          ]
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "CGAL filtered-exact predicates (EPICK); validators re-derive combinatorics from raw OFF, use exact CGAL orientation for per-face triangulation orientation and a certified lattice-sampled Hausdorff bound",
+        "exact_constructions": "unsupported_fail_closed",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_wave_d_cases.py",
+          "tests/master_wave_d_mcp_e2e.py:auto",
+          "tests/master_wave_d_mcp_e2e.py:legacy"
+        ],
+        "worker_manifest_operation": "mesh.smooth.shape",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "mesh.validate.shape_smoothing",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "validator",
+      "summary": "Independently checks identical connectivity, fixed boundary, reduced umbrella roughness, optional volume preservation and certified Hausdorff bound.",
+      "package": "PMP_Remeshing",
+      "aliases": [
+        "validate shape smoothing",
+        "\u30b9\u30e0\u30fc\u30b8\u30f3\u30b0\u691c\u8a3c"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "PMP_Remeshing"
+        },
+        {
+          "kind": "operation_reference",
+          "identifier": "mesh.smooth.shape"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Polygon_mesh_processing",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/smooth_shape.h",
+            "sha256": "cbd2be0ab3402b8b71980039f2260a262b331496dd5bb8e6094c3a3e7ba853bd"
+          },
+          {
+            "path": "include/CGAL/license/gpl_package_list.txt",
+            "sha256": "efb290ee3ef3d8b7675896bc037f1c9359f583543ca9e38bcb425fe34a8995db"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          },
+          {
+            "slot": "source",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "max_deviation",
+          "preserve_volume"
+        ],
+        "properties": {
+          "max_deviation": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Certified two-sided sampled Hausdorff bound the independent validator enforces between source and candidate."
+          },
+          "preserve_volume": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "preconditions": [],
+      "validation": {
+        "required": false,
+        "validators": [],
+        "bindings": {},
+        "terminal_validator": true,
+        "validates": "mesh.smooth.shape",
+        "validates_all": [
+          "mesh.smooth.shape"
+        ],
+        "required_report_checks": {
+          "status": "pass",
+          "passed": true,
+          "validator": "mesh.validate.shape_smoothing",
+          "validates": "mesh.smooth.shape",
+          "checks.candidate_valid_triangle_mesh": true,
+          "checks.connectivity_identical": true,
+          "checks.boundary_vertices_fixed": true,
+          "checks.no_face_inverted": true,
+          "checks.roughness_reduced": true,
+          "checks.hausdorff_within_max_deviation": true,
+          "checks.no_self_intersections": true
+        }
+      },
+      "output_contract": {
+        "schema": "ValidationReport/v1",
+        "required_true_checks": [
+          "candidate_valid_triangle_mesh",
+          "connectivity_identical",
+          "boundary_vertices_fixed",
+          "no_face_inverted",
+          "roughness_reduced",
+          "hausdorff_within_max_deviation",
+          "no_self_intersections"
+        ],
+        "status": "pass",
+        "failure_or_indeterminate_publish": false,
+        "independence": "validator does not call the CGAL meshing/remeshing/smoothing/triangulation function under test"
+      },
+      "dependencies": [
+        "PMP_Remeshing"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "bound_parameters": [
+            "max_deviation",
+            "preserve_volume"
+          ],
+          "checks": [
+            "candidate_valid_triangle_mesh",
+            "connectivity_identical",
+            "boundary_vertices_fixed",
+            "no_face_inverted",
+            "roughness_reduced",
+            "hausdorff_within_max_deviation",
+            "no_self_intersections"
+          ],
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "CGAL filtered-exact predicates (EPICK); validators re-derive combinatorics from raw OFF, use exact CGAL orientation for per-face triangulation orientation and a certified lattice-sampled Hausdorff bound",
+        "exact_constructions": "unsupported_fail_closed",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_wave_d_cases.py",
+          "tests/master_wave_d_mcp_e2e.py:auto",
+          "tests/master_wave_d_mcp_e2e.py:legacy"
+        ],
+        "worker_manifest_operation": "mesh.validate.shape_smoothing",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "mesh.remesh.adaptive",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "transform",
+      "summary": "Curvature-adaptive remeshing with Adaptive_sizing_field driving isotropic_remeshing or split_long_edges.",
+      "package": "PMP_Remeshing",
+      "major_requirements": [
+        "major.7.6.03",
+        "major.7.6.05"
+      ],
+      "aliases": [
+        "adaptive remeshing",
+        "curvature adaptive remesh",
+        "adaptive sizing field",
+        "\u9069\u5fdc\u30ea\u30e1\u30c3\u30b7\u30e5",
+        "\u66f2\u7387\u9069\u5fdc\u30e1\u30c3\u30b7\u30e5"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "PMP_Remeshing"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Polygon_mesh_processing::Adaptive_sizing_field"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Polygon_mesh_processing::isotropic_remeshing"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Polygon_mesh_processing::split_long_edges"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Polygon_mesh_processing/Adaptive_sizing_field.h"
+        },
+        {
+          "kind": "manual",
+          "identifier": "PMP_Remeshing/index.html"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Polygon_mesh_processing",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/Adaptive_sizing_field.h",
+            "sha256": "5913d757bcfe98d89946200b08c86880028360255799ff0716765acdac454a5f"
+          },
+          {
+            "path": "include/CGAL/license/gpl_package_list.txt",
+            "sha256": "efb290ee3ef3d8b7675896bc037f1c9359f583543ca9e38bcb425fe34a8995db"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "source",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "geometry",
+            "type": "TriangleSurfaceMesh",
+            "format": "off",
+            "unit_from": "source"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "tolerance",
+          "min_edge_length",
+          "max_edge_length",
+          "mode",
+          "number_of_iterations",
+          "max_deviation"
+        ],
+        "properties": {
+          "tolerance": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Adaptive_sizing_field curvature tolerance."
+          },
+          "min_edge_length": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Minimum sizing-field edge length."
+          },
+          "max_edge_length": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Maximum sizing-field edge length."
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "isotropic_remeshing",
+              "split_long_edges"
+            ],
+            "default": "isotropic_remeshing"
+          },
+          "number_of_iterations": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 50,
+            "default": 1
+          },
+          "max_deviation": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Certified two-sided sampled Hausdorff bound the independent validator enforces between source and candidate."
+          }
+        }
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 268435456,
+          "maximum_faces": 20000
+        }
+      ],
+      "validation": {
+        "required": true,
+        "validators": [
+          "mesh.validate.adaptive_remesh"
+        ],
+        "bindings": {
+          "mesh.validate.adaptive_remesh": {
+            "artifacts": {
+              "candidate": {
+                "output": "geometry"
+              },
+              "source": {
+                "input": "source"
+              }
+            },
+            "parameters": {
+              "min_edge_length": {
+                "parameter": "min_edge_length"
+              },
+              "max_edge_length": {
+                "parameter": "max_edge_length"
+              },
+              "mode": {
+                "parameter": "mode"
+              },
+              "max_deviation": {
+                "parameter": "max_deviation"
+              }
+            }
+          }
+        }
+      },
+      "output_contract": {
+        "geometry_mutation": true,
+        "source_sha256_preserved": true,
+        "candidate_published_only_after_validation": true,
+        "producer_diagnostics_are_non_authoritative": true
+      },
+      "dependencies": [
+        "PMP_Remeshing"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "input_slots": [
+            "source"
+          ],
+          "maximum_input_faces": 20000,
+          "maximum_output_faces": 60000,
+          "required_parameters": [
+            "tolerance",
+            "min_edge_length",
+            "max_edge_length",
+            "mode",
+            "number_of_iterations",
+            "max_deviation"
+          ],
+          "source_header": "CGAL/Polygon_mesh_processing/Adaptive_sizing_field.h",
+          "symbols": [
+            "Adaptive_sizing_field",
+            "isotropic_remeshing",
+            "split_long_edges"
+          ],
+          "validator_parameter_bindings": {
+            "mesh.validate.adaptive_remesh": {
+              "max_deviation": "max_deviation",
+              "max_edge_length": "max_edge_length",
+              "min_edge_length": "min_edge_length",
+              "mode": "mode"
+            }
+          },
+          "validators": [
+            "mesh.validate.adaptive_remesh"
+          ]
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "CGAL filtered-exact predicates (EPICK); validators re-derive combinatorics from raw OFF, use exact CGAL orientation for per-face triangulation orientation and a certified lattice-sampled Hausdorff bound",
+        "exact_constructions": "unsupported_fail_closed",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_wave_d_cases.py",
+          "tests/master_wave_d_mcp_e2e.py:auto",
+          "tests/master_wave_d_mcp_e2e.py:legacy"
+        ],
+        "worker_manifest_operation": "mesh.remesh.adaptive",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "mesh.validate.adaptive_remesh",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "validator",
+      "summary": "Independently checks topology, orientation, certified Hausdorff bound and mode-specific sizing-range or on-edge subdivision properties.",
+      "package": "PMP_Remeshing",
+      "aliases": [
+        "validate adaptive remesh",
+        "\u9069\u5fdc\u30ea\u30e1\u30c3\u30b7\u30e5\u691c\u8a3c"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "PMP_Remeshing"
+        },
+        {
+          "kind": "operation_reference",
+          "identifier": "mesh.remesh.adaptive"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Polygon_mesh_processing",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/Adaptive_sizing_field.h",
+            "sha256": "5913d757bcfe98d89946200b08c86880028360255799ff0716765acdac454a5f"
+          },
+          {
+            "path": "include/CGAL/license/gpl_package_list.txt",
+            "sha256": "efb290ee3ef3d8b7675896bc037f1c9359f583543ca9e38bcb425fe34a8995db"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          },
+          {
+            "slot": "source",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "min_edge_length",
+          "max_edge_length",
+          "mode",
+          "max_deviation"
+        ],
+        "properties": {
+          "min_edge_length": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Minimum sizing-field edge length."
+          },
+          "max_edge_length": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Maximum sizing-field edge length."
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "isotropic_remeshing",
+              "split_long_edges"
+            ],
+            "default": "isotropic_remeshing"
+          },
+          "max_deviation": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Certified two-sided sampled Hausdorff bound the independent validator enforces between source and candidate."
+          }
+        }
+      },
+      "preconditions": [],
+      "validation": {
+        "required": false,
+        "validators": [],
+        "bindings": {},
+        "terminal_validator": true,
+        "validates": "mesh.remesh.adaptive",
+        "validates_all": [
+          "mesh.remesh.adaptive"
+        ],
+        "required_report_checks": {
+          "status": "pass",
+          "passed": true,
+          "validator": "mesh.validate.adaptive_remesh",
+          "validates": "mesh.remesh.adaptive",
+          "checks.candidate_valid_triangle_mesh": true,
+          "checks.topology_preserved": true,
+          "checks.orientation_preserved": true,
+          "checks.hausdorff_within_max_deviation": true,
+          "checks.no_self_intersections": true
+        }
+      },
+      "output_contract": {
+        "schema": "ValidationReport/v1",
+        "required_true_checks": [
+          "candidate_valid_triangle_mesh",
+          "topology_preserved",
+          "orientation_preserved",
+          "hausdorff_within_max_deviation",
+          "no_self_intersections"
+        ],
+        "status": "pass",
+        "failure_or_indeterminate_publish": false,
+        "independence": "validator does not call the CGAL meshing/remeshing/smoothing/triangulation function under test"
+      },
+      "dependencies": [
+        "PMP_Remeshing"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "bound_parameters": [
+            "min_edge_length",
+            "max_edge_length",
+            "mode",
+            "max_deviation"
+          ],
+          "checks": [
+            "candidate_valid_triangle_mesh",
+            "topology_preserved",
+            "orientation_preserved",
+            "hausdorff_within_max_deviation",
+            "no_self_intersections"
+          ],
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "CGAL filtered-exact predicates (EPICK); validators re-derive combinatorics from raw OFF, use exact CGAL orientation for per-face triangulation orientation and a certified lattice-sampled Hausdorff bound",
+        "exact_constructions": "unsupported_fail_closed",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_wave_d_cases.py",
+          "tests/master_wave_d_mcp_e2e.py:auto",
+          "tests/master_wave_d_mcp_e2e.py:legacy"
+        ],
+        "worker_manifest_operation": "mesh.validate.adaptive_remesh",
         "build": "build-master/Release/cgal-master-worker.exe",
         "source_kind": "official_release",
         "cgal_version": "6.2.1",

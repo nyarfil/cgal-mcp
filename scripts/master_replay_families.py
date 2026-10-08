@@ -895,9 +895,260 @@ FAMILY_7_2 = {
     ],
 }
 
+L_PRISM = {"fixture": "wave_d/l_prism.off",
+           "sha256": "72215189b66d423386e6b9d35dddf6081a96c01a521aaea239e9e3cd77a75305"}
+HEXADECAGON_FAN = {"fixture": "wave_d/hexadecagon_fan.off",
+                   "sha256": "58e93f910dcc1912da7a336fa485d5145efb3b02a99e8cab3495cdf347543a3d"}
+SQUARE_FAN = {"fixture": "wave_d/square_fan.off",
+              "sha256": "71b10da73091276930a2263e652dc9246ec98aa3ebb3d0287f460e4a14fe9089"}
+SQUARE_TWO_TRIANGLES = {"fixture": "wave_d/square_two_triangles.off",
+                        "sha256": "61893beb05b4264903232dd6a2acf21d19fd2c65bfc4daef30454839cc743f8e"}
+GRID3_DISPLACED = {"fixture": "wave_d/grid3_displaced.off",
+                   "sha256": "5bc59a14bc8fbf0a180714daedaf24decb45dabe7e47f071210dae8f48191722"}
+GRID5_BUMP = {"fixture": "wave_d/grid5_bump.off",
+              "sha256": "45509bdb7622ee34019183abff1eaeec63b6fe2b34101af5c937e67371481c63"}
+ICOSPHERE2 = {"fixture": "wave_d/icosphere2.off",
+              "sha256": "cce1858c5c297f8827cfe3a31bf95bd1e9dc7935e8386f44bd3f0a22f1697558"}
+ICOSPHERE2_NOISY = {"fixture": "wave_d/icosphere2_noisy.off",
+                    "sha256": "38d5ccc26c72a6a96f3b2ad053e320758bfd0f2b4360a6074bdf9f48052c1cb0"}
+OBLATE = {"fixture": "wave_d/oblate_spheroid.off",
+          "sha256": "5bb797ddfdd0aa47c3c2ca61768910d16a16ab48a93176754d18a4238fc8f49e"}
+
+
+def _mm(value: float) -> dict:
+    return {"value": value, "unit": "mm"}
+
+
+HEXADECAGON_AREA = 32.0 * math.sin(math.pi / 8.0)
+GRID3_RELAXED_MEAN_EDGE = (12.0 + 4.0 * SQRT2) / 16.0
+NOISY_SPHERE_VOLUME = 4.0426073283768496
+OBLATE_VOLUME = 6.644385307347405
+_ADAPTIVE = {"tolerance": _mm(0.01), "min_edge_length": _mm(0.1), "max_edge_length": _mm(0.8),
+             "number_of_iterations": 3, "max_deviation": _mm(0.05)}
+
+FAMILY_7_6 = {
+    "family": "7.6",
+    "scope": "family_7_6_meshing_remeshing_partial",
+    "evidence_path": "docs/master/evidence/family-7.6-capabilities.json",
+    "test_id": "family-7.6-replay-cases",
+    "requirements": {
+        "major.7.6.01": {
+            "operation_ids": ["mesh.triangulate.faces"],
+            "symbols": ["triangulate_faces", "triangulate_face"],
+            "symbol_notes": "triangulate_faces (whole mesh) and triangulate_face (per face) are both "
+                            "selected through the method parameter. The L-shaped prism with "
+                            "non-convex hexagon caps becomes 20 triangles enclosing volume 3 and area "
+                            "14; the quad cube becomes 12 triangles of volume 1. The independent "
+                            "validator checks each triangle lies in exactly one source face with exact "
+                            "per-face orientation.",
+            "case_ids": ["tri-lprism-faces", "tri-lprism-face", "tri-quadcube"],
+        },
+        "major.7.6.02": {
+            "operation_ids": ["mesh.refine.local"],
+            "symbols": ["refine"],
+            "symbol_notes": "refine inserts 13 interior vertices into a 14-triangle fan of a regular "
+                            "16-gon (29 vertices, 40 faces, area 32 sin(pi/8)), and more at a higher "
+                            "density control factor; the validator checks preserved source vertices "
+                            "and boundary, the 2:1 face/vertex insertion relation and a certified "
+                            "Hausdorff bound. fair is not listed in the inventory of this requirement.",
+            "case_ids": ["refine-hexadecagon", "refine-hexadecagon-dense"],
+        },
+        "major.7.6.03": {
+            "operation_ids": ["mesh.remesh.isotropic", "mesh.remesh.split_long_edges"],
+            "symbols": ["isotropic_remeshing", "split_long_edges"],
+            "symbol_notes": "Uniform isotropic_remeshing of an open planar square (area 16 kept, "
+                            "mean edge within the target band), a closed sphere and an oblate "
+                            "spheroid; split_long_edges of a two-triangle 4x4 square yields exactly "
+                            "23 vertices and 28 faces with every source edge cut into pieces <= 1.",
+            "case_ids": ["iso-square", "iso-sphere", "iso-oblate-uniform", "split-square"],
+        },
+        "major.7.6.04": {
+            "operation_ids": ["mesh.smooth.tangential_relaxation", "mesh.smooth.shape"],
+            "symbols": ["smooth_shape", "tangential_relaxation"],
+            "symbol_notes": "tangential_relaxation moves the displaced centre of a 3x3 grid back to "
+                            "the regular position (edges exactly 1 and sqrt 2); smooth_shape flattens a "
+                            "bumped grid with a fixed boundary and smooths a noisy closed sphere while "
+                            "preserving its volume to 1e-9. Validators check identical connectivity, "
+                            "fixed boundary, quality/roughness improvement and a Hausdorff bound.",
+            "case_ids": ["relax-grid3", "smooth-grid5", "smooth-sphere-volume"],
+        },
+        "major.7.6.05": {
+            "operation_ids": ["mesh.remesh.adaptive"],
+            "symbols": ["split_long_edges", "isotropic_remeshing"],
+            "symbol_notes": "Adaptive_sizing_field drives both isotropic_remeshing and "
+                            "split_long_edges on an oblate spheroid whose curvature ranges from about "
+                            "0.1 to 12.5: the adaptive remesh spans an edge-length ratio above 5 "
+                            "while staying within a certified 0.05 Hausdorff bound, whereas uniform "
+                            "remeshing of the same input stays below ratio 3 and needs a 0.3 bound; the adaptive split preserves the exact "
+                            "geometry while only refining long edges.",
+            "case_ids": ["adaptive-oblate-isotropic", "adaptive-oblate-split"],
+        },
+    },
+    "unbound": {},
+    "cases": [
+        _case("tri-lprism-faces", "mesh.triangulate.faces", [_mesh(L_PRISM, "PolygonSoup3")],
+              {"method": "triangulate_faces"}, [
+            ["input:source:measure:off.max_face_degree", "==", 6],
+            ["output:geometry:measure:off.max_face_degree", "==", 3],
+            ["output:geometry:measure:off.vertex_count", "==", 12],
+            ["output:geometry:measure:off.face_count", "==", 20],
+            ["output:geometry:measure:off.boundary_edge_count", "==", 0],
+            ["output:geometry:measure:off.signed_volume", "approx", [3.0, 1e-12]],
+            ["output:geometry:measure:off.area", "approx", [14.0, 1e-12]],
+        ]),
+        _case("tri-lprism-face", "mesh.triangulate.faces", [_mesh(L_PRISM, "PolygonSoup3")],
+              {"method": "triangulate_face"}, [
+            ["output:geometry:measure:off.max_face_degree", "==", 3],
+            ["output:geometry:measure:off.face_count", "==", 20],
+            ["output:geometry:measure:off.boundary_edge_count", "==", 0],
+            ["output:geometry:measure:off.signed_volume", "approx", [3.0, 1e-12]],
+            ["output:geometry:measure:off.area", "approx", [14.0, 1e-12]],
+            ["metrics.method", "==", "triangulate_face"],
+        ]),
+        _case("tri-quadcube", "mesh.triangulate.faces", [_mesh(QUAD_CUBE, "PolygonSoup3")],
+              {"method": "triangulate_faces"}, [
+            ["input:source:measure:off.max_face_degree", "==", 4],
+            ["output:geometry:measure:off.face_count", "==", 12],
+            ["output:geometry:measure:off.vertex_count", "==", 8],
+            ["output:geometry:measure:off.signed_volume", "approx", [1.0, 1e-12]],
+        ]),
+        _case("refine-hexadecagon", "mesh.refine.local", [_mesh(HEXADECAGON_FAN)],
+              {"density_control_factor": SQRT2, "max_deviation": _mm(0.01)}, [
+            ["input:source:measure:off.vertex_count", "==", 16],
+            ["metrics.inserted_vertices", "==", 13],
+            ["metrics.new_faces", "==", 26],
+            ["output:geometry:measure:off.vertex_count", "==", 29],
+            ["output:geometry:measure:off.face_count", "==", 40],
+            ["output:geometry:measure:off.boundary_edge_count", "==", 16],
+            ["output:geometry:measure:off.area", "approx", [HEXADECAGON_AREA, 1e-9]],
+        ]),
+        _case("refine-hexadecagon-dense", "mesh.refine.local", [_mesh(HEXADECAGON_FAN)],
+              {"density_control_factor": 3.0, "max_deviation": _mm(0.01)}, [
+            ["metrics.inserted_vertices", ">", 13],
+            ["output:geometry:measure:off.boundary_edge_count", "==", 16],
+            ["output:geometry:measure:off.area", "approx", [HEXADECAGON_AREA, 1e-9]],
+        ]),
+        _case("iso-square", "mesh.remesh.isotropic", [_mesh(SQUARE_FAN)],
+              {"target_edge_length": _mm(0.5), "number_of_iterations": 3,
+               "number_of_relaxation_steps": 1, "max_deviation": _mm(0.01)}, [
+            ["output:geometry:measure:off.area", "approx", [16.0, 1e-9]],
+            ["output:geometry:measure:off.mean_edge_length", ">=", 0.4],
+            ["output:geometry:measure:off.mean_edge_length", "<=", 2.0 / 3.0],
+            ["output:geometry:measure:off.face_count", ">",
+             {"path": "input:source:measure:off.face_count"}],
+            ["metrics.target_edge_length", "==", 0.5],
+        ]),
+        _case("iso-sphere", "mesh.remesh.isotropic", [_mesh(ICOSPHERE2)],
+              {"target_edge_length": _mm(0.2), "number_of_iterations": 3,
+               "number_of_relaxation_steps": 1, "max_deviation": _mm(0.05)}, [
+            ["output:geometry:measure:off.boundary_edge_count", "==", 0],
+            ["output:geometry:measure:off.mean_edge_length", ">=", 0.16],
+            ["output:geometry:measure:off.mean_edge_length", "<=", 0.8 / 3.0],
+            ["output:geometry:measure:off.signed_volume", ">", 3.95],
+            ["output:geometry:measure:off.signed_volume", "<", 4.19],
+        ]),
+        _case("iso-oblate-uniform", "mesh.remesh.isotropic", [_mesh(OBLATE)],
+              {"target_edge_length": _mm(0.3), "number_of_iterations": 3,
+               "number_of_relaxation_steps": 1, "max_deviation": _mm(0.3)}, [
+            ["output:geometry:measure:off.boundary_edge_count", "==", 0],
+            ["output:geometry:measure:off.edge_length_ratio", "<", 3.0],
+        ]),
+        _case("split-square", "mesh.remesh.split_long_edges", [_mesh(SQUARE_TWO_TRIANGLES)],
+              {"max_length": _mm(1.0)}, [
+            ["output:geometry:measure:off.vertex_count", "==", 23],
+            ["output:geometry:measure:off.face_count", "==", 28],
+            ["output:geometry:measure:off.boundary_edge_count", "==", 16],
+            ["output:geometry:measure:off.area", "approx", [16.0, 1e-12]],
+        ]),
+        _case("relax-grid3", "mesh.smooth.tangential_relaxation", [_mesh(GRID3_DISPLACED)],
+              {"number_of_iterations": 1, "max_deviation": _mm(0.01)}, [
+            ["output:geometry:measure:off.min_edge_length", "approx", [1.0, 1e-9]],
+            ["output:geometry:measure:off.max_edge_length", "approx", [SQRT2, 1e-9]],
+            ["output:geometry:measure:off.mean_edge_length", "approx",
+             [GRID3_RELAXED_MEAN_EDGE, 1e-9]],
+            ["output:geometry:measure:off.area", "approx", [4.0, 1e-12]],
+        ]),
+        _case("smooth-grid5", "mesh.smooth.shape", [_mesh(GRID5_BUMP)],
+              {"time_step": 0.01, "number_of_iterations": 1, "preserve_volume": False,
+               "max_deviation": _mm(1.0)}, [
+            ["output:geometry:measure:off.vertex_count", "==", 25],
+            ["output:geometry:measure:off.boundary_edge_count", "==", 16],
+            ["output:geometry:measure:off.bbox_diagonal", "<",
+             {"path": "input:source:measure:off.bbox_diagonal"}],
+        ]),
+        _case("smooth-sphere-volume", "mesh.smooth.shape", [_mesh(ICOSPHERE2_NOISY)],
+              {"time_step": 0.01, "number_of_iterations": 1, "preserve_volume": True,
+               "max_deviation": _mm(0.2)}, [
+            ["input:source:measure:off.signed_volume", "approx", [NOISY_SPHERE_VOLUME, 1e-12]],
+            ["output:geometry:measure:off.signed_volume", "approx", [NOISY_SPHERE_VOLUME, 1e-9]],
+            ["output:geometry:measure:off.edge_length_ratio", "<",
+             {"path": "input:source:measure:off.edge_length_ratio"}],
+        ]),
+        _case("adaptive-oblate-isotropic", "mesh.remesh.adaptive", [_mesh(OBLATE)],
+              {**_ADAPTIVE, "mode": "isotropic_remeshing"}, [
+            ["output:geometry:measure:off.boundary_edge_count", "==", 0],
+            ["output:geometry:measure:off.edge_length_ratio", ">", 5.0],
+            ["output:geometry:measure:off.max_edge_length", ">", 0.5],
+            ["metrics.algorithm", "==", "CGAL::Polygon_mesh_processing::isotropic_remeshing"],
+        ]),
+        _case("adaptive-oblate-split", "mesh.remesh.adaptive", [_mesh(OBLATE)],
+              {**_ADAPTIVE, "mode": "split_long_edges"}, [
+            ["output:geometry:measure:off.vertex_count", ">",
+             {"path": "input:source:measure:off.vertex_count"}],
+            ["output:geometry:measure:off.signed_volume", "approx", [OBLATE_VOLUME, 1e-9]],
+            ["output:geometry:measure:off.max_edge_length", "<=",
+             {"path": "input:source:measure:off.max_edge_length"}],
+            ["metrics.algorithm", "==", "CGAL::Polygon_mesh_processing::split_long_edges"],
+        ]),
+    ],
+    "pairs": [
+        {"kind": "different_outputs", "cases": ["refine-hexadecagon", "refine-hexadecagon-dense"]},
+        {"kind": "different_outputs", "cases": ["iso-oblate-uniform", "adaptive-oblate-isotropic"]},
+    ],
+    "negative_controls": [
+        {"id": "tri-wrong-vertices-rejected", "operation": "mesh.validate.triangulated_faces",
+         "inputs": [_mesh(CUBE_A), _mesh(QUAD_CUBE, "PolygonSoup3")], "parameters": {},
+         "expect_error_class": "VALIDATION_FAILED"},
+        {"id": "refine-nonmanifold-rejected", "operation": "mesh.refine.local",
+         "inputs": [_mesh(NONMANIFOLD)],
+         "parameters": {"density_control_factor": SQRT2, "max_deviation": _mm(0.01)},
+         "expect_error_class": "PRECONDITION_FAILED"},
+        {"id": "iso-unremeshed-rejected", "operation": "mesh.validate.isotropic_remesh",
+         "inputs": [_mesh(SQUARE_FAN), _mesh(SQUARE_FAN)],
+         "parameters": {"target_edge_length": _mm(0.5), "max_deviation": _mm(0.01)},
+         "expect_error_class": "VALIDATION_FAILED"},
+        {"id": "iso-nonpositive-length-rejected", "operation": "mesh.remesh.isotropic",
+         "inputs": [_mesh(SQUARE_FAN)],
+         "parameters": {"target_edge_length": _mm(0.0), "number_of_iterations": 1,
+                        "number_of_relaxation_steps": 1, "max_deviation": _mm(0.01)},
+         "expect_error_class": "INVALID_REQUEST"},
+        {"id": "split-unsplit-rejected", "operation": "mesh.validate.split_long_edges",
+         "inputs": [_mesh(SQUARE_TWO_TRIANGLES), _mesh(SQUARE_TWO_TRIANGLES)],
+         "parameters": {"max_length": _mm(1.0)}, "expect_error_class": "VALIDATION_FAILED"},
+        {"id": "relax-changed-connectivity-rejected",
+         "operation": "mesh.validate.tangential_relaxation",
+         "inputs": [_mesh(GRID5_BUMP), _mesh(GRID3_DISPLACED)],
+         "parameters": {"max_deviation": _mm(0.01)}, "expect_error_class": "VALIDATION_FAILED"},
+        {"id": "smooth-unsmoothed-rejected", "operation": "mesh.validate.shape_smoothing",
+         "inputs": [_mesh(GRID5_BUMP), _mesh(GRID5_BUMP)],
+         "parameters": {"max_deviation": _mm(1.0), "preserve_volume": False},
+         "expect_error_class": "VALIDATION_FAILED"},
+        {"id": "smooth-open-volume-rejected", "operation": "mesh.smooth.shape",
+         "inputs": [_mesh(GRID5_BUMP)],
+         "parameters": {"time_step": 0.01, "number_of_iterations": 1, "preserve_volume": True,
+                        "max_deviation": _mm(1.0)},
+         "expect_error_class": "PRECONDITION_FAILED"},
+        {"id": "adaptive-inverted-range-rejected", "operation": "mesh.remesh.adaptive",
+         "inputs": [_mesh(OBLATE)],
+         "parameters": {**_ADAPTIVE, "min_edge_length": _mm(0.8), "max_edge_length": _mm(0.1),
+                        "mode": "isotropic_remeshing"},
+         "expect_error_class": "INVALID_REQUEST"},
+    ],
+}
+
 GENERIC_FAMILIES: dict[str, dict] = {
-    family["family"]: family for family in (FAMILY_7_2, FAMILY_7_3, FAMILY_7_4, FAMILY_7_5, FAMILY_7_9, FAMILY_7_11,
-                   FAMILY_7_12, FAMILY_7_13)
+    family["family"]: family for family in (FAMILY_7_2, FAMILY_7_3, FAMILY_7_4, FAMILY_7_5, FAMILY_7_6,
+                   FAMILY_7_9, FAMILY_7_11, FAMILY_7_12, FAMILY_7_13)
 }
 
 
@@ -1092,8 +1343,29 @@ def _off_measure(name: str, content: bytes) -> object:
             edges[key] = edges.get(key, 0) + 1
     if name == "boundary_edge_count":
         return sum(1 for count in edges.values() if count == 1)
+    lengths = [math.dist(vertices[a], vertices[b]) for a, b in edges]
     if name == "min_edge_length":
-        return min(math.dist(vertices[a], vertices[b]) for a, b in edges)
+        return min(lengths)
+    if name == "max_edge_length":
+        return max(lengths)
+    if name == "mean_edge_length":
+        return sum(lengths) / len(lengths)
+    if name == "edge_length_ratio":
+        return max(lengths) / min(lengths)
+    if name == "bbox_diagonal":
+        return math.dist([min(v[axis] for v in vertices) for axis in range(3)],
+                         [max(v[axis] for v in vertices) for axis in range(3)])
+    if name == "area":
+        total = 0.0
+        for face in faces:
+            a = vertices[face[0]]
+            for index in range(1, len(face) - 1):
+                b, c = vertices[face[index]], vertices[face[index + 1]]
+                u = [b[k] - a[k] for k in range(3)]
+                w = [c[k] - a[k] for k in range(3)]
+                total += 0.5 * math.hypot(u[1] * w[2] - u[2] * w[1], u[2] * w[0] - u[0] * w[2],
+                                          u[0] * w[1] - u[1] * w[0])
+        return total
     if name == "signed_volume":
         total = 0.0
         for face in faces:
