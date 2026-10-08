@@ -985,7 +985,8 @@ def _build_generic_results(family: dict, records: dict[str, dict], blobs: dict[s
         error = response.get("error")
         if (request.get("parameters") != control["parameters"] or
                 response.get("status") != "error" or response.get("outputs") != [] or
-                not isinstance(error, dict) or error.get("class") != control["expect_error_class"]):
+                not isinstance(error, dict) or error.get("class") != control["expect_error_class"] or
+                ("expect_error_code" in control and error.get("code") != control["expect_error_code"])):
             raise ValueError(f"Negative control was not rejected as declared: {control['id']}")
         used_blobs.update(input_hashes)
         proofs[control["id"]] = {

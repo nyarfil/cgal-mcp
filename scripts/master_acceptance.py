@@ -539,6 +539,8 @@ def _generic_family_reasons(report: dict, item: dict, operations: dict[str, dict
                     response.get("status") != "error" or
                     not isinstance(response.get("error"), dict) or
                     response["error"].get("class") != control["expect_error_class"] or
+                    ("expect_error_code" in control and
+                     response["error"].get("code") != control["expect_error_code"]) or
                     control_id in indexed):
                 reasons.append(f"Evidence family negative control mismatch: {control_id}")
                 continue

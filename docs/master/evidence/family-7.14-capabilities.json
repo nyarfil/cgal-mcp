@@ -2,7 +2,7 @@
   "schema_version": 1,
   "generator": "master-capability-acceptance",
   "generator_source_path": "scripts/replay_master_capabilities.py",
-  "generator_source_sha256": "b09bfe95011d3cc14975db8c578c72b634c579162259fd60039af1e85c1d2670",
+  "generator_source_sha256": "000a0bf9d38ce97aabf89e548bfa5d68ec6199bb39d1087d6098c1386891a118",
   "generator_source_hash_encoding": "utf8-lf",
   "status": "pass",
   "scope": "family_7_14_mesh_generation_partial",
@@ -45,9 +45,9 @@
     "major.7.14.03": "No Mesh_3 tetrahedral volume meshing operation (make_mesh_3).",
     "major.7.14.04": "No Mesh_3 domain criteria operation (Mesh_criteria_3, Mesh_facet_criteria_3)."
   },
-  "family_contract_sha256": "ad16dc07af58c0875c04d4b7d7fc06c15a2c534ca689856a7e252960204673b4",
+  "family_contract_sha256": "477fda2dc87f9206b7b72655b6caea61cf1934869d02ce4f6d9a9675e78c1b09",
   "family_contract_source_path": "scripts/master_replay_families.py",
-  "family_contract_source_sha256": "3fdcf0bfb52d20b6a88b43838f16e58164ceb8603210600c3a1edac028781728",
+  "family_contract_source_sha256": "18abb1a98233fbf2f5b06f88a208eea12f8e612175c4390c66c2531ac0032b1d",
   "family_contract_source_hash_encoding": "utf8-lf",
   "catalog_baseline_sha256": "143ec18a5b64d506aad60dc24b0a1ea30940c715d1223b3465fa140aeb9d02a7",
   "operation_registry_sha256": "d7655fe5fb375a21be5cc17e5715763f71e546350470ef2de5fb93dc4dd016af",
@@ -4422,12 +4422,17 @@
       "source_path": "tests/master_family_replay_cases.py",
       "source_sha256": "69b3216bf60de8b908dcf6f82e4fee3ffc438ee2a29cf2d756c4b558c6ce3e65",
       "source_hash_encoding": "utf8-lf",
-      "stdout_sha256": "57b8951852e4d94eb3311d21ed66440261a2805cd56163b69869a4374ff9b61a",
+      "stdout_sha256": "17c75fd88b75f3fd04ce1e4cb46633062b965bbbf6f205cb327172d614fbcaab",
       "exit_code": 0,
       "status": "pass"
     }
   ],
   "blobs": {
+    "0744fdb999d26df7f76317dee550d9584500a5b773da84ede58b61643a7e949e": {
+      "encoding": "base64",
+      "byte_size": 83,
+      "content": "eyJvdXRlciI6W1swLDBdLFsxMCwwXSxbMTAsMTBdLFswLDEwXV0sImhvbGVzIjpbW1syMCwyMF0sWzIyLDIwXSxbMjIsMjJdLFsyMCwyMl1dXX0="
+    },
     "0d2a374eeedd22baf7cd1d0735bd9487060ea7a9a2054e1fabf0dbe2c42a2e51": {
       "encoding": "base64",
       "byte_size": 881,
@@ -4966,7 +4971,7 @@
           },
           "behaviour_assertions": {
             "pass": true,
-            "count": 12
+            "count": 13
           },
           "validator:mesh.validate.delaunay_refinement_2": {
             "pass": true,
@@ -6445,6 +6450,62 @@
       "expected_error_class": "PRECONDITION_FAILED",
       "status": "expected_rejection"
     },
+    "mesh2-hole-far-outside-rejected": {
+      "case_id": "mesh2-hole-far-outside-rejected",
+      "operation_id": "mesh2.refine.delaunay",
+      "revision": 1,
+      "worker_manifest_sha256": "de02697ee8c2a6b3d1ec707bd29f80bccc90d179c97f41849e083871688dcadc",
+      "test_id": "family-7.14-replay-cases",
+      "request": {
+        "inputs": [
+          {
+            "artifact_id": "input-0",
+            "blob_sha256": "0744fdb999d26df7f76317dee550d9584500a5b773da84ede58b61643a7e949e",
+            "format": "json",
+            "sha256": "0744fdb999d26df7f76317dee550d9584500a5b773da84ede58b61643a7e949e",
+            "type": "PolygonWithHoles2",
+            "unit": "mm"
+          }
+        ],
+        "kernel": "package_recommended",
+        "limits": {
+          "memory_mb": 2048,
+          "wall_time_ms": 120000
+        },
+        "operation": "mesh2.refine.delaunay",
+        "parameters": {
+          "aspect_bound": 0.125,
+          "size_bound": {
+            "unit": "mm",
+            "value": 2.0
+          }
+        },
+        "protocol": 1,
+        "request_id": "mesh2-hole-far-outside-rejected"
+      },
+      "request_sha256": "e234453081785d9a32b683d897eee8512fbbc27b2387d9aa9418b70bebdcf545",
+      "response": {
+        "error": {
+          "class": "PRECONDITION_FAILED",
+          "code": "HOLE_OUTSIDE_DOMAIN",
+          "message": "A hole is not strictly inside the outer ring",
+          "recoverable": false,
+          "suggested_operations": []
+        },
+        "metrics": {},
+        "outputs": [],
+        "protocol": 1,
+        "request_id": "mesh2-hole-far-outside-rejected",
+        "status": "error"
+      },
+      "response_sha256": "3ce7585de8842e8aa4c6de8c7aa794b361d3db8d9180a92c76fb878bdb049cc7",
+      "input_hashes": [
+        "0744fdb999d26df7f76317dee550d9584500a5b773da84ede58b61643a7e949e"
+      ],
+      "output_hashes": [],
+      "expected_error_class": "PRECONDITION_FAILED",
+      "status": "expected_rejection"
+    },
     "mesh2-nested-hole-rejected": {
       "case_id": "mesh2-nested-hole-rejected",
       "operation_id": "mesh2.refine.delaunay",
@@ -6977,6 +7038,71 @@
         "status": "error"
       },
       "response_sha256": "a209b2a8fc8b0ac5b4363b3d062ab0c1a61d70d16b4b8e68d5b6dace55cfb460",
+      "input_hashes": [
+        "831c615cff3f9204c3c25ec5a575c10215d3e1f5da20b4800dc846355e3f2389",
+        "ffb231e94b4521e4a08334a7514aef2d82acd7c2af6f3899dee5abbfa519300c"
+      ],
+      "output_hashes": [],
+      "expected_error_class": "VALIDATION_FAILED",
+      "status": "expected_rejection"
+    },
+    "mesh2-stricter-aspect-rejected": {
+      "case_id": "mesh2-stricter-aspect-rejected",
+      "operation_id": "mesh.validate.delaunay_refinement_2",
+      "revision": 1,
+      "worker_manifest_sha256": "de02697ee8c2a6b3d1ec707bd29f80bccc90d179c97f41849e083871688dcadc",
+      "test_id": "family-7.14-replay-cases",
+      "request": {
+        "inputs": [
+          {
+            "artifact_id": "input-0",
+            "blob_sha256": "831c615cff3f9204c3c25ec5a575c10215d3e1f5da20b4800dc846355e3f2389",
+            "format": "json",
+            "sha256": "831c615cff3f9204c3c25ec5a575c10215d3e1f5da20b4800dc846355e3f2389",
+            "type": "Triangulation2",
+            "unit": "mm"
+          },
+          {
+            "artifact_id": "input-1",
+            "blob_sha256": "ffb231e94b4521e4a08334a7514aef2d82acd7c2af6f3899dee5abbfa519300c",
+            "format": "json",
+            "sha256": "ffb231e94b4521e4a08334a7514aef2d82acd7c2af6f3899dee5abbfa519300c",
+            "type": "PolygonWithHoles2",
+            "unit": "mm"
+          }
+        ],
+        "kernel": "package_recommended",
+        "limits": {
+          "memory_mb": 2048,
+          "wall_time_ms": 120000
+        },
+        "operation": "mesh.validate.delaunay_refinement_2",
+        "parameters": {
+          "aspect_bound": 0.6,
+          "size_bound": {
+            "unit": "mm",
+            "value": 2.0
+          }
+        },
+        "protocol": 1,
+        "request_id": "mesh2-stricter-aspect-rejected"
+      },
+      "request_sha256": "e8b14e67cffbf45344f00baaa8ffea9151d319407caee2e6a44a74b68d0097d7",
+      "response": {
+        "error": {
+          "class": "VALIDATION_FAILED",
+          "code": "SHAPE_CRITERION_VIOLATED",
+          "message": "A triangle violates the aspect bound",
+          "recoverable": false,
+          "suggested_operations": []
+        },
+        "metrics": {},
+        "outputs": [],
+        "protocol": 1,
+        "request_id": "mesh2-stricter-aspect-rejected",
+        "status": "error"
+      },
+      "response_sha256": "0ce9be58e824fbb24997888c6f1cd0efb3afa57a6265e98e42b2188e4b60d76a",
       "input_hashes": [
         "831c615cff3f9204c3c25ec5a575c10215d3e1f5da20b4800dc846355e3f2389",
         "ffb231e94b4521e4a08334a7514aef2d82acd7c2af6f3899dee5abbfa519300c"

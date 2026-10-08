@@ -214,6 +214,7 @@ def main() -> None:
         report_fine, mesh_fine, _, _ = run_pair(scratch, square, params(1.0))
         assert report_fine["area"]["exact"] == "100"
         assert len(mesh_fine["triangles"]) > coarse_triangles
+        assert coarse_triangles < 231 <= len(mesh_fine["triangles"]),             (coarse_triangles, len(mesh_fine["triangles"]))
         assert mesh_facts(mesh_fine)["max_edge"] <= 1.0 + 1e-12
 
         # --- a tighter angle bound than the defaults still holds (0.0625, ~14.5 deg) --
@@ -340,6 +341,7 @@ def main() -> None:
         for fixture, code in (
                 (WAVE_C / "polygon_bowtie.json", "SELF_INTERSECTING_DOMAIN"),
                 (FIXTURES / "hole_outside.json", "SELF_INTERSECTING_DOMAIN"),
+                (FIXTURES / "hole_far_outside.json", "HOLE_OUTSIDE_DOMAIN"),
                 (FIXTURES / "hole_touching.json", "SELF_INTERSECTING_DOMAIN"),
                 (FIXTURES / "holes_overlapping.json", "SELF_INTERSECTING_DOMAIN"),
                 (FIXTURES / "hole_nested.json", "NESTED_HOLE"),
