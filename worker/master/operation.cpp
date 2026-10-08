@@ -7,6 +7,7 @@
 #include "wave_c/wave_c_operations.h"
 #include "wave_d/wave_d_operations.h"
 #include "wave_e/wave_e_operations.h"
+#include "kernel/kernel_query_set.h"
 
 #include <CGAL/version.h>
 
@@ -91,6 +92,12 @@ const std::vector<OperationDefinition>& operation_registry() {
     operations.push_back(std::move(operation));
   }
   for (auto& operation : wave_e::operations()) {
+    operations.push_back(std::move(operation));
+  }
+  for (auto& operation : kernel_ops::transform_operations()) {
+    operations.push_back(std::move(operation));
+  }
+  for (auto& operation : kernel_ops::validator_operations()) {
     operations.push_back(std::move(operation));
   }
   return operations;

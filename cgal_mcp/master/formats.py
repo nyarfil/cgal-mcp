@@ -527,7 +527,60 @@ MAX_EXACT_JSON_INTEGER = 2 ** 53
 REPORT_JSON_TYPES = {
     "Polygon2AnalysisReport": "analysis_kind",
     "SpatialQueryReport": "query_kind",
+    "KernelReport": "report_kind",
 }
+KERNEL_PRIMITIVE_DIMENSIONS = {
+    "Point_2": 2, "Vector_2": 2, "Segment_2": 2, "Line_2": 2, "Ray_2": 2, "Triangle_2": 2,
+    "Circle_2": 2, "Iso_rectangle_2": 2, "Aff_transformation_2": 2,
+    "Point_3": 3, "Vector_3": 3, "Segment_3": 3, "Line_3": 3, "Ray_3": 3, "Plane_3": 3,
+    "Triangle_3": 3, "Tetrahedron_3": 3, "Sphere_3": 3, "Iso_cuboid_3": 3, "Aff_transformation_3": 3,
+}
+KERNEL_RATIONAL_RE = re.compile(r"^-?[0-9]+(?:\.[0-9]+|/[0-9]+)?$")
+MAX_KERNEL_ELEMENTS = 10_000
+
+
+def _kernel_rational(item: Any, where: str) -> Fraction:
+    if not isinstance(item, str) or not KERNEL_RATIONAL_RE.match(item) or len(item) > 64:
+        raise InvalidInput("schema_mismatch", f"KernelQuerySet {where} must be an exact rational string")
+    value = Fraction(item)
+    if abs(value.numerator) >= 2 ** 53 or value.denominator >= 2 ** 53:
+        raise InvalidInput("inexact_integer", f"KernelQuerySet {where} exceeds the exact 2^53 range")
+    return value
+
+
+def _kernel_query_set(value: Any) -> Inspection:
+    """Structural screen of KernelQuerySet; the worker re-parses it strictly."""
+    data = _object(value, "KernelQuerySet", {"primitives", "queries"})
+    primitives, queries = data["primitives"], data["queries"]
+    if (not isinstance(primitives, list) or not primitives or len(primitives) > MAX_KERNEL_ELEMENTS
+            or not isinstance(queries, list) or len(queries) > MAX_KERNEL_ELEMENTS):
+        raise InvalidInput("schema_mismatch", "KernelQuerySet needs bounded primitive and query arrays")
+    ids: set[str] = set()
+    points: list[tuple[float, ...]] = []
+    for primitive in primitives:
+        if not isinstance(primitive, dict) or primitive.get("kind") not in KERNEL_PRIMITIVE_DIMENSIONS:
+            raise InvalidInput("schema_mismatch", "KernelQuerySet primitive kind is not supported")
+        identifier = primitive.get("id")
+        if not isinstance(identifier, str) or identifier in ids:
+            raise InvalidInput("schema_mismatch", "KernelQuerySet primitive ids must be unique strings")
+        ids.add(identifier)
+        rows = primitive.get("matrix", primitive.get("points"))
+        if not isinstance(rows, list) or not rows:
+            raise InvalidInput("schema_mismatch", "KernelQuerySet primitive needs points or matrix")
+        for row in rows:
+            if not isinstance(row, list):
+                raise InvalidInput("schema_mismatch", "KernelQuerySet coordinates must be arrays")
+            coordinates = tuple(float(_kernel_rational(x, identifier)) for x in row)
+            if "points" in primitive and "matrix" not in primitive:
+                points.append(coordinates[:3] + (0.0,) * (3 - len(coordinates)))
+    for query in queries:
+        if (not isinstance(query, dict) or set(query) != {"id", "query", "arguments"}
+                or not isinstance(query["arguments"], list)
+                or not all(isinstance(x, str) and x in ids for x in query["arguments"])):
+            raise InvalidInput("schema_mismatch", "KernelQuerySet queries need known primitive arguments")
+    return Inspection("KernelQuerySet", "json", {"finite": True},
+                      {"primitive_count": len(primitives), "query_count": len(queries),
+                       "point_count": len(points), "bounds": _bounds(points) if points else None})
 
 
 def _object(value: Any, type_name: str, keys: set[str]) -> dict[str, Any]:
@@ -625,6 +678,8 @@ def _parse_typed_json(value: Any, requested_type: str | None) -> Inspection:
         return Inspection(requested_type, "json", {"schema_valid": True},
                           {kind_key: value[kind_key], "operation": value.get("operation"),
                            "source": value["source"]})
+    if requested_type == "KernelQuerySet":
+        return _kernel_query_set(value)
     if requested_type == "PointSet2":
         points = _points(_object(value, "PointSet2", {"points"})["points"], 2, "PointSet2", 1)
         return _geometry("PointSet2", points, {}, {})

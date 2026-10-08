@@ -64,6 +64,9 @@ add_executable(cgal-master-worker
   master/wave_e/surface_mesh.cpp
   master/wave_e/tet_mesh.cpp
   master/wave_e/volume_mesh.cpp
+  master/kernel/kernel_query_set.cpp
+  master/kernel/kernel_operations.cpp
+  master/kernel/kernel_validators.cpp
 )
 # smooth_shape needs CGAL's Eigen sparse solver; enable it only where used.
 set_source_files_properties(master/wave_d/remesh_operations.cpp PROPERTIES

@@ -16,7 +16,8 @@ UNIT_SCALE_MM = {"mm": 1.0, "cm": 10.0, "m": 1000.0}
 
 
 REPORT_TYPES = frozenset({"ValidationReport", "GeometryAnalysisReport",
-                          "Polygon2AnalysisReport", "SpatialQueryReport"})
+                          "Polygon2AnalysisReport", "SpatialQueryReport",
+                          "KernelReport"})
 ANALYSIS_REPORT_TYPES = REPORT_TYPES - {"ValidationReport"}
 
 

@@ -2120,8 +2120,258 @@ FAMILY_7_14 = {
     ],
 }
 
+def _kfx(name: str, sha: str) -> dict:
+    return {"fixture": f"kernel/{name}", "sha256": sha}
+
+
+K_PRIMITIVES = _kfx("primitives.json", "1a9f4ab76ebd3a4e9d2c7a5c32d1e8a3cba4ec495c11810674d515e79715809d")
+K_PREDICATES = _kfx("predicates.json", "d7539b43cb71ebc3763be3f82d219627f294e9d19b10baa7921ed9336c66f635")
+K_ROBUSTNESS = _kfx("robustness.json", "7a3993562218161ee1e3bced2486e5713b8665ddbac8dcc76d2bd185a57e8cae")
+K_INTERSECTIONS = _kfx("intersections.json", "31ffe025532815c5b7e52c3f586d029fcf90085145384766afb1a3cf312243e0")
+K_DISTANCES = _kfx("distances.json", "9d1537895b4990cc0c9ceecc4b4f6c57f21f38a3f335c20928e3794e0ad5e18d")
+K_COLLINEAR = _kfx("collinear_circumcenter.json", "df062464e9594d835b828197044d7e7a697505a730814b75a432701994e568d8")
+K_UNSUPPORTED = _kfx("unsupported_pair.json", "b93850e03b83b9f065b77914843f9124e289b4d9e68580b34d09fedb25d9e081")
+K_TAMPERED = {
+    "primitives": _kfx("tampered_primitives_report.json",
+                       "235cc74fc24a0dedcb2d70092cd0c83caa7a5cb2807e30ae974989cd93f9f320"),
+    "predicates": _kfx("tampered_predicates_report.json",
+                       "d90b72a2956772070d4fd6c42edeeb170899ffc3ba5599c306caf4fd643f300d"),
+    "robustness": _kfx("tampered_robustness_report.json",
+                       "de707aaf94f58019557de540896bb2e374554b83fabf64683e22afd6415cd214"),
+    "intersections": _kfx("tampered_intersections_report.json",
+                          "eaf43580fd50be9004ab4dcdb692004f2b30744a70b80c09ea4444a0a3497c43"),
+    "distances": _kfx("tampered_distances_report.json",
+                      "d5c6031be8eafca4898cea1a79ede060df93d381e606d7a69a338a04a091445f"),
+}
+KERNEL_TYPES = {
+    "simple_cartesian_double": "CGAL::Simple_cartesian<double>",
+    "cartesian_double": "CGAL::Cartesian<double>",
+    "epick": "CGAL::Exact_predicates_inexact_constructions_kernel",
+    "epeck": "CGAL::Exact_predicates_exact_constructions_kernel",
+}
+# Double nearest to 1/3 (the centroid of (0,0),(1,0),(0,1) in every binary64-based kernel).
+THIRD_BINARY64 = "6004799503160661/18014398509481984"
+PRIMITIVE_KINDS = ["Point_2", "Vector_2", "Segment_2", "Line_2", "Ray_2", "Triangle_2", "Circle_2",
+                   "Iso_rectangle_2", "Aff_transformation_2", "Point_3", "Vector_3", "Segment_3", "Line_3",
+                   "Ray_3", "Plane_3", "Triangle_3", "Tetrahedron_3", "Sphere_3", "Iso_cuboid_3",
+                   "Aff_transformation_3"]
+PREDICATE_RESULTS = ["left_turn", "right_turn", "collinear", "positive", "negative", "coplanar",
+                     True, False, True, False, True, False, True, False]
+PREDICATE_CONSTRUCTIONS_EXACT = [["2", "0"], ["0", "0", "1"], ["4/3", "4/3"], ["1/2", "1/2", "1/2"],
+                                 ["2", "2"], ["1", "1", "0"], ["1", "1", "1"]]
+INTERSECTION_RESULTS = [
+    {"point": ["2", "2"], "type": "point"}, {"points": [["1", "0"], ["2", "0"]], "type": "segment"},
+    {"type": "empty"}, True, False,
+    {"point": ["1", "1"], "type": "point"}, {"type": "empty"},
+    {"coefficients": ["-1", "1", "0"], "type": "line"}, False,
+    {"points": [["1", "3"], ["1", "1"], ["3", "1"]], "type": "triangle"},
+    {"points": [["0", "3"], ["3/2", "0"], ["3", "0"], ["7/2", "1/2"], ["0", "4"]], "type": "polygon"},
+    {"point": ["4", "0"], "type": "point"}, {"points": [["0", "4"], ["4", "0"]], "type": "segment"},
+    {"type": "empty"}, True,
+    {"point": ["1", "1", "0"], "type": "point"}, {"point": ["1", "1", "0"], "type": "point"},
+    {"points": [["0", "0", "0"], ["1", "1", "0"]], "type": "line"}, {"type": "empty"}, False,
+    {"point": ["1", "1", "0"], "type": "point"}, {"type": "empty"},
+    {"points": [["-1", "1", "0"], ["5", "1", "0"]], "type": "segment"}, True,
+    {"points": [["0", "0", "0"], ["0", "-1", "0"]], "type": "line"}, {"type": "empty"},
+    {"coefficients": ["0", "0", "1", "0"], "type": "plane"}, False,
+    {"point": ["1", "1", "0"], "type": "point"}, {"type": "empty"},
+    {"points": [["0", "1", "0"], ["3", "1", "0"]], "type": "segment"}, False,
+    {"point": ["1", "1", "0"], "type": "point"}, {"type": "empty"}, True,
+    {"point": ["0", "0", "0"], "type": "point"}, {"type": "empty"}, {"type": "empty"},
+    {"points": [["0", "0", "0"], ["1", "0", "0"]], "type": "line"}, False,
+]
+DISTANCE_RESULTS = ["25", "1", "1/2", "2", "4", "0", "9", "2", "3", "9", "9", "18", "1", "2", "4", "1",
+                    "smaller", "equal", "larger", "larger"]
+
+
+def _kq(fixture: dict) -> dict:
+    return _json_input(fixture, "KernelQuerySet")
+
+
+def _kernel_checks(kernel: str, queries: int) -> list[list]:
+    exact_predicates = kernel in ("epick", "epeck")
+    return [
+        ["metrics.kernel", "==", kernel],
+        ["metrics.kernel_type", "==", KERNEL_TYPES[kernel]],
+        ["metrics.exact_predicates", "==", exact_predicates],
+        ["metrics.exact_constructions", "==", kernel == "epeck"],
+        ["metrics.query_count", "==", queries],
+        ["output:analysis:json:input_representation", "==",
+         "exact_rational" if kernel == "epeck" else "binary64_round_to_nearest"],
+    ]
+
+
+def _robustness_case(kernel: str) -> dict:
+    exact_predicates = kernel in ("epick", "epeck")
+    third = "1/3" if kernel == "epeck" else THIRD_BINARY64
+    return _case(f"kernel-robustness-{kernel}", "kernel.predicates.evaluate", [_kq(K_ROBUSTNESS)],
+                 {"kernel": kernel}, _kernel_checks(kernel, 3) + [
+                     ["output:analysis:json:results.queries[*].result", "==",
+                      ["left_turn" if exact_predicates else "right_turn", exact_predicates, [third, third]]],
+                 ])
+
+
+FAMILY_7_1 = {
+    "family": "7.1",
+    "scope": "family_7_1_geometry_kernel",
+    "evidence_path": "docs/master/evidence/family-7.1-capabilities.json",
+    "test_id": "family-7.1-replay-cases",
+    "requirements": {
+        "major.7.1.01": {
+            "operation_ids": ["kernel.predicates.evaluate"],
+            "symbols": ["Simple_cartesian", "Cartesian", "Exact_predicates_inexact_constructions_kernel",
+                        "Exact_predicates_exact_constructions_kernel"],
+            "symbol_notes": "The same exact-dyadic input (p = ((2^51+21)/2^52, (2^51+24)/2^52), q = (12,12), "
+                            "r = (24,24); exact orientation is a left turn) is evaluated in all four kernels. "
+                            "Simple_cartesian<double> and Cartesian<double> return the floating-point answer "
+                            "right_turn; EPICK and EPECK return the exact left_turn. The centroid of (0,0),(1,0),"
+                            "(0,1) is the binary64 value nearest 1/3 in the three double-based kernels and exactly "
+                            "1/3 only in EPECK. Each report is checked by an independent GMP-rational validator; a "
+                            "report that claims the floating-point answer for EPICK is rejected.",
+            "case_ids": [f"kernel-robustness-{k}" for k in KERNEL_TYPES],
+        },
+        "major.7.1.02": {
+            "operation_ids": ["kernel.primitives.construct"],
+            "symbols": ["Point_2", "Point_3", "Vector_2", "Vector_3", "Line_2", "Line_3", "Ray_2", "Ray_3",
+                        "Segment_2", "Segment_3", "Plane_3", "Circle_2", "Sphere_3", "Triangle_2", "Triangle_3",
+                        "Tetrahedron_3", "Iso_rectangle_2", "Iso_cuboid_3", "Aff_transformation_2",
+                        "Aff_transformation_3"],
+            "symbol_notes": "One fixture holds one primitive of each of the 20 kinds plus affine images of 2D/3D "
+                            "points and vectors. Hand-derived exact values are pinned in EPECK (tetrahedron volume "
+                            "1/6, plane z=1, iso-cuboid volume 18, transformed point (5/2,-5/3)); the "
+                            "Simple_cartesian case shows the same kinds and integer results in binary64. Every "
+                            "derived property is recomputed by the independent rational validator.",
+            "case_ids": ["kernel-primitives-epeck", "kernel-primitives-simple-cartesian"],
+        },
+        "major.7.1.03": {
+            "operation_ids": ["kernel.predicates.evaluate"],
+            "symbols": ["orientation", "collinear", "coplanar", "left_turn", "right_turn", "midpoint",
+                        "centroid", "circumcenter"],
+            "symbol_notes": "2D/3D orientation (all three signs), collinear, coplanar, left_turn and right_turn "
+                            "with true and false answers, and midpoint, centroid and circumcenter (2D, 3D from 3 "
+                            "and from 4 points) with hand-derived exact results.",
+            "case_ids": ["kernel-predicates-epeck", "kernel-predicates-epick"],
+        },
+        "major.7.1.04": {
+            "operation_ids": ["kernel.intersections.compute"],
+            "symbols": ["intersection", "do_intersect"],
+            "symbol_notes": "Segment/segment, line/line and triangle/triangle in 2D and line/plane, segment/"
+                            "plane, plane/plane, segment/triangle, ray/triangle and line/line in 3D, covering "
+                            "point, segment, line, plane, triangle, polygon and empty results plus do_intersect "
+                            "true/false. Results are re-derived by exact parametric and half-plane clipping "
+                            "formulas in the validator.",
+            "case_ids": ["kernel-intersections-epeck", "kernel-intersections-epick"],
+        },
+        "major.7.1.05": {
+            "operation_ids": ["kernel.distance.squared"],
+            "symbols": ["squared_distance", "compare_distance", "compare_distance_to_point"],
+            "symbol_notes": "squared_distance for point/point, point/line, point/segment and segment/segment in "
+                            "2D and point/point, point/line, point/segment, point/plane, point/triangle (interior "
+                            "and edge region), segment/segment (interior and endpoint) and line/line (skew and "
+                            "parallel) in 3D, plus compare_distance and compare_distance_to_point with smaller/"
+                            "equal/larger outcomes; hand-derived values are pinned.",
+            "case_ids": ["kernel-distances-epeck", "kernel-distances-simple-cartesian"],
+        },
+    },
+    "unbound": {},
+    "cases": [
+        *[_robustness_case(kernel) for kernel in KERNEL_TYPES],
+        _case("kernel-primitives-epeck", "kernel.primitives.construct", [_kq(K_PRIMITIVES)], {"kernel": "epeck"},
+              _kernel_checks("epeck", 4) + [
+                  ["metrics.primitive_count", "==", 20],
+                  ["output:analysis:json:results.primitives[*].kind", "==", PRIMITIVE_KINDS],
+                  ["output:analysis:json:results.primitives.16.signed_volume", "==", "1/6"],
+                  ["output:analysis:json:results.primitives.16.orientation", "==", "positive"],
+                  ["output:analysis:json:results.primitives.14.coefficients", "==", ["0", "0", "1", "-1"]],
+                  ["output:analysis:json:results.primitives.18.volume", "==", "18"],
+                  ["output:analysis:json:results.primitives.5.signed_area", "==", "6"],
+                  ["output:analysis:json:results.primitives.15.squared_area", "==", "4"],
+                  ["output:analysis:json:results.primitives.17.squared_radius", "==", "9/4"],
+                  ["output:analysis:json:results.primitives.0.coordinates", "==", ["1/3", "5/2"]],
+                  ["output:analysis:json:results.queries[*].result", "==", [
+                      {"coordinates": ["5/2", "-5/3"], "kind": "Point_2"},
+                      {"coordinates": ["4", "3"], "kind": "Vector_2"},
+                      {"coordinates": ["3", "4", "5"], "kind": "Point_3"},
+                      {"coordinates": ["2", "-4", "4"], "kind": "Vector_3"}]],
+              ]),
+        _case("kernel-primitives-simple-cartesian", "kernel.primitives.construct", [_kq(K_PRIMITIVES)],
+              {"kernel": "simple_cartesian_double"}, _kernel_checks("simple_cartesian_double", 4) + [
+                  ["output:analysis:json:results.primitives[*].kind", "==", PRIMITIVE_KINDS],
+                  ["output:analysis:json:results.primitives.14.coefficients", "==", ["0", "0", "1", "-1"]],
+                  ["output:analysis:json:results.primitives.18.volume", "==", "18"],
+                  ["output:analysis:json:results.queries.2.result.coordinates", "==", ["3", "4", "5"]],
+              ]),
+        _case("kernel-predicates-epeck", "kernel.predicates.evaluate", [_kq(K_PREDICATES)], {"kernel": "epeck"},
+              _kernel_checks("epeck", 21) + [
+                  ["output:analysis:json:results.queries[*].result", "==",
+                   PREDICATE_RESULTS + PREDICATE_CONSTRUCTIONS_EXACT],
+              ]),
+        _case("kernel-predicates-epick", "kernel.predicates.evaluate", [_kq(K_PREDICATES)], {"kernel": "epick"},
+              _kernel_checks("epick", 21) + [
+                  *[[f"output:analysis:json:results.queries.{index}.result", "==", value]
+                    for index, value in enumerate(PREDICATE_RESULTS)],
+                  ["output:analysis:json:results.queries.18.result", "==", ["2", "2"]],
+                  ["output:analysis:json:results.queries.20.result", "==", ["1", "1", "1"]],
+              ]),
+        _case("kernel-intersections-epeck", "kernel.intersections.compute", [_kq(K_INTERSECTIONS)],
+              {"kernel": "epeck"}, _kernel_checks("epeck", 40) + [
+                  ["output:analysis:json:results.queries[*].result", "==", INTERSECTION_RESULTS],
+              ]),
+        _case("kernel-intersections-epick", "kernel.intersections.compute", [_kq(K_INTERSECTIONS)],
+              {"kernel": "epick"}, _kernel_checks("epick", 40) + [
+                  ["output:analysis:json:results.queries[*].result", "==", INTERSECTION_RESULTS],
+              ]),
+        _case("kernel-distances-epeck", "kernel.distance.squared", [_kq(K_DISTANCES)], {"kernel": "epeck"},
+              _kernel_checks("epeck", 20) + [
+                  ["output:analysis:json:results.queries[*].result", "==", DISTANCE_RESULTS],
+              ]),
+        _case("kernel-distances-simple-cartesian", "kernel.distance.squared", [_kq(K_DISTANCES)],
+              {"kernel": "simple_cartesian_double"}, _kernel_checks("simple_cartesian_double", 20) + [
+                  ["output:analysis:json:results.queries[*].result", "==", DISTANCE_RESULTS],
+              ]),
+    ],
+    "pairs": [
+        {"kind": "different_outputs", "cases": ["kernel-robustness-simple_cartesian_double",
+                                                "kernel-robustness-epick"]},
+        {"kind": "different_outputs", "cases": ["kernel-robustness-epick", "kernel-robustness-epeck"]},
+    ],
+    "negative_controls": [
+        {"id": "kernel-circumcenter-collinear-rejected", "operation": "kernel.predicates.evaluate",
+         "inputs": [_kq(K_COLLINEAR)], "parameters": {"kernel": "epeck"},
+         "expect_error_class": "PRECONDITION_FAILED", "expect_error_code": "DEGENERATE_CONFIGURATION"},
+        {"id": "kernel-intersection-unsupported-pair-rejected", "operation": "kernel.intersections.compute",
+         "inputs": [_kq(K_UNSUPPORTED)], "parameters": {"kernel": "epeck"},
+         "expect_error_class": "PRECONDITION_FAILED", "expect_error_code": "UNSUPPORTED_PRIMITIVE_PAIR"},
+        {"id": "kernel-intersection-inexact-kernel-rejected", "operation": "kernel.intersections.compute",
+         "inputs": [_kq(K_INTERSECTIONS)], "parameters": {"kernel": "simple_cartesian_double"},
+         "expect_error_class": "INVALID_REQUEST", "expect_error_code": "INVALID_PARAMETER"},
+        {"id": "kernel-primitives-tampered-volume-rejected", "operation": "kernel.validate.primitives_report",
+         "inputs": [_json_input(K_TAMPERED["primitives"], "KernelReport", "none"), _kq(K_PRIMITIVES)],
+         "parameters": {"kernel": "epeck"}, "expect_error_class": "VALIDATION_FAILED",
+         "expect_error_code": "CONSTRUCTION_MISMATCH"},
+        {"id": "kernel-predicates-tampered-circumcenter-rejected",
+         "operation": "kernel.validate.predicates_report",
+         "inputs": [_json_input(K_TAMPERED["predicates"], "KernelReport", "none"), _kq(K_PREDICATES)],
+         "parameters": {"kernel": "epeck"}, "expect_error_class": "VALIDATION_FAILED",
+         "expect_error_code": "CONSTRUCTION_MISMATCH"},
+        {"id": "kernel-epick-floating-orientation-rejected", "operation": "kernel.validate.predicates_report",
+         "inputs": [_json_input(K_TAMPERED["robustness"], "KernelReport", "none"), _kq(K_ROBUSTNESS)],
+         "parameters": {"kernel": "epick"}, "expect_error_class": "VALIDATION_FAILED",
+         "expect_error_code": "PREDICATE_MISMATCH"},
+        {"id": "kernel-intersections-tampered-vertex-rejected",
+         "operation": "kernel.validate.intersections_report",
+         "inputs": [_json_input(K_TAMPERED["intersections"], "KernelReport", "none"), _kq(K_INTERSECTIONS)],
+         "parameters": {"kernel": "epeck"}, "expect_error_class": "VALIDATION_FAILED",
+         "expect_error_code": "INTERSECTION_MISMATCH"},
+        {"id": "kernel-distances-tampered-value-rejected", "operation": "kernel.validate.distances_report",
+         "inputs": [_json_input(K_TAMPERED["distances"], "KernelReport", "none"), _kq(K_DISTANCES)],
+         "parameters": {"kernel": "epeck"}, "expect_error_class": "VALIDATION_FAILED",
+         "expect_error_code": "CONSTRUCTION_MISMATCH"},
+    ],
+}
+
 GENERIC_FAMILIES: dict[str, dict] = {
-    family["family"]: family for family in (FAMILY_7_2, FAMILY_7_3, FAMILY_7_4, FAMILY_7_5, FAMILY_7_6,
+    family["family"]: family for family in (FAMILY_7_1, FAMILY_7_2, FAMILY_7_3, FAMILY_7_4, FAMILY_7_5, FAMILY_7_6,
                    FAMILY_7_9, FAMILY_7_11, FAMILY_7_12, FAMILY_7_13, FAMILY_7_14)
 }
 

@@ -189,11 +189,11 @@
     }
   },
   "catalog_baseline_sha256": "143ec18a5b64d506aad60dc24b0a1ea30940c715d1223b3465fa140aeb9d02a7",
-  "operation_registry_sha256": "66ecb030da6669722e24794b7cc15663aa1ed001e82fd8f3f94aa4aba2a4f8d1",
+  "operation_registry_sha256": "b150ff419526914729d5eba0ec25d3e84a169fed9a1d0356ef85e50e8351630a",
   "operation_registry_hash_encoding": "utf8-lf",
   "policy_catalog_sha256": "45f4be759288aaeb834a3ce97aa64ee7768048b15534618fc8c19512801f9a9f",
   "policy_catalog_hash_encoding": "utf8-lf",
-  "worker_sha256": "c86a86ac5d7acc0e211de3f1124c7b974aa5796213be25055542edfa5d4dfe7b",
+  "worker_sha256": "b351f376717f4fd40286cadb08b2ad2efa7f47fe2a9b42581f4078b222e0d1a2",
   "worker_binary_format": "pe",
   "worker_manifest": {
     "actual_cgal_version": "6.2.1",
@@ -4817,6 +4817,284 @@
         "supported_kernels": [
           "package_recommended"
         ]
+      },
+      {
+        "dependencies": [
+          "Kernel_23"
+        ],
+        "effective_kernel": "selected_by_parameter:kernel",
+        "id": "kernel.primitives.construct",
+        "info": {
+          "input_format": "json",
+          "kernels": [
+            "simple_cartesian_double",
+            "cartesian_double",
+            "epick",
+            "epeck"
+          ],
+          "maximum_primitives": 10000,
+          "maximum_queries": 10000,
+          "output_format": "json",
+          "validator_parameter_bindings": {
+            "kernel.validate.primitives_report": {
+              "kernel": "kernel"
+            }
+          },
+          "validators": [
+            "kernel.validate.primitives_report"
+          ]
+        },
+        "input_types": [
+          "KernelQuerySet"
+        ],
+        "output_type": "KernelReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Kernel_23"
+        ],
+        "effective_kernel": "selected_by_parameter:kernel",
+        "id": "kernel.predicates.evaluate",
+        "info": {
+          "input_format": "json",
+          "kernels": [
+            "simple_cartesian_double",
+            "cartesian_double",
+            "epick",
+            "epeck"
+          ],
+          "maximum_primitives": 10000,
+          "maximum_queries": 10000,
+          "output_format": "json",
+          "validator_parameter_bindings": {
+            "kernel.validate.predicates_report": {
+              "kernel": "kernel"
+            }
+          },
+          "validators": [
+            "kernel.validate.predicates_report"
+          ]
+        },
+        "input_types": [
+          "KernelQuerySet"
+        ],
+        "output_type": "KernelReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Kernel_23",
+          "Intersections_2",
+          "Intersections_3"
+        ],
+        "effective_kernel": "selected_by_parameter:kernel",
+        "id": "kernel.intersections.compute",
+        "info": {
+          "input_format": "json",
+          "kernels": [
+            "epick",
+            "epeck"
+          ],
+          "maximum_primitives": 10000,
+          "maximum_queries": 10000,
+          "output_format": "json",
+          "validator_parameter_bindings": {
+            "kernel.validate.intersections_report": {
+              "kernel": "kernel"
+            }
+          },
+          "validators": [
+            "kernel.validate.intersections_report"
+          ]
+        },
+        "input_types": [
+          "KernelQuerySet"
+        ],
+        "output_type": "KernelReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Kernel_23",
+          "Distance_2",
+          "Distance_3"
+        ],
+        "effective_kernel": "selected_by_parameter:kernel",
+        "id": "kernel.distance.squared",
+        "info": {
+          "input_format": "json",
+          "kernels": [
+            "simple_cartesian_double",
+            "cartesian_double",
+            "epick",
+            "epeck"
+          ],
+          "maximum_primitives": 10000,
+          "maximum_queries": 10000,
+          "output_format": "json",
+          "validator_parameter_bindings": {
+            "kernel.validate.distances_report": {
+              "kernel": "kernel"
+            }
+          },
+          "validators": [
+            "kernel.validate.distances_report"
+          ]
+        },
+        "input_types": [
+          "KernelQuerySet"
+        ],
+        "output_type": "KernelReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Kernel_23"
+        ],
+        "effective_kernel": "selected_by_parameter:kernel",
+        "id": "kernel.validate.primitives_report",
+        "info": {
+          "checks": [
+            "kernel_matches",
+            "source_matches",
+            "result_set_complete",
+            "primitive_properties_match",
+            "transformations_match"
+          ],
+          "independence": "GMP rationals; no CGAL kernel functor",
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "KernelReport",
+          "KernelQuerySet"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Kernel_23"
+        ],
+        "effective_kernel": "selected_by_parameter:kernel",
+        "id": "kernel.validate.predicates_report",
+        "info": {
+          "checks": [
+            "kernel_matches",
+            "source_matches",
+            "result_set_complete",
+            "predicates_match",
+            "constructions_match"
+          ],
+          "independence": "GMP rationals; no CGAL kernel functor",
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "KernelReport",
+          "KernelQuerySet"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Kernel_23",
+          "Intersections_2",
+          "Intersections_3"
+        ],
+        "effective_kernel": "selected_by_parameter:kernel",
+        "id": "kernel.validate.intersections_report",
+        "info": {
+          "checks": [
+            "kernel_matches",
+            "source_matches",
+            "result_set_complete",
+            "intersection_types_match",
+            "intersection_geometry_matches"
+          ],
+          "independence": "GMP rationals; no CGAL kernel functor",
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "KernelReport",
+          "KernelQuerySet"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Kernel_23",
+          "Distance_2",
+          "Distance_3"
+        ],
+        "effective_kernel": "selected_by_parameter:kernel",
+        "id": "kernel.validate.distances_report",
+        "info": {
+          "checks": [
+            "kernel_matches",
+            "source_matches",
+            "result_set_complete",
+            "squared_distances_match",
+            "distance_comparisons_match"
+          ],
+          "independence": "GMP rationals; no CGAL kernel functor",
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "KernelReport",
+          "KernelQuerySet"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
       }
     ],
     "protocol": 1,
@@ -4828,7 +5106,7 @@
     ],
     "worker": "cgal-master-worker"
   },
-  "worker_manifest_sha256": "d759eaa0f73c9a02f79eed93a27a8ce0bc7517e7bc8a082ef9ab0efc8f9dd353",
+  "worker_manifest_sha256": "54296ed6f184d6e94bce1bbfe8f95a9ac8756d2fb272fc4fec66e84fdaeb49de",
   "tests": [
     {
       "id": "wave-a-worker-cases",
@@ -5536,7 +5814,7 @@
       "case_id": "policy-lindstrom_turk",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "d759eaa0f73c9a02f79eed93a27a8ce0bc7517e7bc8a082ef9ab0efc8f9dd353",
+      "worker_manifest_sha256": "54296ed6f184d6e94bce1bbfe8f95a9ac8756d2fb272fc4fec66e84fdaeb49de",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -5669,7 +5947,7 @@
       "case_id": "policy-edge_length_midpoint",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "d759eaa0f73c9a02f79eed93a27a8ce0bc7517e7bc8a082ef9ab0efc8f9dd353",
+      "worker_manifest_sha256": "54296ed6f184d6e94bce1bbfe8f95a9ac8756d2fb272fc4fec66e84fdaeb49de",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -5802,7 +6080,7 @@
       "case_id": "policy-gh_plane",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "d759eaa0f73c9a02f79eed93a27a8ce0bc7517e7bc8a082ef9ab0efc8f9dd353",
+      "worker_manifest_sha256": "54296ed6f184d6e94bce1bbfe8f95a9ac8756d2fb272fc4fec66e84fdaeb49de",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -5935,7 +6213,7 @@
       "case_id": "policy-gh_triangle",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "d759eaa0f73c9a02f79eed93a27a8ce0bc7517e7bc8a082ef9ab0efc8f9dd353",
+      "worker_manifest_sha256": "54296ed6f184d6e94bce1bbfe8f95a9ac8756d2fb272fc4fec66e84fdaeb49de",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -6068,7 +6346,7 @@
       "case_id": "policy-gh_plane_line",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "d759eaa0f73c9a02f79eed93a27a8ce0bc7517e7bc8a082ef9ab0efc8f9dd353",
+      "worker_manifest_sha256": "54296ed6f184d6e94bce1bbfe8f95a9ac8756d2fb272fc4fec66e84fdaeb49de",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -6201,7 +6479,7 @@
       "case_id": "policy-gh_probabilistic_plane",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "d759eaa0f73c9a02f79eed93a27a8ce0bc7517e7bc8a082ef9ab0efc8f9dd353",
+      "worker_manifest_sha256": "54296ed6f184d6e94bce1bbfe8f95a9ac8756d2fb272fc4fec66e84fdaeb49de",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -6334,7 +6612,7 @@
       "case_id": "policy-gh_probabilistic_triangle",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "d759eaa0f73c9a02f79eed93a27a8ce0bc7517e7bc8a082ef9ab0efc8f9dd353",
+      "worker_manifest_sha256": "54296ed6f184d6e94bce1bbfe8f95a9ac8756d2fb272fc4fec66e84fdaeb49de",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -6467,7 +6745,7 @@
       "case_id": "stop-edge_count",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "d759eaa0f73c9a02f79eed93a27a8ce0bc7517e7bc8a082ef9ab0efc8f9dd353",
+      "worker_manifest_sha256": "54296ed6f184d6e94bce1bbfe8f95a9ac8756d2fb272fc4fec66e84fdaeb49de",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -6603,7 +6881,7 @@
       "case_id": "stop-edge_ratio",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "d759eaa0f73c9a02f79eed93a27a8ce0bc7517e7bc8a082ef9ab0efc8f9dd353",
+      "worker_manifest_sha256": "54296ed6f184d6e94bce1bbfe8f95a9ac8756d2fb272fc4fec66e84fdaeb49de",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -6739,7 +7017,7 @@
       "case_id": "stop-face_count",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "d759eaa0f73c9a02f79eed93a27a8ce0bc7517e7bc8a082ef9ab0efc8f9dd353",
+      "worker_manifest_sha256": "54296ed6f184d6e94bce1bbfe8f95a9ac8756d2fb272fc4fec66e84fdaeb49de",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -6875,7 +7153,7 @@
       "case_id": "stop-face_ratio",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "d759eaa0f73c9a02f79eed93a27a8ce0bc7517e7bc8a082ef9ab0efc8f9dd353",
+      "worker_manifest_sha256": "54296ed6f184d6e94bce1bbfe8f95a9ac8756d2fb272fc4fec66e84fdaeb49de",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -7011,7 +7289,7 @@
       "case_id": "stop-edge_length",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "d759eaa0f73c9a02f79eed93a27a8ce0bc7517e7bc8a082ef9ab0efc8f9dd353",
+      "worker_manifest_sha256": "54296ed6f184d6e94bce1bbfe8f95a9ac8756d2fb272fc4fec66e84fdaeb49de",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -7154,7 +7432,7 @@
       "case_id": "stop-edge_length-below-minimum",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "d759eaa0f73c9a02f79eed93a27a8ce0bc7517e7bc8a082ef9ab0efc8f9dd353",
+      "worker_manifest_sha256": "54296ed6f184d6e94bce1bbfe8f95a9ac8756d2fb272fc4fec66e84fdaeb49de",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -7297,7 +7575,7 @@
       "case_id": "constraints",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "d759eaa0f73c9a02f79eed93a27a8ce0bc7517e7bc8a082ef9ab0efc8f9dd353",
+      "worker_manifest_sha256": "54296ed6f184d6e94bce1bbfe8f95a9ac8756d2fb272fc4fec66e84fdaeb49de",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -7436,7 +7714,7 @@
       "case_id": "preserve-open-border",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "d759eaa0f73c9a02f79eed93a27a8ce0bc7517e7bc8a082ef9ab0efc8f9dd353",
+      "worker_manifest_sha256": "54296ed6f184d6e94bce1bbfe8f95a9ac8756d2fb272fc4fec66e84fdaeb49de",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -7569,7 +7847,7 @@
       "case_id": "bounded-distance",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "d759eaa0f73c9a02f79eed93a27a8ce0bc7517e7bc8a082ef9ab0efc8f9dd353",
+      "worker_manifest_sha256": "54296ed6f184d6e94bce1bbfe8f95a9ac8756d2fb272fc4fec66e84fdaeb49de",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -7706,7 +7984,7 @@
       "case_id": "bounded-normal",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "d759eaa0f73c9a02f79eed93a27a8ce0bc7517e7bc8a082ef9ab0efc8f9dd353",
+      "worker_manifest_sha256": "54296ed6f184d6e94bce1bbfe8f95a9ac8756d2fb272fc4fec66e84fdaeb49de",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -7839,7 +8117,7 @@
       "case_id": "polyhedral-envelope",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "d759eaa0f73c9a02f79eed93a27a8ce0bc7517e7bc8a082ef9ab0efc8f9dd353",
+      "worker_manifest_sha256": "54296ed6f184d6e94bce1bbfe8f95a9ac8756d2fb272fc4fec66e84fdaeb49de",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -7976,7 +8254,7 @@
       "case_id": "filter-control",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "d759eaa0f73c9a02f79eed93a27a8ce0bc7517e7bc8a082ef9ab0efc8f9dd353",
+      "worker_manifest_sha256": "54296ed6f184d6e94bce1bbfe8f95a9ac8756d2fb272fc4fec66e84fdaeb49de",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -8109,7 +8387,7 @@
       "case_id": "bounded-distance-tight",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "d759eaa0f73c9a02f79eed93a27a8ce0bc7517e7bc8a082ef9ab0efc8f9dd353",
+      "worker_manifest_sha256": "54296ed6f184d6e94bce1bbfe8f95a9ac8756d2fb272fc4fec66e84fdaeb49de",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -8250,7 +8528,7 @@
       "case_id": "polyhedral-envelope-tight",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "d759eaa0f73c9a02f79eed93a27a8ce0bc7517e7bc8a082ef9ab0efc8f9dd353",
+      "worker_manifest_sha256": "54296ed6f184d6e94bce1bbfe8f95a9ac8756d2fb272fc4fec66e84fdaeb49de",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -8391,7 +8669,7 @@
       "case_id": "bounded-normal-adversarial",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "d759eaa0f73c9a02f79eed93a27a8ce0bc7517e7bc8a082ef9ab0efc8f9dd353",
+      "worker_manifest_sha256": "54296ed6f184d6e94bce1bbfe8f95a9ac8756d2fb272fc4fec66e84fdaeb49de",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -8534,7 +8812,7 @@
       "case_id": "bounded-normal-control",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "d759eaa0f73c9a02f79eed93a27a8ce0bc7517e7bc8a082ef9ab0efc8f9dd353",
+      "worker_manifest_sha256": "54296ed6f184d6e94bce1bbfe8f95a9ac8756d2fb272fc4fec66e84fdaeb49de",
       "test_id": "wave-a-worker-cases",
       "paired_positive_case_id": "bounded-normal-adversarial",
       "request": {

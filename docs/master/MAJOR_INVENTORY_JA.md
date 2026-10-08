@@ -39,6 +39,7 @@ CIは台帳を公式配布物から再生成してバイト一致を検査しま
 
 | 分野 | 結合/全体 | 結合済み要求 |
 |---|---|---|
+| 7.1 カーネル | 5/5 | 7.1.01 Simple_cartesian・Cartesian・EPICK・EPECK（同一の準退化入力で浮動小数点kernelは誤判定、厳密述語kernelは正答）、.02 20種のprimitive、.03 述語・構成、.04 intersection・do_intersect、.05 squared_distance・距離比較。validatorはCGALを使わないGMP有理数の独立再計算 |
 | 7.2 空間問合せ | 4/5 | 7.2.01 AABB、.02 Kd木、.03 k近傍、.05 bbox |
 | 7.3 解析 | 3/8 | 7.3.01 検査・自己交差、7.3.03 法線、7.3.04 計測 |
 | 7.4 修復 | 5/6 | 7.4.01 向き、.02 境界縫合、.03 退化除去、.05 polygon soup、.06 非多様体前処理 |
@@ -52,7 +53,7 @@ CIは台帳を公式配布物から再生成してバイト一致を検査しま
 | 7.13 凸包等 | 1/5 | 7.13.01 2D/3D凸包 |
 | 7.14 メッシュ生成 | 4/4 | 7.14.01 Mesh_2（`refine_Delaunay_mesh_2`）、7.14.02 Surface_mesher（`make_surface_mesh`、球・楕円体・トーラス）、7.14.03 Mesh_3（`make_mesh_3`、同3種のimplicit domainと、閉じた三角形メッシュの多面体domain）、7.14.04 `Mesh_criteria_3`の型付きcriteria（列挙boxのsizing field、facet_topology、多面体の1D特徴辺edge_size）。画像domainと複数パッチtopologyは未実装 |
 
-未結合要求の不足（7.6は5/5結合済みで不足なし）:
+未結合要求の不足（7.1・7.6は5/5結合済みで不足なし）:
 
 - 7.3.02: connected component / keep largest を公開Operationにしていない。
 - 7.3.05: sharp edge / segmentation がない。
