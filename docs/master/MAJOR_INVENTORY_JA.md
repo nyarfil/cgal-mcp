@@ -50,7 +50,7 @@ CIは台帳を公式配布物から再生成してバイト一致を検査しま
 | 7.11 三角形分割 | 2/5 | 7.11.01 Delaunay 2D/3D、.02 制約付き |
 | 7.12 多角形 | 1/7 | 7.12.01 Polygon_2/with_holesの性質・内外判定 |
 | 7.13 凸包等 | 1/5 | 7.13.01 2D/3D凸包 |
-| 7.14 メッシュ生成 | 1/4 | 7.14.01 Mesh_2（`refine_Delaunay_mesh_2`） |
+| 7.14 メッシュ生成 | 2/4 | 7.14.01 Mesh_2（`refine_Delaunay_mesh_2`）、7.14.02 Surface_mesher（`make_surface_mesh`、球・楕円体・トーラス） |
 
 未結合要求の不足（7.6は5/5結合済みで不足なし）:
 
@@ -68,7 +68,7 @@ CIは台帳を公式配布物から再生成してバイト一致を検査しま
 - 7.8.01〜06: 再構成Operationがない。
 - 7.2.04: do_intersect・any/all_intersected_primitiveを公開していない（ray最初の交点のみ）。
 - 7.11.03〜05: regular、periodic・on-sphere、Voronoiがない。
-- 7.14.02〜04: 曲面メッシュ生成（Surface_mesher）、Mesh_3の四面体体積メッシュ、Mesh_3のdomain criteriaがない。
+- 7.14.03〜04: Mesh_3の四面体体積メッシュ、Mesh_3のdomain criteriaがない。
 - 7.12.02〜07: Arrangement、overlay、Polygon_set Boolean、skeleton、offset、Minkowskiがない。
 - 7.13.02〜05: alpha shape、wrap、bounding volume、barycentric座標がない。
 

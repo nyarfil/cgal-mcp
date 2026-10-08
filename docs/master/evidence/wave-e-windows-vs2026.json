@@ -2,15 +2,17 @@
   "schema_version": 1,
   "generator": "master-wave-e-milestone",
   "status": "pass",
-  "generator_sha256": "400cf996c651c7f4aff0ed37fd0ad05e96cd0008ce6021e2572e46616dfa2bff",
+  "generator_sha256": "eadb346be1830755a0ddc4275bd069f0d7f9dcbb4b56e2a5a9b01f9dfe299755",
   "scope": "one_wave_e_mesh2_operation_and_independent_validator",
   "standalone_accepted": false,
   "requirements": [],
   "operations": [
+    "mesh.surface.generate",
     "mesh.validate.delaunay_refinement_2",
+    "mesh.validate.surface_mesh",
     "mesh2.refine.delaunay"
   ],
-  "worker_sha256": "c6fb9bd222538ee722bd0b69edb97fa6256b1b6f56604abab1fb791e47d06ce6",
+  "worker_sha256": "c950e007e39927eed9b0b1413d491aa1346fb2a457a005c53c6038470fa7c10a",
   "worker_manifest": {
     "actual_cgal_version": "6.2.1",
     "build": {
@@ -4359,6 +4361,102 @@
         "supported_kernels": [
           "package_recommended"
         ]
+      },
+      {
+        "dependencies": [
+          "Surface_mesher",
+          "Triangulation_3"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "mesh.surface.generate",
+        "info": {
+          "domain_kinds": [
+            "sphere",
+            "ellipsoid",
+            "torus"
+          ],
+          "input_format": "json",
+          "maximum_estimated_facets": 30000,
+          "output_format": "off",
+          "required_parameters": [
+            "angle_bound",
+            "size_bound",
+            "distance_bound"
+          ],
+          "source_header": "CGAL/make_surface_mesh.h",
+          "symbols": [
+            "make_surface_mesh",
+            "Implicit_surface_3",
+            "Surface_mesh_default_criteria_3"
+          ],
+          "validator_parameter_bindings": {
+            "mesh.validate.surface_mesh": {
+              "angle_bound": "angle_bound",
+              "distance_bound": "distance_bound",
+              "size_bound": "size_bound"
+            }
+          },
+          "validators": [
+            "mesh.validate.surface_mesh"
+          ]
+        },
+        "input_types": [
+          "ImplicitSurfaceDomain"
+        ],
+        "output_type": "TriangleSurfaceMesh",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Surface_mesher",
+          "Triangulation_3"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "mesh.validate.surface_mesh",
+        "info": {
+          "bound_parameters": [
+            "angle_bound",
+            "size_bound",
+            "distance_bound"
+          ],
+          "checks": [
+            "source_domain_valid",
+            "triangle_mesh",
+            "closed_surface",
+            "edge_manifold",
+            "vertex_manifold",
+            "consistent_orientation",
+            "single_component",
+            "euler_characteristic_matches_domain",
+            "vertices_on_analytic_surface",
+            "outward_orientation",
+            "angle_criterion_satisfied",
+            "size_criterion_satisfied",
+            "distance_criterion_satisfied",
+            "hausdorff_bound_satisfied",
+            "area_matches_analytic",
+            "volume_matches_analytic"
+          ],
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "TriangleSurfaceMesh",
+          "ImplicitSurfaceDomain"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
       }
     ],
     "protocol": 1,
@@ -4370,26 +4468,26 @@
     ],
     "worker": "cgal-master-worker"
   },
-  "worker_manifest_sha256": "de02697ee8c2a6b3d1ec707bd29f80bccc90d179c97f41849e083871688dcadc",
-  "operation_catalog_sha256": "76688ed1d2ec885a934a1a9c717118182991d937cd3adb895b71162dfb110bd1",
+  "worker_manifest_sha256": "6c7d45aa49d38eb84d3e5e94c9bac7bffd49997586b5e9f8a7ce669ca2d21da2",
+  "operation_catalog_sha256": "d4f8e623e8069c2f135fb778555b4667e17cf99cfa428110f59b155ec1c11cae",
   "tests": [
     {
       "test": "tests/master_wave_e_cases.py",
-      "source_sha256": "8d7ed388b9117bffd95fd25e6cbc6a7aae435a6591682d369e1b695e0b1b4807",
+      "source_sha256": "7fca038fe760509e6e5ddb607e44200c431b04c46f735c1a2a1409cc6613b4b7",
       "mode": "worker",
       "exit_code": 0,
       "status": "pass"
     },
     {
       "test": "tests/master_wave_e_mcp_e2e.py",
-      "source_sha256": "2862def8f259eee0dce58d98ad32369af693535b6c022b6bed8fe1a07b6f73b2",
+      "source_sha256": "634881e41b75dd87f2059d05a00e1fbecadc3205f5085033ea7f63c0b43fbae0",
       "mode": "auto",
       "exit_code": 0,
       "status": "pass"
     },
     {
       "test": "tests/master_wave_e_mcp_e2e.py",
-      "source_sha256": "2862def8f259eee0dce58d98ad32369af693535b6c022b6bed8fe1a07b6f73b2",
+      "source_sha256": "634881e41b75dd87f2059d05a00e1fbecadc3205f5085033ea7f63c0b43fbae0",
       "mode": "legacy",
       "exit_code": 0,
       "status": "pass"

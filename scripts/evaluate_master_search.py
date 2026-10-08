@@ -33,8 +33,10 @@ LANGUAGES = frozenset({"ja", "en"})
 EXECUTION_EXPECTATIONS = frozenset({"eligible", "documentation_only"})
 KNOWN_INPUT_TYPES = frozenset({
     "PointSet2", "PointSet3", "PointSet3Normals", "Polygon2", "PolygonSoup3", "PolygonWithHoles2",
-    "RayBatch3", "SegmentGraph2", "TriangleSurfaceMesh", "Triangulation2", "Triangulation3"})
+    "RayBatch3", "SegmentGraph2", "TriangleSurfaceMesh", "Triangulation2", "Triangulation3",
+    "ImplicitSurfaceDomain"})
 WAVE_C_FIXTURES = Path(__file__).resolve().parents[1] / "tests" / "fixtures" / "master" / "wave_c"
+WAVE_E_FIXTURES = Path(__file__).resolve().parents[1] / "tests" / "fixtures" / "master" / "wave_e"
 WAVE_C_SYNTHETIC = {"PointSet2": "planar_points.json", "PolygonWithHoles2": "polygon_with_hole.json",
                     "SegmentGraph2": "constraint_graph.json", "RayBatch3": "cube_rays.json",
                     "Polygon2": "search_hull_polygon2.json", "Triangulation2": "search_delaunay2.json"}
@@ -728,6 +730,8 @@ def _synthetic_artifacts(folder: Path, runtime: Any) -> dict[str, str]:
             "TriangleSurfaceMesh":runtime.artifact_import(str(off),"mm",artifact_type="TriangleSurfaceMesh")["artifact_id"],
             "PointSet3Normals":runtime.artifact_import(str(ply),"mm",artifact_type="PointSet3Normals")["artifact_id"],
             "PolygonSoup3":runtime.artifact_import(str(soup),"mm",artifact_type="PolygonSoup3")["artifact_id"],
+            "ImplicitSurfaceDomain":runtime.artifact_import(str(WAVE_E_FIXTURES/"domain_sphere.json"),"mm",
+                artifact_type="ImplicitSurfaceDomain")["artifact_id"],
             **{kind:runtime.artifact_import(str(WAVE_C_FIXTURES/name),"mm",artifact_type=kind)["artifact_id"]
                for kind,name in WAVE_C_SYNTHETIC.items()}}
 

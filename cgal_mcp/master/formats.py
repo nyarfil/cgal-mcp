@@ -577,6 +577,41 @@ def _geometry(type_name: str, points: list[tuple[float, ...]], properties: dict[
                       {"point_count": len(points), "bounds": _bounds(points), **metadata})
 
 
+IMPLICIT_DOMAIN_KEYS = {
+    "sphere": {"radius"},
+    "ellipsoid": {"semi_axis_x", "semi_axis_y", "semi_axis_z"},
+    "torus": {"major_radius", "minor_radius"},
+}
+MAX_IMPLICIT_DIMENSION = 1e6
+MAX_ELLIPSOID_RATIO = 8.0
+MAX_TORUS_RATIO = 0.75
+
+
+def _implicit_surface_domain(value: Any) -> Inspection:
+    """A typed, closed set of analytic implicit domains (never a free-form expression)."""
+    data = _object(value, "ImplicitSurfaceDomain", {"kind", "parameters"})
+    kind = data["kind"]
+    if kind not in IMPLICIT_DOMAIN_KEYS:
+        raise InvalidInput("unsupported_domain_kind",
+                           "ImplicitSurfaceDomain kind must be sphere, ellipsoid or torus")
+    parameters = _object(data["parameters"], f"ImplicitSurfaceDomain {kind}", IMPLICIT_DOMAIN_KEYS[kind])
+    numbers: dict[str, float] = {}
+    for key, item in parameters.items():
+        if (not isinstance(item, (int, float)) or isinstance(item, bool)
+                or not math.isfinite(float(item)) or not 0 < float(item) <= MAX_IMPLICIT_DIMENSION):
+            raise InvalidInput("invalid_domain",
+                               f"ImplicitSurfaceDomain {key} must be a finite number in (0, 1e6]")
+        numbers[key] = float(item)
+    if kind == "ellipsoid" and max(numbers.values()) > MAX_ELLIPSOID_RATIO * min(numbers.values()):
+        raise InvalidInput("invalid_domain", "Ellipsoid axis ratio exceeds the supported maximum of 8")
+    if kind == "torus" and numbers["minor_radius"] > MAX_TORUS_RATIO * numbers["major_radius"]:
+        raise InvalidInput("invalid_domain", "Torus minor_radius must not exceed 0.75 * major_radius")
+    extent = numbers["major_radius"] + numbers["minor_radius"] if kind == "torus" else max(numbers.values())
+    bounds = [[-extent, extent]] * 3
+    return Inspection("ImplicitSurfaceDomain", "json", {"finite": True},
+                      {"domain_kind": kind, "bounds": bounds, "parameters": numbers})
+
+
 def _parse_typed_json(value: Any, requested_type: str | None) -> Inspection:
     """Strict JSON encodings of the 2D, triangulation, ray and query-report types."""
     if requested_type in REPORT_JSON_TYPES:
@@ -603,6 +638,8 @@ def _parse_typed_json(value: Any, requested_type: str | None) -> Inspection:
         holes = [_points(hole, 2, "PolygonWithHoles2", 3) for hole in data["holes"]]
         return _geometry("PolygonWithHoles2", outer + [p for hole in holes for p in hole],
                          {"simple": "unknown"}, {"hole_count": len(holes)})
+    if requested_type == "ImplicitSurfaceDomain":
+        return _implicit_surface_domain(value)
     if requested_type == "SegmentGraph2":
         data = _object(value, "SegmentGraph2", {"points", "segments"})
         points = _points(data["points"], 2, "SegmentGraph2", 2)

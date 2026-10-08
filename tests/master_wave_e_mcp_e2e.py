@@ -1,9 +1,10 @@
-"""Official MCP client -> Wave E Mesh_2 refinement -> independent validator."""
+"""Official MCP client -> Wave E Mesh_2 and Surface_mesher operations -> independent validators."""
 
 from __future__ import annotations
 
 import asyncio
 import json
+import math
 import os
 from pathlib import Path
 import sys
@@ -18,6 +19,9 @@ FIXTURES = ROOT / "tests" / "fixtures" / "master"
 DOMAIN = "PolygonWithHoles2"
 TRANSFORM = "mesh2.refine.delaunay"
 VALIDATOR = "mesh.validate.delaunay_refinement_2"
+SURFACE_DOMAIN = "ImplicitSurfaceDomain"
+SURFACE_TRANSFORM = "mesh.surface.generate"
+SURFACE_VALIDATOR = "mesh.validate.surface_mesh"
 
 
 def length(value: float, unit: str) -> dict:
@@ -122,7 +126,50 @@ async def main() -> None:
             assert rejected["state"] in {"rejected", "failed"}, rejected
             assert not rejected.get("outputs"), rejected
 
-            print(f"CGAL Master Wave E MCP ({mode}) + Mesh_2 independent validator: PASS")
+            # --- 7.14.02 Surface_mesher over a typed implicit domain, validated independently ---
+            surface_unit = "cm"
+            domain = await call("cgal_artifact_import", {
+                "path": str(FIXTURES / "wave_e" / "domain_sphere.json"), "unit": surface_unit,
+                "artifact_type": SURFACE_DOMAIN})
+            assert domain["type"] == SURFACE_DOMAIN, domain
+            surface_parameters = {"angle_bound": 25.0, "size_bound": length(0.5, surface_unit),
+                                  "distance_bound": length(0.05, surface_unit)}
+            plan = await call("cgal_plan", {"request": {
+                "operation_id": SURFACE_TRANSFORM, "inputs": [domain["artifact_id"]],
+                "parameters": surface_parameters}})
+            assert [step["operation"] for step in plan["steps"]] == [SURFACE_TRANSFORM, SURFACE_VALIDATOR], plan
+            queued = await call("cgal_execute", {"plan_id": plan["plan_id"]})
+            status = await wait_job(queued["job_id"])
+            assert status["state"] == "succeeded" and status["validation_status"] == "passed", status
+            report = status["validation"][0]["report"]
+            assert report["status"] == "pass" and report["validator"] == SURFACE_VALIDATOR, report
+            assert all(report["checks"].values()) and report["genus"] == 0, report
+            assert abs(report["area"]["analytic"] - 16.0 * math.pi) < 1e-9, report["area"]
+            assert report["area"]["unit"] == "cm^2" and report["volume"]["unit"] == "cm^3", report
+            surface = await call("cgal_artifact_inspect", {"artifact_id": status["outputs"][0]["artifact_id"]})
+            assert surface["type"] == "TriangleSurfaceMesh" and surface["format"] == "off", surface
+            assert surface["unit"] == surface_unit, surface
+            # A globally scaled candidate leaves the analytic sphere and must be rejected.
+            exported_surface = root / "sphere.off"
+            await call("cgal_artifact_export", {"artifact_id": surface["artifact_id"],
+                                                "path": str(exported_surface)})
+            tokens = exported_surface.read_text(encoding="ascii").split()
+            count = int(tokens[1])
+            for position in range(4, 4 + 3 * count):
+                tokens[position] = repr(1.001 * float(tokens[position]))
+            exported_surface.write_text("\n".join(tokens) + "\n", encoding="ascii")
+            scaled = await call("cgal_artifact_import", {
+                "path": str(exported_surface), "unit": surface_unit, "artifact_type": "TriangleSurfaceMesh"})
+            plan = await call("cgal_plan", {"request": {"steps": [{
+                "id": "validate", "operation": SURFACE_VALIDATOR,
+                "inputs": {"candidate": scaled["artifact_id"], "source": domain["artifact_id"]},
+                "parameters": surface_parameters}]}})
+            queued = await call("cgal_execute", {"plan_id": plan["plan_id"]})
+            rejected = await wait_job(queued["job_id"])
+            assert rejected["state"] in {"rejected", "failed"}, rejected
+            assert not rejected.get("outputs"), rejected
+
+            print(f"CGAL Master Wave E MCP ({mode}) + Mesh_2 and Surface_mesher independent validators: PASS")
 
 
 if __name__ == "__main__":

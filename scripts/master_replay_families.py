@@ -1196,6 +1196,55 @@ def _domain(fixture: dict) -> dict:
     return _json_input(fixture, "PolygonWithHoles2")
 
 
+def _fx(name: str, sha: str, folder: str = "wave_e") -> dict:
+    return {"fixture": f"{folder}/{name}", "sha256": sha}
+
+
+DOM_SPHERE = _fx("domain_sphere.json", "bc34d6ea177e51f89badee9a56c54929a18a0cab280ecd095eea4d5439df1ed6")
+DOM_SPHERE_R25 = _fx("domain_sphere_r25.json", "9b15c56b66cf83fb18c9e878f01ab5c5589e7ecb6227ccf94d98e0b79b962ae4")
+DOM_ELLIPSOID = _fx("domain_ellipsoid.json", "bb3b0067560f83b79c9372ebf47b5d1c2ef75277286e150d43e2b94165afe269")
+DOM_TORUS = _fx("domain_torus.json", "6822f541ac8f34998be9ef12aa51cb0e8988de34a685a5872d9982f0eeba0b9e")
+DOM_EXPRESSION = _fx("domain_expression.json", "be8b9c7977654d9326afed6001eb9db463b82034a90ab5e37d5366043c317ebd")
+DOM_UNKNOWN_KIND = _fx("domain_unknown_kind.json", "a646cf9a2c48e3d1269eff355ef3c73d496535106de86569e848a877fbffaf00")
+DOM_NEGATIVE_RADIUS = _fx("domain_negative_radius.json", "40ef4479ff98b887c0279587718b32308c8c619e4603d5a6983cadb5d03623e0")
+DOM_EXTRA_PARAMETER = _fx("domain_extra_parameter.json", "5b01da327554bd849b695d003e3a0d6b20bef63ca4b1708da1c809a2e188fa42")
+DOM_THICK_TORUS = _fx("domain_thick_torus.json", "1c93cbf031ad545809fbd9ba43073e83f23d1be3a27cc753f5074a1a4d8cdebb")
+DOM_NEEDLE_ELLIPSOID = _fx("domain_needle_ellipsoid.json", "14561aba29339e7d769642cce1c5e82d79db217de0a6cd577c15612b5defa180")
+SURF_SPHERE_MESH = _fx("surface_sphere_r2_mesh.off", "a38143b10d50280fe2ecd3a9d78f0666f2adf2cebcfd9ea9032eef2ef47f7d22")
+SURF_MISSING = _fx("surface_sphere_missing_triangle.off", "81459d76b732eb0b15bd12e1d2c19fa670b879cbc83140da604c1b188e004b4e")
+SURF_FLIPPED_ALL = _fx("surface_sphere_flipped_all.off", "2f60d5567fbba72909fb4524d1410cf65809d03af6a7745a73f932fb8b414670")
+SURF_FLIPPED_ONE = _fx("surface_sphere_flipped_one.off", "fa35721b3a61b6e15a32e147fea079d30ec56bdb7181d63bfa12fe8439182ed4")
+SURF_DUPLICATE = _fx("surface_sphere_duplicate_face.off", "a6ead538d0b1565e64c8f98671e04ddee6322911b1fddf8cb61a9060244a107c")
+SURF_SCALED = _fx("surface_sphere_scaled.off", "006d5623a3f155e2b8d3bf00e10a0cad019af631d8eedc30a8c94e0f76df0997")
+SURF_OCTAHEDRON = _fx("surface_octahedron_r2.off", "def4f60cd272c68dd283bb2ecb6ab34b7243676726d61afda6207fe944efc2d0")
+SURF_TORUS_MESH = _fx("surface_torus_mesh.off", "2be23395ea7b788b8c49a86df2d0a6a520950d62dd70b3e7b76881f41f28ffa7")
+SURF_ELLIPSOID_MESH = _fx("surface_ellipsoid_mesh.off", "bfe2bd399d614779d1dd3fdad182805966e7b6b00a07dc9299726ace90d89321")
+
+SURF_GEN = "mesh.surface.generate"
+SURF_VAL = "mesh.validate.surface_mesh"
+PI = math.pi
+
+
+def _surf(angle: float, size: float, distance: float) -> dict:
+    return {"angle_bound": angle, "size_bound": _mm(size), "distance_bound": _mm(distance)}
+
+
+def _surface(fixture: dict) -> dict:
+    return _json_input(fixture, "ImplicitSurfaceDomain")
+
+
+def _surface_checks() -> list[list]:
+    return [
+        ["metrics.algorithm", "==", "CGAL::make_surface_mesh"],
+        ["metrics.criteria", "==", "CGAL::Surface_mesh_default_criteria_3"],
+        ["output:geometry:measure:off.boundary_edge_count", "==", 0],
+        ["output:geometry:measure:off.max_face_degree", "==", 3],
+        ["output:geometry:measure:off.face_count", "==", {"path": "metrics.facet_count"}],
+        ["output:geometry:measure:off.vertex_count", "==", {"path": "metrics.vertex_count"}],
+        ["output:geometry:measure:off.euler_characteristic", "==", {"path": "metrics.euler_characteristic"}],
+    ]
+
+
 FAMILY_7_14 = {
     "family": "7.14",
     "scope": "family_7_14_mesh_generation_partial",
@@ -1219,9 +1268,27 @@ FAMILY_7_14 = {
                          "mesh2-hole", "mesh2-lshape", "mesh2-two-holes", "mesh2-rect-unrefined",
                          "mesh2-rect-refined"],
         },
+        "major.7.14.02": {
+            "operation_ids": [SURF_GEN],
+            "symbols": ["make_surface_mesh", "Implicit_surface_3", "Surface_mesh_default_criteria_3"],
+            "symbol_notes": "CGAL::make_surface_mesh (Surface_mesher, deprecated in CGAL 6.2.1) with "
+                            "Implicit_surface_3 meshes a fixed enumerated set of typed implicit "
+                            "domains (sphere, ellipsoid, torus; no free-form expressions) under angle, "
+                            "size and distance criteria. Checks are recomputed from the OFF output: "
+                            "closed 2-manifold (no boundary), Euler characteristic 2 for sphere and "
+                            "ellipsoid and 0 for the torus, every vertex on the analytic surface "
+                            "(radius 2; ellipsoid 3x2x1.5; torus R=3 r=1), smallest facet angle >= "
+                            "the angle bound, facet circumradius <= the size bound, and area and "
+                            "volume within sampling error of 16 pi and 32 pi / 3 (sphere), "
+                            "4 pi^2 R r and 2 pi^2 R r^2 (torus), 4 pi abc / 3 (ellipsoid). Finer "
+                            "criteria give more facets and another radius gives another mesh. The "
+                            "independent validator recomputes topology, orientation, analytic "
+                            "distance, criteria and analytic area and volume.",
+            "case_ids": ["surface-sphere", "surface-sphere-fine", "surface-sphere-r25",
+                         "surface-ellipsoid", "surface-torus"],
+        },
     },
     "unbound": {
-        "major.7.14.02": "No surface mesh generation operation (Surface_mesher make_surface_mesh).",
         "major.7.14.03": "No Mesh_3 tetrahedral volume meshing operation (make_mesh_3).",
         "major.7.14.04": "No Mesh_3 domain criteria operation (Mesh_criteria_3, Mesh_facet_criteria_3).",
     },
@@ -1293,12 +1360,138 @@ FAMILY_7_14 = {
             ["output:mesh:measure:tri2.min_angle_degrees", ">=", MESH2_MIN_ANGLE],
             ["output:mesh:measure:tri2.boundary_edge_count", "==", {"path": "metrics.constrained_edge_count"}],
         ]),
+        _case("surface-sphere", SURF_GEN, [_surface(DOM_SPHERE)], _surf(25.0, 0.5, 0.05), [
+            *_surface_checks(),
+            ["metrics.domain_kind", "==", "sphere"],
+            ["metrics.euler_characteristic", "==", 2],
+            ["metrics.facet_count", ">=", 260],
+            ["output:geometry:measure:off.min_vertex_radius", "approx", [2.0, 1e-5]],
+            ["output:geometry:measure:off.max_vertex_radius", "approx", [2.0, 1e-5]],
+            ["output:geometry:measure:off.area", "approx", [16.0 * PI, 0.03 * 16.0 * PI]],
+            ["output:geometry:measure:off.signed_volume", "approx", [32.0 * PI / 3.0, 0.06 * 32.0 * PI / 3.0]],
+            ["output:geometry:measure:off.min_angle_degrees", ">=", 25.0],
+            ["output:geometry:measure:off.max_circumradius", "<=", 0.5 + 1e-9],
+        ]),
+        _case("surface-sphere-fine", SURF_GEN, [_surface(DOM_SPHERE)], _surf(25.0, 0.3, 0.02), [
+            *_surface_checks(),
+            ["metrics.euler_characteristic", "==", 2],
+            ["metrics.facet_count", ">", 600],
+            ["output:geometry:measure:off.min_vertex_radius", "approx", [2.0, 1e-5]],
+            ["output:geometry:measure:off.max_vertex_radius", "approx", [2.0, 1e-5]],
+            ["output:geometry:measure:off.area", "approx", [16.0 * PI, 0.01 * 16.0 * PI]],
+            ["output:geometry:measure:off.min_angle_degrees", ">=", 25.0],
+            ["output:geometry:measure:off.max_circumradius", "<=", 0.3 + 1e-9],
+        ]),
+        _case("surface-sphere-r25", SURF_GEN, [_surface(DOM_SPHERE_R25)], _surf(25.0, 0.5, 0.05), [
+            *_surface_checks(),
+            ["metrics.euler_characteristic", "==", 2],
+            ["output:geometry:measure:off.min_vertex_radius", "approx", [2.5, 1e-5]],
+            ["output:geometry:measure:off.max_vertex_radius", "approx", [2.5, 1e-5]],
+            ["output:geometry:measure:off.area", "approx", [25.0 * PI, 0.03 * 25.0 * PI]],
+            ["output:geometry:measure:off.signed_volume", "approx", [4.0 / 3.0 * PI * 15.625,
+                                                                  0.06 * 4.0 / 3.0 * PI * 15.625]],
+        ]),
+        _case("surface-ellipsoid", SURF_GEN, [_surface(DOM_ELLIPSOID)], _surf(25.0, 0.6, 0.04), [
+            *_surface_checks(),
+            ["metrics.domain_kind", "==", "ellipsoid"],
+            ["metrics.euler_characteristic", "==", 2],
+            ["output:geometry:measure:off.max_ellipsoid_residual(3,2,1.5)", "approx", [0.0, 1e-5]],
+            ["output:geometry:measure:off.signed_volume", "approx", [4.0 / 3.0 * PI * 9.0,
+                                                                  0.06 * 4.0 / 3.0 * PI * 9.0]],
+            ["output:geometry:measure:off.min_angle_degrees", ">=", 25.0],
+            ["output:geometry:measure:off.max_circumradius", "<=", 0.6 + 1e-9],
+        ]),
+        _case("surface-torus", SURF_GEN, [_surface(DOM_TORUS)], _surf(25.0, 0.5, 0.03), [
+            *_surface_checks(),
+            ["metrics.domain_kind", "==", "torus"],
+            ["metrics.euler_characteristic", "==", 0],
+            ["output:geometry:measure:off.max_torus_residual(3,1)", "approx", [0.0, 1e-5]],
+            ["output:geometry:measure:off.area", "approx", [12.0 * PI * PI, 0.03 * 12.0 * PI * PI]],
+            ["output:geometry:measure:off.signed_volume", "approx", [6.0 * PI * PI, 0.06 * 6.0 * PI * PI]],
+            ["output:geometry:measure:off.min_angle_degrees", ">=", 25.0],
+            ["output:geometry:measure:off.max_circumradius", "<=", 0.5 + 1e-9],
+        ]),
     ],
     "pairs": [
+        {"kind": "different_outputs", "cases": ["surface-sphere", "surface-sphere-fine"]},
         {"kind": "different_outputs", "cases": ["mesh2-square-size2", "mesh2-square-size1"]},
         {"kind": "different_outputs", "cases": ["mesh2-rect-unrefined", "mesh2-rect-refined"]},
     ],
     "negative_controls": [
+        {"id": "surface-expression-rejected", "operation": SURF_GEN,
+         "inputs": [_surface(DOM_EXPRESSION)], "parameters": _surf(25.0, 0.5, 0.05),
+         "expect_error_class": "INPUT_ERROR", "expect_error_code": "UNSUPPORTED_DOMAIN_KIND"},
+        {"id": "surface-unknown-kind-rejected", "operation": SURF_GEN,
+         "inputs": [_surface(DOM_UNKNOWN_KIND)], "parameters": _surf(25.0, 0.5, 0.05),
+         "expect_error_class": "INPUT_ERROR", "expect_error_code": "UNSUPPORTED_DOMAIN_KIND"},
+        {"id": "surface-negative-radius-rejected", "operation": SURF_GEN,
+         "inputs": [_surface(DOM_NEGATIVE_RADIUS)], "parameters": _surf(25.0, 0.5, 0.05),
+         "expect_error_class": "INPUT_ERROR", "expect_error_code": "INVALID_DOMAIN"},
+        {"id": "surface-extra-parameter-rejected", "operation": SURF_GEN,
+         "inputs": [_surface(DOM_EXTRA_PARAMETER)], "parameters": _surf(25.0, 0.5, 0.05),
+         "expect_error_class": "INPUT_ERROR", "expect_error_code": "SCHEMA_MISMATCH"},
+        {"id": "surface-thick-torus-rejected", "operation": SURF_GEN,
+         "inputs": [_surface(DOM_THICK_TORUS)], "parameters": _surf(25.0, 0.5, 0.05),
+         "expect_error_class": "INPUT_ERROR", "expect_error_code": "INVALID_DOMAIN"},
+        {"id": "surface-needle-ellipsoid-rejected", "operation": SURF_GEN,
+         "inputs": [_surface(DOM_NEEDLE_ELLIPSOID)], "parameters": _surf(25.0, 0.5, 0.05),
+         "expect_error_class": "INPUT_ERROR", "expect_error_code": "INVALID_DOMAIN"},
+        {"id": "surface-angle-above-guarantee-rejected", "operation": SURF_GEN,
+         "inputs": [_surface(DOM_SPHERE)], "parameters": _surf(31.0, 0.5, 0.05),
+         "expect_error_class": "INVALID_REQUEST", "expect_error_code": "INVALID_PARAMETER"},
+        {"id": "surface-distance-too-coarse-rejected", "operation": SURF_GEN,
+         "inputs": [_surface(DOM_SPHERE)], "parameters": _surf(25.0, 0.5, 0.5),
+         "expect_error_class": "INVALID_REQUEST", "expect_error_code": "INVALID_PARAMETER"},
+        {"id": "surface-unit-mismatch-rejected", "operation": SURF_GEN,
+         "inputs": [_surface(DOM_SPHERE)],
+         "parameters": {"angle_bound": 25.0, "size_bound": {"value": 0.5, "unit": "cm"},
+                        "distance_bound": _mm(0.05)},
+         "expect_error_class": "TYPE_ERROR", "expect_error_code": "UNIT_MISMATCH"},
+        {"id": "surface-size-budget-rejected", "operation": SURF_GEN,
+         "inputs": [_surface(DOM_SPHERE)], "parameters": _surf(25.0, 0.01, 0.0001),
+         "expect_error_class": "RESOURCE_LIMIT", "expect_error_code": "MESH_SIZE_LIMIT_EXCEEDED"},
+        {"id": "surface-missing-triangle-rejected", "operation": SURF_VAL,
+         "inputs": [_mesh(SURF_MISSING), _surface(DOM_SPHERE)], "parameters": _surf(25.0, 0.5, 0.05),
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "SURFACE_NOT_CLOSED"},
+        {"id": "surface-flipped-one-rejected", "operation": SURF_VAL,
+         "inputs": [_mesh(SURF_FLIPPED_ONE), _surface(DOM_SPHERE)], "parameters": _surf(25.0, 0.5, 0.05),
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "INCONSISTENT_ORIENTATION"},
+        {"id": "surface-flipped-all-rejected", "operation": SURF_VAL,
+         "inputs": [_mesh(SURF_FLIPPED_ALL), _surface(DOM_SPHERE)], "parameters": _surf(25.0, 0.5, 0.05),
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "ORIENTATION_NOT_OUTWARD"},
+        {"id": "surface-duplicate-face-rejected", "operation": SURF_VAL,
+         "inputs": [_mesh(SURF_DUPLICATE), _surface(DOM_SPHERE)], "parameters": _surf(25.0, 0.5, 0.05),
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "NON_MANIFOLD_EDGE"},
+        {"id": "surface-scaled-rejected", "operation": SURF_VAL,
+         "inputs": [_mesh(SURF_SCALED), _surface(DOM_SPHERE)], "parameters": _surf(25.0, 0.5, 0.05),
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "VERTEX_OFF_SURFACE"},
+        {"id": "surface-wrong-radius-rejected", "operation": SURF_VAL,
+         "inputs": [_mesh(SURF_SPHERE_MESH), _surface(DOM_SPHERE_R25)], "parameters": _surf(25.0, 0.5, 0.05),
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "VERTEX_OFF_SURFACE"},
+        {"id": "surface-sphere-vs-ellipsoid-rejected", "operation": SURF_VAL,
+         "inputs": [_mesh(SURF_SPHERE_MESH), _surface(DOM_ELLIPSOID)], "parameters": _surf(25.0, 0.5, 0.05),
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "VERTEX_OFF_SURFACE"},
+        {"id": "surface-sphere-vs-torus-rejected", "operation": SURF_VAL,
+         "inputs": [_mesh(SURF_SPHERE_MESH), _surface(DOM_TORUS)], "parameters": _surf(25.0, 0.5, 0.05),
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "EULER_CHARACTERISTIC_MISMATCH"},
+        {"id": "surface-torus-vs-sphere-rejected", "operation": SURF_VAL,
+         "inputs": [_mesh(SURF_TORUS_MESH), _surface(DOM_SPHERE)], "parameters": _surf(25.0, 0.5, 0.05),
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "EULER_CHARACTERISTIC_MISMATCH"},
+        {"id": "surface-ellipsoid-vs-sphere-rejected", "operation": SURF_VAL,
+         "inputs": [_mesh(SURF_ELLIPSOID_MESH), _surface(DOM_SPHERE)], "parameters": _surf(25.0, 0.6, 0.04),
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "VERTEX_OFF_SURFACE"},
+        {"id": "surface-stricter-angle-rejected", "operation": SURF_VAL,
+         "inputs": [_mesh(SURF_SPHERE_MESH), _surface(DOM_SPHERE)], "parameters": _surf(35.0, 0.5, 0.05),
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "ANGLE_CRITERION_VIOLATED"},
+        {"id": "surface-stricter-size-rejected", "operation": SURF_VAL,
+         "inputs": [_mesh(SURF_SPHERE_MESH), _surface(DOM_SPHERE)], "parameters": _surf(25.0, 0.2, 0.05),
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "SIZE_CRITERION_VIOLATED"},
+        {"id": "surface-stricter-distance-rejected", "operation": SURF_VAL,
+         "inputs": [_mesh(SURF_SPHERE_MESH), _surface(DOM_SPHERE)], "parameters": _surf(25.0, 0.5, 0.02),
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "DISTANCE_CRITERION_VIOLATED"},
+        {"id": "surface-coarse-octahedron-rejected", "operation": SURF_VAL,
+         "inputs": [_mesh(SURF_OCTAHEDRON), _surface(DOM_SPHERE)], "parameters": _surf(30.0, 5.0, 5.0),
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "AREA_MISMATCH"},
         {"id": "mesh2-bowtie-rejected", "operation": "mesh2.refine.delaunay",
          "inputs": [_domain(BOWTIE)], "parameters": _mesh2(0.125, 2.0),
          "expect_error_class": "PRECONDITION_FAILED",
@@ -1557,6 +1750,40 @@ def _off_measure(name: str, content: bytes) -> object:
         for offset, first in enumerate(face):
             key = tuple(sorted((first, face[(offset + 1) % len(face)])))
             edges[key] = edges.get(key, 0) + 1
+    if name == "euler_characteristic":
+        return len(vertices) - len(edges) + len(faces)
+    if name in {"min_vertex_radius", "max_vertex_radius"}:
+        radii = [math.sqrt(sum(c * c for c in vertex)) for vertex in vertices]
+        return min(radii) if name == "min_vertex_radius" else max(radii)
+    if name.startswith("max_ellipsoid_residual(") or name.startswith("max_torus_residual("):
+        # Largest first-order distance of any vertex from the analytic surface.
+        numbers = [float(item) for item in name[name.index("(") + 1:-1].split(",")]
+        worst = 0.0
+        for x, y, z in vertices:
+            if name.startswith("max_torus_residual("):
+                worst = max(worst, abs(math.hypot(math.hypot(x, y) - numbers[0], z) - numbers[1]))
+            else:
+                a, b, c = numbers
+                value = x * x / (a * a) + y * y / (b * b) + z * z / (c * c) - 1.0
+                gradient = math.sqrt((2 * x / (a * a)) ** 2 + (2 * y / (b * b)) ** 2 + (2 * z / (c * c)) ** 2)
+                worst = max(worst, abs(value) / gradient)
+        return worst
+    if name in {"min_angle_degrees", "max_circumradius"}:
+        smallest, widest = 180.0, 0.0
+        for face in faces:
+            a, b, c = (vertices[index] for index in face[:3])
+            sides = [math.dist(a, b), math.dist(b, c), math.dist(c, a)]
+            u = [b[k] - a[k] for k in range(3)]
+            w = [c[k] - a[k] for k in range(3)]
+            twice = math.hypot(u[1] * w[2] - u[2] * w[1], u[2] * w[0] - u[0] * w[2],
+                               u[0] * w[1] - u[1] * w[0])
+            widest = max(widest, sides[0] * sides[1] * sides[2] / (2.0 * twice))
+            for first, second, third in ((0, 1, 2), (1, 2, 0), (2, 0, 1)):
+                # Law of cosines on the side opposite each corner.
+                cosine = (sides[first] ** 2 + sides[third] ** 2 - sides[second] ** 2) / \
+                         (2.0 * sides[first] * sides[third])
+                smallest = min(smallest, math.degrees(math.acos(max(-1.0, min(1.0, cosine)))))
+        return smallest if name == "min_angle_degrees" else widest
     if name == "boundary_edge_count":
         return sum(1 for count in edges.values() if count == 1)
     lengths = [math.dist(vertices[a], vertices[b]) for a, b in edges]

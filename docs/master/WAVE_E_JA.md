@@ -30,10 +30,29 @@ validatorは被試験のメッシャを呼ばず、生のドメインと候補�
 2組の対照（辺長2と1、未細分の10x1長方形と細分後）、13件のnegative controlを持つ
 7.14.01を結び付けました（7.14は1/4）。
 
+## 曲面メッシュ生成（Surface_mesher、7.14.02）
+
+`CGAL::make_surface_mesh`（`Implicit_surface_3`、`Surface_mesh_default_criteria_3`、`Manifold_tag`）で、
+列挙された型付き陰関数ドメイン`ImplicitSurfaceDomain`（`sphere`／`ellipsoid`／`torus`、寸法は検証済みの長さ）を
+閉じた外向き三角形曲面`TriangleSurfaceMesh`（OFF）へ変換します。任意の式やコードは受け付けません
+（未知の種別は`UNSUPPORTED_DOMAIN_KIND`）。
+
+| Operation | 内容 | 必須validator |
+|---|---|---|
+| `mesh.surface.generate` | `angle_bound`（度、最大30）、`size_bound`、`distance_bound`（TypedLength）基準で曲面を三角形化 | `mesh.validate.surface_mesh` |
+
+`distance_bound`は最小曲率半径の0.1倍以下、推定面数は30000以下です。出力は初期点の乱数を固定して決定的です。
+validatorはSurface_mesherを呼ばず、OFFを生で読み、閉2-多様体・向き・単一連結・Euler標数（種数）、
+全頂点の解析曲面上の位置（閉形式／Lagrange-Newton距離）、外向き法線、最小角・外接円半径・外心距離基準、
+標本点距離、解析面積・体積（既知値16π、32π/3、4π²Rr、2π²Rr²、4πabc/3）を再計算します。
+改ざん（三角形欠落・反転・重複、半径1.001倍、別ドメイン、より厳しい基準、粗い八面体）は拒否します。
+Surface_mesherはCGAL 6.2.1で非推奨のパッケージです。陰関数ドメインは3種類のみで、鋭い特徴、
+画像・多面体ドメインは未実装です。
+
 | 要求 | 状態 | 内容 |
 |---|---|---|
 | 7.14.01 | 結合済み | Mesh_2の`refine_Delaunay_mesh_2` |
-| 7.14.02 | 未結合 | 曲面メッシュ生成（Surface_mesher）がない |
+| 7.14.02 | 結合済み | Surface_mesherの`make_surface_mesh`（球・楕円体・トーラス） |
 | 7.14.03 | 未結合 | Mesh_3の四面体体積メッシュがない |
 | 7.14.04 | 未結合 | Mesh_3のdomain criteriaがない |
 

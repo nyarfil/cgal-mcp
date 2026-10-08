@@ -1,9 +1,11 @@
-"""Real CGAL 6.2.1 Wave E production-worker cases (family 7.14 Mesh_2).
+"""Real CGAL 6.2.1 Wave E production-worker cases (family 7.14 meshing).
 
-mesh2.refine.delaunay runs with its mandatory, independent validator. Known-value
-assertions are recomputed in Python from the produced JSON (exact rational area,
-angles, boundary chains). Negative controls cover tampered candidates, invalid
-parameters and invalid (self-intersecting, degenerate) domains.
+mesh2.refine.delaunay (Mesh_2) and mesh.surface.generate (Surface_mesher make_surface_mesh over a
+fixed enumerated set of typed implicit domains) run with their mandatory, independent validators.
+Known-value assertions are recomputed in Python from the produced files (exact rational area,
+angles and boundary chains for Mesh_2; analytic sphere/ellipsoid/torus area, volume, genus and
+point-to-surface distances for surfaces). Negative controls cover tampered candidates, invalid
+parameters and invalid (self-intersecting, degenerate, unknown or expression-like) domains.
 """
 
 from __future__ import annotations
@@ -167,7 +169,7 @@ def main() -> None:
                                          capture_output=True, timeout=30, check=True).stdout)
     assert manifest["actual_cgal_version"] == "6.2.1", manifest.get("actual_cgal_version")
     operations = {operation["id"]: operation for operation in manifest["operations"]}
-    assert {TRANSFORM, VALIDATOR} <= operations.keys()
+    assert {TRANSFORM, VALIDATOR, SURF_GENERATE, SURF_VALIDATOR} <= operations.keys()
     for operation_id in (TRANSFORM, VALIDATOR):
         entry = operations[operation_id]
         assert entry["revision"] == 1, entry
@@ -367,7 +369,272 @@ def main() -> None:
         # A size bound that would need too many triangles is refused up front.
         error(invoke(scratch, TRANSFORM, [square], params(0.01)),
               "MESH_SIZE_LIMIT_EXCEEDED", "RESOURCE_LIMIT")
+        surface_cases(scratch)
     print("PASS master Wave E worker cases")
+
+
+# ---------------------------------------------------------------------------
+# 7.14.02 surface mesh generation (Surface_mesher make_surface_mesh)
+# ---------------------------------------------------------------------------
+
+SURF_GENERATE = "mesh.surface.generate"
+SURF_VALIDATOR = "mesh.validate.surface_mesh"
+SURF_DOMAIN = "ImplicitSurfaceDomain"
+SURF_MESH = "TriangleSurfaceMesh"
+
+# Analytic references recomputed here, independently of the worker.
+SPHERE_R = 2.0
+ELLIPSOID = (3.0, 2.0, 1.5)
+TORUS = (3.0, 1.0)
+
+
+def surface_params(angle: float, size: float, distance: float) -> dict:
+    return {"angle_bound": angle, "size_bound": mm(size), "distance_bound": mm(distance)}
+
+
+def read_off(path: pathlib.Path) -> tuple[list[list[float]], list[list[int]]]:
+    tokens = path.read_text("utf-8").split()
+    assert tokens[0] == "OFF", tokens[:1]
+    vertex_count, face_count = int(tokens[1]), int(tokens[2])
+    numbers = tokens[4:]
+    vertices = [[float(numbers[3 * i + k]) for k in range(3)] for i in range(vertex_count)]
+    base = 3 * vertex_count
+    faces, position = [], base
+    for _ in range(face_count):
+        size = int(numbers[position])
+        faces.append([int(value) for value in numbers[position + 1:position + 1 + size]])
+        position += 1 + size
+    assert position == len(numbers), "trailing OFF tokens"
+    return vertices, faces
+
+
+def write_off(scratch: pathlib.Path, vertices, faces) -> dict:
+    COUNTER[0] += 1
+    path = scratch / f"tampered{COUNTER[0]:03d}.off"
+    lines = ["OFF", f"{len(vertices)} {len(faces)} 0"]
+    lines += [" ".join(repr(float(c)) for c in v) for v in vertices]
+    lines += [" ".join(str(i) for i in [len(f), *f]) for f in faces]
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return {"artifact_id": path.stem, "type": SURF_MESH, "unit": "mm", "format": "off",
+            "path": str(path.resolve()), "sha256": sha256(path)}
+
+
+def surface_distance_python(kind: str, point) -> float:
+    x, y, z = point
+    if kind == "sphere":
+        return abs(math.sqrt(x * x + y * y + z * z) - SPHERE_R)
+    if kind == "torus":
+        return abs(math.hypot(math.hypot(x, y) - TORUS[0], z) - TORUS[1])
+    a, b, c = ELLIPSOID  # algebraic first-order distance (Sampson); exact enough at 1e-6
+    f = x * x / (a * a) + y * y / (b * b) + z * z / (c * c) - 1.0
+    g = math.sqrt((2 * x / (a * a)) ** 2 + (2 * y / (b * b)) ** 2 + (2 * z / (c * c)) ** 2)
+    return abs(f) / g
+
+
+def mesh_summary(vertices, faces) -> dict:
+    """Independent Python recomputation: topology, area, volume, angles, circumradii."""
+    edges: dict[tuple[int, int], list[int]] = {}
+    area = volume = 0.0
+    smallest = 180.0
+    largest_circumradius = 0.0
+    for a, b, c in faces:
+        pa, pb, pc = vertices[a], vertices[b], vertices[c]
+        u = [pb[k] - pa[k] for k in range(3)]
+        v = [pc[k] - pa[k] for k in range(3)]
+        w = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]]
+        area += math.sqrt(sum(t * t for t in w)) / 2
+        volume += sum(pa[k] * (pb[(k + 1) % 3] * pc[(k + 2) % 3] - pb[(k + 2) % 3] * pc[(k + 1) % 3])
+                      for k in range(3)) / 6.0
+        lengths = [math.dist(pa, pb), math.dist(pb, pc), math.dist(pc, pa)]
+        twice = math.sqrt(sum(t * t for t in w))
+        largest_circumradius = max(largest_circumradius, lengths[0] * lengths[1] * lengths[2] / (2 * twice))
+        for i, p in enumerate((a, b, c)):
+            q, r = (a, b, c)[(i + 1) % 3], (a, b, c)[(i + 2) % 3]
+            e1 = [vertices[q][k] - vertices[p][k] for k in range(3)]
+            e2 = [vertices[r][k] - vertices[p][k] for k in range(3)]
+            cosine = sum(e1[k] * e2[k] for k in range(3)) / (math.hypot(*e1) * math.hypot(*e2))
+            smallest = min(smallest, math.degrees(math.acos(max(-1.0, min(1.0, cosine)))))
+        for i in range(3):
+            edges.setdefault(tuple(sorted(((a, b, c)[i], (a, b, c)[(i + 1) % 3]))), []).append(1)
+    assert all(len(owners) == 2 for owners in edges.values()), "surface is not closed and manifold"
+    return {"area": area, "volume": volume, "euler": len(vertices) - len(edges) + len(faces),
+            "min_angle": smallest, "max_circumradius": largest_circumradius}
+
+
+def run_surface_pair(scratch, domain, parameters):
+    """Generate and validate; return (report, mesh dict, metrics, candidate artifact)."""
+    result = invoke(scratch, SURF_GENERATE, [domain], parameters)
+    output, path = ok(result)
+    assert output["type"] == SURF_MESH and output["format"] == "off" and output["unit"] == "mm", output
+    candidate = produced(output, path)
+    validation = invoke(scratch, SURF_VALIDATOR, [candidate, domain], parameters)
+    _, validation_path = ok(validation)
+    report = json.loads(validation_path.read_text("utf-8"))
+    assert report["status"] == "pass" and report["passed"] is True, report
+    assert report["checks"] and all(report["checks"].values()) and len(report["checks"]) == 16, report
+    assert report["validator"] == SURF_VALIDATOR, report
+    vertices, faces = read_off(path)
+    return report, (vertices, faces), result["metrics"], candidate
+
+
+def surface_cases(scratch: pathlib.Path) -> None:
+    sphere = artifact(FIXTURES / "domain_sphere.json", SURF_DOMAIN)
+    sphere_big = artifact(FIXTURES / "domain_sphere_r25.json", SURF_DOMAIN)
+    ellipsoid = artifact(FIXTURES / "domain_ellipsoid.json", SURF_DOMAIN)
+    torus = artifact(FIXTURES / "domain_torus.json", SURF_DOMAIN)
+    sphere_parameters = surface_params(25.0, 0.5, 0.05)
+
+    # --- sphere r = 2: closed genus-0 surface with analytic area 16 pi and volume 32 pi / 3 -----
+    report, (vertices, faces), metrics, sphere_candidate = run_surface_pair(
+        scratch, sphere, sphere_parameters)
+    facts = mesh_summary(vertices, faces)
+    assert metrics["algorithm"] == "CGAL::make_surface_mesh" and metrics["domain_kind"] == "sphere", metrics
+    assert metrics["vertex_count"] == len(vertices) and metrics["facet_count"] == len(faces), metrics
+    assert facts["euler"] == 2 == metrics["euler_characteristic"] == report["euler_characteristic"], facts
+    assert report["genus"] == 0 and report["domain_kind"] == "sphere", report
+    assert max(surface_distance_python("sphere", v) for v in vertices) < 1e-6, "vertex off the sphere"
+    assert facts["volume"] > 0, "mesh is not outward oriented"
+    assert abs(facts["area"] - 4 * math.pi * SPHERE_R ** 2) / (4 * math.pi * SPHERE_R ** 2) < 0.03, facts
+    assert abs(facts["volume"] - 4 / 3 * math.pi * SPHERE_R ** 3) / (4 / 3 * math.pi * SPHERE_R ** 3) < 0.06
+    assert abs(report["area"]["analytic"] - 4 * math.pi * 4) < 1e-9, report["area"]
+    assert abs(report["volume"]["analytic"] - 4 / 3 * math.pi * 8) < 1e-9, report["volume"]
+    assert abs(report["area"]["value"] - facts["area"]) < 1e-9 * facts["area"], report["area"]
+    # Criteria hold on the produced mesh, recomputed here: angle >= 25 deg, circumradius <= 0.5.
+    assert facts["min_angle"] >= 25.0 and facts["max_circumradius"] <= 0.5, facts
+    assert abs(report["minimum_angle_degrees"] - facts["min_angle"]) < 1e-6, report
+    # Facets of circumradius <= 0.5 have area <= 1.299 * 0.25, so many facets are needed.
+    assert len(faces) >= math.ceil(4 * math.pi * 4 / (1.3 * 0.25)), len(faces)
+    assert 3 * len(faces) == 2 * metrics["edge_count"] and len(vertices) == len(faces) // 2 + 2, (len(faces), len(vertices), metrics)
+    # Deterministic: the same request reproduces the same mesh bytes (seeded oracle).
+    again = ok(invoke(scratch, SURF_GENERATE, [sphere], sphere_parameters))[1]
+    assert sha256(again) == sphere_candidate["sha256"], "Surface_mesher output is not deterministic"
+
+    # --- finer criteria give a finer mesh of the same sphere (contrast pair) -------------------
+    report_fine, (vertices_fine, faces_fine), _, _ = run_surface_pair(
+        scratch, sphere, surface_params(25.0, 0.3, 0.02))
+    assert len(faces_fine) > 2 * len(faces), (len(faces_fine), len(faces))
+    assert report_fine["area"]["relative_error"] < report["area"]["relative_error"], (report_fine, report)
+    assert report_fine["maximum_circumcentre_distance"] <= 0.02 + 1e-5
+
+    # --- ellipsoid (3, 2, 1.5): vertices on the algebraic surface, volume 4 pi abc / 3 ---------
+    report_e, (vertices_e, faces_e), _, ellipsoid_candidate = run_surface_pair(
+        scratch, ellipsoid, surface_params(25.0, 0.6, 0.04))
+    facts_e = mesh_summary(vertices_e, faces_e)
+    assert facts_e["euler"] == 2 and report_e["genus"] == 0, facts_e
+    assert max(surface_distance_python("ellipsoid", v) for v in vertices_e) < 1e-6
+    exact_volume = 4 / 3 * math.pi * ELLIPSOID[0] * ELLIPSOID[1] * ELLIPSOID[2]
+    assert abs(report_e["volume"]["analytic"] - exact_volume) < 1e-9 and facts_e["volume"] > 0
+    assert abs(facts_e["volume"] - exact_volume) / exact_volume < 0.06, facts_e
+    # Knud Thomsen's approximation bounds the ellipsoid area to about 1.1 percent.
+    p = 1.6075
+    thomsen = 4 * math.pi * (((ELLIPSOID[0] * ELLIPSOID[1]) ** p + (ELLIPSOID[0] * ELLIPSOID[2]) ** p +
+                              (ELLIPSOID[1] * ELLIPSOID[2]) ** p) / 3) ** (1 / p)
+    assert abs(report_e["area"]["analytic"] - thomsen) / thomsen < 0.012, (report_e["area"], thomsen)
+    assert facts_e["min_angle"] >= 25.0 and facts_e["max_circumradius"] <= 0.6, facts_e
+
+    # --- torus R = 3, r = 1: genus 1, area 4 pi^2 R r, volume 2 pi^2 R r^2 -------------------
+    report_t, (vertices_t, faces_t), _, torus_candidate = run_surface_pair(
+        scratch, torus, surface_params(25.0, 0.5, 0.03))
+    facts_t = mesh_summary(vertices_t, faces_t)
+    assert facts_t["euler"] == 0 and report_t["genus"] == 1, facts_t
+    assert max(surface_distance_python("torus", v) for v in vertices_t) < 1e-6
+    assert abs(report_t["area"]["analytic"] - 4 * math.pi ** 2 * 3 * 1) < 1e-9
+    assert abs(report_t["volume"]["analytic"] - 2 * math.pi ** 2 * 3 * 1) < 1e-9
+    assert abs(facts_t["area"] - 4 * math.pi ** 2 * 3) / (4 * math.pi ** 2 * 3) < 0.03, facts_t
+    assert abs(facts_t["volume"] - 2 * math.pi ** 2 * 3) / (2 * math.pi ** 2 * 3) < 0.06, facts_t
+    assert facts_t["min_angle"] >= 25.0 and facts_t["max_circumradius"] <= 0.5, facts_t
+
+    # --- Negative controls: tampered candidates are rejected by the independent validator ------
+    def tamper(mutate, base=(vertices, faces)):
+        changed_vertices = [list(v) for v in base[0]]
+        changed_faces = [list(f) for f in base[1]]
+        mutate(changed_vertices, changed_faces)
+        return write_off(scratch, changed_vertices, changed_faces)
+
+    def drop_face(v, f):
+        del f[len(f) // 3]
+
+    def flip_one(v, f):
+        f[len(f) // 2][1], f[len(f) // 2][2] = f[len(f) // 2][2], f[len(f) // 2][1]
+
+    def flip_all(v, f):
+        for face in f:
+            face[1], face[2] = face[2], face[1]
+
+    def duplicate_face(v, f):
+        f.append(list(f[0]))
+
+    def push_vertex(v, f):
+        x, y, z = v[len(v) // 2]
+        norm = math.sqrt(x * x + y * y + z * z)
+        v[len(v) // 2] = [x * (1 + 0.05 / norm), y * (1 + 0.05 / norm), z * (1 + 0.05 / norm)]
+
+    def scale_all(v, f):
+        for vertex in v:
+            vertex[:] = [1.001 * c for c in vertex]
+
+    def repeat_vertex(v, f):
+        v[1] = list(v[0])
+
+    def add_unused_vertex(v, f):
+        v.append([0.1, 0.2, 0.3])
+
+    good = sphere_parameters
+    for mutate, code in ((drop_face, "SURFACE_NOT_CLOSED"), (flip_one, "INCONSISTENT_ORIENTATION"),
+                         (flip_all, "ORIENTATION_NOT_OUTWARD"), (duplicate_face, "NON_MANIFOLD_EDGE"),
+                         (push_vertex, "VERTEX_OFF_SURFACE"), (scale_all, "VERTEX_OFF_SURFACE"),
+                         (repeat_vertex, "REPEATED_VERTEX"), (add_unused_vertex, "UNUSED_VERTEX")):
+        rejected(invoke(scratch, SURF_VALIDATOR, [tamper(mutate), sphere], good), code)
+    # Mismatched domain: the sphere-r2 mesh against other domains.
+    rejected(invoke(scratch, SURF_VALIDATOR, [sphere_candidate, sphere_big], good), "VERTEX_OFF_SURFACE")
+    rejected(invoke(scratch, SURF_VALIDATOR, [sphere_candidate, ellipsoid], good), "VERTEX_OFF_SURFACE")
+    rejected(invoke(scratch, SURF_VALIDATOR, [sphere_candidate, torus], good),
+             "EULER_CHARACTERISTIC_MISMATCH")
+    rejected(invoke(scratch, SURF_VALIDATOR, [torus_candidate, sphere], good),
+             "EULER_CHARACTERISTIC_MISMATCH")
+    rejected(invoke(scratch, SURF_VALIDATOR, [ellipsoid_candidate, sphere], good), "VERTEX_OFF_SURFACE")
+    # Criteria stricter than the genuine mesh was built for.
+    rejected(invoke(scratch, SURF_VALIDATOR, [sphere_candidate, sphere], surface_params(35.0, 0.5, 0.05)),
+             "ANGLE_CRITERION_VIOLATED")
+    rejected(invoke(scratch, SURF_VALIDATOR, [sphere_candidate, sphere], surface_params(25.0, 0.2, 0.05)),
+             "SIZE_CRITERION_VIOLATED")
+    rejected(invoke(scratch, SURF_VALIDATOR, [sphere_candidate, sphere], surface_params(25.0, 0.5, 0.02)),
+             "DISTANCE_CRITERION_VIOLATED")
+    # A coarse octahedron inscribed in the sphere is a closed, outward, genus-0 manifold with all
+    # vertices on the surface and passes every criterion below, but its area is 45 percent short.
+    octahedron = write_off(scratch, [[2, 0, 0], [-2, 0, 0], [0, 2, 0], [0, -2, 0], [0, 0, 2], [0, 0, -2]],
+                           [[0, 2, 4], [2, 1, 4], [1, 3, 4], [3, 0, 4],
+                            [2, 0, 5], [1, 2, 5], [3, 1, 5], [0, 3, 5]])
+    rejected(invoke(scratch, SURF_VALIDATOR, [octahedron, sphere], surface_params(30.0, 5.0, 5.0)),
+             "AREA_MISMATCH")
+    error(invoke(scratch, SURF_VALIDATOR, [{**sphere_candidate, "unit": "cm"}, sphere], good),
+          "UNIT_MISMATCH", "TYPE_ERROR")
+
+    # --- Negative controls: the domain set is closed; no expression or unknown kind is accepted --
+    for fixture, code in (("domain_expression.json", "UNSUPPORTED_DOMAIN_KIND"),
+                          ("domain_unknown_kind.json", "UNSUPPORTED_DOMAIN_KIND"),
+                          ("domain_negative_radius.json", "INVALID_DOMAIN"),
+                          ("domain_extra_parameter.json", "SCHEMA_MISMATCH"),
+                          ("domain_thick_torus.json", "INVALID_DOMAIN"),
+                          ("domain_needle_ellipsoid.json", "INVALID_DOMAIN")):
+        error(invoke(scratch, SURF_GENERATE, [artifact(FIXTURES / fixture, SURF_DOMAIN)], good), code,
+              "INPUT_ERROR")
+    for bad in (surface_params(31.0, 0.5, 0.05), surface_params(0.0, 0.5, 0.05),
+                surface_params(25.0, 0.0, 0.05), surface_params(25.0, 0.5, 0.0),
+                surface_params(25.0, 0.5, 0.5),  # 0.5 > 0.1 * smallest curvature radius (2)
+                {**good, "angle_bound": "25"}, {**good, "size_bound": 0.5}):
+        error(invoke(scratch, SURF_GENERATE, [sphere], bad), "INVALID_PARAMETER", "INVALID_REQUEST")
+    error(invoke(scratch, SURF_GENERATE, [sphere], {"angle_bound": 25.0}), "MISSING_PARAMETER",
+          "INVALID_REQUEST")
+    error(invoke(scratch, SURF_GENERATE, [sphere], dict(good, level_set="x*x+y*y+z*z-4")),
+          "UNSUPPORTED_PARAMETER", "INVALID_REQUEST")
+    error(invoke(scratch, SURF_GENERATE, [sphere],
+                 dict(good, size_bound={"value": 0.5, "unit": "cm"})), "UNIT_MISMATCH", "TYPE_ERROR")
+    error(invoke(scratch, SURF_GENERATE, [sphere, sphere], good), "INPUT_COUNT_MISMATCH", "TYPE_ERROR")
+    error(invoke(scratch, SURF_GENERATE, [artifact(WAVE_C / "polygon_with_hole.json", DOMAIN)], good),
+          "INPUT_TYPE_MISMATCH", "TYPE_ERROR")
+    error(invoke(scratch, SURF_GENERATE, [sphere], surface_params(25.0, 0.01, 0.0001)),
+          "MESH_SIZE_LIMIT_EXCEEDED", "RESOURCE_LIMIT")
 
 
 def on_boundary(vertex) -> bool:

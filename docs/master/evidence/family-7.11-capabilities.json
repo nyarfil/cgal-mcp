@@ -57,14 +57,14 @@
   },
   "family_contract_sha256": "3cb7292f6cc9d9859e03d907aeb273bc6c0c16225d7cff589428236cdf58997e",
   "family_contract_source_path": "scripts/master_replay_families.py",
-  "family_contract_source_sha256": "18abb1a98233fbf2f5b06f88a208eea12f8e612175c4390c66c2531ac0032b1d",
+  "family_contract_source_sha256": "79fdb9c6533093fc33d64bcd4fa69ce3194002e66f438d9ef4e3fe046264cb35",
   "family_contract_source_hash_encoding": "utf8-lf",
   "catalog_baseline_sha256": "143ec18a5b64d506aad60dc24b0a1ea30940c715d1223b3465fa140aeb9d02a7",
-  "operation_registry_sha256": "d7655fe5fb375a21be5cc17e5715763f71e546350470ef2de5fb93dc4dd016af",
+  "operation_registry_sha256": "97e4b40b9fd041216387595a9e8daddc4f48bf7bf1d3a28cdb60fc6721293d63",
   "operation_registry_hash_encoding": "utf8-lf",
   "policy_catalog_sha256": "45f4be759288aaeb834a3ce97aa64ee7768048b15534618fc8c19512801f9a9f",
   "policy_catalog_hash_encoding": "utf8-lf",
-  "worker_sha256": "c6fb9bd222538ee722bd0b69edb97fa6256b1b6f56604abab1fb791e47d06ce6",
+  "worker_sha256": "c950e007e39927eed9b0b1413d491aa1346fb2a457a005c53c6038470fa7c10a",
   "worker_binary_format": "pe",
   "worker_manifest": {
     "actual_cgal_version": "6.2.1",
@@ -4414,6 +4414,102 @@
         "supported_kernels": [
           "package_recommended"
         ]
+      },
+      {
+        "dependencies": [
+          "Surface_mesher",
+          "Triangulation_3"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "mesh.surface.generate",
+        "info": {
+          "domain_kinds": [
+            "sphere",
+            "ellipsoid",
+            "torus"
+          ],
+          "input_format": "json",
+          "maximum_estimated_facets": 30000,
+          "output_format": "off",
+          "required_parameters": [
+            "angle_bound",
+            "size_bound",
+            "distance_bound"
+          ],
+          "source_header": "CGAL/make_surface_mesh.h",
+          "symbols": [
+            "make_surface_mesh",
+            "Implicit_surface_3",
+            "Surface_mesh_default_criteria_3"
+          ],
+          "validator_parameter_bindings": {
+            "mesh.validate.surface_mesh": {
+              "angle_bound": "angle_bound",
+              "distance_bound": "distance_bound",
+              "size_bound": "size_bound"
+            }
+          },
+          "validators": [
+            "mesh.validate.surface_mesh"
+          ]
+        },
+        "input_types": [
+          "ImplicitSurfaceDomain"
+        ],
+        "output_type": "TriangleSurfaceMesh",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Surface_mesher",
+          "Triangulation_3"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "mesh.validate.surface_mesh",
+        "info": {
+          "bound_parameters": [
+            "angle_bound",
+            "size_bound",
+            "distance_bound"
+          ],
+          "checks": [
+            "source_domain_valid",
+            "triangle_mesh",
+            "closed_surface",
+            "edge_manifold",
+            "vertex_manifold",
+            "consistent_orientation",
+            "single_component",
+            "euler_characteristic_matches_domain",
+            "vertices_on_analytic_surface",
+            "outward_orientation",
+            "angle_criterion_satisfied",
+            "size_criterion_satisfied",
+            "distance_criterion_satisfied",
+            "hausdorff_bound_satisfied",
+            "area_matches_analytic",
+            "volume_matches_analytic"
+          ],
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "TriangleSurfaceMesh",
+          "ImplicitSurfaceDomain"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
       }
     ],
     "protocol": 1,
@@ -4425,7 +4521,7 @@
     ],
     "worker": "cgal-master-worker"
   },
-  "worker_manifest_sha256": "de02697ee8c2a6b3d1ec707bd29f80bccc90d179c97f41849e083871688dcadc",
+  "worker_manifest_sha256": "6c7d45aa49d38eb84d3e5e94c9bac7bffd49997586b5e9f8a7ce669ca2d21da2",
   "tests": [
     {
       "id": "family-7.11-replay-cases",
@@ -4650,7 +4746,7 @@
       "case_id": "dt2-grid",
       "operation_id": "triangulation.delaunay_2",
       "revision": 1,
-      "worker_manifest_sha256": "de02697ee8c2a6b3d1ec707bd29f80bccc90d179c97f41849e083871688dcadc",
+      "worker_manifest_sha256": "6c7d45aa49d38eb84d3e5e94c9bac7bffd49997586b5e9f8a7ce669ca2d21da2",
       "test_id": "family-7.11-replay-cases",
       "request": {
         "inputs": [
@@ -4810,7 +4906,7 @@
       "case_id": "dt3-cube",
       "operation_id": "triangulation.delaunay_3",
       "revision": 1,
-      "worker_manifest_sha256": "de02697ee8c2a6b3d1ec707bd29f80bccc90d179c97f41849e083871688dcadc",
+      "worker_manifest_sha256": "6c7d45aa49d38eb84d3e5e94c9bac7bffd49997586b5e9f8a7ce669ca2d21da2",
       "test_id": "family-7.11-replay-cases",
       "request": {
         "inputs": [
@@ -4968,7 +5064,7 @@
       "case_id": "dt3-cloud",
       "operation_id": "triangulation.delaunay_3",
       "revision": 1,
-      "worker_manifest_sha256": "de02697ee8c2a6b3d1ec707bd29f80bccc90d179c97f41849e083871688dcadc",
+      "worker_manifest_sha256": "6c7d45aa49d38eb84d3e5e94c9bac7bffd49997586b5e9f8a7ce669ca2d21da2",
       "test_id": "family-7.11-replay-cases",
       "request": {
         "inputs": [
@@ -5126,7 +5222,7 @@
       "case_id": "cdt-delaunay",
       "operation_id": "triangulation.constrained_2",
       "revision": 1,
-      "worker_manifest_sha256": "de02697ee8c2a6b3d1ec707bd29f80bccc90d179c97f41849e083871688dcadc",
+      "worker_manifest_sha256": "6c7d45aa49d38eb84d3e5e94c9bac7bffd49997586b5e9f8a7ce669ca2d21da2",
       "test_id": "family-7.11-replay-cases",
       "request": {
         "inputs": [
@@ -5294,7 +5390,7 @@
       "case_id": "ct-plain",
       "operation_id": "triangulation.constrained_2",
       "revision": 1,
-      "worker_manifest_sha256": "de02697ee8c2a6b3d1ec707bd29f80bccc90d179c97f41849e083871688dcadc",
+      "worker_manifest_sha256": "6c7d45aa49d38eb84d3e5e94c9bac7bffd49997586b5e9f8a7ce669ca2d21da2",
       "test_id": "family-7.11-replay-cases",
       "request": {
         "inputs": [
@@ -5463,7 +5559,7 @@
       "case_id": "dt2-collinear-rejected",
       "operation_id": "triangulation.delaunay_2",
       "revision": 1,
-      "worker_manifest_sha256": "de02697ee8c2a6b3d1ec707bd29f80bccc90d179c97f41849e083871688dcadc",
+      "worker_manifest_sha256": "6c7d45aa49d38eb84d3e5e94c9bac7bffd49997586b5e9f8a7ce669ca2d21da2",
       "test_id": "family-7.11-replay-cases",
       "request": {
         "inputs": [
@@ -5513,7 +5609,7 @@
       "case_id": "cdt-crossing-constraints-rejected",
       "operation_id": "triangulation.constrained_2",
       "revision": 1,
-      "worker_manifest_sha256": "de02697ee8c2a6b3d1ec707bd29f80bccc90d179c97f41849e083871688dcadc",
+      "worker_manifest_sha256": "6c7d45aa49d38eb84d3e5e94c9bac7bffd49997586b5e9f8a7ce669ca2d21da2",
       "test_id": "family-7.11-replay-cases",
       "request": {
         "inputs": [

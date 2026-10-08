@@ -585,6 +585,7 @@ std::vector<OperationDefinition> operations() {
          "euler_characteristic", "constraints_preserved", "boundary_equals_domain_boundary",
          "area_covers_domain", "triangles_inside_domain", "shape_criterion_satisfied",
          "size_criterion_satisfied", "constrained_delaunay"}}}));
+  for (auto& definition : surface_mesh_operations()) result.push_back(std::move(definition));
   return result;
 }
 
