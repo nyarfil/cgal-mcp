@@ -923,6 +923,8 @@ HEXADECAGON_AREA = 32.0 * math.sin(math.pi / 8.0)
 GRID3_RELAXED_MEAN_EDGE = (12.0 + 4.0 * SQRT2) / 16.0
 NOISY_SPHERE_VOLUME = 4.0426073283768496
 OBLATE_VOLUME = 6.644385307347405
+# Uniform isotropic remesh (target 0.1) of OBLATE: a valid, close, but curvature-blind candidate.
+OBLATE_UNIFORM = {"fixture": "wave_d/oblate_uniform_0p1.off", "sha256": "de7e7f8a43b86b0afdb2fe32751a0c28d17773844eaded75ac26c663324e2eab"}
 _ADAPTIVE = {"tolerance": _mm(0.01), "min_edge_length": _mm(0.1), "max_edge_length": _mm(0.8),
              "number_of_iterations": 3, "max_deviation": _mm(0.05)}
 
@@ -980,7 +982,8 @@ FAMILY_7_6 = {
                             "0.1 to 12.5: the adaptive remesh spans an edge-length ratio above 5 "
                             "while staying within a certified 0.05 Hausdorff bound, whereas uniform "
                             "remeshing of the same input stays below ratio 3 and needs a 0.3 bound; the adaptive split preserves the exact "
-                            "geometry while only refining long edges.",
+                            "geometry while only refining long edges. The adaptive validator recomputes a curvature-driven "
+                            "target from the raw source and rejects a uniform 0.1 remesh of the same input.",
             "case_ids": ["adaptive-oblate-isotropic", "adaptive-oblate-split"],
         },
     },
@@ -1138,6 +1141,11 @@ FAMILY_7_6 = {
          "parameters": {"time_step": 0.01, "number_of_iterations": 1, "preserve_volume": True,
                         "max_deviation": _mm(1.0)},
          "expect_error_class": "PRECONDITION_FAILED"},
+        {"id": "adaptive-uniform-remesh-rejected", "operation": "mesh.validate.adaptive_remesh",
+         "inputs": [_mesh(OBLATE_UNIFORM), _mesh(OBLATE)],
+         "parameters": {**{k: v for k, v in _ADAPTIVE.items() if k != "number_of_iterations"},
+                        "mode": "isotropic_remeshing"},
+         "expect_error_class": "VALIDATION_FAILED"},
         {"id": "adaptive-inverted-range-rejected", "operation": "mesh.remesh.adaptive",
          "inputs": [_mesh(OBLATE)],
          "parameters": {**_ADAPTIVE, "min_edge_length": _mm(0.8), "max_edge_length": _mm(0.1),

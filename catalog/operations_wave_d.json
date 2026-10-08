@@ -2490,6 +2490,9 @@
               }
             },
             "parameters": {
+              "tolerance": {
+                "parameter": "tolerance"
+              },
               "min_edge_length": {
                 "parameter": "min_edge_length"
               },
@@ -2543,7 +2546,8 @@
               "max_deviation": "max_deviation",
               "max_edge_length": "max_edge_length",
               "min_edge_length": "min_edge_length",
-              "mode": "mode"
+              "mode": "mode",
+              "tolerance": "tolerance"
             }
           },
           "validators": [
@@ -2582,7 +2586,7 @@
       "revision": 1,
       "status": "VALIDATED",
       "role": "validator",
-      "summary": "Independently checks topology, orientation, certified Hausdorff bound and mode-specific sizing-range or on-edge subdivision properties.",
+      "summary": "Independently checks topology, orientation, certified Hausdorff bound, mode-specific sizing-range or on-edge subdivision properties, and that candidate edge lengths follow the curvature-driven sizing field recomputed from the raw source mesh.",
       "package": "PMP_Remeshing",
       "aliases": [
         "validate adaptive remesh",
@@ -2663,12 +2667,18 @@
         "type": "object",
         "additionalProperties": false,
         "required": [
+          "tolerance",
           "min_edge_length",
           "max_edge_length",
           "mode",
           "max_deviation"
         ],
         "properties": {
+          "tolerance": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Sizing-field error tolerance; the validator re-derives the target edge length clamp(sqrt(6*tol/k_max - 3*tol^2), min, max) from its own curvature estimate on the raw source mesh."
+          },
           "min_edge_length": {
             "type": "TypedLength",
             "exclusiveMinimum": 0,
@@ -2713,7 +2723,8 @@
           "checks.topology_preserved": true,
           "checks.orientation_preserved": true,
           "checks.hausdorff_within_max_deviation": true,
-          "checks.no_self_intersections": true
+          "checks.no_self_intersections": true,
+          "checks.edges_follow_curvature_sizing": true
         }
       },
       "output_contract": {
@@ -2723,7 +2734,8 @@
           "topology_preserved",
           "orientation_preserved",
           "hausdorff_within_max_deviation",
-          "no_self_intersections"
+          "no_self_intersections",
+          "edges_follow_curvature_sizing"
         ],
         "status": "pass",
         "failure_or_indeterminate_publish": false,
@@ -2737,6 +2749,7 @@
         "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
         "info": {
           "bound_parameters": [
+            "tolerance",
             "min_edge_length",
             "max_edge_length",
             "mode",
@@ -2747,7 +2760,8 @@
             "topology_preserved",
             "orientation_preserved",
             "hausdorff_within_max_deviation",
-            "no_self_intersections"
+            "no_self_intersections",
+            "edges_follow_curvature_sizing"
           ],
           "input_slots": [
             "candidate",

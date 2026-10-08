@@ -17,6 +17,11 @@
 全14 Operationの状態は`VALIDATED`です（`self_verified_not_independently_reviewed`）。
 validatorは被試験のアルゴリズムを呼ばず、生のOFFから位相・向き・境界・辺長帯・面積の分割・
 サンプリングによる証明付きの両側Hausdorff上界を再計算し、改ざんした候補を拒否します。
+適応remeshのvalidator（`mesh.validate.adaptive_remesh`）は`tolerance`を受け取り、生のソースOFFから独立に曲率
+（角欠損とcotan平均曲率）を推定して目標辺長`clamp(sqrt(6*tol/k - 3*tol^2), min, max)`を再計算し、
+候補辺長／目標の分布（5・50・95パーセンタイル、対数相関）が帯内にあるか検査します
+（`edges_follow_curvature_sizing`）。一様remesh（目標0.1／0.3）は曲率を無視するため拒否され、
+negative controlとして7.6に結び付けています。
 生成側も検証予算を事前に確認します。非多様体入力、非三角形入力、不正parameterは拒否します。
 
 原本要求との結合は[受入判定](CAPABILITY_ACCEPTANCE_JA.md)のfamily 7.6再試験で行い、

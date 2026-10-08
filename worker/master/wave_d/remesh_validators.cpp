@@ -12,6 +12,8 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
+#include <array>
 #include <map>
 #include <set>
 #include <string>
@@ -38,6 +40,22 @@ constexpr double kIsotropicMaxRatio = 2.0;       // longest edge / target
 constexpr double kIsotropicMinRatio = 0.2;       // shortest edge / target
 constexpr double kAdaptiveMaxRatio = 2.0;        // longest edge / max_edge_length
 constexpr double kAdaptiveMinRatio = 0.2;        // shortest edge / min_edge_length
+// Curvature-following band (adaptive remeshing). Each candidate edge is compared with the
+// local target edge length t = clamp(sqrt(6 tol / k - 3 tol^2), min, max) derived from an
+// independent discrete maximum-curvature estimate k on the RAW source mesh (angle defect +
+// cotangent mean curvature, 2 rounds of 1-ring averaging). The estimate is coarser than
+// CGAL's interpolated corrected curvature, so only robust distribution statistics of
+// edge/t are enforced.
+constexpr int kAdaptiveCurvatureSmoothing = 2;
+constexpr double kAdaptiveRatioP05Min = 0.35;     // 5th percentile of edge/t
+constexpr double kAdaptiveRatioP95Max = 1.75;     // 95th percentile of edge/t
+constexpr double kAdaptiveRatioMedianLow = 0.65;  // isotropic remeshing: median of edge/t
+constexpr double kAdaptiveRatioMedianHigh = 1.3;
+constexpr double kAdaptiveSplitP95Max = 2.25;     // split_long_edges: CGAL splits only edges > 4/3 of the
+                                                  // smaller endpoint size, so pieces overshoot more
+constexpr double kAdaptiveSplitMedianLow = 0.4;   // split_long_edges: median of edge/t (not over-split)
+constexpr double kAdaptiveMinCorrelation = 0.5;   // corr(log edge, log t) over candidate edges
+constexpr double kAdaptiveMinFieldContrast = 1.5; // correlation required only if max t / min t >= this
 
 struct Inputs {
   RawMesh candidate;
@@ -499,11 +517,207 @@ Json run_shape_smoothing_validator(const Request& request) {
 
 // -------------------------------------------------------- adaptive remeshing --
 
+V3 sub3(const V3& a, const V3& b) { return {a[0] - b[0], a[1] - b[1], a[2] - b[2]}; }
+double dot3(const V3& a, const V3& b) { return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]; }
+V3 cross3(const V3& a, const V3& b) {
+  return {a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]};
+}
+double norm3(const V3& a) { return std::sqrt(dot3(a, a)); }
+
+// Independent per-vertex target edge length on the raw source mesh (never calls CGAL PMP).
+std::vector<double> adaptive_target_sizes(const RawMesh& mesh, double tolerance, double minimum,
+                                          double maximum) {
+  const std::size_t n = mesh.vertices.size();
+  constexpr double kPi = 3.14159265358979323846;
+  std::vector<double> defect(n, 2 * kPi), area(n, 0.0);
+  std::vector<V3> laplace(n, V3{0, 0, 0});
+  std::vector<std::set<std::size_t>> ring(n);
+  for (const auto& face : mesh.faces) {
+    if (face.size() != 3) continue;
+    const V3 cross_full = cross3(sub3(mesh.vertices[face[1]], mesh.vertices[face[0]]),
+                                 sub3(mesh.vertices[face[2]], mesh.vertices[face[0]]));
+    const double twice_area = norm3(cross_full);
+    if (!(twice_area > 0)) continue;
+    for (int a = 0; a < 3; ++a) {
+      const std::size_t i = face[a], j = face[(a + 1) % 3], k = face[(a + 2) % 3];
+      const V3 u = sub3(mesh.vertices[j], mesh.vertices[i]);
+      const V3 w = sub3(mesh.vertices[k], mesh.vertices[i]);
+      const double cos_angle = dot3(u, w) / (norm3(u) * norm3(w));
+      defect[i] -= std::acos(std::max(-1.0, std::min(1.0, cos_angle)));
+      const V3 p = sub3(mesh.vertices[i], mesh.vertices[k]);
+      const V3 q = sub3(mesh.vertices[j], mesh.vertices[k]);
+      const double cotangent = dot3(p, q) / norm3(cross3(p, q));  // angle at k, edge ij
+      const V3 d = sub3(mesh.vertices[i], mesh.vertices[j]);
+      for (int c = 0; c < 3; ++c) {
+        laplace[i][c] += 0.5 * cotangent * d[c];
+        laplace[j][c] -= 0.5 * cotangent * d[c];
+      }
+      area[i] += twice_area / 6;
+      ring[i].insert(j);
+      ring[i].insert(k);
+    }
+  }
+  std::vector<double> curvature(n, 0.0);
+  for (std::size_t v = 0; v < n; ++v) {
+    if (!(area[v] > 0)) continue;
+    const double mean = norm3(laplace[v]) / (2 * area[v]);
+    const double gauss = defect[v] / area[v];
+    curvature[v] = mean + std::sqrt(std::max(mean * mean - gauss, 0.0));
+  }
+  for (int pass = 0; pass < kAdaptiveCurvatureSmoothing; ++pass) {
+    std::vector<double> next(n, 0.0);
+    for (std::size_t v = 0; v < n; ++v) {
+      double sum = curvature[v];
+      for (const std::size_t neighbour : ring[v]) sum += curvature[neighbour];
+      next[v] = sum / static_cast<double>(1 + ring[v].size());
+    }
+    curvature.swap(next);
+  }
+  std::vector<double> size(n, maximum);
+  for (std::size_t v = 0; v < n; ++v) {
+    if (!(curvature[v] > 0)) continue;  // flat: largest allowed edge
+    const double squared = 6 * tolerance / curvature[v] - 3 * tolerance * tolerance;
+    size[v] = std::max(minimum, std::min(maximum, std::sqrt(std::max(squared, 0.0))));
+  }
+  return size;
+}
+
+// Nearest source vertex for each query point through a uniform grid.
+class VertexGrid {
+ public:
+  explicit VertexGrid(const std::vector<V3>& points) : points_(points) {
+    lo_ = hi_ = points.front();
+    for (const auto& p : points) {
+      for (int c = 0; c < 3; ++c) {
+        lo_[c] = std::min(lo_[c], p[c]);
+        hi_[c] = std::max(hi_[c], p[c]);
+      }
+    }
+    const int cells = std::max(1, std::min(64, static_cast<int>(std::cbrt(points.size() / 2.0))));
+    for (int c = 0; c < 3; ++c) {
+      dim_[c] = cells;
+      step_[c] = std::max((hi_[c] - lo_[c]) / cells, 1e-12);
+    }
+    cell_min_ = std::min({step_[0], step_[1], step_[2]});
+    buckets_.resize(static_cast<std::size_t>(dim_[0]) * dim_[1] * dim_[2]);
+    for (std::size_t i = 0; i < points.size(); ++i) {
+      const auto cell = locate(points[i]);
+      buckets_[index(cell[0], cell[1], cell[2])].push_back(i);
+    }
+  }
+
+  std::size_t nearest(const V3& q) const {
+    const auto home = locate(q);
+    std::size_t best = 0;
+    double best_distance = std::numeric_limits<double>::infinity();
+    const int span = std::max({dim_[0], dim_[1], dim_[2]});
+    for (int radius = 0; radius <= span; ++radius) {
+      for (int x = std::max(0, home[0] - radius); x <= std::min(dim_[0] - 1, home[0] + radius); ++x)
+        for (int y = std::max(0, home[1] - radius); y <= std::min(dim_[1] - 1, home[1] + radius); ++y)
+          for (int z = std::max(0, home[2] - radius); z <= std::min(dim_[2] - 1, home[2] + radius); ++z) {
+            if (std::max({std::abs(x - home[0]), std::abs(y - home[1]), std::abs(z - home[2])}) != radius)
+              continue;
+            for (const std::size_t i : buckets_[index(x, y, z)]) {
+              const double d = norm3(sub3(points_[i], q));
+              if (d < best_distance) {
+                best_distance = d;
+                best = i;
+              }
+            }
+          }
+      if (best_distance <= radius * cell_min_) break;
+    }
+    return best;
+  }
+
+ private:
+  std::array<int, 3> locate(const V3& p) const {
+    std::array<int, 3> cell{};
+    for (int c = 0; c < 3; ++c) {
+      cell[c] = std::max(0, std::min(dim_[c] - 1, static_cast<int>((p[c] - lo_[c]) / step_[c])));
+    }
+    return cell;
+  }
+  std::size_t index(int x, int y, int z) const {
+    return (static_cast<std::size_t>(x) * dim_[1] + y) * dim_[2] + z;
+  }
+  const std::vector<V3>& points_;
+  V3 lo_{}, hi_{}, step_{};
+  std::array<int, 3> dim_{};
+  double cell_min_ = 0;
+  std::vector<std::vector<std::size_t>> buckets_;
+};
+
+double percentile(std::vector<double> values, double fraction) {
+  std::sort(values.begin(), values.end());
+  return values[static_cast<std::size_t>(fraction * static_cast<double>(values.size() - 1))];
+}
+
+struct SizingFollow {
+  bool valid = false;
+  double p05 = 0, median = 0, p95 = 0, correlation = 1, field_contrast = 1;
+  double field_min = 0, field_max = 0;
+  bool correlation_required = false;
+};
+
+SizingFollow measure_sizing_follow(const RawMesh& source, const RawMesh& candidate,
+                                   double tolerance, double minimum, double maximum) {
+  SizingFollow result;
+  if (source.vertices.empty() || candidate.faces.empty()) return result;
+  const auto size = adaptive_target_sizes(source, tolerance, minimum, maximum);
+  result.field_min = *std::min_element(size.begin(), size.end());
+  result.field_max = *std::max_element(size.begin(), size.end());
+  result.field_contrast = result.field_max / result.field_min;
+  const VertexGrid grid(source.vertices);
+  std::set<std::pair<std::size_t, std::size_t>> edges;
+  for (const auto& face : candidate.faces) {
+    for (std::size_t a = 0; a < face.size(); ++a) {
+      const std::size_t u = face[a], v = face[(a + 1) % face.size()];
+      edges.insert({std::min(u, v), std::max(u, v)});
+    }
+  }
+  std::vector<double> ratio, log_length, log_target;
+  for (const auto& [u, v] : edges) {
+    const V3& a = candidate.vertices[u];
+    const V3& b = candidate.vertices[v];
+    const double length = norm3(sub3(a, b));
+    if (!(length > 0)) return result;
+    const V3 mid{(a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2};
+    const double target = size[grid.nearest(mid)];
+    ratio.push_back(length / target);
+    log_length.push_back(std::log(length));
+    log_target.push_back(std::log(target));
+  }
+  const double count = static_cast<double>(ratio.size());
+  double mean_l = 0, mean_t = 0;
+  for (std::size_t i = 0; i < ratio.size(); ++i) {
+    mean_l += log_length[i];
+    mean_t += log_target[i];
+  }
+  mean_l /= count;
+  mean_t /= count;
+  double cov = 0, var_l = 0, var_t = 0;
+  for (std::size_t i = 0; i < ratio.size(); ++i) {
+    cov += (log_length[i] - mean_l) * (log_target[i] - mean_t);
+    var_l += (log_length[i] - mean_l) * (log_length[i] - mean_l);
+    var_t += (log_target[i] - mean_t) * (log_target[i] - mean_t);
+  }
+  result.correlation = var_l > 0 && var_t > 0 ? cov / std::sqrt(var_l * var_t) : 0.0;
+  result.p05 = percentile(ratio, 0.05);
+  result.median = percentile(ratio, 0.5);
+  result.p95 = percentile(ratio, 0.95);
+  result.correlation_required = result.field_contrast >= kAdaptiveMinFieldContrast;
+  result.valid = true;
+  return result;
+}
+
 Json run_adaptive_validator(const Request& request) {
   const std::string validator = "mesh.validate.adaptive_remesh";
-  require_parameters(request, {"min_edge_length", "max_edge_length", "mode", "max_deviation"});
+  require_parameters(request,
+                     {"tolerance", "min_edge_length", "max_edge_length", "mode", "max_deviation"});
   const auto inputs = read_inputs(request, validator, {"TriangleSurfaceMesh"});
   const auto& unit = request.inputs[0].unit;
+  const double tolerance = positive_length(request, "tolerance", unit);
   const double minimum = positive_length(request, "min_edge_length", unit);
   const double maximum = positive_length(request, "max_edge_length", unit);
   const double max_deviation = positive_length(request, "max_deviation", unit);
@@ -523,12 +737,38 @@ Json run_adaptive_validator(const Request& request) {
   Json details{{"source", facts_json(s)},
                {"candidate", facts_json(c)},
                {"mode", mode},
+               {"tolerance", tolerance},
                {"edge_length_range", {minimum, maximum}},
                {"deviation", deviation.json(max_deviation)}};
+  const auto follow =
+      measure_sizing_follow(inputs.source, inputs.candidate, tolerance, minimum, maximum);
+  details["sizing_follow"] = {
+      {"curvature_estimator", "angle_defect_and_cotangent_mean_curvature_on_raw_source"},
+      {"target_formula", "clamp(sqrt(6*tol/k_max - 3*tol^2), min, max)"},
+      {"target_range", {follow.field_min, follow.field_max}},
+      {"field_contrast", follow.field_contrast},
+      {"edge_over_target_p05", follow.p05},
+      {"edge_over_target_median", follow.median},
+      {"edge_over_target_p95", follow.p95},
+      {"log_correlation", follow.correlation},
+      {"correlation_required", follow.correlation_required},
+      {"bands", {{"p05_min", kAdaptiveRatioP05Min},
+                 {"p95_max", kAdaptiveRatioP95Max},
+                 {"median_isotropic", {kAdaptiveRatioMedianLow, kAdaptiveRatioMedianHigh}},
+                 {"p95_max_split", kAdaptiveSplitP95Max},
+                 {"median_split_min", kAdaptiveSplitMedianLow},
+                 {"min_correlation", kAdaptiveMinCorrelation}}}};
+  const bool follows_upper = follow.valid && follow.p95 <= kAdaptiveRatioP95Max;
+  const bool split_follows_upper = follow.valid && follow.p95 <= kAdaptiveSplitP95Max;
+  const bool follows_correlation =
+      follow.valid && (!follow.correlation_required || follow.correlation >= kAdaptiveMinCorrelation);
   if (mode == "isotropic_remeshing") {
     checks["edge_lengths_within_sizing_range"] =
         c.max_edge_length <= kAdaptiveMaxRatio * maximum &&
         c.min_edge_length >= kAdaptiveMinRatio * minimum;
+    checks["edges_follow_curvature_sizing"] =
+        follows_upper && follows_correlation && follow.p05 >= kAdaptiveRatioP05Min &&
+        follow.median >= kAdaptiveRatioMedianLow && follow.median <= kAdaptiveRatioMedianHigh;
     details["edge_length_band"] = {{"max_ratio", kAdaptiveMaxRatio},
                                    {"min_ratio", kAdaptiveMinRatio},
                                    {"max_ratio_observed", c.max_edge_length / maximum},
@@ -544,6 +784,8 @@ Json run_adaptive_validator(const Request& request) {
     checks["new_vertices_on_source_edges"] = split.new_vertices_on_source_edges;
     checks["source_edges_fully_subdivided"] = split.source_edges_fully_subdivided;
     checks["subdivided_pieces_within_sizing_range"] = split.pieces_within_max_length;
+    checks["edges_follow_curvature_sizing"] =
+        split_follows_upper && follows_correlation && follow.median >= kAdaptiveSplitMedianLow;
     checks["every_triangle_inside_one_source_face"] = partition.every_triangle_inside_one_source_face;
     checks["per_face_area_preserved"] = partition.per_face_area_preserved;
     details["longest_subdivided_piece"] = split.longest_piece;
@@ -623,8 +865,8 @@ std::vector<OperationDefinition> remesh_validators() {
       "ValidationReport", "validator", run_adaptive_validator, {"PMP_Remeshing"},
       validator_info({"candidate_valid_triangle_mesh", "topology_preserved",
                       "orientation_preserved", "hausdorff_within_max_deviation",
-                      "no_self_intersections"},
-                     {"min_edge_length", "max_edge_length", "mode", "max_deviation"})));
+                      "no_self_intersections", "edges_follow_curvature_sizing"},
+                     {"tolerance", "min_edge_length", "max_edge_length", "mode", "max_deviation"})));
   return result;
 }
 

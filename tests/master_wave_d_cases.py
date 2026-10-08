@@ -380,8 +380,11 @@ def main() -> None:
                       "max_deviation": mm(0.05)}
             report, path, _ = run_pair(
                 scratch, "mesh.remesh.adaptive", ellipsoid, params, "mesh.validate.adaptive_remesh",
-                {key: params[key] for key in ("min_edge_length", "max_edge_length", "mode",
-                                              "max_deviation")})
+                {key: params[key] for key in ("tolerance", "min_edge_length", "max_edge_length",
+                                              "mode", "max_deviation")})
+            follow = report["sizing_follow"]
+            assert not follow["correlation_required"] or follow["log_correlation"] >= 0.5, follow
+            assert follow["edge_over_target_p95"] <= (2.25 if mode == "split_long_edges" else 1.75), follow
             adaptive[mode] = path
         # Adaptivity: curvature-driven sizing yields a wider edge-length spread than a
         # uniform remesh of the same input at a comparable mean length.
@@ -397,8 +400,31 @@ def main() -> None:
         spread = max(lengths) / min(lengths)
         uniform_spread = max(uniform_lengths) / min(uniform_lengths)
         assert spread > uniform_spread, (spread, uniform_spread)
-        adaptive_params = {"min_edge_length": mm(0.1), "max_edge_length": mm(0.6),
+        adaptive_params = {"tolerance": mm(0.005), "min_edge_length": mm(0.1), "max_edge_length": mm(0.6),
                            "mode": "isotropic_remeshing", "max_deviation": mm(0.05)}
+        # Negative controls on the strongly curved oblate spheroid (field contrast > 1.5):
+        # uniform remeshes are valid isotropic remeshes but ignore curvature.
+        oblate = artifact(FIXTURES / "oblate_spheroid.off", TSM)
+        oblate_params = {"tolerance": mm(0.01), "min_edge_length": mm(0.1),
+                         "max_edge_length": mm(0.8), "mode": "isotropic_remeshing",
+                         "max_deviation": mm(0.05)}
+        for target in (0.1, 0.3):
+            _, uniform_oblate, _ = run_pair(
+                scratch, "mesh.remesh.isotropic", oblate,
+                {"target_edge_length": mm(target), "number_of_iterations": 3,
+                 "number_of_relaxation_steps": 3, "max_deviation": mm(0.3)},
+                "mesh.validate.isotropic_remesh",
+                {"target_edge_length": mm(target), "max_deviation": mm(0.3)})
+            rejected(invoke(scratch, "mesh.validate.adaptive_remesh", [tampered(scratch, uniform_oblate, lambda v, f: None), oblate],
+                            oblate_params), "edges_follow_curvature_sizing")
+        genuine_report, genuine_oblate, _ = run_pair(
+            scratch, "mesh.remesh.adaptive", oblate,
+            dict(oblate_params, number_of_iterations=3),
+            "mesh.validate.adaptive_remesh", oblate_params)
+        assert genuine_report["sizing_follow"]["correlation_required"], genuine_report
+        rejected(invoke(scratch, "mesh.validate.adaptive_remesh",
+                        [tampered(scratch, genuine_oblate, lambda v, f: None), oblate],
+                        dict(oblate_params, tolerance=mm(0.0001))), "edges_follow_curvature_sizing")
         rejected(invoke(scratch, "mesh.validate.adaptive_remesh",
                         [tampered(scratch, adaptive["isotropic_remeshing"],
                                   lambda v, f: v[0].__setitem__(0, v[0][0] + 0.5)), ellipsoid],
