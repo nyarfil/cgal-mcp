@@ -460,7 +460,7 @@ class AcceptanceContractTests(unittest.TestCase):
         bound = {requirement_id for family in REPLAY_FAMILIES
                  for requirement_id in family_bindings(family)}
         replay_rows = [row for row in evaluated["requirements"] if row["id"] in bound]
-        self.assertEqual(len(replay_rows), 30)
+        self.assertEqual(len(replay_rows), 31)
         self.assertTrue(all(row["status"] == "INCOMPLETE" for row in replay_rows))
 
 

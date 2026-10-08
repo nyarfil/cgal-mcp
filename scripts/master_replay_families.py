@@ -1154,9 +1154,194 @@ FAMILY_7_6 = {
     ],
 }
 
+RECT_10X1 = {"fixture": "wave_e/rect_10x1.json",
+             "sha256": "340646ffe0cf50adc5194dc15b16e7b739fb4b041ef5310e21ff491211a4fc5f"}
+SQUARE_10 = {"fixture": "wave_e/square10.json",
+             "sha256": "ffb231e94b4521e4a08334a7514aef2d82acd7c2af6f3899dee5abbfa519300c"}
+TWO_HOLES = {"fixture": "wave_e/two_holes.json",
+             "sha256": "cf06284fc29f97fb5e147d92529bd2adbd85716c846a4f4754debf3104c51643"}
+HOLE_SQUARE = {"fixture": "wave_c/polygon_with_hole.json",
+               "sha256": "b88fd8eeacddaa021697227ce5caa3a2fe22bd026592f9676a97bf17963d7959"}
+L_SHAPE = {"fixture": "wave_c/polygon_l_shape.json",
+           "sha256": "dec71795a9fc825548732ea647003420ad0b4fd1419443f4440308bdbe7f4b4d"}
+BOWTIE = {"fixture": "wave_c/polygon_bowtie.json",
+          "sha256": "44351418b0b2c4af582cf01a32eda634860b502b0026459e767f0924ba4cc71f"}
+HOLE_OUTSIDE = {"fixture": "wave_e/hole_outside.json",
+                "sha256": "9753d01982dac2231a1bdacb012e870e896bc4aae168b8a9a0bd404ec38d1578"}
+HOLE_TOUCHING = {"fixture": "wave_e/hole_touching.json",
+                 "sha256": "7f1dfcdd608fa14933e24ac36379fa0ac273a5a732a5b407cbaa97dc3a6e9ecd"}
+HOLE_NESTED = {"fixture": "wave_e/hole_nested.json",
+               "sha256": "608ce22a5a9e152c5f03b4e03de5c40204d81c3e4d5221a0b71fef29db2bc94a"}
+SQUARE_MESH = {"fixture": "wave_e/square10_mesh.json",
+               "sha256": "831c615cff3f9204c3c25ec5a575c10215d3e1f5da20b4800dc846355e3f2389"}
+SQUARE_MESH_MISSING = {"fixture": "wave_e/square10_mesh_missing_triangle.json",
+                       "sha256": "16eec39c116bf3b5574504f252394d44142de0431d3f9a250e6335c03b4a1fc9"}
+SQUARE_MESH_SHIFTED = {"fixture": "wave_e/square10_mesh_shifted_boundary.json",
+                       "sha256": "1b2a5e0ef565e0f723abd7f6a935349ed1780799e262dd5de3ed974c2a0de4a9"}
+HOLED_MESH_FLIPPED = {"fixture": "wave_e/holed_mesh_flipped_diagonal.json",
+                      "sha256": "ce1055676afa581be4b77529ed817f127fdb297dc757e9fc6c761802e25533dd"}
+
+# Shape bound 0.125 = sin^2 of the smallest angle: asin(sqrt(0.125)) = 20.7048 degrees.
+MESH2_MIN_ANGLE = math.degrees(math.asin(math.sqrt(0.125)))
+MESH2_LOOSE_MIN_ANGLE = math.degrees(math.asin(0.25))
+
+
+def _mesh2(aspect: float, size: float) -> dict:
+    return {"aspect_bound": aspect, "size_bound": _mm(size)}
+
+
+def _domain(fixture: dict) -> dict:
+    return _json_input(fixture, "PolygonWithHoles2")
+
+
+FAMILY_7_14 = {
+    "family": "7.14",
+    "scope": "family_7_14_mesh_generation_partial",
+    "evidence_path": "docs/master/evidence/family-7.14-capabilities.json",
+    "test_id": "family-7.14-replay-cases",
+    "requirements": {
+        "major.7.14.01": {
+            "operation_ids": ["mesh2.refine.delaunay"],
+            "symbols": ["refine_Delaunay_mesh_2", "Delaunay_mesh_size_criteria_2"],
+            "symbol_notes": "refine_Delaunay_mesh_2 with Delaunay_mesh_size_criteria_2 meshes a 10x10 "
+                            "square (area 100), the same square with a 3x3 hole (91), an L-shape (7) "
+                            "and a square with two holes (92). Output area is recomputed exactly "
+                            "from the produced mesh; triangles are counterclockwise and meet the "
+                            "aspect bound (smallest angle >= asin(sqrt(B))) and the maximum edge "
+                            "length; boundary edges equal the refined constraints. A 10x1 "
+                            "rectangle with a loose aspect bound stays the two input triangles "
+                            "(smallest angle atan(1/10)); the default bound forces refinement. "
+                            "The independent validator re-derives constraint preservation, "
+                            "coverage, criteria and the constrained Delaunay property.",
+            "case_ids": ["mesh2-square-size2", "mesh2-square-size1", "mesh2-square-loose-angle",
+                         "mesh2-hole", "mesh2-lshape", "mesh2-two-holes", "mesh2-rect-unrefined",
+                         "mesh2-rect-refined"],
+        },
+    },
+    "unbound": {
+        "major.7.14.02": "No surface mesh generation operation (Surface_mesher make_surface_mesh).",
+        "major.7.14.03": "No Mesh_3 tetrahedral volume meshing operation (make_mesh_3).",
+        "major.7.14.04": "No Mesh_3 domain criteria operation (Mesh_criteria_3, Mesh_facet_criteria_3).",
+    },
+    "cases": [
+        _case("mesh2-square-size2", "mesh2.refine.delaunay", [_domain(SQUARE_10)], _mesh2(0.125, 2.0), [
+            ["metrics.algorithm", "==", "CGAL::refine_Delaunay_mesh_2"],
+            ["metrics.criteria", "==", "CGAL::Delaunay_mesh_size_criteria_2"],
+            ["metrics.input_vertex_count", "==", 4],
+            ["metrics.ring_count", "==", 1],
+            ["metrics.triangle_count", ">=", 58],
+            ["output:mesh:measure:tri2.area", "approx", [100.0, 1e-9]],
+            ["output:mesh:measure:tri2.max_edge_length", "<=", 2.0],
+            ["output:mesh:measure:tri2.min_angle_degrees", ">=", MESH2_MIN_ANGLE],
+            ["output:mesh:measure:tri2.max_edge_use", "<=", 2],
+            ["output:mesh:measure:tri2.boundary_edge_count", ">=", 20],
+            ["output:mesh:measure:tri2.boundary_edge_count", "==", {"path": "metrics.constrained_edge_count"}],
+            ["output:mesh:measure:tri2.triangle_count", "==", {"path": "metrics.triangle_count"}],
+        ]),
+        _case("mesh2-square-size1", "mesh2.refine.delaunay", [_domain(SQUARE_10)], _mesh2(0.125, 1.0), [
+            ["output:mesh:measure:tri2.area", "approx", [100.0, 1e-9]],
+            ["output:mesh:measure:tri2.max_edge_length", "<=", 1.0],
+            ["output:mesh:measure:tri2.min_angle_degrees", ">=", MESH2_MIN_ANGLE],
+            ["output:mesh:measure:tri2.boundary_edge_count", ">=", 40],
+            ["metrics.triangle_count", ">=", 116],
+        ]),
+        _case("mesh2-square-loose-angle", "mesh2.refine.delaunay", [_domain(SQUARE_10)],
+              _mesh2(0.0625, 2.0), [
+            ["output:mesh:measure:tri2.area", "approx", [100.0, 1e-9]],
+            ["output:mesh:measure:tri2.min_angle_degrees", ">=", MESH2_LOOSE_MIN_ANGLE],
+            ["output:mesh:measure:tri2.max_edge_length", "<=", 2.0],
+        ]),
+        _case("mesh2-hole", "mesh2.refine.delaunay", [_domain(HOLE_SQUARE)], _mesh2(0.125, 2.0), [
+            ["metrics.input_vertex_count", "==", 8],
+            ["metrics.ring_count", "==", 2],
+            ["output:mesh:measure:tri2.area", "approx", [91.0, 1e-9]],
+            ["output:mesh:measure:tri2.max_edge_length", "<=", 2.0],
+            ["output:mesh:measure:tri2.min_angle_degrees", ">=", MESH2_MIN_ANGLE],
+            ["output:mesh:measure:tri2.boundary_edge_count", "==", {"path": "metrics.constrained_edge_count"}],
+            ["output:mesh:measure:tri2.max_edge_use", "<=", 2],
+        ]),
+        _case("mesh2-lshape", "mesh2.refine.delaunay", [_domain(L_SHAPE)], _mesh2(0.125, 2.0), [
+            ["metrics.input_vertex_count", "==", 6],
+            ["output:mesh:measure:tri2.area", "approx", [7.0, 1e-9]],
+            ["output:mesh:measure:tri2.max_edge_length", "<=", 2.0],
+            ["output:mesh:measure:tri2.min_angle_degrees", ">=", MESH2_MIN_ANGLE],
+            ["output:mesh:measure:tri2.boundary_edge_count", ">=", 10],
+        ]),
+        _case("mesh2-two-holes", "mesh2.refine.delaunay", [_domain(TWO_HOLES)], _mesh2(0.125, 2.0), [
+            ["metrics.input_vertex_count", "==", 12],
+            ["metrics.ring_count", "==", 3],
+            ["output:mesh:measure:tri2.area", "approx", [92.0, 1e-9]],
+            ["output:mesh:measure:tri2.min_angle_degrees", ">=", MESH2_MIN_ANGLE],
+            ["output:mesh:measure:tri2.boundary_edge_count", "==", {"path": "metrics.constrained_edge_count"}],
+        ]),
+        _case("mesh2-rect-unrefined", "mesh2.refine.delaunay", [_domain(RECT_10X1)],
+              _mesh2(0.001, 100.0), [
+            ["metrics.triangle_count", "==", 2],
+            ["metrics.vertex_count", "==", 4],
+            ["metrics.steiner_vertex_count", "==", 0],
+            ["output:mesh:measure:tri2.area", "approx", [10.0, 1e-12]],
+            ["output:mesh:measure:tri2.min_angle_degrees", "approx", [math.degrees(math.atan(0.1)), 1e-9]],
+        ]),
+        _case("mesh2-rect-refined", "mesh2.refine.delaunay", [_domain(RECT_10X1)],
+              _mesh2(0.125, 100.0), [
+            ["metrics.triangle_count", ">", 2],
+            ["metrics.steiner_vertex_count", ">", 0],
+            ["output:mesh:measure:tri2.area", "approx", [10.0, 1e-9]],
+            ["output:mesh:measure:tri2.min_angle_degrees", ">=", MESH2_MIN_ANGLE],
+            ["output:mesh:measure:tri2.boundary_edge_count", "==", {"path": "metrics.constrained_edge_count"}],
+        ]),
+    ],
+    "pairs": [
+        {"kind": "different_outputs", "cases": ["mesh2-square-size2", "mesh2-square-size1"]},
+        {"kind": "different_outputs", "cases": ["mesh2-rect-unrefined", "mesh2-rect-refined"]},
+    ],
+    "negative_controls": [
+        {"id": "mesh2-bowtie-rejected", "operation": "mesh2.refine.delaunay",
+         "inputs": [_domain(BOWTIE)], "parameters": _mesh2(0.125, 2.0),
+         "expect_error_class": "PRECONDITION_FAILED"},
+        {"id": "mesh2-hole-outside-rejected", "operation": "mesh2.refine.delaunay",
+         "inputs": [_domain(HOLE_OUTSIDE)], "parameters": _mesh2(0.125, 2.0),
+         "expect_error_class": "PRECONDITION_FAILED"},
+        {"id": "mesh2-hole-touching-rejected", "operation": "mesh2.refine.delaunay",
+         "inputs": [_domain(HOLE_TOUCHING)], "parameters": _mesh2(0.125, 2.0),
+         "expect_error_class": "PRECONDITION_FAILED"},
+        {"id": "mesh2-nested-hole-rejected", "operation": "mesh2.refine.delaunay",
+         "inputs": [_domain(HOLE_NESTED)], "parameters": _mesh2(0.125, 2.0),
+         "expect_error_class": "PRECONDITION_FAILED"},
+        {"id": "mesh2-aspect-above-guarantee-rejected", "operation": "mesh2.refine.delaunay",
+         "inputs": [_domain(SQUARE_10)], "parameters": _mesh2(0.5, 2.0),
+         "expect_error_class": "INVALID_REQUEST"},
+        {"id": "mesh2-zero-size-rejected", "operation": "mesh2.refine.delaunay",
+         "inputs": [_domain(SQUARE_10)], "parameters": _mesh2(0.125, 0.0),
+         "expect_error_class": "INVALID_REQUEST"},
+        {"id": "mesh2-unit-mismatch-rejected", "operation": "mesh2.refine.delaunay",
+         "inputs": [_domain(SQUARE_10)],
+         "parameters": {"aspect_bound": 0.125, "size_bound": {"value": 2.0, "unit": "cm"}},
+         "expect_error_class": "TYPE_ERROR"},
+        {"id": "mesh2-size-budget-rejected", "operation": "mesh2.refine.delaunay",
+         "inputs": [_domain(SQUARE_10)], "parameters": _mesh2(0.125, 0.01),
+         "expect_error_class": "RESOURCE_LIMIT"},
+        {"id": "mesh2-missing-triangle-rejected", "operation": "mesh.validate.delaunay_refinement_2",
+         "inputs": [_json_input(SQUARE_MESH_MISSING, "Triangulation2"), _domain(SQUARE_10)],
+         "parameters": _mesh2(0.125, 2.0), "expect_error_class": "VALIDATION_FAILED"},
+        {"id": "mesh2-shifted-boundary-rejected", "operation": "mesh.validate.delaunay_refinement_2",
+         "inputs": [_json_input(SQUARE_MESH_SHIFTED, "Triangulation2"), _domain(SQUARE_10)],
+         "parameters": _mesh2(0.125, 2.0), "expect_error_class": "VALIDATION_FAILED"},
+        {"id": "mesh2-flipped-diagonal-rejected", "operation": "mesh.validate.delaunay_refinement_2",
+         "inputs": [_json_input(HOLED_MESH_FLIPPED, "Triangulation2"), _domain(HOLE_SQUARE)],
+         "parameters": _mesh2(0.001, 50.0), "expect_error_class": "VALIDATION_FAILED"},
+        {"id": "mesh2-stricter-size-rejected", "operation": "mesh.validate.delaunay_refinement_2",
+         "inputs": [_json_input(SQUARE_MESH, "Triangulation2"), _domain(SQUARE_10)],
+         "parameters": _mesh2(0.125, 0.5), "expect_error_class": "VALIDATION_FAILED"},
+        {"id": "mesh2-wrong-domain-rejected", "operation": "mesh.validate.delaunay_refinement_2",
+         "inputs": [_json_input(SQUARE_MESH, "Triangulation2"), _domain(L_SHAPE)],
+         "parameters": _mesh2(0.125, 2.0), "expect_error_class": "VALIDATION_FAILED"},
+    ],
+}
+
 GENERIC_FAMILIES: dict[str, dict] = {
     family["family"]: family for family in (FAMILY_7_2, FAMILY_7_3, FAMILY_7_4, FAMILY_7_5, FAMILY_7_6,
-                   FAMILY_7_9, FAMILY_7_11, FAMILY_7_12, FAMILY_7_13)
+                   FAMILY_7_9, FAMILY_7_11, FAMILY_7_12, FAMILY_7_13, FAMILY_7_14)
 }
 
 
@@ -1429,10 +1614,52 @@ def _points_measure(name: str, content: bytes) -> object:
     raise ValueError(f"unknown point measure {name}")
 
 
+def _tri2_measure(name: str, content: bytes) -> object:
+    """Independent facts of a Triangulation2 JSON artifact (exact rational area)."""
+    from fractions import Fraction
+    mesh = json.loads(content.decode("utf-8"))
+    vertices = [(Fraction(x), Fraction(y)) for x, y in mesh["vertices"]]
+    triangles = mesh["triangles"]
+    if name == "vertex_count":
+        return len(vertices)
+    if name == "triangle_count":
+        return len(triangles)
+    edges: dict[tuple[int, int], int] = {}
+    twice = Fraction(0)
+    smallest = 180.0
+    longest = 0.0
+    for a, b, c in triangles:
+        (ax, ay), (bx, by), (cx, cy) = vertices[a], vertices[b], vertices[c]
+        twice += (bx - ax) * (cy - ay) - (by - ay) * (cx - ax)
+        corners = [(float(x), float(y)) for x, y in (vertices[a], vertices[b], vertices[c])]
+        for index in range(3):
+            p, q, r = corners[index], corners[(index + 1) % 3], corners[(index + 2) % 3]
+            u, v = (q[0] - p[0], q[1] - p[1]), (r[0] - p[0], r[1] - p[1])
+            cosine = (u[0] * v[0] + u[1] * v[1]) / (math.hypot(*u) * math.hypot(*v))
+            smallest = min(smallest, math.degrees(math.acos(max(-1.0, min(1.0, cosine)))))
+            longest = max(longest, math.dist(p, q))
+        for first, second in ((a, b), (b, c), (c, a)):
+            key = (min(first, second), max(first, second))
+            edges[key] = edges.get(key, 0) + 1
+    if name == "area":
+        return float(twice / 2)
+    if name == "min_angle_degrees":
+        return smallest
+    if name == "max_edge_length":
+        return longest
+    if name == "boundary_edge_count":
+        return sum(1 for count in edges.values() if count == 1)
+    if name == "max_edge_use":
+        return max(edges.values())
+    raise ValueError(f"unknown triangulation measure {name}")
+
+
 def measure(name: str, content: bytes) -> object:
     kind, _, field = name.partition(".")
     if kind == "off":
         return _off_measure(field, content)
+    if kind == "tri2":
+        return _tri2_measure(field, content)
     if kind == "points":
         return _points_measure(field, content)
     raise ValueError(f"unknown measure {name}")

@@ -1,0 +1,423 @@
+{
+  "schema_version": 1,
+  "catalog_revision": "wave-e-validated-1",
+  "cgal_version": "6.2.1",
+  "build_requirements": {
+    "source_kind": "official_release",
+    "source_sha256": "b6be77c60765a8456335de991eeaf6ffec55256984e4a9ecc6a97c37bbfe85bf"
+  },
+  "status_note": "One bounded Wave E Mesh_2 adapter (refine_Delaunay_mesh_2 with Delaunay_mesh_size_criteria_2 over a polygon-with-holes domain) and its mandatory independent validator are VALIDATED in the formal official-CGAL 6.2.1 worker and the MCP auto/legacy publication paths. They were verified by the repository's own cases and MCP end-to-end tests and have not had a separate independent native review. Mesh_2 conforming-only, Lipschitz/local sizing criteria, Lloyd optimization, surface and volume meshing remain unimplemented.",
+  "operations": [
+    {
+      "id": "mesh2.refine.delaunay",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "transform",
+      "summary": "Refine a polygon-with-holes domain into a constrained Delaunay triangle mesh meeting a shape (aspect) bound and a maximum edge length with refine_Delaunay_mesh_2.",
+      "package": "Mesh_2",
+      "major_requirements": [
+        "major.7.14.01"
+      ],
+      "aliases": [
+        "mesh_2 delaunay refinement",
+        "2d mesh generation",
+        "refine delaunay mesh 2d",
+        "triangular mesh generation 2d",
+        "delaunay mesher",
+        "2d meshing size criteria",
+        "\u4e8c\u6b21\u5143\u30e1\u30c3\u30b7\u30e5\u751f\u6210",
+        "\u30c9\u30ed\u30cd\u30fc\u7d30\u5206\u30e1\u30c3\u30b7\u30e5",
+        "\u5e73\u9762\u4e09\u89d2\u5f62\u30e1\u30c3\u30b7\u30e5\u751f\u6210"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Mesh_2"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::refine_Delaunay_mesh_2"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Delaunay_mesh_size_criteria_2"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Delaunay_mesher_2.h"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Delaunay_mesh_size_criteria_2.h"
+        },
+        {
+          "kind": "manual",
+          "identifier": "Mesh_2/index.html"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Mesh_2",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Delaunay_mesher_2.h",
+            "sha256": "a7728b69536748e98bc3860107274a222d2426fc13cfcfb2f01e2107a930c58a"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "domain",
+            "types": [
+              "PolygonWithHoles2"
+            ],
+            "formats": [
+              "json"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "mesh",
+            "type": "Triangulation2",
+            "format": "json",
+            "unit_from": "domain"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "aspect_bound",
+          "size_bound"
+        ],
+        "properties": {
+          "aspect_bound": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 0.125,
+            "description": "Squared sine of the minimum triangle angle (Delaunay_mesh_size_criteria_2 aspect bound); 0.125 is about 20.7 degrees and is the Mesh_2 termination guarantee."
+          },
+          "size_bound": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Upper bound on the longest triangle edge (Delaunay_mesh_size_criteria_2 size bound)."
+          }
+        }
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 67108864
+        }
+      ],
+      "validation": {
+        "required": true,
+        "validators": [
+          "mesh.validate.delaunay_refinement_2"
+        ],
+        "bindings": {
+          "mesh.validate.delaunay_refinement_2": {
+            "artifacts": {
+              "candidate": {
+                "output": "mesh"
+              },
+              "source": {
+                "input": "domain"
+              }
+            },
+            "parameters": {
+              "aspect_bound": {
+                "parameter": "aspect_bound"
+              },
+              "size_bound": {
+                "parameter": "size_bound"
+              }
+            }
+          }
+        }
+      },
+      "output_contract": {
+        "source_mutation": false,
+        "atomic_publication_required": true,
+        "empty_output": false,
+        "candidate_published_only_after_validation": true,
+        "producer_diagnostics_are_non_authoritative": true
+      },
+      "dependencies": [
+        "Mesh_2",
+        "Triangulation_2"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "input_format": "json",
+          "output_format": "json",
+          "maximum_domain_vertices": 1000,
+          "maximum_output_triangles": 30000,
+          "required_parameters": [
+            "aspect_bound",
+            "size_bound"
+          ],
+          "source_header": "CGAL/Delaunay_mesher_2.h",
+          "symbols": [
+            "refine_Delaunay_mesh_2",
+            "Delaunay_mesh_size_criteria_2"
+          ],
+          "validator_parameter_bindings": {
+            "mesh.validate.delaunay_refinement_2": {
+              "aspect_bound": "aspect_bound",
+              "size_bound": "size_bound"
+            }
+          },
+          "validators": [
+            "mesh.validate.delaunay_refinement_2"
+          ]
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "CGAL filtered-exact predicates (EPICK); independent validators use exact rational/orientation arithmetic",
+        "exact_constructions": "unsupported_fail_closed",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_wave_e_cases.py",
+          "tests/master_wave_e_mcp_e2e.py:auto",
+          "tests/master_wave_e_mcp_e2e.py:legacy"
+        ],
+        "worker_manifest_operation": "mesh2.refine.delaunay",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "mesh.validate.delaunay_refinement_2",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "validator",
+      "summary": "Independent exact check that a Triangulation2 is a conforming, constrained Delaunay mesh of the polygon-with-holes domain meeting the aspect and size criteria.",
+      "package": "Mesh_2",
+      "aliases": [
+        "validate mesh_2 refinement",
+        "validate 2d mesh",
+        "\u30e1\u30c3\u30b7\u30e5\u751f\u6210\u691c\u8a3c"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Mesh_2"
+        },
+        {
+          "kind": "operation_reference",
+          "identifier": "mesh2.refine.delaunay"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Mesh_2",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Delaunay_mesher_2.h",
+            "sha256": "a7728b69536748e98bc3860107274a222d2426fc13cfcfb2f01e2107a930c58a"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "Triangulation2"
+            ],
+            "formats": [
+              "json"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          },
+          {
+            "slot": "source",
+            "types": [
+              "PolygonWithHoles2"
+            ],
+            "formats": [
+              "json"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "aspect_bound",
+          "size_bound"
+        ],
+        "properties": {
+          "aspect_bound": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 1,
+            "description": "Squared sine of the minimum angle the validator enforces."
+          },
+          "size_bound": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Longest edge the validator enforces."
+          }
+        }
+      },
+      "preconditions": [],
+      "validation": {
+        "required": false,
+        "validators": [],
+        "bindings": {},
+        "terminal_validator": true,
+        "validates": "mesh2.refine.delaunay",
+        "validates_all": [
+          "mesh2.refine.delaunay"
+        ],
+        "required_report_checks": {
+          "status": "pass",
+          "passed": true,
+          "validator": "mesh.validate.delaunay_refinement_2",
+          "checks.input_domain_valid": true,
+          "checks.triangles_counterclockwise": true,
+          "checks.edge_manifold": true,
+          "checks.euler_characteristic": true,
+          "checks.constraints_preserved": true,
+          "checks.boundary_equals_domain_boundary": true,
+          "checks.area_covers_domain": true,
+          "checks.triangles_inside_domain": true,
+          "checks.shape_criterion_satisfied": true,
+          "checks.size_criterion_satisfied": true,
+          "checks.constrained_delaunay": true
+        }
+      },
+      "output_contract": {
+        "schema": "ValidationReport/v1",
+        "required_true_checks": [
+          "input_domain_valid",
+          "triangles_counterclockwise",
+          "edge_manifold",
+          "euler_characteristic",
+          "constraints_preserved",
+          "boundary_equals_domain_boundary",
+          "area_covers_domain",
+          "triangles_inside_domain",
+          "shape_criterion_satisfied",
+          "size_criterion_satisfied",
+          "constrained_delaunay"
+        ],
+        "status": "pass",
+        "failure_or_indeterminate_publish": false,
+        "independence": "validator does not call CGAL Mesh_2 (refine_Delaunay_mesh_2) or any mesher under test"
+      },
+      "dependencies": [
+        "Mesh_2",
+        "Triangulation_2"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "bound_parameters": [
+            "aspect_bound",
+            "size_bound"
+          ],
+          "checks": [
+            "input_domain_valid",
+            "triangles_counterclockwise",
+            "edge_manifold",
+            "euler_characteristic",
+            "constraints_preserved",
+            "boundary_equals_domain_boundary",
+            "area_covers_domain",
+            "triangles_inside_domain",
+            "shape_criterion_satisfied",
+            "size_criterion_satisfied",
+            "constrained_delaunay"
+          ],
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "CGAL filtered-exact predicates (EPICK); independent validators use exact rational/orientation arithmetic",
+        "exact_constructions": "unsupported_fail_closed",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_wave_e_cases.py",
+          "tests/master_wave_e_mcp_e2e.py:auto",
+          "tests/master_wave_e_mcp_e2e.py:legacy"
+        ],
+        "worker_manifest_operation": "mesh.validate.delaunay_refinement_2",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    }
+  ]
+}

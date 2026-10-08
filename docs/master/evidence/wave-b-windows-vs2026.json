@@ -20,7 +20,7 @@
     "pointset.validate.smoothed",
     "pointset.validate.subset"
   ],
-  "worker_sha256": "04daace513d3781f5ce3efe20d757bdf80ba744b0175775f1408edab9230275c",
+  "worker_sha256": "c6fb9bd222538ee722bd0b69edb97fa6256b1b6f56604abab1fb791e47d06ce6",
   "worker_manifest": {
     "actual_cgal_version": "6.2.1",
     "build": {
@@ -4011,7 +4011,8 @@
               "max_deviation": "max_deviation",
               "max_edge_length": "max_edge_length",
               "min_edge_length": "min_edge_length",
-              "mode": "mode"
+              "mode": "mode",
+              "tolerance": "tolerance"
             }
           },
           "validators": [
@@ -4255,6 +4256,7 @@
         "id": "mesh.validate.adaptive_remesh",
         "info": {
           "bound_parameters": [
+            "tolerance",
             "min_edge_length",
             "max_edge_length",
             "mode",
@@ -4265,7 +4267,8 @@
             "topology_preserved",
             "orientation_preserved",
             "hausdorff_within_max_deviation",
-            "no_self_intersections"
+            "no_self_intersections",
+            "edges_follow_curvature_sizing"
           ],
           "input_slots": [
             "candidate",
@@ -4276,6 +4279,89 @@
         "input_types": [
           "TriangleSurfaceMesh",
           "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Mesh_2",
+          "Triangulation_2"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "mesh2.refine.delaunay",
+        "info": {
+          "input_format": "json",
+          "maximum_domain_vertices": 1000,
+          "maximum_output_triangles": 30000,
+          "output_format": "json",
+          "required_parameters": [
+            "aspect_bound",
+            "size_bound"
+          ],
+          "source_header": "CGAL/Delaunay_mesher_2.h",
+          "symbols": [
+            "refine_Delaunay_mesh_2",
+            "Delaunay_mesh_size_criteria_2"
+          ],
+          "validator_parameter_bindings": {
+            "mesh.validate.delaunay_refinement_2": {
+              "aspect_bound": "aspect_bound",
+              "size_bound": "size_bound"
+            }
+          },
+          "validators": [
+            "mesh.validate.delaunay_refinement_2"
+          ]
+        },
+        "input_types": [
+          "PolygonWithHoles2"
+        ],
+        "output_type": "Triangulation2",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Mesh_2",
+          "Triangulation_2"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "mesh.validate.delaunay_refinement_2",
+        "info": {
+          "bound_parameters": [
+            "aspect_bound",
+            "size_bound"
+          ],
+          "checks": [
+            "input_domain_valid",
+            "triangles_counterclockwise",
+            "edge_manifold",
+            "euler_characteristic",
+            "constraints_preserved",
+            "boundary_equals_domain_boundary",
+            "area_covers_domain",
+            "triangles_inside_domain",
+            "shape_criterion_satisfied",
+            "size_criterion_satisfied",
+            "constrained_delaunay"
+          ],
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "Triangulation2",
+          "PolygonWithHoles2"
         ],
         "output_type": "ValidationReport",
         "revision": 1,
@@ -4294,7 +4380,7 @@
     ],
     "worker": "cgal-master-worker"
   },
-  "worker_manifest_sha256": "5c215ed4cf1d337192fb711538560d24b00f292a61c0a9467812113f368b3e3a",
+  "worker_manifest_sha256": "de02697ee8c2a6b3d1ec707bd29f80bccc90d179c97f41849e083871688dcadc",
   "operation_catalog_sha256": "f72ef14a6621a5104423260d97862ccf5fdb0931f129e11fd8c03582fd97d7bd",
   "tests": [
     {

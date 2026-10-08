@@ -22,7 +22,7 @@
     "mesh.validate.tangential_relaxation",
     "mesh.validate.triangulated_faces"
   ],
-  "worker_sha256": "090cfd12a90a250d147ad06e7067565167717f36a398bcd447ec37e81feeff80",
+  "worker_sha256": "c6fb9bd222538ee722bd0b69edb97fa6256b1b6f56604abab1fb791e47d06ce6",
   "worker_manifest": {
     "actual_cgal_version": "6.2.1",
     "build": {
@@ -4288,6 +4288,89 @@
         "supported_kernels": [
           "package_recommended"
         ]
+      },
+      {
+        "dependencies": [
+          "Mesh_2",
+          "Triangulation_2"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "mesh2.refine.delaunay",
+        "info": {
+          "input_format": "json",
+          "maximum_domain_vertices": 1000,
+          "maximum_output_triangles": 30000,
+          "output_format": "json",
+          "required_parameters": [
+            "aspect_bound",
+            "size_bound"
+          ],
+          "source_header": "CGAL/Delaunay_mesher_2.h",
+          "symbols": [
+            "refine_Delaunay_mesh_2",
+            "Delaunay_mesh_size_criteria_2"
+          ],
+          "validator_parameter_bindings": {
+            "mesh.validate.delaunay_refinement_2": {
+              "aspect_bound": "aspect_bound",
+              "size_bound": "size_bound"
+            }
+          },
+          "validators": [
+            "mesh.validate.delaunay_refinement_2"
+          ]
+        },
+        "input_types": [
+          "PolygonWithHoles2"
+        ],
+        "output_type": "Triangulation2",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Mesh_2",
+          "Triangulation_2"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "mesh.validate.delaunay_refinement_2",
+        "info": {
+          "bound_parameters": [
+            "aspect_bound",
+            "size_bound"
+          ],
+          "checks": [
+            "input_domain_valid",
+            "triangles_counterclockwise",
+            "edge_manifold",
+            "euler_characteristic",
+            "constraints_preserved",
+            "boundary_equals_domain_boundary",
+            "area_covers_domain",
+            "triangles_inside_domain",
+            "shape_criterion_satisfied",
+            "size_criterion_satisfied",
+            "constrained_delaunay"
+          ],
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "Triangulation2",
+          "PolygonWithHoles2"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
       }
     ],
     "protocol": 1,
@@ -4299,7 +4382,7 @@
     ],
     "worker": "cgal-master-worker"
   },
-  "worker_manifest_sha256": "e138dd296f559e1b652cc3a8b4f41344928a6713370f2eb7e54b4ffd00e7eb2e",
+  "worker_manifest_sha256": "de02697ee8c2a6b3d1ec707bd29f80bccc90d179c97f41849e083871688dcadc",
   "operation_catalog_sha256": "6ad0605f087a7fdf47e8bd8c16e8a86f0ab3bf94de119f942a01b5b0e3d0d05a",
   "tests": [
     {

@@ -48,14 +48,14 @@
   },
   "family_contract_sha256": "8aff63b2e441b8e4aaae368b2d3cec81c4f12f996e31858af4142d6ed4dfeddd",
   "family_contract_source_path": "scripts/master_replay_families.py",
-  "family_contract_source_sha256": "e675499a0d675f82c749c4b77c93fe2f74d420cd840507d88e6c5dbc169019a6",
+  "family_contract_source_sha256": "3fdcf0bfb52d20b6a88b43838f16e58164ceb8603210600c3a1edac028781728",
   "family_contract_source_hash_encoding": "utf8-lf",
   "catalog_baseline_sha256": "143ec18a5b64d506aad60dc24b0a1ea30940c715d1223b3465fa140aeb9d02a7",
-  "operation_registry_sha256": "326d4df3fdb66295ecdb2d91beb7fc070773e61af7ff6cdd22892aa7273e9322",
+  "operation_registry_sha256": "d7655fe5fb375a21be5cc17e5715763f71e546350470ef2de5fb93dc4dd016af",
   "operation_registry_hash_encoding": "utf8-lf",
   "policy_catalog_sha256": "45f4be759288aaeb834a3ce97aa64ee7768048b15534618fc8c19512801f9a9f",
   "policy_catalog_hash_encoding": "utf8-lf",
-  "worker_sha256": "090cfd12a90a250d147ad06e7067565167717f36a398bcd447ec37e81feeff80",
+  "worker_sha256": "c6fb9bd222538ee722bd0b69edb97fa6256b1b6f56604abab1fb791e47d06ce6",
   "worker_binary_format": "pe",
   "worker_manifest": {
     "actual_cgal_version": "6.2.1",
@@ -4322,6 +4322,89 @@
         "supported_kernels": [
           "package_recommended"
         ]
+      },
+      {
+        "dependencies": [
+          "Mesh_2",
+          "Triangulation_2"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "mesh2.refine.delaunay",
+        "info": {
+          "input_format": "json",
+          "maximum_domain_vertices": 1000,
+          "maximum_output_triangles": 30000,
+          "output_format": "json",
+          "required_parameters": [
+            "aspect_bound",
+            "size_bound"
+          ],
+          "source_header": "CGAL/Delaunay_mesher_2.h",
+          "symbols": [
+            "refine_Delaunay_mesh_2",
+            "Delaunay_mesh_size_criteria_2"
+          ],
+          "validator_parameter_bindings": {
+            "mesh.validate.delaunay_refinement_2": {
+              "aspect_bound": "aspect_bound",
+              "size_bound": "size_bound"
+            }
+          },
+          "validators": [
+            "mesh.validate.delaunay_refinement_2"
+          ]
+        },
+        "input_types": [
+          "PolygonWithHoles2"
+        ],
+        "output_type": "Triangulation2",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Mesh_2",
+          "Triangulation_2"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "mesh.validate.delaunay_refinement_2",
+        "info": {
+          "bound_parameters": [
+            "aspect_bound",
+            "size_bound"
+          ],
+          "checks": [
+            "input_domain_valid",
+            "triangles_counterclockwise",
+            "edge_manifold",
+            "euler_characteristic",
+            "constraints_preserved",
+            "boundary_equals_domain_boundary",
+            "area_covers_domain",
+            "triangles_inside_domain",
+            "shape_criterion_satisfied",
+            "size_criterion_satisfied",
+            "constrained_delaunay"
+          ],
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "Triangulation2",
+          "PolygonWithHoles2"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
       }
     ],
     "protocol": 1,
@@ -4333,7 +4416,7 @@
     ],
     "worker": "cgal-master-worker"
   },
-  "worker_manifest_sha256": "e138dd296f559e1b652cc3a8b4f41344928a6713370f2eb7e54b4ffd00e7eb2e",
+  "worker_manifest_sha256": "de02697ee8c2a6b3d1ec707bd29f80bccc90d179c97f41849e083871688dcadc",
   "tests": [
     {
       "id": "family-7.12-replay-cases",
@@ -4485,7 +4568,7 @@
       "case_id": "polygon-with-hole",
       "operation_id": "polygon.analysis.properties",
       "revision": 1,
-      "worker_manifest_sha256": "e138dd296f559e1b652cc3a8b4f41344928a6713370f2eb7e54b4ffd00e7eb2e",
+      "worker_manifest_sha256": "de02697ee8c2a6b3d1ec707bd29f80bccc90d179c97f41849e083871688dcadc",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -4638,7 +4721,7 @@
       "case_id": "polygon-l-shape",
       "operation_id": "polygon.analysis.properties",
       "revision": 1,
-      "worker_manifest_sha256": "e138dd296f559e1b652cc3a8b4f41344928a6713370f2eb7e54b4ffd00e7eb2e",
+      "worker_manifest_sha256": "de02697ee8c2a6b3d1ec707bd29f80bccc90d179c97f41849e083871688dcadc",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -4791,7 +4874,7 @@
       "case_id": "polygon-bowtie",
       "operation_id": "polygon.analysis.properties",
       "revision": 1,
-      "worker_manifest_sha256": "e138dd296f559e1b652cc3a8b4f41344928a6713370f2eb7e54b4ffd00e7eb2e",
+      "worker_manifest_sha256": "de02697ee8c2a6b3d1ec707bd29f80bccc90d179c97f41849e083871688dcadc",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -4941,7 +5024,7 @@
       "case_id": "containment-with-hole",
       "operation_id": "polygon.query.containment",
       "revision": 1,
-      "worker_manifest_sha256": "e138dd296f559e1b652cc3a8b4f41344928a6713370f2eb7e54b4ffd00e7eb2e",
+      "worker_manifest_sha256": "de02697ee8c2a6b3d1ec707bd29f80bccc90d179c97f41849e083871688dcadc",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -5109,7 +5192,7 @@
       "case_id": "containment-bowtie-rejected",
       "operation_id": "polygon.query.containment",
       "revision": 1,
-      "worker_manifest_sha256": "e138dd296f559e1b652cc3a8b4f41344928a6713370f2eb7e54b4ffd00e7eb2e",
+      "worker_manifest_sha256": "de02697ee8c2a6b3d1ec707bd29f80bccc90d179c97f41849e083871688dcadc",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
