@@ -278,6 +278,11 @@ Criteria build_criteria(const Criteria3& c) {
                       .cell_size(SizingField{c.regions, c.cell_size}).edge_size(edge));
 }
 
+// With edge_size the facet and cell criteria are checked only on the facets and cells away from the
+// protected sharp edges. Fewer than this share of all facets (or cells), or none, makes the scoped
+// checks meaningless and fails closed with CRITERIA_SCOPE_EMPTY.
+constexpr double kMinimumCheckedShare = 0.05;
+
 Json criteria_metrics(const Criteria3& c) {
   Json metrics = {{"facet_angle", c.facet_angle},
                   {"facet_size", c.facet_size},
@@ -961,6 +966,13 @@ Json validate_polyhedral(const Request& request, const Criteria3& criteria, cons
     centres.push_back(circumcentre(a, b, c, &radius));
     maximum_facet_circumradius = std::max(maximum_facet_circumradius, radius);
   }
+  const std::size_t total_facets = analysis.boundary_faces.size();
+  const std::size_t checked_facets = total_facets - feature_facets;
+  if (criteria.edge_size &&
+      (checked_facets == 0 || static_cast<double>(checked_facets) < kMinimumCheckedShare * static_cast<double>(total_facets))) {
+    fail_validation("CRITERIA_SCOPE_EMPTY",
+                    "Too few boundary facets lie away from the protected sharp edges for the facet criteria to be checked");
+  }
   const double maximum_centre_distance =
       wave_d::one_sided_deviation(point_cloud(centres), raw, kNoSubdivision, false).sampled_maximum;
   if (minimum_facet_angle < facet_angle - 1e-6) {
@@ -984,6 +996,12 @@ Json validate_polyhedral(const Request& request, const Criteria3& criteria, cons
   // Cell criteria, recomputed per cell (feature cells excepted when edge_size is requested).
   const RegionReport regions =
       check_cell_regions(mesh, criteria, vertex_tolerance, criteria.edge_size ? &feature_vertex : nullptr);
+  const std::size_t checked_cells = analysis.cell_count - regions.excluded_cells;
+  if (criteria.edge_size &&
+      (checked_cells == 0 || static_cast<double>(checked_cells) < kMinimumCheckedShare * static_cast<double>(analysis.cell_count))) {
+    fail_validation("CRITERIA_SCOPE_EMPTY",
+                    "Too few tetrahedra lie away from the protected sharp edges for the cell criteria to be checked");
+  }
   if (regions.maximum_radius_edge > radius_edge * (1.0 + 1e-9)) {
     fail_validation("RADIUS_EDGE_VIOLATED", "A tetrahedron radius-edge ratio exceeds cell_radius_edge_ratio");
   }
@@ -1045,6 +1063,10 @@ Json validate_polyhedral(const Request& request, const Criteria3& criteria, cons
     subdomains[std::to_string(entry.first)] = {
         {"cell_count", analysis.subdomain_cells.at(entry.first)}, {"volume", static_cast<double>(entry.second)}};
   }
+  // In feature mode the criteria hold only on the unprotected facets/cells: report them under
+  // scoped keys so they cannot read as full passes.
+  const std::string scope = criteria.edge_size ? "_on_unprotected_facets_only" : "";
+  const std::string cell_scope = criteria.edge_size ? "_on_unprotected_cells_only" : "";
   Json report = {
       {"checks",
        {{"source_domain_valid", true},
@@ -1054,14 +1076,20 @@ Json validate_polyhedral(const Request& request, const Criteria3& criteria, cons
         {"solid_euler_characteristic_matches_domain", true},
         {"boundary_vertices_on_domain_surface", true},
         {"outward_boundary_orientation", true},
-        {"facet_angle_criterion_satisfied", true},
-        {"facet_size_criterion_satisfied", true},
-        {"facet_distance_criterion_satisfied", true},
+        {"facet_angle_criterion_satisfied" + scope, true},
+        {"facet_size_criterion_satisfied" + scope, true},
+        {"facet_distance_criterion_satisfied" + scope, true},
         {"hausdorff_bound_satisfied", true},
         {"source_coverage_bound_satisfied", true},
-        {"cell_size_criterion_satisfied", true},
-        {"cell_radius_edge_criterion_satisfied", true},
+        {"cell_size_criterion_satisfied" + cell_scope, true},
+        {"cell_radius_edge_criterion_satisfied" + cell_scope, true},
         {"volume_matches_domain", true}}},
+      {"criteria_scope",
+       {{"scoped", criteria.edge_size.has_value()},
+        {"facets", {{"checked", checked_facets}, {"excluded", feature_facets}, {"total", total_facets}}},
+        {"cells", {{"checked", checked_cells}, {"excluded", regions.excluded_cells},
+                   {"total", analysis.cell_count}}},
+        {"minimum_checked_share", kMinimumCheckedShare}}},
       {"domain_kind", "polyhedral"},
       {"optional_criteria", optional_report},
       {"facets_excluded_from_facet_criteria", feature_facets},
@@ -1366,6 +1394,12 @@ std::vector<OperationDefinition> volume_mesh_operations() {
          "facet_distance_criterion_satisfied", "hausdorff_bound_satisfied",
          "cell_size_criterion_satisfied", "cell_radius_edge_criterion_satisfied",
          "volume_matches_domain"}},
+       {"feature_mode_scoped_checks",
+        {{"facet_angle_criterion_satisfied", "facet_angle_criterion_satisfied_on_unprotected_facets_only"},
+         {"facet_size_criterion_satisfied", "facet_size_criterion_satisfied_on_unprotected_facets_only"},
+         {"facet_distance_criterion_satisfied", "facet_distance_criterion_satisfied_on_unprotected_facets_only"},
+         {"cell_size_criterion_satisfied", "cell_size_criterion_satisfied_on_unprotected_cells_only"},
+         {"cell_radius_edge_criterion_satisfied", "cell_radius_edge_criterion_satisfied_on_unprotected_cells_only"}}},
        {"implicit_domain_extra_checks",
         {"vertices_inside_domain", "interior_vertices_strictly_inside", "boundary_area_matches_analytic"}},
        {"polyhedral_domain_extra_checks", {"source_coverage_bound_satisfied"}}}));

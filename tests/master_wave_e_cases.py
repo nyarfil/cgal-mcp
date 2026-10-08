@@ -924,7 +924,10 @@ def run_volume_pair(scratch, domain, parameters):
     _, validation_path = ok(validation)
     report = json.loads(validation_path.read_text("utf-8"))
     assert report["status"] == "pass" and report["passed"] is True, report
-    assert report["checks"] and all(report["checks"].values()) and len(report["checks"]) >= 17, report
+    # The count is the base set (14 checks plus 3 domain-specific ones) plus the optional criteria
+    # actually requested in this call, so it is exact per call rather than a fixed constant.
+    assert report["checks"] and all(report["checks"].values()), report
+    assert len(report["checks"]) == 17 + sum(name in report["checks"] for name in OPTIONAL_CHECKS), report
     assert report["validator"] == VOL_VALIDATOR, report
     return report, json.loads(path.read_text("utf-8")), result["metrics"], candidate
 
@@ -1182,6 +1185,9 @@ def lattice(a, b, c, divisions: int):
             yield [a[k] * (1 - s - t) + b[k] * s + c[k] * t for k in range(3)]
 
 
+OPTIONAL_CHECKS = ("cell_size_regions_satisfied", "facet_topology_satisfied", "feature_edge_size_satisfied")
+
+
 def run_poly_pair(scratch, source, parameters):
     result = invoke(scratch, VOL_GENERATE, [source], parameters)
     output, path = ok(result)
@@ -1191,7 +1197,11 @@ def run_poly_pair(scratch, source, parameters):
     _, validation_path = ok(validation)
     report = json.loads(validation_path.read_text("utf-8"))
     assert report["status"] == "pass" and report["passed"] is True, report
-    assert report["checks"] and all(report["checks"].values()) and len(report["checks"]) >= 15, report
+    # Base 15 checks (feature mode renames five of them to scoped keys, same count) plus the optional
+    # criteria requested in this call.
+    assert report["checks"] and all(report["checks"].values()), report
+    assert len(report["checks"]) == 15 + sum(name in report["checks"] for name in OPTIONAL_CHECKS), report
+    assert report["criteria_scope"]["scoped"] is ("feature_edge_size_satisfied" in report["checks"]), report
     assert report["validator"] == VOL_VALIDATOR and report["domain_kind"] == "polyhedral", report
     return report, json.loads(path.read_text("utf-8")), result["metrics"], candidate
 
@@ -1596,6 +1606,17 @@ def criteria_cases(scratch: pathlib.Path) -> None:
         assert result["metrics"]["domain"] == "CGAL::Polyhedral_mesh_domain_with_features_3", result["metrics"]
         report = json.loads(ok(invoke(scratch, VOL_VALIDATOR, [candidate, cube], parameters))[1].read_text("utf-8"))
         assert report["status"] == "pass" and report["checks"]["feature_edge_size_satisfied"] is True, report
+        # Feature mode reports the facet/cell criteria under scoped keys, never as full passes.
+        scope = report["criteria_scope"]
+        assert scope["scoped"] is True and scope["facets"]["excluded"] > 0, report
+        assert scope["facets"]["checked"] + scope["facets"]["excluded"] == scope["facets"]["total"], report
+        assert scope["cells"]["checked"] + scope["cells"]["excluded"] == scope["cells"]["total"], report
+        assert scope["facets"]["checked"] >= scope["minimum_checked_share"] * scope["facets"]["total"], report
+        assert scope["cells"]["checked"] >= scope["minimum_checked_share"] * scope["cells"]["total"], report
+        assert "facet_angle_criterion_satisfied_on_unprotected_facets_only" in report["checks"], report
+        assert "cell_size_criterion_satisfied_on_unprotected_cells_only" in report["checks"], report
+        assert "facet_angle_criterion_satisfied" not in report["checks"], report
+        assert "cell_radius_edge_criterion_satisfied" not in report["checks"], report
         mesh = json.loads(path.read_text("utf-8"))
         chains = cube_feature_chains(mesh)
         assert len(chains) == 12 and all(c["joined"] for c in chains), chains
@@ -1622,6 +1643,14 @@ def criteria_cases(scratch: pathlib.Path) -> None:
     # The facet-criteria exclusion of feature facets applies only when edge_size is requested: the
     # same feature-protected mesh is judged by all facets (and fails the facet angle) without it.
     rejected(invoke(scratch, VOL_VALIDATOR, [loose_candidate, cube], cube_parameters), "FACET_ANGLE_VIOLATED")
+    # Fail closed: a fabricated candidate with only the eight cube corners (five tetrahedra) has every
+    # boundary facet touching a protected sharp edge, so the scoped facet criteria would check nothing.
+    corners = [[float(i & 1), float((i >> 1) & 1), float((i >> 2) & 1)] for i in range(8)]
+    corner_cells = [[1, 2, 4, 7], [0, 1, 2, 4], [3, 1, 2, 7], [5, 1, 4, 7], [6, 2, 4, 7]]
+    corner_cells = [c if det3([corners[i] for i in c]) > 0 else [c[0], c[1], c[3], c[2]] for c in corner_cells]
+    corner_candidate = write_tet(scratch, corners, corner_cells)
+    rejected(invoke(scratch, VOL_VALIDATOR, [corner_candidate, cube], {**cube_parameters, "edge_size": mm(1.5)}),
+             "CRITERIA_SCOPE_EMPTY")
     # Cell regions work on polyhedral domains too.
     poly_regional = {**cube_parameters, "cell_size_regions": [region([0.0, 0.0, 0.0], [0.5, 1.0, 1.0], 0.15)]}
     result = invoke(scratch, VOL_GENERATE, [cube], poly_regional)

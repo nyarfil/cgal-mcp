@@ -2264,7 +2264,15 @@ def validator_report_failures(validator: dict, report: object, transform_id: str
         failures.append("passed")
     if "validates" in report and report.get("validates") != transform_id:
         failures.append("validates")
+    # A feature-scoped report (criteria_scope.scoped) must carry the scoped keys instead of the full
+    # ones; the full key must then be absent so a scoped pass cannot read as a full pass.
+    scoped = isinstance(report.get("criteria_scope"), dict) and report["criteria_scope"].get("scoped") is True
+    scoped_keys = validation.get("scoped_report_checks", {})
     for key, expected in validation.get("required_report_checks", {}).items():
+        if scoped and key in scoped_keys:
+            if _report_value(report, key)[0] or _report_value(report, scoped_keys[key]) != (True, expected):
+                failures.append(key)
+            continue
         if _report_value(report, key) != (True, expected):
             failures.append(key)
     for key in validation.get("required_report_fields", []):

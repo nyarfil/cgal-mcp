@@ -119,6 +119,8 @@ fixtureは単位立方体（体積1）、L字角柱（3）、階段形角柱（6
 validatorは各criterionを出力とrequestだけから独立に再計算します：領域別cell外接半径（`CELL_SIZE_REGION_VIOLATED`）、
 特徴辺ごとのメッシュ辺連鎖の被覆と長さ（`FEATURE_EDGE_NOT_PROTECTED`／`EDGE_SIZE_VIOLATED`）、facet頂点のdomain面上確認。
 多面体の体積許容はfacetごとの標本最大偏差から導き、境界が緩すぎれば`VOLUME_BOUND_TOO_LOOSE`で失敗します（0.5へのクランプはしません）。
+`edge_size`指定時、facet・cell基準は鋭い辺の頂点に触れないfacet/cellだけで検査されます。この検査は`*_on_unprotected_facets_only`／`*_on_unprotected_cells_only`という限定キーで報告し、
+全数検査のキーは出しません。`criteria_scope`に検査数・除外数・総数を記録し、検査対象がゼロ、または総数の5%未満なら`CRITERIA_SCOPE_EMPTY`で失敗します（鋭い辺に全facetが触れる捏造候補を陰性対照とし、除外を使わない場合は同じメッシュが`FACET_ANGLE_VIOLATED`で失敗します）。
 再生試験は、box内外の外接半径、立方体12辺上の頂点間隔と辺長（edge_size 0.5で36、0.25で48区間）、基準を締めた陰性対照（各criterion固有のcode）を生出力から再計算します。
 `edge_size`指定時は保護された特徴に接するfacetとcellにはfacet／cell基準を適用しません（Mesh_3が保護球内を細分しないため。既知の限界）。
 `facet_topology`は単一パッチのdomainでは出力が変わりません（受理・伝達・検査のみ）。
