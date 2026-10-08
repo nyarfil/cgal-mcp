@@ -1231,6 +1231,28 @@ VOL_SCALED = _fx("volume_sphere_scaled.json", "16e4a1f1d21a838c3af902eaa4d788bb2
 VOL_TWO_SUBDOMAINS = _fx("volume_sphere_two_subdomains.json", "98cb02dfa2ad5026d88d83118ffc57b0a59ee1413202235b69dd0304c2273665")
 VOL_OCTAHEDRON = _fx("volume_sphere_octahedron_r2.json", "774ac96291ff9e2d0c5eb11c3fd8abb0b81fd32d8849408e00ab9bf258bc0931")
 
+POLY_CUBE = _fx("poly_cube.off", "7c6caa2b4ca6ceb1ddcfb09bdd6764fbf9311763e99b3f0e716064c8164e28ac")
+POLY_L_PRISM = _fx("poly_l_prism.off", "ff474d287097017c7ef598c85696efa92a11b7d6b7a1bd16dd96c471c4a650bb")
+POLY_STAIR_PRISM = _fx("poly_stair_prism.off", "dc7f8a1e59f99c4d0f0fae2baf292ef91bdb70e3b0bc1f0aa4390fd66d2c9569")
+POLY_TILTED_BOX = _fx("poly_tilted_box.off", "eac37c93d9ecb251360f0070544e5f9eb4f710c3dd8ab55ddfcf67fb24adc991")
+POLY_CUBE_OPEN = _fx("poly_cube_open.off", "0446fa9718591641b6f2c066e98dd4f64068b14bb6ebbf53f884452c9ea4872a")
+POLY_CUBE_INVERTED = _fx("poly_cube_inverted.off", "351c7f2977d911fbcd75c7df03ce1e163cef0bb92a32c4d0b0d9176296c3087b")
+POLY_CUBE_INCONSISTENT = _fx("poly_cube_inconsistent.off", "f5979445dbaad5a9ddbb050c3ccb257c169fec7382e690cc8e17f3a690a18e9b")
+POLY_CUBE_SELF_INTERSECTING = _fx("poly_cube_self_intersecting.off", "54645a9fd72fb8f16efe43cff9c5ca2c5084a5f76de6e59d70fadcb4aa066d61")
+POLY_CUBE_NONMANIFOLD = _fx("poly_cube_nonmanifold.off", "42af0e10714897a1129e1ef2acc815fe95501ae40b3f19c48d712deab375ae7b")
+POLY_TWO_CUBES = _fx("poly_two_cubes.off", "7d2e06074561d742d2743d87c19ec287ae4fbfe45b41e76f02aba4c3d65aa305")
+POLY_CUBE_MESH = _fx("poly_cube_mesh.json", "a634d1ad14ac59e768c6c00e7959739c90b1ee46e7742081a5fc8d6e0d747717")
+POLY_L_MESH = _fx("poly_l_prism_mesh.json", "157e6ae4f2a3a96b6ba0e90a4663d26f487ed6fef15ea1ac59c69a6ec9c595f8")
+POLY_BOX_IN_L_MESH = _fx("poly_box_in_l_prism_mesh.json", "3e93ece081fd80f8abd2d72fc9e9f31cfcaff24c7849e24c043321f29bbd440c")
+POLY_MISSING_INTERIOR = _fx("poly_cube_missing_interior_cell.json", "52b17bcaebaa67000d42ad46f8a30c96b504d2f088485eb82e889668c3ccb2b1")
+POLY_MISSING_BOUNDARY = _fx("poly_cube_missing_boundary_cell.json", "4a4f5afc9509252640a9fd78bbf41eaeac235d450f6341bd329708cb305e8439")
+POLY_FLIPPED = _fx("poly_cube_flipped_cell.json", "6c815354d6407623a8a43fa4acc8d501335040f4f4aadae163c46ed2d4b0562c")
+POLY_DUPLICATE = _fx("poly_cube_duplicate_cell.json", "8387ec688a11e0283b8cda8c7d0d0b1b4f1f1867f51f2b07a8d72f9f85d37c6f")
+POLY_SHIFTED = _fx("poly_cube_shifted.json", "71cb8f7ac36a89027acb07cb784d15e23efd21cf5487a6d04fd932ad3f2a1638")
+POLY_SCALED = _fx("poly_cube_scaled.json", "30587f6995545aeee9563080c5b23fd4b2a7deabbd3a869c925a5f08b743404e")
+POLY_BUMPED = _fx("poly_cube_bumped_vertex.json", "2ad85ea3a6532c27e05adf7eaffa54ed8774723080f1375ac945442e8ca306b0")
+POLY_TWO_SUBDOMAINS = _fx("poly_cube_two_subdomains.json", "102457603f2f90b74ddf4b3fa3502828754d69310c58f63742ab880aa6bc8923")
+
 VOL_GEN = "mesh.volume.generate"
 VOL_VAL = "mesh.validate.volume_mesh"
 
@@ -1244,11 +1266,11 @@ def _tet(fixture: dict) -> dict:
     return _json_input(fixture, "TetrahedralMesh")
 
 
-def _volume_checks() -> list[list]:
+def _volume_checks(domain: str = "CGAL::Labeled_mesh_domain_3") -> list[list]:
     return [
         ["metrics.algorithm", "==", "CGAL::make_mesh_3"],
         ["metrics.criteria", "==", "CGAL::Mesh_criteria_3"],
-        ["metrics.domain", "==", "CGAL::Labeled_mesh_domain_3"],
+        ["metrics.domain", "==", domain],
         ["metrics.perturbation", "==", False],
         ["metrics.exudation", "==", False],
         ["output:geometry:measure:tet.tetrahedron_count", "==", {"path": "metrics.tetrahedron_count"}],
@@ -1257,6 +1279,36 @@ def _volume_checks() -> list[list]:
         ["output:geometry:measure:tet.max_face_use", "<=", 2],
         ["output:geometry:measure:tet.subdomain_count", "==", 1],
         ["output:geometry:measure:tet.min_tetrahedron_volume", ">", 0.0],
+    ]
+
+
+def _poly(fixture: dict) -> dict:
+    return _mesh(fixture)
+
+
+def _poly_checks(name: str, volume: float, area: float, volume_tolerance: float, size: float,
+                 distance: float, angle: float, ratio: float, cell: float) -> list[list]:
+    """Assertions on a polyhedral Mesh_3 output, re-measured against the raw OFF source."""
+    off = f"({name})"
+    return [
+        *_volume_checks("CGAL::Polyhedral_mesh_domain_3"),
+        ["metrics.domain_kind", "==", "polyhedral"],
+        ["metrics.feature_protection", "==", False],
+        ["metrics.source_volume", "approx", [volume, 1e-9]],
+        ["metrics.source_area", "approx", [area, 1e-9]],
+        ["output:geometry:measure:tet.euler_characteristic", "==", 1],
+        ["output:geometry:measure:tet.boundary_euler_characteristic", "==", 2],
+        ["output:geometry:measure:tet.volume", "approx", [volume, volume_tolerance * volume]],
+        ["output:geometry:measure:tet.volume", "<=", volume + 1e-9],
+        ["output:geometry:measure:tet.boundary_area", "approx", [area, 0.06 * area]],
+        ["output:geometry:measure:tet.max_boundary_vertex_distance_to_off" + off, "<=", 1e-9],
+        ["output:geometry:measure:tet.max_boundary_sample_distance_to_off" + off, "<=", size],
+        ["output:geometry:measure:tet.max_off_sample_distance_to_boundary" + off, "<=", 2.0 * size],
+        ["output:geometry:measure:tet.max_boundary_facet_center_distance_to_off" + off, "<=", distance + 1e-9],
+        ["output:geometry:measure:tet.min_boundary_facet_angle", ">=", angle],
+        ["output:geometry:measure:tet.max_boundary_facet_circumradius", "<=", size + 1e-9],
+        ["output:geometry:measure:tet.max_circumradius", "<=", cell + 1e-9],
+        ["output:geometry:measure:tet.max_radius_edge", "<=", ratio + 1e-9],
     ]
 
 
@@ -1331,8 +1383,24 @@ FAMILY_7_14 = {
         },
         "major.7.14.03": {
             "operation_ids": [VOL_GEN],
-            "symbols": ["make_mesh_3", "Labeled_mesh_domain_3", "Mesh_criteria_3"],
-            "symbol_notes": "CGAL::make_mesh_3 (Mesh_3) over a Labeled_mesh_domain_3 built from a fixed "
+            "symbols": ["make_mesh_3", "Labeled_mesh_domain_3", "Polyhedral_mesh_domain_3",
+                        "Mesh_criteria_3"],
+            "symbol_notes": "CGAL::make_mesh_3 (Mesh_3) over a Polyhedral_mesh_domain_3 built from a "
+                            "validated closed, outward oriented, single-component, intersection-free "
+                            "TriangleSurfaceMesh (no feature protection) meshes the solid with typed "
+                            "criteria: a unit cube (volume 1), an L-shaped prism (3), a staircase prism "
+                            "(6) and a tilted 1x2x3 box (6). Every output is re-measured here from the "
+                            "raw OFF source: boundary vertices lie on the source triangles, boundary "
+                            "facet samples are within facet_size of the source and source samples "
+                            "within twice facet_size of the boundary facets, facet circumcentres are "
+                            "within facet_distance, the cell volume is within the stated bound of the "
+                            "divergence-theorem volume, Euler characteristics are 1 and 2, and the "
+                            "facet and cell criteria hold. Open, non-manifold, self-intersecting, "
+                            "inconsistently oriented, inverted or multi-component sources are refused; "
+                            "tampered, shifted, scaled, wrong-source and too-coarse meshes are "
+                            "rejected by the validator. Image domains, polyhedral feature protection, "
+                            "perturbation and exudation are not implemented. Implicit domains: "
+                            "CGAL::make_mesh_3 (Mesh_3) over a Labeled_mesh_domain_3 built from a fixed "
                             "enumerated set of typed implicit domains (sphere radius 2 and 2.5, ellipsoid "
                             "3x2x1.5, torus R=3 r=1; no free-form expressions) meshes the solid with "
                             "typed facet angle/size/distance and cell radius-edge/size criteria. The "
@@ -1347,7 +1415,8 @@ FAMILY_7_14 = {
                             "validator recomputes topology, exact orientation, the analytic domain "
                             "relation and every criterion without calling Mesh_3.",
             "case_ids": ["volume-sphere", "volume-sphere-fine", "volume-sphere-r25", "volume-ellipsoid",
-                         "volume-torus"],
+                         "volume-torus", "volume-poly-cube", "volume-poly-cube-fine", "volume-poly-l-prism",
+                         "volume-poly-stair-prism", "volume-poly-tilted-box"],
         },
     },
     "unbound": {
@@ -1534,8 +1603,21 @@ FAMILY_7_14 = {
             ["output:geometry:measure:tet.max_circumradius", "<=", 0.6 + 1e-9],
             ["output:geometry:measure:tet.max_radius_edge", "<=", 3.0 + 1e-9],
         ]),
+        _case("volume-poly-cube", VOL_GEN, [_poly(POLY_CUBE)], _vol(25.0, 0.25, 0.02, 3.0, 0.3),
+              _poly_checks("poly_cube.off", 1.0, 6.0, 0.02, 0.25, 0.02, 25.0, 3.0, 0.3)),
+        _case("volume-poly-cube-fine", VOL_GEN, [_poly(POLY_CUBE)], _vol(25.0, 0.15, 0.01, 2.5, 0.15), [
+            *_poly_checks("poly_cube.off", 1.0, 6.0, 0.01, 0.15, 0.01, 25.0, 2.5, 0.15),
+            ["metrics.tetrahedron_count", ">=", 2000],
+        ]),
+        _case("volume-poly-l-prism", VOL_GEN, [_poly(POLY_L_PRISM)], _vol(25.0, 0.4, 0.03, 3.0, 0.5),
+              _poly_checks("poly_l_prism.off", 3.0, 14.0, 0.02, 0.4, 0.03, 25.0, 3.0, 0.5)),
+        _case("volume-poly-stair-prism", VOL_GEN, [_poly(POLY_STAIR_PRISM)], _vol(25.0, 0.4, 0.03, 3.0, 0.5),
+              _poly_checks("poly_stair_prism.off", 6.0, 24.0, 0.02, 0.4, 0.03, 25.0, 3.0, 0.5)),
+        _case("volume-poly-tilted-box", VOL_GEN, [_poly(POLY_TILTED_BOX)], _vol(25.0, 0.5, 0.04, 3.0, 0.6),
+              _poly_checks("poly_tilted_box.off", 6.0, 22.0, 0.02, 0.5, 0.04, 25.0, 3.0, 0.6)),
     ],
     "pairs": [
+        {"kind": "different_outputs", "cases": ["volume-poly-cube", "volume-poly-cube-fine"]},
         {"kind": "different_outputs", "cases": ["surface-sphere", "surface-sphere-fine"]},
         {"kind": "different_outputs", "cases": ["volume-sphere", "volume-sphere-fine"]},
         {"kind": "different_outputs", "cases": ["mesh2-square-size2", "mesh2-square-size1"]},
@@ -1703,6 +1785,102 @@ FAMILY_7_14 = {
         {"id": "volume-coarse-octahedron-area-rejected", "operation": VOL_VAL,
          "inputs": [_tet(VOL_OCTAHEDRON), _surface(DOM_SPHERE)], "parameters": _vol(30.0, 5.0, 5.0, 100.0, 50.0),
          "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "AREA_MISMATCH"},
+        {"id": "volume-poly-open-source-rejected", "operation": VOL_GEN,
+         "inputs": [_poly(POLY_CUBE_OPEN)], "parameters": _vol(25.0, 0.25, 0.02, 3.0, 0.3),
+         "expect_error_class": "PRECONDITION_FAILED", "expect_error_code": "MESH_NOT_CLOSED"},
+        {"id": "volume-poly-open-source-validator-rejected", "operation": VOL_VAL,
+         "inputs": [_tet(POLY_CUBE_MESH), _poly(POLY_CUBE_OPEN)], "parameters": _vol(25.0, 0.25, 0.02, 3.0, 0.3),
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "SOURCE_MESH_NOT_CLOSED"},
+        {"id": "volume-poly-inverted-source-rejected", "operation": VOL_GEN,
+         "inputs": [_poly(POLY_CUBE_INVERTED)], "parameters": _vol(25.0, 0.25, 0.02, 3.0, 0.3),
+         "expect_error_class": "PRECONDITION_FAILED", "expect_error_code": "INWARD_ORIENTED_INPUT"},
+        {"id": "volume-poly-inverted-source-validator-rejected", "operation": VOL_VAL,
+         "inputs": [_tet(POLY_CUBE_MESH), _poly(POLY_CUBE_INVERTED)], "parameters": _vol(25.0, 0.25, 0.02, 3.0, 0.3),
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "SOURCE_INWARD_ORIENTED_INPUT"},
+        {"id": "volume-poly-inconsistent-source-rejected", "operation": VOL_GEN,
+         "inputs": [_poly(POLY_CUBE_INCONSISTENT)], "parameters": _vol(25.0, 0.25, 0.02, 3.0, 0.3),
+         "expect_error_class": "PRECONDITION_FAILED", "expect_error_code": "INCONSISTENT_ORIENTATION"},
+        {"id": "volume-poly-inconsistent-source-validator-rejected", "operation": VOL_VAL,
+         "inputs": [_tet(POLY_CUBE_MESH), _poly(POLY_CUBE_INCONSISTENT)], "parameters": _vol(25.0, 0.25, 0.02, 3.0, 0.3),
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "SOURCE_INCONSISTENT_ORIENTATION"},
+        {"id": "volume-poly-self-intersecting-source-rejected", "operation": VOL_GEN,
+         "inputs": [_poly(POLY_CUBE_SELF_INTERSECTING)], "parameters": _vol(25.0, 0.25, 0.02, 3.0, 0.3),
+         "expect_error_class": "PRECONDITION_FAILED", "expect_error_code": "SELF_INTERSECTING_INPUT"},
+        {"id": "volume-poly-self-intersecting-source-validator-rejected", "operation": VOL_VAL,
+         "inputs": [_tet(POLY_CUBE_MESH), _poly(POLY_CUBE_SELF_INTERSECTING)], "parameters": _vol(25.0, 0.25, 0.02, 3.0, 0.3),
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "SOURCE_SELF_INTERSECTING_INPUT"},
+        {"id": "volume-poly-two-components-source-rejected", "operation": VOL_GEN,
+         "inputs": [_poly(POLY_TWO_CUBES)], "parameters": _vol(25.0, 0.25, 0.02, 3.0, 0.3),
+         "expect_error_class": "PRECONDITION_FAILED", "expect_error_code": "MULTIPLE_COMPONENTS"},
+        {"id": "volume-poly-two-components-source-validator-rejected", "operation": VOL_VAL,
+         "inputs": [_tet(POLY_CUBE_MESH), _poly(POLY_TWO_CUBES)], "parameters": _vol(25.0, 0.25, 0.02, 3.0, 0.3),
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "SOURCE_MULTIPLE_COMPONENTS"},
+        {"id": "volume-poly-non-manifold-source-rejected", "operation": VOL_GEN,
+         "inputs": [_poly(POLY_CUBE_NONMANIFOLD)], "parameters": _vol(25.0, 0.25, 0.02, 3.0, 0.3),
+         "expect_error_class": "PRECONDITION_FAILED", "expect_error_code": "NON_MANIFOLD_INPUT"},
+        {"id": "volume-poly-non-manifold-source-validator-rejected", "operation": VOL_VAL,
+         "inputs": [_tet(POLY_CUBE_MESH), _poly(POLY_CUBE_NONMANIFOLD)], "parameters": _vol(25.0, 0.25, 0.02, 3.0, 0.3),
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "SOURCE_NON_MANIFOLD_INPUT"},
+        {"id": "volume-poly-missing-interior-rejected", "operation": VOL_VAL,
+         "inputs": [_tet(POLY_MISSING_INTERIOR), _poly(POLY_CUBE)], "parameters": _vol(25.0, 0.25, 0.02, 3.0, 0.3),
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "BOUNDARY_NOT_CLOSED"},
+        {"id": "volume-poly-missing-boundary-rejected", "operation": VOL_VAL,
+         "inputs": [_tet(POLY_MISSING_BOUNDARY), _poly(POLY_CUBE)], "parameters": _vol(25.0, 0.25, 0.02, 3.0, 0.3),
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "FACET_DISTANCE_VIOLATED"},
+        {"id": "volume-poly-flipped-rejected", "operation": VOL_VAL,
+         "inputs": [_tet(POLY_FLIPPED), _poly(POLY_CUBE)], "parameters": _vol(25.0, 0.25, 0.02, 3.0, 0.3),
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "INVERTED_TETRAHEDRON"},
+        {"id": "volume-poly-duplicate-rejected", "operation": VOL_VAL,
+         "inputs": [_tet(POLY_DUPLICATE), _poly(POLY_CUBE)], "parameters": _vol(25.0, 0.25, 0.02, 3.0, 0.3),
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "NON_MANIFOLD_FACE"},
+        {"id": "volume-poly-shifted-rejected", "operation": VOL_VAL,
+         "inputs": [_tet(POLY_SHIFTED), _poly(POLY_CUBE)], "parameters": _vol(25.0, 0.25, 0.02, 3.0, 0.3),
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "VERTEX_OFF_SURFACE"},
+        {"id": "volume-poly-scaled-rejected", "operation": VOL_VAL,
+         "inputs": [_tet(POLY_SCALED), _poly(POLY_CUBE)], "parameters": _vol(25.0, 0.25, 0.02, 3.0, 0.3),
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "VERTEX_OFF_SURFACE"},
+        {"id": "volume-poly-bumped-rejected", "operation": VOL_VAL,
+         "inputs": [_tet(POLY_BUMPED), _poly(POLY_CUBE)], "parameters": _vol(25.0, 0.25, 0.02, 3.0, 0.3),
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "VERTEX_OFF_SURFACE"},
+        {"id": "volume-poly-two-subdomains-rejected", "operation": VOL_VAL,
+         "inputs": [_tet(POLY_TWO_SUBDOMAINS), _poly(POLY_CUBE)], "parameters": _vol(25.0, 0.25, 0.02, 3.0, 0.3),
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "SUBDOMAIN_INDEX_INVALID"},
+        {"id": "volume-poly-cube-vs-l-prism-rejected", "operation": VOL_VAL,
+         "inputs": [_tet(POLY_CUBE_MESH), _poly(POLY_L_PRISM)], "parameters": _vol(25.0, 0.25, 0.02, 3.0, 0.3),
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "VERTEX_OFF_SURFACE"},
+        {"id": "volume-poly-cube-vs-tilted-box-rejected", "operation": VOL_VAL,
+         "inputs": [_tet(POLY_CUBE_MESH), _poly(POLY_TILTED_BOX)], "parameters": _vol(25.0, 0.25, 0.02, 3.0, 0.3),
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "VERTEX_OFF_SURFACE"},
+        {"id": "volume-poly-l-prism-vs-cube-rejected", "operation": VOL_VAL,
+         "inputs": [_tet(POLY_L_MESH), _poly(POLY_CUBE)], "parameters": _vol(25.0, 0.4, 0.03, 3.0, 0.5),
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "VERTEX_OFF_SURFACE"},
+        {"id": "volume-poly-partial-fill-rejected", "operation": VOL_VAL,
+         "inputs": [_tet(POLY_BOX_IN_L_MESH), _poly(POLY_L_PRISM)], "parameters": _vol(25.0, 0.4, 0.03, 3.0, 0.5),
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "ORIENTATION_NOT_OUTWARD"},
+        {"id": "volume-poly-stricter-angle-rejected", "operation": VOL_VAL,
+         "inputs": [_tet(POLY_CUBE_MESH), _poly(POLY_CUBE)], "parameters": _vol(35.0, 0.25, 0.02, 3.0, 0.3),
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "FACET_ANGLE_VIOLATED"},
+        {"id": "volume-poly-stricter-size-rejected", "operation": VOL_VAL,
+         "inputs": [_tet(POLY_CUBE_MESH), _poly(POLY_CUBE)], "parameters": _vol(25.0, 0.15, 0.02, 3.0, 0.3),
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "FACET_SIZE_VIOLATED"},
+        {"id": "volume-poly-stricter-distance-rejected", "operation": VOL_VAL,
+         "inputs": [_tet(POLY_CUBE_MESH), _poly(POLY_CUBE)], "parameters": _vol(25.0, 0.25, 0.005, 3.0, 0.3),
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "FACET_DISTANCE_VIOLATED"},
+        {"id": "volume-poly-stricter-cell-size-rejected", "operation": VOL_VAL,
+         "inputs": [_tet(POLY_CUBE_MESH), _poly(POLY_CUBE)], "parameters": _vol(25.0, 0.25, 0.02, 3.0, 0.2),
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "CELL_SIZE_VIOLATED"},
+        {"id": "volume-poly-stricter-radius-edge-rejected", "operation": VOL_VAL,
+         "inputs": [_tet(POLY_CUBE_MESH), _poly(POLY_CUBE)], "parameters": _vol(25.0, 0.25, 0.02, 1.5, 0.3),
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "RADIUS_EDGE_VIOLATED"},
+        {"id": "volume-poly-size-budget-rejected", "operation": VOL_GEN,
+         "inputs": [_poly(POLY_CUBE)], "parameters": _vol(25.0, 0.25, 0.0001, 3.0, 0.3),
+         "expect_error_class": "RESOURCE_LIMIT", "expect_error_code": "MESH_SIZE_LIMIT_EXCEEDED"},
+        {"id": "volume-poly-angle-above-guarantee-rejected", "operation": VOL_GEN,
+         "inputs": [_poly(POLY_CUBE)], "parameters": _vol(31.0, 0.25, 0.02, 3.0, 0.3),
+         "expect_error_class": "INVALID_REQUEST", "expect_error_code": "INVALID_PARAMETER"},
+        {"id": "volume-poly-unit-mismatch-rejected", "operation": VOL_GEN,
+         "inputs": [{**_poly(POLY_CUBE), "unit": "cm"}], "parameters": _vol(25.0, 0.25, 0.02, 3.0, 0.3),
+         "expect_error_class": "TYPE_ERROR", "expect_error_code": "UNIT_MISMATCH"},
         {"id": "mesh2-bowtie-rejected", "operation": "mesh2.refine.delaunay",
          "inputs": [_domain(BOWTIE)], "parameters": _mesh2(0.125, 2.0),
          "expect_error_class": "PRECONDITION_FAILED",
@@ -2115,6 +2293,80 @@ def _tri2_measure(name: str, content: bytes) -> object:
     raise ValueError(f"unknown triangulation measure {name}")
 
 
+def _point_triangle_distance(p, a, b, c) -> float:
+    """Closest-point distance by barycentric region tests (Ericson), independent of the worker."""
+    def sub(u, v): return [u[k] - v[k] for k in range(3)]
+    def dot(u, v): return sum(x * y for x, y in zip(u, v))
+    ab, ac, ap = sub(b, a), sub(c, a), sub(p, a)
+    d1, d2 = dot(ab, ap), dot(ac, ap)
+    if d1 <= 0 and d2 <= 0:
+        return math.dist(p, a)
+    bp = sub(p, b)
+    d3, d4 = dot(ab, bp), dot(ac, bp)
+    if d3 >= 0 and d4 <= d3:
+        return math.dist(p, b)
+    vc = d1 * d4 - d3 * d2
+    if vc <= 0 and d1 >= 0 and d3 <= 0:
+        v = d1 / (d1 - d3)
+        return math.dist(p, [a[k] + v * ab[k] for k in range(3)])
+    cp = sub(p, c)
+    d5, d6 = dot(ab, cp), dot(ac, cp)
+    if d6 >= 0 and d5 <= d6:
+        return math.dist(p, c)
+    vb = d5 * d2 - d1 * d6
+    if vb <= 0 and d2 >= 0 and d6 <= 0:
+        w = d2 / (d2 - d6)
+        return math.dist(p, [a[k] + w * ac[k] for k in range(3)])
+    va = d3 * d6 - d5 * d4
+    if va <= 0 and (d4 - d3) >= 0 and (d5 - d6) >= 0:
+        w = (d4 - d3) / ((d4 - d3) + (d5 - d6))
+        return math.dist(p, [b[k] + w * (c[k] - b[k]) for k in range(3)])
+    denominator = 1.0 / (va + vb + vc)
+    v, w = vb * denominator, vc * denominator
+    return math.dist(p, [a[k] + ab[k] * v + ac[k] * w for k in range(3)])
+
+
+def _lattice(a, b, c, divisions: int):
+    for i in range(divisions + 1):
+        for j in range(divisions + 1 - i):
+            s, t = i / divisions, j / divisions
+            yield [a[k] * (1 - s - t) + b[k] * s + c[k] * t for k in range(3)]
+
+
+def _tet_off_measure(name: str, source: str, vertices, boundary, boundary_vertices) -> float:
+    """Distances between a TetrahedralMesh boundary and a raw OFF source fixture (pinned by the
+    input artifact hash of the same file)."""
+    from pathlib import Path
+    lines = (Path(__file__).resolve().parents[1] / FIXTURE_ROOT / "wave_e" / source).read_text("utf-8").split("\n")
+    count, face_count = (int(x) for x in lines[1].split()[:2])
+    points = [[float(x) for x in line.split()] for line in lines[2:2 + count]]
+    triangles = [[points[int(i)] for i in line.split()[1:4]] for line in lines[2 + count:2 + count + face_count]]
+    facets = [[vertices[i] for i in face] for face in boundary]
+
+    def to_source(point):
+        return min(_point_triangle_distance(point, *t) for t in triangles)
+
+    def to_boundary(point):
+        return min(_point_triangle_distance(point, *f) for f in facets)
+
+    if name == "max_boundary_vertex_distance_to_off":
+        return max(to_source(vertices[i]) for i in boundary_vertices)
+    if name == "max_boundary_sample_distance_to_off":
+        return max(to_source(p) for f in facets for p in _lattice(*f, 4))
+    if name == "max_off_sample_distance_to_boundary":
+        return max(to_boundary(p) for t in triangles for p in _lattice(*t, 8))
+    if name == "max_boundary_facet_center_distance_to_off":
+        worst = 0.0
+        for a, b, c in facets:
+            sides = [math.dist(b, c), math.dist(c, a), math.dist(a, b)]
+            weights = [s * s * (sides[(i + 1) % 3] ** 2 + sides[(i + 2) % 3] ** 2 - s * s) for i, s in enumerate(sides)]
+            total = sum(weights)
+            centre = [(weights[0] * a[k] + weights[1] * b[k] + weights[2] * c[k]) / total for k in range(3)]
+            worst = max(worst, to_source(centre))
+        return worst
+    raise ValueError(f"unknown tetrahedral-versus-OFF measure {name}")
+
+
 def _tet_measure(name: str, content: bytes) -> object:
     """Independent facts of a TetrahedralMesh JSON artifact (exact rational volume)."""
     from fractions import Fraction
@@ -2231,6 +2483,9 @@ def _tet_measure(name: str, content: bytes) -> object:
                 smallest = min(smallest, math.degrees(math.acos(max(-1.0, min(1.0, cosine)))))
         return {"boundary_area": area, "min_boundary_facet_angle": smallest,
                 "max_boundary_facet_circumradius": widest_facet}[name]
+    if "(" in name and name.endswith(".off)"):
+        return _tet_off_measure(name[:name.index("(")], name[name.index("(") + 1:-1], vertices, boundary,
+                                boundary_vertices)
     raise ValueError(f"unknown tetrahedral measure {name}")
 
 

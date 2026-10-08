@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
-  "catalog_revision": "wave-e-validated-4",
+  "catalog_revision": "wave-e-validated-5",
   "cgal_version": "6.2.1",
   "build_requirements": {
     "source_kind": "official_release",
     "source_sha256": "b6be77c60765a8456335de991eeaf6ffec55256984e4a9ecc6a97c37bbfe85bf"
   },
-  "status_note": "Three bounded Wave E families are VALIDATED in the formal official-CGAL 6.2.1 worker and the MCP auto/legacy publication paths, each with a mandatory independent validator: Mesh_2 (refine_Delaunay_mesh_2 over a polygon-with-holes domain) Surface_mesher (make_surface_mesh over the enumerated typed implicit domains sphere, ellipsoid and torus; Surface_mesher is a deprecated CGAL package; no free-form expressions) and Mesh_3 (make_mesh_3 over the same enumerated domains with typed facet and cell criteria; perturbation and exudation disabled). They were verified by the repository's own cases and MCP end-to-end tests and have not had a separate independent native review. Mesh_2 conforming-only, Lipschitz/local sizing criteria, Lloyd optimization, Mesh_3 polyhedral/image domains, perturbation, exudation, Lloyd/ODT optimization and sharp-feature protection, the separate Mesh_3 domain criteria requirement, further implicit domains, image/polyhedral domains and sharp-feature surface meshing remain unimplemented.",
+  "status_note": "Three bounded Wave E families are VALIDATED in the formal official-CGAL 6.2.1 worker and the MCP auto/legacy publication paths, each with a mandatory independent validator: Mesh_2 (refine_Delaunay_mesh_2 over a polygon-with-holes domain) Surface_mesher (make_surface_mesh over the enumerated typed implicit domains sphere, ellipsoid and torus; Surface_mesher is a deprecated CGAL package; no free-form expressions) and Mesh_3 (make_mesh_3 over the same enumerated domains and over closed oriented triangle-mesh polyhedral domains without feature protection, with typed facet and cell criteria; perturbation and exudation disabled). They were verified by the repository's own cases and MCP end-to-end tests and have not had a separate independent native review. Mesh_2 conforming-only, Lipschitz/local sizing criteria, Lloyd optimization, Mesh_3 image domains, polyhedral feature protection (sharp turns above about 90 degrees are not supported), perturbation, exudation, Lloyd/ODT optimization and sharp-feature protection, the separate Mesh_3 domain criteria requirement, further implicit domains, image domains and sharp-feature surface meshing remain unimplemented.",
   "operations": [
     {
       "id": "mesh2.refine.delaunay",
@@ -1095,7 +1095,7 @@
       "revision": 1,
       "status": "VALIDATED",
       "role": "transform",
-      "summary": "Generate a tetrahedral volume mesh (TetrahedralMesh, one subdomain) of a typed implicit domain (sphere, ellipsoid or torus; a fixed enumerated set, no free-form expressions) with CGAL Mesh_3 make_mesh_3 over a Labeled_mesh_domain_3 under typed facet angle/size/distance and cell radius-edge/size criteria. Perturbation and exudation are disabled; closed surface polyhedra, images and sharp features are unsupported.",
+      "summary": "Generate a tetrahedral volume mesh (TetrahedralMesh, one subdomain) with CGAL Mesh_3 make_mesh_3 under typed facet angle/size/distance and cell radius-edge/size criteria, either of a typed implicit domain (sphere, ellipsoid or torus; a fixed enumerated set, no free-form expressions) through Labeled_mesh_domain_3, or of a validated closed, outward oriented, single-component, intersection-free TriangleSurfaceMesh (a polyhedral domain) through Polyhedral_mesh_domain_3 without sharp-feature protection. Open, non-manifold, self-intersecting, inconsistently oriented or inverted polyhedral input is rejected. Perturbation and exudation are disabled; image domains and sharp features are unsupported.",
       "package": "Mesh_3",
       "major_requirements": [
         "major.7.14.03"
@@ -1114,7 +1114,12 @@
         "\u56db\u9762\u4f53\u30e1\u30c3\u30b7\u30e5\u751f\u6210",
         "\u4f53\u7a4d\u30e1\u30c3\u30b7\u30e5\u751f\u6210",
         "\u7403\u306e\u4f53\u7a4d\u30e1\u30c3\u30b7\u30e5\u5316",
-        "\u30c8\u30fc\u30e9\u30b9\u4f53\u7a4d\u30e1\u30c3\u30b7\u30e5"
+        "\u30c8\u30fc\u30e9\u30b9\u4f53\u7a4d\u30e1\u30c3\u30b7\u30e5",
+        "mesh a polyhedron volume",
+        "tetrahedralize a closed triangle mesh",
+        "Polyhedral_mesh_domain_3",
+        "tetrahedral mesh of a solid from a surface mesh",
+        "mesh the inside of an STL or OFF surface"
       ],
       "sources": [
         {
@@ -1131,6 +1136,10 @@
         },
         {
           "kind": "cgal_symbol",
+          "identifier": "CGAL::Polyhedral_mesh_domain_3"
+        },
+        {
+          "kind": "cgal_symbol",
           "identifier": "CGAL::Mesh_criteria_3"
         },
         {
@@ -1140,6 +1149,10 @@
         {
           "kind": "header",
           "identifier": "CGAL/Labeled_mesh_domain_3.h"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Polyhedral_mesh_domain_3.h"
         },
         {
           "kind": "header",
@@ -1178,10 +1191,12 @@
           {
             "slot": "domain",
             "types": [
-              "ImplicitSurfaceDomain"
+              "ImplicitSurfaceDomain",
+              "TriangleSurfaceMesh"
             ],
             "formats": [
-              "json"
+              "json",
+              "off"
             ],
             "unit_dimension": "length",
             "units": [
@@ -1225,7 +1240,7 @@
           "facet_distance": {
             "type": "TypedLength",
             "exclusiveMinimum": 0,
-            "description": "Upper bound on the distance between a boundary facet circumcentre and the centre of its surface Delaunay ball (Mesh_3 facet_distance); must not exceed 0.1 times the smallest curvature radius of the domain."
+            "description": "Upper bound on the distance between a boundary facet circumcentre and the centre of its surface Delaunay ball (Mesh_3 facet_distance); for implicit domains it must not exceed 0.1 times the smallest curvature radius of the domain."
           },
           "cell_radius_edge_ratio": {
             "type": "number",
@@ -1296,12 +1311,13 @@
         "require_dependencies": true,
         "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
         "info": {
-          "input_format": "json",
+          "input_format": "json|off",
           "output_format": "json",
           "domain_kinds": [
             "sphere",
             "ellipsoid",
-            "torus"
+            "torus",
+            "polyhedral"
           ],
           "maximum_estimated_cells": 50000,
           "required_parameters": [
@@ -1315,6 +1331,7 @@
           "symbols": [
             "make_mesh_3",
             "Labeled_mesh_domain_3",
+            "Polyhedral_mesh_domain_3",
             "Mesh_criteria_3"
           ],
           "validator_parameter_bindings": {
@@ -1362,7 +1379,7 @@
       "revision": 1,
       "status": "VALIDATED",
       "role": "validator",
-      "summary": "Independent check that a TetrahedralMesh is a valid volume mesh of a typed implicit domain: the full tetrahedral mesh validation (exact orientation, face adjacency, single closed boundary, 3-manifold vertex links, cell-versus-boundary volume), one subdomain, vertices inside the domain and boundary vertices on the analytic surface, outward boundary, boundary and solid Euler characteristics, the facet angle/size/distance and cell size/radius-edge criteria recomputed from the raw mesh, and the analytic volume and boundary area. It never calls Mesh_3.",
+      "summary": "Independent check that a TetrahedralMesh is a valid volume mesh of its domain, a typed implicit domain or a closed TriangleSurfaceMesh (polyhedral). Common: the full tetrahedral mesh validation (exact orientation, face adjacency, single closed boundary, 3-manifold vertex links, cell-versus-boundary volume), one subdomain, boundary vertices on the domain surface, outward boundary, boundary and solid Euler characteristics, facet angle/size/distance and cell size/radius-edge criteria recomputed from the raw mesh, a Hausdorff-style surface bound and the volume. Implicit: analytic surface, area and volume. Polyhedral: the source re-validated from raw triangles (closed, manifold, oriented, single component, no self-intersection), two-sided sampled Hausdorff bounds against the source triangles and the divergence-theorem volume. It never calls Mesh_3.",
       "package": "Mesh_3",
       "aliases": [
         "validate volume mesh",
@@ -1419,10 +1436,12 @@
           {
             "slot": "source",
             "types": [
-              "ImplicitSurfaceDomain"
+              "ImplicitSurfaceDomain",
+              "TriangleSurfaceMesh"
             ],
             "formats": [
-              "json"
+              "json",
+              "off"
             ],
             "unit_dimension": "length",
             "units": [
@@ -1466,7 +1485,7 @@
           "facet_distance": {
             "type": "TypedLength",
             "exclusiveMinimum": 0,
-            "description": "Largest distance between a boundary facet circumcentre and the analytic surface."
+            "description": "Largest distance between a boundary facet circumcentre and the analytic surface (implicit) or the source triangles (polyhedral)."
           },
           "cell_radius_edge_ratio": {
             "type": "number",
@@ -1487,9 +1506,9 @@
         "validators": [],
         "bindings": {},
         "terminal_validator": true,
-        "validates": "mesh.surface.generate",
+        "validates": "mesh.volume.generate",
         "validates_all": [
-          "mesh.surface.generate"
+          "mesh.volume.generate"
         ],
         "required_report_checks": {
           "status": "pass",
@@ -1498,11 +1517,9 @@
           "checks.source_domain_valid": true,
           "checks.tetrahedral_mesh_valid": true,
           "checks.single_region_subdomain": true,
-          "checks.vertices_inside_domain": true,
-          "checks.boundary_vertices_on_analytic_surface": true,
-          "checks.interior_vertices_strictly_inside": true,
           "checks.boundary_euler_characteristic_matches_domain": true,
           "checks.solid_euler_characteristic_matches_domain": true,
+          "checks.boundary_vertices_on_domain_surface": true,
           "checks.outward_boundary_orientation": true,
           "checks.facet_angle_criterion_satisfied": true,
           "checks.facet_size_criterion_satisfied": true,
@@ -1510,8 +1527,7 @@
           "checks.hausdorff_bound_satisfied": true,
           "checks.cell_size_criterion_satisfied": true,
           "checks.cell_radius_edge_criterion_satisfied": true,
-          "checks.boundary_area_matches_analytic": true,
-          "checks.volume_matches_analytic": true
+          "checks.volume_matches_domain": true
         }
       },
       "output_contract": {
@@ -1520,11 +1536,9 @@
           "source_domain_valid",
           "tetrahedral_mesh_valid",
           "single_region_subdomain",
-          "vertices_inside_domain",
-          "boundary_vertices_on_analytic_surface",
-          "interior_vertices_strictly_inside",
           "boundary_euler_characteristic_matches_domain",
           "solid_euler_characteristic_matches_domain",
+          "boundary_vertices_on_domain_surface",
           "outward_boundary_orientation",
           "facet_angle_criterion_satisfied",
           "facet_size_criterion_satisfied",
@@ -1532,12 +1546,11 @@
           "hausdorff_bound_satisfied",
           "cell_size_criterion_satisfied",
           "cell_radius_edge_criterion_satisfied",
-          "boundary_area_matches_analytic",
-          "volume_matches_analytic"
+          "volume_matches_domain"
         ],
         "status": "pass",
         "failure_or_indeterminate_publish": false,
-        "independence": "validator does not call CGAL Mesh_3 (make_mesh_3) or any mesher; it uses only the exact orientation predicate and its own combinatorics and arithmetic"
+        "independence": "validator does not call CGAL Mesh_3 (make_mesh_3, Polyhedral_mesh_domain_3) or any mesher; it uses only the exact orientation predicate, the PMP self-intersection test on the source and its own combinatorics, circumcentres, nearest-triangle search and arithmetic"
       },
       "dependencies": [
         "Mesh_3",
@@ -1551,11 +1564,9 @@
             "source_domain_valid",
             "tetrahedral_mesh_valid",
             "single_region_subdomain",
-            "vertices_inside_domain",
-            "boundary_vertices_on_analytic_surface",
-            "interior_vertices_strictly_inside",
             "boundary_euler_characteristic_matches_domain",
             "solid_euler_characteristic_matches_domain",
+            "boundary_vertices_on_domain_surface",
             "outward_boundary_orientation",
             "facet_angle_criterion_satisfied",
             "facet_size_criterion_satisfied",
@@ -1563,8 +1574,7 @@
             "hausdorff_bound_satisfied",
             "cell_size_criterion_satisfied",
             "cell_radius_edge_criterion_satisfied",
-            "boundary_area_matches_analytic",
-            "volume_matches_analytic"
+            "volume_matches_domain"
           ],
           "input_slots": [
             "candidate",
@@ -1577,7 +1587,15 @@
             "cell_radius_edge_ratio",
             "cell_size"
           ],
-          "output_slot": "validation"
+          "output_slot": "validation",
+          "implicit_domain_extra_checks": [
+            "vertices_inside_domain",
+            "interior_vertices_strictly_inside",
+            "boundary_area_matches_analytic"
+          ],
+          "polyhedral_domain_extra_checks": [
+            "source_coverage_bound_satisfied"
+          ]
         }
       },
       "kernel": {

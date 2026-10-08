@@ -47,13 +47,13 @@ validatorはSurface_mesherを呼ばず、OFFを生で読み、閉2-多様体・�
 標本点距離、解析面積・体積（既知値16π、32π/3、4π²Rr、2π²Rr²、4πabc/3）を再計算します。
 改ざん（三角形欠落・反転・重複、半径1.001倍、別ドメイン、より厳しい基準、粗い八面体）は拒否します。
 Surface_mesherはCGAL 6.2.1で非推奨のパッケージです。陰関数ドメインは3種類のみで、鋭い特徴、
-画像・多面体ドメインは未実装です。
+画像ドメインと特徴保存は未実装です。
 
 | 要求 | 状態 | 内容 |
 |---|---|---|
 | 7.14.01 | 結合済み | Mesh_2の`refine_Delaunay_mesh_2` |
 | 7.14.02 | 結合済み | Surface_mesherの`make_surface_mesh`（球・楕円体・トーラス） |
-| 7.14.03 | 結合済み | Mesh_3の`make_mesh_3`（球・楕円体・トーラス） |
+| 7.14.03 | 結合済み | Mesh_3の`make_mesh_3`（球・楕円体・トーラスのimplicit domainと、閉じた向き付き三角形メッシュの多面体domain） |
 | 7.14.04 | 未結合 | Mesh_3のdomain criteriaがない |
 
 Mesh_2のconforming専用、局所サイズ基準、Lloyd最適化も未実装です。
@@ -80,9 +80,12 @@ fixtureは単一四面体、立方体の6分割・5分割、2サブドメイン�
 
 ## Mesh_3 体積メッシュ生成（7.14.03）
 
-Operation `mesh.volume.generate`は、`ImplicitSurfaceDomain`（球・楕円体・トーラスの列挙済み型付きdomain）に対し
-`CGAL::make_mesh_3`（`Labeled_mesh_domain_3`、`Mesh_criteria_3`）を実行し、`TetrahedralMesh`を出力します。
-自由式と生成C++は受け付けません。多面体・画像domainは未実装、perturbationとexudationは無効です（cell基準を保つため）。
+Operation `mesh.volume.generate`は2種類のdomainに`CGAL::make_mesh_3`（`Mesh_criteria_3`）を実行し、`TetrahedralMesh`を出力します。
+- `ImplicitSurfaceDomain`（球・楕円体・トーラスの列挙済み型付きdomain）: `Labeled_mesh_domain_3`。
+- `TriangleSurfaceMesh`（OFF、多面体domain）: `Polyhedral_mesh_domain_3`（特徴保存なし）。入力は閉じ・多様体・一貫した向き・外向き（体積正）・単一連結・自己交差なしでなければならず、
+  開いた面・非多様体・自己交差・向き不整合・反転・複数成分は`PRECONDITION_FAILED`で拒否します（面数上限20000）。
+自由式と生成C++は受け付けません。画像domain、多面体の鋭い特徴保存、perturbation、exudationは未実装（無効）です。
+多面体domainの鋭い折れ（法線の回転が約90度を超える凹み等）はMesh_3の出力がvalidatorで拒否されるため非対応です（階段形角柱までを確認）。
 
 parameterは`facet_angle`（30度以下）、`facet_size`、`facet_distance`（最小曲率半径の0.1倍以下）、
 `cell_radius_edge_ratio`（2以上）、`cell_size`で、長さは単位付きです。
@@ -92,9 +95,19 @@ parameterは`facet_angle`（30度以下）、`facet_size`、`facet_distance`（�
 次を再計算します：サブドメイン、オイラー標数（球・楕円体1、トーラス0）、境界頂点が解析曲面上・内部頂点が内側、
 境界向きが外向き、facet角・サイズ・距離、Hausdorff境界、cellサイズと外接半径／最短辺比、
 解析面積・体積（標本化誤差の上限付き）。
+多面体domainでは、同じvalidatorが生のOFFから入力を再検証し（閉・多様体・向き・単一成分・自己交差なし）、境界頂点が入力三角形上にあること、
+境界facetから入力三角形への標本Hausdorff距離（facet_size以下）と入力標本から境界facetへの逆方向被覆（facet_sizeの2倍以下）、
+facet外心距離（facet_distance以下）、境界向きと最近傍入力三角形の法線の一致（不一致5%以下）、境界・立体のオイラー標数（入力の値と半分）、
+体積を入力の発散定理体積と比較（許容は入力面積×測定Hausdorff距離）を再計算します。
+fixtureは単位立方体（体積1）、L字角柱（3）、階段形角柱（6）、傾けた1x2x3箱（6）です。
+多面体の陰性対照は開・反転・向き不整合・自己交差・2成分・非多様体の入力、欠落セル（内部・境界）、反転・重複セル、平行移動・拡大・頂点移動した境界、
+サブドメイン不正、別形状、入力の一部だけを満たすメッシュ、基準の厳格化5種、粗い立方体6分割、サイズ予算超過です。
 陰性対照は欠落セル（内部・境界）、反転、重複、拡大、サブドメイン不正、粗い八面体、別domain、基準の厳格化5種、
 式・未知種別・負半径・過大トーラス・針状楕円体、範囲外parameter、サイズ予算超過です。
 7.14.04（domain criteria）は未結合です。
+未実装の範囲: 画像domain、多面体の特徴（鋭い辺・角）保存、perturbation／exudation、Lloyd/ODT。
+逆方向被覆と体積の許容は保守的な上限で、セル同士の貫入はface隣接と体積和で除外します（点位置による独立検査ではありません）。
+単独の`mesh.validate.tetrahedral_mesh`は`domain_volume`未指定ではセルの貫入を除外しません。貫入の除外は`mesh.validate.volume_mesh`（境界と体積の比較）だけです。
 
 ```powershell
 .venv/Scripts/python.exe scripts/verify_master_wave_e.py `

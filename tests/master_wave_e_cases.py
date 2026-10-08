@@ -372,6 +372,7 @@ def main() -> None:
         surface_cases(scratch)
         tetrahedral_cases(scratch)
         volume_cases(scratch)
+        polyhedral_volume_cases(scratch)
     print("PASS master Wave E worker cases")
 
 
@@ -1119,6 +1120,308 @@ def volume_cases(scratch: pathlib.Path) -> None:
           "INPUT_TYPE_MISMATCH", "TYPE_ERROR")
     error(invoke(scratch, VOL_GENERATE, [sphere], vol_params(25.0, 0.5, 0.05, 3.0, 0.05)),
           "MESH_SIZE_LIMIT_EXCEEDED", "RESOURCE_LIMIT")
+
+# ---------------------------------------------------------------------------
+# 7.14.03 polyhedral domains (Polyhedral_mesh_domain_3 over a closed TriangleSurfaceMesh)
+# ---------------------------------------------------------------------------
+
+def poly_source(name: str, unit: str = "mm") -> dict:
+    path = FIXTURES / name
+    return {"artifact_id": path.stem, "type": SURF_MESH, "unit": unit, "format": "off",
+            "path": str(path.resolve()), "sha256": sha256(path)}
+
+
+def read_off_fixture(name: str):
+    lines = (FIXTURES / name).read_text("utf-8").split("\n")
+    count, face_count = (int(x) for x in lines[1].split()[:2])
+    vertices = [[float(x) for x in line.split()] for line in lines[2:2 + count]]
+    faces = [[int(x) for x in line.split()[1:]] for line in lines[2 + count:2 + count + face_count]]
+    return vertices, faces
+
+
+def point_triangle_distance_python(p, a, b, c) -> float:
+    """Closest-point distance by exact barycentric clamping (independent of the worker)."""
+    def sub(u, v): return [u[k] - v[k] for k in range(3)]
+    def dot(u, v): return sum(x * y for x, y in zip(u, v))
+    ab, ac, ap = sub(b, a), sub(c, a), sub(p, a)
+    d1, d2 = dot(ab, ap), dot(ac, ap)
+    if d1 <= 0 and d2 <= 0: return math.dist(p, a)
+    bp = sub(p, b)
+    d3, d4 = dot(ab, bp), dot(ac, bp)
+    if d3 >= 0 and d4 <= d3: return math.dist(p, b)
+    vc = d1 * d4 - d3 * d2
+    if vc <= 0 and d1 >= 0 and d3 <= 0:
+        v = d1 / (d1 - d3)
+        return math.dist(p, [a[k] + v * ab[k] for k in range(3)])
+    cp = sub(p, c)
+    d5, d6 = dot(ab, cp), dot(ac, cp)
+    if d6 >= 0 and d5 <= d6: return math.dist(p, c)
+    vb = d5 * d2 - d1 * d6
+    if vb <= 0 and d2 >= 0 and d6 <= 0:
+        w = d2 / (d2 - d6)
+        return math.dist(p, [a[k] + w * ac[k] for k in range(3)])
+    va = d3 * d6 - d5 * d4
+    if va <= 0 and (d4 - d3) >= 0 and (d5 - d6) >= 0:
+        w = (d4 - d3) / ((d4 - d3) + (d5 - d6))
+        return math.dist(p, [b[k] + w * (c[k] - b[k]) for k in range(3)])
+    denominator = 1.0 / (va + vb + vc)
+    v, w = vb * denominator, vc * denominator
+    return math.dist(p, [a[k] + ab[k] * v + ac[k] * w for k in range(3)])
+
+
+def distance_to_off(point, vertices, faces) -> float:
+    return min(point_triangle_distance_python(point, vertices[f[0]], vertices[f[1]], vertices[f[2]])
+               for f in faces)
+
+
+def lattice(a, b, c, divisions: int):
+    for i in range(divisions + 1):
+        for j in range(divisions + 1 - i):
+            s, t = i / divisions, j / divisions
+            yield [a[k] * (1 - s - t) + b[k] * s + c[k] * t for k in range(3)]
+
+
+def run_poly_pair(scratch, source, parameters):
+    result = invoke(scratch, VOL_GENERATE, [source], parameters)
+    output, path = ok(result)
+    assert output["type"] == TET_TYPE and output["format"] == "json" and output["unit"] == "mm", output
+    candidate = produced(output, path)
+    validation = invoke(scratch, VOL_VALIDATOR, [candidate, source], parameters)
+    _, validation_path = ok(validation)
+    report = json.loads(validation_path.read_text("utf-8"))
+    assert report["status"] == "pass" and report["passed"] is True, report
+    assert report["checks"] and all(report["checks"].values()) and len(report["checks"]) == 15, report
+    assert report["validator"] == VOL_VALIDATOR and report["domain_kind"] == "polyhedral", report
+    return report, json.loads(path.read_text("utf-8")), result["metrics"], candidate
+
+
+def polyhedral_volume_cases(scratch: pathlib.Path) -> None:
+    cube_parameters = vol_params(25.0, 0.25, 0.02, 3.0, 0.3)
+    fine_parameters = vol_params(25.0, 0.15, 0.01, 2.5, 0.15)
+    prism_parameters = vol_params(25.0, 0.4, 0.03, 3.0, 0.5)
+    box_parameters = vol_params(25.0, 0.5, 0.04, 3.0, 0.6)
+    cube = poly_source("poly_cube.off")
+    cube_vertices, cube_faces = read_off_fixture("poly_cube.off")
+
+    # --- unit cube: volume 1, Euler characteristic 1, vertices on the six planes ----------------
+    report, mesh, metrics, cube_candidate = run_poly_pair(scratch, cube, cube_parameters)
+    facts = volume_facts(mesh)
+    vertices, cells = mesh["vertices"], mesh["tetrahedra"]
+    assert metrics["algorithm"] == "CGAL::make_mesh_3" and metrics["domain"] == "CGAL::Polyhedral_mesh_domain_3", metrics
+    assert metrics["domain_kind"] == "polyhedral" and metrics["feature_protection"] is False, metrics
+    assert metrics["perturbation"] is False and metrics["exudation"] is False, metrics
+    assert metrics["source_face_count"] == 12 and metrics["source_vertex_count"] == 8, metrics
+    assert abs(metrics["source_volume"] - 1.0) < 1e-12 and abs(metrics["source_area"] - 6.0) < 1e-12, metrics
+    assert metrics["vertex_count"] == len(vertices) and metrics["tetrahedron_count"] == len(cells), metrics
+    assert metrics["boundary_facet_count"] == len(facts["boundary"]), metrics
+    assert set(mesh["subdomains"]) == {1}, mesh["subdomains"][:3]
+    assert facts["euler"] == 1 == report["euler_characteristic"], facts
+    assert facts["boundary_euler"] == 2 == report["boundary_euler_characteristic"] and report["genus"] == 0, facts
+    assert abs(report["volume"]["source"] - 1.0) < 1e-12, report["volume"]
+    assert abs(facts["volume"] - report["volume"]["value"]) < 1e-9, (facts, report["volume"])
+    # Vertices lie in the closed cube; boundary vertices on a face plane, interior vertices strictly inside.
+    for index, vertex in enumerate(vertices):
+        assert all(-1e-9 <= c <= 1 + 1e-9 for c in vertex), vertex
+        on_plane = any(min(abs(c), abs(c - 1)) < 1e-9 for c in vertex)
+        assert on_plane == (index in facts["boundary_vertices"]), (index, vertex)
+    # Corner and edge cutting can only remove volume: 0.9 <= V <= 1 for this mesh.
+    assert 0.95 <= facts["volume"] <= 1.0 + 1e-9, facts["volume"]
+    assert facts["facet_angle"] >= 25.0 and facts["facet_radius"] <= 0.25 + 1e-9, facts
+    assert facts["max_circumradius"] <= 0.3 + 1e-9 and facts["radius_edge"] <= 3.0 + 1e-9, facts
+    assert abs(report["maximum_radius_edge_ratio"] - facts["radius_edge"]) < 1e-6, report
+    assert report["boundary_area"]["source"] == 6.0 or abs(report["boundary_area"]["source"] - 6.0) < 1e-12, report
+    assert 0.8 * 6.0 <= facts["facet_area"] <= 6.0 + 1e-6, facts["facet_area"]
+    # Two-sided sampled Hausdorff recomputed here by brute force.
+    forward = reverse = 0.0
+    for face in facts["boundary"]:
+        for point in lattice(vertices[face[0]], vertices[face[1]], vertices[face[2]], 4):
+            forward = max(forward, distance_to_off(point, cube_vertices, cube_faces))
+    for f in cube_faces:
+        for point in lattice(cube_vertices[f[0]], cube_vertices[f[1]], cube_vertices[f[2]], 8):
+            reverse = min(max(reverse, min(point_triangle_distance_python(
+                point, vertices[b[0]], vertices[b[1]], vertices[b[2]]) for b in facts["boundary"])), 10.0)
+    assert forward <= 0.25 + 1e-9 and reverse <= 0.5 + 1e-9, (forward, reverse)
+    assert abs(report["forward_hausdorff_sampled"] - forward) < 0.25 * 0.25 / 4, (report, forward)
+    # Deterministic: the same request reproduces the same mesh bytes.
+    again = ok(invoke(scratch, VOL_GENERATE, [cube], cube_parameters))[1]
+    assert sha256(again) == cube_candidate["sha256"], "Mesh_3 polyhedral output is not deterministic"
+
+    # --- finer criteria give a finer mesh of the same cube (contrast pair) ----------------------
+    fine_report, fine_mesh, _, _ = run_poly_pair(scratch, cube, fine_parameters)
+    assert len(fine_mesh["tetrahedra"]) > 2.5 * len(cells), (len(fine_mesh["tetrahedra"]), len(cells))
+    assert fine_report["maximum_cell_circumradius"] <= 0.15 + 1e-9, fine_report
+    assert fine_report["volume"]["relative_error"] <= report["volume"]["relative_error"] + 1e-9, (fine_report, report)
+
+    # --- L-shaped prism (non-convex, reflex edge): volume 3 -------------------------------------
+    l_source = poly_source("poly_l_prism.off")
+    l_vertices, l_faces = read_off_fixture("poly_l_prism.off")
+    l_report, l_mesh, l_metrics, l_candidate = run_poly_pair(scratch, l_source, prism_parameters)
+    l_facts = volume_facts(l_mesh)
+    assert abs(l_metrics["source_volume"] - 3.0) < 1e-12 and abs(l_metrics["source_area"] - 14.0) < 1e-12, l_metrics
+    assert l_facts["euler"] == 1 and l_facts["boundary_euler"] == 2, l_facts
+    assert 0.95 * 3.0 <= l_facts["volume"] <= 3.0 + 1e-9, l_facts["volume"]
+    for index in l_facts["boundary_vertices"]:
+        assert distance_to_off(l_mesh["vertices"][index], l_vertices, l_faces) < 1e-9
+    for index, vertex in enumerate(l_mesh["vertices"]):
+        if index in l_facts["boundary_vertices"]:
+            continue
+        x, y, z = vertex
+        assert 0 < z < 1 and 0 < x < 2 and 0 < y < 2 and not (x > 1 and y > 1), vertex  # strictly inside the L
+    assert l_facts["facet_angle"] >= 25.0 and l_facts["facet_radius"] <= 0.4 + 1e-9, l_facts
+    assert l_facts["max_circumradius"] <= 0.5 + 1e-9 and l_facts["radius_edge"] <= 3.0 + 1e-9, l_facts
+
+    # --- staircase prism (three reflex edges): volume 6 ----------------------------------------
+    stair_source = poly_source("poly_stair_prism.off")
+    stair_vertices, stair_faces = read_off_fixture("poly_stair_prism.off")
+    stair_report, stair_mesh, stair_metrics, _ = run_poly_pair(scratch, stair_source, prism_parameters)
+    stair_facts = volume_facts(stair_mesh)
+    assert abs(stair_metrics["source_volume"] - 6.0) < 1e-12, stair_metrics
+    assert stair_facts["euler"] == 1 and stair_facts["boundary_euler"] == 2, stair_facts
+    assert 0.95 * 6.0 <= stair_facts["volume"] <= 6.0 + 1e-9, stair_facts["volume"]
+    for index in stair_facts["boundary_vertices"]:
+        assert distance_to_off(stair_mesh["vertices"][index], stair_vertices, stair_faces) < 1e-9
+
+    # --- tilted box 1 x 2 x 3: volume 6, vertices on the six tilted planes ----------------------
+    box_source = poly_source("poly_tilted_box.off")
+    box_vertices, box_faces = read_off_fixture("poly_tilted_box.off")
+    box_report, box_mesh, box_metrics, _ = run_poly_pair(scratch, box_source, box_parameters)
+    box_facts = volume_facts(box_mesh)
+    assert abs(box_metrics["source_volume"] - 6.0) < 1e-9 and abs(box_metrics["source_area"] - 22.0) < 1e-9, box_metrics
+    assert box_facts["euler"] == 1 and box_facts["boundary_euler"] == 2, box_facts
+    assert 0.95 * 6.0 <= box_facts["volume"] <= 6.0 + 1e-9, box_facts["volume"]
+    origin = box_vertices[0]
+    axes = [[box_vertices[i][k] - origin[k] for k in range(3)] for i in (1, 3, 4)]
+    lengths = [math.sqrt(sum(c * c for c in axis)) for axis in axes]
+    assert [round(x, 9) for x in lengths] == [1.0, 2.0, 3.0], lengths
+    for index, vertex in enumerate(box_mesh["vertices"]):
+        local = [sum((vertex[k] - origin[k]) * axes[i][k] for k in range(3)) / lengths[i] for i in range(3)]
+        assert all(-1e-9 <= local[i] <= lengths[i] + 1e-9 for i in range(3)), local
+        on_plane = any(min(abs(local[i]), abs(local[i] - lengths[i])) < 1e-9 for i in range(3))
+        assert on_plane == (index in box_facts["boundary_vertices"]), (index, local)
+
+    # --- Negative controls: tampered meshes are rejected by the independent validator ---------
+    base_cells = [list(c) for c in cells]
+    face_count: dict[tuple, int] = {}
+    for cell in base_cells:
+        for slot in ((1, 2, 3), (0, 3, 2), (0, 1, 3), (0, 2, 1)):
+            key = tuple(sorted(cell[i] for i in slot))
+            face_count[key] = face_count.get(key, 0) + 1
+    boundary_vertex_set = {v for key, n in face_count.items() if n == 1 for v in key}
+
+    def fully_interior(cell) -> bool:
+        return all(face_count[tuple(sorted(cell[i] for i in slot))] == 2
+                   for slot in ((1, 2, 3), (0, 3, 2), (0, 1, 3), (0, 2, 1)))
+    interior_cell = next(i for i, c in enumerate(base_cells) if fully_interior(c))
+    surface_cell = next(i for i, c in enumerate(base_cells) if set(c) & boundary_vertex_set)
+
+    def tamper(vertices_fn=None, cells_fn=None, subdomains_fn=None):
+        new_vertices = [list(v) for v in vertices]
+        new_cells = [list(c) for c in base_cells]
+        new_subdomains = list(mesh["subdomains"])
+        if vertices_fn:
+            vertices_fn(new_vertices)
+        if cells_fn:
+            cells_fn(new_cells, new_subdomains)
+        if subdomains_fn:
+            subdomains_fn(new_subdomains)
+        return write_tet(scratch, new_vertices, new_cells, new_subdomains)
+
+    def drop(index):
+        def apply(c, s):
+            del c[index]
+            del s[index]
+        return apply
+
+    def flip(c, s):
+        c[interior_cell][2], c[interior_cell][3] = c[interior_cell][3], c[interior_cell][2]
+
+    def duplicate(c, s):
+        c.append(list(c[interior_cell]))
+        s.append(1)
+
+    def shift_all(v):
+        for vertex in v:
+            vertex[0] += 0.05
+
+    def scale_all(v):
+        for vertex in v:
+            vertex[:] = [1.02 * x for x in vertex]
+
+    def bump_boundary_vertex(v):
+        i = min(facts["boundary_vertices"])
+        v[i][0] += -0.08 if v[i][0] < 0.5 else 0.08
+
+    def relabel(s):
+        for i in range(0, len(s), 2):
+            s[i] = 2
+
+    good = cube_parameters
+    for candidate, code in (
+            (tamper(cells_fn=drop(interior_cell)), "BOUNDARY_NOT_CLOSED"),
+            (tamper(cells_fn=drop(surface_cell)), "FACET_DISTANCE_VIOLATED"),
+            (tamper(cells_fn=flip), "INVERTED_TETRAHEDRON"),
+            (tamper(cells_fn=duplicate), "NON_MANIFOLD_FACE"),
+            (tamper(vertices_fn=shift_all), "VERTEX_OFF_SURFACE"),
+            (tamper(vertices_fn=scale_all), "VERTEX_OFF_SURFACE"),
+            (tamper(vertices_fn=bump_boundary_vertex), "VERTEX_OFF_SURFACE"),
+            (tamper(subdomains_fn=relabel), "SUBDOMAIN_INDEX_INVALID")):
+        rejected(invoke(scratch, VOL_VALIDATOR, [candidate, cube], good), code)
+    # A mesh of one polyhedron against another.
+    rejected(invoke(scratch, VOL_VALIDATOR, [cube_candidate, l_source], good), "VERTEX_OFF_SURFACE")
+    rejected(invoke(scratch, VOL_VALIDATOR, [cube_candidate, box_source], good), "VERTEX_OFF_SURFACE")
+    rejected(invoke(scratch, VOL_VALIDATOR, [cube_candidate, stair_source], good), "VERTEX_OFF_SURFACE")
+    rejected(invoke(scratch, VOL_VALIDATOR, [l_candidate, cube], prism_parameters), "VERTEX_OFF_SURFACE")
+    rejected(invoke(scratch, VOL_VALIDATOR, [l_candidate, stair_source], prism_parameters), "VERTEX_OFF_SURFACE")
+    # The sub-box [0,1] x [0,2] x [0,1] of the L-prism has all 8 vertices on the prism surface but
+    # fills only part of it: its boundary facets are not the prism's.
+    sub_vertices = [[v[0], 2 * v[1], v[2]] for v in [[0, 0, 0], [1, 0, 0], [0, 1, 0], [1, 1, 0],
+                                                      [0, 0, 1], [1, 0, 1], [0, 1, 1], [1, 1, 1]]]
+    sub_box = write_tet(scratch, sub_vertices,
+                        [[0, 1, 3, 7], [0, 1, 7, 5], [0, 2, 7, 3], [0, 2, 6, 7], [0, 4, 5, 7], [0, 4, 7, 6]])
+    rejected(invoke(scratch, VOL_VALIDATOR, [sub_box, l_source], prism_parameters), "ORIENTATION_NOT_OUTWARD")
+    # Criteria stricter than the genuine mesh was built for.
+    for stricter, code in ((vol_params(35.0, 0.25, 0.02, 3.0, 0.3), "FACET_ANGLE_VIOLATED"),
+                           (vol_params(25.0, 0.15, 0.02, 3.0, 0.3), "FACET_SIZE_VIOLATED"),
+                           (vol_params(25.0, 0.25, 0.005, 3.0, 0.3), "FACET_DISTANCE_VIOLATED"),
+                           (vol_params(25.0, 0.25, 0.02, 3.0, 0.2), "CELL_SIZE_VIOLATED"),
+                           (vol_params(25.0, 0.25, 0.02, 1.5, 0.3), "RADIUS_EDGE_VIOLATED")):
+        rejected(invoke(scratch, VOL_VALIDATOR, [cube_candidate, cube], stricter), code)
+    # The six-tetrahedron cube mesh is a perfect tiling of the cube: the validator accepts it under
+    # loose criteria (it does not depend on the generator) and rejects it as too coarse otherwise.
+    cube6 = artifact(FIXTURES / "tet_cube6.json", TET_TYPE)
+    loose = vol_params(30.0, 5.0, 5.0, 100.0, 50.0)
+    loose_report = ok(invoke(scratch, VOL_VALIDATOR, [cube6, cube], loose))[1]
+    loose_data = json.loads(loose_report.read_text("utf-8"))
+    assert loose_data["status"] == "pass" and abs(loose_data["volume"]["value"] - 1.0) < 1e-12, loose_data
+    assert loose_data["forward_hausdorff_sampled"] < 1e-9 and loose_data["reverse_hausdorff_sampled"] < 1e-9, loose_data
+    rejected(invoke(scratch, VOL_VALIDATOR, [cube6, cube], good), "FACET_SIZE_VIOLATED")
+    # Invalid sources are rejected by the validator as well as by the generator.
+    for name, source_code, producer_code in (
+            ("poly_cube_open.off", "SOURCE_MESH_NOT_CLOSED", "MESH_NOT_CLOSED"),
+            ("poly_cube_inverted.off", "SOURCE_INWARD_ORIENTED_INPUT", "INWARD_ORIENTED_INPUT"),
+            ("poly_cube_inconsistent.off", "SOURCE_INCONSISTENT_ORIENTATION", "INCONSISTENT_ORIENTATION"),
+            ("poly_cube_self_intersecting.off", "SOURCE_SELF_INTERSECTING_INPUT", "SELF_INTERSECTING_INPUT"),
+            ("poly_two_cubes.off", "SOURCE_MULTIPLE_COMPONENTS", "MULTIPLE_COMPONENTS"),
+            ("poly_cube_nonmanifold.off", "SOURCE_NON_MANIFOLD_INPUT", "NON_MANIFOLD_INPUT")):
+        bad_source = poly_source(name)
+        error(invoke(scratch, VOL_GENERATE, [bad_source], good), producer_code, "PRECONDITION_FAILED")
+        rejected(invoke(scratch, VOL_VALIDATOR, [cube_candidate, bad_source], good), source_code)
+    # Parameter and type errors.
+    for bad in (vol_params(31.0, 0.25, 0.02, 3.0, 0.3), vol_params(0.0, 0.25, 0.02, 3.0, 0.3),
+                vol_params(25.0, 0.0, 0.02, 3.0, 0.3), vol_params(25.0, 0.25, 0.0, 3.0, 0.3),
+                vol_params(25.0, 0.25, 0.02, 1.99, 0.3), vol_params(25.0, 0.25, 0.02, 3.0, 0.0),
+                {**good, "facet_angle": "25"}):
+        error(invoke(scratch, VOL_GENERATE, [cube], bad), "INVALID_PARAMETER", "INVALID_REQUEST")
+    error(invoke(scratch, VOL_GENERATE, [cube], dict(good, features="sharp")), "UNSUPPORTED_PARAMETER",
+          "INVALID_REQUEST")
+    error(invoke(scratch, VOL_GENERATE, [poly_source("poly_cube.off", "cm")], good), "UNIT_MISMATCH", "TYPE_ERROR")
+    error(invoke(scratch, VOL_GENERATE, [{**cube, "format": "json"}], good), "INPUT_FORMAT_MISMATCH", "TYPE_ERROR")
+    error(invoke(scratch, VOL_GENERATE, [cube], vol_params(25.0, 0.25, 0.0001, 3.0, 0.3)),
+          "MESH_SIZE_LIMIT_EXCEEDED", "RESOURCE_LIMIT")
+    error(invoke(scratch, VOL_GENERATE, [cube], vol_params(25.0, 0.25, 0.02, 3.0, 0.01)),
+          "MESH_SIZE_LIMIT_EXCEEDED", "RESOURCE_LIMIT")
+    error(invoke(scratch, VOL_VALIDATOR, [cube_candidate, poly_source("poly_cube.off", "cm")], good),
+          "UNIT_MISMATCH", "TYPE_ERROR")
 
 
 def on_boundary(vertex) -> bool:

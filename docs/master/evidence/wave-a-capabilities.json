@@ -189,11 +189,11 @@
     }
   },
   "catalog_baseline_sha256": "143ec18a5b64d506aad60dc24b0a1ea30940c715d1223b3465fa140aeb9d02a7",
-  "operation_registry_sha256": "e8956c389cc59f4c6ed24863bcee58911e514f59d166dff09ea390bae7dcbf4d",
+  "operation_registry_sha256": "eca16ae1b5e70b3ef563d9cf1058952af15385a4aa867cd6a369755a0ea212b2",
   "operation_registry_hash_encoding": "utf8-lf",
   "policy_catalog_sha256": "45f4be759288aaeb834a3ce97aa64ee7768048b15534618fc8c19512801f9a9f",
   "policy_catalog_hash_encoding": "utf8-lf",
-  "worker_sha256": "83cd681669840daa3fd13b09abb060f7845857e0e2f90a62f9c9c2cc6b824f27",
+  "worker_sha256": "c80f19e38a5a6332cf1270e9daf45ebc1a78271d3c77b8b78e4b95edd8ad0cb0",
   "worker_binary_format": "pe",
   "worker_manifest": {
     "actual_cgal_version": "6.2.1",
@@ -4694,9 +4694,10 @@
           "domain_kinds": [
             "sphere",
             "ellipsoid",
-            "torus"
+            "torus",
+            "polyhedral"
           ],
-          "input_format": "json",
+          "input_format": "json|off",
           "maximum_estimated_cells": 50000,
           "output_format": "json",
           "required_parameters": [
@@ -4710,6 +4711,7 @@
           "symbols": [
             "make_mesh_3",
             "Labeled_mesh_domain_3",
+            "Polyhedral_mesh_domain_3",
             "Mesh_criteria_3"
           ],
           "validator_parameter_bindings": {
@@ -4726,7 +4728,8 @@
           ]
         },
         "input_types": [
-          "ImplicitSurfaceDomain"
+          "ImplicitSurfaceDomain",
+          "TriangleSurfaceMesh"
         ],
         "output_type": "TetrahedralMesh",
         "revision": 1,
@@ -4754,11 +4757,9 @@
             "source_domain_valid",
             "tetrahedral_mesh_valid",
             "single_region_subdomain",
-            "vertices_inside_domain",
-            "boundary_vertices_on_analytic_surface",
-            "interior_vertices_strictly_inside",
             "boundary_euler_characteristic_matches_domain",
             "solid_euler_characteristic_matches_domain",
+            "boundary_vertices_on_domain_surface",
             "outward_boundary_orientation",
             "facet_angle_criterion_satisfied",
             "facet_size_criterion_satisfied",
@@ -4766,18 +4767,26 @@
             "hausdorff_bound_satisfied",
             "cell_size_criterion_satisfied",
             "cell_radius_edge_criterion_satisfied",
-            "boundary_area_matches_analytic",
-            "volume_matches_analytic"
+            "volume_matches_domain"
+          ],
+          "implicit_domain_extra_checks": [
+            "vertices_inside_domain",
+            "interior_vertices_strictly_inside",
+            "boundary_area_matches_analytic"
           ],
           "input_slots": [
             "candidate",
             "source"
           ],
-          "output_slot": "validation"
+          "output_slot": "validation",
+          "polyhedral_domain_extra_checks": [
+            "source_coverage_bound_satisfied"
+          ]
         },
         "input_types": [
           "TetrahedralMesh",
-          "ImplicitSurfaceDomain"
+          "ImplicitSurfaceDomain",
+          "TriangleSurfaceMesh"
         ],
         "output_type": "ValidationReport",
         "revision": 1,
@@ -4796,7 +4805,7 @@
     ],
     "worker": "cgal-master-worker"
   },
-  "worker_manifest_sha256": "4d9043b5fd636ec7f2926202be22bba3dd0c3bef6baa3fa772247449bcba75da",
+  "worker_manifest_sha256": "5cb9f6657eec3e38af252504119b15b556fc30bddb5fedfb0053b28745631363",
   "tests": [
     {
       "id": "wave-a-worker-cases",
@@ -5504,7 +5513,7 @@
       "case_id": "policy-lindstrom_turk",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "4d9043b5fd636ec7f2926202be22bba3dd0c3bef6baa3fa772247449bcba75da",
+      "worker_manifest_sha256": "5cb9f6657eec3e38af252504119b15b556fc30bddb5fedfb0053b28745631363",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -5637,7 +5646,7 @@
       "case_id": "policy-edge_length_midpoint",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "4d9043b5fd636ec7f2926202be22bba3dd0c3bef6baa3fa772247449bcba75da",
+      "worker_manifest_sha256": "5cb9f6657eec3e38af252504119b15b556fc30bddb5fedfb0053b28745631363",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -5770,7 +5779,7 @@
       "case_id": "policy-gh_plane",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "4d9043b5fd636ec7f2926202be22bba3dd0c3bef6baa3fa772247449bcba75da",
+      "worker_manifest_sha256": "5cb9f6657eec3e38af252504119b15b556fc30bddb5fedfb0053b28745631363",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -5903,7 +5912,7 @@
       "case_id": "policy-gh_triangle",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "4d9043b5fd636ec7f2926202be22bba3dd0c3bef6baa3fa772247449bcba75da",
+      "worker_manifest_sha256": "5cb9f6657eec3e38af252504119b15b556fc30bddb5fedfb0053b28745631363",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -6036,7 +6045,7 @@
       "case_id": "policy-gh_plane_line",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "4d9043b5fd636ec7f2926202be22bba3dd0c3bef6baa3fa772247449bcba75da",
+      "worker_manifest_sha256": "5cb9f6657eec3e38af252504119b15b556fc30bddb5fedfb0053b28745631363",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -6169,7 +6178,7 @@
       "case_id": "policy-gh_probabilistic_plane",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "4d9043b5fd636ec7f2926202be22bba3dd0c3bef6baa3fa772247449bcba75da",
+      "worker_manifest_sha256": "5cb9f6657eec3e38af252504119b15b556fc30bddb5fedfb0053b28745631363",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -6302,7 +6311,7 @@
       "case_id": "policy-gh_probabilistic_triangle",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "4d9043b5fd636ec7f2926202be22bba3dd0c3bef6baa3fa772247449bcba75da",
+      "worker_manifest_sha256": "5cb9f6657eec3e38af252504119b15b556fc30bddb5fedfb0053b28745631363",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -6435,7 +6444,7 @@
       "case_id": "stop-edge_count",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "4d9043b5fd636ec7f2926202be22bba3dd0c3bef6baa3fa772247449bcba75da",
+      "worker_manifest_sha256": "5cb9f6657eec3e38af252504119b15b556fc30bddb5fedfb0053b28745631363",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -6571,7 +6580,7 @@
       "case_id": "stop-edge_ratio",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "4d9043b5fd636ec7f2926202be22bba3dd0c3bef6baa3fa772247449bcba75da",
+      "worker_manifest_sha256": "5cb9f6657eec3e38af252504119b15b556fc30bddb5fedfb0053b28745631363",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -6707,7 +6716,7 @@
       "case_id": "stop-face_count",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "4d9043b5fd636ec7f2926202be22bba3dd0c3bef6baa3fa772247449bcba75da",
+      "worker_manifest_sha256": "5cb9f6657eec3e38af252504119b15b556fc30bddb5fedfb0053b28745631363",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -6843,7 +6852,7 @@
       "case_id": "stop-face_ratio",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "4d9043b5fd636ec7f2926202be22bba3dd0c3bef6baa3fa772247449bcba75da",
+      "worker_manifest_sha256": "5cb9f6657eec3e38af252504119b15b556fc30bddb5fedfb0053b28745631363",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -6979,7 +6988,7 @@
       "case_id": "stop-edge_length",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "4d9043b5fd636ec7f2926202be22bba3dd0c3bef6baa3fa772247449bcba75da",
+      "worker_manifest_sha256": "5cb9f6657eec3e38af252504119b15b556fc30bddb5fedfb0053b28745631363",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -7122,7 +7131,7 @@
       "case_id": "stop-edge_length-below-minimum",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "4d9043b5fd636ec7f2926202be22bba3dd0c3bef6baa3fa772247449bcba75da",
+      "worker_manifest_sha256": "5cb9f6657eec3e38af252504119b15b556fc30bddb5fedfb0053b28745631363",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -7265,7 +7274,7 @@
       "case_id": "constraints",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "4d9043b5fd636ec7f2926202be22bba3dd0c3bef6baa3fa772247449bcba75da",
+      "worker_manifest_sha256": "5cb9f6657eec3e38af252504119b15b556fc30bddb5fedfb0053b28745631363",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -7404,7 +7413,7 @@
       "case_id": "preserve-open-border",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "4d9043b5fd636ec7f2926202be22bba3dd0c3bef6baa3fa772247449bcba75da",
+      "worker_manifest_sha256": "5cb9f6657eec3e38af252504119b15b556fc30bddb5fedfb0053b28745631363",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -7537,7 +7546,7 @@
       "case_id": "bounded-distance",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "4d9043b5fd636ec7f2926202be22bba3dd0c3bef6baa3fa772247449bcba75da",
+      "worker_manifest_sha256": "5cb9f6657eec3e38af252504119b15b556fc30bddb5fedfb0053b28745631363",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -7674,7 +7683,7 @@
       "case_id": "bounded-normal",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "4d9043b5fd636ec7f2926202be22bba3dd0c3bef6baa3fa772247449bcba75da",
+      "worker_manifest_sha256": "5cb9f6657eec3e38af252504119b15b556fc30bddb5fedfb0053b28745631363",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -7807,7 +7816,7 @@
       "case_id": "polyhedral-envelope",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "4d9043b5fd636ec7f2926202be22bba3dd0c3bef6baa3fa772247449bcba75da",
+      "worker_manifest_sha256": "5cb9f6657eec3e38af252504119b15b556fc30bddb5fedfb0053b28745631363",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -7944,7 +7953,7 @@
       "case_id": "filter-control",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "4d9043b5fd636ec7f2926202be22bba3dd0c3bef6baa3fa772247449bcba75da",
+      "worker_manifest_sha256": "5cb9f6657eec3e38af252504119b15b556fc30bddb5fedfb0053b28745631363",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -8077,7 +8086,7 @@
       "case_id": "bounded-distance-tight",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "4d9043b5fd636ec7f2926202be22bba3dd0c3bef6baa3fa772247449bcba75da",
+      "worker_manifest_sha256": "5cb9f6657eec3e38af252504119b15b556fc30bddb5fedfb0053b28745631363",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -8218,7 +8227,7 @@
       "case_id": "polyhedral-envelope-tight",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "4d9043b5fd636ec7f2926202be22bba3dd0c3bef6baa3fa772247449bcba75da",
+      "worker_manifest_sha256": "5cb9f6657eec3e38af252504119b15b556fc30bddb5fedfb0053b28745631363",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -8359,7 +8368,7 @@
       "case_id": "bounded-normal-adversarial",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "4d9043b5fd636ec7f2926202be22bba3dd0c3bef6baa3fa772247449bcba75da",
+      "worker_manifest_sha256": "5cb9f6657eec3e38af252504119b15b556fc30bddb5fedfb0053b28745631363",
       "test_id": "wave-a-worker-cases",
       "request": {
         "inputs": [
@@ -8502,7 +8511,7 @@
       "case_id": "bounded-normal-control",
       "operation_id": "mesh.simplify.edge_collapse",
       "revision": 1,
-      "worker_manifest_sha256": "4d9043b5fd636ec7f2926202be22bba3dd0c3bef6baa3fa772247449bcba75da",
+      "worker_manifest_sha256": "5cb9f6657eec3e38af252504119b15b556fc30bddb5fedfb0053b28745631363",
       "test_id": "wave-a-worker-cases",
       "paired_positive_case_id": "bounded-normal-adversarial",
       "request": {

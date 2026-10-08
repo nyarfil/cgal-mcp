@@ -15,7 +15,7 @@
     "mesh.volume.generate",
     "mesh2.refine.delaunay"
   ],
-  "worker_sha256": "83cd681669840daa3fd13b09abb060f7845857e0e2f90a62f9c9c2cc6b824f27",
+  "worker_sha256": "c80f19e38a5a6332cf1270e9daf45ebc1a78271d3c77b8b78e4b95edd8ad0cb0",
   "worker_manifest": {
     "actual_cgal_version": "6.2.1",
     "build": {
@@ -4515,9 +4515,10 @@
           "domain_kinds": [
             "sphere",
             "ellipsoid",
-            "torus"
+            "torus",
+            "polyhedral"
           ],
-          "input_format": "json",
+          "input_format": "json|off",
           "maximum_estimated_cells": 50000,
           "output_format": "json",
           "required_parameters": [
@@ -4531,6 +4532,7 @@
           "symbols": [
             "make_mesh_3",
             "Labeled_mesh_domain_3",
+            "Polyhedral_mesh_domain_3",
             "Mesh_criteria_3"
           ],
           "validator_parameter_bindings": {
@@ -4547,7 +4549,8 @@
           ]
         },
         "input_types": [
-          "ImplicitSurfaceDomain"
+          "ImplicitSurfaceDomain",
+          "TriangleSurfaceMesh"
         ],
         "output_type": "TetrahedralMesh",
         "revision": 1,
@@ -4575,11 +4578,9 @@
             "source_domain_valid",
             "tetrahedral_mesh_valid",
             "single_region_subdomain",
-            "vertices_inside_domain",
-            "boundary_vertices_on_analytic_surface",
-            "interior_vertices_strictly_inside",
             "boundary_euler_characteristic_matches_domain",
             "solid_euler_characteristic_matches_domain",
+            "boundary_vertices_on_domain_surface",
             "outward_boundary_orientation",
             "facet_angle_criterion_satisfied",
             "facet_size_criterion_satisfied",
@@ -4587,18 +4588,26 @@
             "hausdorff_bound_satisfied",
             "cell_size_criterion_satisfied",
             "cell_radius_edge_criterion_satisfied",
-            "boundary_area_matches_analytic",
-            "volume_matches_analytic"
+            "volume_matches_domain"
+          ],
+          "implicit_domain_extra_checks": [
+            "vertices_inside_domain",
+            "interior_vertices_strictly_inside",
+            "boundary_area_matches_analytic"
           ],
           "input_slots": [
             "candidate",
             "source"
           ],
-          "output_slot": "validation"
+          "output_slot": "validation",
+          "polyhedral_domain_extra_checks": [
+            "source_coverage_bound_satisfied"
+          ]
         },
         "input_types": [
           "TetrahedralMesh",
-          "ImplicitSurfaceDomain"
+          "ImplicitSurfaceDomain",
+          "TriangleSurfaceMesh"
         ],
         "output_type": "ValidationReport",
         "revision": 1,
@@ -4617,26 +4626,26 @@
     ],
     "worker": "cgal-master-worker"
   },
-  "worker_manifest_sha256": "4d9043b5fd636ec7f2926202be22bba3dd0c3bef6baa3fa772247449bcba75da",
-  "operation_catalog_sha256": "460af58a4950b9aeecb31d768ef135e440de5004643b1a510baf7b7ac323741c",
+  "worker_manifest_sha256": "5cb9f6657eec3e38af252504119b15b556fc30bddb5fedfb0053b28745631363",
+  "operation_catalog_sha256": "efc23ae5bb38672bdb0822782bd5a41f33304c4846473e1a3e03980210106c9a",
   "tests": [
     {
       "test": "tests/master_wave_e_cases.py",
-      "source_sha256": "3d70192c0f0b7aa4aed9b2956c62865868a02cc983afdbe109e6af5a10206b6a",
+      "source_sha256": "931369ddd0fc9865dc652ffcbad804917cde35f14c716869bb7b5abd59e59a8b",
       "mode": "worker",
       "exit_code": 0,
       "status": "pass"
     },
     {
       "test": "tests/master_wave_e_mcp_e2e.py",
-      "source_sha256": "0665ef0b069589b7c8e1ca6577f80246c9c3433dba4b2679c4dd9ca3985fc3a1",
+      "source_sha256": "eac7afbae70e756bc467f69cb47b3fbf9001eed4bbbd196d9b464d691667a16d",
       "mode": "auto",
       "exit_code": 0,
       "status": "pass"
     },
     {
       "test": "tests/master_wave_e_mcp_e2e.py",
-      "source_sha256": "0665ef0b069589b7c8e1ca6577f80246c9c3433dba4b2679c4dd9ca3985fc3a1",
+      "source_sha256": "eac7afbae70e756bc467f69cb47b3fbf9001eed4bbbd196d9b464d691667a16d",
       "mode": "legacy",
       "exit_code": 0,
       "status": "pass"

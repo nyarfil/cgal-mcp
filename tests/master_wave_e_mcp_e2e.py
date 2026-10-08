@@ -208,6 +208,56 @@ async def main() -> None:
             assert rejected["state"] in {"rejected", "failed"}, rejected
             assert not rejected.get("outputs"), rejected
 
+            # --- 7.14.03 polyhedral domain: a closed oriented cube (OFF) meshed by Polyhedral_mesh_domain_3 ---
+            cube = await call("cgal_artifact_import", {
+                "path": str(FIXTURES / "wave_e" / "poly_cube.off"), "unit": surface_unit,
+                "artifact_type": "TriangleSurfaceMesh"})
+            assert cube["type"] == "TriangleSurfaceMesh", cube
+            cube_parameters = {"facet_angle": 25.0, "facet_size": length(0.25, surface_unit),
+                               "facet_distance": length(0.02, surface_unit),
+                               "cell_radius_edge_ratio": 3.0, "cell_size": length(0.3, surface_unit)}
+            plan = await call("cgal_plan", {"request": {
+                "operation_id": VOLUME_TRANSFORM, "inputs": [cube["artifact_id"]],
+                "parameters": cube_parameters}})
+            assert [step["operation"] for step in plan["steps"]] == [VOLUME_TRANSFORM, VOLUME_VALIDATOR], plan
+            queued = await call("cgal_execute", {"plan_id": plan["plan_id"]})
+            status = await wait_job(queued["job_id"])
+            assert status["state"] == "succeeded" and status["validation_status"] == "passed", status
+            report = status["validation"][0]["report"]
+            assert report["status"] == "pass" and report["validator"] == VOLUME_VALIDATOR, report
+            assert report["domain_kind"] == "polyhedral" and all(report["checks"].values()), report
+            assert report["euler_characteristic"] == 1 and report["boundary_euler_characteristic"] == 2, report
+            assert abs(report["volume"]["source"] - 1.0) < 1e-12 and report["volume"]["unit"] == "cm^3", report["volume"]
+            cube_mesh = await call("cgal_artifact_inspect", {"artifact_id": status["outputs"][0]["artifact_id"]})
+            assert cube_mesh["type"] == "TetrahedralMesh" and cube_mesh["unit"] == surface_unit, cube_mesh
+            exported_cube = root / "cube_mesh.json"
+            await call("cgal_artifact_export", {"artifact_id": cube_mesh["artifact_id"],
+                                                "path": str(exported_cube)})
+            cube_data = json.loads(exported_cube.read_text(encoding="utf-8"))
+            cube_data["vertices"] = [[vertex[0] + 0.05, vertex[1], vertex[2]] for vertex in cube_data["vertices"]]
+            exported_cube.write_text(json.dumps(cube_data), encoding="utf-8")
+            shifted_cube = await call("cgal_artifact_import", {
+                "path": str(exported_cube), "unit": surface_unit, "artifact_type": "TetrahedralMesh"})
+            plan = await call("cgal_plan", {"request": {"steps": [{
+                "id": "validate", "operation": VOLUME_VALIDATOR,
+                "inputs": {"candidate": shifted_cube["artifact_id"], "source": cube["artifact_id"]},
+                "parameters": cube_parameters}]}})
+            queued = await call("cgal_execute", {"plan_id": plan["plan_id"]})
+            rejected = await wait_job(queued["job_id"])
+            assert rejected["state"] in {"rejected", "failed"}, rejected
+            assert not rejected.get("outputs"), rejected
+            # An open source surface is refused before any mesh is produced.
+            open_cube = await call("cgal_artifact_import", {
+                "path": str(FIXTURES / "wave_e" / "poly_cube_open.off"), "unit": surface_unit,
+                "artifact_type": "TriangleSurfaceMesh"})
+            plan = await call("cgal_plan", {"request": {
+                "operation_id": VOLUME_TRANSFORM, "inputs": [open_cube["artifact_id"]],
+                "parameters": cube_parameters}})
+            queued = await call("cgal_execute", {"plan_id": plan["plan_id"]})
+            refused = await wait_job(queued["job_id"])
+            assert refused["state"] in {"rejected", "failed"}, refused
+            assert not refused.get("outputs"), refused
+
             print(f"CGAL Master Wave E MCP ({mode}) + Mesh_2, Surface_mesher and Mesh_3 independent validators: PASS")
 
 
