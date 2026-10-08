@@ -19045,10 +19045,11 @@
       "revision": 1,
       "status": "VALIDATED",
       "role": "transform",
-      "summary": "Generate a tetrahedral volume mesh (TetrahedralMesh, one subdomain) with CGAL Mesh_3 make_mesh_3 under typed facet angle/size/distance and cell radius-edge/size criteria, either of a typed implicit domain (sphere, ellipsoid or torus; a fixed enumerated set, no free-form expressions) through Labeled_mesh_domain_3, or of a validated closed, outward oriented, single-component, intersection-free TriangleSurfaceMesh (a polyhedral domain) through Polyhedral_mesh_domain_3 without sharp-feature protection. Open, non-manifold, self-intersecting, inconsistently oriented or inverted polyhedral input is rejected. Perturbation and exudation are disabled; image domains and sharp features are unsupported.",
+      "summary": "Generate a tetrahedral volume mesh (TetrahedralMesh, one subdomain) with CGAL Mesh_3 make_mesh_3 under the typed MeshCriteria3 criteria (facet angle/size/distance, cell radius-edge/size, plus optional cell_size_regions boxes, facet_topology and, for polyhedral domains, edge_size with sharp-edge protection), either of a typed implicit domain (sphere, ellipsoid or torus; a fixed enumerated set, no free-form expressions) through Labeled_mesh_domain_3, or of a validated closed, outward oriented, single-component, intersection-free TriangleSurfaceMesh (a polyhedral domain) through Polyhedral_mesh_domain_3 with sharp-edge protection only when edge_size is given. Open, non-manifold, self-intersecting, inconsistently oriented or inverted polyhedral input is rejected. Perturbation and exudation are disabled; image domains are unsupported.",
       "package": "Mesh_3",
       "major_requirements": [
-        "major.7.14.03"
+        "major.7.14.03",
+        "major.7.14.04"
       ],
       "aliases": [
         "volume mesh generation",
@@ -19202,6 +19203,89 @@
             "type": "TypedLength",
             "exclusiveMinimum": 0,
             "description": "Upper bound on the circumradius of every cell (Mesh_3 cell_size)."
+          },
+          "cell_size_regions": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 4,
+            "description": "Typed sizing field: up to 4 axis-aligned boxes. The cell size bound at a point is the minimum of cell_size and the cell_size of every box containing it, evaluated at the cell circumcentre (Mesh_3 variable cell_size). Each region must be smaller than cell_size and must intersect the domain.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "box_min",
+                "box_max",
+                "cell_size"
+              ],
+              "properties": {
+                "box_min": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "x",
+                    "y",
+                    "z"
+                  ],
+                  "properties": {
+                    "x": {
+                      "type": "TypedLength",
+                      "description": "Coordinate in the artifact unit."
+                    },
+                    "y": {
+                      "type": "TypedLength",
+                      "description": "Coordinate in the artifact unit."
+                    },
+                    "z": {
+                      "type": "TypedLength",
+                      "description": "Coordinate in the artifact unit."
+                    }
+                  },
+                  "description": "Lower corner of the box."
+                },
+                "box_max": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "x",
+                    "y",
+                    "z"
+                  ],
+                  "properties": {
+                    "x": {
+                      "type": "TypedLength",
+                      "description": "Coordinate in the artifact unit."
+                    },
+                    "y": {
+                      "type": "TypedLength",
+                      "description": "Coordinate in the artifact unit."
+                    },
+                    "z": {
+                      "type": "TypedLength",
+                      "description": "Coordinate in the artifact unit."
+                    }
+                  },
+                  "description": "Upper corner of the box; every coordinate above box_min."
+                },
+                "cell_size": {
+                  "type": "TypedLength",
+                  "exclusiveMinimum": 0,
+                  "description": "Upper bound on the circumradius of cells whose circumcentre lies in the box."
+                }
+              }
+            }
+          },
+          "facet_topology": {
+            "type": "string",
+            "enum": [
+              "FACET_VERTICES_ON_SURFACE",
+              "FACET_VERTICES_ON_SAME_SURFACE_PATCH"
+            ],
+            "description": "Mesh_3 facet_topology. The unprotected domains have one surface patch, so both values require every boundary facet vertex on the domain surface; the patch variant is not supported together with edge_size."
+          },
+          "edge_size": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Upper bound on the length of the 1D feature edges (Mesh_3 edge_size). Polyhedral domains only: it switches on sharp-edge protection (normal angle above 60 degrees); implicit domains and sources without sharp edges are refused (CRITERION_NOT_APPLICABLE)."
           }
         }
       },
@@ -19241,6 +19325,18 @@
               },
               "cell_size": {
                 "parameter": "cell_size"
+              },
+              "cell_size_regions": {
+                "parameter": "cell_size_regions",
+                "optional": true
+              },
+              "facet_topology": {
+                "parameter": "facet_topology",
+                "optional": true
+              },
+              "edge_size": {
+                "parameter": "edge_size",
+                "optional": true
               }
             }
           }
@@ -19290,11 +19386,19 @@
               "facet_size": "facet_size",
               "facet_distance": "facet_distance",
               "cell_radius_edge_ratio": "cell_radius_edge_ratio",
-              "cell_size": "cell_size"
+              "cell_size": "cell_size",
+              "cell_size_regions": "cell_size_regions",
+              "facet_topology": "facet_topology",
+              "edge_size": "edge_size"
             }
           },
           "validators": [
             "mesh.validate.volume_mesh"
+          ],
+          "optional_parameters": [
+            "cell_size_regions",
+            "facet_topology",
+            "edge_size"
           ]
         }
       },
@@ -19329,7 +19433,7 @@
       "revision": 1,
       "status": "VALIDATED",
       "role": "validator",
-      "summary": "Independent check that a TetrahedralMesh is a valid volume mesh of its domain, a typed implicit domain or a closed TriangleSurfaceMesh (polyhedral). Common: the full tetrahedral mesh validation (exact orientation, face adjacency, single closed boundary, 3-manifold vertex links, cell-versus-boundary volume), one subdomain, boundary vertices on the domain surface, outward boundary, boundary and solid Euler characteristics, facet angle/size/distance and cell size/radius-edge criteria recomputed from the raw mesh, a Hausdorff-style surface bound and the volume. Implicit: analytic surface, area and volume. Polyhedral: the source re-validated from raw triangles (closed, manifold, oriented, single component, no self-intersection), two-sided sampled Hausdorff bounds against the source triangles and the divergence-theorem volume. It never calls Mesh_3.",
+      "summary": "Independent check that a TetrahedralMesh is a valid volume mesh of its domain, a typed implicit domain or a closed TriangleSurfaceMesh (polyhedral). Common: the full tetrahedral mesh validation (exact orientation, face adjacency, single closed boundary, 3-manifold vertex links, cell-versus-boundary volume), one subdomain, boundary vertices on the domain surface, outward boundary, boundary and solid Euler characteristics, facet angle/size/distance and cell size/radius-edge criteria recomputed from the raw mesh (plus the optional regional cell sizes, facet topology and feature edge_size chains when requested), a Hausdorff-style surface bound and the volume. Implicit: analytic surface, area and volume. Polyhedral: the source re-validated from raw triangles (closed, manifold, oriented, single component, no self-intersection), two-sided sampled Hausdorff bounds against the source triangles and the divergence-theorem volume. It never calls Mesh_3.",
       "package": "Mesh_3",
       "aliases": [
         "validate volume mesh",
@@ -19447,6 +19551,89 @@
             "type": "TypedLength",
             "exclusiveMinimum": 0,
             "description": "Largest circumradius every cell may have."
+          },
+          "cell_size_regions": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 4,
+            "description": "Typed sizing field: up to 4 axis-aligned boxes. The cell size bound at a point is the minimum of cell_size and the cell_size of every box containing it, evaluated at the cell circumcentre (Mesh_3 variable cell_size). Each region must be smaller than cell_size and must intersect the domain.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "box_min",
+                "box_max",
+                "cell_size"
+              ],
+              "properties": {
+                "box_min": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "x",
+                    "y",
+                    "z"
+                  ],
+                  "properties": {
+                    "x": {
+                      "type": "TypedLength",
+                      "description": "Coordinate in the artifact unit."
+                    },
+                    "y": {
+                      "type": "TypedLength",
+                      "description": "Coordinate in the artifact unit."
+                    },
+                    "z": {
+                      "type": "TypedLength",
+                      "description": "Coordinate in the artifact unit."
+                    }
+                  },
+                  "description": "Lower corner of the box."
+                },
+                "box_max": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "x",
+                    "y",
+                    "z"
+                  ],
+                  "properties": {
+                    "x": {
+                      "type": "TypedLength",
+                      "description": "Coordinate in the artifact unit."
+                    },
+                    "y": {
+                      "type": "TypedLength",
+                      "description": "Coordinate in the artifact unit."
+                    },
+                    "z": {
+                      "type": "TypedLength",
+                      "description": "Coordinate in the artifact unit."
+                    }
+                  },
+                  "description": "Upper corner of the box; every coordinate above box_min."
+                },
+                "cell_size": {
+                  "type": "TypedLength",
+                  "exclusiveMinimum": 0,
+                  "description": "Upper bound on the circumradius of cells whose circumcentre lies in the box."
+                }
+              }
+            }
+          },
+          "facet_topology": {
+            "type": "string",
+            "enum": [
+              "FACET_VERTICES_ON_SURFACE",
+              "FACET_VERTICES_ON_SAME_SURFACE_PATCH"
+            ],
+            "description": "Mesh_3 facet_topology. The unprotected domains have one surface patch, so both values require every boundary facet vertex on the domain surface; the patch variant is not supported together with edge_size."
+          },
+          "edge_size": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Upper bound on the length of the 1D feature edges (Mesh_3 edge_size). Polyhedral domains only: it switches on sharp-edge protection (normal angle above 60 degrees); implicit domains and sources without sharp edges are refused (CRITERION_NOT_APPLICABLE)."
           }
         }
       },
@@ -19535,7 +19722,10 @@
             "facet_size",
             "facet_distance",
             "cell_radius_edge_ratio",
-            "cell_size"
+            "cell_size",
+            "cell_size_regions",
+            "facet_topology",
+            "edge_size"
           ],
           "output_slot": "validation",
           "implicit_domain_extra_checks": [
@@ -19545,6 +19735,11 @@
           ],
           "polyhedral_domain_extra_checks": [
             "source_coverage_bound_satisfied"
+          ],
+          "optional_criteria_checks": [
+            "cell_size_regions_satisfied",
+            "facet_topology_satisfied",
+            "feature_edge_size_satisfied"
           ]
         }
       },

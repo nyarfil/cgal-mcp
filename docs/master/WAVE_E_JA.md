@@ -54,7 +54,7 @@ Surface_mesherはCGAL 6.2.1で非推奨のパッケージです。陰関数ド�
 | 7.14.01 | 結合済み | Mesh_2の`refine_Delaunay_mesh_2` |
 | 7.14.02 | 結合済み | Surface_mesherの`make_surface_mesh`（球・楕円体・トーラス） |
 | 7.14.03 | 結合済み | Mesh_3の`make_mesh_3`（球・楕円体・トーラスのimplicit domainと、閉じた向き付き三角形メッシュの多面体domain） |
-| 7.14.04 | 未結合 | Mesh_3のdomain criteriaがない |
+| 7.14.04 | 結合済み | `Mesh_criteria_3`の型付きcriteria（facet角・サイズ・距離、cell外接半径／最短辺比・サイズに加え、列挙boxのsizing field、facet_topology、多面体の1D特徴辺`edge_size`） |
 
 Mesh_2のconforming専用、局所サイズ基準、Lloyd最適化も未実装です。
 全体の未結合は[主要能力台帳](MAJOR_INVENTORY_JA.md)を参照。
@@ -82,9 +82,9 @@ fixtureは単一四面体、立方体の6分割・5分割、2サブドメイン�
 
 Operation `mesh.volume.generate`は2種類のdomainに`CGAL::make_mesh_3`（`Mesh_criteria_3`）を実行し、`TetrahedralMesh`を出力します。
 - `ImplicitSurfaceDomain`（球・楕円体・トーラスの列挙済み型付きdomain）: `Labeled_mesh_domain_3`。
-- `TriangleSurfaceMesh`（OFF、多面体domain）: `Polyhedral_mesh_domain_3`（特徴保存なし）。入力は閉じ・多様体・一貫した向き・外向き（体積正）・単一連結・自己交差なしでなければならず、
+- `TriangleSurfaceMesh`（OFF、多面体domain）: `Polyhedral_mesh_domain_3`（`edge_size`指定時は`Polyhedral_mesh_domain_with_features_3`）。入力は閉じ・多様体・一貫した向き・外向き（体積正）・単一連結・自己交差なしでなければならず、
   開いた面・非多様体・自己交差・向き不整合・反転・複数成分は`PRECONDITION_FAILED`で拒否します（面数上限20000）。
-自由式と生成C++は受け付けません。画像domain、多面体の鋭い特徴保存、perturbation、exudationは未実装（無効）です。
+自由式と生成C++は受け付けません。画像domain、perturbation、exudationは未実装（無効）です。多面体の鋭い特徴保存は`edge_size`指定時のみ有効です（7.14.04）。
 多面体domainの鋭い折れ（法線の回転が約90度を超える凹み等）はMesh_3の出力がvalidatorで拒否されるため非対応です（階段形角柱までを確認）。
 
 parameterは`facet_angle`（30度以下）、`facet_size`、`facet_distance`（最小曲率半径の0.1倍以下）、
@@ -104,8 +104,25 @@ fixtureは単位立方体（体積1）、L字角柱（3）、階段形角柱（6
 サブドメイン不正、別形状、入力の一部だけを満たすメッシュ、基準の厳格化5種、粗い立方体6分割、サイズ予算超過です。
 陰性対照は欠落セル（内部・境界）、反転、重複、拡大、サブドメイン不正、粗い八面体、別domain、基準の厳格化5種、
 式・未知種別・負半径・過大トーラス・針状楕円体、範囲外parameter、サイズ予算超過です。
-7.14.04（domain criteria）は未結合です。
-未実装の範囲: 画像domain、多面体の特徴（鋭い辺・角）保存、perturbation／exudation、Lloyd/ODT。
+
+## Mesh_3 domain criteria（7.14.04）
+
+`mesh.volume.generate`と`mesh.validate.volume_mesh`は同じ厳格な型付き`MeshCriteria3`を受け取ります（未知キー拒否、単位・範囲検査、自由式なし）。
+追加の任意parameterは次の3つです。
+- `cell_size_regions`（最大4個の軸平行box、各`box_min`/`box_max`/`cell_size`）: Mesh_3のcell_sizeにsizing fieldを与えます。
+  cell外接中心がboxに入るcellの外接半径はそのbox内の最小値以下、box外は全体の`cell_size`以下です。
+  boxは`cell_size`より小さい値で、domainと交わる必要があります（`REGION_OUTSIDE_DOMAIN`）。
+- `facet_topology`（`FACET_VERTICES_ON_SURFACE`／`FACET_VERTICES_ON_SAME_SURFACE_PATCH`）: domainは単一パッチなので境界facetの全頂点がdomain面上にあることを確認します。
+- `edge_size`（多面体domainのみ）: `Polyhedral_mesh_domain_with_features_3`（法線角60度超の鋭い辺を検出）で1D特徴辺を保護し、特徴辺の長さをedge_size以下にします。
+  鋭い辺が無い入力・implicit domain・`FACET_VERTICES_ON_SAME_SURFACE_PATCH`との併用は`CRITERION_NOT_APPLICABLE`、辺が60度閾値の1度以内なら`FEATURE_ANGLE_AMBIGUOUS`で拒否します。
+
+validatorは各criterionを出力とrequestだけから独立に再計算します：領域別cell外接半径（`CELL_SIZE_REGION_VIOLATED`）、
+特徴辺ごとのメッシュ辺連鎖の被覆と長さ（`FEATURE_EDGE_NOT_PROTECTED`／`EDGE_SIZE_VIOLATED`）、facet頂点のdomain面上確認。
+多面体の体積許容はfacetごとの標本最大偏差から導き、境界が緩すぎれば`VOLUME_BOUND_TOO_LOOSE`で失敗します（0.5へのクランプはしません）。
+再生試験は、box内外の外接半径、立方体12辺上の頂点間隔と辺長（edge_size 0.5で36、0.25で48区間）、基準を締めた陰性対照（各criterion固有のcode）を生出力から再計算します。
+`edge_size`指定時は保護された特徴に接するfacetとcellにはfacet／cell基準を適用しません（Mesh_3が保護球内を細分しないため。既知の限界）。
+`facet_topology`は単一パッチのdomainでは出力が変わりません（受理・伝達・検査のみ）。
+未実装の範囲: 画像domain、複数パッチのfacet_topology、列挙box以外のsizing field、`mesh.surface.generate`のMesh_3 criteria（Surface_mesher基準のまま）、perturbation／exudation、Lloyd/ODT。
 逆方向被覆と体積の許容は保守的な上限で、セル同士の貫入はface隣接と体積和で除外します（点位置による独立検査ではありません）。
 単独の`mesh.validate.tetrahedral_mesh`は`domain_volume`未指定ではセルの貫入を除外しません。貫入の除外は`mesh.validate.volume_mesh`（境界と体積の比較）だけです。
 

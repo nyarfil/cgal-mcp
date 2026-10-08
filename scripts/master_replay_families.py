@@ -1241,6 +1241,8 @@ POLY_CUBE_INCONSISTENT = _fx("poly_cube_inconsistent.off", "f5979445dbaad5a9ddbb
 POLY_CUBE_SELF_INTERSECTING = _fx("poly_cube_self_intersecting.off", "54645a9fd72fb8f16efe43cff9c5ca2c5084a5f76de6e59d70fadcb4aa066d61")
 POLY_CUBE_NONMANIFOLD = _fx("poly_cube_nonmanifold.off", "42af0e10714897a1129e1ef2acc815fe95501ae40b3f19c48d712deab375ae7b")
 POLY_TWO_CUBES = _fx("poly_two_cubes.off", "7d2e06074561d742d2743d87c19ec287ae4fbfe45b41e76f02aba4c3d65aa305")
+POLY_ICOSPHERE = _fx("poly_icosphere.off", "53b740bfd5bb10c0ba6b583e2b9853f6f4b6cd60a38aa5230845aa8b36bc4c9f")
+POLY_CUBE_FEATURES_MESH = _fx("poly_cube_features_mesh.json", "1cdef17597beb6e1876bbecd415732d1b855cc047134843573b14f7fdedd24fd")
 POLY_CUBE_MESH = _fx("poly_cube_mesh.json", "a634d1ad14ac59e768c6c00e7959739c90b1ee46e7742081a5fc8d6e0d747717")
 POLY_L_MESH = _fx("poly_l_prism_mesh.json", "157e6ae4f2a3a96b6ba0e90a4663d26f487ed6fef15ea1ac59c69a6ec9c595f8")
 POLY_BOX_IN_L_MESH = _fx("poly_box_in_l_prism_mesh.json", "3e93ece081fd80f8abd2d72fc9e9f31cfcaff24c7849e24c043321f29bbd440c")
@@ -1260,6 +1262,20 @@ VOL_VAL = "mesh.validate.volume_mesh"
 def _vol(angle: float, size: float, distance: float, ratio: float, cell: float) -> dict:
     return {"facet_angle": angle, "facet_size": _mm(size), "facet_distance": _mm(distance),
             "cell_radius_edge_ratio": ratio, "cell_size": _mm(cell)}
+
+
+def _regions(*boxes) -> list:
+    """Typed cell_size_regions entries: (low corner, high corner, cell size)."""
+    return [{"box_min": {a: _mm(low[i]) for i, a in enumerate("xyz")},
+             "box_max": {a: _mm(high[i]) for i, a in enumerate("xyz")}, "cell_size": _mm(size)}
+            for low, high, size in boxes]
+
+
+def _box_name(prefix: str, low, high) -> str:
+    return f"{prefix}({','.join(str(c) for c in (*low, *high))})"
+
+
+SPHERE_BOX = ((0.0, 0.0, 0.0), (2.5, 2.5, 2.5))
 
 
 def _tet(fixture: dict) -> dict:
@@ -1418,10 +1434,36 @@ FAMILY_7_14 = {
                          "volume-torus", "volume-poly-cube", "volume-poly-cube-fine", "volume-poly-l-prism",
                          "volume-poly-stair-prism", "volume-poly-tilted-box"],
         },
+        "major.7.14.04": {
+            "operation_ids": [VOL_GEN],
+            "symbols": ["Mesh_criteria_3", "Mesh_cell_criteria_3", "Mesh_facet_criteria_3",
+                        "Polyhedral_mesh_domain_with_features_3"],
+            "symbol_notes": "Typed MeshCriteria3 parameters (facet_angle, facet_size, facet_distance, "
+                            "cell_radius_edge_ratio, cell_size, cell_size_regions, facet_topology, edge_size; "
+                            "units checked, ranges checked, unknown keys rejected, no free-form expressions) "
+                            "are passed to CGAL::Mesh_criteria_3 by mesh.volume.generate and re-checked one "
+                            "criterion at a time by mesh.validate.volume_mesh. Each criterion has a "
+                            "measurable effect re-derived here from the raw output: cell_size_regions (a "
+                            "sizing field of up to four enumerated boxes, evaluated at the cell "
+                            "circumcentre) bounds the circumradius of the cells inside the box by 0.3 while "
+                            "the global 0.6 still holds outside and the plain mesh exceeds 0.3 there; "
+                            "edge_size on the polyhedral unit cube (12 sharp edges, normal angle above 60 "
+                            "degrees, protected through Polyhedral_mesh_domain_with_features_3) bounds the "
+                            "gaps between consecutive mesh vertices on each cube edge and the mesh edge "
+                            "lengths there by 0.5 and 0.25 (36 and 48 segments); facet_topology is carried "
+                            "through and checked (every boundary facet vertex on the single-patch domain "
+                            "surface). The negative controls tighten each criterion against a pinned genuine "
+                            "mesh and expect that criterion's own code. Not covered: image domains, "
+                            "multi-patch facet topology, sizing fields other than the enumerated boxes, "
+                            "mesh.surface.generate (Surface_mesher criteria are not Mesh_criteria_3), and "
+                            "facet and cell criteria on facets and cells that touch a protected feature "
+                            "when edge_size is given.",
+            "case_ids": ["volume-sphere-baseline-box", "volume-sphere-regions", "volume-sphere-topology-surface",
+                         "volume-sphere-topology-patch", "volume-poly-cube-edge-size-half",
+                         "volume-poly-cube-edge-size-quarter"],
+        },
     },
-    "unbound": {
-        "major.7.14.04": "No Mesh_3 domain criteria operation (Mesh_criteria_3, Mesh_facet_criteria_3).",
-    },
+    "unbound": {},
     "cases": [
         _case("mesh2-square-size2", "mesh2.refine.delaunay", [_domain(SQUARE_10)], _mesh2(0.125, 2.0), [
             ["metrics.algorithm", "==", "CGAL::refine_Delaunay_mesh_2"],
@@ -1615,8 +1657,82 @@ FAMILY_7_14 = {
               _poly_checks("poly_stair_prism.off", 6.0, 24.0, 0.02, 0.4, 0.03, 25.0, 3.0, 0.5)),
         _case("volume-poly-tilted-box", VOL_GEN, [_poly(POLY_TILTED_BOX)], _vol(25.0, 0.5, 0.04, 3.0, 0.6),
               _poly_checks("poly_tilted_box.off", 6.0, 22.0, 0.02, 0.5, 0.04, 25.0, 3.0, 0.6)),
+        _case("volume-sphere-baseline-box", VOL_GEN, [_surface(DOM_SPHERE)], _vol(25.0, 0.5, 0.05, 3.0, 0.6), [
+            *_volume_checks(),
+            ["metrics.cell_size_region_count", "==", 0],
+            ["output:geometry:measure:tet." + _box_name("max_circumradius_in_box", *SPHERE_BOX), ">", 0.3 + 1e-6],
+            ["output:geometry:measure:tet.tetrahedron_count", "<=", 1000],
+        ]),
+        _case("volume-sphere-regions", VOL_GEN, [_surface(DOM_SPHERE)],
+              {**_vol(25.0, 0.5, 0.05, 3.0, 0.6), "cell_size_regions": _regions((*SPHERE_BOX, 0.3))}, [
+            *_volume_checks(),
+            ["metrics.domain_kind", "==", "sphere"],
+            ["metrics.cell_size_region_count", "==", 1],
+            ["output:geometry:measure:tet." + _box_name("max_circumradius_in_box", *SPHERE_BOX), "<=", 0.3 + 1e-9],
+            ["output:geometry:measure:tet." + _box_name("max_circumradius_outside_box", *SPHERE_BOX), ">", 0.3],
+            ["output:geometry:measure:tet." + _box_name("cell_count_in_box", *SPHERE_BOX), ">=", 400],
+            ["output:geometry:measure:tet.max_circumradius", "<=", 0.6 + 1e-9],
+            ["output:geometry:measure:tet.max_radius_edge", "<=", 3.0 + 1e-9],
+            ["output:geometry:measure:tet.tetrahedron_count", ">=", 1200],
+            ["output:geometry:measure:tet.euler_characteristic", "==", 1],
+            ["output:geometry:measure:tet.boundary_euler_characteristic", "==", 2],
+            ["output:geometry:measure:tet.volume", "approx", [32.0 * PI / 3.0, 0.08 * 32.0 * PI / 3.0]],
+        ]),
+        *[_case(f"volume-sphere-topology-{tag}", VOL_GEN, [_surface(DOM_SPHERE)],
+                {**_vol(25.0, 0.5, 0.05, 3.0, 0.6), "facet_topology": topology}, [
+            *_volume_checks(),
+            ["metrics.facet_topology", "==", topology],
+            ["output:geometry:measure:tet.boundary_euler_characteristic", "==", 2],
+            ["output:geometry:measure:tet.max_boundary_vertex_radius", "approx", [2.0, 1e-6]],
+            ["output:geometry:measure:tet.min_boundary_vertex_radius", "approx", [2.0, 1e-6]],
+            ["output:geometry:measure:tet.max_circumradius", "<=", 0.6 + 1e-9],
+        ]) for tag, topology in (("surface", "FACET_VERTICES_ON_SURFACE"),
+                                 ("patch", "FACET_VERTICES_ON_SAME_SURFACE_PATCH"))],
+        _case("volume-poly-cube-edge-size-half", VOL_GEN, [_poly(POLY_CUBE)],
+              {**_vol(25.0, 0.25, 0.02, 3.0, 0.3), "edge_size": _mm(0.5)}, [
+            *_volume_checks("CGAL::Polyhedral_mesh_domain_with_features_3"),
+            ["metrics.domain_kind", "==", "polyhedral"],
+            ["metrics.feature_protection", "==", True],
+            ["metrics.sharp_edge_count", "==", 12],
+            ["metrics.edge_size", "==", 0.5],
+            ["metrics.source_volume", "approx", [1.0, 1e-9]],
+            ["output:geometry:measure:tet.euler_characteristic", "==", 1],
+            ["output:geometry:measure:tet.boundary_euler_characteristic", "==", 2],
+            ["output:geometry:measure:tet.volume", "approx", [1.0, 0.02]],
+            ["output:geometry:measure:tet.boundary_area", "approx", [6.0, 0.36]],
+            ["output:geometry:measure:tet.max_boundary_vertex_distance_to_off(poly_cube.off)", "<=", 1e-9],
+            ["output:geometry:measure:tet.max_boundary_sample_distance_to_off(poly_cube.off)", "<=", 0.25],
+            ["output:geometry:measure:tet.max_off_sample_distance_to_boundary(poly_cube.off)", "<=", 0.5],
+            ["output:geometry:measure:tet.max_cube_edge_vertex_gap", "<=", 0.5 + 1e-9],
+            ["output:geometry:measure:tet.max_cube_edge_vertex_gap", ">", 0.25],
+            ["output:geometry:measure:tet.max_cube_edge_mesh_segment", "<=", 0.5 + 1e-9],
+            ["output:geometry:measure:tet.cube_edge_mesh_segment_count", "==", 36],
+        ]),
+        _case("volume-poly-cube-edge-size-quarter", VOL_GEN, [_poly(POLY_CUBE)],
+              {**_vol(25.0, 0.25, 0.02, 3.0, 0.3), "edge_size": _mm(0.25)}, [
+            *_volume_checks("CGAL::Polyhedral_mesh_domain_with_features_3"),
+            ["metrics.domain_kind", "==", "polyhedral"],
+            ["metrics.feature_protection", "==", True],
+            ["metrics.sharp_edge_count", "==", 12],
+            ["metrics.edge_size", "==", 0.25],
+            ["metrics.source_volume", "approx", [1.0, 1e-9]],
+            ["output:geometry:measure:tet.euler_characteristic", "==", 1],
+            ["output:geometry:measure:tet.boundary_euler_characteristic", "==", 2],
+            ["output:geometry:measure:tet.volume", "approx", [1.0, 0.02]],
+            ["output:geometry:measure:tet.boundary_area", "approx", [6.0, 0.36]],
+            ["output:geometry:measure:tet.max_boundary_vertex_distance_to_off(poly_cube.off)", "<=", 1e-9],
+            ["output:geometry:measure:tet.max_boundary_sample_distance_to_off(poly_cube.off)", "<=", 0.25],
+            ["output:geometry:measure:tet.max_off_sample_distance_to_boundary(poly_cube.off)", "<=", 0.5],
+            ["output:geometry:measure:tet.max_cube_edge_vertex_gap", "<=", 0.25 + 1e-9],
+            ["output:geometry:measure:tet.max_cube_edge_vertex_gap", ">", 0.125],
+            ["output:geometry:measure:tet.max_cube_edge_mesh_segment", "<=", 0.25 + 1e-9],
+            ["output:geometry:measure:tet.cube_edge_mesh_segment_count", "==", 48],
+        ]),
     ],
     "pairs": [
+        {"kind": "different_outputs", "cases": ["volume-sphere", "volume-sphere-regions"]},
+        {"kind": "different_outputs", "cases": ["volume-poly-cube", "volume-poly-cube-edge-size-half"]},
+        {"kind": "different_outputs", "cases": ["volume-poly-cube-edge-size-half", "volume-poly-cube-edge-size-quarter"]},
         {"kind": "different_outputs", "cases": ["volume-poly-cube", "volume-poly-cube-fine"]},
         {"kind": "different_outputs", "cases": ["surface-sphere", "surface-sphere-fine"]},
         {"kind": "different_outputs", "cases": ["volume-sphere", "volume-sphere-fine"]},
@@ -1880,6 +1996,66 @@ FAMILY_7_14 = {
          "expect_error_class": "INVALID_REQUEST", "expect_error_code": "INVALID_PARAMETER"},
         {"id": "volume-poly-unit-mismatch-rejected", "operation": VOL_GEN,
          "inputs": [{**_poly(POLY_CUBE), "unit": "cm"}], "parameters": _vol(25.0, 0.25, 0.02, 3.0, 0.3),
+         "expect_error_class": "TYPE_ERROR", "expect_error_code": "UNIT_MISMATCH"},
+        {"id": "volume-region-unrefined-mesh-rejected", "operation": VOL_VAL,
+         "inputs": [_tet(VOL_SPHERE_MESH), _surface(DOM_SPHERE)], "parameters": {**_vol(25.0, 0.5, 0.05, 3.0, 0.6), "cell_size_regions": _regions((*SPHERE_BOX, 0.3))},
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "CELL_SIZE_REGION_VIOLATED"},
+        {"id": "volume-poly-region-unrefined-mesh-rejected", "operation": VOL_VAL,
+         "inputs": [_tet(POLY_CUBE_MESH), _poly(POLY_CUBE)], "parameters": {**_vol(25.0, 0.25, 0.02, 3.0, 0.3), "cell_size_regions": _regions(((0.0, 0.0, 0.0), (0.5, 0.5, 0.5), 0.1))},
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "CELL_SIZE_REGION_VIOLATED"},
+        {"id": "volume-poly-edge-size-unprotected-mesh-rejected", "operation": VOL_VAL,
+         "inputs": [_tet(POLY_CUBE_MESH), _poly(POLY_CUBE)], "parameters": {**_vol(25.0, 0.25, 0.02, 3.0, 0.3), "edge_size": _mm(0.5)},
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "FEATURE_EDGE_NOT_PROTECTED"},
+        {"id": "volume-poly-edge-size-tightened-rejected", "operation": VOL_VAL,
+         "inputs": [_tet(POLY_CUBE_FEATURES_MESH), _poly(POLY_CUBE)], "parameters": {**_vol(25.0, 0.25, 0.02, 3.0, 0.3), "edge_size": _mm(0.25)},
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "EDGE_SIZE_VIOLATED"},
+        {"id": "volume-poly-features-mesh-without-edge-size-rejected", "operation": VOL_VAL,
+         "inputs": [_tet(POLY_CUBE_FEATURES_MESH), _poly(POLY_CUBE)], "parameters": _vol(25.0, 0.25, 0.02, 3.0, 0.3),
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "FACET_ANGLE_VIOLATED"},
+        {"id": "volume-edge-size-implicit-validator-rejected", "operation": VOL_VAL,
+         "inputs": [_tet(VOL_SPHERE_MESH), _surface(DOM_SPHERE)], "parameters": {**_vol(25.0, 0.5, 0.05, 3.0, 0.6), "edge_size": _mm(0.3)},
+         "expect_error_class": "INVALID_REQUEST", "expect_error_code": "CRITERION_NOT_APPLICABLE"},
+        {"id": "volume-edge-size-implicit-rejected", "operation": VOL_GEN,
+         "inputs": [_surface(DOM_SPHERE)], "parameters": {**_vol(25.0, 0.5, 0.05, 3.0, 0.6), "edge_size": _mm(0.3)},
+         "expect_error_class": "INVALID_REQUEST", "expect_error_code": "CRITERION_NOT_APPLICABLE"},
+        {"id": "volume-poly-edge-size-no-sharp-edges-rejected", "operation": VOL_GEN,
+         "inputs": [_poly(POLY_ICOSPHERE)], "parameters": {**_vol(25.0, 0.3, 0.02, 3.0, 0.4), "edge_size": _mm(0.3)},
+         "expect_error_class": "INVALID_REQUEST", "expect_error_code": "CRITERION_NOT_APPLICABLE"},
+        {"id": "volume-poly-edge-size-patch-topology-rejected", "operation": VOL_GEN,
+         "inputs": [_poly(POLY_CUBE)], "parameters": {**_vol(25.0, 0.25, 0.02, 3.0, 0.3), "edge_size": _mm(0.5), "facet_topology": "FACET_VERTICES_ON_SAME_SURFACE_PATCH"},
+         "expect_error_class": "INVALID_REQUEST", "expect_error_code": "CRITERION_NOT_APPLICABLE"},
+        {"id": "volume-poly-edge-size-budget-rejected", "operation": VOL_GEN,
+         "inputs": [_poly(POLY_CUBE)], "parameters": {**_vol(25.0, 0.25, 0.02, 3.0, 0.3), "edge_size": _mm(0.0005)},
+         "expect_error_class": "RESOURCE_LIMIT", "expect_error_code": "MESH_SIZE_LIMIT_EXCEEDED"},
+        {"id": "volume-region-outside-domain-rejected", "operation": VOL_GEN,
+         "inputs": [_surface(DOM_SPHERE)], "parameters": {**_vol(25.0, 0.5, 0.05, 3.0, 0.6), "cell_size_regions": _regions(((5.0, 5.0, 5.0), (6.0, 6.0, 6.0), 0.3))},
+         "expect_error_class": "INVALID_REQUEST", "expect_error_code": "REGION_OUTSIDE_DOMAIN"},
+        {"id": "volume-region-not-smaller-rejected", "operation": VOL_GEN,
+         "inputs": [_surface(DOM_SPHERE)], "parameters": {**_vol(25.0, 0.5, 0.05, 3.0, 0.6), "cell_size_regions": _regions((*SPHERE_BOX, 0.6))},
+         "expect_error_class": "INVALID_REQUEST", "expect_error_code": "INVALID_PARAMETER"},
+        {"id": "volume-region-inverted-box-rejected", "operation": VOL_GEN,
+         "inputs": [_surface(DOM_SPHERE)], "parameters": {**_vol(25.0, 0.5, 0.05, 3.0, 0.6), "cell_size_regions": _regions((SPHERE_BOX[1], SPHERE_BOX[0], 0.3))},
+         "expect_error_class": "INVALID_REQUEST", "expect_error_code": "INVALID_PARAMETER"},
+        {"id": "volume-region-too-many-rejected", "operation": VOL_GEN,
+         "inputs": [_surface(DOM_SPHERE)], "parameters": {**_vol(25.0, 0.5, 0.05, 3.0, 0.6), "cell_size_regions": _regions(*[(*SPHERE_BOX, 0.3)] * 5)},
+         "expect_error_class": "INVALID_REQUEST", "expect_error_code": "INVALID_PARAMETER"},
+        {"id": "volume-region-empty-list-rejected", "operation": VOL_GEN,
+         "inputs": [_surface(DOM_SPHERE)], "parameters": {**_vol(25.0, 0.5, 0.05, 3.0, 0.6), "cell_size_regions": []},
+         "expect_error_class": "INVALID_REQUEST", "expect_error_code": "INVALID_PARAMETER"},
+        {"id": "volume-region-unit-mismatch-rejected", "operation": VOL_GEN,
+         "inputs": [_surface(DOM_SPHERE)], "parameters": {**_vol(25.0, 0.5, 0.05, 3.0, 0.6), "cell_size_regions": [{**_regions((*SPHERE_BOX, 0.3))[0], "cell_size": {"value": 0.3, "unit": "cm"}}]},
+         "expect_error_class": "TYPE_ERROR", "expect_error_code": "UNIT_MISMATCH"},
+        {"id": "volume-region-free-form-key-rejected", "operation": VOL_GEN,
+         "inputs": [_surface(DOM_SPHERE)], "parameters": {**_vol(25.0, 0.5, 0.05, 3.0, 0.6), "cell_size_regions": [{**_regions((*SPHERE_BOX, 0.3))[0], "expression": "x*x"}]},
+         "expect_error_class": "INVALID_REQUEST", "expect_error_code": "INVALID_PARAMETER"},
+        {"id": "volume-topology-unknown-value-rejected", "operation": VOL_GEN,
+         "inputs": [_surface(DOM_SPHERE)], "parameters": {**_vol(25.0, 0.5, 0.05, 3.0, 0.6), "facet_topology": "FACET_VERTICES_ANYWHERE"},
+         "expect_error_class": "INVALID_REQUEST", "expect_error_code": "INVALID_PARAMETER"},
+        {"id": "volume-unknown-criterion-rejected", "operation": VOL_GEN,
+         "inputs": [_surface(DOM_SPHERE)], "parameters": {**_vol(25.0, 0.5, 0.05, 3.0, 0.6), "mystery_criterion": 1},
+         "expect_error_class": "INVALID_REQUEST", "expect_error_code": "UNSUPPORTED_PARAMETER"},
+        {"id": "volume-region-validator-unit-mismatch-rejected", "operation": VOL_VAL,
+         "inputs": [_tet(VOL_SPHERE_MESH), _surface(DOM_SPHERE)], "parameters": {**_vol(25.0, 0.5, 0.05, 3.0, 0.6), "cell_size_regions": [{**_regions((*SPHERE_BOX, 0.3))[0], "cell_size": {"value": 0.3, "unit": "cm"}}]},
          "expect_error_class": "TYPE_ERROR", "expect_error_code": "UNIT_MISMATCH"},
         {"id": "mesh2-bowtie-rejected", "operation": "mesh2.refine.delaunay",
          "inputs": [_domain(BOWTIE)], "parameters": _mesh2(0.125, 2.0),
@@ -2391,6 +2567,7 @@ def _tet_measure(name: str, content: bytes) -> object:
     smallest_volume = None
     volume = Fraction(0)
     radius_edge = widest = 0.0
+    spheres = []
     for cell in cells:
         points = [vertices[i] for i in cell]
         signed = determinant(points) / 6
@@ -2419,9 +2596,39 @@ def _tet_measure(name: str, content: bytes) -> object:
             return det3(m)
         d = det3(rows)
         radius = math.hypot(column(0) / d, column(1) / d, column(2) / d)
+        spheres.append(([points[0][k] + column(k) / d for k in range(3)], radius))
         widest = max(widest, radius)
         shortest = min(math.dist(points[i], points[j]) for i in range(4) for j in range(i + 1, 4))
         radius_edge = max(radius_edge, radius / shortest)
+    if name.startswith(("max_circumradius_in_box(", "max_circumradius_outside_box(", "cell_count_in_box(")):
+        low_high = [float(x) for x in name[name.index("(") + 1:-1].split(",")]
+        low, high = low_high[:3], low_high[3:]
+        inside = [r for c, r in spheres if all(low[k] <= c[k] <= high[k] for k in range(3))]
+        outside = [r for c, r in spheres if not all(low[k] <= c[k] <= high[k] for k in range(3))]
+        if name.startswith("cell_count_in_box("):
+            return len(inside)
+        chosen = inside if name.startswith("max_circumradius_in_box(") else outside
+        return max(chosen) if chosen else 0.0
+    if name in {"max_cube_edge_vertex_gap", "max_cube_edge_mesh_segment", "cube_edge_mesh_segment_count"}:
+        tolerance = 1e-9
+        gaps, segment_lengths = [], []
+        for axis in range(3):
+            first, second = [k for k in range(3) if k != axis]
+            for a in (0.0, 1.0):
+                for b in (0.0, 1.0):
+                    on = [i for i, v in enumerate(vertices)
+                          if abs(v[first] - a) <= tolerance and abs(v[second] - b) <= tolerance
+                          and -tolerance <= v[axis] <= 1.0 + tolerance]
+                    ts = sorted([0.0, 1.0] + [vertices[i][axis] for i in on])
+                    gaps.append(max(y - x for x, y in zip(ts, ts[1:])))
+                    members = set(on)
+                    segment_lengths += [math.dist(vertices[i], vertices[j]) for i, j in edges
+                                        if i in members and j in members]
+        if name == "max_cube_edge_vertex_gap":
+            return max(gaps)
+        if name == "max_cube_edge_mesh_segment":
+            return max(segment_lengths) if segment_lengths else float("inf")
+        return len(segment_lengths)
     if name == "volume":
         return float(volume)
     if name == "min_tetrahedron_volume":

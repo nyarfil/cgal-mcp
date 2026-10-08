@@ -373,6 +373,7 @@ def main() -> None:
         tetrahedral_cases(scratch)
         volume_cases(scratch)
         polyhedral_volume_cases(scratch)
+        criteria_cases(scratch)
     print("PASS master Wave E worker cases")
 
 
@@ -923,7 +924,7 @@ def run_volume_pair(scratch, domain, parameters):
     _, validation_path = ok(validation)
     report = json.loads(validation_path.read_text("utf-8"))
     assert report["status"] == "pass" and report["passed"] is True, report
-    assert report["checks"] and all(report["checks"].values()) and len(report["checks"]) == 17, report
+    assert report["checks"] and all(report["checks"].values()) and len(report["checks"]) >= 17, report
     assert report["validator"] == VOL_VALIDATOR, report
     return report, json.loads(path.read_text("utf-8")), result["metrics"], candidate
 
@@ -1190,7 +1191,7 @@ def run_poly_pair(scratch, source, parameters):
     _, validation_path = ok(validation)
     report = json.loads(validation_path.read_text("utf-8"))
     assert report["status"] == "pass" and report["passed"] is True, report
-    assert report["checks"] and all(report["checks"].values()) and len(report["checks"]) == 15, report
+    assert report["checks"] and all(report["checks"].values()) and len(report["checks"]) >= 15, report
     assert report["validator"] == VOL_VALIDATOR and report["domain_kind"] == "polyhedral", report
     return report, json.loads(path.read_text("utf-8")), result["metrics"], candidate
 
@@ -1422,6 +1423,231 @@ def polyhedral_volume_cases(scratch: pathlib.Path) -> None:
           "MESH_SIZE_LIMIT_EXCEEDED", "RESOURCE_LIMIT")
     error(invoke(scratch, VOL_VALIDATOR, [cube_candidate, poly_source("poly_cube.off", "cm")], good),
           "UNIT_MISMATCH", "TYPE_ERROR")
+
+
+# ---------------------------------------------------------------------------
+# 7.14.04 typed Mesh_criteria_3 criteria, each recomputed independently from the output
+# ---------------------------------------------------------------------------
+
+def cell_circumspheres(mesh: dict) -> list:
+    """(centre, radius) of every tetrahedron by Cramer's rule, independent of the worker."""
+    result = []
+    vertices = mesh["vertices"]
+    for cell in mesh["tetrahedra"]:
+        p = [vertices[i] for i in cell]
+        rows = [[2 * (p[k][c] - p[0][c]) for c in range(3)] for k in (1, 2, 3)]
+        rhs = [sum((p[k][c] - p[0][c]) ** 2 for c in range(3)) for k in (1, 2, 3)]
+
+        def det3(m):
+            return (m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1])
+                    - m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0])
+                    + m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0]))
+        d = det3(rows)
+        offset = []
+        for column in range(3):
+            m = [row[:] for row in rows]
+            for r in range(3):
+                m[r][column] = rhs[r]
+            offset.append(det3(m) / d)
+        result.append(([p[0][c] + offset[c] for c in range(3)], math.hypot(*offset)))
+    return result
+
+
+def in_box(point, low, high) -> bool:
+    return all(low[c] <= point[c] <= high[c] for c in range(3))
+
+
+def region(low, high, size: float) -> dict:
+    return {"box_min": {axis: mm(low[i]) for i, axis in enumerate("xyz")},
+            "box_max": {axis: mm(high[i]) for i, axis in enumerate("xyz")}, "cell_size": mm(size)}
+
+
+def cube_feature_chains(mesh: dict) -> list:
+    """For each of the 12 unit-cube edges, the sorted mesh vertices on it and whether consecutive
+    ones are joined by a tetrahedron edge (all recomputed from the raw mesh)."""
+    vertices = mesh["vertices"]
+    edges = set()
+    for cell in mesh["tetrahedra"]:
+        for i in range(4):
+            for j in range(i + 1, 4):
+                edges.add((min(cell[i], cell[j]), max(cell[i], cell[j])))
+    chains = []
+    for axis in range(3):
+        others = [c for c in range(3) if c != axis]
+        for a in (0.0, 1.0):
+            for b in (0.0, 1.0):
+                on_line = sorted((vertices[i][axis], i) for i in range(len(vertices))
+                                 if abs(vertices[i][others[0]] - a) < 1e-9 and abs(vertices[i][others[1]] - b) < 1e-9)
+                joined = all((min(u[1], w[1]), max(u[1], w[1])) in edges for u, w in zip(on_line, on_line[1:]))
+                gaps = [w[0] - u[0] for u, w in zip(on_line, on_line[1:])]
+                chains.append({"count": len(on_line), "joined": joined, "gaps": gaps,
+                               "ends": (on_line[0][0], on_line[-1][0])})
+    return chains
+
+
+def criteria_cases(scratch: pathlib.Path) -> None:
+    sphere = artifact(FIXTURES / "domain_sphere.json", SURF_DOMAIN)
+    base = vol_params(25.0, 0.5, 0.05, 3.0, 0.6)
+
+    # --- every Mesh_criteria_3 criterion has a measurable effect, recomputed from the output -----
+    base_report, base_mesh, _, base_candidate = run_volume_pair(scratch, sphere, base)
+    base_facts = volume_facts(base_mesh)
+    base_spheres = cell_circumspheres(base_mesh)
+    variants = (("cell_size", vol_params(25.0, 0.5, 0.05, 3.0, 0.4)),
+                ("facet_size", vol_params(25.0, 0.3, 0.05, 3.0, 0.6)),
+                ("facet_distance", vol_params(25.0, 0.5, 0.02, 3.0, 0.6)),
+                ("cell_radius_edge_ratio", vol_params(25.0, 0.5, 0.05, 2.0, 0.6)),
+                ("facet_angle", {**base, "facet_angle": 30.0}))
+    for name, parameters in variants:
+        report, mesh, _, _ = run_volume_pair(scratch, sphere, parameters)
+        facts = volume_facts(mesh)
+        spheres = cell_circumspheres(mesh)
+        if name == "cell_size":
+            assert max(r for _, r in spheres) <= 0.4 + 1e-9 < max(r for _, r in base_spheres), name
+            assert len(mesh["tetrahedra"]) > 1.5 * len(base_mesh["tetrahedra"]), name
+        elif name == "facet_size":
+            assert facts["facet_radius"] <= 0.3 + 1e-9 and len(facts["boundary"]) > 1.5 * len(base_facts["boundary"])
+        elif name == "facet_distance":
+            assert len(facts["boundary"]) > len(base_facts["boundary"]), name
+            assert report["maximum_facet_circumcentre_distance"] <= 0.02 + 1e-9, report
+        elif name == "cell_radius_edge_ratio":
+            assert facts["radius_edge"] <= 2.0 + 1e-9, facts
+            assert report["maximum_radius_edge_ratio"] <= 2.0 + 1e-9, report
+        elif name == "facet_angle":
+            assert facts["facet_angle"] >= 30.0 - 1e-9, facts
+            assert report["minimum_facet_angle_degrees"] >= 30.0 - 1e-6, report
+    # Each criterion tightened alone makes the genuine baseline mesh fail with its own code.
+    for parameters, code in ((vol_params(25.0, 0.5, 0.05, 3.0, 0.4), "CELL_SIZE_VIOLATED"),
+                             (vol_params(25.0, 0.3, 0.05, 3.0, 0.6), "FACET_SIZE_VIOLATED"),
+                             (vol_params(25.0, 0.5, 0.02, 3.0, 0.6), "FACET_DISTANCE_VIOLATED"),
+                             (vol_params(25.0, 0.5, 0.05, 1.5, 0.6), "RADIUS_EDGE_VIOLATED"),
+                             ({**base, "facet_angle": 35.0}, "FACET_ANGLE_VIOLATED")):
+        rejected(invoke(scratch, VOL_VALIDATOR, [base_candidate, sphere], parameters), code)
+
+    # --- cell_size_regions: a sizing field restricted to enumerated boxes ------------------------
+    low, high = [0.0, 0.0, 0.0], [2.5, 2.5, 2.5]
+    regional = {**base, "cell_size_regions": [region(low, high, 0.3)]}
+    reg_report, reg_mesh, reg_metrics, reg_candidate = run_volume_pair(scratch, sphere, regional)
+    assert reg_metrics["cell_size_region_count"] == 1 and reg_report["checks"]["cell_size_regions_satisfied"] is True
+    inside = [(c, r) for c, r in cell_circumspheres(reg_mesh) if in_box(c, low, high)]
+    outside = [(c, r) for c, r in cell_circumspheres(reg_mesh) if not in_box(c, low, high)]
+    base_inside = [r for c, r in base_spheres if in_box(c, low, high)]
+    assert inside and outside and max(r for _, r in inside) <= 0.3 + 1e-9, (len(inside), len(outside))
+    assert max(base_inside) > 0.3 + 1e-6, "the box must actually constrain the baseline"
+    assert len(reg_mesh["tetrahedra"]) > 1.3 * len(base_mesh["tetrahedra"]), "regional refinement adds cells"
+    assert max(r for _, r in outside) > 0.3, "outside the box the global bound still applies"
+    assert max(r for _, r in outside) <= 0.6 + 1e-9
+    assert reg_report["optional_criteria"]["cell_size_regions"][0]["cells_with_circumcentre_inside"] == len(inside), reg_report
+    assert ok(invoke(scratch, VOL_GENERATE, [sphere], regional))[1].read_bytes() == \
+        pathlib.Path(reg_candidate["path"]).read_bytes(), "regional mesh must be deterministic"
+    # The unrefined mesh violates the regional bound; the regional mesh meets the global one too.
+    rejected(invoke(scratch, VOL_VALIDATOR, [base_candidate, sphere], regional), "CELL_SIZE_REGION_VIOLATED")
+    ok(invoke(scratch, VOL_VALIDATOR, [reg_candidate, sphere], base))
+    two = {**base, "cell_size_regions": [region(low, high, 0.3), region([-2.5, -2.5, -2.5], [0.0, 0.0, 0.0], 0.45)]}
+    two_report, two_mesh, _, _ = run_volume_pair(scratch, sphere, two)
+    for centre, radius in cell_circumspheres(two_mesh):
+        bound = min([0.6] + ([0.3] if in_box(centre, low, high) else []) +
+                    ([0.45] if in_box(centre, [-2.5] * 3, [0.0] * 3) else []))
+        assert radius <= bound + 1e-9, (centre, radius, bound)
+    # Typed-schema errors, from the generator and from the validator.
+    good_region = region(low, high, 0.3)
+    for bad, code, kind in (
+            ([], "INVALID_PARAMETER", "INVALID_REQUEST"),
+            ("box", "INVALID_PARAMETER", "INVALID_REQUEST"),
+            ([good_region] * 5, "INVALID_PARAMETER", "INVALID_REQUEST"),
+            ([{**good_region, "color": "red"}], "INVALID_PARAMETER", "INVALID_REQUEST"),
+            ([{"box_min": good_region["box_min"], "cell_size": mm(0.3)}], "INVALID_PARAMETER", "INVALID_REQUEST"),
+            ([region(high, low, 0.3)], "INVALID_PARAMETER", "INVALID_REQUEST"),
+            ([region(low, high, 0.6)], "INVALID_PARAMETER", "INVALID_REQUEST"),
+            ([region(low, high, 0.9)], "INVALID_PARAMETER", "INVALID_REQUEST"),
+            ([region(low, high, -0.3)], "INVALID_PARAMETER", "INVALID_REQUEST"),
+            ([{**good_region, "cell_size": "0.3"}], "INVALID_PARAMETER", "INVALID_REQUEST"),
+            ([{**good_region, "cell_size": {"value": 0.3, "unit": "cm"}}], "UNIT_MISMATCH", "TYPE_ERROR"),
+            ([{**good_region, "box_max": {"x": mm(2.5), "y": mm(2.5)}}], "INVALID_PARAMETER", "INVALID_REQUEST"),
+            ([region([5.0, 5.0, 5.0], [6.0, 6.0, 6.0], 0.3)], "REGION_OUTSIDE_DOMAIN", "INVALID_REQUEST")):
+        error(invoke(scratch, VOL_GENERATE, [sphere], {**base, "cell_size_regions": bad}), code, kind)
+        error(invoke(scratch, VOL_VALIDATOR, [base_candidate, sphere], {**base, "cell_size_regions": bad}), code, kind)
+
+    # --- facet_topology and unsupported combinations --------------------------------------------
+    for topology in ("FACET_VERTICES_ON_SURFACE", "FACET_VERTICES_ON_SAME_SURFACE_PATCH"):
+        topo_report, _, topo_metrics, _ = run_volume_pair(scratch, sphere, {**base, "facet_topology": topology})
+        assert topo_metrics["facet_topology"] == topology and topo_report["checks"]["facet_topology_satisfied"] is True
+    for bad in ("FACET_VERTICES_ON_SURFACE ", "facet_vertices_on_surface", 3, None):
+        error(invoke(scratch, VOL_GENERATE, [sphere], {**base, "facet_topology": bad}), "INVALID_PARAMETER",
+              "INVALID_REQUEST")
+    error(invoke(scratch, VOL_GENERATE, [sphere], {**base, "edge_size": mm(0.3)}), "CRITERION_NOT_APPLICABLE",
+          "INVALID_REQUEST")
+    error(invoke(scratch, VOL_VALIDATOR, [base_candidate, sphere], {**base, "edge_size": mm(0.3)}),
+          "CRITERION_NOT_APPLICABLE", "INVALID_REQUEST")
+    error(invoke(scratch, VOL_GENERATE, [sphere], {**base, "mystery_criterion": 1}), "UNSUPPORTED_PARAMETER",
+          "INVALID_REQUEST")
+
+    # --- edge_size: sharp-edge (1D feature) protection on a polyhedral domain ----------------------
+    cube = poly_source("poly_cube.off")
+    cube_parameters = vol_params(25.0, 0.25, 0.02, 3.0, 0.3)
+    chain_counts = {}
+    loose_candidate = None
+    for edge in (0.5, 0.25):
+        parameters = {**cube_parameters, "edge_size": mm(edge)}
+        result = invoke(scratch, VOL_GENERATE, [cube], parameters)
+        output, path = ok(result)
+        candidate = produced(output, path)
+        assert result["metrics"]["feature_protection"] is True and result["metrics"]["edge_size"] == edge, result["metrics"]
+        assert result["metrics"]["domain"] == "CGAL::Polyhedral_mesh_domain_with_features_3", result["metrics"]
+        report = json.loads(ok(invoke(scratch, VOL_VALIDATOR, [candidate, cube], parameters))[1].read_text("utf-8"))
+        assert report["status"] == "pass" and report["checks"]["feature_edge_size_satisfied"] is True, report
+        mesh = json.loads(path.read_text("utf-8"))
+        chains = cube_feature_chains(mesh)
+        assert len(chains) == 12 and all(c["joined"] for c in chains), chains
+        assert all(c["ends"] == (0.0, 1.0) for c in chains), chains
+        assert max(max(c["gaps"]) for c in chains) <= edge + 1e-9, chains
+        assert any(max(c["gaps"]) > edge / 2 for c in chains), "the bound is actually active"
+        chain_counts[edge] = sum(c["count"] for c in chains)
+        features = report["optional_criteria"]["feature_edges"]
+        assert features["sharp_source_edges"] == 12 and features["longest_segment"] <= edge + 1e-9, report
+        assert features["mesh_edge_segments"] == sum(len(c["gaps"]) for c in chains), (features, chains)
+        # Volume is exact: the cube corners and edges are preserved.
+        assert abs(report["volume"]["value"] - 1.0) < 1e-9, report["volume"]
+        if edge == 0.5:
+            loose_candidate = candidate
+            # A mesh built for 0.5 is rejected under 0.25.
+            rejected(invoke(scratch, VOL_VALIDATOR, [candidate, cube], {**cube_parameters, "edge_size": mm(0.25)}),
+                     "EDGE_SIZE_VIOLATED")
+    assert chain_counts[0.25] > chain_counts[0.5] > 12, chain_counts
+    # A mesh without feature protection is rejected whenever edge_size is requested.
+    plain_report, plain_mesh, plain_metrics, plain_candidate = run_poly_pair(scratch, cube, cube_parameters)
+    assert plain_metrics["feature_protection"] is False
+    rejected(invoke(scratch, VOL_VALIDATOR, [plain_candidate, cube], {**cube_parameters, "edge_size": mm(0.5)}),
+             "FEATURE_EDGE_NOT_PROTECTED")
+    # The facet-criteria exclusion of feature facets applies only when edge_size is requested: the
+    # same feature-protected mesh is judged by all facets (and fails the facet angle) without it.
+    rejected(invoke(scratch, VOL_VALIDATOR, [loose_candidate, cube], cube_parameters), "FACET_ANGLE_VIOLATED")
+    # Cell regions work on polyhedral domains too.
+    poly_regional = {**cube_parameters, "cell_size_regions": [region([0.0, 0.0, 0.0], [0.5, 1.0, 1.0], 0.15)]}
+    result = invoke(scratch, VOL_GENERATE, [cube], poly_regional)
+    output, path = ok(result)
+    poly_candidate = produced(output, path)
+    poly_mesh = json.loads(path.read_text("utf-8"))
+    report = json.loads(ok(invoke(scratch, VOL_VALIDATOR, [poly_candidate, cube], poly_regional))[1].read_text("utf-8"))
+    assert report["checks"]["cell_size_regions_satisfied"] is True, report
+    half = [(c, r) for c, r in cell_circumspheres(poly_mesh) if in_box(c, [0, 0, 0], [0.5, 1, 1])]
+    assert half and max(r for _, r in half) <= 0.15 + 1e-9, len(half)
+    assert len(poly_mesh["tetrahedra"]) > 1.3 * len(plain_mesh["tetrahedra"])
+    rejected(invoke(scratch, VOL_VALIDATOR, [plain_candidate, cube], poly_regional), "CELL_SIZE_REGION_VIOLATED")
+    # edge_size needs sharp edges: a smooth polyhedral sphere has none.
+    ico = poly_source("poly_icosphere.off")
+    error(invoke(scratch, VOL_GENERATE, [ico], {**vol_params(25.0, 0.3, 0.03, 3.0, 0.5), "edge_size": mm(0.3)}),
+          "CRITERION_NOT_APPLICABLE", "INVALID_REQUEST")
+    for bad in (mm(0.0), mm(-0.1), 0.25):
+        error(invoke(scratch, VOL_GENERATE, [cube], {**cube_parameters, "edge_size": bad}), "INVALID_PARAMETER",
+              "INVALID_REQUEST")
+    error(invoke(scratch, VOL_GENERATE, [cube], {**cube_parameters, "edge_size": {"value": 0.25, "unit": "cm"}}),
+          "UNIT_MISMATCH", "TYPE_ERROR")
+    error(invoke(scratch, VOL_GENERATE, [cube], {**cube_parameters, "edge_size": mm(0.001)}),
+          "MESH_SIZE_LIMIT_EXCEEDED", "RESOURCE_LIMIT")
+    error(invoke(scratch, VOL_GENERATE, [cube], {
+        **cube_parameters, "edge_size": mm(0.25), "facet_topology": "FACET_VERTICES_ON_SAME_SURFACE_PATCH"}),
+        "CRITERION_NOT_APPLICABLE", "INVALID_REQUEST")
 
 
 def on_boundary(vertex) -> bool:

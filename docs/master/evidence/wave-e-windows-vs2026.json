@@ -2,7 +2,7 @@
   "schema_version": 1,
   "generator": "master-wave-e-milestone",
   "status": "pass",
-  "generator_sha256": "3c86d9135ee0b76273e9b9a4e6130657d2bac8ee23fa23f7fc69fdbf16e6b244",
+  "generator_sha256": "2be09ee416ed6260e65590b0150216fa13ec73b6704540e97c1c4b4010e46f74",
   "scope": "one_wave_e_mesh2_operation_and_independent_validator",
   "standalone_accepted": false,
   "requirements": [],
@@ -15,7 +15,7 @@
     "mesh.volume.generate",
     "mesh2.refine.delaunay"
   ],
-  "worker_sha256": "c80f19e38a5a6332cf1270e9daf45ebc1a78271d3c77b8b78e4b95edd8ad0cb0",
+  "worker_sha256": "baf0e1e2ac47f276dad9db35fdfe95d0a6f8474d070e7a42e20c8686b96f56b5",
   "worker_manifest": {
     "actual_cgal_version": "6.2.1",
     "build": {
@@ -4520,6 +4520,11 @@
           ],
           "input_format": "json|off",
           "maximum_estimated_cells": 50000,
+          "optional_parameters": [
+            "cell_size_regions",
+            "facet_topology",
+            "edge_size"
+          ],
           "output_format": "json",
           "required_parameters": [
             "facet_angle",
@@ -4539,9 +4544,12 @@
             "mesh.validate.volume_mesh": {
               "cell_radius_edge_ratio": "cell_radius_edge_ratio",
               "cell_size": "cell_size",
+              "cell_size_regions": "cell_size_regions",
+              "edge_size": "edge_size",
               "facet_angle": "facet_angle",
               "facet_distance": "facet_distance",
-              "facet_size": "facet_size"
+              "facet_size": "facet_size",
+              "facet_topology": "facet_topology"
             }
           },
           "validators": [
@@ -4572,7 +4580,10 @@
             "facet_size",
             "facet_distance",
             "cell_radius_edge_ratio",
-            "cell_size"
+            "cell_size",
+            "cell_size_regions",
+            "facet_topology",
+            "edge_size"
           ],
           "checks": [
             "source_domain_valid",
@@ -4598,6 +4609,11 @@
           "input_slots": [
             "candidate",
             "source"
+          ],
+          "optional_criteria_checks": [
+            "cell_size_regions_satisfied",
+            "facet_topology_satisfied",
+            "feature_edge_size_satisfied"
           ],
           "output_slot": "validation",
           "polyhedral_domain_extra_checks": [
@@ -4626,12 +4642,12 @@
     ],
     "worker": "cgal-master-worker"
   },
-  "worker_manifest_sha256": "5cb9f6657eec3e38af252504119b15b556fc30bddb5fedfb0053b28745631363",
-  "operation_catalog_sha256": "efc23ae5bb38672bdb0822782bd5a41f33304c4846473e1a3e03980210106c9a",
+  "worker_manifest_sha256": "11a3582e0ded22fc10d1cccace44a5057030881ad8d4ce34ef2a5f2f972071cd",
+  "operation_catalog_sha256": "62670826019cad5400aec8989b821cf94a3f85ef68c8f20c44424fa0539be9bc",
   "tests": [
     {
       "test": "tests/master_wave_e_cases.py",
-      "source_sha256": "931369ddd0fc9865dc652ffcbad804917cde35f14c716869bb7b5abd59e59a8b",
+      "source_sha256": "05927b1999a25561058b65de1a2ab25d6450cfaf70872e79e29e911ca9234bc1",
       "mode": "worker",
       "exit_code": 0,
       "status": "pass"
@@ -4651,5 +4667,5 @@
       "status": "pass"
     }
   ],
-  "coverage_note": "The Wave E registry operations were replayed: mesh2.refine.delaunay (CGAL::refine_Delaunay_mesh_2), mesh.surface.generate (CGAL::make_surface_mesh over a fixed enumerated implicit domain set), mesh.volume.generate (CGAL::make_mesh_3 over the same domains) and their independent validators. Conforming-only Mesh_2, Lipschitz or local sizing criteria, Lloyd optimization, polyhedral and image Mesh_3 domains, perturbation and exudation, and mesh domain criteria (7.14.04) remain incomplete."
+  "coverage_note": "The Wave E registry operations were replayed: mesh2.refine.delaunay (CGAL::refine_Delaunay_mesh_2), mesh.surface.generate (CGAL::make_surface_mesh over a fixed enumerated implicit domain set), mesh.volume.generate (CGAL::make_mesh_3 over the same domains) and their independent validators. Conforming-only Mesh_2, Lipschitz or local sizing criteria, Lloyd optimization, image Mesh_3 domains, multi-patch facet topology, perturbation and exudation remain incomplete. Typed Mesh_criteria_3 criteria (cell_size_regions, facet_topology, edge_size) are replayed on mesh.volume.generate only."
 }

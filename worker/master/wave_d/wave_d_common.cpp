@@ -713,6 +713,7 @@ Deviation one_sided_deviation(const RawMesh& from, const RawMesh& to, double res
     }
     result.sampled_maximum = std::max(result.sampled_maximum, face_maximum);
     result.certified_upper_bound = std::max(result.certified_upper_bound, face_maximum + cover);
+    result.face_sampled_maxima.push_back(face_maximum);
     if (check_orientation) {
       const V3 centroid = scale(add(triangle[0], add(triangle[1], triangle[2])), 1.0 / 3.0);
       const auto nearest = grid.nearest(centroid);

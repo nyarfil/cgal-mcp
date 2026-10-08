@@ -63,14 +63,14 @@
   },
   "family_contract_sha256": "bb6839ecc402819738b0fc0ebe2eb40e630221185e85c939a6eb9a124ebcdfbc",
   "family_contract_source_path": "scripts/master_replay_families.py",
-  "family_contract_source_sha256": "60956a2c6f7c32dc2bc42f45ddabde1dd9f48fbcd076e5db9fe200a1d6f7a62f",
+  "family_contract_source_sha256": "7d1273280892e856d43567d9b8cc086a8266133fcfefc2e5fbca212bbce06fb2",
   "family_contract_source_hash_encoding": "utf8-lf",
   "catalog_baseline_sha256": "143ec18a5b64d506aad60dc24b0a1ea30940c715d1223b3465fa140aeb9d02a7",
-  "operation_registry_sha256": "eca16ae1b5e70b3ef563d9cf1058952af15385a4aa867cd6a369755a0ea212b2",
+  "operation_registry_sha256": "18fed534e8c31c9d274b2594c0670919e43fdd5af4c03233eee9996b32a34a13",
   "operation_registry_hash_encoding": "utf8-lf",
   "policy_catalog_sha256": "45f4be759288aaeb834a3ce97aa64ee7768048b15534618fc8c19512801f9a9f",
   "policy_catalog_hash_encoding": "utf8-lf",
-  "worker_sha256": "c80f19e38a5a6332cf1270e9daf45ebc1a78271d3c77b8b78e4b95edd8ad0cb0",
+  "worker_sha256": "baf0e1e2ac47f276dad9db35fdfe95d0a6f8474d070e7a42e20c8686b96f56b5",
   "worker_binary_format": "pe",
   "worker_manifest": {
     "actual_cgal_version": "6.2.1",
@@ -4576,6 +4576,11 @@
           ],
           "input_format": "json|off",
           "maximum_estimated_cells": 50000,
+          "optional_parameters": [
+            "cell_size_regions",
+            "facet_topology",
+            "edge_size"
+          ],
           "output_format": "json",
           "required_parameters": [
             "facet_angle",
@@ -4595,9 +4600,12 @@
             "mesh.validate.volume_mesh": {
               "cell_radius_edge_ratio": "cell_radius_edge_ratio",
               "cell_size": "cell_size",
+              "cell_size_regions": "cell_size_regions",
+              "edge_size": "edge_size",
               "facet_angle": "facet_angle",
               "facet_distance": "facet_distance",
-              "facet_size": "facet_size"
+              "facet_size": "facet_size",
+              "facet_topology": "facet_topology"
             }
           },
           "validators": [
@@ -4628,7 +4636,10 @@
             "facet_size",
             "facet_distance",
             "cell_radius_edge_ratio",
-            "cell_size"
+            "cell_size",
+            "cell_size_regions",
+            "facet_topology",
+            "edge_size"
           ],
           "checks": [
             "source_domain_valid",
@@ -4654,6 +4665,11 @@
           "input_slots": [
             "candidate",
             "source"
+          ],
+          "optional_criteria_checks": [
+            "cell_size_regions_satisfied",
+            "facet_topology_satisfied",
+            "feature_edge_size_satisfied"
           ],
           "output_slot": "validation",
           "polyhedral_domain_extra_checks": [
@@ -4682,7 +4698,7 @@
     ],
     "worker": "cgal-master-worker"
   },
-  "worker_manifest_sha256": "5cb9f6657eec3e38af252504119b15b556fc30bddb5fedfb0053b28745631363",
+  "worker_manifest_sha256": "11a3582e0ded22fc10d1cccace44a5057030881ad8d4ce34ef2a5f2f972071cd",
   "tests": [
     {
       "id": "family-7.9-replay-cases",
@@ -4966,7 +4982,7 @@
       "case_id": "normals-pca-plane",
       "operation_id": "pointset.normals.estimate",
       "revision": 1,
-      "worker_manifest_sha256": "5cb9f6657eec3e38af252504119b15b556fc30bddb5fedfb0053b28745631363",
+      "worker_manifest_sha256": "11a3582e0ded22fc10d1cccace44a5057030881ad8d4ce34ef2a5f2f972071cd",
       "test_id": "family-7.9-replay-cases",
       "request": {
         "inputs": [
@@ -5195,7 +5211,7 @@
       "case_id": "normals-jet-plane",
       "operation_id": "pointset.normals.estimate",
       "revision": 1,
-      "worker_manifest_sha256": "5cb9f6657eec3e38af252504119b15b556fc30bddb5fedfb0053b28745631363",
+      "worker_manifest_sha256": "11a3582e0ded22fc10d1cccace44a5057030881ad8d4ce34ef2a5f2f972071cd",
       "test_id": "family-7.9-replay-cases",
       "request": {
         "inputs": [
@@ -5427,7 +5443,7 @@
       "case_id": "normals-orient-mst",
       "operation_id": "pointset.normals.orient_mst",
       "revision": 1,
-      "worker_manifest_sha256": "5cb9f6657eec3e38af252504119b15b556fc30bddb5fedfb0053b28745631363",
+      "worker_manifest_sha256": "11a3582e0ded22fc10d1cccace44a5057030881ad8d4ce34ef2a5f2f972071cd",
       "test_id": "family-7.9-replay-cases",
       "request": {
         "inputs": [
@@ -5658,7 +5674,7 @@
       "case_id": "simplify-grid",
       "operation_id": "pointset.simplify.grid",
       "revision": 1,
-      "worker_manifest_sha256": "5cb9f6657eec3e38af252504119b15b556fc30bddb5fedfb0053b28745631363",
+      "worker_manifest_sha256": "11a3582e0ded22fc10d1cccace44a5057030881ad8d4ce34ef2a5f2f972071cd",
       "test_id": "family-7.9-replay-cases",
       "request": {
         "inputs": [
@@ -5895,7 +5911,7 @@
       "case_id": "simplify-random-seed-a",
       "operation_id": "pointset.simplify.random",
       "revision": 1,
-      "worker_manifest_sha256": "5cb9f6657eec3e38af252504119b15b556fc30bddb5fedfb0053b28745631363",
+      "worker_manifest_sha256": "11a3582e0ded22fc10d1cccace44a5057030881ad8d4ce34ef2a5f2f972071cd",
       "test_id": "family-7.9-replay-cases",
       "request": {
         "inputs": [
@@ -6132,7 +6148,7 @@
       "case_id": "simplify-random-seed-a-repeat",
       "operation_id": "pointset.simplify.random",
       "revision": 1,
-      "worker_manifest_sha256": "5cb9f6657eec3e38af252504119b15b556fc30bddb5fedfb0053b28745631363",
+      "worker_manifest_sha256": "11a3582e0ded22fc10d1cccace44a5057030881ad8d4ce34ef2a5f2f972071cd",
       "test_id": "family-7.9-replay-cases",
       "request": {
         "inputs": [
@@ -6366,7 +6382,7 @@
       "case_id": "simplify-random-seed-b",
       "operation_id": "pointset.simplify.random",
       "revision": 1,
-      "worker_manifest_sha256": "5cb9f6657eec3e38af252504119b15b556fc30bddb5fedfb0053b28745631363",
+      "worker_manifest_sha256": "11a3582e0ded22fc10d1cccace44a5057030881ad8d4ce34ef2a5f2f972071cd",
       "test_id": "family-7.9-replay-cases",
       "request": {
         "inputs": [
@@ -6600,7 +6616,7 @@
       "case_id": "simplify-hierarchy",
       "operation_id": "pointset.simplify.hierarchy",
       "revision": 1,
-      "worker_manifest_sha256": "5cb9f6657eec3e38af252504119b15b556fc30bddb5fedfb0053b28745631363",
+      "worker_manifest_sha256": "11a3582e0ded22fc10d1cccace44a5057030881ad8d4ce34ef2a5f2f972071cd",
       "test_id": "family-7.9-replay-cases",
       "request": {
         "inputs": [

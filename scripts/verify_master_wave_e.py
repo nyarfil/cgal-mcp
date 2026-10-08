@@ -54,7 +54,7 @@ def verify(worker: Path) -> dict:
         "worker_manifest_sha256": hashlib.sha256(json.dumps(manifest, sort_keys=True,
             separators=(",", ":"), ensure_ascii=False).encode()).hexdigest(),
         "operation_catalog_sha256": digest(REPO / "catalog/operations_wave_e.json"), "tests": results,
-        "coverage_note": "The Wave E registry operations were replayed: mesh2.refine.delaunay (CGAL::refine_Delaunay_mesh_2), mesh.surface.generate (CGAL::make_surface_mesh over a fixed enumerated implicit domain set), mesh.volume.generate (CGAL::make_mesh_3 over the same domains) and their independent validators. Conforming-only Mesh_2, Lipschitz or local sizing criteria, Lloyd optimization, polyhedral and image Mesh_3 domains, perturbation and exudation, and mesh domain criteria (7.14.04) remain incomplete."}
+        "coverage_note": "The Wave E registry operations were replayed: mesh2.refine.delaunay (CGAL::refine_Delaunay_mesh_2), mesh.surface.generate (CGAL::make_surface_mesh over a fixed enumerated implicit domain set), mesh.volume.generate (CGAL::make_mesh_3 over the same domains) and their independent validators. Conforming-only Mesh_2, Lipschitz or local sizing criteria, Lloyd optimization, image Mesh_3 domains, multi-patch facet topology, perturbation and exudation remain incomplete. Typed Mesh_criteria_3 criteria (cell_size_regions, facet_topology, edge_size) are replayed on mesh.volume.generate only."}
 
 
 def main() -> None:

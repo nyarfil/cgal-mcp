@@ -73,6 +73,7 @@ struct Deviation {
   std::size_t sample_count = 0;
   bool orientation_agrees = true;
   std::size_t orientation_disagreements = 0;
+  std::vector<double> face_sampled_maxima;  // sampled per-triangle maximum, in fan triangle order
 };
 
 // ---- Producer side (CGAL Surface_mesh) -------------------------------------
