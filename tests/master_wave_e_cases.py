@@ -371,6 +371,7 @@ def main() -> None:
               "MESH_SIZE_LIMIT_EXCEEDED", "RESOURCE_LIMIT")
         surface_cases(scratch)
         tetrahedral_cases(scratch)
+        volume_cases(scratch)
     print("PASS master Wave E worker cases")
 
 
@@ -673,7 +674,7 @@ def det3(p):
 def tet_reference(vertices, tetrahedra) -> dict:
     """Independent recomputation: exact volume, dihedral extremes, radius-edge maximum."""
     volume = Fraction(0)
-    smallest, largest, ratio = 180.0, 0.0, 0.0
+    smallest, largest, ratio, largest_radius = 180.0, 0.0, 0.0, 0.0
     for cell in tetrahedra:
         p = [vertices[i] for i in cell]
         volume += det3(p) / 6
@@ -708,8 +709,9 @@ def tet_reference(vertices, tetrahedra) -> dict:
         radius = math.hypot(column(0) / d, column(1) / d, column(2) / d)
         shortest = min(math.dist(p[i], p[j]) for i in range(4) for j in range(i + 1, 4))
         ratio = max(ratio, radius / shortest)
+        largest_radius = max(largest_radius, radius)
     return {"volume": float(volume), "min_dihedral": smallest, "max_dihedral": largest,
-            "radius_edge": ratio}
+            "radius_edge": ratio, "max_circumradius": largest_radius}
 
 
 def tet_validate(scratch, candidate, parameters=None):
@@ -853,6 +855,270 @@ def tetrahedral_cases(scratch: pathlib.Path) -> None:
     error(tet_validate(scratch, good_input, {"level_set": "x"}), "UNSUPPORTED_PARAMETER", "INVALID_REQUEST")
     # An artifact whose bytes no longer match its pinned hash is refused.
     assert tet_validate(scratch, dict(good_input, sha256="0" * 64))["status"] == "error"
+
+
+# ---------------------------------------------------------------------------
+# 7.14.03 tetrahedral volume mesh generation (Mesh_3 make_mesh_3) and its independent validator
+# ---------------------------------------------------------------------------
+
+VOL_GENERATE = "mesh.volume.generate"
+VOL_VALIDATOR = "mesh.validate.volume_mesh"
+
+
+def vol_params(angle: float, size: float, distance: float, ratio: float, cell: float) -> dict:
+    return {"facet_angle": angle, "facet_size": mm(size), "facet_distance": mm(distance),
+            "cell_radius_edge_ratio": ratio, "cell_size": mm(cell)}
+
+
+def volume_facts(mesh: dict) -> dict:
+    """Independent Python recomputation of topology and metrics of a TetrahedralMesh."""
+    vertices, cells = mesh["vertices"], mesh["tetrahedra"]
+    face_use: dict[tuple, list] = {}
+    edges = set()
+    for cell in cells:
+        for slot in ((1, 2, 3), (0, 3, 2), (0, 1, 3), (0, 2, 1)):
+            face = tuple(cell[i] for i in slot)
+            face_use.setdefault(tuple(sorted(face)), []).append(face)
+        for i in range(4):
+            for j in range(i + 1, 4):
+                edges.add(tuple(sorted((cell[i], cell[j]))))
+    assert all(len(uses) <= 2 for uses in face_use.values()), "face shared by more than two cells"
+    boundary = [uses[0] for uses in face_use.values() if len(uses) == 1]
+    boundary_edges: dict[tuple, int] = {}
+    boundary_vertices = set()
+    for face in boundary:
+        boundary_vertices.update(face)
+        for i in range(3):
+            key = tuple(sorted((face[i], face[(i + 1) % 3])))
+            boundary_edges[key] = boundary_edges.get(key, 0) + 1
+    assert all(count == 2 for count in boundary_edges.values()), "boundary is not closed"
+    facet_angle, facet_radius, facet_area = 180.0, 0.0, 0.0
+    for a, b, c in boundary:
+        pa, pb, pc = vertices[a], vertices[b], vertices[c]
+        sides = [math.dist(pb, pc), math.dist(pc, pa), math.dist(pa, pb)]
+        u = [pb[k] - pa[k] for k in range(3)]
+        w = [pc[k] - pa[k] for k in range(3)]
+        twice = math.hypot(u[1] * w[2] - u[2] * w[1], u[2] * w[0] - u[0] * w[2], u[0] * w[1] - u[1] * w[0])
+        facet_area += twice / 2
+        facet_radius = max(facet_radius, sides[0] * sides[1] * sides[2] / (2 * twice))
+        for i in range(3):
+            s1, s2 = sides[(i + 1) % 3], sides[(i + 2) % 3]
+            cosine = (s1 * s1 + s2 * s2 - sides[i] * sides[i]) / (2 * s1 * s2)
+            facet_angle = min(facet_angle, math.degrees(math.acos(max(-1.0, min(1.0, cosine)))))
+    reference = tet_reference(vertices, cells)
+    return {"boundary": boundary, "boundary_vertices": boundary_vertices,
+            "euler": len(vertices) - len(edges) + len(face_use) - len(cells),
+            "boundary_euler": len(boundary_vertices) - len(boundary_edges) + len(boundary),
+            "facet_angle": facet_angle, "facet_radius": facet_radius, "facet_area": facet_area, **reference}
+
+
+def run_volume_pair(scratch, domain, parameters):
+    """Generate and validate; return (report, mesh dict, metrics, candidate artifact)."""
+    result = invoke(scratch, VOL_GENERATE, [domain], parameters)
+    output, path = ok(result)
+    assert output["type"] == TET_TYPE and output["format"] == "json" and output["unit"] == "mm", output
+    candidate = produced(output, path)
+    validation = invoke(scratch, VOL_VALIDATOR, [candidate, domain], parameters)
+    _, validation_path = ok(validation)
+    report = json.loads(validation_path.read_text("utf-8"))
+    assert report["status"] == "pass" and report["passed"] is True, report
+    assert report["checks"] and all(report["checks"].values()) and len(report["checks"]) == 17, report
+    assert report["validator"] == VOL_VALIDATOR, report
+    return report, json.loads(path.read_text("utf-8")), result["metrics"], candidate
+
+
+def volume_cases(scratch: pathlib.Path) -> None:
+    sphere = artifact(FIXTURES / "domain_sphere.json", SURF_DOMAIN)
+    sphere_big = artifact(FIXTURES / "domain_sphere_r25.json", SURF_DOMAIN)
+    ellipsoid = artifact(FIXTURES / "domain_ellipsoid.json", SURF_DOMAIN)
+    torus = artifact(FIXTURES / "domain_torus.json", SURF_DOMAIN)
+    sphere_parameters = vol_params(25.0, 0.5, 0.05, 3.0, 0.6)
+    regular_volume = 8 / (9 * math.sqrt(3))  # volume of a regular tetrahedron per circumradius cubed
+
+    # --- sphere r = 2: ball with analytic volume 32 pi / 3 and boundary area 16 pi -------------
+    report, mesh, metrics, sphere_candidate = run_volume_pair(scratch, sphere, sphere_parameters)
+    facts = volume_facts(mesh)
+    vertices, cells = mesh["vertices"], mesh["tetrahedra"]
+    assert metrics["algorithm"] == "CGAL::make_mesh_3" and metrics["domain_kind"] == "sphere", metrics
+    assert metrics["perturbation"] is False and metrics["exudation"] is False, metrics
+    assert metrics["vertex_count"] == len(vertices) and metrics["tetrahedron_count"] == len(cells), metrics
+    assert metrics["boundary_facet_count"] == len(facts["boundary"]), metrics
+    assert set(mesh["subdomains"]) == {1} and len(mesh["subdomains"]) == len(cells), mesh["subdomains"][:3]
+    assert facts["euler"] == 1 == report["euler_characteristic"], facts
+    assert facts["boundary_euler"] == 2 == report["boundary_euler_characteristic"] and report["genus"] == 0, facts
+    exact = 4 / 3 * math.pi * SPHERE_R ** 3
+    assert abs(report["volume"]["analytic"] - exact) < 1e-9, report["volume"]
+    assert abs(facts["volume"] - report["volume"]["value"]) < 1e-9 * exact, (facts, report["volume"])
+    assert abs(facts["volume"] - exact) / exact < 0.08 and facts["volume"] < exact, facts
+    assert abs(report["boundary_area"]["analytic"] - 4 * math.pi * 4) < 1e-9, report["boundary_area"]
+    assert abs(facts["facet_area"] - 4 * math.pi * 4) / (4 * math.pi * 4) < 0.04, facts
+    for index in range(len(vertices)):
+        radius = math.sqrt(sum(c * c for c in vertices[index]))
+        if index in facts["boundary_vertices"]:
+            assert abs(radius - SPHERE_R) < 1e-6, radius
+        else:
+            assert radius < SPHERE_R - 1e-6, radius
+    assert facts["facet_angle"] >= 25.0 and facts["facet_radius"] <= 0.5, facts
+    assert facts["max_circumradius"] <= 0.6 + 1e-9 and facts["radius_edge"] <= 3.0 + 1e-9, facts
+    assert abs(report["maximum_radius_edge_ratio"] - facts["radius_edge"]) < 1e-6, report
+    assert abs(report["minimum_dihedral_angle_degrees"] - facts["min_dihedral"]) < 1e-6, report
+    assert len(cells) >= int(0.9 * exact / (regular_volume * 0.6 ** 3)), len(cells)
+    assert len(facts["boundary"]) >= math.ceil(4 * math.pi * 4 / (1.3 * 0.25)), len(facts["boundary"])
+    assert report["subdomains"]["1"]["cell_count"] == len(cells), report["subdomains"]
+    # Deterministic: the same request reproduces the same mesh bytes.
+    again = ok(invoke(scratch, VOL_GENERATE, [sphere], sphere_parameters))[1]
+    assert sha256(again) == sphere_candidate["sha256"], "Mesh_3 output is not deterministic"
+
+    # --- finer criteria give a finer mesh of the same ball (contrast pair) ----------------------
+    report_fine, mesh_fine, _, _ = run_volume_pair(scratch, sphere, vol_params(25.0, 0.3, 0.02, 2.5, 0.3))
+    assert len(mesh_fine["tetrahedra"]) > 3 * len(cells), (len(mesh_fine["tetrahedra"]), len(cells))
+    assert report_fine["volume"]["relative_error"] < report["volume"]["relative_error"], (report_fine, report)
+    assert report_fine["maximum_cell_circumradius"] <= 0.3 + 1e-9, report_fine
+    # Another radius gives another ball.
+    _, mesh_big, _, _ = run_volume_pair(scratch, sphere_big, sphere_parameters)
+    assert abs(volume_facts(mesh_big)["volume"] - 4 / 3 * math.pi * 15.625) / (4 / 3 * math.pi * 15.625) < 0.08
+
+    # --- ellipsoid (3, 2, 1.5): boundary vertices on the algebraic surface, volume 4 pi abc / 3 --
+    ellipsoid_parameters = vol_params(25.0, 0.6, 0.04, 3.0, 0.8)
+    report_e, mesh_e, _, ellipsoid_candidate = run_volume_pair(scratch, ellipsoid, ellipsoid_parameters)
+    facts_e = volume_facts(mesh_e)
+    assert facts_e["euler"] == 1 and facts_e["boundary_euler"] == 2 and report_e["genus"] == 0, facts_e
+    exact_e = 4 / 3 * math.pi * ELLIPSOID[0] * ELLIPSOID[1] * ELLIPSOID[2]
+    assert abs(report_e["volume"]["analytic"] - exact_e) < 1e-9, report_e["volume"]
+    assert abs(facts_e["volume"] - exact_e) / exact_e < 0.08 and facts_e["volume"] < exact_e, facts_e
+    for index in facts_e["boundary_vertices"]:
+        assert surface_distance_python("ellipsoid", mesh_e["vertices"][index]) < 1e-6
+    assert facts_e["facet_angle"] >= 25.0 and facts_e["max_circumradius"] <= 0.8 + 1e-9, facts_e
+
+    # --- torus R = 3, r = 1: solid torus, Euler characteristic 0, volume 2 pi^2 R r^2 ---------
+    torus_parameters = vol_params(25.0, 0.5, 0.03, 3.0, 0.6)
+    report_t, mesh_t, _, torus_candidate = run_volume_pair(scratch, torus, torus_parameters)
+    facts_t = volume_facts(mesh_t)
+    assert facts_t["euler"] == 0 and facts_t["boundary_euler"] == 0 and report_t["genus"] == 1, facts_t
+    exact_t = 2 * math.pi ** 2 * 3 * 1
+    assert abs(report_t["volume"]["analytic"] - exact_t) < 1e-9, report_t["volume"]
+    assert abs(facts_t["volume"] - exact_t) / exact_t < 0.08 and facts_t["volume"] < exact_t, facts_t
+    assert abs(report_t["boundary_area"]["analytic"] - 4 * math.pi ** 2 * 3) < 1e-9
+    for index in facts_t["boundary_vertices"]:
+        assert surface_distance_python("torus", mesh_t["vertices"][index]) < 1e-6
+    assert facts_t["facet_angle"] >= 25.0 and facts_t["max_circumradius"] <= 0.6 + 1e-9, facts_t
+
+    # --- Negative controls: tampered meshes are rejected by the independent validator ---------
+    base_cells = [list(c) for c in cells]
+    face_count: dict[tuple, int] = {}
+    for cell in base_cells:
+        for slot in ((1, 2, 3), (0, 3, 2), (0, 1, 3), (0, 2, 1)):
+            key = tuple(sorted(cell[i] for i in slot))
+            face_count[key] = face_count.get(key, 0) + 1
+    boundary_vertex_set = {v for key, n in face_count.items() if n == 1 for v in key}
+    interior_cell = next(i for i, c in enumerate(base_cells) if not set(c) & boundary_vertex_set)
+    surface_cell = next(i for i, c in enumerate(base_cells) if set(c) & boundary_vertex_set)
+
+    def tamper(vertices_fn=None, cells_fn=None, subdomains_fn=None):
+        new_vertices = [list(v) for v in vertices]
+        new_cells = [list(c) for c in base_cells]
+        new_subdomains = list(mesh["subdomains"])
+        if vertices_fn:
+            vertices_fn(new_vertices)
+        if cells_fn:
+            cells_fn(new_cells, new_subdomains)
+        if subdomains_fn:
+            subdomains_fn(new_subdomains)
+        return write_tet(scratch, new_vertices, new_cells, new_subdomains)
+
+    def drop(index):
+        def apply(c, s):
+            del c[index]
+            del s[index]
+        return apply
+
+    def flip(c, s):
+        c[interior_cell][2], c[interior_cell][3] = c[interior_cell][3], c[interior_cell][2]
+
+    def duplicate(c, s):
+        c.append(list(c[interior_cell]))
+        s.append(1)
+
+    def scale_all(v):
+        for vertex in v:
+            vertex[:] = [1.001 * x for x in vertex]
+
+    def push_boundary_vertex(v):
+        i = min(facts["boundary_vertices"])
+        x, y, z = v[i]
+        norm = math.sqrt(x * x + y * y + z * z)
+        v[i] = [x * (1 + 0.05 / norm), y * (1 + 0.05 / norm), z * (1 + 0.05 / norm)]
+
+    def relabel(s):
+        for i in range(0, len(s), 2):
+            s[i] = 2
+
+    good = sphere_parameters
+    for candidate, code in (
+            (tamper(cells_fn=drop(interior_cell)), "MULTIPLE_BOUNDARY_SURFACES"),
+            (tamper(cells_fn=drop(surface_cell)), "VERTEX_OFF_SURFACE"),
+            (tamper(cells_fn=flip), "INVERTED_TETRAHEDRON"),
+            (tamper(cells_fn=duplicate), "NON_MANIFOLD_FACE"),
+            (tamper(vertices_fn=scale_all), "VERTEX_OUTSIDE_DOMAIN"),
+            (tamper(vertices_fn=push_boundary_vertex), "VERTEX_OUTSIDE_DOMAIN"),
+            (tamper(subdomains_fn=relabel), "SUBDOMAIN_INDEX_INVALID")):
+        rejected(invoke(scratch, VOL_VALIDATOR, [candidate, sphere], good), code)
+    # Mismatched domain: the sphere mesh against other domains and other meshes against the sphere.
+    rejected(invoke(scratch, VOL_VALIDATOR, [sphere_candidate, sphere_big], good), "VERTEX_OFF_SURFACE")
+    rejected(invoke(scratch, VOL_VALIDATOR, [sphere_candidate, ellipsoid], good), "VERTEX_OUTSIDE_DOMAIN")
+    rejected(invoke(scratch, VOL_VALIDATOR, [sphere_candidate, torus], good), "EULER_CHARACTERISTIC_MISMATCH")
+    rejected(invoke(scratch, VOL_VALIDATOR, [torus_candidate, sphere], good), "EULER_CHARACTERISTIC_MISMATCH")
+    rejected(invoke(scratch, VOL_VALIDATOR, [ellipsoid_candidate, sphere], ellipsoid_parameters),
+             "VERTEX_OUTSIDE_DOMAIN")
+    # Criteria stricter than the genuine mesh was built for.
+    for stricter, code in ((vol_params(35.0, 0.5, 0.05, 3.0, 0.6), "FACET_ANGLE_VIOLATED"),
+                           (vol_params(25.0, 0.3, 0.05, 3.0, 0.6), "FACET_SIZE_VIOLATED"),
+                           (vol_params(25.0, 0.5, 0.02, 3.0, 0.6), "FACET_DISTANCE_VIOLATED"),
+                           (vol_params(25.0, 0.5, 0.05, 3.0, 0.4), "CELL_SIZE_VIOLATED"),
+                           (vol_params(25.0, 0.5, 0.05, 1.5, 0.6), "RADIUS_EDGE_VIOLATED")):
+        rejected(invoke(scratch, VOL_VALIDATOR, [sphere_candidate, sphere], stricter), code)
+    # A uniformly coarse octahedral mesh (6 vertices on the sphere plus the centre, 8 cells) is a
+    # topologically perfect ball whose vertices lie on the surface. It violates the size criteria,
+    # and with criteria loose enough to pass them its boundary area is 45 percent short.
+    octa_vertices = [[2, 0, 0], [-2, 0, 0], [0, 2, 0], [0, -2, 0], [0, 0, 2], [0, 0, -2], [0, 0, 0]]
+    octahedron = write_tet(
+        scratch, octa_vertices,
+        [fix_orientation(octa_vertices, triangle + [6]) for triangle in
+         ([0, 2, 4], [2, 1, 4], [1, 3, 4], [3, 0, 4], [2, 0, 5], [1, 2, 5], [3, 1, 5], [0, 3, 5])])
+    rejected(invoke(scratch, VOL_VALIDATOR, [octahedron, sphere], good), "FACET_SIZE_VIOLATED")
+    rejected(invoke(scratch, VOL_VALIDATOR, [octahedron, sphere], vol_params(30.0, 5.0, 5.0, 100.0, 50.0)),
+             "AREA_MISMATCH")
+    error(invoke(scratch, VOL_VALIDATOR, [{**sphere_candidate, "unit": "cm"}, sphere], good),
+          "UNIT_MISMATCH", "TYPE_ERROR")
+    error(invoke(scratch, VOL_VALIDATOR, [sphere_candidate, sphere], dict(good, cell_size=0.6)),
+          "INVALID_PARAMETER", "INVALID_REQUEST")
+
+    # --- Negative controls: the domain set is closed; no expression or unknown kind is accepted --
+    for fixture, code in (("domain_expression.json", "UNSUPPORTED_DOMAIN_KIND"),
+                          ("domain_unknown_kind.json", "UNSUPPORTED_DOMAIN_KIND"),
+                          ("domain_negative_radius.json", "INVALID_DOMAIN"),
+                          ("domain_extra_parameter.json", "SCHEMA_MISMATCH"),
+                          ("domain_thick_torus.json", "INVALID_DOMAIN"),
+                          ("domain_needle_ellipsoid.json", "INVALID_DOMAIN")):
+        error(invoke(scratch, VOL_GENERATE, [artifact(FIXTURES / fixture, SURF_DOMAIN)], good), code,
+              "INPUT_ERROR")
+    for bad in (vol_params(31.0, 0.5, 0.05, 3.0, 0.6), vol_params(0.0, 0.5, 0.05, 3.0, 0.6),
+                vol_params(25.0, 0.0, 0.05, 3.0, 0.6), vol_params(25.0, 0.5, 0.0, 3.0, 0.6),
+                vol_params(25.0, 0.5, 0.5, 3.0, 0.6),  # 0.5 > 0.1 * smallest curvature radius (2)
+                vol_params(25.0, 0.5, 0.05, 1.99, 0.6), vol_params(25.0, 0.5, 0.05, 3.0, 0.0),
+                {**good, "facet_angle": "25"}, {**good, "cell_size": 0.6}):
+        error(invoke(scratch, VOL_GENERATE, [sphere], bad), "INVALID_PARAMETER", "INVALID_REQUEST")
+    error(invoke(scratch, VOL_GENERATE, [sphere], {"facet_angle": 25.0}), "MISSING_PARAMETER",
+          "INVALID_REQUEST")
+    error(invoke(scratch, VOL_GENERATE, [sphere], dict(good, level_set="x*x+y*y+z*z-4")),
+          "UNSUPPORTED_PARAMETER", "INVALID_REQUEST")
+    error(invoke(scratch, VOL_GENERATE, [sphere], dict(good, cell_size={"value": 0.6, "unit": "cm"})),
+          "UNIT_MISMATCH", "TYPE_ERROR")
+    error(invoke(scratch, VOL_GENERATE, [sphere, sphere], good), "INPUT_COUNT_MISMATCH", "TYPE_ERROR")
+    error(invoke(scratch, VOL_GENERATE, [artifact(WAVE_C / "polygon_with_hole.json", DOMAIN)], good),
+          "INPUT_TYPE_MISMATCH", "TYPE_ERROR")
+    error(invoke(scratch, VOL_GENERATE, [sphere], vol_params(25.0, 0.5, 0.05, 3.0, 0.05)),
+          "MESH_SIZE_LIMIT_EXCEEDED", "RESOURCE_LIMIT")
 
 
 def on_boundary(vertex) -> bool:

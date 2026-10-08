@@ -9,6 +9,7 @@
 // Known limit: global interpenetration of cells that are combinatorially consistent is not
 // excluded except through the declared domain volume; internal cavities are rejected.
 #include "wave_e_operations.h"
+#include "tet_analysis.h"
 
 #include "../artifact_io.h"
 #include "../wave_c/wave_c_common.h"
@@ -89,30 +90,7 @@ struct FaceUse {
   Triple outward;
 };
 
-Json run_validate(const Request& request) {
-  require_input_count(request, 1, "mesh.validate.tetrahedral_mesh");
-  require_parameters(request,
-                     {},
-                     {"domain_volume", "volume_relative_tolerance", "minimum_dihedral_angle",
-                      "maximum_radius_edge_ratio", "minimum_tetrahedron_volume"});
-  const auto mesh = wave_c::read_tetrahedral_mesh(request.inputs[0]);
-  const std::string& unit = request.inputs[0].unit;
-  bool has_domain_volume = false, has_tolerance = false, has_dihedral = false, has_ratio = false,
-       has_minimum_volume = false;
-  const double domain_volume = optional_number(request, "domain_volume", 0.0, 1e18, 0.0, &has_domain_volume);
-  const double volume_tolerance = optional_number(request, "volume_relative_tolerance", 0.0, 0.5,
-                                                  kDefaultVolumeTolerance, &has_tolerance);
-  const double dihedral_bound = optional_number(request, "minimum_dihedral_angle", 0.0,
-                                                kMaximumMinimumDihedral, 0.0, &has_dihedral);
-  const double ratio_bound = optional_number(request, "maximum_radius_edge_ratio",
-                                             kMinimumRadiusEdgeBound, 1e6, 0.0, &has_ratio);
-  const double minimum_volume_bound = optional_number(request, "minimum_tetrahedron_volume", 0.0, 1e18,
-                                                      0.0, &has_minimum_volume);
-  if (has_tolerance && !has_domain_volume) {
-    throw WorkerError("INVALID_REQUEST", "INVALID_PARAMETER",
-                      "volume_relative_tolerance requires domain_volume");
-  }
-
+TetAnalysis analyze_impl(const wave_c::TetrahedralMeshData& mesh) {
   const auto& vertices = mesh.vertices;
   const auto& cells = mesh.tetrahedra;
   const std::size_t vertex_count = vertices.size(), cell_count = cells.size();
@@ -137,7 +115,8 @@ Json run_validate(const Request& request) {
   std::vector<Index4> oriented = cells;
   long double volume_sum = 0.0L;
   double minimum_volume = std::numeric_limits<double>::infinity();
-  double minimum_dihedral = 180.0, maximum_dihedral = 0.0, maximum_radius_edge = 0.0;
+  double minimum_dihedral = 180.0, maximum_dihedral = 0.0, maximum_radius_edge = 0.0,
+         maximum_circumradius = 0.0;
   std::map<std::size_t, long double> subdomain_volume;
   std::map<std::size_t, std::size_t> subdomain_cells;
   constexpr int kEdges[6][4] = {{0, 1, 2, 3}, {0, 2, 1, 3}, {0, 3, 1, 2},
@@ -169,6 +148,7 @@ Json run_validate(const Request& request) {
       for (int j = i + 1; j < 4; ++j) shortest = std::min(shortest, norm(sub(p[i], p[j])));
     }
     maximum_radius_edge = std::max(maximum_radius_edge, circumradius / shortest);
+    maximum_circumradius = std::max(maximum_circumradius, circumradius);
     // Dihedral angles about each of the six edges.
     for (const auto& e : kEdges) {
       const XYZ axis = sub(p[e[1]], p[e[0]]);
@@ -355,6 +335,68 @@ Json run_validate(const Request& request) {
                                    static_cast<long long>(boundary_faces.size());
   const long long boundary_genus = (2 - boundary_euler) / 2;
 
+  TetAnalysis result;
+  result.vertex_count = vertex_count;
+  result.cell_count = cell_count;
+  result.edge_count = edges.size();
+  result.face_count = faces.size();
+  result.interior_faces = interior_faces;
+  result.boundary_vertices = boundary_vertices;
+  result.boundary_edge_count = edge_owner.size();
+  result.boundary_faces = boundary_faces;
+  result.volume_sum = volume_sum;
+  result.boundary_volume = boundary_volume;
+  result.minimum_volume = minimum_volume;
+  result.minimum_dihedral = minimum_dihedral;
+  result.maximum_dihedral = maximum_dihedral;
+  result.maximum_radius_edge = maximum_radius_edge;
+  result.maximum_circumradius = maximum_circumradius;
+  result.euler = euler;
+  result.boundary_euler = boundary_euler;
+  result.boundary_genus = boundary_genus;
+  result.subdomain_volume = subdomain_volume;
+  result.subdomain_cells = subdomain_cells;
+  return result;
+}
+
+Json run_validate(const Request& request) {
+  require_input_count(request, 1, "mesh.validate.tetrahedral_mesh");
+  require_parameters(request,
+                     {},
+                     {"domain_volume", "volume_relative_tolerance", "minimum_dihedral_angle",
+                      "maximum_radius_edge_ratio", "minimum_tetrahedron_volume"});
+  const auto mesh = wave_c::read_tetrahedral_mesh(request.inputs[0]);
+  const std::string& unit = request.inputs[0].unit;
+  bool has_domain_volume = false, has_tolerance = false, has_dihedral = false, has_ratio = false,
+       has_minimum_volume = false;
+  const double domain_volume = optional_number(request, "domain_volume", 0.0, 1e18, 0.0, &has_domain_volume);
+  const double volume_tolerance = optional_number(request, "volume_relative_tolerance", 0.0, 0.5,
+                                                  kDefaultVolumeTolerance, &has_tolerance);
+  const double dihedral_bound = optional_number(request, "minimum_dihedral_angle", 0.0,
+                                                kMaximumMinimumDihedral, 0.0, &has_dihedral);
+  const double ratio_bound = optional_number(request, "maximum_radius_edge_ratio",
+                                             kMinimumRadiusEdgeBound, 1e6, 0.0, &has_ratio);
+  const double minimum_volume_bound = optional_number(request, "minimum_tetrahedron_volume", 0.0, 1e18,
+                                                      0.0, &has_minimum_volume);
+  if (has_tolerance && !has_domain_volume) {
+    throw WorkerError("INVALID_REQUEST", "INVALID_PARAMETER",
+                      "volume_relative_tolerance requires domain_volume");
+  }
+
+  const auto analysis = analyze_impl(mesh);
+  const std::size_t vertex_count = analysis.vertex_count, cell_count = analysis.cell_count;
+  const auto& boundary_faces = analysis.boundary_faces;
+  const auto& subdomain_volume = analysis.subdomain_volume;
+  const auto& subdomain_cells = analysis.subdomain_cells;
+  const std::size_t interior_faces = analysis.interior_faces,
+                    boundary_vertices = analysis.boundary_vertices;
+  const long double volume_sum = analysis.volume_sum;
+  const double minimum_volume = analysis.minimum_volume, minimum_dihedral = analysis.minimum_dihedral,
+               maximum_dihedral = analysis.maximum_dihedral,
+               maximum_radius_edge = analysis.maximum_radius_edge;
+  const long long euler = analysis.euler, boundary_euler = analysis.boundary_euler,
+                  boundary_genus = analysis.boundary_genus;
+
   Json checks = {{"vertices_distinct", true},
                  {"no_unused_vertices", true},
                  {"subdomain_indices_valid", true},
@@ -405,15 +447,15 @@ Json run_validate(const Request& request) {
   Json subdomains = Json::object();
   for (const auto& entry : subdomain_volume) {
     subdomains[std::to_string(entry.first)] = {
-        {"cell_count", subdomain_cells[entry.first]}, {"volume", static_cast<double>(entry.second)}};
+        {"cell_count", subdomain_cells.at(entry.first)}, {"volume", static_cast<double>(entry.second)}};
   }
   Json report = {
       {"checks", checks},
       {"criteria_enforced", criteria},
       {"vertex_count", vertex_count},
       {"tetrahedron_count", cell_count},
-      {"edge_count", edges.size()},
-      {"face_count", faces.size()},
+      {"edge_count", analysis.edge_count},
+      {"face_count", analysis.face_count},
       {"interior_face_count", interior_faces},
       {"boundary_face_count", boundary_faces.size()},
       {"boundary_vertex_count", boundary_vertices},
@@ -435,6 +477,10 @@ Json run_validate(const Request& request) {
 }
 
 }  // namespace
+
+TetAnalysis analyze_tetrahedral_mesh(const wave_c::TetrahedralMeshData& mesh) {
+  return analyze_impl(mesh);
+}
 
 std::vector<OperationDefinition> tetrahedral_mesh_operations() {
   std::vector<OperationDefinition> result;

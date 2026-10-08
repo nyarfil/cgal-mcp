@@ -1,4 +1,4 @@
-"""Official MCP client -> Wave E Mesh_2 and Surface_mesher operations -> independent validators."""
+"""Official MCP client -> Wave E Mesh_2, Surface_mesher and Mesh_3 operations -> independent validators."""
 
 from __future__ import annotations
 
@@ -22,6 +22,8 @@ VALIDATOR = "mesh.validate.delaunay_refinement_2"
 SURFACE_DOMAIN = "ImplicitSurfaceDomain"
 SURFACE_TRANSFORM = "mesh.surface.generate"
 SURFACE_VALIDATOR = "mesh.validate.surface_mesh"
+VOLUME_TRANSFORM = "mesh.volume.generate"
+VOLUME_VALIDATOR = "mesh.validate.volume_mesh"
 
 
 def length(value: float, unit: str) -> dict:
@@ -169,7 +171,44 @@ async def main() -> None:
             assert rejected["state"] in {"rejected", "failed"}, rejected
             assert not rejected.get("outputs"), rejected
 
-            print(f"CGAL Master Wave E MCP ({mode}) + Mesh_2 and Surface_mesher independent validators: PASS")
+            # --- 7.14.03 Mesh_3 tetrahedral volume mesh of the same typed domain, validated independently ---
+            volume_parameters = {"facet_angle": 25.0, "facet_size": length(0.5, surface_unit),
+                                 "facet_distance": length(0.05, surface_unit),
+                                 "cell_radius_edge_ratio": 3.0, "cell_size": length(0.6, surface_unit)}
+            plan = await call("cgal_plan", {"request": {
+                "operation_id": VOLUME_TRANSFORM, "inputs": [domain["artifact_id"]],
+                "parameters": volume_parameters}})
+            assert [step["operation"] for step in plan["steps"]] == [VOLUME_TRANSFORM, VOLUME_VALIDATOR], plan
+            queued = await call("cgal_execute", {"plan_id": plan["plan_id"]})
+            status = await wait_job(queued["job_id"])
+            assert status["state"] == "succeeded" and status["validation_status"] == "passed", status
+            report = status["validation"][0]["report"]
+            assert report["status"] == "pass" and report["validator"] == VOLUME_VALIDATOR, report
+            assert all(report["checks"].values()) and report["genus"] == 0, report
+            assert report["euler_characteristic"] == 1 and report["boundary_euler_characteristic"] == 2, report
+            assert abs(report["volume"]["analytic"] - 32.0 * math.pi / 3.0) < 1e-9, report["volume"]
+            assert report["volume"]["unit"] == "cm^3" and report["boundary_area"]["unit"] == "cm^2", report
+            volume = await call("cgal_artifact_inspect", {"artifact_id": status["outputs"][0]["artifact_id"]})
+            assert volume["type"] == "TetrahedralMesh" and volume["unit"] == surface_unit, volume
+            # A globally scaled candidate leaves the domain and must be rejected.
+            exported_volume = root / "ball.json"
+            await call("cgal_artifact_export", {"artifact_id": volume["artifact_id"],
+                                                "path": str(exported_volume)})
+            ball = json.loads(exported_volume.read_text(encoding="utf-8"))
+            ball["vertices"] = [[1.001 * c for c in vertex] for vertex in ball["vertices"]]
+            exported_volume.write_text(json.dumps(ball), encoding="utf-8")
+            scaled_ball = await call("cgal_artifact_import", {
+                "path": str(exported_volume), "unit": surface_unit, "artifact_type": "TetrahedralMesh"})
+            plan = await call("cgal_plan", {"request": {"steps": [{
+                "id": "validate", "operation": VOLUME_VALIDATOR,
+                "inputs": {"candidate": scaled_ball["artifact_id"], "source": domain["artifact_id"]},
+                "parameters": volume_parameters}]}})
+            queued = await call("cgal_execute", {"plan_id": plan["plan_id"]})
+            rejected = await wait_job(queued["job_id"])
+            assert rejected["state"] in {"rejected", "failed"}, rejected
+            assert not rejected.get("outputs"), rejected
+
+            print(f"CGAL Master Wave E MCP ({mode}) + Mesh_2, Surface_mesher and Mesh_3 independent validators: PASS")
 
 
 if __name__ == "__main__":

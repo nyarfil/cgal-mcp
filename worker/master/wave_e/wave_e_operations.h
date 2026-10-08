@@ -12,5 +12,6 @@ std::vector<OperationDefinition> operations();
 // Per-family registrations combined by operations().
 std::vector<OperationDefinition> surface_mesh_operations();
 std::vector<OperationDefinition> tetrahedral_mesh_operations();
+std::vector<OperationDefinition> volume_mesh_operations();
 
 }  // namespace cgal_master::wave_e

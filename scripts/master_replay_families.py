@@ -1220,6 +1220,46 @@ SURF_OCTAHEDRON = _fx("surface_octahedron_r2.off", "61089e4b1f1f2475529b65641a4a
 SURF_TORUS_MESH = _fx("surface_torus_mesh.off", "8a5e1dc8db3e21e561eca23e8d26891850c5dead694fdf3734f176bab3e1a56d")
 SURF_ELLIPSOID_MESH = _fx("surface_ellipsoid_mesh.off", "fb02c088721b20ac3c828dea43e62e564687da5bd6b3515c518421f905f10b9f")
 
+VOL_SPHERE_MESH = _fx("volume_sphere_r2_mesh.json", "d153848e5d3fcff06fba3a9345bd6ce1825d714d6ab02cdf61d073ae3b8bca0a")
+VOL_ELLIPSOID_MESH = _fx("volume_ellipsoid_mesh.json", "9490fd102d47883165355fd14f74b2a9b66b7d8bcfe29aa7190312fe22657e52")
+VOL_TORUS_MESH = _fx("volume_torus_mesh.json", "9595cc950410e7b00e7c70b38899a5ac05b88344aab6c68a301db876f56d4572")
+VOL_MISSING_INTERIOR = _fx("volume_sphere_missing_interior_cell.json", "ca92a6c8b3b0d7541da662c5f979fb329812b064daf619653ccc0dcf6bfdf484")
+VOL_MISSING_BOUNDARY = _fx("volume_sphere_missing_boundary_cell.json", "bb1c0f466f82b70d08d6541420b0eaa09ae4b510951a3c2c6af68e4ae45decf9")
+VOL_FLIPPED = _fx("volume_sphere_flipped_cell.json", "6dd6ac3303ad12e1e1a81834e8c9f5169be60cf5641f83dcc1bb5ebe4ae0f691")
+VOL_DUPLICATE = _fx("volume_sphere_duplicate_cell.json", "cea461efb035d26d51d1ddc715bc4ef15df8f71955111b4fa46bf82e5fb0ed44")
+VOL_SCALED = _fx("volume_sphere_scaled.json", "16e4a1f1d21a838c3af902eaa4d788bb260830c1d34ade88b4169a030aeb7a0d")
+VOL_TWO_SUBDOMAINS = _fx("volume_sphere_two_subdomains.json", "98cb02dfa2ad5026d88d83118ffc57b0a59ee1413202235b69dd0304c2273665")
+VOL_OCTAHEDRON = _fx("volume_sphere_octahedron_r2.json", "774ac96291ff9e2d0c5eb11c3fd8abb0b81fd32d8849408e00ab9bf258bc0931")
+
+VOL_GEN = "mesh.volume.generate"
+VOL_VAL = "mesh.validate.volume_mesh"
+
+
+def _vol(angle: float, size: float, distance: float, ratio: float, cell: float) -> dict:
+    return {"facet_angle": angle, "facet_size": _mm(size), "facet_distance": _mm(distance),
+            "cell_radius_edge_ratio": ratio, "cell_size": _mm(cell)}
+
+
+def _tet(fixture: dict) -> dict:
+    return _json_input(fixture, "TetrahedralMesh")
+
+
+def _volume_checks() -> list[list]:
+    return [
+        ["metrics.algorithm", "==", "CGAL::make_mesh_3"],
+        ["metrics.criteria", "==", "CGAL::Mesh_criteria_3"],
+        ["metrics.domain", "==", "CGAL::Labeled_mesh_domain_3"],
+        ["metrics.perturbation", "==", False],
+        ["metrics.exudation", "==", False],
+        ["output:geometry:measure:tet.tetrahedron_count", "==", {"path": "metrics.tetrahedron_count"}],
+        ["output:geometry:measure:tet.vertex_count", "==", {"path": "metrics.vertex_count"}],
+        ["output:geometry:measure:tet.boundary_face_count", "==", {"path": "metrics.boundary_facet_count"}],
+        ["output:geometry:measure:tet.max_face_use", "<=", 2],
+        ["output:geometry:measure:tet.subdomain_count", "==", 1],
+        ["output:geometry:measure:tet.min_tetrahedron_volume", ">", 0.0],
+    ]
+
+
 SURF_GEN = "mesh.surface.generate"
 SURF_VAL = "mesh.validate.surface_mesh"
 PI = math.pi
@@ -1289,9 +1329,28 @@ FAMILY_7_14 = {
             "case_ids": ["surface-sphere", "surface-sphere-fine", "surface-sphere-r25",
                          "surface-ellipsoid", "surface-torus"],
         },
+        "major.7.14.03": {
+            "operation_ids": [VOL_GEN],
+            "symbols": ["make_mesh_3", "Labeled_mesh_domain_3", "Mesh_criteria_3"],
+            "symbol_notes": "CGAL::make_mesh_3 (Mesh_3) over a Labeled_mesh_domain_3 built from a fixed "
+                            "enumerated set of typed implicit domains (sphere radius 2 and 2.5, ellipsoid "
+                            "3x2x1.5, torus R=3 r=1; no free-form expressions) meshes the solid with "
+                            "typed facet angle/size/distance and cell radius-edge/size criteria. The "
+                            "TetrahedralMesh output is re-measured here: every interior face is shared "
+                            "by two cells, cells are positive, V-E+F-C is 1 for the balls and 0 for the "
+                            "solid torus, the boundary is a closed surface with Euler characteristic 2 "
+                            "or 0, boundary vertices lie on the analytic surface and interior vertices "
+                            "strictly inside, the cell volume sums to 32 pi / 3, 4 pi abc / 3 and "
+                            "2 pi^2 R r^2 within the sampling bound, the boundary area to 16 pi and "
+                            "4 pi^2 R r, and the facet angle, facet radius, cell circumradius and "
+                            "radius-edge criteria hold. Finer criteria give more cells. The independent "
+                            "validator recomputes topology, exact orientation, the analytic domain "
+                            "relation and every criterion without calling Mesh_3.",
+            "case_ids": ["volume-sphere", "volume-sphere-fine", "volume-sphere-r25", "volume-ellipsoid",
+                         "volume-torus"],
+        },
     },
     "unbound": {
-        "major.7.14.03": "No Mesh_3 tetrahedral volume meshing operation (make_mesh_3).",
         "major.7.14.04": "No Mesh_3 domain criteria operation (Mesh_criteria_3, Mesh_facet_criteria_3).",
     },
     "cases": [
@@ -1416,9 +1475,69 @@ FAMILY_7_14 = {
             ["output:geometry:measure:off.min_angle_degrees", ">=", 25.0],
             ["output:geometry:measure:off.max_circumradius", "<=", 0.5 + 1e-9],
         ]),
+        _case("volume-sphere", VOL_GEN, [_surface(DOM_SPHERE)], _vol(25.0, 0.5, 0.05, 3.0, 0.6), [
+            *_volume_checks(),
+            ["metrics.domain_kind", "==", "sphere"],
+            ["metrics.tetrahedron_count", ">=", 280],
+            ["output:geometry:measure:tet.euler_characteristic", "==", 1],
+            ["output:geometry:measure:tet.boundary_euler_characteristic", "==", 2],
+            ["output:geometry:measure:tet.min_boundary_vertex_radius", "approx", [2.0, 1e-6]],
+            ["output:geometry:measure:tet.max_boundary_vertex_radius", "approx", [2.0, 1e-6]],
+            ["output:geometry:measure:tet.max_interior_vertex_radius", "<", 2.0 - 1e-6],
+            ["output:geometry:measure:tet.volume", "approx", [32.0 * PI / 3.0, 0.08 * 32.0 * PI / 3.0]],
+            ["output:geometry:measure:tet.boundary_area", "approx", [16.0 * PI, 0.04 * 16.0 * PI]],
+            ["output:geometry:measure:tet.min_boundary_facet_angle", ">=", 25.0],
+            ["output:geometry:measure:tet.max_boundary_facet_circumradius", "<=", 0.5 + 1e-9],
+            ["output:geometry:measure:tet.max_circumradius", "<=", 0.6 + 1e-9],
+            ["output:geometry:measure:tet.max_radius_edge", "<=", 3.0 + 1e-9],
+        ]),
+        _case("volume-sphere-fine", VOL_GEN, [_surface(DOM_SPHERE)], _vol(25.0, 0.3, 0.02, 2.5, 0.3), [
+            *_volume_checks(),
+            ["metrics.tetrahedron_count", ">=", 2000],
+            ["output:geometry:measure:tet.euler_characteristic", "==", 1],
+            ["output:geometry:measure:tet.boundary_euler_characteristic", "==", 2],
+            ["output:geometry:measure:tet.volume", "approx", [32.0 * PI / 3.0, 0.04 * 32.0 * PI / 3.0]],
+            ["output:geometry:measure:tet.boundary_area", "approx", [16.0 * PI, 0.02 * 16.0 * PI]],
+            ["output:geometry:measure:tet.max_circumradius", "<=", 0.3 + 1e-9],
+            ["output:geometry:measure:tet.max_radius_edge", "<=", 2.5 + 1e-9],
+            ["output:geometry:measure:tet.max_boundary_facet_circumradius", "<=", 0.3 + 1e-9],
+        ]),
+        _case("volume-sphere-r25", VOL_GEN, [_surface(DOM_SPHERE_R25)], _vol(25.0, 0.5, 0.05, 3.0, 0.6), [
+            *_volume_checks(),
+            ["output:geometry:measure:tet.euler_characteristic", "==", 1],
+            ["output:geometry:measure:tet.min_boundary_vertex_radius", "approx", [2.5, 1e-6]],
+            ["output:geometry:measure:tet.max_boundary_vertex_radius", "approx", [2.5, 1e-6]],
+            ["output:geometry:measure:tet.volume", "approx", [4.0 / 3.0 * PI * 15.625,
+                                                             0.08 * 4.0 / 3.0 * PI * 15.625]],
+        ]),
+        _case("volume-ellipsoid", VOL_GEN, [_surface(DOM_ELLIPSOID)], _vol(25.0, 0.6, 0.04, 3.0, 0.8), [
+            *_volume_checks(),
+            ["metrics.domain_kind", "==", "ellipsoid"],
+            ["output:geometry:measure:tet.euler_characteristic", "==", 1],
+            ["output:geometry:measure:tet.boundary_euler_characteristic", "==", 2],
+            ["output:geometry:measure:tet.max_boundary_ellipsoid_residual(3,2,1.5)", "approx", [0.0, 1e-6]],
+            ["output:geometry:measure:tet.volume", "approx", [4.0 / 3.0 * PI * 9.0, 0.08 * 4.0 / 3.0 * PI * 9.0]],
+            ["output:geometry:measure:tet.boundary_area", "approx", [ELLIPSOID_AREA, 0.04 * ELLIPSOID_AREA]],
+            ["output:geometry:measure:tet.min_boundary_facet_angle", ">=", 25.0],
+            ["output:geometry:measure:tet.max_circumradius", "<=", 0.8 + 1e-9],
+            ["output:geometry:measure:tet.max_radius_edge", "<=", 3.0 + 1e-9],
+        ]),
+        _case("volume-torus", VOL_GEN, [_surface(DOM_TORUS)], _vol(25.0, 0.5, 0.03, 3.0, 0.6), [
+            *_volume_checks(),
+            ["metrics.domain_kind", "==", "torus"],
+            ["output:geometry:measure:tet.euler_characteristic", "==", 0],
+            ["output:geometry:measure:tet.boundary_euler_characteristic", "==", 0],
+            ["output:geometry:measure:tet.max_boundary_torus_residual(3,1)", "approx", [0.0, 1e-6]],
+            ["output:geometry:measure:tet.volume", "approx", [6.0 * PI * PI, 0.08 * 6.0 * PI * PI]],
+            ["output:geometry:measure:tet.boundary_area", "approx", [12.0 * PI * PI, 0.04 * 12.0 * PI * PI]],
+            ["output:geometry:measure:tet.min_boundary_facet_angle", ">=", 25.0],
+            ["output:geometry:measure:tet.max_circumradius", "<=", 0.6 + 1e-9],
+            ["output:geometry:measure:tet.max_radius_edge", "<=", 3.0 + 1e-9],
+        ]),
     ],
     "pairs": [
         {"kind": "different_outputs", "cases": ["surface-sphere", "surface-sphere-fine"]},
+        {"kind": "different_outputs", "cases": ["volume-sphere", "volume-sphere-fine"]},
         {"kind": "different_outputs", "cases": ["mesh2-square-size2", "mesh2-square-size1"]},
         {"kind": "different_outputs", "cases": ["mesh2-rect-unrefined", "mesh2-rect-refined"]},
     ],
@@ -1496,6 +1615,93 @@ FAMILY_7_14 = {
          "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "DISTANCE_CRITERION_VIOLATED"},
         {"id": "surface-coarse-octahedron-rejected", "operation": SURF_VAL,
          "inputs": [_mesh(SURF_OCTAHEDRON), _surface(DOM_SPHERE)], "parameters": _surf(30.0, 5.0, 5.0),
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "AREA_MISMATCH"},
+        {"id": "volume-expression-rejected", "operation": VOL_GEN,
+         "inputs": [_surface(DOM_EXPRESSION)], "parameters": _vol(25.0, 0.5, 0.05, 3.0, 0.6),
+         "expect_error_class": "INPUT_ERROR", "expect_error_code": "UNSUPPORTED_DOMAIN_KIND"},
+        {"id": "volume-unknown-kind-rejected", "operation": VOL_GEN,
+         "inputs": [_surface(DOM_UNKNOWN_KIND)], "parameters": _vol(25.0, 0.5, 0.05, 3.0, 0.6),
+         "expect_error_class": "INPUT_ERROR", "expect_error_code": "UNSUPPORTED_DOMAIN_KIND"},
+        {"id": "volume-negative-radius-rejected", "operation": VOL_GEN,
+         "inputs": [_surface(DOM_NEGATIVE_RADIUS)], "parameters": _vol(25.0, 0.5, 0.05, 3.0, 0.6),
+         "expect_error_class": "INPUT_ERROR", "expect_error_code": "INVALID_DOMAIN"},
+        {"id": "volume-extra-parameter-rejected", "operation": VOL_GEN,
+         "inputs": [_surface(DOM_EXTRA_PARAMETER)], "parameters": _vol(25.0, 0.5, 0.05, 3.0, 0.6),
+         "expect_error_class": "INPUT_ERROR", "expect_error_code": "SCHEMA_MISMATCH"},
+        {"id": "volume-thick-torus-rejected", "operation": VOL_GEN,
+         "inputs": [_surface(DOM_THICK_TORUS)], "parameters": _vol(25.0, 0.5, 0.05, 3.0, 0.6),
+         "expect_error_class": "INPUT_ERROR", "expect_error_code": "INVALID_DOMAIN"},
+        {"id": "volume-needle-ellipsoid-rejected", "operation": VOL_GEN,
+         "inputs": [_surface(DOM_NEEDLE_ELLIPSOID)], "parameters": _vol(25.0, 0.5, 0.05, 3.0, 0.6),
+         "expect_error_class": "INPUT_ERROR", "expect_error_code": "INVALID_DOMAIN"},
+        {"id": "volume-angle-above-guarantee-rejected", "operation": VOL_GEN,
+         "inputs": [_surface(DOM_SPHERE)], "parameters": _vol(31.0, 0.5, 0.05, 3.0, 0.6),
+         "expect_error_class": "INVALID_REQUEST", "expect_error_code": "INVALID_PARAMETER"},
+        {"id": "volume-radius-edge-below-guarantee-rejected", "operation": VOL_GEN,
+         "inputs": [_surface(DOM_SPHERE)], "parameters": _vol(25.0, 0.5, 0.05, 1.99, 0.6),
+         "expect_error_class": "INVALID_REQUEST", "expect_error_code": "INVALID_PARAMETER"},
+        {"id": "volume-distance-too-coarse-rejected", "operation": VOL_GEN,
+         "inputs": [_surface(DOM_SPHERE)], "parameters": _vol(25.0, 0.5, 0.5, 3.0, 0.6),
+         "expect_error_class": "INVALID_REQUEST", "expect_error_code": "INVALID_PARAMETER"},
+        {"id": "volume-size-budget-rejected", "operation": VOL_GEN,
+         "inputs": [_surface(DOM_SPHERE)], "parameters": _vol(25.0, 0.5, 0.05, 3.0, 0.05),
+         "expect_error_class": "RESOURCE_LIMIT", "expect_error_code": "MESH_SIZE_LIMIT_EXCEEDED"},
+        {"id": "volume-unit-mismatch-rejected", "operation": VOL_GEN,
+         "inputs": [_surface(DOM_SPHERE)], "parameters": {**_vol(25.0, 0.5, 0.05, 3.0, 0.6), "cell_size": {"value": 0.6, "unit": "cm"}},
+         "expect_error_class": "TYPE_ERROR", "expect_error_code": "UNIT_MISMATCH"},
+        {"id": "volume-missing-interior-cell-rejected", "operation": VOL_VAL,
+         "inputs": [_tet(VOL_MISSING_INTERIOR), _surface(DOM_SPHERE)], "parameters": _vol(25.0, 0.5, 0.05, 3.0, 0.6),
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "MULTIPLE_BOUNDARY_SURFACES"},
+        {"id": "volume-missing-boundary-cell-rejected", "operation": VOL_VAL,
+         "inputs": [_tet(VOL_MISSING_BOUNDARY), _surface(DOM_SPHERE)], "parameters": _vol(25.0, 0.5, 0.05, 3.0, 0.6),
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "VERTEX_OFF_SURFACE"},
+        {"id": "volume-flipped-cell-rejected", "operation": VOL_VAL,
+         "inputs": [_tet(VOL_FLIPPED), _surface(DOM_SPHERE)], "parameters": _vol(25.0, 0.5, 0.05, 3.0, 0.6),
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "INVERTED_TETRAHEDRON"},
+        {"id": "volume-duplicate-cell-rejected", "operation": VOL_VAL,
+         "inputs": [_tet(VOL_DUPLICATE), _surface(DOM_SPHERE)], "parameters": _vol(25.0, 0.5, 0.05, 3.0, 0.6),
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "NON_MANIFOLD_FACE"},
+        {"id": "volume-scaled-rejected", "operation": VOL_VAL,
+         "inputs": [_tet(VOL_SCALED), _surface(DOM_SPHERE)], "parameters": _vol(25.0, 0.5, 0.05, 3.0, 0.6),
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "VERTEX_OUTSIDE_DOMAIN"},
+        {"id": "volume-two-subdomains-rejected", "operation": VOL_VAL,
+         "inputs": [_tet(VOL_TWO_SUBDOMAINS), _surface(DOM_SPHERE)], "parameters": _vol(25.0, 0.5, 0.05, 3.0, 0.6),
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "SUBDOMAIN_INDEX_INVALID"},
+        {"id": "volume-wrong-radius-rejected", "operation": VOL_VAL,
+         "inputs": [_tet(VOL_SPHERE_MESH), _surface(DOM_SPHERE_R25)], "parameters": _vol(25.0, 0.5, 0.05, 3.0, 0.6),
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "VERTEX_OFF_SURFACE"},
+        {"id": "volume-sphere-vs-ellipsoid-rejected", "operation": VOL_VAL,
+         "inputs": [_tet(VOL_SPHERE_MESH), _surface(DOM_ELLIPSOID)], "parameters": _vol(25.0, 0.5, 0.05, 3.0, 0.6),
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "VERTEX_OUTSIDE_DOMAIN"},
+        {"id": "volume-sphere-vs-torus-rejected", "operation": VOL_VAL,
+         "inputs": [_tet(VOL_SPHERE_MESH), _surface(DOM_TORUS)], "parameters": _vol(25.0, 0.5, 0.05, 3.0, 0.6),
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "EULER_CHARACTERISTIC_MISMATCH"},
+        {"id": "volume-torus-vs-sphere-rejected", "operation": VOL_VAL,
+         "inputs": [_tet(VOL_TORUS_MESH), _surface(DOM_SPHERE)], "parameters": _vol(25.0, 0.5, 0.05, 3.0, 0.6),
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "EULER_CHARACTERISTIC_MISMATCH"},
+        {"id": "volume-ellipsoid-vs-sphere-rejected", "operation": VOL_VAL,
+         "inputs": [_tet(VOL_ELLIPSOID_MESH), _surface(DOM_SPHERE)], "parameters": _vol(25.0, 0.6, 0.04, 3.0, 0.8),
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "VERTEX_OUTSIDE_DOMAIN"},
+        {"id": "volume-stricter-facet-angle-rejected", "operation": VOL_VAL,
+         "inputs": [_tet(VOL_SPHERE_MESH), _surface(DOM_SPHERE)], "parameters": _vol(35.0, 0.5, 0.05, 3.0, 0.6),
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "FACET_ANGLE_VIOLATED"},
+        {"id": "volume-stricter-facet-size-rejected", "operation": VOL_VAL,
+         "inputs": [_tet(VOL_SPHERE_MESH), _surface(DOM_SPHERE)], "parameters": _vol(25.0, 0.3, 0.05, 3.0, 0.6),
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "FACET_SIZE_VIOLATED"},
+        {"id": "volume-stricter-facet-distance-rejected", "operation": VOL_VAL,
+         "inputs": [_tet(VOL_SPHERE_MESH), _surface(DOM_SPHERE)], "parameters": _vol(25.0, 0.5, 0.02, 3.0, 0.6),
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "FACET_DISTANCE_VIOLATED"},
+        {"id": "volume-stricter-cell-size-rejected", "operation": VOL_VAL,
+         "inputs": [_tet(VOL_SPHERE_MESH), _surface(DOM_SPHERE)], "parameters": _vol(25.0, 0.5, 0.05, 3.0, 0.4),
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "CELL_SIZE_VIOLATED"},
+        {"id": "volume-stricter-radius-edge-rejected", "operation": VOL_VAL,
+         "inputs": [_tet(VOL_SPHERE_MESH), _surface(DOM_SPHERE)], "parameters": _vol(25.0, 0.5, 0.05, 1.5, 0.6),
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "RADIUS_EDGE_VIOLATED"},
+        {"id": "volume-coarse-octahedron-size-rejected", "operation": VOL_VAL,
+         "inputs": [_tet(VOL_OCTAHEDRON), _surface(DOM_SPHERE)], "parameters": _vol(25.0, 0.5, 0.05, 3.0, 0.6),
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "FACET_SIZE_VIOLATED"},
+        {"id": "volume-coarse-octahedron-area-rejected", "operation": VOL_VAL,
+         "inputs": [_tet(VOL_OCTAHEDRON), _surface(DOM_SPHERE)], "parameters": _vol(30.0, 5.0, 5.0, 100.0, 50.0),
          "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "AREA_MISMATCH"},
         {"id": "mesh2-bowtie-rejected", "operation": "mesh2.refine.delaunay",
          "inputs": [_domain(BOWTIE)], "parameters": _mesh2(0.125, 2.0),
@@ -1909,12 +2115,133 @@ def _tri2_measure(name: str, content: bytes) -> object:
     raise ValueError(f"unknown triangulation measure {name}")
 
 
+def _tet_measure(name: str, content: bytes) -> object:
+    """Independent facts of a TetrahedralMesh JSON artifact (exact rational volume)."""
+    from fractions import Fraction
+    mesh = json.loads(content.decode("utf-8"))
+    vertices = mesh["vertices"]
+    cells = mesh["tetrahedra"]
+    if name == "vertex_count":
+        return len(vertices)
+    if name == "tetrahedron_count":
+        return len(cells)
+    if name == "subdomain_count":
+        return len(set(mesh["subdomains"]))
+
+    def determinant(p):
+        a, b, c = ([Fraction(p[i][k]) - Fraction(p[0][k]) for k in range(3)] for i in (1, 2, 3))
+        return (a[0] * (b[1] * c[2] - b[2] * c[1]) - a[1] * (b[0] * c[2] - b[2] * c[0])
+                + a[2] * (b[0] * c[1] - b[1] * c[0]))
+
+    face_use: dict[tuple, int] = {}
+    boundary_candidates: dict[tuple, tuple] = {}
+    edges = set()
+    smallest_volume = None
+    volume = Fraction(0)
+    radius_edge = widest = 0.0
+    for cell in cells:
+        points = [vertices[i] for i in cell]
+        signed = determinant(points) / 6
+        volume += signed
+        smallest_volume = signed if smallest_volume is None else min(smallest_volume, signed)
+        for slot in ((1, 2, 3), (0, 3, 2), (0, 1, 3), (0, 2, 1)):
+            key = tuple(sorted(cell[i] for i in slot))
+            face_use[key] = face_use.get(key, 0) + 1
+            boundary_candidates[key] = tuple(cell[i] for i in slot)
+        for i in range(4):
+            for j in range(i + 1, 4):
+                edges.add(tuple(sorted((cell[i], cell[j]))))
+        a, b, c = ([points[i][k] - points[0][k] for k in range(3)] for i in (1, 2, 3))
+        rows = [[2 * x for x in v] for v in (a, b, c)]
+        rhs = [sum(x * x for x in v) for v in (a, b, c)]
+
+        def det3(m):
+            return (m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1])
+                    - m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0])
+                    + m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0]))
+
+        def column(index):
+            m = [r[:] for r in rows]
+            for r in range(3):
+                m[r][index] = rhs[r]
+            return det3(m)
+        d = det3(rows)
+        radius = math.hypot(column(0) / d, column(1) / d, column(2) / d)
+        widest = max(widest, radius)
+        shortest = min(math.dist(points[i], points[j]) for i in range(4) for j in range(i + 1, 4))
+        radius_edge = max(radius_edge, radius / shortest)
+    if name == "volume":
+        return float(volume)
+    if name == "min_tetrahedron_volume":
+        return float(smallest_volume)
+    if name == "max_circumradius":
+        return widest
+    if name == "max_radius_edge":
+        return radius_edge
+    if name == "max_face_use":
+        return max(face_use.values())
+    boundary = [boundary_candidates[key] for key, count in face_use.items() if count == 1]
+    boundary_vertices = {v for face in boundary for v in face}
+    if name == "euler_characteristic":
+        return len(vertices) - len(edges) + len(face_use) - len(cells)
+    if name == "boundary_face_count":
+        return len(boundary)
+    boundary_edges: dict[tuple, int] = {}
+    for face in boundary:
+        for i in range(3):
+            key = tuple(sorted((face[i], face[(i + 1) % 3])))
+            boundary_edges[key] = boundary_edges.get(key, 0) + 1
+    if name == "boundary_euler_characteristic":
+        if any(count != 2 for count in boundary_edges.values()):
+            raise ValueError("tetrahedral boundary is not a closed surface")
+        return len(boundary_vertices) - len(boundary_edges) + len(boundary)
+    if name in {"min_boundary_vertex_radius", "max_boundary_vertex_radius"}:
+        radii = [math.sqrt(sum(c * c for c in vertices[i])) for i in boundary_vertices]
+        return min(radii) if name.startswith("min") else max(radii)
+    if name == "max_interior_vertex_radius":
+        return max(math.sqrt(sum(c * c for c in vertices[i])) for i in range(len(vertices))
+                   if i not in boundary_vertices)
+    if name.startswith("max_boundary_ellipsoid_residual(") or name.startswith("max_boundary_torus_residual("):
+        numbers = [float(item) for item in name[name.index("(") + 1:-1].split(",")]
+        worst = 0.0
+        for i in boundary_vertices:
+            x, y, z = vertices[i]
+            if name.startswith("max_boundary_torus_residual("):
+                worst = max(worst, abs(math.hypot(math.hypot(x, y) - numbers[0], z) - numbers[1]))
+            else:
+                a, b, c = numbers
+                value = x * x / (a * a) + y * y / (b * b) + z * z / (c * c) - 1.0
+                gradient = math.sqrt((2 * x / (a * a)) ** 2 + (2 * y / (b * b)) ** 2 + (2 * z / (c * c)) ** 2)
+                worst = max(worst, abs(value) / gradient)
+        return worst
+    if name in {"boundary_area", "min_boundary_facet_angle", "max_boundary_facet_circumradius"}:
+        area, smallest, widest_facet = 0.0, 180.0, 0.0
+        for face in boundary:
+            pa, pb, pc = (vertices[i] for i in face)
+            sides = [math.dist(pb, pc), math.dist(pc, pa), math.dist(pa, pb)]
+            u = [pb[k] - pa[k] for k in range(3)]
+            w = [pc[k] - pa[k] for k in range(3)]
+            twice = math.hypot(u[1] * w[2] - u[2] * w[1], u[2] * w[0] - u[0] * w[2],
+                               u[0] * w[1] - u[1] * w[0])
+            area += twice / 2
+            widest_facet = max(widest_facet, sides[0] * sides[1] * sides[2] / (2.0 * twice))
+            for i in range(3):
+                s1, s2 = sides[(i + 1) % 3], sides[(i + 2) % 3]
+                cosine = (s1 * s1 + s2 * s2 - sides[i] * sides[i]) / (2.0 * s1 * s2)
+                smallest = min(smallest, math.degrees(math.acos(max(-1.0, min(1.0, cosine)))))
+        return {"boundary_area": area, "min_boundary_facet_angle": smallest,
+                "max_boundary_facet_circumradius": widest_facet}[name]
+    raise ValueError(f"unknown tetrahedral measure {name}")
+
+
 def measure(name: str, content: bytes) -> object:
     kind, _, field = name.partition(".")
     if kind == "off":
         return _off_measure(field, content)
     if kind == "tri2":
         return _tri2_measure(field, content)
+    if kind == "tet":
+        return _tet_measure(field, content)
     if kind == "points":
         return _points_measure(field, content)
     raise ValueError(f"unknown measure {name}")

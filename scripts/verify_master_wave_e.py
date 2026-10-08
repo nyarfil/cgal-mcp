@@ -1,4 +1,4 @@
-"""Replay one Wave E Mesh_2 refinement operation and its mandatory independent validator."""
+"""Replay the Wave E mesh-generation operations and their mandatory independent validators."""
 from __future__ import annotations
 
 import argparse
@@ -25,7 +25,7 @@ def verify(worker: Path) -> dict:
     assert manifest["build"]["source_kind"] == "official_release"
     catalog = json.loads((REPO / "catalog/operations_wave_e.json").read_text("utf-8"))
     operations = sorted(operation["id"] for operation in catalog["operations"])
-    assert len(operations) == 5
+    assert len(operations) == 7
     assert all(operation["status"] == "VALIDATED" for operation in catalog["operations"])
     assert set(operations) <= {operation["id"] for operation in manifest["operations"]}
     results = []
@@ -54,7 +54,7 @@ def verify(worker: Path) -> dict:
         "worker_manifest_sha256": hashlib.sha256(json.dumps(manifest, sort_keys=True,
             separators=(",", ":"), ensure_ascii=False).encode()).hexdigest(),
         "operation_catalog_sha256": digest(REPO / "catalog/operations_wave_e.json"), "tests": results,
-        "coverage_note": "Only mesh2.refine.delaunay (CGAL::refine_Delaunay_mesh_2 with Delaunay_mesh_size_criteria_2 over a polygon-with-holes domain) and mesh.validate.delaunay_refinement_2 were replayed. Conforming-only Mesh_2, Lipschitz or local sizing criteria, Lloyd optimization, surface mesh generation and Mesh_3 volume meshing remain incomplete."}
+        "coverage_note": "The Wave E registry operations were replayed: mesh2.refine.delaunay (CGAL::refine_Delaunay_mesh_2), mesh.surface.generate (CGAL::make_surface_mesh over a fixed enumerated implicit domain set), mesh.volume.generate (CGAL::make_mesh_3 over the same domains) and their independent validators. Conforming-only Mesh_2, Lipschitz or local sizing criteria, Lloyd optimization, polyhedral and image Mesh_3 domains, perturbation and exudation, and mesh domain criteria (7.14.04) remain incomplete."}
 
 
 def main() -> None:

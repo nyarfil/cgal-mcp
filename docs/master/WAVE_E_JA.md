@@ -53,7 +53,7 @@ Surface_mesherはCGAL 6.2.1で非推奨のパッケージです。陰関数ド�
 |---|---|---|
 | 7.14.01 | 結合済み | Mesh_2の`refine_Delaunay_mesh_2` |
 | 7.14.02 | 結合済み | Surface_mesherの`make_surface_mesh`（球・楕円体・トーラス） |
-| 7.14.03 | 未結合 | Mesh_3の四面体体積メッシュがない |
+| 7.14.03 | 結合済み | Mesh_3の`make_mesh_3`（球・楕円体・トーラス） |
 | 7.14.04 | 未結合 | Mesh_3のdomain criteriaがない |
 
 Mesh_2のconforming専用、局所サイズ基準、Lloyd最適化も未実装です。
@@ -76,7 +76,25 @@ Operation `mesh.validate.tetrahedral_mesh`はMesh_3を呼ばず、生JSONから�
 fixtureは単一四面体、立方体の6分割・5分割、2サブドメイン、八面体（球状、体積4/3）。
 陰性対照は反転、退化、穴（体積不一致）、T接合、重複・未使用頂点、重複セル、同側重なり、分離した内部体です。
 セル同士のグローバルな貫入は、`domain_volume`指定時の体積比較以外では除外できません（既知の限界）。
-7.14.03は、Mesh_3の`make_mesh_3`生産Operationとdomain基準の結合が揃うまで未結合のままです。
+`mesh.volume.generate`（次節）がこのvalidatorの検査を再利用して7.14.03を結合しました。
+
+## Mesh_3 体積メッシュ生成（7.14.03）
+
+Operation `mesh.volume.generate`は、`ImplicitSurfaceDomain`（球・楕円体・トーラスの列挙済み型付きdomain）に対し
+`CGAL::make_mesh_3`（`Labeled_mesh_domain_3`、`Mesh_criteria_3`）を実行し、`TetrahedralMesh`を出力します。
+自由式と生成C++は受け付けません。多面体・画像domainは未実装、perturbationとexudationは無効です（cell基準を保つため）。
+
+parameterは`facet_angle`（30度以下）、`facet_size`、`facet_distance`（最小曲率半径の0.1倍以下）、
+`cell_radius_edge_ratio`（2以上）、`cell_size`で、長さは単位付きです。
+乱数種は固定で出力は決定的です。推定セル数5万・面3万・出力10万セルを超える要求は`MESH_SIZE_LIMIT_EXCEEDED`で拒否します。
+
+必須validator `mesh.validate.volume_mesh`はMesh_3を呼ばず、`mesh.validate.tetrahedral_mesh`と同じ独立な位相・正確な向き検査に加え、
+次を再計算します：サブドメイン、オイラー標数（球・楕円体1、トーラス0）、境界頂点が解析曲面上・内部頂点が内側、
+境界向きが外向き、facet角・サイズ・距離、Hausdorff境界、cellサイズと外接半径／最短辺比、
+解析面積・体積（標本化誤差の上限付き）。
+陰性対照は欠落セル（内部・境界）、反転、重複、拡大、サブドメイン不正、粗い八面体、別domain、基準の厳格化5種、
+式・未知種別・負半径・過大トーラス・針状楕円体、範囲外parameter、サイズ予算超過です。
+7.14.04（domain criteria）は未結合です。
 
 ```powershell
 .venv/Scripts/python.exe scripts/verify_master_wave_e.py `

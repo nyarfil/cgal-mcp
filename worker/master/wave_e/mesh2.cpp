@@ -587,6 +587,7 @@ std::vector<OperationDefinition> operations() {
          "size_criterion_satisfied", "constrained_delaunay"}}}));
   for (auto& definition : surface_mesh_operations()) result.push_back(std::move(definition));
   for (auto& definition : tetrahedral_mesh_operations()) result.push_back(std::move(definition));
+  for (auto& definition : volume_mesh_operations()) result.push_back(std::move(definition));
   return result;
 }
 

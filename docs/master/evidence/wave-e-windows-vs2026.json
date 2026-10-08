@@ -2,7 +2,7 @@
   "schema_version": 1,
   "generator": "master-wave-e-milestone",
   "status": "pass",
-  "generator_sha256": "673d1bc6ab2c0121f3210fe1f3d98d4e159844ae02ea71aec3a3aabac215afa1",
+  "generator_sha256": "3c86d9135ee0b76273e9b9a4e6130657d2bac8ee23fa23f7fc69fdbf16e6b244",
   "scope": "one_wave_e_mesh2_operation_and_independent_validator",
   "standalone_accepted": false,
   "requirements": [],
@@ -11,9 +11,11 @@
     "mesh.validate.delaunay_refinement_2",
     "mesh.validate.surface_mesh",
     "mesh.validate.tetrahedral_mesh",
+    "mesh.validate.volume_mesh",
+    "mesh.volume.generate",
     "mesh2.refine.delaunay"
   ],
-  "worker_sha256": "efa6fd7e8199d5ca5856629b869a51264273ee0770f12586df12bc6cd21e0b93",
+  "worker_sha256": "83cd681669840daa3fd13b09abb060f7845857e0e2f90a62f9c9c2cc6b824f27",
   "worker_manifest": {
     "actual_cgal_version": "6.2.1",
     "build": {
@@ -4501,6 +4503,109 @@
         "supported_kernels": [
           "package_recommended"
         ]
+      },
+      {
+        "dependencies": [
+          "Mesh_3",
+          "Triangulation_3"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "mesh.volume.generate",
+        "info": {
+          "domain_kinds": [
+            "sphere",
+            "ellipsoid",
+            "torus"
+          ],
+          "input_format": "json",
+          "maximum_estimated_cells": 50000,
+          "output_format": "json",
+          "required_parameters": [
+            "facet_angle",
+            "facet_size",
+            "facet_distance",
+            "cell_radius_edge_ratio",
+            "cell_size"
+          ],
+          "source_header": "CGAL/make_mesh_3.h",
+          "symbols": [
+            "make_mesh_3",
+            "Labeled_mesh_domain_3",
+            "Mesh_criteria_3"
+          ],
+          "validator_parameter_bindings": {
+            "mesh.validate.volume_mesh": {
+              "cell_radius_edge_ratio": "cell_radius_edge_ratio",
+              "cell_size": "cell_size",
+              "facet_angle": "facet_angle",
+              "facet_distance": "facet_distance",
+              "facet_size": "facet_size"
+            }
+          },
+          "validators": [
+            "mesh.validate.volume_mesh"
+          ]
+        },
+        "input_types": [
+          "ImplicitSurfaceDomain"
+        ],
+        "output_type": "TetrahedralMesh",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Mesh_3",
+          "Triangulation_3"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "mesh.validate.volume_mesh",
+        "info": {
+          "bound_parameters": [
+            "facet_angle",
+            "facet_size",
+            "facet_distance",
+            "cell_radius_edge_ratio",
+            "cell_size"
+          ],
+          "checks": [
+            "source_domain_valid",
+            "tetrahedral_mesh_valid",
+            "single_region_subdomain",
+            "vertices_inside_domain",
+            "boundary_vertices_on_analytic_surface",
+            "interior_vertices_strictly_inside",
+            "boundary_euler_characteristic_matches_domain",
+            "solid_euler_characteristic_matches_domain",
+            "outward_boundary_orientation",
+            "facet_angle_criterion_satisfied",
+            "facet_size_criterion_satisfied",
+            "facet_distance_criterion_satisfied",
+            "hausdorff_bound_satisfied",
+            "cell_size_criterion_satisfied",
+            "cell_radius_edge_criterion_satisfied",
+            "boundary_area_matches_analytic",
+            "volume_matches_analytic"
+          ],
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "TetrahedralMesh",
+          "ImplicitSurfaceDomain"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
       }
     ],
     "protocol": 1,
@@ -4512,30 +4617,30 @@
     ],
     "worker": "cgal-master-worker"
   },
-  "worker_manifest_sha256": "07ff74bde9abd4f6e8240971f9ee525fc136b1142f8bbcc6bf72597eb59a9f42",
-  "operation_catalog_sha256": "27dd57ce613fc32af098c1830d4d7435093c2d2df501c9b3a1a30cd6744967d9",
+  "worker_manifest_sha256": "4d9043b5fd636ec7f2926202be22bba3dd0c3bef6baa3fa772247449bcba75da",
+  "operation_catalog_sha256": "460af58a4950b9aeecb31d768ef135e440de5004643b1a510baf7b7ac323741c",
   "tests": [
     {
       "test": "tests/master_wave_e_cases.py",
-      "source_sha256": "b876b2a127e101b92fb2f000b05ad369acf006da104a69c9eeebb9c0e1da1d3d",
+      "source_sha256": "3d70192c0f0b7aa4aed9b2956c62865868a02cc983afdbe109e6af5a10206b6a",
       "mode": "worker",
       "exit_code": 0,
       "status": "pass"
     },
     {
       "test": "tests/master_wave_e_mcp_e2e.py",
-      "source_sha256": "634881e41b75dd87f2059d05a00e1fbecadc3205f5085033ea7f63c0b43fbae0",
+      "source_sha256": "0665ef0b069589b7c8e1ca6577f80246c9c3433dba4b2679c4dd9ca3985fc3a1",
       "mode": "auto",
       "exit_code": 0,
       "status": "pass"
     },
     {
       "test": "tests/master_wave_e_mcp_e2e.py",
-      "source_sha256": "634881e41b75dd87f2059d05a00e1fbecadc3205f5085033ea7f63c0b43fbae0",
+      "source_sha256": "0665ef0b069589b7c8e1ca6577f80246c9c3433dba4b2679c4dd9ca3985fc3a1",
       "mode": "legacy",
       "exit_code": 0,
       "status": "pass"
     }
   ],
-  "coverage_note": "Only mesh2.refine.delaunay (CGAL::refine_Delaunay_mesh_2 with Delaunay_mesh_size_criteria_2 over a polygon-with-holes domain) and mesh.validate.delaunay_refinement_2 were replayed. Conforming-only Mesh_2, Lipschitz or local sizing criteria, Lloyd optimization, surface mesh generation and Mesh_3 volume meshing remain incomplete."
+  "coverage_note": "The Wave E registry operations were replayed: mesh2.refine.delaunay (CGAL::refine_Delaunay_mesh_2), mesh.surface.generate (CGAL::make_surface_mesh over a fixed enumerated implicit domain set), mesh.volume.generate (CGAL::make_mesh_3 over the same domains) and their independent validators. Conforming-only Mesh_2, Lipschitz or local sizing criteria, Lloyd optimization, polyhedral and image Mesh_3 domains, perturbation and exudation, and mesh domain criteria (7.14.04) remain incomplete."
 }

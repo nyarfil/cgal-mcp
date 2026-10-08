@@ -1,7 +1,7 @@
 {
   "$schema": "operation.schema.json",
   "schema_version": 1,
-  "catalog_revision": "master-core-hull-wave-a-wave-b-mesh-boolean-repair-wave-c-wave-d-wave-e-validated-3",
+  "catalog_revision": "master-core-hull-wave-a-wave-b-mesh-boolean-repair-wave-c-wave-d-wave-e-validated-4",
   "cgal_version": "6.2.1",
   "build_requirements": {
     "source_kind": "official_release",
@@ -19034,6 +19034,522 @@
           "tests/master_wave_e_mcp_e2e.py:legacy"
         ],
         "worker_manifest_operation": "mesh.validate.tetrahedral_mesh",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "mesh.volume.generate",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "transform",
+      "summary": "Generate a tetrahedral volume mesh (TetrahedralMesh, one subdomain) of a typed implicit domain (sphere, ellipsoid or torus; a fixed enumerated set, no free-form expressions) with CGAL Mesh_3 make_mesh_3 over a Labeled_mesh_domain_3 under typed facet angle/size/distance and cell radius-edge/size criteria. Perturbation and exudation are disabled; closed surface polyhedra, images and sharp features are unsupported.",
+      "package": "Mesh_3",
+      "major_requirements": [
+        "major.7.14.03"
+      ],
+      "aliases": [
+        "volume mesh generation",
+        "tetrahedral mesh generation",
+        "make_mesh_3",
+        "Mesh_3",
+        "tetrahedral volume meshing",
+        "tetrahedralize an implicit domain",
+        "3D mesh generation",
+        "mesh a sphere volume",
+        "mesh a torus volume",
+        "mesh an ellipsoid volume",
+        "\u56db\u9762\u4f53\u30e1\u30c3\u30b7\u30e5\u751f\u6210",
+        "\u4f53\u7a4d\u30e1\u30c3\u30b7\u30e5\u751f\u6210",
+        "\u7403\u306e\u4f53\u7a4d\u30e1\u30c3\u30b7\u30e5\u5316",
+        "\u30c8\u30fc\u30e9\u30b9\u4f53\u7a4d\u30e1\u30c3\u30b7\u30e5"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Mesh_3"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::make_mesh_3"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Labeled_mesh_domain_3"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Mesh_criteria_3"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/make_mesh_3.h"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Labeled_mesh_domain_3.h"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Mesh_criteria_3.h"
+        },
+        {
+          "kind": "manual",
+          "identifier": "Mesh_3/index.html"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Mesh_3",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/make_mesh_3.h",
+            "sha256": "ecc86720a72e96eb0d7f3011e39f5e408de8f2c209efc76305249a1076ec8f89"
+          },
+          {
+            "path": "include/CGAL/Labeled_mesh_domain_3.h",
+            "sha256": "4ea5984378d6f4dfc4bbd787f11b63bdf330aa2e7e8a0d8c115e04232b498960"
+          },
+          {
+            "path": "include/CGAL/Mesh_criteria_3.h",
+            "sha256": "9f7e3c392369605b25dff8bc7a3ced493a9e19ba074044036e5ed5ccb284ff6b"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "domain",
+            "types": [
+              "ImplicitSurfaceDomain"
+            ],
+            "formats": [
+              "json"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "geometry",
+            "type": "TetrahedralMesh",
+            "format": "json",
+            "unit_from": "domain"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "facet_angle",
+          "facet_size",
+          "facet_distance",
+          "cell_radius_edge_ratio",
+          "cell_size"
+        ],
+        "properties": {
+          "facet_angle": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 30,
+            "description": "Lower bound in degrees for the angles of the boundary facets (Mesh_3 facet_angle); 30 degrees is the termination guarantee."
+          },
+          "facet_size": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Upper bound on the radius of the surface Delaunay balls of the boundary facets (Mesh_3 facet_size)."
+          },
+          "facet_distance": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Upper bound on the distance between a boundary facet circumcentre and the centre of its surface Delaunay ball (Mesh_3 facet_distance); must not exceed 0.1 times the smallest curvature radius of the domain."
+          },
+          "cell_radius_edge_ratio": {
+            "type": "number",
+            "minimum": 2,
+            "maximum": 100,
+            "description": "Upper bound on the circumradius to shortest-edge ratio of every cell (Mesh_3 cell_radius_edge_ratio); at least 2, the termination guarantee."
+          },
+          "cell_size": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Upper bound on the circumradius of every cell (Mesh_3 cell_size)."
+          }
+        }
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 4096
+        }
+      ],
+      "validation": {
+        "required": true,
+        "validators": [
+          "mesh.validate.volume_mesh"
+        ],
+        "bindings": {
+          "mesh.validate.volume_mesh": {
+            "artifacts": {
+              "candidate": {
+                "output": "geometry"
+              },
+              "source": {
+                "input": "domain"
+              }
+            },
+            "parameters": {
+              "facet_angle": {
+                "parameter": "facet_angle"
+              },
+              "facet_size": {
+                "parameter": "facet_size"
+              },
+              "facet_distance": {
+                "parameter": "facet_distance"
+              },
+              "cell_radius_edge_ratio": {
+                "parameter": "cell_radius_edge_ratio"
+              },
+              "cell_size": {
+                "parameter": "cell_size"
+              }
+            }
+          }
+        }
+      },
+      "output_contract": {
+        "source_mutation": false,
+        "atomic_publication_required": true,
+        "empty_output": false,
+        "candidate_published_only_after_validation": true,
+        "producer_diagnostics_are_non_authoritative": true
+      },
+      "dependencies": [
+        "Mesh_3",
+        "Triangulation_3"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "input_format": "json",
+          "output_format": "json",
+          "domain_kinds": [
+            "sphere",
+            "ellipsoid",
+            "torus"
+          ],
+          "maximum_estimated_cells": 50000,
+          "required_parameters": [
+            "facet_angle",
+            "facet_size",
+            "facet_distance",
+            "cell_radius_edge_ratio",
+            "cell_size"
+          ],
+          "source_header": "CGAL/make_mesh_3.h",
+          "symbols": [
+            "make_mesh_3",
+            "Labeled_mesh_domain_3",
+            "Mesh_criteria_3"
+          ],
+          "validator_parameter_bindings": {
+            "mesh.validate.volume_mesh": {
+              "facet_angle": "facet_angle",
+              "facet_size": "facet_size",
+              "facet_distance": "facet_distance",
+              "cell_radius_edge_ratio": "cell_radius_edge_ratio",
+              "cell_size": "cell_size"
+            }
+          },
+          "validators": [
+            "mesh.validate.volume_mesh"
+          ]
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "CGAL filtered-exact predicates (EPICK); independent validators use exact rational/orientation arithmetic",
+        "exact_constructions": "unsupported_fail_closed",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_wave_e_cases.py",
+          "tests/master_wave_e_mcp_e2e.py:auto",
+          "tests/master_wave_e_mcp_e2e.py:legacy"
+        ],
+        "worker_manifest_operation": "mesh.volume.generate",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "mesh.validate.volume_mesh",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "validator",
+      "summary": "Independent check that a TetrahedralMesh is a valid volume mesh of a typed implicit domain: the full tetrahedral mesh validation (exact orientation, face adjacency, single closed boundary, 3-manifold vertex links, cell-versus-boundary volume), one subdomain, vertices inside the domain and boundary vertices on the analytic surface, outward boundary, boundary and solid Euler characteristics, the facet angle/size/distance and cell size/radius-edge criteria recomputed from the raw mesh, and the analytic volume and boundary area. It never calls Mesh_3.",
+      "package": "Mesh_3",
+      "aliases": [
+        "validate volume mesh",
+        "validate Mesh_3 output",
+        "volume mesh validator",
+        "\u4f53\u7a4d\u30e1\u30c3\u30b7\u30e5\u691c\u8a3c"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Mesh_3"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Mesh_3",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/make_mesh_3.h",
+            "sha256": "ecc86720a72e96eb0d7f3011e39f5e408de8f2c209efc76305249a1076ec8f89"
+          },
+          {
+            "path": "include/CGAL/Labeled_mesh_domain_3.h",
+            "sha256": "4ea5984378d6f4dfc4bbd787f11b63bdf330aa2e7e8a0d8c115e04232b498960"
+          },
+          {
+            "path": "include/CGAL/Mesh_criteria_3.h",
+            "sha256": "9f7e3c392369605b25dff8bc7a3ced493a9e19ba074044036e5ed5ccb284ff6b"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "TetrahedralMesh"
+            ],
+            "formats": [
+              "json"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          },
+          {
+            "slot": "source",
+            "types": [
+              "ImplicitSurfaceDomain"
+            ],
+            "formats": [
+              "json"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "facet_angle",
+          "facet_size",
+          "facet_distance",
+          "cell_radius_edge_ratio",
+          "cell_size"
+        ],
+        "properties": {
+          "facet_angle": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 60,
+            "description": "Smallest angle in degrees every boundary facet must have."
+          },
+          "facet_size": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Largest circumradius every boundary facet may have."
+          },
+          "facet_distance": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Largest distance between a boundary facet circumcentre and the analytic surface."
+          },
+          "cell_radius_edge_ratio": {
+            "type": "number",
+            "maximum": 1000000.0,
+            "description": "Largest circumradius to shortest-edge ratio every cell may have (regular tetrahedron: 0.6124).",
+            "exclusiveMinimum": 0.6123
+          },
+          "cell_size": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Largest circumradius every cell may have."
+          }
+        }
+      },
+      "preconditions": [],
+      "validation": {
+        "required": false,
+        "validators": [],
+        "bindings": {},
+        "terminal_validator": true,
+        "validates": "mesh.surface.generate",
+        "validates_all": [
+          "mesh.surface.generate"
+        ],
+        "required_report_checks": {
+          "status": "pass",
+          "passed": true,
+          "validator": "mesh.validate.volume_mesh",
+          "checks.source_domain_valid": true,
+          "checks.tetrahedral_mesh_valid": true,
+          "checks.single_region_subdomain": true,
+          "checks.vertices_inside_domain": true,
+          "checks.boundary_vertices_on_analytic_surface": true,
+          "checks.interior_vertices_strictly_inside": true,
+          "checks.boundary_euler_characteristic_matches_domain": true,
+          "checks.solid_euler_characteristic_matches_domain": true,
+          "checks.outward_boundary_orientation": true,
+          "checks.facet_angle_criterion_satisfied": true,
+          "checks.facet_size_criterion_satisfied": true,
+          "checks.facet_distance_criterion_satisfied": true,
+          "checks.hausdorff_bound_satisfied": true,
+          "checks.cell_size_criterion_satisfied": true,
+          "checks.cell_radius_edge_criterion_satisfied": true,
+          "checks.boundary_area_matches_analytic": true,
+          "checks.volume_matches_analytic": true
+        }
+      },
+      "output_contract": {
+        "schema": "ValidationReport/v1",
+        "required_true_checks": [
+          "source_domain_valid",
+          "tetrahedral_mesh_valid",
+          "single_region_subdomain",
+          "vertices_inside_domain",
+          "boundary_vertices_on_analytic_surface",
+          "interior_vertices_strictly_inside",
+          "boundary_euler_characteristic_matches_domain",
+          "solid_euler_characteristic_matches_domain",
+          "outward_boundary_orientation",
+          "facet_angle_criterion_satisfied",
+          "facet_size_criterion_satisfied",
+          "facet_distance_criterion_satisfied",
+          "hausdorff_bound_satisfied",
+          "cell_size_criterion_satisfied",
+          "cell_radius_edge_criterion_satisfied",
+          "boundary_area_matches_analytic",
+          "volume_matches_analytic"
+        ],
+        "status": "pass",
+        "failure_or_indeterminate_publish": false,
+        "independence": "validator does not call CGAL Mesh_3 (make_mesh_3) or any mesher; it uses only the exact orientation predicate and its own combinatorics and arithmetic"
+      },
+      "dependencies": [
+        "Mesh_3",
+        "Triangulation_3"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "checks": [
+            "source_domain_valid",
+            "tetrahedral_mesh_valid",
+            "single_region_subdomain",
+            "vertices_inside_domain",
+            "boundary_vertices_on_analytic_surface",
+            "interior_vertices_strictly_inside",
+            "boundary_euler_characteristic_matches_domain",
+            "solid_euler_characteristic_matches_domain",
+            "outward_boundary_orientation",
+            "facet_angle_criterion_satisfied",
+            "facet_size_criterion_satisfied",
+            "facet_distance_criterion_satisfied",
+            "hausdorff_bound_satisfied",
+            "cell_size_criterion_satisfied",
+            "cell_radius_edge_criterion_satisfied",
+            "boundary_area_matches_analytic",
+            "volume_matches_analytic"
+          ],
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "bound_parameters": [
+            "facet_angle",
+            "facet_size",
+            "facet_distance",
+            "cell_radius_edge_ratio",
+            "cell_size"
+          ],
+          "output_slot": "validation"
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "CGAL filtered-exact predicates (EPICK); independent validators use exact rational/orientation arithmetic",
+        "exact_constructions": "unsupported_fail_closed",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_wave_e_cases.py",
+          "tests/master_wave_e_mcp_e2e.py:auto",
+          "tests/master_wave_e_mcp_e2e.py:legacy"
+        ],
+        "worker_manifest_operation": "mesh.validate.volume_mesh",
         "build": "build-master/Release/cgal-master-worker.exe",
         "source_kind": "official_release",
         "cgal_version": "6.2.1",
