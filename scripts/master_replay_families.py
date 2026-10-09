@@ -670,13 +670,17 @@ FAMILY_7_3 = {
         },
     },
     "unbound": {
-        "major.7.3.07": "Self-intersection (self_intersections, does_self_intersect) is replayed through "
-                        "mesh.analysis.self_intersections, but intersections between two meshes "
-                        "(do_intersect/surface_intersection) are not an executable operation.",
-        "major.7.3.06": "Only bounded_error_symmetric_Hausdorff_distance is executable, as the "
-                        "simplification validator; sample_triangle_mesh, max_distance_to_triangle_mesh, "
-                        "approximate/one-sided Hausdorff and approximate_max_distance_to_point_set "
-                        "are not exposed.",
+        "major.7.3.06": "Six of the seven ledger symbols (sample_triangle_mesh, max_distance_to_triangle_mesh, "
+                        "approximate_Hausdorff_distance, approximate_symmetric_Hausdorff_distance, "
+                        "approximate_max_distance_to_point_set, bounded_error_Hausdorff_distance) have "
+                        "analysis operations with independent validators (mesh.distance.sample_points, "
+                        "max_to_mesh, hausdorff_approximate, hausdorff_approximate_symmetric, max_to_points, "
+                        "hausdorff_bounded), but bounded_error_symmetric_Hausdorff_distance is only reachable "
+                        "through the wave-A simplification validator mesh.distance.symmetric_hausdorff, a "
+                        "validator-role operation with validation.required false whose ValidationReport output "
+                        "carries no source hashes: it cannot carry a mandatory validator chain, so a replay "
+                        "case cannot exercise it, and a second operation for the same CGAL function would "
+                        "violate the one-operation-per-function rule.",
     },
     "cases": [
         *B2_CASES_7_3,
@@ -4183,6 +4187,112 @@ FAMILY_7_13["negative_controls"].extend([
      "inputs": [_b4report("tampered_alpha3_facet_added.json"), B4_A3_BIPYRAMID], "parameters": {"alpha": 6},
      "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "REGULAR_FACET_MISMATCH"},
 ])
+
+# >>> b5-73
+# --- Batch 5 (7.3.07 mesh-mesh intersections, 7.12.05 straight skeleton, 7.12.06 offsets) ----------
+B5_FIXTURES = {
+    "cube_shift.off": "bcc8211116fe11863778c045a6df8c0dc1bee5b5e8600e0a6914041a439ad7be",
+    "cube_far.off": "c19af08411e7f4d9ff2b5deac5527de91391769be1a076db899911d39558fab9",
+    "tampered_do_intersect_flipped.json": "aa8e4ca1240eade8d98b17155eff2068ff00f46a6266a919a28122110c7026d7",
+    "tampered_poly_chord_shortcut.json": "49547b109dff8130930f6765a620cbb69729632fa20f88d99b30fcba43a3b538",
+    "tampered_poly_point_off_surface.json": "e30e987007a391017bfbed38e184b01dd462d1d5705157107187663706d423f6",
+    "tampered_poly_segment_dropped.json": "dd8f71075139169f731d439a171d2942fe1de72a411d017c235fda0ae5afb4c8",
+}
+
+
+def _b5fx(name: str) -> dict:
+    return {"fixture": f"batch5/{name}", "sha256": B5_FIXTURES[name]}
+
+
+def _b5mesh(name: str, type_: str = "TriangleSurfaceMesh") -> dict:
+    return {**_b5fx(name), "type": type_, "format": "off", "unit": "mm"}
+
+
+def _b5report(name: str) -> dict:
+    return {**_b5fx(name), "type": "GeometryQueryReport", "format": "json", "unit": "none"}
+
+
+COPLANAR_TOUCH = {"fixture": "wave_a_boolean/cube_partial_coplanar_touch.off",
+                  "sha256": "565554572e7db8cbdd744929b217fc2ae805d3b05053ab6dd40e6fd43e27accc"}
+# 7.3.07: the 0..2 cube_a against the same cube translated by (1, 0.5, 0.25): the surfaces cross in one closed
+# hexagonal loop with corners (1,2,2) (1,2,1/4) (2,2,1/4) (2,1/2,1/4) (2,1/2,2) (1,1/2,2), perimeter 8.5
+# (1.75+1+1.5+1.75+1+1.5), found independently by intersecting the box faces.
+B5_SHIFT = _b5mesh("cube_shift.off")
+B5_FAR = _b5mesh("cube_far.off")
+B5_SURFACES_ONLY = {"overlap_test": False}
+B5_BOUNDED_SIDES = {"overlap_test": True}
+FAMILY_7_3["requirements"]["major.7.3.07"] = {
+    "operation_ids": ["mesh.analysis.self_intersections", "mesh.intersections.do_intersect",
+                      "mesh.intersections.polylines"],
+    "symbols": ["self_intersections", "does_self_intersect", "do_intersect", "intersection_polylines"],
+    "symbol_notes": "Self-intersection (self_intersections, does_self_intersect) is replayed through "
+                    "mesh.analysis.self_intersections on a free tetrahedron and on two interpenetrating "
+                    "tetrahedra. Intersections between two meshes are replayed through PMP::do_intersect "
+                    "(overlapping cubes true, far cubes false, a cube strictly inside another false on the "
+                    "surfaces alone and true with the bounded-side overlap test) and PMP::intersection_polylines "
+                    "(formerly surface_intersection) on the cube_a / translated-cube pair whose single closed "
+                    "hexagonal loop with perimeter 8.5 is hand-derived; its polyline corners are asserted as "
+                    "exact rationals. The independent validators decide every triangle pair with GMP rational "
+                    "arithmetic, add exact ray parity for the bounded-side test, and require every polyline "
+                    "point on both meshes, every polyline segment on the exact intersection and the exact "
+                    "intersection covered. Coplanar overlapping triangle pairs and open meshes under the "
+                    "bounded-side test are rejected.",
+    "case_ids": ["self-intersection-free-tetra", "self-intersecting-tetrahedra", "intersect-cubes-overlap",
+                 "intersect-cubes-far", "intersect-contained-surfaces-only", "intersect-contained-bounded-sides",
+                 "intersect-polylines-shifted-cubes"],
+}
+FAMILY_7_3["cases"].extend([
+    _case("intersect-cubes-overlap", "mesh.intersections.do_intersect", [_mesh(CUBE_A), B5_SHIFT], B5_SURFACES_ONLY, [
+        ["output:analysis:json:report_kind", "==", "mesh_do_intersect"],
+        ["output:analysis:json:results.intersect", "==", True],
+        ["metrics.algorithm", "==", "CGAL::Polygon_mesh_processing::do_intersect"],
+    ]),
+    _case("intersect-cubes-far", "mesh.intersections.do_intersect", [_mesh(CUBE_A), B5_FAR], B5_SURFACES_ONLY, [
+        ["output:analysis:json:results.intersect", "==", False],
+    ]),
+    _case("intersect-contained-surfaces-only", "mesh.intersections.do_intersect",
+          [_mesh(CUBE_A), _mesh(CUBE_CONTAINED)], B5_SURFACES_ONLY, [
+        ["output:analysis:json:results.intersect", "==", False],
+    ]),
+    _case("intersect-contained-bounded-sides", "mesh.intersections.do_intersect",
+          [_mesh(CUBE_A), _mesh(CUBE_CONTAINED)], B5_BOUNDED_SIDES, [
+        ["output:analysis:json:results.intersect", "==", True],
+    ]),
+    _case("intersect-polylines-shifted-cubes", "mesh.intersections.polylines", [_mesh(CUBE_A), B5_SHIFT], {}, [
+        ["output:analysis:json:report_kind", "==", "mesh_intersection_polylines"],
+        ["output:analysis:json:summary.polyline_count", "==", 1],
+        ["output:analysis:json:results.polylines.0.points.3", "==", ["1", "2", "1/4"]],
+        ["output:analysis:json:results.polylines.0.points.7", "==", ["2", "1/2", "1/4"]],
+        ["output:analysis:json:results.polylines.0.points.0", "==",
+         {"path": "output:analysis:json:results.polylines.0.points.14"}],
+    ]),
+])
+FAMILY_7_3["negative_controls"].extend([
+    {"id": "intersect-tampered-point-off-surface-rejected", "operation": "mesh.validate.intersection_polylines",
+     "inputs": [_b5report("tampered_poly_point_off_surface.json"), _mesh(CUBE_A), B5_SHIFT], "parameters": {},
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "POINT_NOT_ON_BOTH_MESHES"},
+    {"id": "intersect-tampered-segment-dropped-rejected", "operation": "mesh.validate.intersection_polylines",
+     "inputs": [_b5report("tampered_poly_segment_dropped.json"), _mesh(CUBE_A), B5_SHIFT], "parameters": {},
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "INTERSECTION_MISSING"},
+    {"id": "intersect-tampered-chord-shortcut-rejected", "operation": "mesh.validate.intersection_polylines",
+     "inputs": [_b5report("tampered_poly_chord_shortcut.json"), _mesh(CUBE_A), B5_SHIFT], "parameters": {},
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "SEGMENT_NOT_ON_INTERSECTION"},
+    {"id": "intersect-tampered-flag-rejected", "operation": "mesh.validate.do_intersect",
+     "inputs": [_b5report("tampered_do_intersect_flipped.json"), _mesh(CUBE_A), B5_SHIFT],
+     "parameters": B5_SURFACES_ONLY,
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "INTERSECTION_MISMATCH"},
+    {"id": "intersect-coplanar-overlap-rejected", "operation": "mesh.intersections.polylines",
+     "inputs": [_mesh(CUBE_A), _mesh(COPLANAR_TOUCH)], "parameters": {},
+     "expect_error_class": "PRECONDITION_FAILED", "expect_error_code": "COPLANAR_TRIANGLES"},
+    {"id": "intersect-open-mesh-bounded-sides-rejected", "operation": "mesh.intersections.do_intersect",
+     "inputs": [_mesh(CUBE_A), _mesh(OPEN_CUBE)], "parameters": B5_BOUNDED_SIDES,
+     "expect_error_class": "PRECONDITION_FAILED", "expect_error_code": "MESH_NOT_CLOSED"},
+    {"id": "intersect-overlap-flag-type-rejected", "operation": "mesh.intersections.do_intersect",
+     "inputs": [_mesh(CUBE_A), B5_SHIFT], "parameters": {"overlap_test": "yes"},
+     "expect_error_class": "INVALID_REQUEST", "expect_error_code": "INVALID_PARAMETER"},
+])
+
+# <<< b5-73
 
 GENERIC_FAMILIES: dict[str, dict] = {
     family["family"]: family for family in (FAMILY_7_1, FAMILY_7_2, FAMILY_7_3, FAMILY_7_4, FAMILY_7_5, FAMILY_7_6,

@@ -258,6 +258,7 @@ Json run_hausdorff(const Request& request) {
     }
     checks["distance_not_below_vertex_sample_distance"] = true;
   }
+  checks["distance_consistent_with_exact_hausdorff_bracket"] = true;
   return concluded(request, validator, checks,
                    {{"operation", operation},
                     {"recomputed_vertex_lower_bound", static_cast<double>(vertex_lower)},
@@ -455,7 +456,7 @@ std::vector<OperationDefinition> distance_validators() {
   result.push_back(query_definition(
       "mesh.validate.hausdorff_report", {"GeometryQueryReport", "TriangleSurfaceMesh", "TriangleSurfaceMesh"}, "ValidationReport",
       "validator", run_hausdorff, {"Polygon_mesh_processing"}, "long double (no CGAL header)",
-      vinfo({"parameters_match", "source_matches", "distance_unit_matches_mesh"}, {"candidate", "first", "second"},
+      vinfo({"parameters_match", "source_matches", "distance_unit_matches_mesh", "distance_consistent_with_exact_hausdorff_bracket"}, {"candidate", "first", "second"},
             "exact rational vertex distances plus best-first Lipschitz subdivision bracket over brute-force point-triangle distances; no CGAL header")));
   return result;
 }

@@ -35743,6 +35743,2755 @@
         "cgal_version": "6.2.1",
         "review_status": "self_verified_not_independently_reviewed"
       }
+    },
+    {
+      "id": "mesh.distance.sample_points",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "analysis",
+      "summary": "Sample points on a triangle mesh surface (sample_triangle_mesh): a grid of given spacing or a seeded uniform random sample on faces and edges, optionally including the vertices.",
+      "package": "Polygon_mesh_processing",
+      "major_requirements": [
+        "major.7.3.06"
+      ],
+      "aliases": [
+        "sample points on mesh surface",
+        "sample triangle mesh",
+        "mesh surface point sampling",
+        "random points on mesh",
+        "\u30e1\u30c3\u30b7\u30e5\u8868\u9762\u30b5\u30f3\u30d7\u30ea\u30f3\u30b0"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Polygon_mesh_processing"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Polygon_mesh_processing::sample_triangle_mesh"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Polygon_mesh_processing/distance.h"
+        },
+        {
+          "kind": "manual",
+          "identifier": "Polygon_mesh_processing/index.html"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Polygon_mesh_processing",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/distance.h",
+            "sha256": "e4e10b3837b4175dd35d22f3056cc5a89d38b8e42f3bdaa1a84a390ca900f2bd"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "mesh",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "analysis",
+            "type": "GeometryQueryReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "sampling"
+        ],
+        "properties": {
+          "sampling": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "method",
+                  "grid_spacing",
+                  "include_vertices"
+                ],
+                "properties": {
+                  "method": {
+                    "const": "grid"
+                  },
+                  "grid_spacing": {
+                    "type": "TypedLength",
+                    "exclusiveMinimum": 0
+                  },
+                  "include_vertices": {
+                    "type": "boolean"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "method",
+                  "random_seed",
+                  "points_on_faces",
+                  "points_on_edges",
+                  "include_vertices"
+                ],
+                "properties": {
+                  "method": {
+                    "const": "random_uniform"
+                  },
+                  "random_seed": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 2147483647
+                  },
+                  "points_on_faces": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 20000
+                  },
+                  "points_on_edges": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 20000
+                  },
+                  "include_vertices": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            ],
+            "description": "Sampling named parameters of PMP::sample_triangle_mesh: a grid of the given spacing, or a seeded uniform random sample on faces and edges; include_vertices adds the mesh vertices."
+          }
+        }
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 268435456,
+          "maximum_faces": 400
+        }
+      ],
+      "validation": {
+        "required": true,
+        "validators": [
+          "mesh.validate.distance_samples"
+        ],
+        "bindings": {
+          "mesh.validate.distance_samples": {
+            "artifacts": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "mesh": {
+                "input": "mesh"
+              }
+            },
+            "parameters": {
+              "sampling": {
+                "parameter": "sampling"
+              }
+            }
+          }
+        }
+      },
+      "output_contract": {
+        "report_schema_version": 1,
+        "geometry_mutation": false,
+        "source_sha256_preserved": true,
+        "exact_rational_strings": false,
+        "producer_diagnostics_are_non_authoritative": true
+      },
+      "dependencies": [
+        "Polygon_mesh_processing",
+        "Surface_mesh"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "input_slots": [
+            "mesh"
+          ],
+          "maximum_input_faces": 400,
+          "source_header": "CGAL/Polygon_mesh_processing/distance.h",
+          "validator_parameter_bindings": {
+            "mesh.validate.distance_samples": {
+              "sampling": "sampling"
+            }
+          },
+          "validators": [
+            "mesh.validate.distance_samples"
+          ]
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "samples are binary64 points; the validator checks them against the mesh with the declared 1e-9 relative tolerance",
+        "exact_constructions": "none",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_batch5_cases.py"
+        ],
+        "worker_manifest_operation": "mesh.distance.sample_points",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "mesh.distance.max_to_mesh",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "analysis",
+      "summary": "Maximum distance from a point set to a triangle mesh (max_distance_to_triangle_mesh), the one-sided deviation of the points from the surface.",
+      "package": "Polygon_mesh_processing",
+      "major_requirements": [
+        "major.7.3.06"
+      ],
+      "aliases": [
+        "max distance to triangle mesh",
+        "maximum point to mesh distance",
+        "point set to surface deviation",
+        "\u70b9\u7fa4\u304b\u3089\u30e1\u30c3\u30b7\u30e5\u3078\u306e\u6700\u5927\u8ddd\u96e2"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Polygon_mesh_processing"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Polygon_mesh_processing::max_distance_to_triangle_mesh"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Polygon_mesh_processing/distance.h"
+        },
+        {
+          "kind": "manual",
+          "identifier": "Polygon_mesh_processing/index.html"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Polygon_mesh_processing",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/distance.h",
+            "sha256": "e4e10b3837b4175dd35d22f3056cc5a89d38b8e42f3bdaa1a84a390ca900f2bd"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "points",
+            "types": [
+              "PointSet3"
+            ],
+            "formats": [
+              "xyz"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          },
+          {
+            "slot": "mesh",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "analysis",
+            "type": "GeometryQueryReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [],
+        "properties": {}
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 268435456,
+          "maximum_faces": 400
+        }
+      ],
+      "validation": {
+        "required": true,
+        "validators": [
+          "mesh.validate.max_distance_to_mesh"
+        ],
+        "bindings": {
+          "mesh.validate.max_distance_to_mesh": {
+            "artifacts": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "points": {
+                "input": "points"
+              },
+              "mesh": {
+                "input": "mesh"
+              }
+            }
+          }
+        }
+      },
+      "output_contract": {
+        "report_schema_version": 1,
+        "geometry_mutation": false,
+        "source_sha256_preserved": true,
+        "exact_rational_strings": false,
+        "producer_diagnostics_are_non_authoritative": true
+      },
+      "dependencies": [
+        "Polygon_mesh_processing",
+        "Surface_mesh"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "input_slots": [
+            "points",
+            "mesh"
+          ],
+          "maximum_input_faces": 400,
+          "source_header": "CGAL/Polygon_mesh_processing/distance.h",
+          "validators": [
+            "mesh.validate.max_distance_to_mesh"
+          ]
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "binary64 distance; the validator recomputes the maximum exactly over rational squared point-triangle distances",
+        "exact_constructions": "none",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_batch5_cases.py"
+        ],
+        "worker_manifest_operation": "mesh.distance.max_to_mesh",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "mesh.distance.hausdorff_approximate",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "analysis",
+      "summary": "Approximate one-sided Hausdorff distance from a first to a second triangle mesh (approximate_Hausdorff_distance): the largest distance of sample points of the first mesh to the second.",
+      "package": "Polygon_mesh_processing",
+      "major_requirements": [
+        "major.7.3.06"
+      ],
+      "aliases": [
+        "approximate Hausdorff distance",
+        "one sided Hausdorff distance",
+        "mesh deviation sampling",
+        "\u8fd1\u4f3c\u30cf\u30a6\u30b9\u30c9\u30eb\u30d5\u8ddd\u96e2"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Polygon_mesh_processing"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Polygon_mesh_processing::approximate_Hausdorff_distance"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Polygon_mesh_processing/distance.h"
+        },
+        {
+          "kind": "manual",
+          "identifier": "Polygon_mesh_processing/index.html"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Polygon_mesh_processing",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/distance.h",
+            "sha256": "e4e10b3837b4175dd35d22f3056cc5a89d38b8e42f3bdaa1a84a390ca900f2bd"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "first",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          },
+          {
+            "slot": "second",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "analysis",
+            "type": "GeometryQueryReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "sampling"
+        ],
+        "properties": {
+          "sampling": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "method",
+                  "grid_spacing",
+                  "include_vertices"
+                ],
+                "properties": {
+                  "method": {
+                    "const": "grid"
+                  },
+                  "grid_spacing": {
+                    "type": "TypedLength",
+                    "exclusiveMinimum": 0
+                  },
+                  "include_vertices": {
+                    "type": "boolean"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "method",
+                  "random_seed",
+                  "points_on_faces",
+                  "points_on_edges",
+                  "include_vertices"
+                ],
+                "properties": {
+                  "method": {
+                    "const": "random_uniform"
+                  },
+                  "random_seed": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 2147483647
+                  },
+                  "points_on_faces": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 20000
+                  },
+                  "points_on_edges": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 20000
+                  },
+                  "include_vertices": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            ],
+            "description": "Sampling named parameters of PMP::sample_triangle_mesh: a grid of the given spacing, or a seeded uniform random sample on faces and edges; include_vertices adds the mesh vertices."
+          }
+        }
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 268435456,
+          "maximum_faces": 400
+        }
+      ],
+      "validation": {
+        "required": true,
+        "validators": [
+          "mesh.validate.hausdorff_report"
+        ],
+        "bindings": {
+          "mesh.validate.hausdorff_report": {
+            "artifacts": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "first": {
+                "input": "first"
+              },
+              "second": {
+                "input": "second"
+              }
+            },
+            "parameters": {
+              "sampling": {
+                "parameter": "sampling"
+              }
+            }
+          }
+        }
+      },
+      "output_contract": {
+        "report_schema_version": 1,
+        "geometry_mutation": false,
+        "source_sha256_preserved": true,
+        "exact_rational_strings": false,
+        "producer_diagnostics_are_non_authoritative": true
+      },
+      "dependencies": [
+        "Polygon_mesh_processing",
+        "Surface_mesh"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "input_slots": [
+            "first",
+            "second"
+          ],
+          "maximum_input_faces": 400,
+          "source_header": "CGAL/Polygon_mesh_processing/distance.h",
+          "validator_parameter_bindings": {
+            "mesh.validate.hausdorff_report": {
+              "sampling": "sampling"
+            }
+          },
+          "validators": [
+            "mesh.validate.hausdorff_report"
+          ]
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "square roots force a declared tolerance: 1e-9 relative to the larger mesh diagonal; Hausdorff suprema are bracketed to 0.5% of the diagonal",
+        "exact_constructions": "none",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_batch5_cases.py"
+        ],
+        "worker_manifest_operation": "mesh.distance.hausdorff_approximate",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "mesh.distance.hausdorff_approximate_symmetric",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "analysis",
+      "summary": "Approximate symmetric Hausdorff distance between two triangle meshes (approximate_symmetric_Hausdorff_distance): the larger of the two sampled one-sided distances.",
+      "package": "Polygon_mesh_processing",
+      "major_requirements": [
+        "major.7.3.06"
+      ],
+      "aliases": [
+        "approximate symmetric Hausdorff distance",
+        "symmetric Hausdorff estimate",
+        "two mesh deviation sampling",
+        "\u8fd1\u4f3c\u5bfe\u79f0\u30cf\u30a6\u30b9\u30c9\u30eb\u30d5\u8ddd\u96e2"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Polygon_mesh_processing"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Polygon_mesh_processing::approximate_symmetric_Hausdorff_distance"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Polygon_mesh_processing/distance.h"
+        },
+        {
+          "kind": "manual",
+          "identifier": "Polygon_mesh_processing/index.html"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Polygon_mesh_processing",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/distance.h",
+            "sha256": "e4e10b3837b4175dd35d22f3056cc5a89d38b8e42f3bdaa1a84a390ca900f2bd"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "first",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          },
+          {
+            "slot": "second",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "analysis",
+            "type": "GeometryQueryReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "sampling"
+        ],
+        "properties": {
+          "sampling": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "method",
+                  "grid_spacing",
+                  "include_vertices"
+                ],
+                "properties": {
+                  "method": {
+                    "const": "grid"
+                  },
+                  "grid_spacing": {
+                    "type": "TypedLength",
+                    "exclusiveMinimum": 0
+                  },
+                  "include_vertices": {
+                    "type": "boolean"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "method",
+                  "random_seed",
+                  "points_on_faces",
+                  "points_on_edges",
+                  "include_vertices"
+                ],
+                "properties": {
+                  "method": {
+                    "const": "random_uniform"
+                  },
+                  "random_seed": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 2147483647
+                  },
+                  "points_on_faces": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 20000
+                  },
+                  "points_on_edges": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 20000
+                  },
+                  "include_vertices": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            ],
+            "description": "Sampling named parameters of PMP::sample_triangle_mesh: a grid of the given spacing, or a seeded uniform random sample on faces and edges; include_vertices adds the mesh vertices."
+          }
+        }
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 268435456,
+          "maximum_faces": 400
+        }
+      ],
+      "validation": {
+        "required": true,
+        "validators": [
+          "mesh.validate.hausdorff_report"
+        ],
+        "bindings": {
+          "mesh.validate.hausdorff_report": {
+            "artifacts": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "first": {
+                "input": "first"
+              },
+              "second": {
+                "input": "second"
+              }
+            },
+            "parameters": {
+              "sampling": {
+                "parameter": "sampling"
+              }
+            }
+          }
+        }
+      },
+      "output_contract": {
+        "report_schema_version": 1,
+        "geometry_mutation": false,
+        "source_sha256_preserved": true,
+        "exact_rational_strings": false,
+        "producer_diagnostics_are_non_authoritative": true
+      },
+      "dependencies": [
+        "Polygon_mesh_processing",
+        "Surface_mesh"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "input_slots": [
+            "first",
+            "second"
+          ],
+          "maximum_input_faces": 400,
+          "source_header": "CGAL/Polygon_mesh_processing/distance.h",
+          "validator_parameter_bindings": {
+            "mesh.validate.hausdorff_report": {
+              "sampling": "sampling"
+            }
+          },
+          "validators": [
+            "mesh.validate.hausdorff_report"
+          ]
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "square roots force a declared tolerance: 1e-9 relative to the larger mesh diagonal; Hausdorff suprema are bracketed to 0.5% of the diagonal",
+        "exact_constructions": "none",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_batch5_cases.py"
+        ],
+        "worker_manifest_operation": "mesh.distance.hausdorff_approximate_symmetric",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "mesh.distance.max_to_points",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "analysis",
+      "summary": "Approximate maximum distance from a triangle mesh to a point set (approximate_max_distance_to_point_set) within a precision bound.",
+      "package": "Polygon_mesh_processing",
+      "major_requirements": [
+        "major.7.3.06"
+      ],
+      "aliases": [
+        "approximate max distance to point set",
+        "mesh to point cloud deviation",
+        "surface to points distance",
+        "\u30e1\u30c3\u30b7\u30e5\u304b\u3089\u70b9\u7fa4\u3078\u306e\u6700\u5927\u8ddd\u96e2"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Polygon_mesh_processing"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Polygon_mesh_processing::approximate_max_distance_to_point_set"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Polygon_mesh_processing/distance.h"
+        },
+        {
+          "kind": "manual",
+          "identifier": "Polygon_mesh_processing/index.html"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Polygon_mesh_processing",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/distance.h",
+            "sha256": "e4e10b3837b4175dd35d22f3056cc5a89d38b8e42f3bdaa1a84a390ca900f2bd"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "mesh",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          },
+          {
+            "slot": "points",
+            "types": [
+              "PointSet3"
+            ],
+            "formats": [
+              "xyz"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "analysis",
+            "type": "GeometryQueryReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "precision"
+        ],
+        "properties": {
+          "precision": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0
+          }
+        }
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 268435456,
+          "maximum_faces": 400
+        }
+      ],
+      "validation": {
+        "required": true,
+        "validators": [
+          "mesh.validate.max_distance_to_points"
+        ],
+        "bindings": {
+          "mesh.validate.max_distance_to_points": {
+            "artifacts": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "mesh": {
+                "input": "mesh"
+              },
+              "points": {
+                "input": "points"
+              }
+            },
+            "parameters": {
+              "precision": {
+                "parameter": "precision"
+              }
+            }
+          }
+        }
+      },
+      "output_contract": {
+        "report_schema_version": 1,
+        "geometry_mutation": false,
+        "source_sha256_preserved": true,
+        "exact_rational_strings": false,
+        "producer_diagnostics_are_non_authoritative": true
+      },
+      "dependencies": [
+        "Polygon_mesh_processing",
+        "Surface_mesh"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "input_slots": [
+            "mesh",
+            "points"
+          ],
+          "maximum_input_faces": 400,
+          "source_header": "CGAL/Polygon_mesh_processing/distance.h",
+          "validator_parameter_bindings": {
+            "mesh.validate.max_distance_to_points": {
+              "precision": "precision"
+            }
+          },
+          "validators": [
+            "mesh.validate.max_distance_to_points"
+          ]
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "square roots force a declared tolerance: 1e-9 relative to the larger mesh diagonal; Hausdorff suprema are bracketed to 0.5% of the diagonal",
+        "exact_constructions": "none",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_batch5_cases.py"
+        ],
+        "worker_manifest_operation": "mesh.distance.max_to_points",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "mesh.distance.hausdorff_bounded",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "analysis",
+      "summary": "One-sided Hausdorff distance between two triangle meshes with a guaranteed error bound (bounded_error_Hausdorff_distance).",
+      "package": "Polygon_mesh_processing",
+      "major_requirements": [
+        "major.7.3.06"
+      ],
+      "aliases": [
+        "bounded error Hausdorff distance",
+        "guaranteed Hausdorff distance",
+        "one sided Hausdorff with error bound",
+        "\u8aa4\u5dee\u4fdd\u8a3c\u30cf\u30a6\u30b9\u30c9\u30eb\u30d5\u8ddd\u96e2"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Polygon_mesh_processing"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Polygon_mesh_processing::bounded_error_Hausdorff_distance"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Polygon_mesh_processing/distance.h"
+        },
+        {
+          "kind": "manual",
+          "identifier": "Polygon_mesh_processing/index.html"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Polygon_mesh_processing",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/distance.h",
+            "sha256": "e4e10b3837b4175dd35d22f3056cc5a89d38b8e42f3bdaa1a84a390ca900f2bd"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "first",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          },
+          {
+            "slot": "second",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "analysis",
+            "type": "GeometryQueryReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "error_bound"
+        ],
+        "properties": {
+          "error_bound": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0
+          }
+        }
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 268435456,
+          "maximum_faces": 400
+        }
+      ],
+      "validation": {
+        "required": true,
+        "validators": [
+          "mesh.validate.hausdorff_report"
+        ],
+        "bindings": {
+          "mesh.validate.hausdorff_report": {
+            "artifacts": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "first": {
+                "input": "first"
+              },
+              "second": {
+                "input": "second"
+              }
+            },
+            "parameters": {
+              "error_bound": {
+                "parameter": "error_bound"
+              }
+            }
+          }
+        }
+      },
+      "output_contract": {
+        "report_schema_version": 1,
+        "geometry_mutation": false,
+        "source_sha256_preserved": true,
+        "exact_rational_strings": false,
+        "producer_diagnostics_are_non_authoritative": true
+      },
+      "dependencies": [
+        "Polygon_mesh_processing",
+        "Surface_mesh"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "input_slots": [
+            "first",
+            "second"
+          ],
+          "maximum_input_faces": 400,
+          "source_header": "CGAL/Polygon_mesh_processing/distance.h",
+          "validator_parameter_bindings": {
+            "mesh.validate.hausdorff_report": {
+              "error_bound": "error_bound"
+            }
+          },
+          "validators": [
+            "mesh.validate.hausdorff_report"
+          ]
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "square roots force a declared tolerance: 1e-9 relative to the larger mesh diagonal; Hausdorff suprema are bracketed to 0.5% of the diagonal",
+        "exact_constructions": "none",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_batch5_cases.py"
+        ],
+        "worker_manifest_operation": "mesh.distance.hausdorff_bounded",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "mesh.validate.distance_samples",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "validator",
+      "summary": "Check every sample lies on the mesh surface (brute-force point-triangle distance), the vertices are sampled when requested, grid sampling covers every triangle and random sampling has the requested count with the required edge samples.",
+      "package": "Polygon_mesh_processing",
+      "aliases": [],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Polygon_mesh_processing"
+        },
+        {
+          "kind": "operation_reference",
+          "identifier": "mesh.distance.sample_points"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Polygon_mesh_processing",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/distance.h",
+            "sha256": "e4e10b3837b4175dd35d22f3056cc5a89d38b8e42f3bdaa1a84a390ca900f2bd"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "GeometryQueryReport"
+            ],
+            "formats": [
+              "json"
+            ],
+            "unit": "none"
+          },
+          {
+            "slot": "mesh",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "sampling"
+        ],
+        "properties": {
+          "sampling": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "method",
+                  "grid_spacing",
+                  "include_vertices"
+                ],
+                "properties": {
+                  "method": {
+                    "const": "grid"
+                  },
+                  "grid_spacing": {
+                    "type": "TypedLength",
+                    "exclusiveMinimum": 0
+                  },
+                  "include_vertices": {
+                    "type": "boolean"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "method",
+                  "random_seed",
+                  "points_on_faces",
+                  "points_on_edges",
+                  "include_vertices"
+                ],
+                "properties": {
+                  "method": {
+                    "const": "random_uniform"
+                  },
+                  "random_seed": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 2147483647
+                  },
+                  "points_on_faces": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 20000
+                  },
+                  "points_on_edges": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 20000
+                  },
+                  "include_vertices": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            ],
+            "description": "Sampling named parameters of PMP::sample_triangle_mesh: a grid of the given spacing, or a seeded uniform random sample on faces and edges; include_vertices adds the mesh vertices."
+          }
+        }
+      },
+      "preconditions": [],
+      "validation": {
+        "required": false,
+        "validators": [],
+        "bindings": {},
+        "terminal_validator": true,
+        "validates": "mesh.distance.sample_points",
+        "validates_all": [
+          "mesh.distance.sample_points"
+        ],
+        "required_report_checks": {
+          "status": "pass",
+          "passed": true,
+          "validator": "mesh.validate.distance_samples",
+          "checks.parameters_match": true,
+          "checks.source_matches": true,
+          "checks.length_unit_matches_mesh": true,
+          "checks.samples_lie_on_mesh_surface": true,
+          "checks.vertices_sampled_as_requested": true
+        }
+      },
+      "output_contract": {
+        "schema": "ValidationReport/v1",
+        "required_true_checks": [
+          "parameters_match",
+          "source_matches",
+          "length_unit_matches_mesh",
+          "samples_lie_on_mesh_surface",
+          "vertices_sampled_as_requested"
+        ],
+        "status": "pass",
+        "failure_or_indeterminate_publish": false,
+        "independence": "brute-force point-triangle and point-edge distances over all samples; sample positions of a seeded random stream are not re-derived; no CGAL header"
+      },
+      "dependencies": [
+        "Polygon_mesh_processing"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "long double (no CGAL header)",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "length_unit_matches_mesh",
+            "samples_lie_on_mesh_surface",
+            "vertices_sampled_as_requested"
+          ],
+          "independence": "brute-force point-triangle and point-edge distances over all samples; sample positions of a seeded random stream are not re-derived; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "mesh"
+          ],
+          "output_slot": "validation"
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "long double (no CGAL header)",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "square roots force a declared tolerance: 1e-9 relative to the larger mesh diagonal; Hausdorff suprema are bracketed to 0.5% of the diagonal",
+        "exact_constructions": "none",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_batch5_cases.py"
+        ],
+        "worker_manifest_operation": "mesh.validate.distance_samples",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "mesh.validate.max_distance_to_mesh",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "validator",
+      "summary": "Recompute the maximum point-to-mesh distance exactly over all points and triangles (GMP rational squared distances) and compare it with the report.",
+      "package": "Polygon_mesh_processing",
+      "aliases": [],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Polygon_mesh_processing"
+        },
+        {
+          "kind": "operation_reference",
+          "identifier": "mesh.distance.max_to_mesh"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Polygon_mesh_processing",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/distance.h",
+            "sha256": "e4e10b3837b4175dd35d22f3056cc5a89d38b8e42f3bdaa1a84a390ca900f2bd"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "GeometryQueryReport"
+            ],
+            "formats": [
+              "json"
+            ],
+            "unit": "none"
+          },
+          {
+            "slot": "points",
+            "types": [
+              "PointSet3"
+            ],
+            "formats": [
+              "xyz"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          },
+          {
+            "slot": "mesh",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [],
+        "properties": {}
+      },
+      "preconditions": [],
+      "validation": {
+        "required": false,
+        "validators": [],
+        "bindings": {},
+        "terminal_validator": true,
+        "validates": "mesh.distance.max_to_mesh",
+        "validates_all": [
+          "mesh.distance.max_to_mesh"
+        ],
+        "required_report_checks": {
+          "status": "pass",
+          "passed": true,
+          "validator": "mesh.validate.max_distance_to_mesh",
+          "checks.parameters_match": true,
+          "checks.source_matches": true,
+          "checks.distance_unit_matches_mesh": true,
+          "checks.distance_equals_exact_brute_force_maximum": true
+        }
+      },
+      "output_contract": {
+        "schema": "ValidationReport/v1",
+        "required_true_checks": [
+          "parameters_match",
+          "source_matches",
+          "distance_unit_matches_mesh",
+          "distance_equals_exact_brute_force_maximum"
+        ],
+        "status": "pass",
+        "failure_or_indeterminate_publish": false,
+        "independence": "exact rational squared point-triangle distances over all points and triangles; no CGAL header"
+      },
+      "dependencies": [
+        "Polygon_mesh_processing"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "GMP rationals (no CGAL header)",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "distance_unit_matches_mesh",
+            "distance_equals_exact_brute_force_maximum"
+          ],
+          "independence": "exact rational squared point-triangle distances over all points and triangles; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "points",
+            "mesh"
+          ],
+          "output_slot": "validation"
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "GMP rationals (no CGAL header)",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "the squared distance is exact; the reported binary64 distance is compared with its square root at 1e-9 relative tolerance",
+        "exact_constructions": "none",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_batch5_cases.py"
+        ],
+        "worker_manifest_operation": "mesh.validate.max_distance_to_mesh",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "mesh.validate.max_distance_to_points",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "validator",
+      "summary": "Bracket the maximum mesh-to-point-set distance by best-first Lipschitz subdivision over the mesh triangles and require the reported value within the precision of the bracket.",
+      "package": "Polygon_mesh_processing",
+      "aliases": [],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Polygon_mesh_processing"
+        },
+        {
+          "kind": "operation_reference",
+          "identifier": "mesh.distance.max_to_points"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Polygon_mesh_processing",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/distance.h",
+            "sha256": "e4e10b3837b4175dd35d22f3056cc5a89d38b8e42f3bdaa1a84a390ca900f2bd"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "GeometryQueryReport"
+            ],
+            "formats": [
+              "json"
+            ],
+            "unit": "none"
+          },
+          {
+            "slot": "mesh",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          },
+          {
+            "slot": "points",
+            "types": [
+              "PointSet3"
+            ],
+            "formats": [
+              "xyz"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "precision"
+        ],
+        "properties": {
+          "precision": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0
+          }
+        }
+      },
+      "preconditions": [],
+      "validation": {
+        "required": false,
+        "validators": [],
+        "bindings": {},
+        "terminal_validator": true,
+        "validates": "mesh.distance.max_to_points",
+        "validates_all": [
+          "mesh.distance.max_to_points"
+        ],
+        "required_report_checks": {
+          "status": "pass",
+          "passed": true,
+          "validator": "mesh.validate.max_distance_to_points",
+          "checks.parameters_match": true,
+          "checks.source_matches": true,
+          "checks.distance_unit_matches_mesh": true,
+          "checks.distance_within_precision_of_exact_bracket": true
+        }
+      },
+      "output_contract": {
+        "schema": "ValidationReport/v1",
+        "required_true_checks": [
+          "parameters_match",
+          "source_matches",
+          "distance_unit_matches_mesh",
+          "distance_within_precision_of_exact_bracket"
+        ],
+        "status": "pass",
+        "failure_or_indeterminate_publish": false,
+        "independence": "best-first Lipschitz subdivision bracket over brute-force point distances; no CGAL header"
+      },
+      "dependencies": [
+        "Polygon_mesh_processing"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "long double (no CGAL header)",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "distance_unit_matches_mesh",
+            "distance_within_precision_of_exact_bracket"
+          ],
+          "independence": "best-first Lipschitz subdivision bracket over brute-force point distances; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "mesh",
+            "points"
+          ],
+          "output_slot": "validation"
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "long double (no CGAL header)",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "square roots force a declared tolerance: 1e-9 relative to the larger mesh diagonal; Hausdorff suprema are bracketed to 0.5% of the diagonal",
+        "exact_constructions": "none",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_batch5_cases.py"
+        ],
+        "worker_manifest_operation": "mesh.validate.max_distance_to_points",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "mesh.validate.hausdorff_report",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "validator",
+      "summary": "Bracket the exact Hausdorff distance (exact rational vertex distances plus best-first Lipschitz subdivision) and require a sampled estimate not above it and not below the vertex distance, or a bounded-error estimate within its bound of the bracket.",
+      "package": "Polygon_mesh_processing",
+      "aliases": [],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Polygon_mesh_processing"
+        },
+        {
+          "kind": "operation_reference",
+          "identifier": "mesh.distance.hausdorff_approximate"
+        },
+        {
+          "kind": "operation_reference",
+          "identifier": "mesh.distance.hausdorff_approximate_symmetric"
+        },
+        {
+          "kind": "operation_reference",
+          "identifier": "mesh.distance.hausdorff_bounded"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Polygon_mesh_processing",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/distance.h",
+            "sha256": "e4e10b3837b4175dd35d22f3056cc5a89d38b8e42f3bdaa1a84a390ca900f2bd"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "GeometryQueryReport"
+            ],
+            "formats": [
+              "json"
+            ],
+            "unit": "none"
+          },
+          {
+            "slot": "first",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          },
+          {
+            "slot": "second",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [],
+        "properties": {
+          "sampling": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "method",
+                  "grid_spacing",
+                  "include_vertices"
+                ],
+                "properties": {
+                  "method": {
+                    "const": "grid"
+                  },
+                  "grid_spacing": {
+                    "type": "TypedLength",
+                    "exclusiveMinimum": 0
+                  },
+                  "include_vertices": {
+                    "type": "boolean"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "method",
+                  "random_seed",
+                  "points_on_faces",
+                  "points_on_edges",
+                  "include_vertices"
+                ],
+                "properties": {
+                  "method": {
+                    "const": "random_uniform"
+                  },
+                  "random_seed": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 2147483647
+                  },
+                  "points_on_faces": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 20000
+                  },
+                  "points_on_edges": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 20000
+                  },
+                  "include_vertices": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            ],
+            "description": "Sampling named parameters of PMP::sample_triangle_mesh: a grid of the given spacing, or a seeded uniform random sample on faces and edges; include_vertices adds the mesh vertices."
+          },
+          "error_bound": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0
+          }
+        }
+      },
+      "preconditions": [],
+      "validation": {
+        "required": false,
+        "validators": [],
+        "bindings": {},
+        "terminal_validator": true,
+        "validates": "mesh.distance.hausdorff_approximate",
+        "validates_all": [
+          "mesh.distance.hausdorff_approximate",
+          "mesh.distance.hausdorff_approximate_symmetric",
+          "mesh.distance.hausdorff_bounded"
+        ],
+        "required_report_checks": {
+          "status": "pass",
+          "passed": true,
+          "validator": "mesh.validate.hausdorff_report",
+          "checks.parameters_match": true,
+          "checks.source_matches": true,
+          "checks.distance_unit_matches_mesh": true,
+          "checks.distance_consistent_with_exact_hausdorff_bracket": true
+        }
+      },
+      "output_contract": {
+        "schema": "ValidationReport/v1",
+        "required_true_checks": [
+          "parameters_match",
+          "source_matches",
+          "distance_unit_matches_mesh",
+          "distance_consistent_with_exact_hausdorff_bracket"
+        ],
+        "status": "pass",
+        "failure_or_indeterminate_publish": false,
+        "independence": "exact rational vertex distances plus best-first Lipschitz subdivision bracket over brute-force point-triangle distances; no CGAL header"
+      },
+      "dependencies": [
+        "Polygon_mesh_processing"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "long double (no CGAL header)",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "distance_unit_matches_mesh",
+            "distance_consistent_with_exact_hausdorff_bracket"
+          ],
+          "independence": "exact rational vertex distances plus best-first Lipschitz subdivision bracket over brute-force point-triangle distances; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "first",
+            "second"
+          ],
+          "output_slot": "validation"
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "long double (no CGAL header)",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "square roots force a declared tolerance: 1e-9 relative to the larger mesh diagonal; Hausdorff suprema are bracketed to 0.5% of the diagonal",
+        "exact_constructions": "none",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_batch5_cases.py"
+        ],
+        "worker_manifest_operation": "mesh.validate.hausdorff_report",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "mesh.intersections.do_intersect",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "analysis",
+      "summary": "Decide whether two triangle meshes intersect (PMP::do_intersect), optionally also when one closed mesh lies inside the other (bounded-side overlap test).",
+      "package": "Polygon_mesh_processing",
+      "major_requirements": [
+        "major.7.3.07"
+      ],
+      "aliases": [
+        "do intersect two meshes",
+        "mesh mesh intersection test",
+        "triangle mesh collision test",
+        "\u30e1\u30c3\u30b7\u30e5\u540c\u58eb\u306e\u4ea4\u5dee\u5224\u5b9a"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Polygon_mesh_processing"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Polygon_mesh_processing::do_intersect"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Polygon_mesh_processing/intersection.h"
+        },
+        {
+          "kind": "manual",
+          "identifier": "Polygon_mesh_processing/index.html"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Polygon_mesh_processing",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/intersection.h",
+            "sha256": "2f3c5c2e50e56457e1a3de422acba82c62f141ffe6e03fffca74a7a9b9a39584"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "first",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          },
+          {
+            "slot": "second",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "analysis",
+            "type": "GeometryQueryReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "overlap_test"
+        ],
+        "properties": {
+          "overlap_test": {
+            "type": "boolean",
+            "description": "True also reports one closed mesh lying strictly inside the other (do_overlap_test_of_bounded_sides); both meshes must then be closed."
+          }
+        }
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 268435456,
+          "maximum_faces": 200
+        }
+      ],
+      "validation": {
+        "required": true,
+        "validators": [
+          "mesh.validate.do_intersect"
+        ],
+        "bindings": {
+          "mesh.validate.do_intersect": {
+            "artifacts": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "first": {
+                "input": "first"
+              },
+              "second": {
+                "input": "second"
+              }
+            },
+            "parameters": {
+              "overlap_test": {
+                "parameter": "overlap_test"
+              }
+            }
+          }
+        }
+      },
+      "output_contract": {
+        "report_schema_version": 1,
+        "geometry_mutation": false,
+        "source_sha256_preserved": true,
+        "exact_rational_strings": false,
+        "producer_diagnostics_are_non_authoritative": true
+      },
+      "dependencies": [
+        "Polygon_mesh_processing",
+        "Surface_mesh"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "input_slots": [
+            "first",
+            "second"
+          ],
+          "maximum_input_faces": 200,
+          "source_header": "CGAL/Polygon_mesh_processing/intersection.h",
+          "validator_parameter_bindings": {
+            "mesh.validate.do_intersect": {
+              "overlap_test": "overlap_test"
+            }
+          },
+          "validators": [
+            "mesh.validate.do_intersect"
+          ]
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "do_intersect uses exact predicates; the validator decides every triangle pair with GMP rationals",
+        "exact_constructions": "none",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_batch5_cases.py"
+        ],
+        "worker_manifest_operation": "mesh.intersections.do_intersect",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "mesh.intersections.polylines",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "analysis",
+      "summary": "Intersection curves of two triangle meshes as exact-rational polylines (PMP::intersection_polylines, formerly surface_intersection); coplanar overlapping triangle pairs are rejected.",
+      "package": "Polygon_mesh_processing",
+      "major_requirements": [
+        "major.7.3.07"
+      ],
+      "aliases": [
+        "surface intersection polylines",
+        "mesh mesh intersection curve",
+        "intersection polylines of two meshes",
+        "\u30e1\u30c3\u30b7\u30e5\u4ea4\u7dda"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Polygon_mesh_processing"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Polygon_mesh_processing::intersection_polylines"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Polygon_mesh_processing/intersection_polylines.h"
+        },
+        {
+          "kind": "manual",
+          "identifier": "Polygon_mesh_processing/index.html"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Polygon_mesh_processing",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/intersection_polylines.h",
+            "sha256": "37723789fccb71a8d382b157b7c19ca891019619be57ac46acd172bf6fef6909"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "first",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          },
+          {
+            "slot": "second",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "analysis",
+            "type": "GeometryQueryReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [],
+        "properties": {}
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 268435456,
+          "maximum_faces": 200
+        }
+      ],
+      "validation": {
+        "required": true,
+        "validators": [
+          "mesh.validate.intersection_polylines"
+        ],
+        "bindings": {
+          "mesh.validate.intersection_polylines": {
+            "artifacts": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "first": {
+                "input": "first"
+              },
+              "second": {
+                "input": "second"
+              }
+            }
+          }
+        }
+      },
+      "output_contract": {
+        "report_schema_version": 1,
+        "geometry_mutation": false,
+        "source_sha256_preserved": true,
+        "exact_rational_strings": true,
+        "producer_diagnostics_are_non_authoritative": true
+      },
+      "dependencies": [
+        "Polygon_mesh_processing",
+        "Surface_mesh"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "info": {
+          "input_slots": [
+            "first",
+            "second"
+          ],
+          "maximum_input_faces": 200,
+          "source_header": "CGAL/Polygon_mesh_processing/intersection_polylines.h",
+          "validators": [
+            "mesh.validate.intersection_polylines"
+          ]
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "Epeck construction; polyline vertices are exact rationals written as p/q strings",
+        "exact_constructions": "CGAL Epeck",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_batch5_cases.py"
+        ],
+        "worker_manifest_operation": "mesh.intersections.polylines",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "mesh.validate.do_intersect",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "validator",
+      "summary": "Decide the intersection predicate again with a brute-force exact (GMP rational) triangle-triangle test over all face pairs, plus exact ray parity for the bounded-side overlap test.",
+      "package": "Polygon_mesh_processing",
+      "aliases": [],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Polygon_mesh_processing"
+        },
+        {
+          "kind": "operation_reference",
+          "identifier": "mesh.intersections.do_intersect"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Polygon_mesh_processing",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/intersection.h",
+            "sha256": "2f3c5c2e50e56457e1a3de422acba82c62f141ffe6e03fffca74a7a9b9a39584"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "GeometryQueryReport"
+            ],
+            "formats": [
+              "json"
+            ],
+            "unit": "none"
+          },
+          {
+            "slot": "first",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          },
+          {
+            "slot": "second",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "overlap_test"
+        ],
+        "properties": {
+          "overlap_test": {
+            "type": "boolean",
+            "description": "True also reports one closed mesh lying strictly inside the other (do_overlap_test_of_bounded_sides); both meshes must then be closed."
+          }
+        }
+      },
+      "preconditions": [],
+      "validation": {
+        "required": false,
+        "validators": [],
+        "bindings": {},
+        "terminal_validator": true,
+        "validates": "mesh.intersections.do_intersect",
+        "validates_all": [
+          "mesh.intersections.do_intersect"
+        ],
+        "required_report_checks": {
+          "status": "pass",
+          "passed": true,
+          "validator": "mesh.validate.do_intersect",
+          "checks.parameters_match": true,
+          "checks.source_matches": true,
+          "checks.intersect_equals_exact_brute_force": true
+        }
+      },
+      "output_contract": {
+        "schema": "ValidationReport/v1",
+        "required_true_checks": [
+          "parameters_match",
+          "source_matches",
+          "intersect_equals_exact_brute_force"
+        ],
+        "status": "pass",
+        "failure_or_indeterminate_publish": false,
+        "independence": "exact rational triangle-pair intersection over all face pairs and exact ray parity; no CGAL header"
+      },
+      "dependencies": [
+        "Polygon_mesh_processing"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "GMP rationals (no CGAL header)",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "intersect_equals_exact_brute_force"
+          ],
+          "independence": "exact rational triangle-pair intersection over all face pairs and exact ray parity; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "first",
+            "second"
+          ],
+          "output_slot": "validation"
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "GMP rationals (no CGAL header)",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "exact rational arithmetic; no tolerance",
+        "exact_constructions": "none",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_batch5_cases.py"
+        ],
+        "worker_manifest_operation": "mesh.validate.do_intersect",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "mesh.validate.intersection_polylines",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "validator",
+      "summary": "Rebuild the intersection curve from the exact triangle-pair intersection segments; every polyline point must lie on both meshes, every polyline segment on the exact intersection, and the exact intersection must be covered.",
+      "package": "Polygon_mesh_processing",
+      "aliases": [],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Polygon_mesh_processing"
+        },
+        {
+          "kind": "operation_reference",
+          "identifier": "mesh.intersections.polylines"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Polygon_mesh_processing",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/intersection_polylines.h",
+            "sha256": "37723789fccb71a8d382b157b7c19ca891019619be57ac46acd172bf6fef6909"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "GeometryQueryReport"
+            ],
+            "formats": [
+              "json"
+            ],
+            "unit": "none"
+          },
+          {
+            "slot": "first",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          },
+          {
+            "slot": "second",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [],
+        "properties": {}
+      },
+      "preconditions": [],
+      "validation": {
+        "required": false,
+        "validators": [],
+        "bindings": {},
+        "terminal_validator": true,
+        "validates": "mesh.intersections.polylines",
+        "validates_all": [
+          "mesh.intersections.polylines"
+        ],
+        "required_report_checks": {
+          "status": "pass",
+          "passed": true,
+          "validator": "mesh.validate.intersection_polylines",
+          "checks.parameters_match": true,
+          "checks.source_matches": true,
+          "checks.points_lie_on_both_meshes": true,
+          "checks.candidate_covered_by_exact_intersection": true,
+          "checks.exact_intersection_covered_by_candidate": true
+        }
+      },
+      "output_contract": {
+        "schema": "ValidationReport/v1",
+        "required_true_checks": [
+          "parameters_match",
+          "source_matches",
+          "points_lie_on_both_meshes",
+          "candidate_covered_by_exact_intersection",
+          "exact_intersection_covered_by_candidate"
+        ],
+        "status": "pass",
+        "failure_or_indeterminate_publish": false,
+        "independence": "exact rational triangle-pair intersection segments over all face pairs; no CGAL header"
+      },
+      "dependencies": [
+        "Polygon_mesh_processing"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "GMP rationals (no CGAL header)",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "points_lie_on_both_meshes",
+            "candidate_covered_by_exact_intersection",
+            "exact_intersection_covered_by_candidate"
+          ],
+          "independence": "exact rational triangle-pair intersection segments over all face pairs; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "first",
+            "second"
+          ],
+          "output_slot": "validation"
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "GMP rationals (no CGAL header)",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "exact rational arithmetic; no tolerance",
+        "exact_constructions": "none",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_batch5_cases.py"
+        ],
+        "worker_manifest_operation": "mesh.validate.intersection_polylines",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
     }
   ]
 }
