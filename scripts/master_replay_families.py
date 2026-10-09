@@ -4294,6 +4294,161 @@ FAMILY_7_3["negative_controls"].extend([
 
 # <<< b5-73
 
+# >>> b5-712
+# --- Batch 5 (7.12.05 straight skeleton, 7.12.06 offsets) ------------------------------------------
+B5_FIXTURES.update({
+    "rect4x2.json": "1ea61017d5e8d48d8b62dffb195d87e5a95f46b4be18487fbe4df3d5fb5f5c60",
+    "lshape.json": "97230a3e931e766367584147572835963b2aefca0fe785db3c0a80e2aaa3f1d5",
+    "square_hole.json": "118120e1fc83098c7054277037b2bb95280b8fbf7b506c2d21bba604fbe1752f",
+    "triangle_6_8.json": "a5cbd96391e7e4658da0b74461783cd2073919c4571f5f91b0402c15ebba4cbc",
+    "bowtie.json": "2d9456cbcc3ed7db7310512ae7d4e0741d04c4f628ee8acccfbf617d206cca70",
+    "sliver.json": "efb99bdf178eafca2316adc7dd2ddee7e9ee2cf9740bd14cb13800edd38411fb",
+    "tampered_skel_node_moved.json": "cea4983f2930feb165f492b3d399e8066d8e45c0958efb36dfb0edde64316e37",
+    "tampered_skel_time_changed.json": "b88be4ead1206192ffcbdf428d46374c497ca4886f3d5d612abc3f9582072ac4",
+    "tampered_skel_face_dropped.json": "886c8b8df5f44c134b6ee9b19d2567f48e97623285cd068661ac671be73c1a96",
+    "tampered_offset_edge_shifted.json": "537c36dc5b8a1ab84f7fd5d50893363cf79212bc13abb2acebcdb7cb214bdd12",
+    "tampered_offset_forged_empty.json": "6b6c542d791c9d76a4e0c03170ff42a77c29ea199397d67c32a930eebbffa57f",
+})
+
+
+def _b5poly(name: str) -> dict:
+    return {**_b5fx(name), "type": "PolygonWithHoles2", "format": "json", "unit": "mm"}
+
+
+B5_RECT = _b5poly("rect4x2.json")
+B5_LSHAPE = _b5poly("lshape.json")
+B5_HOLED = _b5poly("square_hole.json")
+B5_TRIANGLE = _b5poly("triangle_6_8.json")
+_MM = lambda value: {"value": value, "unit": "mm"}
+_SK = "output:analysis:json:"
+FAMILY_7_12["requirements"]["major.7.12.05"] = {
+    "operation_ids": ["polygon.straight_skeleton.interior", "polygon.straight_skeleton.exterior"],
+    "symbols": ["create_interior_straight_skeleton_2", "create_exterior_straight_skeleton_2"],
+    "symbol_notes": "create_interior_straight_skeleton_2 is replayed on a 4x2 rectangle (two nodes (1,1) and (3,1) at "
+                    "time 1, four faces), on the L-shape of arm width 1 (three nodes at time 1/2) and on a 6x6 square "
+                    "with a 2x2 hole (four nodes at time 1 on the diagonals, one face per edge); "
+                    "create_exterior_straight_skeleton_2 on the rectangle with max_offset 1 gives the frame "
+                    "[-3,7]x[-3,5] that CGAL adds and four frame-corner nodes at time 3/2. The independent validator "
+                    "requires the contour to equal the source polygon exactly, one face per contour edge, every node "
+                    "strictly inside the region (exact rational point-in-ring), node time equal to the distance to "
+                    "the line of every touching face edge and clear of the boundary, positive face areas and an "
+                    "exact face-area sum equal to the region area; distance checks use a declared 1e-9 relative "
+                    "tolerance. The exterior construction takes a simple polygon without holes.",
+    "case_ids": ["skeleton-rectangle-interior", "skeleton-lshape-interior", "skeleton-holed-interior",
+                 "skeleton-rectangle-exterior"],
+}
+FAMILY_7_12["requirements"]["major.7.12.06"] = {
+    "operation_ids": ["polygon.offset.interior", "polygon.offset.exterior"],
+    "symbols": ["create_interior_skeleton_and_offset_polygons_2", "create_exterior_skeleton_and_offset_polygons_2"],
+    "symbol_notes": "The interior and exterior mitered offsets are replayed on the 4x2 rectangle at 1/2 (inner "
+                    "[1/2,7/2]x[1/2,3/2] with area 3, outer [-1/2,9/2]x[-1/2,5/2] with area 15, exactly "
+                    "(w -/+ 2d)(h -/+ 2d)) and beyond the inradius (offset 3/2, no ring). The 6-8-10 triangle at "
+                    "offset 1 gives the similar triangle with corners (1,1) and (4,1) (incircle radius 2); the "
+                    "L-shape at 0.3 gives one hexagon and at 0.6 nothing; the holed square at 0.3 gives two rings. "
+                    "The independent validator requires every output edge parallel to a source edge at the offset "
+                    "distance on the correct side, every vertex clear of the source boundary and on the correct "
+                    "side, convex sources against the half-plane intersection, rectangles against the exact "
+                    "rational (w -/+ 2d)(h -/+ 2d), and an empty result only when the convex construction is empty "
+                    "or the inradius bound proves the true offset region empty. Completeness of non-empty offsets "
+                    "of non-convex sources is not certified; the exterior construction takes a simple polygon.",
+    "case_ids": ["offset-rectangle-interior", "offset-rectangle-exterior", "offset-rectangle-consumed",
+                 "offset-triangle-incircle", "offset-lshape-interior", "offset-lshape-consumed",
+                 "offset-holed-interior"],
+}
+FAMILY_7_12["unbound"].pop("major.7.12.05", None)
+FAMILY_7_12["unbound"].pop("major.7.12.06", None)
+FAMILY_7_12["cases"].extend([
+    _case("skeleton-rectangle-interior", "polygon.straight_skeleton.interior", [B5_RECT], {}, [
+        [_SK + "report_kind", "==", "straight_skeleton"],
+        [_SK + "results.vertices.4.x", "==", 1.0], [_SK + "results.vertices.4.y", "==", 1.0],
+        [_SK + "results.vertices.4.time", "==", 1.0],
+        [_SK + "results.vertices.5.x", "==", 3.0], [_SK + "results.vertices.5.time", "==", 1.0],
+        [_SK + "results.bisectors", "==", [[0, 4], [1, 5], [2, 5], [3, 4], [4, 5]]],
+        [_SK + "summary.face_count", "==", 4],
+        ["metrics.algorithm", "==", "CGAL::create_interior_straight_skeleton_2"],
+    ]),
+    _case("skeleton-lshape-interior", "polygon.straight_skeleton.interior", [B5_LSHAPE], {}, [
+        [_SK + "summary.vertex_count", "==", 9], [_SK + "summary.face_count", "==", 6],
+        [_SK + "results.vertices.6.time", "==", 0.5], [_SK + "results.vertices.7.time", "==", 0.5],
+        [_SK + "results.vertices.8.time", "==", 0.5],
+    ]),
+    _case("skeleton-holed-interior", "polygon.straight_skeleton.interior", [B5_HOLED], {}, [
+        [_SK + "summary.vertex_count", "==", 12], [_SK + "summary.face_count", "==", 8],
+        [_SK + "results.vertices.8.time", "==", 1.0], [_SK + "results.vertices.11.time", "==", 1.0],
+    ]),
+    _case("skeleton-rectangle-exterior", "polygon.straight_skeleton.exterior", [B5_RECT], {"max_offset": _MM(1)}, [
+        [_SK + "results.includes_outer_frame", "==", True],
+        [_SK + "results.vertices.0.x", "==", -3.0], [_SK + "results.vertices.0.y", "==", -3.0],
+        [_SK + "results.vertices.2.x", "==", 7.0], [_SK + "results.vertices.2.y", "==", 5.0],
+        [_SK + "results.vertices.8.time", "==", 1.5], [_SK + "results.vertices.11.time", "==", 1.5],
+        [_SK + "summary.face_count", "==", 8],
+        ["metrics.algorithm", "==", "CGAL::create_exterior_straight_skeleton_2"],
+    ]),
+    _case("offset-rectangle-interior", "polygon.offset.interior", [B5_RECT], {"offset": _MM(0.5)}, [
+        [_SK + "report_kind", "==", "polygon_offset"], [_SK + "summary.ring_count", "==", 1],
+        [_SK + "results.rings.0.points", "==", [[0.5, 0.5], [3.5, 0.5], [3.5, 1.5], [0.5, 1.5]]],
+        ["metrics.algorithm", "==", "CGAL::create_interior_skeleton_and_offset_polygons_2"],
+    ]),
+    _case("offset-rectangle-exterior", "polygon.offset.exterior", [B5_RECT], {"offset": _MM(0.5)}, [
+        [_SK + "summary.ring_count", "==", 1],
+        [_SK + "results.rings.0.points", "==", [[-0.5, 2.5], [4.5, 2.5], [4.5, -0.5], [-0.5, -0.5]]],
+        ["metrics.algorithm", "==", "CGAL::create_exterior_skeleton_and_offset_polygons_2"],
+    ]),
+    _case("offset-rectangle-consumed", "polygon.offset.interior", [B5_RECT], {"offset": _MM(1.5)}, [
+        [_SK + "summary.ring_count", "==", 0], [_SK + "results.rings", "==", []], ["metrics.empty", "==", True],
+    ]),
+    _case("offset-triangle-incircle", "polygon.offset.interior", [B5_TRIANGLE], {"offset": _MM(1)}, [
+        [_SK + "summary.ring_count", "==", 1],
+        [_SK + "results.rings.0.points.0", "==", [1.0, 1.0]], [_SK + "results.rings.0.points.1", "==", [4.0, 1.0]],
+    ]),
+    _case("offset-lshape-interior", "polygon.offset.interior", [B5_LSHAPE], {"offset": _MM(0.3)}, [
+        [_SK + "summary.ring_count", "==", 1],
+        [_SK + "results.rings.0.points.0", "==", [0.3, 0.3]], [_SK + "results.rings.0.points.1", "==", [2.7, 0.3]],
+    ]),
+    _case("offset-lshape-consumed", "polygon.offset.interior", [B5_LSHAPE], {"offset": _MM(0.6)}, [
+        [_SK + "summary.ring_count", "==", 0],
+    ]),
+    _case("offset-holed-interior", "polygon.offset.interior", [B5_HOLED], {"offset": _MM(0.3)}, [
+        [_SK + "summary.ring_count", "==", 2],
+    ]),
+])
+FAMILY_7_12["negative_controls"].extend([
+    {"id": "skeleton-tampered-node-moved-rejected", "operation": "polygon.validate.straight_skeleton",
+     "inputs": [_b5report("tampered_skel_node_moved.json"), B5_RECT], "parameters": {},
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "NODE_TIME_MISMATCH"},
+    {"id": "skeleton-tampered-time-changed-rejected", "operation": "polygon.validate.straight_skeleton",
+     "inputs": [_b5report("tampered_skel_time_changed.json"), B5_RECT], "parameters": {},
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "NODE_TIME_MISMATCH"},
+    {"id": "skeleton-tampered-face-dropped-rejected", "operation": "polygon.validate.straight_skeleton",
+     "inputs": [_b5report("tampered_skel_face_dropped.json"), B5_RECT], "parameters": {},
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "FACE_EDGE_MISMATCH"},
+    {"id": "offset-tampered-edge-shifted-rejected", "operation": "polygon.validate.offset",
+     "inputs": [_b5report("tampered_offset_edge_shifted.json"), B5_RECT], "parameters": {"offset": _MM(0.5)},
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "OFFSET_EDGE_MISMATCH"},
+    {"id": "offset-forged-empty-rejected", "operation": "polygon.validate.offset",
+     "inputs": [_b5report("tampered_offset_forged_empty.json"), B5_RECT], "parameters": {"offset": _MM(0.5)},
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "OFFSET_EXTENT_MISMATCH"},
+    {"id": "skeleton-self-intersecting-polygon-rejected", "operation": "polygon.straight_skeleton.interior",
+     "inputs": [_b5poly("bowtie.json")], "parameters": {},
+     "expect_error_class": "PRECONDITION_FAILED", "expect_error_code": "POLYGON_NOT_SIMPLE"},
+    {"id": "skeleton-zero-area-polygon-rejected", "operation": "polygon.straight_skeleton.interior",
+     "inputs": [_b5poly("sliver.json")], "parameters": {},
+     "expect_error_class": "PRECONDITION_FAILED", "expect_error_code": "POLYGON_ZERO_AREA"},
+    {"id": "skeleton-exterior-holes-rejected", "operation": "polygon.straight_skeleton.exterior",
+     "inputs": [B5_HOLED], "parameters": {"max_offset": _MM(1)},
+     "expect_error_class": "PRECONDITION_FAILED", "expect_error_code": "HOLES_NOT_SUPPORTED"},
+    {"id": "offset-self-intersecting-polygon-rejected", "operation": "polygon.offset.interior",
+     "inputs": [_b5poly("bowtie.json")], "parameters": {"offset": _MM(0.5)},
+     "expect_error_class": "PRECONDITION_FAILED", "expect_error_code": "POLYGON_NOT_SIMPLE"},
+    {"id": "offset-zero-distance-rejected", "operation": "polygon.offset.interior",
+     "inputs": [B5_RECT], "parameters": {"offset": _MM(0)},
+     "expect_error_class": "INVALID_REQUEST", "expect_error_code": "INVALID_PARAMETER"},
+    {"id": "offset-missing-distance-rejected", "operation": "polygon.offset.exterior",
+     "inputs": [B5_RECT], "parameters": {},
+     "expect_error_class": "INVALID_REQUEST", "expect_error_code": "MISSING_PARAMETER"},
+])
+# <<< b5-712
+
 GENERIC_FAMILIES: dict[str, dict] = {
     family["family"]: family for family in (FAMILY_7_1, FAMILY_7_2, FAMILY_7_3, FAMILY_7_4, FAMILY_7_5, FAMILY_7_6,
                    FAMILY_7_9, FAMILY_7_11, FAMILY_7_12, FAMILY_7_13, FAMILY_7_14, FAMILY_7_15, FAMILY_7_10, FAMILY_7_8)

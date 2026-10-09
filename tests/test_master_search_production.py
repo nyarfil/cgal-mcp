@@ -118,6 +118,28 @@ class ProductionOperationSearchTests(unittest.TestCase):
             self.assertFalse(analysis["automatic_route_supported"], (query, analysis))
             self.assertNotEqual(analysis["routing_confidence"], "high", (query, analysis))
 
+    def test_batch5_operations_route_and_polygon_goals_fail_closed_on_other_inputs(self):
+        self.assert_route("straight skeleton of a polygon", ["PolygonWithHoles2"], "polygon.straight_skeleton.interior")
+        self.assert_route("exterior straight skeleton of a polygon", ["PolygonWithHoles2"],
+                          "polygon.straight_skeleton.exterior")
+        self.assert_route("shrink a polygon by an offset distance", ["PolygonWithHoles2"], "polygon.offset.interior")
+        self.assert_route("approximate hausdorff distance between two meshes",
+                          ["TriangleSurfaceMesh", "TriangleSurfaceMesh"], "mesh.distance.hausdorff_approximate")
+        self.assert_route("bounded error hausdorff distance", ["TriangleSurfaceMesh", "TriangleSurfaceMesh"],
+                          "mesh.distance.hausdorff_bounded")
+        self.assert_route("sample points on a mesh surface", ["TriangleSurfaceMesh"], "mesh.distance.sample_points")
+        self.assert_route("intersection test between two meshes", ["TriangleSurfaceMesh", "TriangleSurfaceMesh"],
+                          "mesh.intersections.do_intersect")
+        self.assert_route("surface intersection polylines of two meshes", ["TriangleSurfaceMesh", "TriangleSurfaceMesh"],
+                          "mesh.intersections.polylines")
+        # A straight skeleton or offset of a mesh or point set has no registered operation: fail closed.
+        for query, types in (("straight skeleton of a mesh", ["TriangleSurfaceMesh"]),
+                             ("straight skeleton of 3d points", ["PointSet3"]),
+                             ("offset a mesh surface", ["TriangleSurfaceMesh"])):
+            analysis = self.search(query, types)["query_analysis"]
+            self.assertFalse(analysis["automatic_route_supported"], (query, analysis))
+            self.assertNotEqual(analysis["routing_confidence"], "high", (query, analysis))
+
     def test_non_manifold_split_goal_routes_to_validated_repair(self):
         result = self.search("split non-manifold neighborhoods into repairable shells",
                              ["TriangleSurfaceMesh"])

@@ -82,6 +82,9 @@ VOCABULARY: dict[str, tuple[str, ...]] = {
     "intersection": ("intersection", "intersect", "overlap volume", "overlapping volume", "common volume",
                      "交差", "共通部分", "積集合", "重なった体積"),
     "difference": ("difference", "subtract", "cut away", "carve out", "差集合", "引き算", "くり抜"),
+    "surface_intersection": ("intersection test", "intersection tests",
+                             "surface intersection",
+                             "交差判定", "交線"),
     "self_intersection": ("self intersection", "self-intersection", "self intersecting",
                           "self-intersecting",
                           "self crossing", "crosses itself", "surface crosses itself",
@@ -105,6 +108,8 @@ VOCABULARY: dict[str, tuple[str, ...]] = {
     "validation": ("validate", "validation", "validator", "verify the result",
                    "check the result", "検証", "結果を確かめ"),
     "distance": ("distance", "distances", "距離", "hausdorff", "ハウスドルフ"),
+    "sampling": ("sample points", "point sampling", "surface sampling", "sample the surface",
+                 "サンプリング", "表面サンプル"),
     "directed_distance": ("directed hausdorff", "one-sided hausdorff",
                           "one sided hausdorff", "chamfer distance",
                           "片方向ハウスドルフ", "片側ハウスドルフ"),
@@ -275,7 +280,7 @@ def parse_query(text: str) -> QueryTerms:
                 if not any(other != concept and phrase != longer and phrase in longer
                            for other, longer in matches)]
     concepts = {concept for concept, _ in retained}
-    if "self_intersection" in concepts:
+    if "self_intersection" in concepts or "surface_intersection" in concepts:
         concepts.discard("intersection")
     if "bounded_normal_change" in concepts:
         concepts.discard("normals")
