@@ -395,6 +395,11 @@ def match_operation(query: QueryTerms, text: str, *,
     uncovered = requested - target_concepts
     if "2d" in query.words and "2d" not in target.words:
         uncovered = frozenset((*uncovered, "dimension_2d"))
+    # Mirror of the 2D guard: a query that names 3D must not auto-route with high confidence to an
+    # operation whose text declares 2D and never mentions 3D (for example a 3D point set sent to a
+    # planar triangulation).
+    if "3d" in query.words and "2d" in target.words and "3d" not in target.words:
+        uncovered = frozenset((*uncovered, "dimension_3d"))
     requested_methods = requested & METHOD_CONCEPTS
     covered_methods = requested_methods & target_concepts
     uncovered_methods = requested_methods - target_concepts

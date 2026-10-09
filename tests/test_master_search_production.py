@@ -102,6 +102,22 @@ class ProductionOperationSearchTests(unittest.TestCase):
             allowed_licenses=["MIT"])
         self.assertEqual(license_blocked["candidates"], [])
 
+    def test_batch4_operations_route_and_three_d_goals_do_not_fall_to_2d_operations(self):
+        self.assert_route("regular triangulation of 3d points", ["PointSet3"], "triangulation.regular_3")
+        self.assert_route("alpha shape of 3d points", ["PointSet3"], "shape.alpha_shape_3")
+        self.assert_route("fixed alpha shape 3d", ["PointSet3"], "shape.fixed_alpha_shape_3")
+        self.assert_route("alpha shape of 2d points", ["PointSet2"], "shape.alpha_shape_2")
+        self.assert_route("shortest path on a mesh surface", ["TriangleSurfaceMesh"], "mesh.path.shortest")
+        self.assert_route("fill holes with refinement and fairing", ["TriangleSurfaceMesh"],
+                          "mesh.repair.fill_holes_refine_fair")
+        # No registered executable operation: the router must fail closed instead of picking a 2D neighbour.
+        for query, types in (("voronoi diagram of 3d points", ["PointSet3"]),
+                             ("minkowski sum of two meshes", ["TriangleSurfaceMesh", "TriangleSurfaceMesh"]),
+                             ("overlay two meshes", ["TriangleSurfaceMesh", "TriangleSurfaceMesh"])):
+            analysis = self.search(query, types)["query_analysis"]
+            self.assertFalse(analysis["automatic_route_supported"], (query, analysis))
+            self.assertNotEqual(analysis["routing_confidence"], "high", (query, analysis))
+
     def test_non_manifold_split_goal_routes_to_validated_repair(self):
         result = self.search("split non-manifold neighborhoods into repairable shells",
                              ["TriangleSurfaceMesh"])
