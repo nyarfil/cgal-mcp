@@ -2602,9 +2602,198 @@ FAMILY_7_15 = {
     ],
 }
 
+
+def _rfx(name: str, sha: str) -> dict:
+    return {"fixture": f"reconstruction/{name}", "sha256": sha}
+
+
+R_SPHERE_DENSE = _rfx("sphere_dense_normals.ply", "95f3480275a8d98f7ac71a3ead6dc015ea8cf7090f85e31759e309edbedae873")
+R_TORUS_NORMALS = _rfx("torus_normals.ply", "105a7aec80dc4270226d68f1e03ca21de00c10ab8f2ce7f859ffe40120b2dd0c")
+R_SPHERE_ZERO = _rfx("sphere_zero_normal.ply", "42a4b031f696ca314abc6a694add71096009ed99272a2fbf2c8e73b8847e1b7c")
+R_SPHERE_XYZ = _rfx("sphere_points.xyz", "eec51f63b0fd681275fb2cb2039b36f5908d814253d4f0963019e36cd05b6db0")
+R_TORUS_XYZ = _rfx("torus_points.xyz", "1b431b05d6b8c211119a08793b2c330ed4982cddb648d1c0751b8dfb3582a4f5")
+R_TAMPERED = {
+    "poisson_flipped": _rfx("tampered_poisson_flipped.off",
+                            "00ace823ccd9ae18dc81058043ab5f40ec1fa338d0be911540af5430728127c8"),
+    "poisson_shrunk": _rfx("tampered_poisson_shrunk.off",
+                           "9955446bffdb0c7722e0ead7aab7af8ea7f440078417609b3ac42c37fb36cf57"),
+    "wrap_shrunk": _rfx("tampered_wrap_shrunk.off",
+                        "7b847cabf11a419700223a603cd06b979cb5750865a43007c67f12241036bf7c"),
+    "wrap_grown": _rfx("tampered_wrap_grown.off",
+                       "557f1674b859cea6ad08842168d3de6befd75e365cd09851b5a2933b208118d3"),
+    "wrap_vertex_inside": _rfx("tampered_wrap_vertex_inside.off",
+                               "7504c4c5c66f4292d74cf46e05ebdd58fbc9b8c9b6445b988b10bd738f12ad6c"),
+}
+R_POISSON_SPHERE = {"sm_angle": 20, "sm_radius": 2, "sm_distance": 0.375, "max_deviation": _mm(3.0)}
+R_POISSON_TORUS = {"sm_angle": 20, "sm_radius": 2, "sm_distance": 0.375, "max_deviation": _mm(4.0)}
+R_POISSON_TORUS_FINE = {"sm_angle": 20, "sm_radius": 1.5, "sm_distance": 0.25, "max_deviation": _mm(4.0)}
+R_WRAP_SPHERE = {"alpha": _mm(3.0), "offset": _mm(0.5)}
+R_WRAP_TORUS_FINE = {"alpha": _mm(2.5), "offset": _mm(0.5)}
+R_WRAP_TORUS_COARSE = {"alpha": _mm(15.0), "offset": _mm(0.5)}
+R_SPHERE_VOLUME = 4.0 / 3.0 * math.pi * 1000.0
+R_SPHERE_AREA = 4.0 * math.pi * 100.0
+R_TORUS_VOLUME = 2.0 * math.pi ** 2 * 10.0 * 16.0
+R_TORUS_AREA = 4.0 * math.pi ** 2 * 10.0 * 4.0
+R_POISSON_ALGORITHM = "CGAL::Poisson_reconstruction_function + CGAL::make_mesh_3"
+
+
+def _closed_mesh_checks(euler: int) -> list[list]:
+    return [
+        ["output:geometry:measure:off.boundary_edge_count", "==", 0],
+        ["output:geometry:measure:off.max_face_degree", "==", 3],
+        ["output:geometry:measure:off.euler_characteristic", "==", euler],
+        ["output:geometry:measure:off.face_count", "==", {"path": "metrics.facet_count"}],
+        ["output:geometry:measure:off.vertex_count", "==", {"path": "metrics.vertex_count"}],
+        ["metrics.boundary_edge_count", "==", 0],
+        ["metrics.euler_characteristic", "==", euler],
+    ]
+
+
+def _poisson_case(case_id: str, fixture: dict, parameters: dict, euler: int, points: int, extra: list[list]) -> dict:
+    return _case(case_id, "reconstruction.poisson", [_points(fixture, "PointSet3Normals", "ply")], parameters, [
+        ["metrics.algorithm", "==", R_POISSON_ALGORITHM],
+        ["metrics.mesh_domain", "==", "CGAL::Poisson_mesh_domain_3"],
+        ["metrics.mesh_3_options", "==", "surface_only().manifold()"],
+        ["metrics.point_count", "==", points],
+        ["input:points:measure:points.count", "==", points],
+        ["output:geometry:measure:off.min_angle_degrees", ">=", 19.9],
+    ] + _closed_mesh_checks(euler) + extra)
+
+
+def _wrap_case(case_id: str, fixture: dict, parameters: dict, euler: int, points: int, extra: list[list]) -> dict:
+    return _case(case_id, "reconstruction.alpha_wrap", [_points(fixture)], parameters, [
+        ["metrics.algorithm", "==", "CGAL::alpha_wrap_3"],
+        ["metrics.alpha", "==", parameters["alpha"]["value"]],
+        ["metrics.offset", "==", 0.5],
+        ["metrics.point_count", "==", points],
+        ["input:points:measure:points.count", "==", points],
+    ] + _closed_mesh_checks(euler) + extra)
+
+
+FAMILY_7_10 = {
+    "family": "7.10",
+    "scope": "family_7_10_surface_reconstruction_partial",
+    "evidence_path": "docs/master/evidence/family-7.10-capabilities.json",
+    "test_id": "family-7.10-replay-cases",
+    "requirements": {
+        "major.7.10.01": {
+            "operation_ids": ["reconstruction.poisson"],
+            "symbols": ["Poisson_reconstruction_function", "Poisson_mesh_domain_3", "make_mesh_3",
+                        "compute_average_spacing"],
+            "symbol_notes": "Poisson_surface_reconstruction_3: Poisson_reconstruction_function over a "
+                            "Poisson_mesh_domain_3 and a surface-only make_mesh_3 (closed manifold option) on "
+                            "oriented point sets sampled from a radius-10 sphere (1500 points) and a torus "
+                            "(R=10, r=4, 640 points). The mesh size criteria are tied to compute_average_spacing. "
+                            "The independent validator (own PLY/OFF parsers) checks a closed edge- and "
+                            "vertex-manifold consistently outward oriented mesh by exact signed volume, source "
+                            "normals agreeing with the surface, exact GMP point-to-triangle distances from every "
+                            "source point within max_deviation and a certified surface-to-source cover bound. "
+                            "Replay asserts hand-derived Euler characteristics (2 and 0), the analytic radius, "
+                            "torus residual, volume and area within sampling error and the facet angle bound; a "
+                            "finer facet size gives a different, larger mesh. CGAL::poisson_surface_reconstruction_"
+                            "delaunay (the packaged one-call wrapper, a candidate symbol of the ledger) is NOT "
+                            "exposed: in CGAL 6.2.1 it appends manifold_with_boundary() after the caller tag "
+                            "and measurably leaves 24 to 214 boundary edges on these closed fixtures, so its "
+                            "output cannot satisfy the closed-surface validator.",
+            "case_ids": ["reconstruction-poisson-sphere", "reconstruction-poisson-torus",
+                         "reconstruction-poisson-torus-fine"],
+        },
+        "major.7.10.03": {
+            "operation_ids": ["reconstruction.alpha_wrap"],
+            "symbols": ["alpha_wrap_3"],
+            "symbol_notes": "alpha_wrap_3 wraps unoriented point sets (the same sphere and torus samples, "
+                            "320 and 640 points) with typed alpha and offset. The independent validator checks a "
+                            "closed outward oriented 2-manifold, every input point strictly enclosed (exact "
+                            "axis-ray parity), every wrap vertex in the offset band of the input (exact "
+                            "distances), and a certified surface-to-source bound of alpha plus offset. Replay "
+                            "asserts hand-derived Euler characteristics: the sphere wrap is 2; with alpha 2.5 "
+                            "the torus wrap keeps its hole (0) while alpha 15 exceeds the 6 mm hole and fills "
+                            "it (2); wrap vertices lie within offset of the radius-10 sphere and the torus. "
+                            "Only the point-set oracle is replayed; mesh and soup oracles, the 2D wrap, "
+                            "alpha_wrap_3 with a Surface_mesh input and the pause-and-resume API are not exposed.",
+            "case_ids": ["reconstruction-wrap-sphere", "reconstruction-wrap-torus-fine",
+                         "reconstruction-wrap-torus-coarse"],
+        },
+    },
+    "unbound": {
+        "major.7.10.02": "Advancing_front_surface_reconstruction (advancing_front_surface_reconstruction) and "
+                         "Scale_space_reconstruction_3 (Jet_smoother plus Advancing_front_mesher) are implemented "
+                         "with independent validators and covered by tests/master_reconstruction_cases.py, but the "
+                         "ledger family also names Polygonal_surface_reconstruction, which needs a mixed-integer "
+                         "program solver (SCIP or GLPK; neither is part of this build), and "
+                         "Kinetic_surface_reconstruction, which has no operation. The requirement stays unbound "
+                         "until every named family is replayed.",
+    },
+    "cases": [
+        _poisson_case("reconstruction-poisson-sphere", R_SPHERE_DENSE, R_POISSON_SPHERE, 2, 1500, [
+            ["output:geometry:measure:off.min_vertex_radius", ">", 9.7],
+            ["output:geometry:measure:off.max_vertex_radius", "<", 10.4],
+            ["output:geometry:measure:off.signed_volume", "approx", [R_SPHERE_VOLUME, 150.0]],
+            ["output:geometry:measure:off.area", "approx", [R_SPHERE_AREA, 40.0]],
+        ]),
+        _poisson_case("reconstruction-poisson-torus", R_TORUS_NORMALS, R_POISSON_TORUS, 0, 640, [
+            ["output:geometry:measure:off.max_torus_residual(10,4)", "<", 0.6],
+            ["output:geometry:measure:off.signed_volume", "approx", [R_TORUS_VOLUME, 400.0]],
+            ["output:geometry:measure:off.area", "approx", [R_TORUS_AREA, 100.0]],
+            ["metrics.facet_count", "<", 400],
+        ]),
+        _poisson_case("reconstruction-poisson-torus-fine", R_TORUS_NORMALS, R_POISSON_TORUS_FINE, 0, 640, [
+            ["output:geometry:measure:off.max_torus_residual(10,4)", "<", 0.6],
+            ["output:geometry:measure:off.signed_volume", "approx", [R_TORUS_VOLUME, 400.0]],
+            ["metrics.facet_count", ">", 400],
+        ]),
+        _wrap_case("reconstruction-wrap-sphere", R_SPHERE_XYZ, R_WRAP_SPHERE, 2, 320, [
+            ["output:geometry:measure:off.min_vertex_radius", ">", 9.49],
+            ["output:geometry:measure:off.max_vertex_radius", "<", 10.51],
+            ["output:geometry:measure:off.signed_volume", ">", 4000.0],
+            ["output:geometry:measure:off.signed_volume", "<", 4.0 / 3.0 * math.pi * 10.5 ** 3],
+        ]),
+        _wrap_case("reconstruction-wrap-torus-fine", R_TORUS_XYZ, R_WRAP_TORUS_FINE, 0, 640, [
+            ["output:geometry:measure:off.max_torus_residual(10,4)", "<=", 0.500001],
+            ["output:geometry:measure:off.signed_volume", ">", R_TORUS_VOLUME * 0.9],
+        ]),
+        _wrap_case("reconstruction-wrap-torus-coarse", R_TORUS_XYZ, R_WRAP_TORUS_COARSE, 2, 640, [
+            ["output:geometry:measure:off.max_torus_residual(10,4)", "<=", 0.500001],
+            ["output:geometry:measure:off.signed_volume", ">", R_TORUS_VOLUME],
+        ]),
+    ],
+    "pairs": [
+        {"kind": "different_outputs", "cases": ["reconstruction-poisson-torus", "reconstruction-poisson-torus-fine"]},
+        {"kind": "different_outputs", "cases": ["reconstruction-wrap-torus-fine", "reconstruction-wrap-torus-coarse"]},
+    ],
+    "negative_controls": [
+        {"id": "reconstruction-poisson-zero-normal-rejected", "operation": "reconstruction.poisson",
+         "inputs": [_points(R_SPHERE_ZERO, "PointSet3Normals", "ply")], "parameters": R_POISSON_SPHERE,
+         "expect_error_class": "PRECONDITION_FAILED", "expect_error_code": "ZERO_NORMAL"},
+        {"id": "reconstruction-poisson-unoriented-points-rejected", "operation": "reconstruction.poisson",
+         "inputs": [_points(R_SPHERE_XYZ)], "parameters": R_POISSON_SPHERE,
+         "expect_error_class": "TYPE_ERROR", "expect_error_code": "INPUT_TYPE_MISMATCH"},
+        {"id": "reconstruction-wrap-too-fine-rejected", "operation": "reconstruction.alpha_wrap",
+         "inputs": [_points(R_TORUS_XYZ)], "parameters": {"alpha": _mm(0.1), "offset": _mm(0.5)},
+         "expect_error_class": "RESOURCE_LIMIT", "expect_error_code": "MESH_SIZE_LIMIT_EXCEEDED"},
+        {"id": "reconstruction-poisson-flipped-orientation-rejected", "operation": "reconstruction.validate.poisson",
+         "inputs": [_mesh(R_TAMPERED["poisson_flipped"]), _points(R_SPHERE_DENSE, "PointSet3Normals", "ply")],
+         "parameters": {"max_deviation": _mm(3.0)}, "expect_error_class": "VALIDATION_FAILED",
+         "expect_error_code": "ORIENTATION_NOT_OUTWARD"},
+        {"id": "reconstruction-poisson-shrunk-surface-rejected", "operation": "reconstruction.validate.poisson",
+         "inputs": [_mesh(R_TAMPERED["poisson_shrunk"]), _points(R_SPHERE_DENSE, "PointSet3Normals", "ply")],
+         "parameters": {"max_deviation": _mm(3.0)}, "expect_error_class": "VALIDATION_FAILED",
+         "expect_error_code": "SOURCE_TO_SURFACE_BOUND_EXCEEDED"},
+        {"id": "reconstruction-wrap-shrunk-not-enclosing-rejected", "operation": "reconstruction.validate.alpha_wrap",
+         "inputs": [_mesh(R_TAMPERED["wrap_shrunk"]), _points(R_SPHERE_XYZ)], "parameters": R_WRAP_SPHERE,
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "SOURCE_NOT_ENCLOSED"},
+        {"id": "reconstruction-wrap-grown-surface-rejected", "operation": "reconstruction.validate.alpha_wrap",
+         "inputs": [_mesh(R_TAMPERED["wrap_grown"]), _points(R_SPHERE_XYZ)], "parameters": R_WRAP_SPHERE,
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "SURFACE_TO_SOURCE_BOUND_EXCEEDED"},
+        {"id": "reconstruction-wrap-vertex-inside-band-rejected", "operation": "reconstruction.validate.alpha_wrap",
+         "inputs": [_mesh(R_TAMPERED["wrap_vertex_inside"]), _points(R_SPHERE_XYZ)], "parameters": R_WRAP_SPHERE,
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "VERTEX_INSIDE_OFFSET_BAND"},
+    ],
+}
+
 GENERIC_FAMILIES: dict[str, dict] = {
     family["family"]: family for family in (FAMILY_7_1, FAMILY_7_2, FAMILY_7_3, FAMILY_7_4, FAMILY_7_5, FAMILY_7_6,
-                   FAMILY_7_9, FAMILY_7_11, FAMILY_7_12, FAMILY_7_13, FAMILY_7_14, FAMILY_7_15)
+                   FAMILY_7_9, FAMILY_7_11, FAMILY_7_12, FAMILY_7_13, FAMILY_7_14, FAMILY_7_15, FAMILY_7_10)
 }
 
 

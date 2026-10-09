@@ -106,7 +106,7 @@ class ProductionOperationSearchTests(unittest.TestCase):
 
     def test_unsupported_specific_and_multioperation_goals_signal_fail_closed(self):
         cases = [
-            ("Poisson reconstruction from oriented samples", ["PointSet3Normals"]),
+            ("Poisson reconstruction from unoriented samples", ["PointSet3"]),
             ("straight skeleton of this polygon", ["Polygon2"]),
             ("alpha wrap this triangle surface", ["TriangleSurfaceMesh"]),
             ("remove outliers and then estimate normals", ["PointSet3"]),

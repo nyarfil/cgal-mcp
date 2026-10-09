@@ -23067,6 +23067,1473 @@
         "cgal_version": "6.2.1",
         "review_status": "self_verified_not_independently_reviewed"
       }
+    },
+    {
+      "id": "reconstruction.poisson",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "transform",
+      "summary": "Poisson surface reconstruction from an oriented point set: Poisson_reconstruction_function, Poisson_mesh_domain_3 and a surface-only Mesh_3 extraction (closed manifold option) into a triangle surface mesh.",
+      "package": "Poisson_surface_reconstruction_3",
+      "major_requirements": [
+        "major.7.10.01"
+      ],
+      "aliases": [
+        "Poisson reconstruction",
+        "surface from oriented points",
+        "implicit surface reconstruction",
+        "\u30dd\u30a2\u30bd\u30f3\u66f2\u9762\u518d\u69cb\u6210",
+        "\u70b9\u7fa4\u304b\u3089\u66f2\u9762\u518d\u69cb\u6210"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Poisson_surface_reconstruction_3"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Poisson_reconstruction_function"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Poisson_mesh_domain_3"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::make_mesh_3"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::compute_average_spacing"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Poisson_reconstruction_function.h"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Poisson_mesh_domain_3.h"
+        },
+        {
+          "kind": "manual",
+          "identifier": "Poisson_surface_reconstruction_3/index.html"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Poisson_surface_reconstruction_3",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Poisson_reconstruction_function.h",
+            "sha256": "6a0ac0c065f67fabe30561733eacddf5bcf4293224750ebda133aa7a44be165e"
+          },
+          {
+            "path": "include/CGAL/Poisson_mesh_domain_3.h",
+            "sha256": "eeb41bbc371b52d349eec1ed1d3ce044f6222d136d99e7094164f890462ebe5f"
+          },
+          {
+            "path": "include/CGAL/license/gpl_package_list.txt",
+            "sha256": "efb290ee3ef3d8b7675896bc037f1c9359f583543ca9e38bcb425fe34a8995db"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "points",
+            "types": [
+              "PointSet3Normals"
+            ],
+            "formats": [
+              "ply"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "geometry",
+            "type": "TriangleSurfaceMesh",
+            "format": "off",
+            "unit_from": "points"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "sm_angle",
+          "sm_radius",
+          "sm_distance",
+          "max_deviation"
+        ],
+        "properties": {
+          "sm_angle": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 30,
+            "description": "Mesh_3 facet angle bound in degrees (surface sampling quality)."
+          },
+          "sm_radius": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 100,
+            "description": "Mesh_3 facet size as a multiple of the average point spacing."
+          },
+          "sm_distance": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 10,
+            "description": "Mesh_3 facet distance as a multiple of the average point spacing."
+          },
+          "max_deviation": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Certified two-sided bound the independent validator enforces between source points and the reconstructed surface."
+          }
+        }
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 16777216
+        }
+      ],
+      "validation": {
+        "required": true,
+        "validators": [
+          "reconstruction.validate.poisson"
+        ],
+        "bindings": {
+          "reconstruction.validate.poisson": {
+            "artifacts": {
+              "candidate": {
+                "output": "geometry"
+              },
+              "source": {
+                "input": "points"
+              }
+            },
+            "parameters": {
+              "max_deviation": {
+                "parameter": "max_deviation"
+              }
+            }
+          }
+        }
+      },
+      "output_contract": {
+        "geometry_mutation": false,
+        "source_sha256_preserved": true,
+        "candidate_published_only_after_validation": true,
+        "producer_diagnostics_are_non_authoritative": true
+      },
+      "dependencies": [
+        "Poisson_surface_reconstruction_3",
+        "Mesh_3",
+        "Point_set_processing_3",
+        "Eigen3"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "source_header": "CGAL/Poisson_reconstruction_function.h",
+          "symbols": [
+            "Poisson_reconstruction_function",
+            "Poisson_mesh_domain_3",
+            "make_mesh_3",
+            "compute_average_spacing"
+          ],
+          "input_format": "ascii_ply_with_x_y_z_nx_ny_nz",
+          "output_format": "off",
+          "required_parameters": [
+            "sm_angle",
+            "sm_radius",
+            "sm_distance",
+            "max_deviation"
+          ],
+          "validators": [
+            "reconstruction.validate.poisson"
+          ],
+          "validator_parameter_bindings": {
+            "reconstruction.validate.poisson": {
+              "max_deviation": "max_deviation"
+            }
+          }
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "CGAL filtered-exact predicates (EPICK); validators re-derive combinatorics from raw OFF/XYZ/PLY and use exact GMP rational arithmetic for orientation, distances, signed volume and enclosure parity",
+        "exact_constructions": "unsupported_fail_closed",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_reconstruction_cases.py"
+        ],
+        "worker_manifest_operation": "reconstruction.poisson",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "reconstruction.advancing_front",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "transform",
+      "summary": "Interpolating surface reconstruction of an unoriented point set with the advancing front algorithm (advancing_front_surface_reconstruction); every output vertex is an input point.",
+      "package": "Advancing_front_surface_reconstruction",
+      "major_requirements": [
+        "major.7.10.02"
+      ],
+      "aliases": [
+        "advancing front reconstruction",
+        "interpolating surface reconstruction",
+        "Delaunay based reconstruction",
+        "\u30a2\u30c9\u30d0\u30f3\u30b7\u30f3\u30b0\u30d5\u30ed\u30f3\u30c8\u518d\u69cb\u6210"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Advancing_front_surface_reconstruction"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::advancing_front_surface_reconstruction"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Advancing_front_surface_reconstruction.h"
+        },
+        {
+          "kind": "manual",
+          "identifier": "Advancing_front_surface_reconstruction/index.html"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Advancing_front_surface_reconstruction",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Advancing_front_surface_reconstruction.h",
+            "sha256": "9fe5b0255d21dc3a4b17bce551e0bbd9ee4cb29ff810df9945c3e615e4f3fa84"
+          },
+          {
+            "path": "include/CGAL/license/gpl_package_list.txt",
+            "sha256": "efb290ee3ef3d8b7675896bc037f1c9359f583543ca9e38bcb425fe34a8995db"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "points",
+            "types": [
+              "PointSet3"
+            ],
+            "formats": [
+              "xyz"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "geometry",
+            "type": "TriangleSurfaceMesh",
+            "format": "off",
+            "unit_from": "points"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "radius_ratio_bound",
+          "beta",
+          "max_deviation"
+        ],
+        "properties": {
+          "radius_ratio_bound": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 100,
+            "description": "Advancing front radius ratio bound (dimensionless)."
+          },
+          "beta": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 1.5707963267948966,
+            "description": "Advancing front angle bound beta in radians."
+          },
+          "max_deviation": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Certified two-sided bound the independent validator enforces between source points and the reconstructed surface."
+          }
+        }
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 16777216
+        }
+      ],
+      "validation": {
+        "required": true,
+        "validators": [
+          "reconstruction.validate.interpolating"
+        ],
+        "bindings": {
+          "reconstruction.validate.interpolating": {
+            "artifacts": {
+              "candidate": {
+                "output": "geometry"
+              },
+              "source": {
+                "input": "points"
+              }
+            },
+            "parameters": {
+              "max_deviation": {
+                "parameter": "max_deviation"
+              }
+            }
+          }
+        }
+      },
+      "output_contract": {
+        "geometry_mutation": false,
+        "source_sha256_preserved": true,
+        "candidate_published_only_after_validation": true,
+        "producer_diagnostics_are_non_authoritative": true
+      },
+      "dependencies": [
+        "Advancing_front_surface_reconstruction",
+        "Triangulation_3"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "source_header": "CGAL/Advancing_front_surface_reconstruction.h",
+          "symbols": [
+            "advancing_front_surface_reconstruction"
+          ],
+          "input_format": "xyz",
+          "output_format": "off",
+          "required_parameters": [
+            "radius_ratio_bound",
+            "beta",
+            "max_deviation"
+          ],
+          "validators": [
+            "reconstruction.validate.interpolating"
+          ],
+          "validator_parameter_bindings": {
+            "reconstruction.validate.interpolating": {
+              "max_deviation": "max_deviation"
+            }
+          }
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "CGAL filtered-exact predicates (EPICK); validators re-derive combinatorics from raw OFF/XYZ/PLY and use exact GMP rational arithmetic for orientation, distances, signed volume and enclosure parity",
+        "exact_constructions": "unsupported_fail_closed",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_reconstruction_cases.py"
+        ],
+        "worker_manifest_operation": "reconstruction.advancing_front",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "reconstruction.scale_space",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "transform",
+      "summary": "Scale-space surface reconstruction of a noisy point set: Jet_smoother increase_scale, then the Advancing_front_mesher; facets are published at the original input positions.",
+      "package": "Scale_space_reconstruction_3",
+      "major_requirements": [
+        "major.7.10.02"
+      ],
+      "aliases": [
+        "scale space reconstruction",
+        "noisy point cloud surface reconstruction",
+        "jet smoother",
+        "\u30b9\u30b1\u30fc\u30eb\u7a7a\u9593\u518d\u69cb\u6210"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Scale_space_reconstruction_3"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Scale_space_surface_reconstruction_3"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Scale_space_reconstruction_3::Jet_smoother"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Scale_space_reconstruction_3::Advancing_front_mesher"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Scale_space_surface_reconstruction_3.h"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Scale_space_reconstruction_3/Jet_smoother.h"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Scale_space_reconstruction_3/Advancing_front_mesher.h"
+        },
+        {
+          "kind": "manual",
+          "identifier": "Scale_space_reconstruction_3/index.html"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Scale_space_reconstruction_3",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Scale_space_surface_reconstruction_3.h",
+            "sha256": "14483326029277a66fa7dddbd58c1bede35ff115d5c1d46004a07e48da0abafc"
+          },
+          {
+            "path": "include/CGAL/Scale_space_reconstruction_3/Jet_smoother.h",
+            "sha256": "76ccec4bf69ecb44e8955f5fc945d4b66fa47ef7a45624db01ab7c5326369b4e"
+          },
+          {
+            "path": "include/CGAL/Scale_space_reconstruction_3/Advancing_front_mesher.h",
+            "sha256": "ce2ebb000c0a9db6f2b02bdc134823f71bc4e325a6ad0837c037c8de753b90a7"
+          },
+          {
+            "path": "include/CGAL/license/gpl_package_list.txt",
+            "sha256": "efb290ee3ef3d8b7675896bc037f1c9359f583543ca9e38bcb425fe34a8995db"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "points",
+            "types": [
+              "PointSet3"
+            ],
+            "formats": [
+              "xyz"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "geometry",
+            "type": "TriangleSurfaceMesh",
+            "format": "off",
+            "unit_from": "points"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "iterations",
+          "neighbors",
+          "maximum_facet_length",
+          "radius_ratio_bound",
+          "beta",
+          "max_deviation"
+        ],
+        "properties": {
+          "iterations": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10,
+            "description": "Scale-space smoothing iterations."
+          },
+          "neighbors": {
+            "type": "integer",
+            "minimum": 6,
+            "maximum": 64,
+            "description": "Jet_smoother neighbourhood size (must be below the point count)."
+          },
+          "maximum_facet_length": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Advancing_front_mesher maximum facet length."
+          },
+          "radius_ratio_bound": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 100,
+            "description": "Advancing front radius ratio bound (dimensionless)."
+          },
+          "beta": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 1.5707963267948966,
+            "description": "Advancing front angle bound beta in radians."
+          },
+          "max_deviation": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Certified two-sided bound the independent validator enforces between source points and the reconstructed surface."
+          }
+        }
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 16777216
+        }
+      ],
+      "validation": {
+        "required": true,
+        "validators": [
+          "reconstruction.validate.interpolating"
+        ],
+        "bindings": {
+          "reconstruction.validate.interpolating": {
+            "artifacts": {
+              "candidate": {
+                "output": "geometry"
+              },
+              "source": {
+                "input": "points"
+              }
+            },
+            "parameters": {
+              "max_deviation": {
+                "parameter": "max_deviation"
+              }
+            }
+          }
+        }
+      },
+      "output_contract": {
+        "geometry_mutation": false,
+        "source_sha256_preserved": true,
+        "candidate_published_only_after_validation": true,
+        "producer_diagnostics_are_non_authoritative": true
+      },
+      "dependencies": [
+        "Scale_space_reconstruction_3",
+        "Advancing_front_surface_reconstruction",
+        "Eigen3"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "source_header": "CGAL/Scale_space_surface_reconstruction_3.h",
+          "symbols": [
+            "Scale_space_surface_reconstruction_3",
+            "Scale_space_reconstruction_3::Jet_smoother",
+            "Scale_space_reconstruction_3::Advancing_front_mesher"
+          ],
+          "input_format": "xyz",
+          "output_format": "off",
+          "required_parameters": [
+            "iterations",
+            "neighbors",
+            "maximum_facet_length",
+            "radius_ratio_bound",
+            "beta",
+            "max_deviation"
+          ],
+          "validators": [
+            "reconstruction.validate.interpolating"
+          ],
+          "validator_parameter_bindings": {
+            "reconstruction.validate.interpolating": {
+              "max_deviation": "max_deviation"
+            }
+          }
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "CGAL filtered-exact predicates (EPICK); validators re-derive combinatorics from raw OFF/XYZ/PLY and use exact GMP rational arithmetic for orientation, distances, signed volume and enclosure parity",
+        "exact_constructions": "unsupported_fail_closed",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_reconstruction_cases.py"
+        ],
+        "worker_manifest_operation": "reconstruction.scale_space",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "reconstruction.alpha_wrap",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "transform",
+      "summary": "3D alpha wrapping of a point set (alpha_wrap_3): a watertight, orientable, 2-manifold triangle surface that strictly encloses the input at the given offset.",
+      "package": "Alpha_wrap_3",
+      "major_requirements": [
+        "major.7.10.03"
+      ],
+      "aliases": [
+        "alpha wrap",
+        "alpha wrapping",
+        "watertight wrap",
+        "shrink wrap",
+        "\u30a2\u30eb\u30d5\u30a1\u30e9\u30c3\u30d4\u30f3\u30b0",
+        "\u5305\u307f\u8fbc\u307f\u518d\u69cb\u6210"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Alpha_wrap_3"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::alpha_wrap_3"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/alpha_wrap_3.h"
+        },
+        {
+          "kind": "manual",
+          "identifier": "Alpha_wrap_3/index.html"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Alpha_wrap_3",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/alpha_wrap_3.h",
+            "sha256": "648e654a09f08997693ee023ded631777415c766656c52d59bd4ff28c098e40c"
+          },
+          {
+            "path": "include/CGAL/license/gpl_package_list.txt",
+            "sha256": "efb290ee3ef3d8b7675896bc037f1c9359f583543ca9e38bcb425fe34a8995db"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "points",
+            "types": [
+              "PointSet3"
+            ],
+            "formats": [
+              "xyz"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "geometry",
+            "type": "TriangleSurfaceMesh",
+            "format": "off",
+            "unit_from": "points"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "alpha",
+          "offset"
+        ],
+        "properties": {
+          "alpha": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Alpha wrapping alpha: the ball radius; larger values give a coarser, more closed wrap."
+          },
+          "offset": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Alpha wrapping offset distance between the wrap surface and the input."
+          }
+        }
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 16777216
+        }
+      ],
+      "validation": {
+        "required": true,
+        "validators": [
+          "reconstruction.validate.alpha_wrap"
+        ],
+        "bindings": {
+          "reconstruction.validate.alpha_wrap": {
+            "artifacts": {
+              "candidate": {
+                "output": "geometry"
+              },
+              "source": {
+                "input": "points"
+              }
+            },
+            "parameters": {
+              "alpha": {
+                "parameter": "alpha"
+              },
+              "offset": {
+                "parameter": "offset"
+              }
+            }
+          }
+        }
+      },
+      "output_contract": {
+        "geometry_mutation": false,
+        "source_sha256_preserved": true,
+        "candidate_published_only_after_validation": true,
+        "producer_diagnostics_are_non_authoritative": true
+      },
+      "dependencies": [
+        "Alpha_wrap_3",
+        "Triangulation_3"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "source_header": "CGAL/alpha_wrap_3.h",
+          "symbols": [
+            "alpha_wrap_3"
+          ],
+          "input_format": "xyz",
+          "output_format": "off",
+          "required_parameters": [
+            "alpha",
+            "offset"
+          ],
+          "maximum_extent_to_alpha": 200.0,
+          "validators": [
+            "reconstruction.validate.alpha_wrap"
+          ],
+          "validator_parameter_bindings": {
+            "reconstruction.validate.alpha_wrap": {
+              "alpha": "alpha",
+              "offset": "offset"
+            }
+          }
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "CGAL filtered-exact predicates (EPICK); validators re-derive combinatorics from raw OFF/XYZ/PLY and use exact GMP rational arithmetic for orientation, distances, signed volume and enclosure parity",
+        "exact_constructions": "unsupported_fail_closed",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_reconstruction_cases.py"
+        ],
+        "worker_manifest_operation": "reconstruction.alpha_wrap",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "reconstruction.validate.poisson",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "validator",
+      "summary": "Independently checks a Poisson reconstruction: closed edge/vertex-manifold consistently outward oriented mesh (exact signed volume), source normals agreeing with the surface, exact rational source-to-surface distances within the bound and a certified surface-to-source cover bound.",
+      "package": "Poisson_surface_reconstruction_3",
+      "aliases": [
+        "validate poisson reconstruction"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Poisson_surface_reconstruction_3"
+        },
+        {
+          "kind": "operation_reference",
+          "identifier": "reconstruction.poisson"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Poisson_surface_reconstruction_3",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Poisson_reconstruction_function.h",
+            "sha256": "6a0ac0c065f67fabe30561733eacddf5bcf4293224750ebda133aa7a44be165e"
+          },
+          {
+            "path": "include/CGAL/license/gpl_package_list.txt",
+            "sha256": "efb290ee3ef3d8b7675896bc037f1c9359f583543ca9e38bcb425fe34a8995db"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          },
+          {
+            "slot": "source",
+            "types": [
+              "PointSet3Normals"
+            ],
+            "formats": [
+              "ply"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "max_deviation"
+        ],
+        "properties": {
+          "max_deviation": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Certified two-sided bound the independent validator enforces between source points and the reconstructed surface."
+          }
+        }
+      },
+      "preconditions": [],
+      "validation": {
+        "required": false,
+        "validators": [],
+        "bindings": {},
+        "terminal_validator": true,
+        "validates": "reconstruction.poisson",
+        "validates_all": [
+          "reconstruction.poisson"
+        ],
+        "required_report_checks": {
+          "status": "pass",
+          "passed": true,
+          "validator": "reconstruction.validate.poisson",
+          "checks.source_points_valid": true,
+          "checks.triangle_mesh": true,
+          "checks.nondegenerate_triangles_exact": true,
+          "checks.no_unreferenced_vertices": true,
+          "checks.edge_manifold": true,
+          "checks.vertex_manifold": true,
+          "checks.consistent_orientation": true,
+          "checks.closed_surface": true,
+          "checks.outward_orientation_exact_volume": true,
+          "checks.source_normals_agree_with_orientation": true,
+          "checks.source_to_surface_within_bound_exact": true,
+          "checks.surface_to_source_within_bound_certified": true
+        }
+      },
+      "output_contract": {
+        "schema": "ValidationReport/v1",
+        "required_true_checks": [
+          "source_points_valid",
+          "triangle_mesh",
+          "nondegenerate_triangles_exact",
+          "no_unreferenced_vertices",
+          "edge_manifold",
+          "vertex_manifold",
+          "consistent_orientation",
+          "closed_surface",
+          "outward_orientation_exact_volume",
+          "source_normals_agree_with_orientation",
+          "source_to_surface_within_bound_exact",
+          "surface_to_source_within_bound_certified"
+        ],
+        "status": "pass",
+        "failure_or_indeterminate_publish": false,
+        "independence": "own OFF/PLY parsers and combinatorics; exact GMP rational point-triangle distances, signed volume and certified triangle cover bounds; CGAL Poisson_surface_reconstruction_3, Mesh_3 and Point_set_processing_3 are not used"
+      },
+      "dependencies": [
+        "Poisson_surface_reconstruction_3"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "bound_parameters": [
+            "max_deviation"
+          ],
+          "checks": [
+            "source_points_valid",
+            "triangle_mesh",
+            "nondegenerate_triangles_exact",
+            "no_unreferenced_vertices",
+            "edge_manifold",
+            "vertex_manifold",
+            "consistent_orientation",
+            "closed_surface",
+            "outward_orientation_exact_volume",
+            "source_normals_agree_with_orientation",
+            "source_to_surface_within_bound_exact",
+            "surface_to_source_within_bound_certified"
+          ],
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "CGAL filtered-exact predicates (EPICK); validators re-derive combinatorics from raw OFF/XYZ/PLY and use exact GMP rational arithmetic for orientation, distances, signed volume and enclosure parity",
+        "exact_constructions": "unsupported_fail_closed",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_reconstruction_cases.py"
+        ],
+        "worker_manifest_operation": "reconstruction.validate.poisson",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "reconstruction.validate.interpolating",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "validator",
+      "summary": "Independently checks an interpolating reconstruction: edge/vertex-manifold consistently oriented mesh whose every vertex is exactly a source point, unused source points within the bound of the surface in exact rationals, and a certified surface-to-source cover bound.",
+      "package": "Advancing_front_surface_reconstruction",
+      "aliases": [
+        "validate interpolating reconstruction"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Advancing_front_surface_reconstruction"
+        },
+        {
+          "kind": "operation_reference",
+          "identifier": "reconstruction.advancing_front"
+        },
+        {
+          "kind": "operation_reference",
+          "identifier": "reconstruction.scale_space"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Advancing_front_surface_reconstruction",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Advancing_front_surface_reconstruction.h",
+            "sha256": "9fe5b0255d21dc3a4b17bce551e0bbd9ee4cb29ff810df9945c3e615e4f3fa84"
+          },
+          {
+            "path": "include/CGAL/license/gpl_package_list.txt",
+            "sha256": "efb290ee3ef3d8b7675896bc037f1c9359f583543ca9e38bcb425fe34a8995db"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          },
+          {
+            "slot": "source",
+            "types": [
+              "PointSet3"
+            ],
+            "formats": [
+              "xyz"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "max_deviation"
+        ],
+        "properties": {
+          "max_deviation": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Certified two-sided bound the independent validator enforces between source points and the reconstructed surface."
+          }
+        }
+      },
+      "preconditions": [],
+      "validation": {
+        "required": false,
+        "validators": [],
+        "bindings": {},
+        "terminal_validator": true,
+        "validates": "reconstruction.advancing_front",
+        "validates_all": [
+          "reconstruction.advancing_front",
+          "reconstruction.scale_space"
+        ],
+        "required_report_checks": {
+          "status": "pass",
+          "passed": true,
+          "validator": "reconstruction.validate.interpolating",
+          "checks.source_points_valid": true,
+          "checks.triangle_mesh": true,
+          "checks.nondegenerate_triangles_exact": true,
+          "checks.no_unreferenced_vertices": true,
+          "checks.edge_manifold": true,
+          "checks.vertex_manifold": true,
+          "checks.consistent_orientation": true,
+          "checks.vertices_are_source_points": true,
+          "checks.source_to_surface_within_bound_exact": true,
+          "checks.surface_to_source_within_bound_certified": true
+        }
+      },
+      "output_contract": {
+        "schema": "ValidationReport/v1",
+        "required_true_checks": [
+          "source_points_valid",
+          "triangle_mesh",
+          "nondegenerate_triangles_exact",
+          "no_unreferenced_vertices",
+          "edge_manifold",
+          "vertex_manifold",
+          "consistent_orientation",
+          "vertices_are_source_points",
+          "source_to_surface_within_bound_exact",
+          "surface_to_source_within_bound_certified"
+        ],
+        "status": "pass",
+        "failure_or_indeterminate_publish": false,
+        "independence": "own OFF/XYZ parsers and combinatorics; exact vertex identity with the source, exact GMP rational point-triangle distances and certified triangle cover bounds; CGAL Advancing_front_surface_reconstruction and Scale_space_reconstruction_3 are not used"
+      },
+      "dependencies": [
+        "Advancing_front_surface_reconstruction",
+        "Scale_space_reconstruction_3"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "bound_parameters": [
+            "max_deviation"
+          ],
+          "checks": [
+            "source_points_valid",
+            "triangle_mesh",
+            "nondegenerate_triangles_exact",
+            "no_unreferenced_vertices",
+            "edge_manifold",
+            "vertex_manifold",
+            "consistent_orientation",
+            "vertices_are_source_points",
+            "source_to_surface_within_bound_exact",
+            "surface_to_source_within_bound_certified"
+          ],
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "CGAL filtered-exact predicates (EPICK); validators re-derive combinatorics from raw OFF/XYZ/PLY and use exact GMP rational arithmetic for orientation, distances, signed volume and enclosure parity",
+        "exact_constructions": "unsupported_fail_closed",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_reconstruction_cases.py"
+        ],
+        "worker_manifest_operation": "reconstruction.validate.interpolating",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "reconstruction.validate.alpha_wrap",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "validator",
+      "summary": "Independently checks an alpha wrap: closed manifold outward-oriented mesh (exact signed volume), every input point strictly enclosed (exact axis-ray parity), wrap vertices in the offset band of the input and a certified surface-to-source bound of alpha plus offset.",
+      "package": "Alpha_wrap_3",
+      "aliases": [
+        "validate alpha wrap reconstruction"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Alpha_wrap_3"
+        },
+        {
+          "kind": "operation_reference",
+          "identifier": "reconstruction.alpha_wrap"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Alpha_wrap_3",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/alpha_wrap_3.h",
+            "sha256": "648e654a09f08997693ee023ded631777415c766656c52d59bd4ff28c098e40c"
+          },
+          {
+            "path": "include/CGAL/license/gpl_package_list.txt",
+            "sha256": "efb290ee3ef3d8b7675896bc037f1c9359f583543ca9e38bcb425fe34a8995db"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          },
+          {
+            "slot": "source",
+            "types": [
+              "PointSet3"
+            ],
+            "formats": [
+              "xyz"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "alpha",
+          "offset"
+        ],
+        "properties": {
+          "alpha": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Alpha wrapping alpha: the ball radius; larger values give a coarser, more closed wrap."
+          },
+          "offset": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Alpha wrapping offset distance between the wrap surface and the input."
+          }
+        }
+      },
+      "preconditions": [],
+      "validation": {
+        "required": false,
+        "validators": [],
+        "bindings": {},
+        "terminal_validator": true,
+        "validates": "reconstruction.alpha_wrap",
+        "validates_all": [
+          "reconstruction.alpha_wrap"
+        ],
+        "required_report_checks": {
+          "status": "pass",
+          "passed": true,
+          "validator": "reconstruction.validate.alpha_wrap",
+          "checks.source_points_valid": true,
+          "checks.triangle_mesh": true,
+          "checks.nondegenerate_triangles_exact": true,
+          "checks.no_unreferenced_vertices": true,
+          "checks.edge_manifold": true,
+          "checks.vertex_manifold": true,
+          "checks.consistent_orientation": true,
+          "checks.closed_surface": true,
+          "checks.outward_orientation_exact_volume": true,
+          "checks.source_strictly_enclosed_exact": true,
+          "checks.surface_within_alpha_plus_offset_certified": true,
+          "checks.vertices_in_offset_band_exact": true
+        }
+      },
+      "output_contract": {
+        "schema": "ValidationReport/v1",
+        "required_true_checks": [
+          "source_points_valid",
+          "triangle_mesh",
+          "nondegenerate_triangles_exact",
+          "no_unreferenced_vertices",
+          "edge_manifold",
+          "vertex_manifold",
+          "consistent_orientation",
+          "closed_surface",
+          "outward_orientation_exact_volume",
+          "source_strictly_enclosed_exact",
+          "surface_within_alpha_plus_offset_certified",
+          "vertices_in_offset_band_exact"
+        ],
+        "status": "pass",
+        "failure_or_indeterminate_publish": false,
+        "independence": "own OFF/XYZ parsers and combinatorics; exact GMP rational signed volume, axis-ray parity, vertex-to-source distances and certified triangle cover bounds; CGAL Alpha_wrap_3 is not used"
+      },
+      "dependencies": [
+        "Alpha_wrap_3"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "bound_parameters": [
+            "alpha",
+            "offset"
+          ],
+          "checks": [
+            "source_points_valid",
+            "triangle_mesh",
+            "nondegenerate_triangles_exact",
+            "no_unreferenced_vertices",
+            "edge_manifold",
+            "vertex_manifold",
+            "consistent_orientation",
+            "closed_surface",
+            "outward_orientation_exact_volume",
+            "source_strictly_enclosed_exact",
+            "surface_within_alpha_plus_offset_certified",
+            "vertices_in_offset_band_exact"
+          ],
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "CGAL filtered-exact predicates (EPICK); validators re-derive combinatorics from raw OFF/XYZ/PLY and use exact GMP rational arithmetic for orientation, distances, signed volume and enclosure parity",
+        "exact_constructions": "unsupported_fail_closed",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_reconstruction_cases.py"
+        ],
+        "worker_manifest_operation": "reconstruction.validate.alpha_wrap",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
     }
   ]
 }
