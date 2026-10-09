@@ -921,6 +921,245 @@ FAMILY_7_4 = {
     "negative_controls": [],
 }
 
+# --- Batch 3 (7.5.01, 7.11.03, 7.11.05, 7.12.02, 7.12.03, 7.12.07) ---------------------------------
+B3_FIXTURES = {
+    "arr_boxes.json": "4ceaaa7786a26f05486c3bee9bd97bbf25c991895c6612f22aa6190505aff9cf",
+    "arr_cross.json": "e59422011904d8245ed2a40c3f4298b715e4cd475b5c8e478ca9771f1bae12d7",
+    "arr_zero_length.json": "11764ac634ad2147568ade5d65e25c3b7244e16768c1da8244e18a583a8de81f",
+    "points_collinear.json": "b5b85285e14b084dedd29f808458516f3966e1534391d0fe362b54418e3a261d",
+    "points_duplicate.json": "264ea9c9dc5e248f0b01452a8db698080089c954393ffe4dc4462b2517dc7e6a",
+    "polygon_c.json": "d7d90a73371c60a39ec29dc11aa3e1a3e6183395671582596675e61ed785e5ae",
+    "polygon_u.json": "7f2d2024c3f835edd181cac2b5fa1543540bf8e8e25fb665d2e9938de7eb8583",
+    "reg2_points.json": "ce5194b8022b68aee33f6d234db2c74237296505d609d587df103f6e014dc006",
+    "reg3_points.xyz": "75353c9b58e92145e7d8085532c9b54a1931317569ec8944a3abe08508ae89ed",
+    "square_three.json": "143fd300fcb208bd8b4eb0945faabb63247ce11083f4f341b98c3efa24476785",
+    "square_two.json": "49a6184ffd1841d9edf22ee626a806a37b7d1272341bc958471873b813b2e5d2",
+    "square_unit.json": "fce05e7de4410ba2a05128b7a83dba333db7caa23803fd0abfed555bc7ce8b50",
+    "tampered_arrangement_edge_dropped_report.json": "5e0090d2cfba6f663372e335deb472beab08d3b7bda28ae7f46bfc2a94e34c66",
+    "tampered_arrangement_face_dropped_report.json": "e3faafefb1cb12075a703ac716f5c661d17af1a2685021edaac1ba9cb01b498a",
+    "tampered_minkowski_hole_dropped_report.json": "f27890a4f94998cab474a28a42f04ae2d0a0016d2a4975b5226e4ff18871aad5",
+    "tampered_minkowski_vertex_moved_report.json": "6d1912484de152e1a617ca21e816da384e82f6dc7b58ba57dae3fd52bcc97825",
+    "tampered_overlay_label_report.json": "5989b8becabbb9d326db0d2dc379922650f216b4818f363a392420dbcbbd046e",
+    "tampered_regular2_hidden_report.json": "bfaa7e3fe01102caa8f287efe1fc61b6aaf232cae37180e6e1e48e9c6dc35488",
+    "tampered_regular2_nonregular_report.json": "ed18b90810ffcaef347cb30978ebfe43e0350397fa7fae4d467761dd93254e9a",
+    "tampered_regular3_hidden_report.json": "1815f9e028b1d285c0d5b64e1a929351dc38317f68c0982174439f3a38fff6d4",
+    "tampered_regular3_missing_cell_report.json": "2bc90fdc2ccbb82e364a9fb44b608b5547dd583172a25cff0cdd99b74df97629",
+    "tampered_voronoi_edge_report.json": "b200d38aa6f2b2857c84f3114741533b130adfcaf69e2477b6a27902f25e4fc2",
+    "tampered_voronoi_vertex_report.json": "5a0f853561d34e73acad75e39b88f42060d973500135cf5ed7d28263a9df66ed",
+    "tampered_zone_vertex_dropped_report.json": "24b0ef8343e497d9c12868c00986f241b3abc6d207ff64114989f86ceccca4d7",
+    "triangle_a.json": "caa42122c3456b7b903003cb0df40c95c39dc34d90b8a719ef4e1cfef5d91e8b",
+    "voronoi_scatter.json": "e796215dced20c143fbb39e930768783140122769ac94de476e4c3bc235ff569",
+    "voronoi_square_center.json": "e0b44a0f257656629ffac21700fe3e79ff2452cf474689e71ea5ce37f1de3d62",
+    "zone_diagonal.json": "0558b76fe198eebc05869b7d0e693e70db95dbb4a7814f5c95e463beed6fdcc2",
+    "zone_horizontal.json": "150679b0a495a99e2ee4c94eedc13bdcfe0f994ae61d211ac3f67127988a9764",
+    "zone_outside.json": "3e780cbdfbffa7facf49b7bd88c3e9ec03fafb4de00feb5dea5f3da002eae3e9",
+    "zone_two_segments.json": "c7402a9b10dd5b3554c0fd1168e730f9fc201fd104a70982ed3dcd1d313d46b5",
+}
+
+
+def _b3fx(name: str) -> dict:
+    return {"fixture": f"batch3/{name}", "sha256": B3_FIXTURES[name]}
+
+
+def _b3json(name: str, type_: str) -> dict:
+    return {**_b3fx(name), "type": type_, "format": "json", "unit": "mm"}
+
+
+def _b3report(name: str) -> dict:
+    return {**_b3fx(name), "type": "GeometryQueryReport", "format": "json", "unit": "none"}
+
+
+B3_REG2 = _b3json("reg2_points.json", "PointSet2")
+B3_REG3 = {**_b3fx("reg3_points.xyz"), "type": "PointSet3", "format": "xyz", "unit": "mm"}
+B3_VORONOI_SQUARE = _b3json("voronoi_square_center.json", "PointSet2")
+B3_VORONOI_SCATTER = _b3json("voronoi_scatter.json", "PointSet2")
+B3_ARR_CROSS = _b3json("arr_cross.json", "SegmentGraph2")
+B3_ARR_BOXES = _b3json("arr_boxes.json", "SegmentGraph2")
+B3_ZONE_HORIZONTAL = _b3json("zone_horizontal.json", "SegmentGraph2")
+B3_ZONE_DIAGONAL = _b3json("zone_diagonal.json", "SegmentGraph2")
+B3_ZONE_OUTSIDE = _b3json("zone_outside.json", "SegmentGraph2")
+B3_SQUARE_TWO = _b3json("square_two.json", "Polygon2")
+B3_SQUARE_UNIT = _b3json("square_unit.json", "Polygon2")
+B3_TRIANGLE = _b3json("triangle_a.json", "Polygon2")
+B3_POLYGON_C = _b3json("polygon_c.json", "Polygon2")
+B3_POLYGON_U = _b3json("polygon_u.json", "Polygon2")
+B3_SQUARE_THREE = _b3json("square_three.json", "Polygon2")
+B3_W2_ZERO = [0, 0, 0, 0, 0, 0]
+B3_W2_HIDDEN = [0, 0, 0, 0, -10, 0]
+B3_W2_HEAVY = [0, 0, 0, 0, 50, 0]
+B3_W3_ZERO = [0] * 10
+B3_W3_HIDDEN = [0] * 8 + [-10, 0]
+B3_MINKOWSKI_ALGORITHMS = {
+    "polygon.minkowski_sum": "CGAL::minkowski_sum_2",
+    "polygon.minkowski_sum_reduced_convolution": "CGAL::minkowski_sum_by_reduced_convolution_2",
+}
+
+B3_CASES_7_11 = [
+    _case("regular2-zero-weights", "triangulation.regular_2", [B3_REG2], {"weights": B3_W2_ZERO}, [
+        ["metrics.algorithm", "==", "CGAL::Regular_triangulation_2"],
+        ["metrics.input_point_count", "==", 6],
+        ["metrics.hidden_count", "==", 0],
+        ["output:analysis:json:report_kind", "==", "regular_triangulation_2"],
+        ["output:analysis:json:results.hidden", "==", []],
+        ["output:analysis:json:results.weight_unit", "==", "mm^2"],
+    ]),
+    _case("regular2-hidden-point", "triangulation.regular_2", [B3_REG2], {"weights": B3_W2_HIDDEN}, [
+        ["metrics.hidden_count", "==", 1],
+        ["output:analysis:json:results.hidden", "==", [4]],
+    ]),
+    _case("regular3-zero-weights", "triangulation.regular_3", [B3_REG3], {"weights": B3_W3_ZERO}, [
+        ["metrics.algorithm", "==", "CGAL::Regular_triangulation_3"],
+        ["metrics.input_point_count", "==", 10],
+        ["metrics.hidden_count", "==", 0],
+        ["output:analysis:json:report_kind", "==", "regular_triangulation_3"],
+    ]),
+    _case("regular3-hidden-point", "triangulation.regular_3", [B3_REG3], {"weights": B3_W3_HIDDEN}, [
+        ["metrics.hidden_count", "==", 1],
+        ["output:analysis:json:results.weight_unit", "==", "mm^2"],
+    ]),
+    _case("voronoi-square-centre", "triangulation.voronoi_dual", [B3_VORONOI_SQUARE], {}, [
+        ["metrics.algorithm", "==", "CGAL::Voronoi_diagram_2"],
+        ["metrics.site_count", "==", 5],
+        ["output:analysis:json:report_kind", "==", "voronoi_diagram_2"],
+    ]),
+    _case("voronoi-scatter", "triangulation.voronoi_dual", [B3_VORONOI_SCATTER], {}, [
+        ["metrics.site_count", "==", 6],
+    ]),
+]
+B3_NEG_7_11 = [
+    {"id": "regular2-weight-count-rejected", "operation": "triangulation.regular_2", "inputs": [B3_REG2],
+     "parameters": {"weights": [0, 0, 0]}, "expect_error_class": "INVALID_REQUEST"},
+    {"id": "regular2-duplicate-point-rejected", "operation": "triangulation.regular_2",
+     "inputs": [_b3json("points_duplicate.json", "PointSet2")], "parameters": {"weights": [0, 0, 0, 0]},
+     "expect_error_class": "PRECONDITION_FAILED"},
+    {"id": "regular2-collinear-rejected", "operation": "triangulation.regular_2",
+     "inputs": [_b3json("points_collinear.json", "PointSet2")], "parameters": {"weights": [0, 0, 0, 0]},
+     "expect_error_class": "PRECONDITION_FAILED"},
+    {"id": "voronoi-collinear-rejected", "operation": "triangulation.voronoi_dual",
+     "inputs": [_b3json("points_collinear.json", "PointSet2")], "parameters": {},
+     "expect_error_class": "PRECONDITION_FAILED"},
+    {"id": "regular2-tampered-hidden-rejected", "operation": "triangulation.validate.regular_2",
+     "inputs": [_b3report("tampered_regular2_hidden_report.json"), B3_REG2], "parameters": {"weights": B3_W2_ZERO},
+     "expect_error_class": "VALIDATION_FAILED"},
+    {"id": "regular2-tampered-nonregular-rejected", "operation": "triangulation.validate.regular_2",
+     "inputs": [_b3report("tampered_regular2_nonregular_report.json"), B3_REG2],
+     "parameters": {"weights": B3_W2_HEAVY}, "expect_error_class": "VALIDATION_FAILED"},
+    {"id": "regular3-tampered-hidden-rejected", "operation": "triangulation.validate.regular_3",
+     "inputs": [_b3report("tampered_regular3_hidden_report.json"), B3_REG3], "parameters": {"weights": B3_W3_ZERO},
+     "expect_error_class": "VALIDATION_FAILED"},
+    {"id": "regular3-tampered-missing-cell-rejected", "operation": "triangulation.validate.regular_3",
+     "inputs": [_b3report("tampered_regular3_missing_cell_report.json"), B3_REG3],
+     "parameters": {"weights": B3_W3_ZERO}, "expect_error_class": "VALIDATION_FAILED"},
+    {"id": "voronoi-tampered-edge-rejected", "operation": "triangulation.validate.voronoi_dual",
+     "inputs": [_b3report("tampered_voronoi_edge_report.json"), B3_VORONOI_SCATTER], "parameters": {},
+     "expect_error_class": "VALIDATION_FAILED"},
+    {"id": "voronoi-tampered-vertex-rejected", "operation": "triangulation.validate.voronoi_dual",
+     "inputs": [_b3report("tampered_voronoi_vertex_report.json"), B3_VORONOI_SCATTER], "parameters": {},
+     "expect_error_class": "VALIDATION_FAILED"},
+]
+
+
+def _minkowski_cases(operation: str, tag: str) -> list[dict]:
+    algorithm = B3_MINKOWSKI_ALGORITHMS[operation]
+    return [
+        _case(f"{tag}-square-triangle", operation, [B3_SQUARE_TWO, B3_TRIANGLE], {}, [
+            ["metrics.algorithm", "==", algorithm],
+            ["metrics.hole_count", "==", 0],
+            ["output:analysis:json:report_kind", "==", "minkowski_sum_2"],
+        ]),
+        _case(f"{tag}-closed-gap-hole", operation, [B3_POLYGON_U, B3_SQUARE_THREE], {}, [
+            ["metrics.hole_count", "==", 1],
+        ]),
+        _case(f"{tag}-nonconvex-no-hole", operation, [B3_POLYGON_C, B3_SQUARE_TWO], {}, [
+            ["metrics.hole_count", "==", 0],
+        ]),
+    ]
+
+
+B3_CASES_7_12 = [
+    *_minkowski_cases("polygon.minkowski_sum", "minkowski"),
+    *_minkowski_cases("polygon.minkowski_sum_reduced_convolution", "minkowski-reduced"),
+    _case("arrangement-concurrent-segments", "arrangement.build", [B3_ARR_CROSS], {}, [
+        ["metrics.algorithm", "==", "CGAL::Arrangement_2"],
+        ["output:analysis:json:report_kind", "==", "arrangement_2"],
+    ]),
+    _case("arrangement-nested-components", "arrangement.build", [B3_ARR_BOXES], {}, [
+        ["metrics.face_count", "==", 3],
+    ]),
+    _case("zone-through-vertices", "arrangement.zone", [B3_ARR_CROSS, B3_ZONE_DIAGONAL], {}, [
+        ["metrics.algorithm", "==", "CGAL::zone"],
+        ["output:analysis:json:report_kind", "==", "arrangement_zone"],
+    ]),
+    _case("zone-crossing-edges", "arrangement.zone", [B3_ARR_BOXES, B3_ZONE_HORIZONTAL], {}, [
+        ["metrics.vertex_count", "==", 0],
+    ]),
+    _case("zone-diagonal-vertices-faces", "arrangement.zone", [B3_ARR_BOXES, B3_ZONE_DIAGONAL], {}, [
+        ["metrics.edge_count", "==", 0],
+    ]),
+    _case("zone-outside", "arrangement.zone", [B3_ARR_BOXES, B3_ZONE_OUTSIDE], {}, [
+        ["metrics.face_count", "==", 1],
+    ]),
+    _case("overlay-square-corner", "arrangement.overlay", [B3_SQUARE_TWO, B3_SQUARE_UNIT], {}, [
+        ["metrics.algorithm", "==", "CGAL::overlay"],
+        ["output:analysis:json:report_kind", "==", "arrangement_overlay"],
+    ]),
+    _case("overlay-inscribed-triangle", "arrangement.overlay", [B3_SQUARE_TWO, B3_TRIANGLE], {}, [
+        ["metrics.face_count", "==", 4],
+    ]),
+    _case("overlay-nonconvex", "arrangement.overlay", [B3_POLYGON_U, B3_SQUARE_THREE], {}, [
+        ["metrics.face_count", ">", 2],
+    ]),
+]
+B3_NEG_7_12 = [
+    {"id": "minkowski-bowtie-operand-rejected", "operation": "polygon.minkowski_sum",
+     "inputs": [B_BOWTIE, B3_SQUARE_TWO], "parameters": {}, "expect_error_class": "PRECONDITION_FAILED"},
+    {"id": "minkowski-tampered-hole-dropped-rejected", "operation": "polygon.validate.minkowski_sum",
+     "inputs": [_b3report("tampered_minkowski_hole_dropped_report.json"), B3_POLYGON_U, B3_SQUARE_THREE],
+     "parameters": {}, "expect_error_class": "VALIDATION_FAILED"},
+    {"id": "minkowski-tampered-vertex-moved-rejected", "operation": "polygon.validate.minkowski_sum",
+     "inputs": [_b3report("tampered_minkowski_vertex_moved_report.json"), B3_SQUARE_TWO, B3_TRIANGLE],
+     "parameters": {}, "expect_error_class": "VALIDATION_FAILED"},
+    {"id": "arrangement-zero-length-segment-rejected", "operation": "arrangement.build",
+     "inputs": [_b3json("arr_zero_length.json", "SegmentGraph2")], "parameters": {},
+     "expect_error_class": "PRECONDITION_FAILED"},
+    {"id": "zone-two-segment-query-rejected", "operation": "arrangement.zone",
+     "inputs": [B3_ARR_BOXES, _b3json("zone_two_segments.json", "SegmentGraph2")], "parameters": {},
+     "expect_error_class": "PRECONDITION_FAILED"},
+    {"id": "overlay-bowtie-operand-rejected", "operation": "arrangement.overlay",
+     "inputs": [B_BOWTIE, B3_SQUARE_TWO], "parameters": {}, "expect_error_class": "PRECONDITION_FAILED"},
+    {"id": "arrangement-tampered-face-dropped-rejected", "operation": "arrangement.validate.build",
+     "inputs": [_b3report("tampered_arrangement_face_dropped_report.json"), B3_ARR_BOXES], "parameters": {},
+     "expect_error_class": "VALIDATION_FAILED"},
+    {"id": "arrangement-tampered-edge-dropped-rejected", "operation": "arrangement.validate.build",
+     "inputs": [_b3report("tampered_arrangement_edge_dropped_report.json"), B3_ARR_BOXES], "parameters": {},
+     "expect_error_class": "VALIDATION_FAILED"},
+    {"id": "zone-tampered-vertex-dropped-rejected", "operation": "arrangement.validate.zone",
+     "inputs": [_b3report("tampered_zone_vertex_dropped_report.json"), B3_ARR_BOXES, B3_ZONE_DIAGONAL],
+     "parameters": {}, "expect_error_class": "VALIDATION_FAILED"},
+    {"id": "overlay-tampered-label-rejected", "operation": "arrangement.validate.overlay",
+     "inputs": [_b3report("tampered_overlay_label_report.json"), B3_SQUARE_TWO, B3_SQUARE_UNIT], "parameters": {},
+     "expect_error_class": "VALIDATION_FAILED"},
+]
+
+B3_CASES_7_5 = [
+    _case("autorefine-intersecting-tetrahedra", "mesh.autorefine", [_mesh(INTERSECTING)], {}, [
+        ["metrics.algorithm", "==", "CGAL::Polygon_mesh_processing::autorefine"],
+        ["metrics.input_face_count", "==", 8],
+        ["metrics.output_face_count", ">", 8],
+        ["output:geometry:measure:off.area", "approx", [3.0 + SQRT3, 1e-9]],
+    ]),
+    _case("autorefine-cube-unchanged", "mesh.autorefine", [Q_CUBE], {}, [
+        ["metrics.input_face_count", "==", 12],
+        ["metrics.output_face_count", "==", 12],
+        ["output:geometry:measure:off.area", "approx", [24.0, 1e-9]],
+    ]),
+]
+B3_NEG_7_5 = [
+    {"id": "autorefine-unrefined-candidate-rejected", "operation": "mesh.validate.autorefine",
+     "inputs": [_mesh(INTERSECTING), _mesh(INTERSECTING)], "parameters": {},
+     "expect_error_class": "VALIDATION_FAILED"},
+]
+
 FAMILY_7_5 = {
     "family": "7.5",
     "scope": "family_7_5_boolean_operations_partial",
@@ -941,6 +1180,17 @@ FAMILY_7_5 = {
                             "rejected.",
             "case_ids": ["intersection-overlap", "intersection-contained", "clip-cube-volume-x1",
                          "clip-cube-surface-x1", "clip-cube-volume-diagonal", "clip-open-square-surface"],
+        },
+        "major.7.5.01": {
+            "operation_ids": ["mesh.corefine", "mesh.autorefine"],
+            "symbols": ["corefine", "autorefine"],
+            "symbol_notes": "PMP::corefine refines one tetrahedron along its intersection with a second one "
+                            "(corefine-tetrahedra, validated by the exact tiling validator of mesh.corefine) and "
+                            "PMP::autorefine refines a self-intersecting pair of tetrahedra (a closed surface whose "
+                            "faces are split along the intersection polylines, tiling validated exactly and "
+                            "re-checked for remaining self-intersection) and leaves a cube without "
+                            "self-intersection unchanged. An unrefined self-intersecting candidate is rejected.",
+            "case_ids": ["corefine-tetrahedra", "autorefine-intersecting-tetrahedra", "autorefine-cube-unchanged"],
         },
         "major.7.5.04": {
             "operation_ids": ["mesh.split.plane", "mesh.corefine"],
@@ -977,12 +1227,10 @@ FAMILY_7_5 = {
             "case_ids": ["slice-cube-mid", "slice-cube-diagonal", "slice-open-square"],
         },
     },
-    "unbound": {
-        "major.7.5.01": "corefine and autorefine are used only inside the three Boolean "
-                        "operations; standalone corefinement output is not an operation.",
-    },
+    "unbound": {},
     "cases": [
         *B2_CASES_7_5,
+        *B3_CASES_7_5,
         _case("union-overlap", "mesh.boolean.union",
               [_mesh(CUBE_A), _mesh(CUBE_OVERLAP)], {"operation": "union"}, [
             ["metrics.exact_volume", "==", "12"], ["metrics.result_status", "==", "volume"],
@@ -1319,6 +1567,27 @@ FAMILY_7_11 = {
                             "checked by the exact independent validator, not a hand-derived value.",
             "case_ids": ["dt2-grid", "dt3-cube", "dt3-cloud"],
         },
+        "major.7.11.03": {
+            "operation_ids": ["triangulation.regular_2", "triangulation.regular_3"],
+            "symbols": ["Regular_triangulation_2", "Regular_triangulation_3"],
+            "symbol_notes": "Weighted points (squared-length weights with the artifact unit squared) in the plane "
+                            "and in space: with zero weights the triangulation is Delaunay; a strongly negative "
+                            "weight makes a point hidden. The independent validators lift the points exactly "
+                            "(GMP rationals), require every reported cell to be regular (no other lifted point "
+                            "below its lifted plane or sphere), the boundary to be the lower convex hull and "
+                            "every hidden point to be dominated. Duplicate or collinear points are rejected.",
+            "case_ids": ["regular2-zero-weights", "regular2-hidden-point", "regular3-zero-weights",
+                         "regular3-hidden-point"],
+        },
+        "major.7.11.05": {
+            "operation_ids": ["triangulation.voronoi_dual"],
+            "symbols": ["Voronoi_diagram_2"],
+            "symbol_notes": "CGAL::Voronoi_diagram_2 over a Delaunay triangulation: five sites (square plus centre) "
+                            "and six scattered sites. The independent validator recomputes all circumcentres and "
+                            "dual edges (finite and unbounded) in exact rationals and rejects altered vertices or "
+                            "edges; fewer than three non-collinear sites are rejected.",
+            "case_ids": ["voronoi-square-centre", "voronoi-scatter"],
+        },
         "major.7.11.02": {
             "operation_ids": ["triangulation.constrained_2"],
             "symbols": ["Constrained_Delaunay_triangulation_2", "Constrained_triangulation_2"],
@@ -1329,11 +1598,10 @@ FAMILY_7_11 = {
         },
     },
     "unbound": {
-        "major.7.11.03": "No Regular_triangulation_2/3 operation.",
         "major.7.11.04": "No periodic or on-sphere triangulation operation.",
-        "major.7.11.05": "No Voronoi_diagram_2 / Voronoi dual operation.",
     },
     "cases": [
+        *B3_CASES_7_11,
         _case("dt2-grid", "triangulation.delaunay_2", [_json_input(PLANAR, "PointSet2")], {}, [
             ["metrics.algorithm", "==", "CGAL::Delaunay_triangulation_2"],
             ["metrics.input_point_count", "==", 21],
@@ -1367,6 +1635,7 @@ FAMILY_7_11 = {
     ],
     "pairs": [],
     "negative_controls": [
+        *B3_NEG_7_11,
         {"id": "dt2-collinear-rejected", "operation": "triangulation.delaunay_2",
          "inputs": [_json_input(COLLINEAR, "PointSet2")], "parameters": {},
          "expect_error_class": "PRECONDITION_FAILED"},
@@ -1397,6 +1666,36 @@ FAMILY_7_12 = {
                          "polygon-difference-hole", "polygon-join-disjoint", "polygon-intersection-disjoint",
                          "polygon-intersection-clockwise-hexagon"],
         },
+        "major.7.12.02": {
+            "operation_ids": ["arrangement.build", "arrangement.zone"],
+            "symbols": ["Arrangement_2", "insert", "zone"],
+            "symbol_notes": "CGAL::Arrangement_2 is built by insert() from segment graphs (concurrent segments; nested "
+                            "squares with free segments) and CGAL::zone reports the vertices, edges and faces a "
+                            "query segment passes through. The independent validators split segments, trace faces "
+                            "and nest cycles in GMP rationals and reject altered vertex, edge or face sets.",
+            "case_ids": ["arrangement-concurrent-segments", "arrangement-nested-components",
+                         "zone-through-vertices", "zone-crossing-edges", "zone-diagonal-vertices-faces",
+                         "zone-outside"],
+        },
+        "major.7.12.03": {
+            "operation_ids": ["arrangement.overlay"],
+            "symbols": ["overlay", "Overlay_traits"],
+            "symbol_notes": "CGAL::overlay with Arr_face_overlay_traits (face labels summed) overlays the arrangements "
+                            "of two simple polygons; the independent validator rebuilds the overlay arrangement "
+                            "and face labels exactly and rejects a changed label.",
+            "case_ids": ["overlay-square-corner", "overlay-inscribed-triangle", "overlay-nonconvex"],
+        },
+        "major.7.12.07": {
+            "operation_ids": ["polygon.minkowski_sum", "polygon.minkowski_sum_reduced_convolution"],
+            "symbols": ["minkowski_sum_2", "minkowski_sum_by_reduced_convolution_2"],
+            "symbol_notes": "Both CGAL Minkowski sum algorithms are replayed on a square plus triangle, on a U-shaped "
+                            "ring plus a square that closes its opening (one hole) and on a C shape (no hole). The "
+                            "independent validator checks the boundary against the exact convolution pieces and "
+                            "rejects a dropped hole or moved vertex.",
+            "case_ids": ["minkowski-square-triangle", "minkowski-closed-gap-hole", "minkowski-nonconvex-no-hole",
+                         "minkowski-reduced-square-triangle", "minkowski-reduced-closed-gap-hole",
+                         "minkowski-reduced-nonconvex-no-hole"],
+        },
         "major.7.12.01": {
             "operation_ids": ["polygon.analysis.properties", "polygon.query.containment"],
             "symbols": ["Polygon_2", "Polygon_with_holes_2", "is_simple"],
@@ -1410,14 +1709,12 @@ FAMILY_7_12 = {
         },
     },
     "unbound": {
-        "major.7.12.02": "No Arrangement_2 operation.",
-        "major.7.12.03": "No overlay operation.",
         "major.7.12.05": "No straight-skeleton operation.",
         "major.7.12.06": "No skeleton-offset operation.",
-        "major.7.12.07": "No Minkowski sum operation.",
     },
     "cases": [
         *B2_CASES_7_12,
+        *B3_CASES_7_12,
         _case("polygon-with-hole", "polygon.analysis.properties",
               [_json_input(POLYGON_HOLE, "PolygonWithHoles2")], {}, [
             ["output:analysis:json:results.valid_polygon_with_holes", "==", True],
