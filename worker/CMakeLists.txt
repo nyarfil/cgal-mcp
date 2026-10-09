@@ -108,8 +108,6 @@ add_executable(cgal-master-worker
   master/batch6/b6_polyfit_ops.cpp
   master/batch6/b6_polyfit_validators.cpp
   master/batch6/b6_kinetic_ops.cpp
-  master/batch6/b6_poisson_delaunay.cpp
-  master/batch6/b6_poisson_delaunay_validators.cpp
 )
 # smooth_shape needs CGAL's Eigen sparse solver; enable it only where used.
 set_source_files_properties(master/wave_d/remesh_operations.cpp PROPERTIES
@@ -156,8 +154,6 @@ endif()
 string(REPLACE ";" "," CGAL_MASTER_OPTIONAL_DEPENDENCIES_TEXT "${CGAL_MASTER_OPTIONAL_DEPENDENCIES}")
 set_property(SOURCE master/operation.cpp APPEND PROPERTY COMPILE_DEFINITIONS
   "CGAL_MASTER_OPTIONAL_DEPENDENCIES=\"${CGAL_MASTER_OPTIONAL_DEPENDENCIES_TEXT}\"")
-set_source_files_properties(master/batch6/b6_poisson_delaunay.cpp PROPERTIES
-  COMPILE_DEFINITIONS CGAL_EIGEN3_ENABLED)
 # Loop/Catmull-Clark subdivision and Polygon_mesh_slicer need no Eigen; query_operations is plain CGAL.
 target_compile_features(cgal-master-worker PRIVATE cxx_std_17)
 target_compile_definitions(cgal-master-worker PRIVATE

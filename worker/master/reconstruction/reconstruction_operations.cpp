@@ -2,8 +2,10 @@
 // 6.2.1 entry point and publishes a TriangleSurfaceMesh candidate only after its
 // independent validator (reconstruction_validators.cpp) passes.
 //   reconstruction.poisson         Poisson_surface_reconstruction_3
-// (CGAL::poisson_surface_reconstruction_delaunay is deliberately not exposed: in 6.2.1 it appends
-// manifold_with_boundary() after the caller's tag, so it leaves holes on closed inputs.)
+//   reconstruction.poisson_delaunay poisson_surface_reconstruction_delaunay (7.10.01 convenience function; in
+//                                  6.2.1 it always appends manifold_with_boundary(), so the result may have
+//                                  boundary edges even on closed inputs: its validator accepts a manifold
+//                                  WITH boundary and never claims a closed surface)
 //   reconstruction.advancing_front Advancing_front_surface_reconstruction
 //   reconstruction.scale_space     Scale_space_reconstruction_3
 //   reconstruction.alpha_wrap      Alpha_wrap_3
@@ -29,10 +31,12 @@
 #include <CGAL/Poisson_reconstruction_function.h>
 #include <CGAL/facets_in_complex_3_to_triangle_mesh.h>
 #include <CGAL/make_mesh_3.h>
+#include <CGAL/poisson_surface_reconstruction.h>
 #include <CGAL/property_map.h>
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include <map>
 #include <set>
 #include <utility>
@@ -161,9 +165,15 @@ struct PoissonInput {
 
 using PointNormal = std::pair<Point, Vector>;
 
-PoissonInput prepare_poisson(const Request& request, const std::string& operation) {
+PoissonInput prepare_poisson(const Request& request, const std::string& operation, bool delaunay = false) {
   require_inputs(request, 1, operation);
-  require_parameter_names(request, {"sm_angle", "sm_radius", "sm_distance", "max_deviation"});
+  if (delaunay) {
+    require_parameter_names(request, {"sm_angle", "sm_radius", "sm_distance", "max_deviation", "max_circumradius", "min_coverage"});
+    length_parameter(request, "max_circumradius", request.inputs[0].unit);  // enforced by the mandatory validator
+    number_parameter(request, "min_coverage", 0.0, 1.0);                    // enforced by the mandatory validator
+  } else {
+    require_parameter_names(request, {"sm_angle", "sm_radius", "sm_distance", "max_deviation"});
+  }
   const auto& source = request.inputs[0];
   PoissonInput input;
   input.cloud = read_points_with_normals(source);
@@ -191,12 +201,89 @@ PoissonInput prepare_poisson(const Request& request, const std::string& operatio
   return input;
 }
 
+// An open Poisson surface may consist of several components (stray patches next to the main sheet), each
+// consistently oriented but with its own sign. Every component is turned to agree with the oriented source
+// normals: up to kVoteFaces evenly strided facets per component vote with the sign of the dot product of
+// their normal and the normal of the source point nearest to their centroid. Returns the number of
+// components reversed. The independent validator re-checks the result against every source normal.
+constexpr std::size_t kVoteFaces = 256;
+
+std::size_t orient_components_by_normals(Mesh& mesh, const PointCloud& cloud) {
+  std::vector<std::size_t> parent(mesh.number_of_vertices());
+  for (std::size_t i = 0; i < parent.size(); ++i) parent[i] = i;
+  const auto find = [&](std::size_t x) {
+    while (parent[x] != x) x = parent[x] = parent[parent[x]];
+    return x;
+  };
+  for (const auto face : mesh.faces()) {
+    std::size_t first = 0;
+    bool have = false;
+    for (const auto v : CGAL::vertices_around_face(mesh.halfedge(face), mesh)) {
+      const auto index = static_cast<std::size_t>(v);
+      if (!have) {
+        first = index;
+        have = true;
+      } else {
+        parent[find(index)] = find(first);
+      }
+    }
+  }
+  std::map<std::size_t, std::vector<Mesh::Face_index>> components;
+  for (const auto face : mesh.faces()) {
+    components[find(static_cast<std::size_t>(mesh.target(mesh.halfedge(face))))].push_back(face);
+  }
+  std::size_t reversed = 0;
+  for (const auto& entry : components) {
+    const auto& faces = entry.second;
+    const std::size_t stride = std::max<std::size_t>(1, faces.size() / kVoteFaces);
+    long long vote = 0;
+    for (std::size_t k = 0; k < faces.size(); k += stride) {
+      std::array<Point, 3> p;
+      int count = 0;
+      for (const auto v : CGAL::vertices_around_face(mesh.halfedge(faces[k]), mesh)) {
+        if (count < 3) p[count] = mesh.point(v);
+        ++count;
+      }
+      const Vector n = CGAL::cross_product(p[1] - p[0], p[2] - p[0]);
+      const double cx = CGAL::to_double(p[0].x() + p[1].x() + p[2].x()) / 3;
+      const double cy = CGAL::to_double(p[0].y() + p[1].y() + p[2].y()) / 3;
+      const double cz = CGAL::to_double(p[0].z() + p[1].z() + p[2].z()) / 3;
+      std::size_t best = 0;
+      double best_distance = std::numeric_limits<double>::infinity();
+      for (std::size_t i = 0; i < cloud.points.size(); ++i) {
+        const double dx = cloud.points[i][0] - cx, dy = cloud.points[i][1] - cy, dz = cloud.points[i][2] - cz;
+        const double d = dx * dx + dy * dy + dz * dz;
+        if (d < best_distance) {
+          best_distance = d;
+          best = i;
+        }
+      }
+      const auto& sn = cloud.normals[best];
+      const double dot = CGAL::to_double(n.x()) * sn[0] + CGAL::to_double(n.y()) * sn[1] + CGAL::to_double(n.z()) * sn[2];
+      vote += dot > 0 ? 1 : (dot < 0 ? -1 : 0);
+    }
+    if (vote < 0) {
+      CGAL::Polygon_mesh_processing::reverse_face_orientations(faces, mesh);
+      ++reversed;
+    }
+  }
+  return reversed;
+}
+
 Json poisson_result(const Request& request, Mesh& mesh, const PoissonInput& input,
-                    const std::string& algorithm, const std::string& mesh_3_options) {
+                    const std::string& algorithm, const std::string& mesh_3_options, bool open_surface = false) {
   // The surface is consistently but not always outward oriented; a negative enclosed
-  // volume is reversed as a whole (re-checked exactly by the validator).
-  const bool reversed = signed_volume_times_six(mesh) < 0;
-  if (reversed) CGAL::Polygon_mesh_processing::reverse_face_orientations(mesh);
+  // volume (open surfaces: each component by its source-normal vote) is reversed
+  // (re-checked exactly by the validator).
+  std::size_t reversed_components = 0;
+  bool reversed = false;
+  if (open_surface) {
+    reversed_components = orient_components_by_normals(mesh, input.cloud);
+    reversed = reversed_components > 0;
+  } else {
+    reversed = signed_volume_times_six(mesh) < 0;
+    if (reversed) CGAL::Polygon_mesh_processing::reverse_face_orientations(mesh);
+  }
   require_output_budget(mesh);
   auto metrics = mesh_metrics(mesh, algorithm, input.cloud.points.size());
   metrics["average_spacing"] = input.spacing;
@@ -206,6 +293,7 @@ Json poisson_result(const Request& request, Mesh& mesh, const PoissonInput& inpu
   metrics["sm_radius"] = input.radius;
   metrics["sm_distance"] = input.distance;
   metrics["orientation_reversed"] = reversed;
+  if (open_surface) metrics["reversed_component_count"] = reversed_components;
   metrics["mesh_3_options"] = mesh_3_options;
   auto output = wave_d::write_mesh_candidate(request, mesh, request.inputs[0].unit);
   return success_result(request, Json::array({std::move(output)}), std::move(metrics));
@@ -254,6 +342,22 @@ Json run_poisson(const Request& request) {
   auto result = poisson_result(request, mesh, input, "CGAL::Poisson_reconstruction_function + CGAL::make_mesh_3",
                                "surface_only().manifold()");
   result["metrics"]["mesh_domain"] = "CGAL::Poisson_mesh_domain_3";
+  return result;
+}
+
+Json run_poisson_delaunay(const Request& request) {
+  const auto input = prepare_poisson(request, "reconstruction.poisson_delaunay", true);
+  Mesh mesh;
+  if (!CGAL::poisson_surface_reconstruction_delaunay(input.points.begin(), input.points.end(),
+                                                     CGAL::First_of_pair_property_map<PointNormal>(),
+                                                     CGAL::Second_of_pair_property_map<PointNormal>(), mesh,
+                                                     input.spacing, input.angle, input.radius, input.distance)) {
+    precondition("RECONSTRUCTION_FAILED", "poisson_surface_reconstruction_delaunay returned no surface");
+  }
+  if (mesh.number_of_faces() == 0) precondition("RECONSTRUCTION_FAILED", "The Poisson surface has no facets");
+  auto result = poisson_result(request, mesh, input, "CGAL::poisson_surface_reconstruction_delaunay",
+                               "manifold_with_boundary().surface_only() (forced by the 6.2.1 convenience function)", true);
+  result["metrics"]["boundary_edges_are_disclosed_not_hidden"] = true;
   return result;
 }
 
@@ -368,6 +472,18 @@ std::vector<OperationDefinition> transform_operations() {
        {"validators", {"reconstruction.validate.poisson"}},
        {"validator_parameter_bindings",
         {{"reconstruction.validate.poisson", {{"max_deviation", "max_deviation"}}}}}}));
+  result.push_back(reconstruction_definition(
+      "reconstruction.poisson_delaunay", {"PointSet3Normals"}, "TriangleSurfaceMesh", "transform",
+      run_poisson_delaunay, {"Poisson_surface_reconstruction_3", "Mesh_3", "Point_set_processing_3", "Eigen3"},
+      {{"source_header", "CGAL/poisson_surface_reconstruction.h"},
+       {"symbols", {"poisson_surface_reconstruction_delaunay", "compute_average_spacing"}},
+       {"input_format", "ascii_ply_with_x_y_z_nx_ny_nz"},
+       {"output_format", "off"},
+       {"required_parameters", {"sm_angle", "sm_radius", "sm_distance", "max_deviation", "max_circumradius", "min_coverage"}},
+       {"validators", {"reconstruction.validate.poisson_boundary"}},
+       {"validator_parameter_bindings",
+        {{"reconstruction.validate.poisson_boundary",
+          {{"max_deviation", "max_deviation"}, {"max_circumradius", "max_circumradius"}, {"min_coverage", "min_coverage"}}}}}}));
   result.push_back(reconstruction_definition(
       "reconstruction.advancing_front", {"PointSet3"}, "TriangleSurfaceMesh", "transform", run_advancing_front,
       {"Advancing_front_surface_reconstruction", "Triangulation_3"},

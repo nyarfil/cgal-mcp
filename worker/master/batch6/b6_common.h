@@ -23,8 +23,6 @@ std::vector<OperationDefinition> registration_validators();
 std::vector<OperationDefinition> polyfit_producers();
 std::vector<OperationDefinition> polyfit_validators();
 std::vector<OperationDefinition> kinetic_producers();
-std::vector<OperationDefinition> poisson_delaunay_producers();
-std::vector<OperationDefinition> poisson_delaunay_validators();
 std::vector<OperationDefinition> producer_operations();
 std::vector<OperationDefinition> validator_operations();
 

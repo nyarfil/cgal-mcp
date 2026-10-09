@@ -37,7 +37,6 @@ std::vector<OperationDefinition> producer_operations() {
   append(result, registration_producers());
   append(result, polyfit_producers());
   append(result, kinetic_producers());
-  append(result, poisson_delaunay_producers());
   return result;
 }
 
@@ -45,7 +44,6 @@ std::vector<OperationDefinition> validator_operations() {
   std::vector<OperationDefinition> result;
   append(result, registration_validators());
   append(result, polyfit_validators());
-  append(result, poisson_delaunay_validators());
   return result;
 }
 
