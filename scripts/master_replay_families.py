@@ -1490,7 +1490,6 @@ FAMILY_7_13 = {
     },
     "unbound": {
         "major.7.13.02": "No alpha shape operation (Alpha_shape_2, Alpha_shape_3).",
-        "major.7.13.03": "No alpha wrapping operation (alpha_wrap_3).",
     },
     "cases": [
         *B2_CASES_7_13,
@@ -3863,6 +3862,48 @@ FAMILY_7_8 = {
          "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "FACE_NOT_MATCHED"},
     ],
 }
+
+
+# --- Batch 4 additions --------------------------------------------------------------------
+# 7.13.03 reuses the validated reconstruction.alpha_wrap operation (one operation per CGAL
+# function): its replay cases are declared in the 7.13 family so the requirement carries its own
+# evidence instead of borrowing the 7.10.03 cases.
+FAMILY_7_13["requirements"]["major.7.13.03"] = {
+    "operation_ids": ["reconstruction.alpha_wrap"],
+    "symbols": ["alpha_wrap_3"],
+    "symbol_notes": "CGAL::alpha_wrap_3 wraps the unoriented 320-point sphere sample (radius 10 mm) and the "
+                    "640-point torus sample (R=10, r=4) with typed alpha and offset. The independent "
+                    "validator checks a closed outward-oriented 2-manifold, exact strict enclosure of every "
+                    "input point (exact axis-ray parity), wrap vertices inside the offset band of the input "
+                    "(exact distances) and a certified surface-to-source bound of alpha plus offset. Replay "
+                    "asserts hand-derived topology: the sphere wrap has Euler characteristic 2, the torus "
+                    "wrap with alpha 2.5 keeps its hole (0) and with alpha 15 (above the 6 mm hole) fills "
+                    "it (2). Only the point-set oracle is exposed; mesh and soup oracles are not.",
+    "case_ids": ["alphawrap-sphere", "alphawrap-torus-open", "alphawrap-torus-filled"],
+}
+FAMILY_7_13["cases"].extend([
+    _wrap_case("alphawrap-sphere", R_SPHERE_XYZ, R_WRAP_SPHERE, 2, 320, [
+        ["output:geometry:measure:off.min_vertex_radius", ">", 9.49],
+        ["output:geometry:measure:off.max_vertex_radius", "<", 10.51],
+        ["output:geometry:measure:off.signed_volume", ">", 4000.0],
+        ["output:geometry:measure:off.signed_volume", "<", 4.0 / 3.0 * math.pi * 10.5 ** 3],
+    ]),
+    _wrap_case("alphawrap-torus-open", R_TORUS_XYZ, R_WRAP_TORUS_FINE, 0, 640, [
+        ["output:geometry:measure:off.max_torus_residual(10,4)", "<=", 0.500001],
+    ]),
+    _wrap_case("alphawrap-torus-filled", R_TORUS_XYZ, R_WRAP_TORUS_COARSE, 2, 640, [
+        ["output:geometry:measure:off.max_torus_residual(10,4)", "<=", 0.500001],
+    ]),
+])
+FAMILY_7_13["pairs"].append({"kind": "different_outputs", "cases": ["alphawrap-torus-open", "alphawrap-torus-filled"]})
+FAMILY_7_13["negative_controls"].extend([
+    {"id": "alphawrap-too-fine-rejected", "operation": "reconstruction.alpha_wrap",
+     "inputs": [_points(R_TORUS_XYZ)], "parameters": {"alpha": _mm(0.1), "offset": _mm(0.5)},
+     "expect_error_class": "RESOURCE_LIMIT", "expect_error_code": "MESH_SIZE_LIMIT_EXCEEDED"},
+    {"id": "alphawrap-tampered-shrunk-rejected", "operation": "reconstruction.validate.alpha_wrap",
+     "inputs": [_mesh(R_TAMPERED["wrap_shrunk"]), _points(R_SPHERE_XYZ)], "parameters": R_WRAP_SPHERE,
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "SOURCE_NOT_ENCLOSED"},
+])
 
 GENERIC_FAMILIES: dict[str, dict] = {
     family["family"]: family for family in (FAMILY_7_1, FAMILY_7_2, FAMILY_7_3, FAMILY_7_4, FAMILY_7_5, FAMILY_7_6,
