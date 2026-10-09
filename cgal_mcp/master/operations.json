@@ -34362,6 +34362,539 @@
           "checks.source_geometry_preserved_as_required": true
         }
       }
+    },
+    {
+      "id": "mesh.path.shortest",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "analysis",
+      "summary": "Exact geodesic shortest paths on a triangle surface mesh (Surface_mesh_shortest_path): from up to 8 source points to up to 32 target points (vertices or face barycentric points), reporting the nearest source, the distance and the unfolded path polyline.",
+      "package": "Surface_mesh_shortest_path",
+      "major_requirements": [
+        "major.7.8.04"
+      ],
+      "aliases": [
+        "shortest path on mesh surface",
+        "geodesic distance on surface",
+        "surface shortest path",
+        "geodesic path on triangle mesh",
+        "mesh geodesic",
+        "\u30e1\u30c3\u30b7\u30e5\u4e0a\u306e\u6700\u77ed\u7d4c\u8def",
+        "\u6e2c\u5730\u7dda\u8ddd\u96e2"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Surface_mesh_shortest_path"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Surface_mesh_shortest_path"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Surface_mesh_shortest_path.h"
+        },
+        {
+          "kind": "manual",
+          "identifier": "Surface_mesh_shortest_path/index.html"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Surface_mesh_shortest_path",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Surface_mesh_shortest_path.h",
+            "sha256": "d8519690d830782b7652a91654241d7e4687322fafbc67fa1d4ced9382cb85d7"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "mesh",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "analysis",
+            "type": "GeometryQueryReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "sources",
+          "targets"
+        ],
+        "properties": {
+          "sources": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 8,
+            "items": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "vertex"
+                  ],
+                  "properties": {
+                    "vertex": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "face",
+                    "barycentric"
+                  ],
+                  "properties": {
+                    "face": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "barycentric": {
+                      "type": "array",
+                      "minItems": 3,
+                      "maxItems": 3,
+                      "items": {
+                        "type": "number",
+                        "minimum": 0
+                      },
+                      "description": "Barycentric coordinates in OFF face corner order, summing to 1 within 1e-12."
+                    }
+                  }
+                }
+              ]
+            },
+            "description": "Source points: a mesh vertex or a face with barycentric coordinates."
+          },
+          "targets": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 32,
+            "items": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "vertex"
+                  ],
+                  "properties": {
+                    "vertex": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "face",
+                    "barycentric"
+                  ],
+                  "properties": {
+                    "face": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "barycentric": {
+                      "type": "array",
+                      "minItems": 3,
+                      "maxItems": 3,
+                      "items": {
+                        "type": "number",
+                        "minimum": 0
+                      },
+                      "description": "Barycentric coordinates in OFF face corner order, summing to 1 within 1e-12."
+                    }
+                  }
+                }
+              ]
+            },
+            "description": "Target points, same encoding as sources."
+          }
+        }
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 268435456,
+          "maximum_faces": 64
+        }
+      ],
+      "validation": {
+        "required": true,
+        "validators": [
+          "mesh.validate.shortest_path"
+        ],
+        "bindings": {
+          "mesh.validate.shortest_path": {
+            "artifacts": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "mesh": {
+                "input": "mesh"
+              }
+            },
+            "parameters": {
+              "sources": {
+                "parameter": "sources"
+              },
+              "targets": {
+                "parameter": "targets"
+              }
+            }
+          }
+        }
+      },
+      "output_contract": {
+        "report_schema_version": 1,
+        "geometry_mutation": false,
+        "source_sha256_preserved": true,
+        "exact_rational_strings": false,
+        "producer_diagnostics_are_non_authoritative": true
+      },
+      "dependencies": [
+        "Surface_mesh_shortest_path"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "input_slots": [
+            "mesh"
+          ],
+          "maximum_input_faces": 64,
+          "source_header": "CGAL/Surface_mesh_shortest_path.h",
+          "validator_parameter_bindings": {
+            "mesh.validate.shortest_path": {
+              "sources": "sources",
+              "targets": "targets"
+            }
+          },
+          "validators": [
+            "mesh.validate.shortest_path"
+          ]
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "CGAL inexact constructions: distances are binary64 sums of square roots, validated to a relative tolerance of 1e-9 of the mesh diagonal",
+        "exact_constructions": "none",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_batch4_cases.py"
+        ],
+        "worker_manifest_operation": "mesh.path.shortest",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "mesh.validate.shortest_path",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "validator",
+      "summary": "Recompute geodesic distances by face-sequence unfolding with visibility windows and Dijkstra over mesh vertices; check path points lie on the surface in shared faces, endpoints, path length, optimality and the nearest source.",
+      "package": "Surface_mesh_shortest_path",
+      "aliases": [],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Surface_mesh_shortest_path"
+        },
+        {
+          "kind": "operation_reference",
+          "identifier": "mesh.path.shortest"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Surface_mesh_shortest_path",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Surface_mesh_shortest_path.h",
+            "sha256": "d8519690d830782b7652a91654241d7e4687322fafbc67fa1d4ced9382cb85d7"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "GeometryQueryReport"
+            ],
+            "formats": [
+              "json"
+            ],
+            "unit": "none"
+          },
+          {
+            "slot": "mesh",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "sources",
+          "targets"
+        ],
+        "properties": {
+          "sources": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 8,
+            "items": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "vertex"
+                  ],
+                  "properties": {
+                    "vertex": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "face",
+                    "barycentric"
+                  ],
+                  "properties": {
+                    "face": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "barycentric": {
+                      "type": "array",
+                      "minItems": 3,
+                      "maxItems": 3,
+                      "items": {
+                        "type": "number",
+                        "minimum": 0
+                      },
+                      "description": "Barycentric coordinates in OFF face corner order, summing to 1 within 1e-12."
+                    }
+                  }
+                }
+              ]
+            },
+            "description": "Source points: a mesh vertex or a face with barycentric coordinates."
+          },
+          "targets": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 32,
+            "items": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "vertex"
+                  ],
+                  "properties": {
+                    "vertex": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "face",
+                    "barycentric"
+                  ],
+                  "properties": {
+                    "face": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "barycentric": {
+                      "type": "array",
+                      "minItems": 3,
+                      "maxItems": 3,
+                      "items": {
+                        "type": "number",
+                        "minimum": 0
+                      },
+                      "description": "Barycentric coordinates in OFF face corner order, summing to 1 within 1e-12."
+                    }
+                  }
+                }
+              ]
+            },
+            "description": "Target points, same encoding as sources."
+          }
+        }
+      },
+      "preconditions": [],
+      "validation": {
+        "required": false,
+        "validators": [],
+        "bindings": {},
+        "terminal_validator": true,
+        "validates": "mesh.path.shortest",
+        "validates_all": [
+          "mesh.path.shortest"
+        ],
+        "required_report_checks": {
+          "status": "pass",
+          "passed": true,
+          "validator": "mesh.validate.shortest_path",
+          "checks.parameters_match": true,
+          "checks.source_matches": true,
+          "checks.distance_unit_matches_mesh": true,
+          "checks.path_points_lie_on_surface_in_shared_faces": true,
+          "checks.path_endpoints_match_source_and_target": true,
+          "checks.path_length_equals_reported_distance": true,
+          "checks.distance_equals_recomputed_geodesic": true,
+          "checks.source_is_nearest": true
+        }
+      },
+      "output_contract": {
+        "schema": "ValidationReport/v1",
+        "required_true_checks": [
+          "parameters_match",
+          "source_matches",
+          "distance_unit_matches_mesh",
+          "path_points_lie_on_surface_in_shared_faces",
+          "path_endpoints_match_source_and_target",
+          "path_length_equals_reported_distance",
+          "distance_equals_recomputed_geodesic",
+          "source_is_nearest"
+        ],
+        "status": "pass",
+        "failure_or_indeterminate_publish": false,
+        "independence": "face-sequence unfolding with visibility windows and Dijkstra over mesh vertices in long double; no CGAL header"
+      },
+      "dependencies": [
+        "Surface_mesh_shortest_path"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "long double (no CGAL header)",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "distance_unit_matches_mesh",
+            "path_points_lie_on_surface_in_shared_faces",
+            "path_endpoints_match_source_and_target",
+            "path_length_equals_reported_distance",
+            "distance_equals_recomputed_geodesic",
+            "source_is_nearest"
+          ],
+          "independence": "face-sequence unfolding with visibility windows and Dijkstra over mesh vertices in long double; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "mesh"
+          ],
+          "output_slot": "validation"
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "long double (no CGAL header)",
+        "coordinate_storage": "IEEE-754 binary64 widened to long double",
+        "predicate_policy": "unfolding uses square roots, so comparisons use a declared relative tolerance of 1e-9 of the mesh diagonal; no exactness is claimed",
+        "exact_constructions": "none",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_batch4_cases.py"
+        ],
+        "worker_manifest_operation": "mesh.validate.shortest_path",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
     }
   ]
 }

@@ -31,6 +31,34 @@ def repair_pair(scratch, producer, validator, source, parameters):
     return path, result
 
 
+def shortest_path_cases(operations) -> None:
+    assert "mesh.validate.shortest_path" in operations["mesh.path.shortest"]["info"]["validators"]
+    cube = art(B4 / "cube_geodesic.off", "TriangleSurfaceMesh")
+    lshape = art(B4 / "lshape.off", "TriangleSurfaceMesh")
+    cases = ((cube, {"sources": [{"vertex": 0}], "targets": [{"vertex": 6}, {"vertex": 2}, {"vertex": 1}]},
+              [4.47213595499958, 2.8284271247461903, 2.0]),
+             (lshape, {"sources": [{"vertex": 6}], "targets": [{"vertex": 3}, {"vertex": 2}]},
+              [2.414213562373095, 2.8284271247461903]))
+    with tempfile.TemporaryDirectory() as raw:
+        scratch = pathlib.Path(raw)
+        for mesh, parameters, expected in cases:
+            result = q.invoke(scratch, "mesh.path.shortest", [mesh], parameters)
+            path = q.ok(result)
+            rows = json.loads(path.read_text("utf-8"))["results"]["targets"]
+            for row, value in zip(rows, expected):
+                assert abs(row["distance"] - value) < 1e-9, rows
+            candidate = art(path, "GeometryQueryReport", "none")
+            verdict = json.loads(q.ok(q.invoke(scratch, "mesh.validate.shortest_path", [candidate, mesh],
+                                               parameters)).read_text("utf-8"))
+            assert verdict["passed"] is True and all(verdict["checks"].values()), verdict
+        for name, code in (("tampered_sp_distance_short.json", "DISTANCE_MISMATCH"),
+                           ("tampered_sp_path_off_surface.json", "PATH_LEAVES_SURFACE")):
+            reject(scratch, "mesh.validate.shortest_path", [art(B4 / name, "GeometryQueryReport", "none"), cube],
+                   cases[0][1] | {"targets": [{"vertex": 6}, {"vertex": 2}]}, code)
+        reject(scratch, "mesh.path.shortest", [cube], {"sources": [{"vertex": 99}], "targets": [{"vertex": 1}]},
+               "INVALID_PARAMETER", "INVALID_REQUEST")
+
+
 def main() -> None:
     manifest = json.loads(subprocess.run([q.WORKER, "--manifest"], text=True, encoding="utf-8",
                                          capture_output=True, timeout=30, check=True).stdout)
@@ -55,6 +83,7 @@ def main() -> None:
                "INVALID_DENSITY_CONTROL_FACTOR", "INVALID_INPUT")
         reject(scratch, FAIR[0], [dome], {**parameters, "fairing_continuity": 3},
                "INVALID_FAIRING_CONTINUITY", "INVALID_INPUT")
+    shortest_path_cases(operations)
     print("batch-4 worker cases: PASS")
 
 

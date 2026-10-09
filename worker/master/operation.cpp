@@ -12,6 +12,7 @@
 #include "query_ops/query_common.h"
 #include "batch2/b2_registry.h"
 #include "batch3/b3_common.h"
+#include "batch4/b4_common.h"
 #include "reconstruction/reconstruction_common.h"
 
 #include <CGAL/version.h>
@@ -133,6 +134,12 @@ const std::vector<OperationDefinition>& operation_registry() {
     operations.push_back(std::move(operation));
   }
   for (auto& operation : batch3::validator_operations()) {
+    operations.push_back(std::move(operation));
+  }
+  for (auto& operation : batch4::producer_operations()) {
+    operations.push_back(std::move(operation));
+  }
+  for (auto& operation : batch4::validator_operations()) {
     operations.push_back(std::move(operation));
   }
   return operations;

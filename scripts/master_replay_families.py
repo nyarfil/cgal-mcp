@@ -3809,7 +3809,6 @@ FAMILY_7_8 = {
         "major.7.8.01": "No SDF segmentation operation (Surface_mesh_segmentation).",
         "major.7.8.02": "No approximate convex decomposition operation.",
         "major.7.8.03": "No skeletonization operation (Surface_mesh_skeletonization / mean curvature flow).",
-        "major.7.8.04": "No shortest path operation (Surface_mesh_shortest_path).",
         "major.7.8.05": "No parameterization operation (Surface_mesh_parameterization).",
     },
     "cases": [
@@ -3905,6 +3904,11 @@ FAMILY_7_13["negative_controls"].extend([
 B4_FIXTURES = {
     "dome_hole12.off": "340016d7e2a9e98a9ccbffd27cef66b94613ae74af9bbcbc99e0bbb0200d3cee",
     "tampered_fair_vertex_moved.off": "a27098c20061cb8402ea25b404489769b183914cfc3ecffd5e16712316e90950",
+    "cube_geodesic.off": "8582ba758a2a781e75be1c3c1a36a84704ef1c712e01dbe87117e7c1d37d40bb",
+    "lshape.off": "9f4f86dc1d7c71dbe94c6354ce73cce3ef3b7edc9d35bd962d881483f8aad9ab",
+    "tampered_sp_distance_short.json": "a0c2fed2a7534ceb34a9d5d6d7fead69170746396916a3b23ba28cbe1609febb",
+    "tampered_sp_path_off_surface.json": "2c44ca38184bcc7dd1741ce5a35c5d4901cc775553377347456ece633ec3ee5f",
+    "tampered_sp_wrong_source.json": "9ca1a1dd7c725f9c2c50aad0113a351303848cdceb8272a720094689457a7faf",
 }
 
 
@@ -4011,6 +4015,69 @@ FAMILY_7_4["negative_controls"].extend([
     {"id": "fair-unfilled-candidate-rejected", "operation": "mesh.validate.repair_fill_holes_refine_fair",
      "inputs": [B4_DOME, B4_DOME], "parameters": B4_FAIR_C1,
      "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "REPAIR_VALIDATION_FAILED"},
+])
+
+# 7.8.04 Surface_mesh_shortest_path on a side-2 cube (12 triangles) and a flat L-shaped region.
+B4_CUBE = _b4mesh("cube_geodesic.off")
+B4_LSHAPE = _b4mesh("lshape.off")
+B4_SP_CORNERS = {"sources": [{"vertex": 0}], "targets": [{"vertex": 6}, {"vertex": 2}, {"vertex": 1}]}
+B4_SP_L = {"sources": [{"vertex": 6}], "targets": [{"vertex": 3}, {"vertex": 2}]}
+B4_SP_POINTS = {"sources": [{"face": 0, "barycentric": [0.5, 0.25, 0.25]}, {"vertex": 6}],
+                "targets": [{"face": 2, "barycentric": [0.25, 0.5, 0.25]}, {"vertex": 4}]}
+B4_SP_CORNER_TARGETS = {"sources": [{"vertex": 0}], "targets": [{"vertex": 6}, {"vertex": 2}]}
+FAMILY_7_8["requirements"]["major.7.8.04"] = {
+    "operation_ids": ["mesh.path.shortest"],
+    "symbols": ["Surface_mesh_shortest_path"],
+    "symbol_notes": "Surface_mesh_shortest_path computes exact geodesic distances on triangle meshes of at most "
+                    "64 faces from up to 8 source points (vertex or face barycentric) to up to 32 targets, with "
+                    "the unfolded path. Hand-derived on the side-2 cube: the opposite corner is 2*sqrt(5) away "
+                    "(unfold two faces), a face diagonal 2*sqrt(2) and an edge 2. On the flat L-shaped region "
+                    "the corner (0,2) to the corner (2,1) must bend at the reflex vertex (1,1), length "
+                    "sqrt(2)+1, and (0,2) to (2,0) is the straight 2*sqrt(2). With two sources each target "
+                    "reports its nearest source (face point to top-face point 1.58 from the corner source, "
+                    "vertex 4 at 2.69 from the face point). The independent validator unfolds face sequences "
+                    "with visibility windows and runs Dijkstra over mesh vertices in long double (tolerance "
+                    "1e-9 relative to the diagonal, declared because square roots are involved); it checks "
+                    "path points, shared faces, endpoints, path length, the optimum and the nearest source. "
+                    "Face barycentric coordinates are given in OFF corner order and permuted internally to "
+                    "the CGAL halfedge order.",
+    "case_ids": ["shortest-cube-corners", "shortest-lshape-reflex", "shortest-cube-two-sources"],
+}
+FAMILY_7_8["cases"].extend([
+    _case("shortest-cube-corners", "mesh.path.shortest", [B4_CUBE], B4_SP_CORNERS, [
+        ["metrics.algorithm", "==", "CGAL::Surface_mesh_shortest_path"],
+        ["output:analysis:json:report_kind", "==", "shortest_paths"],
+        ["output:analysis:json:results.targets.0.distance", "approx", [4.47213595499958, 1e-9]],
+        ["output:analysis:json:results.targets.1.distance", "approx", [2.8284271247461903, 1e-9]],
+        ["output:analysis:json:results.targets.2.distance", "approx", [2.0, 1e-9]],
+    ]),
+    _case("shortest-lshape-reflex", "mesh.path.shortest", [B4_LSHAPE], B4_SP_L, [
+        ["output:analysis:json:results.targets.0.distance", "approx", [2.414213562373095, 1e-9]],
+        ["output:analysis:json:results.targets.1.distance", "approx", [2.8284271247461903, 1e-9]],
+    ]),
+    _case("shortest-cube-two-sources", "mesh.path.shortest", [B4_CUBE], B4_SP_POINTS, [
+        ["output:analysis:json:results.targets.0.distance", "approx", [1.5811388300841898, 1e-9]],
+        ["output:analysis:json:results.targets.0.source_index", "==", 1],
+        ["output:analysis:json:results.targets.1.distance", "approx", [2.6925824035672523, 1e-9]],
+        ["output:analysis:json:results.targets.1.source_index", "==", 0],
+    ]),
+])
+FAMILY_7_8["negative_controls"].extend([
+    {"id": "shortest-tampered-distance-rejected", "operation": "mesh.validate.shortest_path",
+     "inputs": [_b4report("tampered_sp_distance_short.json"), B4_CUBE], "parameters": B4_SP_CORNER_TARGETS,
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "DISTANCE_MISMATCH"},
+    {"id": "shortest-tampered-path-off-surface-rejected", "operation": "mesh.validate.shortest_path",
+     "inputs": [_b4report("tampered_sp_path_off_surface.json"), B4_CUBE], "parameters": B4_SP_CORNER_TARGETS,
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "PATH_LEAVES_SURFACE"},
+    {"id": "shortest-tampered-wrong-source-rejected", "operation": "mesh.validate.shortest_path",
+     "inputs": [_b4report("tampered_sp_wrong_source.json"), B4_CUBE], "parameters": B4_SP_POINTS,
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "SOURCE_NOT_NEAREST"},
+    {"id": "shortest-source-out-of-range-rejected", "operation": "mesh.path.shortest", "inputs": [B4_CUBE],
+     "parameters": {"sources": [{"vertex": 99}], "targets": [{"vertex": 6}]},
+     "expect_error_class": "INVALID_REQUEST", "expect_error_code": "INVALID_PARAMETER"},
+    {"id": "shortest-barycentric-sum-rejected", "operation": "mesh.path.shortest", "inputs": [B4_CUBE],
+     "parameters": {"sources": [{"vertex": 0}], "targets": [{"face": 0, "barycentric": [0.5, 0.5, 0.5]}]},
+     "expect_error_class": "INVALID_REQUEST", "expect_error_code": "INVALID_PARAMETER"},
 ])
 
 GENERIC_FAMILIES: dict[str, dict] = {
