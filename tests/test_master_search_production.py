@@ -37,14 +37,14 @@ class ProductionOperationSearchTests(unittest.TestCase):
         self.assertFalse(result["candidates"][0]["uncovered_primary_concepts"], result)
 
     def test_unseen_bilingual_paraphrases_distinguish_registered_methods(self):
-        # Two registered operations (the bounded-tolerance filter and the CGAL percentile-quota
-        # filter pointset.outliers.remove) legitimately serve this goal: it must not auto-route.
-        ambiguous = self.search("スキャン点群から孤立した測定点を除きたい", ["PointSet3"])
-        self.assertFalse(ambiguous["query_analysis"]["automatic_route_supported"], ambiguous)
-        self.assertEqual({item["operation_id"] for item in ambiguous["candidates"][:2]},
-                         {"pointset.remove_outliers", "pointset.outliers.remove"})
+        self.assert_route("スキャン点群から孤立した測定点を除きたい", ["PointSet3"],
+                          "pointset.remove_outliers")
         self.assert_route("面どうしが自分自身を貫く組を調べる", ["TriangleSurfaceMesh"],
                           "mesh.analysis.self_intersections")
+        self.assert_route("co-refine two surfaces into matching intersection faces",
+                          ["TriangleSurfaceMesh", "TriangleSurfaceMesh"], "mesh.corefine")
+        self.assert_route("交差曲線に沿って両表面を共細分する",
+                          ["TriangleSurfaceMesh", "TriangleSurfaceMesh"], "mesh.corefine")
         self.assert_route("点群の法線を主成分分析で推定", ["PointSet3"],
                           "pointset.normals.estimate")
         self.assert_route("最小全域木で点群法線の符号を揃える", ["PointSet3Normals"],
@@ -125,6 +125,8 @@ class ProductionOperationSearchTests(unittest.TestCase):
             ("cleanup the point cloud and estimate normals", ["PointSet3"]),
             ("clean up the point cloud and estimate normals", ["PointSet3"]),
             ("点群のノイズを除去して法線を推定", ["PointSet3"]),
+            ("clip a surface against a box and label the cut boundary",
+             ["TriangleSurfaceMesh"]),
             ("simplify inside an external geometric envelope",
              ["TriangleSurfaceMesh"]),
             ("simplify using Fast Envelope", ["TriangleSurfaceMesh"]),

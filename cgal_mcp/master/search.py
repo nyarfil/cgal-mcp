@@ -47,6 +47,9 @@ VOCABULARY: dict[str, tuple[str, ...]] = {
                            "triangulate each face", "非三角形面", "各面を三角形分割"),
     "clipping": ("clip the surface", "clip a surface", "clip a mesh", "clipping plane", "clip mesh", "cut-boundary",
                  "mesh clipping", "メッシュをクリップ", "切断面"),
+    # Clipping against a box (or any non-planar region) is not plane clipping.
+    "box_clipping": ("against a box", "clip box", "clipping box", "box clipping", "clip to a box",
+                     "ボックスでクリップ", "箱でクリップ"),
     "remeshing": ("remesh", "remeshing", "リメッシュ", "再メッシュ", "再メッシュ化"),
     # Surface mesh generation/improvement concepts.  Each is a geometry idea,
     # not an Operation ID; routing still needs a registered operation covering it.

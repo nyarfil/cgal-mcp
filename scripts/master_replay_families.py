@@ -263,7 +263,6 @@ B2_FIXTURES = {
     "tampered_features_report.json": "fb1fb0121c2f3242a1e033a9eb901216051bd3e32273ca58829e418d37e2c92d",
     "tampered_outliers.xyz": "76c43c76a7181019cece42a534455d5c6a1ec5527621965f7430306d8d10dc21",
     "tampered_polygon_report.json": "df1ab315d40d581e81d226ec738b2845caea99e21baa300f78ec442c7efc7135",
-    "tampered_selfint_report.json": "56cc4236c2d436d2431b0f176dd1672ac5a895ac6e328f385e5e8faf6f758438",
     "tampered_spacing_report.json": "c648a26cbec864f42b42d921d7aab32ac9ac0afa64418f85114688b58a1977ef",
     "tampered_sphere_report.json": "d8b87b6f0bde1ee5f2844b6c56e01edb4e689c9c7646e6674c2233255fff077d",
     "tetra_b.off": "a71b52c4299519944398644e065224c526aa4d61f03b76e04b5578d8b7ce4433",
@@ -352,26 +351,7 @@ B2_CASES_7_3 = [
         ["metrics.sharp_edge_count", "==", 4],
         ["metrics.patch_count", "==", 1],
     ]),
-    _case("selfint-tetra-clean", "mesh.intersections.self", [Q_TETRA], {}, [
-        ["metrics.face_count", "==", 4],
-        ["metrics.does_self_intersect", "==", False],
-        ["metrics.intersecting_pair_count", "==", 0],
-        ["output:analysis:json:report_kind", "==", "self_intersections"],
-        ["output:analysis:json:results.intersecting_face_pairs", "==", []],
-        ["output:analysis:json:results.does_self_intersect", "==", False],
-    ]),
-    _case("selfint-cube-clean", "mesh.intersections.self", [Q_CUBE], {}, [
-        # Faces meeting along an edge or at a corner do not count as intersecting.
-        ["metrics.face_count", "==", 12],
-        ["metrics.does_self_intersect", "==", False],
-        ["output:analysis:json:results.intersecting_face_pairs", "==", []],
-    ]),
-    _case("selfint-tetrahedra", "mesh.intersections.self", [_mesh(INTERSECTING)], {}, [
-        ["metrics.face_count", "==", 8],
-        ["metrics.does_self_intersect", "==", True],
-        ["metrics.intersecting_pair_count", ">", 0],
-        ["output:analysis:json:results.does_self_intersect", "==", True],
-    ]),
+
 ]
 B2_NEG_7_3 = [
     {"id": "features-angle-out-of-range-rejected", "operation": "mesh.features.detect", "inputs": [Q_CUBE],
@@ -380,9 +360,6 @@ B2_NEG_7_3 = [
     {"id": "features-tampered-missing-sharp-edge-rejected", "operation": "mesh.validate.features",
      "inputs": [_breport("tampered_features_report.json"), B_BENT], "parameters": {"angle_degrees": 30},
      "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "SHARP_EDGES_MISMATCH"},
-    {"id": "selfint-tampered-missing-pair-rejected", "operation": "mesh.validate.self_intersections",
-     "inputs": [_breport("tampered_selfint_report.json"), _mesh(INTERSECTING)], "parameters": {},
-     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "INTERSECTING_PAIRS_MISMATCH"},
 ]
 
 B2_CASES_7_5 = [
@@ -464,29 +441,42 @@ B2_CASES_7_9 = [
         ["output:analysis:json:results.average_spacing.value", "approx", [11.0 / 15.0, 1e-12]],
         ["output:analysis:json:results.average_spacing.unit", "==", "mm"],
     ]),
-    _case("outliers-remove-far-point", "pointset.outliers.remove", [B_CLUSTER],
+    _case("outliers-remove-far-point", "pointset.remove_outliers", [B_CLUSTER],
           {"neighbors": 3, "threshold_percent": 10, "threshold_distance": _mm_length(3)}, [
         # A 3x3 unit grid and one point at (10,10,10): the far point exceeds the distance bound and is
         # the single removable point (10 percent of 10), the nine grid points stay.
         ["metrics.input_point_count", "==", 10],
         ["metrics.output_point_count", "==", 9],
         ["metrics.removed_point_count", "==", 1],
-        ["metrics.algorithm", "==", "CGAL::remove_outliers"],
         ["input:points:measure:points.count", "==", 10],
         ["output:points:measure:points.count", "==", 9],
     ]),
-    _case("outliers-quota-zero-percent", "pointset.outliers.remove", [B_CLUSTER],
+    _case("outliers-quota-zero-percent", "pointset.remove_outliers", [B_CLUSTER],
           {"neighbors": 3, "threshold_percent": 0, "threshold_distance": _mm_length(3)}, [
         # At most 0 percent may be removed: every point is kept even though one exceeds the bound.
         ["metrics.output_point_count", "==", 10],
         ["metrics.removed_point_count", "==", 0],
     ]),
-    _case("outliers-quota-half", "pointset.outliers.remove", [B_CLUSTER],
+    _case("outliers-quota-half", "pointset.remove_outliers", [B_CLUSTER],
           {"neighbors": 3, "threshold_percent": 50, "threshold_distance": _mm_length(0)}, [
         # Distance 0 declares no point good, so CGAL keeps floor(10 * (100-50) / 100) = 5 points.
         ["metrics.output_point_count", "==", 5],
         ["metrics.removed_point_count", "==", 5],
         ["output:points:measure:points.count", "==", 5],
+    ]),
+    _case("spacing-cluster-k3", "pointset.spacing.average", [B_CLUSTER], {"neighbors": 3}, [
+        # Chain step 1: the measured scale of the 3x3 grid plus the far point (brute-force k+1 nearest
+        # average, point included; re-derived by the validator, pinned here to 1e-9).
+        ["metrics.point_count", "==", 10],
+        ["metrics.average_spacing", "approx", [1.8765368701257734, 1e-9]],
+    ]),
+    _case("outliers-threshold-from-spacing", "pointset.remove_outliers", [B_CLUSTER],
+          {"neighbors": 3, "threshold_percent": 30, "threshold_distance": _mm_length(1.8765368701257734)}, [
+        # Chain step 2: the measured spacing used as the distance bound, 30 percent removable: the far
+        # point is the single removal although three could go.
+        ["metrics.input_point_count", "==", 10],
+        ["metrics.output_point_count", "==", 9],
+        ["metrics.removed_point_count", "==", 1],
     ]),
 ]
 B2_PAIRS_7_9 = [
@@ -630,18 +620,6 @@ FAMILY_7_3 = {
             "case_ids": ["features-cube-30", "features-cube-100", "features-bent-30", "features-bent-60",
                          "features-open-square"],
         },
-        "major.7.3.07": {
-            "operation_ids": ["mesh.intersections.self"],
-            "symbols": ["self_intersections", "does_self_intersect"],
-            "symbol_notes": "PMP::self_intersections lists the intersecting face pairs and PMP::does_self_intersect must "
-                            "agree with it. A clean tetrahedron and the triangulated cube (faces sharing edges and "
-                            "corners only) give no pair; two interpenetrating tetrahedra give pairs. The independent "
-                            "validator decides every face pair exactly (GMP rationals, triangle/triangle "
-                            "intersection polygon vertices, shared-simplex rule for faces with common vertices) and "
-                            "compares the pair set and the flag. Intersections between two different meshes are "
-                            "not part of this operation.",
-            "case_ids": ["selfint-tetra-clean", "selfint-cube-clean", "selfint-tetrahedra"],
-        },
         "major.7.3.01": {
             "operation_ids": ["mesh.inspect.pmp", "mesh.analysis.self_intersections"],
             "symbols": ["does_self_intersect", "is_closed", "is_triangle_mesh"],
@@ -692,6 +670,9 @@ FAMILY_7_3 = {
         },
     },
     "unbound": {
+        "major.7.3.07": "Self-intersection (self_intersections, does_self_intersect) is replayed through "
+                        "mesh.analysis.self_intersections, but intersections between two meshes "
+                        "(do_intersect/surface_intersection) are not an executable operation.",
         "major.7.3.06": "Only bounded_error_symmetric_Hausdorff_distance is executable, as the "
                         "simplification validator; sample_triangle_mesh, max_distance_to_triangle_mesh, "
                         "approximate/one-sided Hausdorff and approximate_max_distance_to_point_set "
@@ -1085,7 +1066,7 @@ FAMILY_7_9 = {
     "test_id": "family-7.9-replay-cases",
     "requirements": {
         "major.7.9.02": {
-            "operation_ids": ["pointset.outliers.remove", "pointset.spacing.average"],
+            "operation_ids": ["pointset.remove_outliers", "pointset.spacing.average"],
             "symbols": ["remove_outliers", "compute_average_spacing"],
             "symbol_notes": "CGAL::remove_outliers on a 3x3 unit grid plus a far point (10,10,10): the far point is "
                             "removed under 10 percent, nothing is removed under 0 percent, and distance 0 with "
@@ -1096,18 +1077,21 @@ FAMILY_7_9 = {
                             "relative tolerance; points whose measure is within that tolerance of the bound are "
                             "rejected as ambiguous.",
             "case_ids": ["spacing-line10", "outliers-remove-far-point", "outliers-quota-zero-percent",
-                         "outliers-quota-half"],
+                         "outliers-quota-half", "spacing-cluster-k3", "outliers-threshold-from-spacing"],
         },
         "major.7.9.06": {
-            "operation_ids": ["pointset.outliers.remove", "pointset.spacing.average"],
+            "operation_ids": ["pointset.remove_outliers", "pointset.spacing.average"],
             "symbols": ["compute_average_spacing", "remove_outliers"],
             "symbol_notes": "The reconstruction-preprocessing subcapabilities listed in the ledger are "
                             "compute_average_spacing and remove_outliers (the scale estimate and the outlier "
                             "filter that precede surface reconstruction); both are replayed with their "
-                            "independent validators, with the same cases as the outlier-removal requirement. "
+                            "independent validators, with the same cases as the outlier-removal requirement, plus the "
+                            "preprocessing sequence on the grid-and-far-point cloud: the measured average spacing "
+                            "(k=3) is then used as the distance bound of the outlier filter (the harness replays "
+                            "the two steps as separate cases; it cannot pipe one output into the next input). "
                             "Normal estimation and orientation are separate requirements (7.9.01).",
             "case_ids": ["spacing-line10", "outliers-remove-far-point", "outliers-quota-zero-percent",
-                         "outliers-quota-half"],
+                         "outliers-quota-half", "spacing-cluster-k3", "outliers-threshold-from-spacing"],
         },
         "major.7.9.01": {
             "operation_ids": ["pointset.normals.estimate", "pointset.normals.orient_mst"],

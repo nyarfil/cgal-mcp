@@ -207,36 +207,6 @@ Json detect_features(const Request& request) {
   return success_result(request, Json::array({std::move(output)}), std::move(metrics));
 }
 
-// ---- 7.3.07 -----------------------------------------------------------------------------
-
-Json self_intersections(const Request& request) {
-  require_inputs(request, 1, "mesh.intersections.self");
-  require_parameter_names(request, {});
-  const auto raw = load_input(request.inputs[0]);
-  auto mesh = build_mesh<EpickMesh, Epick::Point_3>(raw);
-  std::vector<std::pair<EpickMesh::Face_index, EpickMesh::Face_index>> pairs;
-  PMP::self_intersections(mesh, std::back_inserter(pairs));
-  const bool flag = PMP::does_self_intersect(mesh);
-  std::set<std::pair<std::size_t, std::size_t>> sorted;
-  for (const auto& [f, g] : pairs) {
-    const std::size_t a = f.idx(), b = g.idx();
-    sorted.insert({std::min(a, b), std::max(a, b)});
-  }
-  if (flag != !pairs.empty()) {
-    throw WorkerError("INTERNAL_ERROR", "SELF_INTERSECTION_INCONSISTENT",
-                      "does_self_intersect disagrees with self_intersections");
-  }
-  Json report = geometry_frame(
-      request, "self_intersections", Json::object(), {{"mesh_sha256", request.inputs[0].sha256}},
-      {{"face_count", raw.faces.size()}, {"intersecting_pair_count", sorted.size()}},
-      {{"intersecting_face_pairs", edge_list_json(sorted)}, {"does_self_intersect", flag}});
-  auto output = write_report(request, "GeometryQueryReport", report);
-  Json metrics{{"face_count", raw.faces.size()}, {"intersecting_pair_count", sorted.size()},
-               {"does_self_intersect", flag},
-               {"algorithm", "CGAL::Polygon_mesh_processing::self_intersections"}};
-  return success_result(request, Json::array({std::move(output)}), std::move(metrics));
-}
-
 // ---- 7.5.03 / 7.5.04 --------------------------------------------------------------------
 
 Json clip_plane(const Request& request) {
@@ -303,11 +273,6 @@ std::vector<OperationDefinition> mesh_producer_operations() {
       {"Polygon_mesh_processing"}, kEpickName,
       pinfo("mesh.validate.features", {"angle_degrees"}, {"mesh"},
             {{"source_header", "CGAL/Polygon_mesh_processing/detect_features.h"}, {"maximum_input_faces", kMaximumFaces}})));
-  result.push_back(query_definition(
-      "mesh.intersections.self", {"TriangleSurfaceMesh"}, "GeometryQueryReport", "analysis", self_intersections,
-      {"Polygon_mesh_processing"}, kEpickName,
-      pinfo("mesh.validate.self_intersections", {}, {"mesh"},
-            {{"source_header", "CGAL/Polygon_mesh_processing/self_intersections.h"}, {"maximum_input_faces", kMaximumFaces}})));
   result.push_back(query_definition(
       "mesh.clip.plane", {"TriangleSurfaceMesh"}, "TriangleSurfaceMesh", "transform", clip_plane,
       {"PMP_Boolean_operations"}, kEpeckName,

@@ -41,13 +41,13 @@ CIは台帳を公式配布物から再生成してバイト一致を検査しま
 |---|---|---|
 | 7.1 カーネル | 5/5 | 7.1.01 Simple_cartesian・Cartesian・EPICK・EPECK（同一の準退化入力で浮動小数点kernelは誤判定、厳密述語kernelは正答）、.02 20種のprimitive、.03 述語・構成、.04 intersection・do_intersect、.05 squared_distance・距離比較。validatorはCGALを使わないGMP有理数の独立再計算 |
 | 7.2 空間問合せ | 5/5 | 7.2.01 AABB、.02 Kd木、.03 k近傍、.04 do_intersect・any/all_intersected_primitives（AABB_tree、ray対三角形メッシュ、独立厳密validator）、.05 bbox |
-| 7.3 解析 | 7/8 | 7.3.01 検査・自己交差、.02 connected_components・connected_component・keep_largest_connected_components、.03 法線、.04 計測、.05 `detect_sharp_edges`・`sharp_edges_segmentation`（厳密な有理数の面法線で再計算）、.07 `self_intersections`・`does_self_intersect`（厳密な三角形対交差）、.08 locate・locate_with_AABB_tree |
+| 7.3 解析 | 6/8 | 7.3.01 検査・自己交差、.02 connected_components・connected_component・keep_largest_connected_components、.03 法線、.04 計測、.05 `detect_sharp_edges`・`sharp_edges_segmentation`（厳密な有理数の面法線で再計算）、.08 locate・locate_with_AABB_tree |
 | 7.4 修復 | 5/6 | 7.4.01 向き、.02 境界縫合、.03 退化除去、.05 polygon soup、.06 非多様体前処理 |
 | 7.5 Boolean | 4/5 | 7.5.02 union/intersection/difference、.03 `clip`（体積・曲面、厳密な重み付き面積の分割で検証）、.04 `split`・`corefine`（同、2面側の分離も検証）、.05 Polygon_mesh_slicer |
 | 7.6 再メッシュ | 5/5 | 7.6.01 面の三角形分割、.02 refine、.03 等方remesh・長辺分割、.04 平滑化・最適化、.05 適応remesh |
 | 7.7 軽量化 | 6/6 | 7.7.01〜06 |
 | 7.8 再構成 | 1/6 | 7.8.06 CatmullClark_subdivision・Loop_subdivision（独立マスク再計算validator） |
-| 7.9 点群 | 4/6 | 7.9.01 法線推定・MST向き付け、.02 `remove_outliers`、.04 grid/random/hierarchy簡略化、.06 再構成前処理（`compute_average_spacing`・`remove_outliers`）。validatorは全点対の総当たり（long double、相対1e-9の許容、境界近傍は曖昧として拒否） |
+| 7.9 点群 | 4/6 | 7.9.01 法線推定・MST向き付け、.02 `remove_outliers`（既存の`pointset.remove_outliers`に独立validatorを追加）、.04 grid/random/hierarchy簡略化、.06 再構成前処理（`compute_average_spacing`・`remove_outliers`）。validatorは全点対の総当たり（long double、相対1e-9の許容、境界近傍は曖昧として拒否） |
 | 7.11 三角形分割 | 2/5 | 7.11.01 Delaunay 2D/3D、.02 制約付き |
 | 7.12 多角形 | 2/7 | 7.12.01 Polygon_2/with_holesの性質・内外判定、.04 `Polygon_set_2`のjoin・intersection・difference（EPECK、境界鎖をGMP有理数で独立再計算） |
 | 7.13 凸包等 | 3/5 | 7.13.01 2D/3D凸包、.04 `Min_circle_2`・`Min_sphere_of_spheres_d`（最小球をGMP有理数の支持集合列挙で検証、半径は平方根のため許容付き）、.05 mean_value・wachspress・discrete_harmonic coordinates（2D、境界点は拒否） |
@@ -61,6 +61,7 @@ CIは台帳を公式配布物から再生成してバイト一致を検査しま
 - 7.10.02: Polygonal_surface_reconstruction（MIP solver未導入）とKinetic_surface_reconstructionがない。Advancing_frontとScale_spaceは実装・検証済みだが、台帳の全familyを再試験するまで未結合。
 - 7.3.06: 距離はvalidator内部の上界付き対称Hausdorffのみで、他の距離関数がない。
 - 7.4.04: `triangulate_refine_and_fair_hole`相当の穴埋めがない。
+- 7.3.07: `self_intersections`・`does_self_intersect`は`mesh.analysis.self_intersections`で再試験済み（7.3.01）だが、2メッシュ間の交差判定（`do_intersect`・`surface_intersection`）を公開していないため未結合。
 - 7.5.01: corefine / autorefine はBoolean内部のみで単独公開していない。
 - 7.9.03: bilateral等のsmoothingがない。
 - 7.9.05: registration がない。

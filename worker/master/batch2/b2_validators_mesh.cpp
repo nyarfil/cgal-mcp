@@ -243,68 +243,6 @@ Json run_features_validator(const Request& request) {
                     {"independence", "exact rational face normals; only the irrational cosine of the bound is floating point and ambiguous edges are rejected"}});
 }
 
-// ---- 7.3.07 self-intersection ------------------------------------------------------------
-
-Json run_self_intersection_validator(const Request& request) {
-  const std::string validator = "mesh.validate.self_intersections";
-  require_inputs(request, 2, validator);
-  require_parameter_names(request, {});
-  const auto report = read_report(request.inputs[0], "GeometryQueryReport", "report_kind", "self_intersections");
-  const auto mesh = load_mesh(request.inputs[1], {"TriangleSurfaceMesh"}, "mesh", kMaximumFaces);
-  Json checks;
-  const auto results = check_report_frame(report, "mesh.intersections.self", Json::object(),
-                                          {{"mesh_sha256", &request.inputs[1]}}, checks);
-  const std::size_t face_count = mesh.tris.size();
-  std::set<std::pair<std::size_t, std::size_t>> expected;
-  for (std::size_t i = 0; i < face_count; ++i) {
-    for (std::size_t j = i + 1; j < face_count; ++j) {
-      if (!boxes_overlap(mesh.tris[i], mesh.tris[j])) continue;
-      std::vector<std::size_t> shared;
-      for (const auto a : mesh.raw.faces[i]) {
-        for (const auto b : mesh.raw.faces[j]) {
-          if (a == b) shared.push_back(a);
-        }
-      }
-      if (shared.size() == 3) validation_failure("DUPLICATE_FACE", "Two faces use the same vertices");
-      const auto points = intersection_points(mesh.tris[i], mesh.tris[j]);
-      if (points.empty()) continue;
-      bool intersects = false;
-      if (shared.empty()) {
-        intersects = true;
-      } else if (shared.size() == 1) {
-        const Vec v = vec(mesh.raw.vertices[shared[0]]);
-        for (const auto& p : points) intersects = intersects || p != v;
-      } else {
-        const Vec a = vec(mesh.raw.vertices[shared[0]]), b = vec(mesh.raw.vertices[shared[1]]);
-        for (const auto& p : points) intersects = intersects || !point_on_segment(p, a, b);
-      }
-      if (intersects) expected.insert({i, j});
-    }
-  }
-  const auto pairs = require_member(results, "intersecting_face_pairs", "results");
-  if (!pairs.is_array()) validation_failure("REPORT_VALUE_INVALID", "intersecting_face_pairs must be an array");
-  std::set<std::pair<std::size_t, std::size_t>> reported;
-  for (const auto& item : pairs) {
-    if (!item.is_array() || item.size() != 2) validation_failure("REPORT_VALUE_INVALID", "face pair expected");
-    const auto a = index_of(item[0], face_count, "face pair"), b = index_of(item[1], face_count, "face pair");
-    if (a >= b) validation_failure("REPORT_VALUE_INVALID", "face pairs must be ordered a<b");
-    if (!reported.insert({a, b}).second) validation_failure("REPORT_VALUE_INVALID", "face pair repeated");
-  }
-  if (reported != expected) {
-    validation_failure("INTERSECTING_PAIRS_MISMATCH",
-                       "Reported intersecting face pairs differ from the exact triangle/triangle decision");
-  }
-  checks["intersecting_pairs_exact"] = true;
-  const auto flag = require_member(results, "does_self_intersect", "results");
-  if (!flag.is_boolean() || flag.get<bool>() != !expected.empty()) {
-    validation_failure("SELF_INTERSECTION_FLAG_MISMATCH", "does_self_intersect disagrees with the exact decision");
-  }
-  checks["flag_consistent_exact"] = true;
-  return concluded(request, validator, checks,
-                   {{"face_count", face_count}, {"intersecting_pair_count", expected.size()},
-                    {"independence", "exact rational triangle/triangle intersection polygon vertices and shared-simplex test; no CGAL header"}});
-}
-
 // ---- 7.5.03 / 7.5.04 shared tiling of a source surface -----------------------------------
 
 Vec plane_normal_parameter(const Request& request, V3& raw) {
@@ -583,11 +521,6 @@ std::vector<OperationDefinition> mesh_validator_operations() {
              "vertex_feature_degree_exact", "patch_partition_exact", "vertex_incident_patches_exact"},
             {"candidate", "mesh"},
             "exact rational face normals; the irrational cosine of the bound is long double and ambiguous edges are rejected; no CGAL header")));
-  result.push_back(query_definition(
-      "mesh.validate.self_intersections", {"GeometryQueryReport", "TriangleSurfaceMesh"}, "ValidationReport", "validator",
-      run_self_intersection_validator, {"Polygon_mesh_processing"}, gmp,
-      vinfo({"parameters_match", "source_matches", "intersecting_pairs_exact", "flag_consistent_exact"},
-            {"candidate", "mesh"}, "exact rational triangle/triangle intersection polygon vertices and shared-simplex test; no CGAL header")));
   result.push_back(query_definition(
       "mesh.validate.clip", {"TriangleSurfaceMesh", "TriangleSurfaceMesh"}, "ValidationReport", "validator",
       run_clip_validator, {"PMP_Boolean_operations"}, gmp,

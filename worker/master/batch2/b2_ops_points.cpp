@@ -68,60 +68,6 @@ Json spacing(const Request& request) {
   return success_result(request, Json::array({std::move(output)}), std::move(metrics));
 }
 
-Json write_xyz_output(const Request& request, const std::vector<Epick::Point_3>& points, const std::string& unit) {
-  const auto directory = checked_output_dir(request);
-  const auto destination = output_path(directory, "points.xyz");
-  const auto temporary = directory / ("." + std::string("points") + "." + staging_filename_token(request.request_id) + ".tmp.xyz");
-  std::error_code error;
-  if (std::filesystem::exists(temporary, error) || error) {
-    throw WorkerError("OUTPUT_ERROR", "TEMPORARY_OUTPUT_EXISTS", "Temporary output path is not clean");
-  }
-  {
-    std::ofstream output(temporary, std::ios::binary);
-    output.imbue(std::locale::classic());
-    output.precision(17);
-    for (const auto& p : points) output << p.x() << ' ' << p.y() << ' ' << p.z() << '\n';
-    output.close();
-    if (!output) {
-      std::filesystem::remove(temporary);
-      throw WorkerError("OUTPUT_ERROR", "OUTPUT_WRITE_FAILED", "Unable to write XYZ output");
-    }
-  }
-  commit_output(temporary, destination);
-  return Json{{"slot", "points"}, {"type", "PointSet3"}, {"unit", unit}, {"format", "xyz"}, {"path", portable_path(destination)}};
-}
-
-Json outliers(const Request& request) {
-  require_inputs(request, 1, "pointset.outliers.remove");
-  require_parameter_names(request, {"neighbors", "threshold_percent", "threshold_distance"});
-  const auto points = read_points3(request.inputs[0]);
-  require_point_budget(points);
-  const auto neighbors = integer_parameter(request, "neighbors", 2, 1000);
-  if (neighbors >= points.size()) precondition("NEIGHBORHOOD_TOO_LARGE", "neighbors must be smaller than the point count");
-  const auto& percent_value = request.parameters.at("threshold_percent");
-  if (!percent_value.is_number() || percent_value.is_boolean()) {
-    throw WorkerError("INVALID_REQUEST", "INVALID_PARAMETER", "threshold_percent must be a number in [0,100]");
-  }
-  const double percent = percent_value.get<double>();
-  if (!std::isfinite(percent) || percent < 0 || percent > 100) {
-    throw WorkerError("INVALID_REQUEST", "INVALID_PARAMETER", "threshold_percent must be in [0,100]");
-  }
-  const double distance = signed_length_parameter(request, "threshold_distance", request.inputs[0].unit);
-  if (distance < 0) throw WorkerError("INVALID_REQUEST", "INVALID_PARAMETER", "threshold_distance must be >= 0");
-  auto cgal_points = epick_points(points);
-  const auto first = CGAL::remove_outliers<CGAL::Sequential_tag>(
-      cgal_points, static_cast<unsigned int>(neighbors),
-      CGAL::parameters::threshold_percent(percent).threshold_distance(distance));
-  const std::size_t removed = static_cast<std::size_t>(std::distance(first, cgal_points.end()));
-  cgal_points.erase(first, cgal_points.end());
-  if (cgal_points.empty()) precondition("EMPTY_RESULT", "Every point was removed as an outlier");
-  auto output = write_xyz_output(request, cgal_points, request.inputs[0].unit);
-  Json metrics{{"input_point_count", points.size()}, {"output_point_count", cgal_points.size()},
-               {"removed_point_count", removed}, {"neighbors", neighbors},
-               {"algorithm", "CGAL::remove_outliers"}};
-  return success_result(request, Json::array({std::move(output)}), std::move(metrics));
-}
-
 Json bounding_circle(const Request& request) {
   require_inputs(request, 1, "shape.bounding.circle");
   require_parameter_names(request, {});
@@ -183,11 +129,6 @@ std::vector<OperationDefinition> points_producer_operations() {
       {"Point_set_processing_3"}, kEpickName,
       pinfo("pointset.validate.average_spacing", {"neighbors"}, {"points"},
             {{"source_header", "CGAL/compute_average_spacing.h"}, {"maximum_input_points", kMaximumPoints3}})));
-  result.push_back(query_definition(
-      "pointset.outliers.remove", {"PointSet3"}, "PointSet3", "transform", outliers, {"Point_set_processing_3"},
-      kEpickName,
-      pinfo("pointset.validate.outliers_removed", {"neighbors", "threshold_percent", "threshold_distance"}, {"points"},
-            {{"source_header", "CGAL/remove_outliers.h"}, {"maximum_input_points", kMaximumPoints3}})));
   result.push_back(query_definition(
       "shape.bounding.circle", {"PointSet2"}, "GeometryQueryReport", "analysis", bounding_circle, {"Bounding_volumes"},
       kEpickName,

@@ -28,10 +28,12 @@
         "outliers-quota-half",
         "outliers-quota-zero-percent",
         "outliers-remove-far-point",
+        "outliers-threshold-from-spacing",
+        "spacing-cluster-k3",
         "spacing-line10"
       ],
       "operation_ids": [
-        "pointset.outliers.remove",
+        "pointset.remove_outliers",
         "pointset.spacing.average"
       ],
       "symbols": [
@@ -44,10 +46,12 @@
         "outliers-quota-half",
         "outliers-quota-zero-percent",
         "outliers-remove-far-point",
+        "outliers-threshold-from-spacing",
+        "spacing-cluster-k3",
         "spacing-line10"
       ],
       "operation_ids": [
-        "pointset.outliers.remove",
+        "pointset.remove_outliers",
         "pointset.spacing.average"
       ],
       "symbols": [
@@ -93,16 +97,16 @@
     "major.7.9.03": "pointset.smooth.jet exposes jet_smooth_point_set only; bilateral_smooth_point_set is not exposed.",
     "major.7.9.05": "No validated registration operation (register_point_sets, compute_registration_transformation)."
   },
-  "family_contract_sha256": "f8c18d1e2815e8e287173855618a9e09e28ff6ce98ccb2c623e2fb004b57f676",
+  "family_contract_sha256": "ff2deb5e9b8eb9aca295cdebfaaeae22e432efae31a223461f445b46d2d35982",
   "family_contract_source_path": "scripts/master_replay_families.py",
-  "family_contract_source_sha256": "8074a42ec540bf6de02610fdca1507f463a726f2239cebd648176fd1642db918",
+  "family_contract_source_sha256": "3188cb5580e18f7a6e3309070d04980fcaaeb1def3524578ad81e5d7f3acd715",
   "family_contract_source_hash_encoding": "utf8-lf",
   "catalog_baseline_sha256": "143ec18a5b64d506aad60dc24b0a1ea30940c715d1223b3465fa140aeb9d02a7",
-  "operation_registry_sha256": "724744997d2f9d833ce60c617e647d2e7d17b748bf39dc7c20adaa9825839858",
+  "operation_registry_sha256": "25e936723e6cfbe3de1a68847a0d575b3275eb4dc473823862be40004bd26b66",
   "operation_registry_hash_encoding": "utf8-lf",
   "policy_catalog_sha256": "45f4be759288aaeb834a3ce97aa64ee7768048b15534618fc8c19512801f9a9f",
   "policy_catalog_hash_encoding": "utf8-lf",
-  "worker_sha256": "398362d1745fc6d8ef61fe96900b1845072793014c545ded0be5d66023b77500",
+  "worker_sha256": "2f56a91a31af1c972ec059b5fa0bf2d15fdd79f618b62b7bbf6cc7fd640c0926",
   "worker_binary_format": "pe",
   "worker_manifest": {
     "actual_cgal_version": "6.2.1",
@@ -318,6 +322,11 @@
           ],
           "source_header": "CGAL/remove_outliers.h",
           "validator_parameter_bindings": {
+            "pointset.validate.outliers_removed": {
+              "neighbors": "neighbors",
+              "threshold_distance": "threshold_distance",
+              "threshold_percent": "threshold_percent"
+            },
             "pointset.validate.subset": {
               "neighbors": "neighbors",
               "threshold_distance": "threshold_distance",
@@ -326,7 +335,8 @@
           },
           "validators": [
             "pointset.validate.basic",
-            "pointset.validate.subset"
+            "pointset.validate.subset",
+            "pointset.validate.outliers_removed"
           ]
         },
         "input_types": [
@@ -6169,39 +6179,6 @@
       },
       {
         "dependencies": [
-          "Point_set_processing_3"
-        ],
-        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
-        "id": "pointset.outliers.remove",
-        "info": {
-          "input_slots": [
-            "points"
-          ],
-          "maximum_input_points": 400,
-          "source_header": "CGAL/remove_outliers.h",
-          "validator_parameter_bindings": {
-            "pointset.validate.outliers_removed": {
-              "neighbors": "neighbors",
-              "threshold_distance": "threshold_distance",
-              "threshold_percent": "threshold_percent"
-            }
-          },
-          "validators": [
-            "pointset.validate.outliers_removed"
-          ]
-        },
-        "input_types": [
-          "PointSet3"
-        ],
-        "output_type": "PointSet3",
-        "revision": 1,
-        "role": "transform",
-        "supported_kernels": [
-          "package_recommended"
-        ]
-      },
-      {
-        "dependencies": [
           "Bounding_volumes"
         ],
         "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
@@ -6276,32 +6253,6 @@
           },
           "validators": [
             "mesh.validate.features"
-          ]
-        },
-        "input_types": [
-          "TriangleSurfaceMesh"
-        ],
-        "output_type": "GeometryQueryReport",
-        "revision": 1,
-        "role": "analysis",
-        "supported_kernels": [
-          "package_recommended"
-        ]
-      },
-      {
-        "dependencies": [
-          "Polygon_mesh_processing"
-        ],
-        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
-        "id": "mesh.intersections.self",
-        "info": {
-          "input_slots": [
-            "mesh"
-          ],
-          "maximum_input_faces": 600,
-          "source_header": "CGAL/Polygon_mesh_processing/self_intersections.h",
-          "validators": [
-            "mesh.validate.self_intersections"
           ]
         },
         "input_types": [
@@ -6602,37 +6553,6 @@
       },
       {
         "dependencies": [
-          "Polygon_mesh_processing"
-        ],
-        "effective_kernel": "exact:GMP",
-        "id": "mesh.validate.self_intersections",
-        "info": {
-          "checks": [
-            "parameters_match",
-            "source_matches",
-            "intersecting_pairs_exact",
-            "flag_consistent_exact"
-          ],
-          "independence": "exact rational triangle/triangle intersection polygon vertices and shared-simplex test; no CGAL header",
-          "input_slots": [
-            "candidate",
-            "mesh"
-          ],
-          "output_slot": "validation"
-        },
-        "input_types": [
-          "GeometryQueryReport",
-          "TriangleSurfaceMesh"
-        ],
-        "output_type": "ValidationReport",
-        "revision": 1,
-        "role": "validator",
-        "supported_kernels": [
-          "package_recommended"
-        ]
-      },
-      {
-        "dependencies": [
           "PMP_Boolean_operations"
         ],
         "effective_kernel": "exact:GMP",
@@ -6780,14 +6700,14 @@
     ],
     "worker": "cgal-master-worker"
   },
-  "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+  "worker_manifest_sha256": "e9dfe99e7b2a858f3d9f0cbf8c8dbb424f3c7c32776a0885e45b9e51bf6a1c9b",
   "tests": [
     {
       "id": "family-7.9-replay-cases",
       "source_path": "tests/master_family_replay_cases.py",
       "source_sha256": "69b3216bf60de8b908dcf6f82e4fee3ffc438ee2a29cf2d756c4b558c6ce3e65",
       "source_hash_encoding": "utf8-lf",
-      "stdout_sha256": "07f81d88a4d4578b338a872b84f7e59dc1d3a0ffc2c90bba2ca3db01614085dd",
+      "stdout_sha256": "5fd66a6ab752b9e45275d94b49c2c24aa7ae5adad8fd427d7074d60eb8604e82",
       "exit_code": 0,
       "status": "pass"
     }
@@ -6828,10 +6748,20 @@
       "byte_size": 555,
       "content": "eyJhZmZpbmVfcmFuayI6MywiYWZmaW5lX3JhbmtfdmFsaWQiOnRydWUsImNhbmRpZGF0ZV9pc19zb3VyY2VfbXVsdGlzZXRfc3Vic2V0Ijp0cnVlLCJjYW5kaWRhdGVfaXNfc291cmNlX3N1YnNldCI6dHJ1ZSwiY2FuZGlkYXRlX3BvaW50X2NvdW50IjoxMywiY2dhbF9yZWZlcmVuY2VfbWF0Y2giOnRydWUsImNvdW50X25vdF9pbmNyZWFzZWQiOnRydWUsImV4cGVjdGVkX291dHB1dF9wb2ludF9jb3VudCI6MTMsImZpbml0ZV9jb29yZGluYXRlcyI6dHJ1ZSwibm9ybWFsX3ZlY3RvcnNfbm9uemVybyI6bnVsbCwibm9ybWFsX3ZlY3RvcnNfdW5pdCI6bnVsbCwibm9ybWFsc19wcmVzZW50IjpmYWxzZSwicG9pbnRfY291bnQiOjEzLCJwb2ludF9jb3VudF9ub3RfaW5jcmVhc2VkIjp0cnVlLCJwb2ludF9jb3VudF92YWxpZCI6dHJ1ZSwicmFuZG9tX3NhbXBsZV9jb3VudF9tYXRjaGVzIjp0cnVlLCJyZWZlcmVuY2VfYWxnb3JpdGhtIjoicmFuZG9tX3NpbXBsaWZ5X3BvaW50X3NldCIsInNvdXJjZV9wb2ludF9jb3VudCI6MjYsInN0YXR1cyI6InBhc3MiLCJ2YWxpZCI6dHJ1ZX0K"
     },
+    "34cde328a659999aeb04450fa66dffb0e52bd0e3600ce02f24c7f6992a04e50a": {
+      "encoding": "base64",
+      "byte_size": 475,
+      "content": "eyJhZmZpbmVfcmFuayI6MiwiYWZmaW5lX3JhbmtfdmFsaWQiOnRydWUsImNhbmRpZGF0ZV9pc19zb3VyY2VfbXVsdGlzZXRfc3Vic2V0Ijp0cnVlLCJjYW5kaWRhdGVfaXNfc291cmNlX3N1YnNldCI6dHJ1ZSwiY2FuZGlkYXRlX3BvaW50X2NvdW50Ijo5LCJjZ2FsX3JlZmVyZW5jZV9tYXRjaCI6dHJ1ZSwiY291bnRfbm90X2luY3JlYXNlZCI6dHJ1ZSwiZmluaXRlX2Nvb3JkaW5hdGVzIjp0cnVlLCJub3JtYWxfdmVjdG9yc19ub256ZXJvIjpudWxsLCJub3JtYWxfdmVjdG9yc191bml0IjpudWxsLCJub3JtYWxzX3ByZXNlbnQiOmZhbHNlLCJwb2ludF9jb3VudCI6OSwicG9pbnRfY291bnRfbm90X2luY3JlYXNlZCI6dHJ1ZSwicG9pbnRfY291bnRfdmFsaWQiOnRydWUsInJlZmVyZW5jZV9hbGdvcml0aG0iOiJyZW1vdmVfb3V0bGllcnMiLCJzb3VyY2VfcG9pbnRfY291bnQiOjEwLCJzdGF0dXMiOiJwYXNzIiwidmFsaWQiOnRydWV9Cg=="
+    },
     "362d924e2dff51f4da699158ada35c2be08868df85f44cc89826f15e9cf715c5": {
       "encoding": "base64",
       "byte_size": 63,
       "content": "MCAwIDAKMSAwIDAKMiAwIDAKMCAxIDAKMSAxIDAKMiAxIDAKMCAyIDAKMSAyIDAKMiAyIDAKMTAgMTAgMTAK"
+    },
+    "3b5bc8e3b5b600755533de1f6616dee6be06958839256df2e25b7d16b4241a5e": {
+      "encoding": "base64",
+      "byte_size": 220,
+      "content": "eyJhZmZpbmVfcmFuayI6MiwiYWZmaW5lX3JhbmtfdmFsaWQiOnRydWUsImZpbml0ZV9jb29yZGluYXRlcyI6dHJ1ZSwibm9ybWFsX3ZlY3RvcnNfbm9uemVybyI6bnVsbCwibm9ybWFsX3ZlY3RvcnNfdW5pdCI6bnVsbCwibm9ybWFsc19wcmVzZW50IjpmYWxzZSwicG9pbnRfY291bnQiOjUsInBvaW50X2NvdW50X3ZhbGlkIjp0cnVlLCJzdGF0dXMiOiJwYXNzIiwidmFsaWQiOnRydWV9Cg=="
     },
     "48be697273e9d13f54500a054737372d4189236a8b5ebbdb9b478fa5107c8db2": {
       "encoding": "base64",
@@ -6878,10 +6808,20 @@
       "byte_size": 57,
       "content": "MSAwIDAKMiAwIDAKMCAxIDAKMSAxIDAKMiAxIDAKMCAyIDAKMSAyIDAKMiAyIDAKMTAgMTAgMTAK"
     },
+    "77143f42e0a4c8d5379fad06794cd881ed46c5c3092243826da0e7af6a12790a": {
+      "encoding": "base64",
+      "byte_size": 560,
+      "content": "eyJjaGVja3MiOnsiY2FuZGlkYXRlX2lzX3NvdXJjZV9tdWx0aXNldF9zdWJzZXQiOnRydWUsImtlcHRfY291bnRfbWF0Y2hlc190aHJlc2hvbGRzIjp0cnVlLCJrZXB0X3BvaW50c19oYXZlX2xvd2VzdF9tZWFzdXJlcyI6dHJ1ZX0sImluZGVwZW5kZW5jZSI6ImJydXRlLWZvcmNlIGF2ZXJhZ2Ugc3F1YXJlZCBkaXN0YW5jZSB0byB0aGUgaysxIG5lYXJlc3QgcG9pbnRzIChzZWxmIGluY2x1ZGVkKSBpbiBsb25nIGRvdWJsZTsgbm8gQ0dBTCBoZWFkZXIiLCJrZXB0X3BvaW50X2NvdW50Ijo5LCJuZWlnaGJvcnMiOjMsInBhc3NlZCI6dHJ1ZSwicGVyY2VudF9rZWVwX2luZGV4Ijo3LCJwb2ludHNfYmVsb3dfdGhyZXNob2xkX2Rpc3RhbmNlIjo5LCJyZWxhdGl2ZV90b2xlcmFuY2UiOjFlLTA5LCJyZW1vdmVkX3BvaW50X2NvdW50IjoxLCJyZXBvcnRfdHlwZSI6IlZhbGlkYXRpb25SZXBvcnQiLCJzY2hlbWFfdmVyc2lvbiI6MSwic291cmNlX3BvaW50X2NvdW50IjoxMCwic3RhdHVzIjoicGFzcyIsInZhbGlkYXRvciI6InBvaW50c2V0LnZhbGlkYXRlLm91dGxpZXJzX3JlbW92ZWQifQo="
+    },
     "7d6e08867be12f61ccb63a6755de0b0f8f128d1f90277fbfa8ded3129cda34d6": {
       "encoding": "base64",
       "byte_size": 60,
       "content": "MCAwIDAKMSAwIDAKMiAwIDAKMyAwIDAKNCAwIDAKNSAwIDAKNiAwIDAKNyAwIDAKOCAwIDAKOSAwIDAK"
+    },
+    "7f230c953882c0004e119f009aeae6bf906f5a359964c3d77a5501dd42541480": {
+      "encoding": "base64",
+      "byte_size": 477,
+      "content": "eyJhZmZpbmVfcmFuayI6MywiYWZmaW5lX3JhbmtfdmFsaWQiOnRydWUsImNhbmRpZGF0ZV9pc19zb3VyY2VfbXVsdGlzZXRfc3Vic2V0Ijp0cnVlLCJjYW5kaWRhdGVfaXNfc291cmNlX3N1YnNldCI6dHJ1ZSwiY2FuZGlkYXRlX3BvaW50X2NvdW50IjoxMCwiY2dhbF9yZWZlcmVuY2VfbWF0Y2giOnRydWUsImNvdW50X25vdF9pbmNyZWFzZWQiOnRydWUsImZpbml0ZV9jb29yZGluYXRlcyI6dHJ1ZSwibm9ybWFsX3ZlY3RvcnNfbm9uemVybyI6bnVsbCwibm9ybWFsX3ZlY3RvcnNfdW5pdCI6bnVsbCwibm9ybWFsc19wcmVzZW50IjpmYWxzZSwicG9pbnRfY291bnQiOjEwLCJwb2ludF9jb3VudF9ub3RfaW5jcmVhc2VkIjp0cnVlLCJwb2ludF9jb3VudF92YWxpZCI6dHJ1ZSwicmVmZXJlbmNlX2FsZ29yaXRobSI6InJlbW92ZV9vdXRsaWVycyIsInNvdXJjZV9wb2ludF9jb3VudCI6MTAsInN0YXR1cyI6InBhc3MiLCJ2YWxpZCI6dHJ1ZX0K"
     },
     "83a83516a8695fbc944686b775dcf4aa4e7e46898443c8cc1fb4353a6c4eb23e": {
       "encoding": "base64",
@@ -6893,10 +6833,20 @@
       "byte_size": 135,
       "content": "LTIgMCAwCi0yIDEgMC4wMQotMiAtMSAtMC4wMQotMSAwIC0wLjAyCi0yIC0yIDAuMDIKLTEgMiAwLjAxCjAgMiAtMC4wMQotMSAtMiAtMC4wMQotMSAxIC0wLjAxCjIgMiAtMC4wMgotMiAyIC0wLjAyCjEgLTEgMC4wMQowIC0yIDAuMDEK"
     },
+    "91e5f5a4b28ff886f7e0052bbada9ccf478525a34dba8048590b281c85e19b52": {
+      "encoding": "base64",
+      "byte_size": 220,
+      "content": "eyJhZmZpbmVfcmFuayI6MiwiYWZmaW5lX3JhbmtfdmFsaWQiOnRydWUsImZpbml0ZV9jb29yZGluYXRlcyI6dHJ1ZSwibm9ybWFsX3ZlY3RvcnNfbm9uemVybyI6bnVsbCwibm9ybWFsX3ZlY3RvcnNfdW5pdCI6bnVsbCwibm9ybWFsc19wcmVzZW50IjpmYWxzZSwicG9pbnRfY291bnQiOjksInBvaW50X2NvdW50X3ZhbGlkIjp0cnVlLCJzdGF0dXMiOiJwYXNzIiwidmFsaWQiOnRydWV9Cg=="
+    },
     "99d5c03f4e388f095be58b359cdd44dadd7f9e12fa002fe91b58579f2d7304a9": {
       "encoding": "base64",
       "byte_size": 221,
       "content": "eyJhZmZpbmVfcmFuayI6MywiYWZmaW5lX3JhbmtfdmFsaWQiOnRydWUsImZpbml0ZV9jb29yZGluYXRlcyI6dHJ1ZSwibm9ybWFsX3ZlY3RvcnNfbm9uemVybyI6bnVsbCwibm9ybWFsX3ZlY3RvcnNfdW5pdCI6bnVsbCwibm9ybWFsc19wcmVzZW50IjpmYWxzZSwicG9pbnRfY291bnQiOjEzLCJwb2ludF9jb3VudF92YWxpZCI6dHJ1ZSwic3RhdHVzIjoicGFzcyIsInZhbGlkIjp0cnVlfQo="
+    },
+    "9a38cac98b3d583efa1c085e7516fb711bf0b9b71da4b88b73f6508eb4da3506": {
+      "encoding": "base64",
+      "byte_size": 475,
+      "content": "eyJhZmZpbmVfcmFuayI6MiwiYWZmaW5lX3JhbmtfdmFsaWQiOnRydWUsImNhbmRpZGF0ZV9pc19zb3VyY2VfbXVsdGlzZXRfc3Vic2V0Ijp0cnVlLCJjYW5kaWRhdGVfaXNfc291cmNlX3N1YnNldCI6dHJ1ZSwiY2FuZGlkYXRlX3BvaW50X2NvdW50Ijo1LCJjZ2FsX3JlZmVyZW5jZV9tYXRjaCI6dHJ1ZSwiY291bnRfbm90X2luY3JlYXNlZCI6dHJ1ZSwiZmluaXRlX2Nvb3JkaW5hdGVzIjp0cnVlLCJub3JtYWxfdmVjdG9yc19ub256ZXJvIjpudWxsLCJub3JtYWxfdmVjdG9yc191bml0IjpudWxsLCJub3JtYWxzX3ByZXNlbnQiOmZhbHNlLCJwb2ludF9jb3VudCI6NSwicG9pbnRfY291bnRfbm90X2luY3JlYXNlZCI6dHJ1ZSwicG9pbnRfY291bnRfdmFsaWQiOnRydWUsInJlZmVyZW5jZV9hbGdvcml0aG0iOiJyZW1vdmVfb3V0bGllcnMiLCJzb3VyY2VfcG9pbnRfY291bnQiOjEwLCJzdGF0dXMiOiJwYXNzIiwidmFsaWQiOnRydWV9Cg=="
     },
     "9cb43ab768cce58627effbc1beae14cad991cdcc0d0272bd4caf60ba3623ead3": {
       "encoding": "base64",
@@ -6907,6 +6857,11 @@
       "encoding": "base64",
       "byte_size": 562,
       "content": "eyJjaGVja3MiOnsiY2FuZGlkYXRlX2lzX3NvdXJjZV9tdWx0aXNldF9zdWJzZXQiOnRydWUsImtlcHRfY291bnRfbWF0Y2hlc190aHJlc2hvbGRzIjp0cnVlLCJrZXB0X3BvaW50c19oYXZlX2xvd2VzdF9tZWFzdXJlcyI6dHJ1ZX0sImluZGVwZW5kZW5jZSI6ImJydXRlLWZvcmNlIGF2ZXJhZ2Ugc3F1YXJlZCBkaXN0YW5jZSB0byB0aGUgaysxIG5lYXJlc3QgcG9pbnRzIChzZWxmIGluY2x1ZGVkKSBpbiBsb25nIGRvdWJsZTsgbm8gQ0dBTCBoZWFkZXIiLCJrZXB0X3BvaW50X2NvdW50IjoxMCwibmVpZ2hib3JzIjozLCJwYXNzZWQiOnRydWUsInBlcmNlbnRfa2VlcF9pbmRleCI6MTAsInBvaW50c19iZWxvd190aHJlc2hvbGRfZGlzdGFuY2UiOjksInJlbGF0aXZlX3RvbGVyYW5jZSI6MWUtMDksInJlbW92ZWRfcG9pbnRfY291bnQiOjAsInJlcG9ydF90eXBlIjoiVmFsaWRhdGlvblJlcG9ydCIsInNjaGVtYV92ZXJzaW9uIjoxLCJzb3VyY2VfcG9pbnRfY291bnQiOjEwLCJzdGF0dXMiOiJwYXNzIiwidmFsaWRhdG9yIjoicG9pbnRzZXQudmFsaWRhdGUub3V0bGllcnNfcmVtb3ZlZCJ9Cg=="
+    },
+    "a5c0d386fd0b2f44f5490cf3551ec60e5c3d3618aed66f28a152348e64d33640": {
+      "encoding": "base64",
+      "byte_size": 221,
+      "content": "eyJhZmZpbmVfcmFuayI6MywiYWZmaW5lX3JhbmtfdmFsaWQiOnRydWUsImZpbml0ZV9jb29yZGluYXRlcyI6dHJ1ZSwibm9ybWFsX3ZlY3RvcnNfbm9uemVybyI6bnVsbCwibm9ybWFsX3ZlY3RvcnNfdW5pdCI6bnVsbCwibm9ybWFsc19wcmVzZW50IjpmYWxzZSwicG9pbnRfY291bnQiOjEwLCJwb2ludF9jb3VudF92YWxpZCI6dHJ1ZSwic3RhdHVzIjoicGFzcyIsInZhbGlkIjp0cnVlfQo="
     },
     "ac945053f3167464271d653fbcb7d5be76ed55d356da6b8f73c73cb1d4cec2e3": {
       "encoding": "base64",
@@ -6928,10 +6883,20 @@
       "byte_size": 439,
       "content": "eyJhZmZpbmVfcmFuayI6MywiYWZmaW5lX3JhbmtfdmFsaWQiOnRydWUsImNhbmRpZGF0ZV9wb2ludF9jb3VudCI6MjUsImNnYWxfcmVmZXJlbmNlX2RpcmVjdGlvbl9tYXRjaCI6dHJ1ZSwiZmluaXRlX2Nvb3JkaW5hdGVzIjp0cnVlLCJsb2NhbF9zdXJmYWNlX25laWdoYm9yaG9vZHNfdmFsaWQiOnRydWUsIm5vcm1hbF92ZWN0b3JzX25vbnplcm8iOnRydWUsIm5vcm1hbF92ZWN0b3JzX3VuaXQiOnRydWUsIm5vcm1hbHNfcHJlc2VudCI6dHJ1ZSwicG9pbnRfY291bnQiOjI1LCJwb2ludF9jb3VudF9wcmVzZXJ2ZWQiOnRydWUsInBvaW50X2NvdW50X3ZhbGlkIjp0cnVlLCJwb2ludF9wb3NpdGlvbnNfcHJlc2VydmVkIjp0cnVlLCJwb3NpdGlvbnNfcHJlc2VydmVkIjp0cnVlLCJzb3VyY2VfcG9pbnRfY291bnQiOjI1LCJzdGF0dXMiOiJwYXNzIiwidmFsaWQiOnRydWV9Cg=="
     },
+    "d56e6969c131a6eb2219ebc532f053aa55041991a283ebe79ef62040d67438a6": {
+      "encoding": "base64",
+      "byte_size": 462,
+      "content": "eyJjaGVja3MiOnsiYXZlcmFnZV9zcGFjaW5nX21hdGNoZXNfYnJ1dGVmb3JjZSI6dHJ1ZSwicGFyYW1ldGVyc19tYXRjaCI6dHJ1ZSwic291cmNlX21hdGNoZXMiOnRydWV9LCJleHBlY3RlZF9hdmVyYWdlX3NwYWNpbmciOjEuODc2NTM2ODcwMTI1NzczNCwiaW5kZXBlbmRlbmNlIjoiYnJ1dGUtZm9yY2UgaysxIG5lYXJlc3QgZGlzdGFuY2VzIGluIGxvbmcgZG91YmxlIChzZWxmIGluY2x1ZGVkLCBhcyB0aGUgQ0dBTCBuZWlnaGJvdXIgcXVlcnkpOyBubyBDR0FMIGhlYWRlciIsIm5laWdoYm9ycyI6MywicGFzc2VkIjp0cnVlLCJwb2ludF9jb3VudCI6MTAsInJlbGF0aXZlX3RvbGVyYW5jZSI6MWUtMDksInJlcG9ydF90eXBlIjoiVmFsaWRhdGlvblJlcG9ydCIsInNjaGVtYV92ZXJzaW9uIjoxLCJzdGF0dXMiOiJwYXNzIiwidmFsaWRhdG9yIjoicG9pbnRzZXQudmFsaWRhdGUuYXZlcmFnZV9zcGFjaW5nIn0K"
+    },
     "e0b98706a46581fa6d3113f7a35b6133bcde764892253ec7a604df0c01de01d5": {
       "encoding": "base64",
       "byte_size": 219,
       "content": "eyJhZmZpbmVfcmFuayI6MiwiYWZmaW5lX3JhbmtfdmFsaWQiOnRydWUsImZpbml0ZV9jb29yZGluYXRlcyI6dHJ1ZSwibm9ybWFsX3ZlY3RvcnNfbm9uemVybyI6dHJ1ZSwibm9ybWFsX3ZlY3RvcnNfdW5pdCI6dHJ1ZSwibm9ybWFsc19wcmVzZW50Ijp0cnVlLCJwb2ludF9jb3VudCI6OSwicG9pbnRfY291bnRfdmFsaWQiOnRydWUsInN0YXR1cyI6InBhc3MiLCJ2YWxpZCI6dHJ1ZX0K"
+    },
+    "e15adc76c9a4a8048327a5f5390a1d8fe41bea915898418741d16f8c86a56972": {
+      "encoding": "base64",
+      "byte_size": 370,
+      "content": "eyJsZW5ndGhfdW5pdCI6Im1tIiwib3BlcmF0aW9uIjoicG9pbnRzZXQuc3BhY2luZy5hdmVyYWdlIiwicGFyYW1ldGVycyI6eyJuZWlnaGJvcnMiOjN9LCJyZXBvcnRfa2luZCI6ImF2ZXJhZ2Vfc3BhY2luZyIsInJlcG9ydF90eXBlIjoiR2VvbWV0cnlRdWVyeVJlcG9ydCIsInJlc3VsdHMiOnsiYXZlcmFnZV9zcGFjaW5nIjp7InVuaXQiOiJtbSIsInZhbHVlIjoxLjg3NjUzNjg3MDEyNTc3MzR9fSwic2NoZW1hX3ZlcnNpb24iOjEsInNvdXJjZSI6eyJwb2ludHNfc2hhMjU2IjoiMzYyZDkyNGUyZGZmNTFmNGRhNjk5MTU4YWRhMzVjMmJlMDg4NjhkZjg1ZjQ0Y2M4OTgyNmYxNWU5Y2Y3MTVjNSJ9LCJzdW1tYXJ5Ijp7InBvaW50X2NvdW50IjoxMH19Cg=="
     },
     "e3fddc17e9548b240d2ba8897fd7189b9ae70ded9ad245d5151615970b23f345": {
       "encoding": "base64",
@@ -6967,6 +6932,38 @@
       "status": "pass",
       "validator": "pointset.validate.average_spacing"
     },
+    "2147be53380ed25edb2f460bede96351c7cc5b586adc4155a21fda4e611b0a3a": {
+      "affine_rank": 2,
+      "affine_rank_valid": true,
+      "finite_coordinates": true,
+      "normal_vectors_nonzero": null,
+      "normal_vectors_unit": null,
+      "normals_present": false,
+      "point_count": 9,
+      "point_count_valid": true,
+      "status": "pass",
+      "valid": true
+    },
+    "ba29d8978367c87ed09c74ce71cc80eeef365a9d00a091a71e2efa089384a6f9": {
+      "affine_rank": 2,
+      "affine_rank_valid": true,
+      "candidate_is_source_multiset_subset": true,
+      "candidate_is_source_subset": true,
+      "candidate_point_count": 9,
+      "cgal_reference_match": true,
+      "count_not_increased": true,
+      "finite_coordinates": true,
+      "normal_vectors_nonzero": null,
+      "normal_vectors_unit": null,
+      "normals_present": false,
+      "point_count": 9,
+      "point_count_not_increased": true,
+      "point_count_valid": true,
+      "reference_algorithm": "remove_outliers",
+      "source_point_count": 10,
+      "status": "pass",
+      "valid": true
+    },
     "b52afbc01d8965ed47bbd91feec9800428d34c7c0e84ec5e5968f5850cede6ed": {
       "checks": {
         "candidate_is_source_multiset_subset": true,
@@ -6986,6 +6983,38 @@
       "source_point_count": 10,
       "status": "pass",
       "validator": "pointset.validate.outliers_removed"
+    },
+    "848a1bcb33aefa229a3bd4345c61ef631d1523e099742e208ba3db939d088cdf": {
+      "affine_rank": 3,
+      "affine_rank_valid": true,
+      "finite_coordinates": true,
+      "normal_vectors_nonzero": null,
+      "normal_vectors_unit": null,
+      "normals_present": false,
+      "point_count": 10,
+      "point_count_valid": true,
+      "status": "pass",
+      "valid": true
+    },
+    "3c8f6687c3028653e83836c9477fc5a963c6a32799232098f579b9450131fa9f": {
+      "affine_rank": 3,
+      "affine_rank_valid": true,
+      "candidate_is_source_multiset_subset": true,
+      "candidate_is_source_subset": true,
+      "candidate_point_count": 10,
+      "cgal_reference_match": true,
+      "count_not_increased": true,
+      "finite_coordinates": true,
+      "normal_vectors_nonzero": null,
+      "normal_vectors_unit": null,
+      "normals_present": false,
+      "point_count": 10,
+      "point_count_not_increased": true,
+      "point_count_valid": true,
+      "reference_algorithm": "remove_outliers",
+      "source_point_count": 10,
+      "status": "pass",
+      "valid": true
     },
     "9cef835eb798d5727fddc013e2b7a84ad1fea389663717d3f367276a1a85ad9b": {
       "checks": {
@@ -7007,6 +7036,38 @@
       "status": "pass",
       "validator": "pointset.validate.outliers_removed"
     },
+    "06bde1b69d09444ce5cbf703218c31aadd411b477f9ca4e1c8a95c69798b739b": {
+      "affine_rank": 2,
+      "affine_rank_valid": true,
+      "finite_coordinates": true,
+      "normal_vectors_nonzero": null,
+      "normal_vectors_unit": null,
+      "normals_present": false,
+      "point_count": 5,
+      "point_count_valid": true,
+      "status": "pass",
+      "valid": true
+    },
+    "e7569fd0746f573935dc85e0aa3c35ee809d6fe0998c65416cd3cfe681a2a25c": {
+      "affine_rank": 2,
+      "affine_rank_valid": true,
+      "candidate_is_source_multiset_subset": true,
+      "candidate_is_source_subset": true,
+      "candidate_point_count": 5,
+      "cgal_reference_match": true,
+      "count_not_increased": true,
+      "finite_coordinates": true,
+      "normal_vectors_nonzero": null,
+      "normal_vectors_unit": null,
+      "normals_present": false,
+      "point_count": 5,
+      "point_count_not_increased": true,
+      "point_count_valid": true,
+      "reference_algorithm": "remove_outliers",
+      "source_point_count": 10,
+      "status": "pass",
+      "valid": true
+    },
     "cd5cb728abc4c7b724acbde1ec035951fa43a077271372eebea57a4864f56e69": {
       "checks": {
         "candidate_is_source_multiset_subset": true,
@@ -7021,6 +7082,43 @@
       "points_below_threshold_distance": 0,
       "relative_tolerance": 1e-09,
       "removed_point_count": 5,
+      "report_type": "ValidationReport",
+      "schema_version": 1,
+      "source_point_count": 10,
+      "status": "pass",
+      "validator": "pointset.validate.outliers_removed"
+    },
+    "73f3aeefe07e85536d8ef3bbc861b0adc519162e0983c9694da0988f473e8352": {
+      "checks": {
+        "average_spacing_matches_bruteforce": true,
+        "parameters_match": true,
+        "source_matches": true
+      },
+      "expected_average_spacing": 1.8765368701257734,
+      "independence": "brute-force k+1 nearest distances in long double (self included, as the CGAL neighbour query); no CGAL header",
+      "neighbors": 3,
+      "passed": true,
+      "point_count": 10,
+      "relative_tolerance": 1e-09,
+      "report_type": "ValidationReport",
+      "schema_version": 1,
+      "status": "pass",
+      "validator": "pointset.validate.average_spacing"
+    },
+    "fe1b0cf1b9dd7884021516f88affe9a1ffcd590ace54f0c32da93317d1db0abd": {
+      "checks": {
+        "candidate_is_source_multiset_subset": true,
+        "kept_count_matches_thresholds": true,
+        "kept_points_have_lowest_measures": true
+      },
+      "independence": "brute-force average squared distance to the k+1 nearest points (self included) in long double; no CGAL header",
+      "kept_point_count": 9,
+      "neighbors": 3,
+      "passed": true,
+      "percent_keep_index": 7,
+      "points_below_threshold_distance": 9,
+      "relative_tolerance": 1e-09,
+      "removed_point_count": 1,
       "report_type": "ValidationReport",
       "schema_version": 1,
       "source_point_count": 10,
@@ -7196,7 +7294,7 @@
       "case_id": "spacing-line10",
       "operation_id": "pointset.spacing.average",
       "revision": 1,
-      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "worker_manifest_sha256": "e9dfe99e7b2a858f3d9f0cbf8c8dbb424f3c7c32776a0885e45b9e51bf6a1c9b",
       "test_id": "family-7.9-replay-cases",
       "request": {
         "inputs": [
@@ -7348,9 +7446,9 @@
     },
     {
       "case_id": "outliers-remove-far-point",
-      "operation_id": "pointset.outliers.remove",
+      "operation_id": "pointset.remove_outliers",
       "revision": 1,
-      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "worker_manifest_sha256": "e9dfe99e7b2a858f3d9f0cbf8c8dbb424f3c7c32776a0885e45b9e51bf6a1c9b",
       "test_id": "family-7.9-replay-cases",
       "request": {
         "inputs": [
@@ -7368,7 +7466,7 @@
           "memory_mb": 2048,
           "wall_time_ms": 120000
         },
-        "operation": "pointset.outliers.remove",
+        "operation": "pointset.remove_outliers",
         "parameters": {
           "neighbors": 3,
           "threshold_distance": {
@@ -7380,14 +7478,20 @@
         "protocol": 1,
         "request_id": "outliers-remove-far-point"
       },
-      "request_sha256": "78d8d1050180fbfab4235079495061615f93cc559b3ba0c3dea1bf3501a9b618",
+      "request_sha256": "e53b25638943f40a04e330d34683df33ee1384dd8c85dcdfe592dd6cd5fdfc6e",
       "response": {
         "metrics": {
-          "algorithm": "CGAL::remove_outliers",
+          "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
           "input_point_count": 10,
           "neighbors": 3,
+          "output_affine_rank": 2,
           "output_point_count": 9,
-          "removed_point_count": 1
+          "removed_point_count": 1,
+          "threshold_distance": {
+            "unit": "mm",
+            "value": 3.0
+          },
+          "threshold_percent": 10.0
         },
         "outputs": [
           {
@@ -7402,7 +7506,7 @@
         "request_id": "outliers-remove-far-point",
         "status": "ok"
       },
-      "response_sha256": "93ee8075e79638a9304b4853a3c2a356803f6099790d3ce588d1b812f423bd2c",
+      "response_sha256": "b657f3b5755207b784db0f214f68cae6240ab9d8285c8afc8e27a4f805b401a7",
       "input_hashes": [
         "362d924e2dff51f4da699158ada35c2be08868df85f44cc89826f15e9cf715c5"
       ],
@@ -7410,6 +7514,154 @@
         "130cbd978ec10cd419ecab7ea0b1a791fcb412c92313d1681076ca9937eed6d8"
       ],
       "validators": [
+        {
+          "operation_id": "pointset.validate.basic",
+          "revision": 1,
+          "request": {
+            "inputs": [
+              {
+                "artifact_id": "outliers-remove-far-point-points-0",
+                "blob_sha256": "130cbd978ec10cd419ecab7ea0b1a791fcb412c92313d1681076ca9937eed6d8",
+                "format": "xyz",
+                "sha256": "130cbd978ec10cd419ecab7ea0b1a791fcb412c92313d1681076ca9937eed6d8",
+                "type": "PointSet3",
+                "unit": "mm"
+              }
+            ],
+            "kernel": "package_recommended",
+            "limits": {
+              "memory_mb": 2048,
+              "wall_time_ms": 120000
+            },
+            "operation": "pointset.validate.basic",
+            "parameters": {},
+            "protocol": 1,
+            "request_id": "outliers-remove-far-point--pointset.validate.basic"
+          },
+          "request_sha256": "727643d07a7dfad649d6be59f6c891aca3a88dd5d64055e2e6cf51d000d860cc",
+          "response": {
+            "metrics": {
+              "affine_rank": 2,
+              "affine_rank_valid": true,
+              "finite_coordinates": true,
+              "normal_vectors_nonzero": null,
+              "normal_vectors_unit": null,
+              "normals_present": false,
+              "point_count": 9,
+              "point_count_valid": true,
+              "status": "pass",
+              "valid": true
+            },
+            "outputs": [
+              {
+                "blob_sha256": "91e5f5a4b28ff886f7e0052bbada9ccf478525a34dba8048590b281c85e19b52",
+                "format": "json",
+                "slot": "validation",
+                "type": "ValidationReport",
+                "unit": "none"
+              }
+            ],
+            "protocol": 1,
+            "request_id": "outliers-remove-far-point--pointset.validate.basic",
+            "status": "ok"
+          },
+          "response_sha256": "1aba03656238d004db9f97f89dd90f216f52aabce85a89a59a88c5b8d302789e",
+          "input_hashes": [
+            "130cbd978ec10cd419ecab7ea0b1a791fcb412c92313d1681076ca9937eed6d8"
+          ],
+          "output_hashes": [
+            "91e5f5a4b28ff886f7e0052bbada9ccf478525a34dba8048590b281c85e19b52"
+          ],
+          "report_blob_sha256": "91e5f5a4b28ff886f7e0052bbada9ccf478525a34dba8048590b281c85e19b52",
+          "report_sha256": "2147be53380ed25edb2f460bede96351c7cc5b586adc4155a21fda4e611b0a3a",
+          "status": "pass"
+        },
+        {
+          "operation_id": "pointset.validate.subset",
+          "revision": 1,
+          "request": {
+            "inputs": [
+              {
+                "artifact_id": "outliers-remove-far-point-points-0",
+                "blob_sha256": "130cbd978ec10cd419ecab7ea0b1a791fcb412c92313d1681076ca9937eed6d8",
+                "format": "xyz",
+                "sha256": "130cbd978ec10cd419ecab7ea0b1a791fcb412c92313d1681076ca9937eed6d8",
+                "type": "PointSet3",
+                "unit": "mm"
+              },
+              {
+                "artifact_id": "input-0",
+                "blob_sha256": "362d924e2dff51f4da699158ada35c2be08868df85f44cc89826f15e9cf715c5",
+                "format": "xyz",
+                "sha256": "362d924e2dff51f4da699158ada35c2be08868df85f44cc89826f15e9cf715c5",
+                "type": "PointSet3",
+                "unit": "mm"
+              }
+            ],
+            "kernel": "package_recommended",
+            "limits": {
+              "memory_mb": 2048,
+              "wall_time_ms": 120000
+            },
+            "operation": "pointset.validate.subset",
+            "parameters": {
+              "neighbors": 3,
+              "threshold_distance": {
+                "unit": "mm",
+                "value": 3
+              },
+              "threshold_percent": 10
+            },
+            "protocol": 1,
+            "request_id": "outliers-remove-far-point--pointset.validate.subset"
+          },
+          "request_sha256": "a96f9dbf2895b5752d0392ef8f8e96609ec6cb21cacfc860b1f72d27d6d593a2",
+          "response": {
+            "metrics": {
+              "affine_rank": 2,
+              "affine_rank_valid": true,
+              "candidate_is_source_multiset_subset": true,
+              "candidate_is_source_subset": true,
+              "candidate_point_count": 9,
+              "cgal_reference_match": true,
+              "count_not_increased": true,
+              "finite_coordinates": true,
+              "normal_vectors_nonzero": null,
+              "normal_vectors_unit": null,
+              "normals_present": false,
+              "point_count": 9,
+              "point_count_not_increased": true,
+              "point_count_valid": true,
+              "reference_algorithm": "remove_outliers",
+              "source_point_count": 10,
+              "status": "pass",
+              "valid": true
+            },
+            "outputs": [
+              {
+                "blob_sha256": "34cde328a659999aeb04450fa66dffb0e52bd0e3600ce02f24c7f6992a04e50a",
+                "format": "json",
+                "slot": "validation",
+                "type": "ValidationReport",
+                "unit": "none"
+              }
+            ],
+            "protocol": 1,
+            "request_id": "outliers-remove-far-point--pointset.validate.subset",
+            "status": "ok"
+          },
+          "response_sha256": "2766d9f610ce961601838c0c6fbbe9a8600c22a174cce75231b7b5d4c323c87a",
+          "input_hashes": [
+            "130cbd978ec10cd419ecab7ea0b1a791fcb412c92313d1681076ca9937eed6d8",
+            "362d924e2dff51f4da699158ada35c2be08868df85f44cc89826f15e9cf715c5"
+          ],
+          "output_hashes": [
+            "34cde328a659999aeb04450fa66dffb0e52bd0e3600ce02f24c7f6992a04e50a"
+          ],
+          "report_blob_sha256": "34cde328a659999aeb04450fa66dffb0e52bd0e3600ce02f24c7f6992a04e50a",
+          "report_sha256": "ba29d8978367c87ed09c74ce71cc80eeef365a9d00a091a71e2efa089384a6f9",
+          "status": "pass"
+        },
         {
           "operation_id": "pointset.validate.outliers_removed",
           "revision": 1,
@@ -7505,7 +7757,15 @@
           },
           "behaviour_assertions": {
             "pass": true,
-            "count": 6
+            "count": 5
+          },
+          "validator:pointset.validate.basic": {
+            "pass": true,
+            "report_sha256": "2147be53380ed25edb2f460bede96351c7cc5b586adc4155a21fda4e611b0a3a"
+          },
+          "validator:pointset.validate.subset": {
+            "pass": true,
+            "report_sha256": "ba29d8978367c87ed09c74ce71cc80eeef365a9d00a091a71e2efa089384a6f9"
           },
           "validator:pointset.validate.outliers_removed": {
             "pass": true,
@@ -7519,9 +7779,9 @@
     },
     {
       "case_id": "outliers-quota-zero-percent",
-      "operation_id": "pointset.outliers.remove",
+      "operation_id": "pointset.remove_outliers",
       "revision": 1,
-      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "worker_manifest_sha256": "e9dfe99e7b2a858f3d9f0cbf8c8dbb424f3c7c32776a0885e45b9e51bf6a1c9b",
       "test_id": "family-7.9-replay-cases",
       "request": {
         "inputs": [
@@ -7539,7 +7799,7 @@
           "memory_mb": 2048,
           "wall_time_ms": 120000
         },
-        "operation": "pointset.outliers.remove",
+        "operation": "pointset.remove_outliers",
         "parameters": {
           "neighbors": 3,
           "threshold_distance": {
@@ -7551,14 +7811,20 @@
         "protocol": 1,
         "request_id": "outliers-quota-zero-percent"
       },
-      "request_sha256": "4d621e490c69a76426cc15505c1bda49982cc2965816b8bf01e174ccb33e605a",
+      "request_sha256": "05f00a9e35844da709c17897f62bb9d24c9e6cdfcd2b90bd29b8cb2272a69673",
       "response": {
         "metrics": {
-          "algorithm": "CGAL::remove_outliers",
+          "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
           "input_point_count": 10,
           "neighbors": 3,
+          "output_affine_rank": 3,
           "output_point_count": 10,
-          "removed_point_count": 0
+          "removed_point_count": 0,
+          "threshold_distance": {
+            "unit": "mm",
+            "value": 3.0
+          },
+          "threshold_percent": 0.0
         },
         "outputs": [
           {
@@ -7573,7 +7839,7 @@
         "request_id": "outliers-quota-zero-percent",
         "status": "ok"
       },
-      "response_sha256": "52bcd02c22f4e430ce60f2d694a4d825691f8be01e9d9c5176224ea939eb909b",
+      "response_sha256": "328f3838b7a5171651fbca829083b01cff0b70fb623e1e4eb999a8c61af888ac",
       "input_hashes": [
         "362d924e2dff51f4da699158ada35c2be08868df85f44cc89826f15e9cf715c5"
       ],
@@ -7581,6 +7847,154 @@
         "362d924e2dff51f4da699158ada35c2be08868df85f44cc89826f15e9cf715c5"
       ],
       "validators": [
+        {
+          "operation_id": "pointset.validate.basic",
+          "revision": 1,
+          "request": {
+            "inputs": [
+              {
+                "artifact_id": "outliers-quota-zero-percent-points-0",
+                "blob_sha256": "362d924e2dff51f4da699158ada35c2be08868df85f44cc89826f15e9cf715c5",
+                "format": "xyz",
+                "sha256": "362d924e2dff51f4da699158ada35c2be08868df85f44cc89826f15e9cf715c5",
+                "type": "PointSet3",
+                "unit": "mm"
+              }
+            ],
+            "kernel": "package_recommended",
+            "limits": {
+              "memory_mb": 2048,
+              "wall_time_ms": 120000
+            },
+            "operation": "pointset.validate.basic",
+            "parameters": {},
+            "protocol": 1,
+            "request_id": "outliers-quota-zero-percent--pointset.validate.basic"
+          },
+          "request_sha256": "45232be2e785b679c036ed9e9aef5011fe4826bcc13311c69d351eb6e12d0d4b",
+          "response": {
+            "metrics": {
+              "affine_rank": 3,
+              "affine_rank_valid": true,
+              "finite_coordinates": true,
+              "normal_vectors_nonzero": null,
+              "normal_vectors_unit": null,
+              "normals_present": false,
+              "point_count": 10,
+              "point_count_valid": true,
+              "status": "pass",
+              "valid": true
+            },
+            "outputs": [
+              {
+                "blob_sha256": "a5c0d386fd0b2f44f5490cf3551ec60e5c3d3618aed66f28a152348e64d33640",
+                "format": "json",
+                "slot": "validation",
+                "type": "ValidationReport",
+                "unit": "none"
+              }
+            ],
+            "protocol": 1,
+            "request_id": "outliers-quota-zero-percent--pointset.validate.basic",
+            "status": "ok"
+          },
+          "response_sha256": "eb1e4a854f69ff9d979a8f5487143b145780c69a34cacf2d24dc2d7eadfd3e6b",
+          "input_hashes": [
+            "362d924e2dff51f4da699158ada35c2be08868df85f44cc89826f15e9cf715c5"
+          ],
+          "output_hashes": [
+            "a5c0d386fd0b2f44f5490cf3551ec60e5c3d3618aed66f28a152348e64d33640"
+          ],
+          "report_blob_sha256": "a5c0d386fd0b2f44f5490cf3551ec60e5c3d3618aed66f28a152348e64d33640",
+          "report_sha256": "848a1bcb33aefa229a3bd4345c61ef631d1523e099742e208ba3db939d088cdf",
+          "status": "pass"
+        },
+        {
+          "operation_id": "pointset.validate.subset",
+          "revision": 1,
+          "request": {
+            "inputs": [
+              {
+                "artifact_id": "outliers-quota-zero-percent-points-0",
+                "blob_sha256": "362d924e2dff51f4da699158ada35c2be08868df85f44cc89826f15e9cf715c5",
+                "format": "xyz",
+                "sha256": "362d924e2dff51f4da699158ada35c2be08868df85f44cc89826f15e9cf715c5",
+                "type": "PointSet3",
+                "unit": "mm"
+              },
+              {
+                "artifact_id": "input-0",
+                "blob_sha256": "362d924e2dff51f4da699158ada35c2be08868df85f44cc89826f15e9cf715c5",
+                "format": "xyz",
+                "sha256": "362d924e2dff51f4da699158ada35c2be08868df85f44cc89826f15e9cf715c5",
+                "type": "PointSet3",
+                "unit": "mm"
+              }
+            ],
+            "kernel": "package_recommended",
+            "limits": {
+              "memory_mb": 2048,
+              "wall_time_ms": 120000
+            },
+            "operation": "pointset.validate.subset",
+            "parameters": {
+              "neighbors": 3,
+              "threshold_distance": {
+                "unit": "mm",
+                "value": 3
+              },
+              "threshold_percent": 0
+            },
+            "protocol": 1,
+            "request_id": "outliers-quota-zero-percent--pointset.validate.subset"
+          },
+          "request_sha256": "d5f9df9de76b66301d815cc1594f30396b3a81e5431a1bc5632c832e2a0f68fe",
+          "response": {
+            "metrics": {
+              "affine_rank": 3,
+              "affine_rank_valid": true,
+              "candidate_is_source_multiset_subset": true,
+              "candidate_is_source_subset": true,
+              "candidate_point_count": 10,
+              "cgal_reference_match": true,
+              "count_not_increased": true,
+              "finite_coordinates": true,
+              "normal_vectors_nonzero": null,
+              "normal_vectors_unit": null,
+              "normals_present": false,
+              "point_count": 10,
+              "point_count_not_increased": true,
+              "point_count_valid": true,
+              "reference_algorithm": "remove_outliers",
+              "source_point_count": 10,
+              "status": "pass",
+              "valid": true
+            },
+            "outputs": [
+              {
+                "blob_sha256": "7f230c953882c0004e119f009aeae6bf906f5a359964c3d77a5501dd42541480",
+                "format": "json",
+                "slot": "validation",
+                "type": "ValidationReport",
+                "unit": "none"
+              }
+            ],
+            "protocol": 1,
+            "request_id": "outliers-quota-zero-percent--pointset.validate.subset",
+            "status": "ok"
+          },
+          "response_sha256": "548e612058560b3c15ccd37267d77473b10e4b32b7de51d7343a958189f540f1",
+          "input_hashes": [
+            "362d924e2dff51f4da699158ada35c2be08868df85f44cc89826f15e9cf715c5",
+            "362d924e2dff51f4da699158ada35c2be08868df85f44cc89826f15e9cf715c5"
+          ],
+          "output_hashes": [
+            "7f230c953882c0004e119f009aeae6bf906f5a359964c3d77a5501dd42541480"
+          ],
+          "report_blob_sha256": "7f230c953882c0004e119f009aeae6bf906f5a359964c3d77a5501dd42541480",
+          "report_sha256": "3c8f6687c3028653e83836c9477fc5a963c6a32799232098f579b9450131fa9f",
+          "status": "pass"
+        },
         {
           "operation_id": "pointset.validate.outliers_removed",
           "revision": 1,
@@ -7678,6 +8092,14 @@
             "pass": true,
             "count": 2
           },
+          "validator:pointset.validate.basic": {
+            "pass": true,
+            "report_sha256": "848a1bcb33aefa229a3bd4345c61ef631d1523e099742e208ba3db939d088cdf"
+          },
+          "validator:pointset.validate.subset": {
+            "pass": true,
+            "report_sha256": "3c8f6687c3028653e83836c9477fc5a963c6a32799232098f579b9450131fa9f"
+          },
           "validator:pointset.validate.outliers_removed": {
             "pass": true,
             "report_sha256": "9cef835eb798d5727fddc013e2b7a84ad1fea389663717d3f367276a1a85ad9b"
@@ -7690,9 +8112,9 @@
     },
     {
       "case_id": "outliers-quota-half",
-      "operation_id": "pointset.outliers.remove",
+      "operation_id": "pointset.remove_outliers",
       "revision": 1,
-      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "worker_manifest_sha256": "e9dfe99e7b2a858f3d9f0cbf8c8dbb424f3c7c32776a0885e45b9e51bf6a1c9b",
       "test_id": "family-7.9-replay-cases",
       "request": {
         "inputs": [
@@ -7710,7 +8132,7 @@
           "memory_mb": 2048,
           "wall_time_ms": 120000
         },
-        "operation": "pointset.outliers.remove",
+        "operation": "pointset.remove_outliers",
         "parameters": {
           "neighbors": 3,
           "threshold_distance": {
@@ -7722,14 +8144,20 @@
         "protocol": 1,
         "request_id": "outliers-quota-half"
       },
-      "request_sha256": "444257060f1e7f3f6f867e5f8c20add845ac5da7fdb41e141fb052cfa8ae911c",
+      "request_sha256": "4c7c4db43d46034350d172334f3baa65c3d50c9529bd1dfceddd8228a911fa21",
       "response": {
         "metrics": {
-          "algorithm": "CGAL::remove_outliers",
+          "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
           "input_point_count": 10,
           "neighbors": 3,
+          "output_affine_rank": 2,
           "output_point_count": 5,
-          "removed_point_count": 5
+          "removed_point_count": 5,
+          "threshold_distance": {
+            "unit": "mm",
+            "value": 0.0
+          },
+          "threshold_percent": 50.0
         },
         "outputs": [
           {
@@ -7744,7 +8172,7 @@
         "request_id": "outliers-quota-half",
         "status": "ok"
       },
-      "response_sha256": "ff67e969e4cc25c47f665bdbc43f43cf540ee0fd4b5902ef8c0c0ee3e517e52d",
+      "response_sha256": "93f67160b1bc92dc32b48df50b3a63c4cb3cdcd50dae211798ed7fe680ce7259",
       "input_hashes": [
         "362d924e2dff51f4da699158ada35c2be08868df85f44cc89826f15e9cf715c5"
       ],
@@ -7752,6 +8180,154 @@
         "02cf7b17f3f3c2f1538163f0fa18b11f0247e2318b26dff5492ebd0a6ac95e13"
       ],
       "validators": [
+        {
+          "operation_id": "pointset.validate.basic",
+          "revision": 1,
+          "request": {
+            "inputs": [
+              {
+                "artifact_id": "outliers-quota-half-points-0",
+                "blob_sha256": "02cf7b17f3f3c2f1538163f0fa18b11f0247e2318b26dff5492ebd0a6ac95e13",
+                "format": "xyz",
+                "sha256": "02cf7b17f3f3c2f1538163f0fa18b11f0247e2318b26dff5492ebd0a6ac95e13",
+                "type": "PointSet3",
+                "unit": "mm"
+              }
+            ],
+            "kernel": "package_recommended",
+            "limits": {
+              "memory_mb": 2048,
+              "wall_time_ms": 120000
+            },
+            "operation": "pointset.validate.basic",
+            "parameters": {},
+            "protocol": 1,
+            "request_id": "outliers-quota-half--pointset.validate.basic"
+          },
+          "request_sha256": "f2bfc68155e51ba29365787ac69ae86863bc234f184bb7c82b05e36700339a19",
+          "response": {
+            "metrics": {
+              "affine_rank": 2,
+              "affine_rank_valid": true,
+              "finite_coordinates": true,
+              "normal_vectors_nonzero": null,
+              "normal_vectors_unit": null,
+              "normals_present": false,
+              "point_count": 5,
+              "point_count_valid": true,
+              "status": "pass",
+              "valid": true
+            },
+            "outputs": [
+              {
+                "blob_sha256": "3b5bc8e3b5b600755533de1f6616dee6be06958839256df2e25b7d16b4241a5e",
+                "format": "json",
+                "slot": "validation",
+                "type": "ValidationReport",
+                "unit": "none"
+              }
+            ],
+            "protocol": 1,
+            "request_id": "outliers-quota-half--pointset.validate.basic",
+            "status": "ok"
+          },
+          "response_sha256": "2528c48377db11c7e60524200e84012c7d9a3fdf0df870631ccd1a13df93d636",
+          "input_hashes": [
+            "02cf7b17f3f3c2f1538163f0fa18b11f0247e2318b26dff5492ebd0a6ac95e13"
+          ],
+          "output_hashes": [
+            "3b5bc8e3b5b600755533de1f6616dee6be06958839256df2e25b7d16b4241a5e"
+          ],
+          "report_blob_sha256": "3b5bc8e3b5b600755533de1f6616dee6be06958839256df2e25b7d16b4241a5e",
+          "report_sha256": "06bde1b69d09444ce5cbf703218c31aadd411b477f9ca4e1c8a95c69798b739b",
+          "status": "pass"
+        },
+        {
+          "operation_id": "pointset.validate.subset",
+          "revision": 1,
+          "request": {
+            "inputs": [
+              {
+                "artifact_id": "outliers-quota-half-points-0",
+                "blob_sha256": "02cf7b17f3f3c2f1538163f0fa18b11f0247e2318b26dff5492ebd0a6ac95e13",
+                "format": "xyz",
+                "sha256": "02cf7b17f3f3c2f1538163f0fa18b11f0247e2318b26dff5492ebd0a6ac95e13",
+                "type": "PointSet3",
+                "unit": "mm"
+              },
+              {
+                "artifact_id": "input-0",
+                "blob_sha256": "362d924e2dff51f4da699158ada35c2be08868df85f44cc89826f15e9cf715c5",
+                "format": "xyz",
+                "sha256": "362d924e2dff51f4da699158ada35c2be08868df85f44cc89826f15e9cf715c5",
+                "type": "PointSet3",
+                "unit": "mm"
+              }
+            ],
+            "kernel": "package_recommended",
+            "limits": {
+              "memory_mb": 2048,
+              "wall_time_ms": 120000
+            },
+            "operation": "pointset.validate.subset",
+            "parameters": {
+              "neighbors": 3,
+              "threshold_distance": {
+                "unit": "mm",
+                "value": 0
+              },
+              "threshold_percent": 50
+            },
+            "protocol": 1,
+            "request_id": "outliers-quota-half--pointset.validate.subset"
+          },
+          "request_sha256": "41431bee59bedb46f83749d26a4c28fe90e122c9a3ed7c8247580e5b30fb485f",
+          "response": {
+            "metrics": {
+              "affine_rank": 2,
+              "affine_rank_valid": true,
+              "candidate_is_source_multiset_subset": true,
+              "candidate_is_source_subset": true,
+              "candidate_point_count": 5,
+              "cgal_reference_match": true,
+              "count_not_increased": true,
+              "finite_coordinates": true,
+              "normal_vectors_nonzero": null,
+              "normal_vectors_unit": null,
+              "normals_present": false,
+              "point_count": 5,
+              "point_count_not_increased": true,
+              "point_count_valid": true,
+              "reference_algorithm": "remove_outliers",
+              "source_point_count": 10,
+              "status": "pass",
+              "valid": true
+            },
+            "outputs": [
+              {
+                "blob_sha256": "9a38cac98b3d583efa1c085e7516fb711bf0b9b71da4b88b73f6508eb4da3506",
+                "format": "json",
+                "slot": "validation",
+                "type": "ValidationReport",
+                "unit": "none"
+              }
+            ],
+            "protocol": 1,
+            "request_id": "outliers-quota-half--pointset.validate.subset",
+            "status": "ok"
+          },
+          "response_sha256": "310363b1e3988b151cd2a6af0e3ac51563fb35be47fe54e0c040842063110419",
+          "input_hashes": [
+            "02cf7b17f3f3c2f1538163f0fa18b11f0247e2318b26dff5492ebd0a6ac95e13",
+            "362d924e2dff51f4da699158ada35c2be08868df85f44cc89826f15e9cf715c5"
+          ],
+          "output_hashes": [
+            "9a38cac98b3d583efa1c085e7516fb711bf0b9b71da4b88b73f6508eb4da3506"
+          ],
+          "report_blob_sha256": "9a38cac98b3d583efa1c085e7516fb711bf0b9b71da4b88b73f6508eb4da3506",
+          "report_sha256": "e7569fd0746f573935dc85e0aa3c35ee809d6fe0998c65416cd3cfe681a2a25c",
+          "status": "pass"
+        },
         {
           "operation_id": "pointset.validate.outliers_removed",
           "revision": 1,
@@ -7849,6 +8425,14 @@
             "pass": true,
             "count": 3
           },
+          "validator:pointset.validate.basic": {
+            "pass": true,
+            "report_sha256": "06bde1b69d09444ce5cbf703218c31aadd411b477f9ca4e1c8a95c69798b739b"
+          },
+          "validator:pointset.validate.subset": {
+            "pass": true,
+            "report_sha256": "e7569fd0746f573935dc85e0aa3c35ee809d6fe0998c65416cd3cfe681a2a25c"
+          },
           "validator:pointset.validate.outliers_removed": {
             "pass": true,
             "report_sha256": "cd5cb728abc4c7b724acbde1ec035951fa43a077271372eebea57a4864f56e69"
@@ -7857,10 +8441,494 @@
       }
     },
     {
+      "case_id": "spacing-cluster-k3",
+      "operation_id": "pointset.spacing.average",
+      "revision": 1,
+      "worker_manifest_sha256": "e9dfe99e7b2a858f3d9f0cbf8c8dbb424f3c7c32776a0885e45b9e51bf6a1c9b",
+      "test_id": "family-7.9-replay-cases",
+      "request": {
+        "inputs": [
+          {
+            "artifact_id": "input-0",
+            "blob_sha256": "362d924e2dff51f4da699158ada35c2be08868df85f44cc89826f15e9cf715c5",
+            "format": "xyz",
+            "sha256": "362d924e2dff51f4da699158ada35c2be08868df85f44cc89826f15e9cf715c5",
+            "type": "PointSet3",
+            "unit": "mm"
+          }
+        ],
+        "kernel": "package_recommended",
+        "limits": {
+          "memory_mb": 2048,
+          "wall_time_ms": 120000
+        },
+        "operation": "pointset.spacing.average",
+        "parameters": {
+          "neighbors": 3
+        },
+        "protocol": 1,
+        "request_id": "spacing-cluster-k3"
+      },
+      "request_sha256": "efcbeb76fd68d442400f897fac643378f1ebbc4af05d5d996ecef7c14805e23a",
+      "response": {
+        "metrics": {
+          "algorithm": "CGAL::compute_average_spacing",
+          "average_spacing": 1.8765368701257734,
+          "neighbors": 3,
+          "point_count": 10
+        },
+        "outputs": [
+          {
+            "blob_sha256": "e15adc76c9a4a8048327a5f5390a1d8fe41bea915898418741d16f8c86a56972",
+            "format": "json",
+            "slot": "analysis",
+            "type": "GeometryQueryReport",
+            "unit": "none"
+          }
+        ],
+        "protocol": 1,
+        "request_id": "spacing-cluster-k3",
+        "status": "ok"
+      },
+      "response_sha256": "4f569d830b9572217c7014bea2ddbb1343b6b36c6443d6f02193415d7b9481fc",
+      "input_hashes": [
+        "362d924e2dff51f4da699158ada35c2be08868df85f44cc89826f15e9cf715c5"
+      ],
+      "output_hashes": [
+        "e15adc76c9a4a8048327a5f5390a1d8fe41bea915898418741d16f8c86a56972"
+      ],
+      "validators": [
+        {
+          "operation_id": "pointset.validate.average_spacing",
+          "revision": 1,
+          "request": {
+            "inputs": [
+              {
+                "artifact_id": "spacing-cluster-k3-analysis-0",
+                "blob_sha256": "e15adc76c9a4a8048327a5f5390a1d8fe41bea915898418741d16f8c86a56972",
+                "format": "json",
+                "sha256": "e15adc76c9a4a8048327a5f5390a1d8fe41bea915898418741d16f8c86a56972",
+                "type": "GeometryQueryReport",
+                "unit": "none"
+              },
+              {
+                "artifact_id": "input-0",
+                "blob_sha256": "362d924e2dff51f4da699158ada35c2be08868df85f44cc89826f15e9cf715c5",
+                "format": "xyz",
+                "sha256": "362d924e2dff51f4da699158ada35c2be08868df85f44cc89826f15e9cf715c5",
+                "type": "PointSet3",
+                "unit": "mm"
+              }
+            ],
+            "kernel": "package_recommended",
+            "limits": {
+              "memory_mb": 2048,
+              "wall_time_ms": 120000
+            },
+            "operation": "pointset.validate.average_spacing",
+            "parameters": {
+              "neighbors": 3
+            },
+            "protocol": 1,
+            "request_id": "spacing-cluster-k3--pointset.validate.average_spacing"
+          },
+          "request_sha256": "dfbb17d1ff7e89d76f3fcb7ad16c9bb8b95266f01c1b192107b57c2e734315c8",
+          "response": {
+            "metrics": {
+              "checks": {
+                "average_spacing_matches_bruteforce": true,
+                "parameters_match": true,
+                "source_matches": true
+              },
+              "expected_average_spacing": 1.8765368701257734,
+              "independence": "brute-force k+1 nearest distances in long double (self included, as the CGAL neighbour query); no CGAL header",
+              "neighbors": 3,
+              "passed": true,
+              "point_count": 10,
+              "relative_tolerance": 1e-09,
+              "report_type": "ValidationReport",
+              "schema_version": 1,
+              "status": "pass",
+              "validator": "pointset.validate.average_spacing"
+            },
+            "outputs": [
+              {
+                "blob_sha256": "d56e6969c131a6eb2219ebc532f053aa55041991a283ebe79ef62040d67438a6",
+                "format": "json",
+                "slot": "validation",
+                "type": "ValidationReport",
+                "unit": "none"
+              }
+            ],
+            "protocol": 1,
+            "request_id": "spacing-cluster-k3--pointset.validate.average_spacing",
+            "status": "ok"
+          },
+          "response_sha256": "405f8d221f664c5970f88a71fbc5e1430511c9dc4ef40d017649d45d3ac18c48",
+          "input_hashes": [
+            "e15adc76c9a4a8048327a5f5390a1d8fe41bea915898418741d16f8c86a56972",
+            "362d924e2dff51f4da699158ada35c2be08868df85f44cc89826f15e9cf715c5"
+          ],
+          "output_hashes": [
+            "d56e6969c131a6eb2219ebc532f053aa55041991a283ebe79ef62040d67438a6"
+          ],
+          "report_blob_sha256": "d56e6969c131a6eb2219ebc532f053aa55041991a283ebe79ef62040d67438a6",
+          "report_sha256": "73f3aeefe07e85536d8ef3bbc861b0adc519162e0983c9694da0988f473e8352",
+          "status": "pass"
+        }
+      ],
+      "validation": {
+        "status": "pass",
+        "checks": {
+          "transform_executed": {
+            "pass": true
+          },
+          "behaviour_assertions": {
+            "pass": true,
+            "count": 2
+          },
+          "validator:pointset.validate.average_spacing": {
+            "pass": true,
+            "report_sha256": "73f3aeefe07e85536d8ef3bbc861b0adc519162e0983c9694da0988f473e8352"
+          }
+        }
+      }
+    },
+    {
+      "case_id": "outliers-threshold-from-spacing",
+      "operation_id": "pointset.remove_outliers",
+      "revision": 1,
+      "worker_manifest_sha256": "e9dfe99e7b2a858f3d9f0cbf8c8dbb424f3c7c32776a0885e45b9e51bf6a1c9b",
+      "test_id": "family-7.9-replay-cases",
+      "request": {
+        "inputs": [
+          {
+            "artifact_id": "input-0",
+            "blob_sha256": "362d924e2dff51f4da699158ada35c2be08868df85f44cc89826f15e9cf715c5",
+            "format": "xyz",
+            "sha256": "362d924e2dff51f4da699158ada35c2be08868df85f44cc89826f15e9cf715c5",
+            "type": "PointSet3",
+            "unit": "mm"
+          }
+        ],
+        "kernel": "package_recommended",
+        "limits": {
+          "memory_mb": 2048,
+          "wall_time_ms": 120000
+        },
+        "operation": "pointset.remove_outliers",
+        "parameters": {
+          "neighbors": 3,
+          "threshold_distance": {
+            "unit": "mm",
+            "value": 1.8765368701257734
+          },
+          "threshold_percent": 30
+        },
+        "protocol": 1,
+        "request_id": "outliers-threshold-from-spacing"
+      },
+      "request_sha256": "ebf2cd29bc2eccef79e881c859d5c1876bcee1305ff6a7654fb6db3681466d2a",
+      "response": {
+        "metrics": {
+          "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+          "input_point_count": 10,
+          "neighbors": 3,
+          "output_affine_rank": 2,
+          "output_point_count": 9,
+          "removed_point_count": 1,
+          "threshold_distance": {
+            "unit": "mm",
+            "value": 1.8765368701257734
+          },
+          "threshold_percent": 30.0
+        },
+        "outputs": [
+          {
+            "blob_sha256": "130cbd978ec10cd419ecab7ea0b1a791fcb412c92313d1681076ca9937eed6d8",
+            "format": "xyz",
+            "slot": "points",
+            "type": "PointSet3",
+            "unit": "mm"
+          }
+        ],
+        "protocol": 1,
+        "request_id": "outliers-threshold-from-spacing",
+        "status": "ok"
+      },
+      "response_sha256": "bd9f151bd3b4e46070dadb827a0c97b65bb5788ba83bea8f3e812e808342082a",
+      "input_hashes": [
+        "362d924e2dff51f4da699158ada35c2be08868df85f44cc89826f15e9cf715c5"
+      ],
+      "output_hashes": [
+        "130cbd978ec10cd419ecab7ea0b1a791fcb412c92313d1681076ca9937eed6d8"
+      ],
+      "validators": [
+        {
+          "operation_id": "pointset.validate.basic",
+          "revision": 1,
+          "request": {
+            "inputs": [
+              {
+                "artifact_id": "outliers-threshold-from-spacing-points-0",
+                "blob_sha256": "130cbd978ec10cd419ecab7ea0b1a791fcb412c92313d1681076ca9937eed6d8",
+                "format": "xyz",
+                "sha256": "130cbd978ec10cd419ecab7ea0b1a791fcb412c92313d1681076ca9937eed6d8",
+                "type": "PointSet3",
+                "unit": "mm"
+              }
+            ],
+            "kernel": "package_recommended",
+            "limits": {
+              "memory_mb": 2048,
+              "wall_time_ms": 120000
+            },
+            "operation": "pointset.validate.basic",
+            "parameters": {},
+            "protocol": 1,
+            "request_id": "outliers-threshold-from-spacing--pointset.validate.basic"
+          },
+          "request_sha256": "8dd7b06bbb66b73713b62113afd40a4cb3e35ff7eeeae4814a8b10da4f6272a5",
+          "response": {
+            "metrics": {
+              "affine_rank": 2,
+              "affine_rank_valid": true,
+              "finite_coordinates": true,
+              "normal_vectors_nonzero": null,
+              "normal_vectors_unit": null,
+              "normals_present": false,
+              "point_count": 9,
+              "point_count_valid": true,
+              "status": "pass",
+              "valid": true
+            },
+            "outputs": [
+              {
+                "blob_sha256": "91e5f5a4b28ff886f7e0052bbada9ccf478525a34dba8048590b281c85e19b52",
+                "format": "json",
+                "slot": "validation",
+                "type": "ValidationReport",
+                "unit": "none"
+              }
+            ],
+            "protocol": 1,
+            "request_id": "outliers-threshold-from-spacing--pointset.validate.basic",
+            "status": "ok"
+          },
+          "response_sha256": "557774655c126617382c34aee765a6749adfdaeb746e1fc56cfc24e79e97d2a1",
+          "input_hashes": [
+            "130cbd978ec10cd419ecab7ea0b1a791fcb412c92313d1681076ca9937eed6d8"
+          ],
+          "output_hashes": [
+            "91e5f5a4b28ff886f7e0052bbada9ccf478525a34dba8048590b281c85e19b52"
+          ],
+          "report_blob_sha256": "91e5f5a4b28ff886f7e0052bbada9ccf478525a34dba8048590b281c85e19b52",
+          "report_sha256": "2147be53380ed25edb2f460bede96351c7cc5b586adc4155a21fda4e611b0a3a",
+          "status": "pass"
+        },
+        {
+          "operation_id": "pointset.validate.subset",
+          "revision": 1,
+          "request": {
+            "inputs": [
+              {
+                "artifact_id": "outliers-threshold-from-spacing-points-0",
+                "blob_sha256": "130cbd978ec10cd419ecab7ea0b1a791fcb412c92313d1681076ca9937eed6d8",
+                "format": "xyz",
+                "sha256": "130cbd978ec10cd419ecab7ea0b1a791fcb412c92313d1681076ca9937eed6d8",
+                "type": "PointSet3",
+                "unit": "mm"
+              },
+              {
+                "artifact_id": "input-0",
+                "blob_sha256": "362d924e2dff51f4da699158ada35c2be08868df85f44cc89826f15e9cf715c5",
+                "format": "xyz",
+                "sha256": "362d924e2dff51f4da699158ada35c2be08868df85f44cc89826f15e9cf715c5",
+                "type": "PointSet3",
+                "unit": "mm"
+              }
+            ],
+            "kernel": "package_recommended",
+            "limits": {
+              "memory_mb": 2048,
+              "wall_time_ms": 120000
+            },
+            "operation": "pointset.validate.subset",
+            "parameters": {
+              "neighbors": 3,
+              "threshold_distance": {
+                "unit": "mm",
+                "value": 1.8765368701257734
+              },
+              "threshold_percent": 30
+            },
+            "protocol": 1,
+            "request_id": "outliers-threshold-from-spacing--pointset.validate.subset"
+          },
+          "request_sha256": "28966bed086e4d9b804a9353aea821be5714db1a6c6cdb4a6d22a2ffd4eb1b22",
+          "response": {
+            "metrics": {
+              "affine_rank": 2,
+              "affine_rank_valid": true,
+              "candidate_is_source_multiset_subset": true,
+              "candidate_is_source_subset": true,
+              "candidate_point_count": 9,
+              "cgal_reference_match": true,
+              "count_not_increased": true,
+              "finite_coordinates": true,
+              "normal_vectors_nonzero": null,
+              "normal_vectors_unit": null,
+              "normals_present": false,
+              "point_count": 9,
+              "point_count_not_increased": true,
+              "point_count_valid": true,
+              "reference_algorithm": "remove_outliers",
+              "source_point_count": 10,
+              "status": "pass",
+              "valid": true
+            },
+            "outputs": [
+              {
+                "blob_sha256": "34cde328a659999aeb04450fa66dffb0e52bd0e3600ce02f24c7f6992a04e50a",
+                "format": "json",
+                "slot": "validation",
+                "type": "ValidationReport",
+                "unit": "none"
+              }
+            ],
+            "protocol": 1,
+            "request_id": "outliers-threshold-from-spacing--pointset.validate.subset",
+            "status": "ok"
+          },
+          "response_sha256": "d6c28958582694f5c52b487474e2c4f815aefaf0fc2c598aee9a351f7a8c1e8f",
+          "input_hashes": [
+            "130cbd978ec10cd419ecab7ea0b1a791fcb412c92313d1681076ca9937eed6d8",
+            "362d924e2dff51f4da699158ada35c2be08868df85f44cc89826f15e9cf715c5"
+          ],
+          "output_hashes": [
+            "34cde328a659999aeb04450fa66dffb0e52bd0e3600ce02f24c7f6992a04e50a"
+          ],
+          "report_blob_sha256": "34cde328a659999aeb04450fa66dffb0e52bd0e3600ce02f24c7f6992a04e50a",
+          "report_sha256": "ba29d8978367c87ed09c74ce71cc80eeef365a9d00a091a71e2efa089384a6f9",
+          "status": "pass"
+        },
+        {
+          "operation_id": "pointset.validate.outliers_removed",
+          "revision": 1,
+          "request": {
+            "inputs": [
+              {
+                "artifact_id": "outliers-threshold-from-spacing-points-0",
+                "blob_sha256": "130cbd978ec10cd419ecab7ea0b1a791fcb412c92313d1681076ca9937eed6d8",
+                "format": "xyz",
+                "sha256": "130cbd978ec10cd419ecab7ea0b1a791fcb412c92313d1681076ca9937eed6d8",
+                "type": "PointSet3",
+                "unit": "mm"
+              },
+              {
+                "artifact_id": "input-0",
+                "blob_sha256": "362d924e2dff51f4da699158ada35c2be08868df85f44cc89826f15e9cf715c5",
+                "format": "xyz",
+                "sha256": "362d924e2dff51f4da699158ada35c2be08868df85f44cc89826f15e9cf715c5",
+                "type": "PointSet3",
+                "unit": "mm"
+              }
+            ],
+            "kernel": "package_recommended",
+            "limits": {
+              "memory_mb": 2048,
+              "wall_time_ms": 120000
+            },
+            "operation": "pointset.validate.outliers_removed",
+            "parameters": {
+              "neighbors": 3,
+              "threshold_distance": {
+                "unit": "mm",
+                "value": 1.8765368701257734
+              },
+              "threshold_percent": 30
+            },
+            "protocol": 1,
+            "request_id": "outliers-threshold-from-spacing--pointset.validate.outliers_removed"
+          },
+          "request_sha256": "5cf45dc014080892ae940da9462b1350a96a47587fadf3101505e39dddf6c340",
+          "response": {
+            "metrics": {
+              "checks": {
+                "candidate_is_source_multiset_subset": true,
+                "kept_count_matches_thresholds": true,
+                "kept_points_have_lowest_measures": true
+              },
+              "independence": "brute-force average squared distance to the k+1 nearest points (self included) in long double; no CGAL header",
+              "kept_point_count": 9,
+              "neighbors": 3,
+              "passed": true,
+              "percent_keep_index": 7,
+              "points_below_threshold_distance": 9,
+              "relative_tolerance": 1e-09,
+              "removed_point_count": 1,
+              "report_type": "ValidationReport",
+              "schema_version": 1,
+              "source_point_count": 10,
+              "status": "pass",
+              "validator": "pointset.validate.outliers_removed"
+            },
+            "outputs": [
+              {
+                "blob_sha256": "77143f42e0a4c8d5379fad06794cd881ed46c5c3092243826da0e7af6a12790a",
+                "format": "json",
+                "slot": "validation",
+                "type": "ValidationReport",
+                "unit": "none"
+              }
+            ],
+            "protocol": 1,
+            "request_id": "outliers-threshold-from-spacing--pointset.validate.outliers_removed",
+            "status": "ok"
+          },
+          "response_sha256": "cd9ff94411348e015c0cc3a19ea4d32d4cf1d64dbacb560402302b7dea67444e",
+          "input_hashes": [
+            "130cbd978ec10cd419ecab7ea0b1a791fcb412c92313d1681076ca9937eed6d8",
+            "362d924e2dff51f4da699158ada35c2be08868df85f44cc89826f15e9cf715c5"
+          ],
+          "output_hashes": [
+            "77143f42e0a4c8d5379fad06794cd881ed46c5c3092243826da0e7af6a12790a"
+          ],
+          "report_blob_sha256": "77143f42e0a4c8d5379fad06794cd881ed46c5c3092243826da0e7af6a12790a",
+          "report_sha256": "fe1b0cf1b9dd7884021516f88affe9a1ffcd590ace54f0c32da93317d1db0abd",
+          "status": "pass"
+        }
+      ],
+      "validation": {
+        "status": "pass",
+        "checks": {
+          "transform_executed": {
+            "pass": true
+          },
+          "behaviour_assertions": {
+            "pass": true,
+            "count": 3
+          },
+          "validator:pointset.validate.basic": {
+            "pass": true,
+            "report_sha256": "2147be53380ed25edb2f460bede96351c7cc5b586adc4155a21fda4e611b0a3a"
+          },
+          "validator:pointset.validate.subset": {
+            "pass": true,
+            "report_sha256": "ba29d8978367c87ed09c74ce71cc80eeef365a9d00a091a71e2efa089384a6f9"
+          },
+          "validator:pointset.validate.outliers_removed": {
+            "pass": true,
+            "report_sha256": "fe1b0cf1b9dd7884021516f88affe9a1ffcd590ace54f0c32da93317d1db0abd"
+          }
+        }
+      }
+    },
+    {
       "case_id": "normals-pca-plane",
       "operation_id": "pointset.normals.estimate",
       "revision": 1,
-      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "worker_manifest_sha256": "e9dfe99e7b2a858f3d9f0cbf8c8dbb424f3c7c32776a0885e45b9e51bf6a1c9b",
       "test_id": "family-7.9-replay-cases",
       "request": {
         "inputs": [
@@ -8089,7 +9157,7 @@
       "case_id": "normals-jet-plane",
       "operation_id": "pointset.normals.estimate",
       "revision": 1,
-      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "worker_manifest_sha256": "e9dfe99e7b2a858f3d9f0cbf8c8dbb424f3c7c32776a0885e45b9e51bf6a1c9b",
       "test_id": "family-7.9-replay-cases",
       "request": {
         "inputs": [
@@ -8321,7 +9389,7 @@
       "case_id": "normals-orient-mst",
       "operation_id": "pointset.normals.orient_mst",
       "revision": 1,
-      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "worker_manifest_sha256": "e9dfe99e7b2a858f3d9f0cbf8c8dbb424f3c7c32776a0885e45b9e51bf6a1c9b",
       "test_id": "family-7.9-replay-cases",
       "request": {
         "inputs": [
@@ -8552,7 +9620,7 @@
       "case_id": "simplify-grid",
       "operation_id": "pointset.simplify.grid",
       "revision": 1,
-      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "worker_manifest_sha256": "e9dfe99e7b2a858f3d9f0cbf8c8dbb424f3c7c32776a0885e45b9e51bf6a1c9b",
       "test_id": "family-7.9-replay-cases",
       "request": {
         "inputs": [
@@ -8789,7 +9857,7 @@
       "case_id": "simplify-random-seed-a",
       "operation_id": "pointset.simplify.random",
       "revision": 1,
-      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "worker_manifest_sha256": "e9dfe99e7b2a858f3d9f0cbf8c8dbb424f3c7c32776a0885e45b9e51bf6a1c9b",
       "test_id": "family-7.9-replay-cases",
       "request": {
         "inputs": [
@@ -9026,7 +10094,7 @@
       "case_id": "simplify-random-seed-a-repeat",
       "operation_id": "pointset.simplify.random",
       "revision": 1,
-      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "worker_manifest_sha256": "e9dfe99e7b2a858f3d9f0cbf8c8dbb424f3c7c32776a0885e45b9e51bf6a1c9b",
       "test_id": "family-7.9-replay-cases",
       "request": {
         "inputs": [
@@ -9260,7 +10328,7 @@
       "case_id": "simplify-random-seed-b",
       "operation_id": "pointset.simplify.random",
       "revision": 1,
-      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "worker_manifest_sha256": "e9dfe99e7b2a858f3d9f0cbf8c8dbb424f3c7c32776a0885e45b9e51bf6a1c9b",
       "test_id": "family-7.9-replay-cases",
       "request": {
         "inputs": [
@@ -9494,7 +10562,7 @@
       "case_id": "simplify-hierarchy",
       "operation_id": "pointset.simplify.hierarchy",
       "revision": 1,
-      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "worker_manifest_sha256": "e9dfe99e7b2a858f3d9f0cbf8c8dbb424f3c7c32776a0885e45b9e51bf6a1c9b",
       "test_id": "family-7.9-replay-cases",
       "request": {
         "inputs": [
@@ -9724,7 +10792,7 @@
       "case_id": "spacing-neighborhood-too-large-rejected",
       "operation_id": "pointset.spacing.average",
       "revision": 1,
-      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "worker_manifest_sha256": "e9dfe99e7b2a858f3d9f0cbf8c8dbb424f3c7c32776a0885e45b9e51bf6a1c9b",
       "test_id": "family-7.9-replay-cases",
       "request": {
         "inputs": [
@@ -9776,7 +10844,7 @@
       "case_id": "spacing-tampered-value-rejected",
       "operation_id": "pointset.validate.average_spacing",
       "revision": 1,
-      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "worker_manifest_sha256": "e9dfe99e7b2a858f3d9f0cbf8c8dbb424f3c7c32776a0885e45b9e51bf6a1c9b",
       "test_id": "family-7.9-replay-cases",
       "request": {
         "inputs": [
@@ -9837,7 +10905,7 @@
       "case_id": "outliers-good-point-removed-rejected",
       "operation_id": "pointset.validate.outliers_removed",
       "revision": 1,
-      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "worker_manifest_sha256": "e9dfe99e7b2a858f3d9f0cbf8c8dbb424f3c7c32776a0885e45b9e51bf6a1c9b",
       "test_id": "family-7.9-replay-cases",
       "request": {
         "inputs": [
@@ -9900,5 +10968,5 @@
       "status": "expected_rejection"
     }
   },
-  "coverage_note": "Family 7.9: 4 requirement(s) bound by 12 replayed cases with registry-derived mandatory validators; 2 requirement(s) remain unbound with recorded gaps. The immutable 80-requirement denominator and full standalone acceptance remain incomplete."
+  "coverage_note": "Family 7.9: 4 requirement(s) bound by 14 replayed cases with registry-derived mandatory validators; 2 requirement(s) remain unbound with recorded gaps. The immutable 80-requirement denominator and full standalone acceptance remain incomplete."
 }

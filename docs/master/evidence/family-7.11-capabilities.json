@@ -57,14 +57,14 @@
   },
   "family_contract_sha256": "3cb7292f6cc9d9859e03d907aeb273bc6c0c16225d7cff589428236cdf58997e",
   "family_contract_source_path": "scripts/master_replay_families.py",
-  "family_contract_source_sha256": "8074a42ec540bf6de02610fdca1507f463a726f2239cebd648176fd1642db918",
+  "family_contract_source_sha256": "3188cb5580e18f7a6e3309070d04980fcaaeb1def3524578ad81e5d7f3acd715",
   "family_contract_source_hash_encoding": "utf8-lf",
   "catalog_baseline_sha256": "143ec18a5b64d506aad60dc24b0a1ea30940c715d1223b3465fa140aeb9d02a7",
-  "operation_registry_sha256": "724744997d2f9d833ce60c617e647d2e7d17b748bf39dc7c20adaa9825839858",
+  "operation_registry_sha256": "25e936723e6cfbe3de1a68847a0d575b3275eb4dc473823862be40004bd26b66",
   "operation_registry_hash_encoding": "utf8-lf",
   "policy_catalog_sha256": "45f4be759288aaeb834a3ce97aa64ee7768048b15534618fc8c19512801f9a9f",
   "policy_catalog_hash_encoding": "utf8-lf",
-  "worker_sha256": "398362d1745fc6d8ef61fe96900b1845072793014c545ded0be5d66023b77500",
+  "worker_sha256": "2f56a91a31af1c972ec059b5fa0bf2d15fdd79f618b62b7bbf6cc7fd640c0926",
   "worker_binary_format": "pe",
   "worker_manifest": {
     "actual_cgal_version": "6.2.1",
@@ -280,6 +280,11 @@
           ],
           "source_header": "CGAL/remove_outliers.h",
           "validator_parameter_bindings": {
+            "pointset.validate.outliers_removed": {
+              "neighbors": "neighbors",
+              "threshold_distance": "threshold_distance",
+              "threshold_percent": "threshold_percent"
+            },
             "pointset.validate.subset": {
               "neighbors": "neighbors",
               "threshold_distance": "threshold_distance",
@@ -288,7 +293,8 @@
           },
           "validators": [
             "pointset.validate.basic",
-            "pointset.validate.subset"
+            "pointset.validate.subset",
+            "pointset.validate.outliers_removed"
           ]
         },
         "input_types": [
@@ -6131,39 +6137,6 @@
       },
       {
         "dependencies": [
-          "Point_set_processing_3"
-        ],
-        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
-        "id": "pointset.outliers.remove",
-        "info": {
-          "input_slots": [
-            "points"
-          ],
-          "maximum_input_points": 400,
-          "source_header": "CGAL/remove_outliers.h",
-          "validator_parameter_bindings": {
-            "pointset.validate.outliers_removed": {
-              "neighbors": "neighbors",
-              "threshold_distance": "threshold_distance",
-              "threshold_percent": "threshold_percent"
-            }
-          },
-          "validators": [
-            "pointset.validate.outliers_removed"
-          ]
-        },
-        "input_types": [
-          "PointSet3"
-        ],
-        "output_type": "PointSet3",
-        "revision": 1,
-        "role": "transform",
-        "supported_kernels": [
-          "package_recommended"
-        ]
-      },
-      {
-        "dependencies": [
           "Bounding_volumes"
         ],
         "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
@@ -6238,32 +6211,6 @@
           },
           "validators": [
             "mesh.validate.features"
-          ]
-        },
-        "input_types": [
-          "TriangleSurfaceMesh"
-        ],
-        "output_type": "GeometryQueryReport",
-        "revision": 1,
-        "role": "analysis",
-        "supported_kernels": [
-          "package_recommended"
-        ]
-      },
-      {
-        "dependencies": [
-          "Polygon_mesh_processing"
-        ],
-        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
-        "id": "mesh.intersections.self",
-        "info": {
-          "input_slots": [
-            "mesh"
-          ],
-          "maximum_input_faces": 600,
-          "source_header": "CGAL/Polygon_mesh_processing/self_intersections.h",
-          "validators": [
-            "mesh.validate.self_intersections"
           ]
         },
         "input_types": [
@@ -6564,37 +6511,6 @@
       },
       {
         "dependencies": [
-          "Polygon_mesh_processing"
-        ],
-        "effective_kernel": "exact:GMP",
-        "id": "mesh.validate.self_intersections",
-        "info": {
-          "checks": [
-            "parameters_match",
-            "source_matches",
-            "intersecting_pairs_exact",
-            "flag_consistent_exact"
-          ],
-          "independence": "exact rational triangle/triangle intersection polygon vertices and shared-simplex test; no CGAL header",
-          "input_slots": [
-            "candidate",
-            "mesh"
-          ],
-          "output_slot": "validation"
-        },
-        "input_types": [
-          "GeometryQueryReport",
-          "TriangleSurfaceMesh"
-        ],
-        "output_type": "ValidationReport",
-        "revision": 1,
-        "role": "validator",
-        "supported_kernels": [
-          "package_recommended"
-        ]
-      },
-      {
-        "dependencies": [
           "PMP_Boolean_operations"
         ],
         "effective_kernel": "exact:GMP",
@@ -6742,7 +6658,7 @@
     ],
     "worker": "cgal-master-worker"
   },
-  "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+  "worker_manifest_sha256": "e9dfe99e7b2a858f3d9f0cbf8c8dbb424f3c7c32776a0885e45b9e51bf6a1c9b",
   "tests": [
     {
       "id": "family-7.11-replay-cases",
@@ -6967,7 +6883,7 @@
       "case_id": "dt2-grid",
       "operation_id": "triangulation.delaunay_2",
       "revision": 1,
-      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "worker_manifest_sha256": "e9dfe99e7b2a858f3d9f0cbf8c8dbb424f3c7c32776a0885e45b9e51bf6a1c9b",
       "test_id": "family-7.11-replay-cases",
       "request": {
         "inputs": [
@@ -7127,7 +7043,7 @@
       "case_id": "dt3-cube",
       "operation_id": "triangulation.delaunay_3",
       "revision": 1,
-      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "worker_manifest_sha256": "e9dfe99e7b2a858f3d9f0cbf8c8dbb424f3c7c32776a0885e45b9e51bf6a1c9b",
       "test_id": "family-7.11-replay-cases",
       "request": {
         "inputs": [
@@ -7285,7 +7201,7 @@
       "case_id": "dt3-cloud",
       "operation_id": "triangulation.delaunay_3",
       "revision": 1,
-      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "worker_manifest_sha256": "e9dfe99e7b2a858f3d9f0cbf8c8dbb424f3c7c32776a0885e45b9e51bf6a1c9b",
       "test_id": "family-7.11-replay-cases",
       "request": {
         "inputs": [
@@ -7443,7 +7359,7 @@
       "case_id": "cdt-delaunay",
       "operation_id": "triangulation.constrained_2",
       "revision": 1,
-      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "worker_manifest_sha256": "e9dfe99e7b2a858f3d9f0cbf8c8dbb424f3c7c32776a0885e45b9e51bf6a1c9b",
       "test_id": "family-7.11-replay-cases",
       "request": {
         "inputs": [
@@ -7611,7 +7527,7 @@
       "case_id": "ct-plain",
       "operation_id": "triangulation.constrained_2",
       "revision": 1,
-      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "worker_manifest_sha256": "e9dfe99e7b2a858f3d9f0cbf8c8dbb424f3c7c32776a0885e45b9e51bf6a1c9b",
       "test_id": "family-7.11-replay-cases",
       "request": {
         "inputs": [
@@ -7780,7 +7696,7 @@
       "case_id": "dt2-collinear-rejected",
       "operation_id": "triangulation.delaunay_2",
       "revision": 1,
-      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "worker_manifest_sha256": "e9dfe99e7b2a858f3d9f0cbf8c8dbb424f3c7c32776a0885e45b9e51bf6a1c9b",
       "test_id": "family-7.11-replay-cases",
       "request": {
         "inputs": [
@@ -7830,7 +7746,7 @@
       "case_id": "cdt-crossing-constraints-rejected",
       "operation_id": "triangulation.constrained_2",
       "revision": 1,
-      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "worker_manifest_sha256": "e9dfe99e7b2a858f3d9f0cbf8c8dbb424f3c7c32776a0885e45b9e51bf6a1c9b",
       "test_id": "family-7.11-replay-cases",
       "request": {
         "inputs": [

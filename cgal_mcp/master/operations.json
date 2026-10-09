@@ -1244,7 +1244,8 @@
         "required": true,
         "validators": [
           "pointset.validate.basic",
-          "pointset.validate.subset"
+          "pointset.validate.subset",
+          "pointset.validate.outliers_removed"
         ],
         "bindings": {
           "pointset.validate.basic": {
@@ -1255,6 +1256,27 @@
             }
           },
           "pointset.validate.subset": {
+            "artifacts": {
+              "candidate": {
+                "output": "points"
+              },
+              "source": {
+                "input": "points"
+              }
+            },
+            "parameters": {
+              "neighbors": {
+                "parameter": "neighbors"
+              },
+              "threshold_percent": {
+                "parameter": "threshold_percent"
+              },
+              "threshold_distance": {
+                "parameter": "threshold_distance"
+              }
+            }
+          },
+          "pointset.validate.outliers_removed": {
             "artifacts": {
               "candidate": {
                 "output": "points"
@@ -1299,11 +1321,17 @@
               "neighbors": "neighbors",
               "threshold_distance": "threshold_distance",
               "threshold_percent": "threshold_percent"
+            },
+            "pointset.validate.outliers_removed": {
+              "neighbors": "neighbors",
+              "threshold_distance": "threshold_distance",
+              "threshold_percent": "threshold_percent"
             }
           },
           "validators": [
             "pointset.validate.basic",
-            "pointset.validate.subset"
+            "pointset.validate.subset",
+            "pointset.validate.outliers_removed"
           ]
         }
       },
@@ -11320,7 +11348,7 @@
         "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
         "info": {
           "input_format": "json",
-          "maximum_vertices": 200000,
+          "maximum_points": 200000,
           "output_format": "json",
           "source_header": "CGAL/convex_hull_2.h",
           "validators": [
@@ -11815,7 +11843,7 @@
         "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
         "info": {
           "input_format": "json",
-          "maximum_vertices": 200000,
+          "maximum_points": 200000,
           "output_format": "json",
           "source_header": "CGAL/Delaunay_triangulation_2.h",
           "validators": [
@@ -12144,7 +12172,7 @@
         "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
         "info": {
           "input_format": "xyz",
-          "maximum_vertices": 200000,
+          "maximum_points": 200000,
           "output_format": "json",
           "source_header": "CGAL/Delaunay_triangulation_3.h",
           "validators": [
@@ -22855,7 +22883,7 @@
         "info": {
           "input_format": "json",
           "output_format": "json",
-          "maximum_vertices": 2000,
+          "maximum_points": 2000,
           "validators": [
             "optimization.validate.matrix_search"
           ],
@@ -27920,206 +27948,6 @@
       }
     },
     {
-      "id": "pointset.outliers.remove",
-      "revision": 1,
-      "status": "VALIDATED",
-      "role": "transform",
-      "summary": "CGAL::remove_outliers: drop the points with the largest average squared distance to their k nearest neighbours, within a percentile quota and a distance threshold (reconstruction preprocessing).",
-      "package": "Point_set_processing_3",
-      "major_requirements": [
-        "major.7.9.06"
-      ],
-      "aliases": [
-        "reconstruction preprocessing",
-        "k nearest neighbour quota"
-      ],
-      "sources": [
-        {
-          "kind": "cgal_package",
-          "identifier": "Point_set_processing_3"
-        },
-        {
-          "kind": "cgal_symbol",
-          "identifier": "CGAL::remove_outliers"
-        },
-        {
-          "kind": "cgal_symbol",
-          "identifier": "CGAL::compute_average_spacing"
-        },
-        {
-          "kind": "header",
-          "identifier": "CGAL/remove_outliers.h"
-        },
-        {
-          "kind": "header",
-          "identifier": "CGAL/compute_average_spacing.h"
-        },
-        {
-          "kind": "manual",
-          "identifier": "Point_set_processing_3/index.html"
-        }
-      ],
-      "license": {
-        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
-        "package": "Point_set_processing_3",
-        "commercial_option": true,
-        "evidence": [
-          {
-            "path": "include/CGAL/remove_outliers.h",
-            "sha256": "c3ab7f2e09f1ef03296a9ce702731bcbff5ef54be161dc5ed3cf452f9f5d1517"
-          },
-          {
-            "path": "LICENSE.GPL",
-            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
-          }
-        ]
-      },
-      "io": {
-        "inputs": [
-          {
-            "slot": "points",
-            "types": [
-              "PointSet3"
-            ],
-            "formats": [
-              "xyz"
-            ],
-            "unit_dimension": "length",
-            "units": [
-              "mm",
-              "cm",
-              "m"
-            ]
-          }
-        ],
-        "outputs": [
-          {
-            "slot": "points",
-            "type": "PointSet3",
-            "format": "xyz",
-            "unit_from": "points"
-          }
-        ]
-      },
-      "parameters": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "neighbors",
-          "threshold_percent",
-          "threshold_distance"
-        ],
-        "properties": {
-          "neighbors": {
-            "type": "integer",
-            "minimum": 2,
-            "maximum": 1000,
-            "description": "Neighbourhood size k (the k+1 nearest points including the point itself)."
-          },
-          "threshold_percent": {
-            "type": "number",
-            "minimum": 0,
-            "maximum": 100,
-            "description": "Maximum percentage of points removed as outliers."
-          },
-          "threshold_distance": {
-            "type": "TypedLength",
-            "minimum": 0,
-            "description": "Points whose average squared neighbour distance exceeds the square of this distance are outliers (artifact length units)."
-          }
-        }
-      },
-      "preconditions": [
-        {
-          "id": "bounded_input",
-          "maximum_bytes": 268435456,
-          "maximum_vertices": 400
-        }
-      ],
-      "validation": {
-        "required": true,
-        "validators": [
-          "pointset.validate.outliers_removed"
-        ],
-        "bindings": {
-          "pointset.validate.outliers_removed": {
-            "artifacts": {
-              "candidate": {
-                "output": "points"
-              },
-              "source": {
-                "input": "points"
-              }
-            },
-            "parameters": {
-              "neighbors": {
-                "parameter": "neighbors"
-              },
-              "threshold_percent": {
-                "parameter": "threshold_percent"
-              },
-              "threshold_distance": {
-                "parameter": "threshold_distance"
-              }
-            }
-          }
-        }
-      },
-      "output_contract": {
-        "geometry_mutation": true,
-        "source_sha256_preserved": true,
-        "producer_diagnostics_are_non_authoritative": true,
-        "candidate_published_only_after_validation": true
-      },
-      "dependencies": [
-        "Point_set_processing_3"
-      ],
-      "worker_manifest": {
-        "require_dependencies": true,
-        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
-        "info": {
-          "input_slots": [
-            "points"
-          ],
-          "maximum_input_points": 400,
-          "source_header": "CGAL/remove_outliers.h",
-          "validator_parameter_bindings": {
-            "pointset.validate.outliers_removed": {
-              "neighbors": "neighbors",
-              "threshold_distance": "threshold_distance",
-              "threshold_percent": "threshold_percent"
-            }
-          },
-          "validators": [
-            "pointset.validate.outliers_removed"
-          ]
-        }
-      },
-      "kernel": {
-        "supported": [
-          "package_recommended"
-        ],
-        "default": "package_recommended"
-      },
-      "precision": {
-        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
-        "coordinate_storage": "IEEE-754 binary64",
-        "predicate_policy": "CGAL filtered-exact predicates (EPICK); independent validators use exact rational arithmetic or an explicit tolerance stated in the report",
-        "exact_constructions": "unsupported_fail_closed",
-        "requested_policy": "package_recommended only"
-      },
-      "evidence": {
-        "tests": [
-          "tests/master_batch2_cases.py"
-        ],
-        "worker_manifest_operation": "pointset.outliers.remove",
-        "build": "build-master/Release/cgal-master-worker.exe",
-        "source_kind": "official_release",
-        "cgal_version": "6.2.1",
-        "review_status": "self_verified_not_independently_reviewed"
-      }
-    },
-    {
       "id": "shape.bounding.circle",
       "revision": 1,
       "status": "VALIDATED",
@@ -28633,164 +28461,6 @@
           "tests/master_batch2_cases.py"
         ],
         "worker_manifest_operation": "mesh.features.detect",
-        "build": "build-master/Release/cgal-master-worker.exe",
-        "source_kind": "official_release",
-        "cgal_version": "6.2.1",
-        "review_status": "self_verified_not_independently_reviewed"
-      }
-    },
-    {
-      "id": "mesh.intersections.self",
-      "revision": 1,
-      "status": "VALIDATED",
-      "role": "analysis",
-      "summary": "Report every pair of self-intersecting faces of a triangle mesh and whether it self-intersects (PMP::self_intersections, PMP::does_self_intersect).",
-      "package": "Polygon_mesh_processing",
-      "major_requirements": [
-        "major.7.3.07"
-      ],
-      "aliases": [
-        "self intersection",
-        "self-intersecting faces",
-        "mesh intersection test",
-        "\u81ea\u5df1\u4ea4\u5dee"
-      ],
-      "sources": [
-        {
-          "kind": "cgal_package",
-          "identifier": "Polygon_mesh_processing"
-        },
-        {
-          "kind": "cgal_symbol",
-          "identifier": "CGAL::Polygon_mesh_processing::self_intersections"
-        },
-        {
-          "kind": "cgal_symbol",
-          "identifier": "CGAL::Polygon_mesh_processing::does_self_intersect"
-        },
-        {
-          "kind": "header",
-          "identifier": "CGAL/Polygon_mesh_processing/self_intersections.h"
-        },
-        {
-          "kind": "manual",
-          "identifier": "Polygon_mesh_processing/index.html"
-        }
-      ],
-      "license": {
-        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
-        "package": "Polygon_mesh_processing",
-        "commercial_option": true,
-        "evidence": [
-          {
-            "path": "include/CGAL/Polygon_mesh_processing/self_intersections.h",
-            "sha256": "d459c0e6480a9e1c2cbef291340ae61a0bf4e79ceb182365c1b922dd7e38ae8f"
-          },
-          {
-            "path": "LICENSE.GPL",
-            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
-          }
-        ]
-      },
-      "io": {
-        "inputs": [
-          {
-            "slot": "mesh",
-            "types": [
-              "TriangleSurfaceMesh"
-            ],
-            "formats": [
-              "off"
-            ],
-            "unit_dimension": "length",
-            "units": [
-              "mm",
-              "cm",
-              "m"
-            ]
-          }
-        ],
-        "outputs": [
-          {
-            "slot": "analysis",
-            "type": "GeometryQueryReport",
-            "format": "json",
-            "unit": "none"
-          }
-        ]
-      },
-      "parameters": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [],
-        "properties": {}
-      },
-      "preconditions": [
-        {
-          "id": "bounded_input",
-          "maximum_bytes": 268435456,
-          "maximum_faces": 600
-        }
-      ],
-      "validation": {
-        "required": true,
-        "validators": [
-          "mesh.validate.self_intersections"
-        ],
-        "bindings": {
-          "mesh.validate.self_intersections": {
-            "artifacts": {
-              "candidate": {
-                "output": "analysis"
-              },
-              "mesh": {
-                "input": "mesh"
-              }
-            }
-          }
-        }
-      },
-      "output_contract": {
-        "report_schema_version": 1,
-        "geometry_mutation": false,
-        "source_sha256_preserved": true,
-        "producer_diagnostics_are_non_authoritative": true
-      },
-      "dependencies": [
-        "Polygon_mesh_processing"
-      ],
-      "worker_manifest": {
-        "require_dependencies": true,
-        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
-        "info": {
-          "input_slots": [
-            "mesh"
-          ],
-          "maximum_input_faces": 600,
-          "source_header": "CGAL/Polygon_mesh_processing/self_intersections.h",
-          "validators": [
-            "mesh.validate.self_intersections"
-          ]
-        }
-      },
-      "kernel": {
-        "supported": [
-          "package_recommended"
-        ],
-        "default": "package_recommended"
-      },
-      "precision": {
-        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
-        "coordinate_storage": "IEEE-754 binary64",
-        "predicate_policy": "CGAL filtered-exact predicates (EPICK); independent validators use exact rational arithmetic or an explicit tolerance stated in the report",
-        "exact_constructions": "unsupported_fail_closed",
-        "requested_policy": "package_recommended only"
-      },
-      "evidence": {
-        "tests": [
-          "tests/master_batch2_cases.py"
-        ],
-        "worker_manifest_operation": "mesh.intersections.self",
         "build": "build-master/Release/cgal-master-worker.exe",
         "source_kind": "official_release",
         "cgal_version": "6.2.1",
@@ -29724,185 +29394,6 @@
       }
     },
     {
-      "id": "pointset.validate.outliers_removed",
-      "revision": 1,
-      "status": "VALIDATED",
-      "role": "validator",
-      "summary": "Recompute every point's average squared neighbour distance by brute force and check the kept set, the removal quota and the ordering of kept versus removed points.",
-      "package": "Point_set_processing_3",
-      "aliases": [
-        "pointset validate outliers removed"
-      ],
-      "sources": [
-        {
-          "kind": "cgal_package",
-          "identifier": "Point_set_processing_3"
-        },
-        {
-          "kind": "operation_reference",
-          "identifier": "pointset.outliers.remove"
-        }
-      ],
-      "license": {
-        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
-        "package": "Point_set_processing_3",
-        "commercial_option": true,
-        "evidence": [
-          {
-            "path": "include/CGAL/remove_outliers.h",
-            "sha256": "c3ab7f2e09f1ef03296a9ce702731bcbff5ef54be161dc5ed3cf452f9f5d1517"
-          },
-          {
-            "path": "LICENSE.GPL",
-            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
-          }
-        ]
-      },
-      "io": {
-        "inputs": [
-          {
-            "slot": "candidate",
-            "types": [
-              "PointSet3"
-            ],
-            "formats": [
-              "xyz"
-            ],
-            "unit_dimension": "length",
-            "units": [
-              "mm",
-              "cm",
-              "m"
-            ]
-          },
-          {
-            "slot": "source",
-            "types": [
-              "PointSet3"
-            ],
-            "formats": [
-              "xyz"
-            ],
-            "unit_dimension": "length",
-            "units": [
-              "mm",
-              "cm",
-              "m"
-            ]
-          }
-        ],
-        "outputs": [
-          {
-            "slot": "validation",
-            "type": "ValidationReport",
-            "format": "json",
-            "unit": "none"
-          }
-        ]
-      },
-      "parameters": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "neighbors",
-          "threshold_percent",
-          "threshold_distance"
-        ],
-        "properties": {
-          "neighbors": {
-            "type": "integer",
-            "minimum": 2,
-            "maximum": 1000,
-            "description": "Neighbourhood size k (the k+1 nearest points including the point itself)."
-          },
-          "threshold_percent": {
-            "type": "number",
-            "minimum": 0,
-            "maximum": 100,
-            "description": "Maximum percentage of points removed as outliers."
-          },
-          "threshold_distance": {
-            "type": "TypedLength",
-            "minimum": 0,
-            "description": "Points whose average squared neighbour distance exceeds the square of this distance are outliers (artifact length units)."
-          }
-        }
-      },
-      "preconditions": [],
-      "validation": {
-        "required": false,
-        "validators": [],
-        "bindings": {},
-        "terminal_validator": true,
-        "validates": "pointset.outliers.remove",
-        "validates_all": [
-          "pointset.outliers.remove"
-        ],
-        "required_report_checks": {
-          "status": "pass",
-          "passed": true,
-          "validator": "pointset.validate.outliers_removed",
-          "checks.candidate_is_source_multiset_subset": true,
-          "checks.kept_count_matches_thresholds": true,
-          "checks.kept_points_have_lowest_measures": true
-        }
-      },
-      "output_contract": {
-        "schema": "ValidationReport/v1",
-        "required_true_checks": [
-          "candidate_is_source_multiset_subset",
-          "kept_count_matches_thresholds",
-          "kept_points_have_lowest_measures"
-        ],
-        "status": "pass",
-        "failure_or_indeterminate_publish": false,
-        "independence": "brute-force average squared distance to the k+1 nearest points (self included) in long double; no CGAL header"
-      },
-      "dependencies": [
-        "Point_set_processing_3"
-      ],
-      "worker_manifest": {
-        "require_dependencies": true,
-        "effective_kernel": "float:long_double",
-        "info": {
-          "checks": [
-            "candidate_is_source_multiset_subset",
-            "kept_count_matches_thresholds",
-            "kept_points_have_lowest_measures"
-          ],
-          "independence": "brute-force average squared distance to the k+1 nearest points (self included) in long double; no CGAL header",
-          "input_slots": [
-            "candidate",
-            "source"
-          ],
-          "output_slot": "validation"
-        }
-      },
-      "kernel": {
-        "supported": [
-          "package_recommended"
-        ],
-        "default": "package_recommended"
-      },
-      "precision": {
-        "effective_kernel": "long double floating point with an explicit tolerance (no CGAL header, no exact arithmetic)",
-        "coordinate_storage": "IEEE-754 binary64 converted to long double",
-        "predicate_policy": "no exact predicates: the subdivision masks are recomputed in long double and compared with an explicit tolerance stated in the report",
-        "exact_constructions": "none: all compared quantities are long double values checked within the stated tolerance",
-        "requested_policy": "package_recommended only"
-      },
-      "evidence": {
-        "tests": [
-          "tests/master_batch2_cases.py"
-        ],
-        "worker_manifest_operation": "pointset.validate.outliers_removed",
-        "build": "build-master/Release/cgal-master-worker.exe",
-        "source_kind": "official_release",
-        "cgal_version": "6.2.1",
-        "review_status": "self_verified_not_independently_reviewed"
-      }
-    },
-    {
       "id": "shape.validate.min_circle",
       "revision": 1,
       "status": "VALIDATED",
@@ -30393,161 +29884,6 @@
           "tests/master_batch2_cases.py"
         ],
         "worker_manifest_operation": "mesh.validate.features",
-        "build": "build-master/Release/cgal-master-worker.exe",
-        "source_kind": "official_release",
-        "cgal_version": "6.2.1",
-        "review_status": "self_verified_not_independently_reviewed"
-      }
-    },
-    {
-      "id": "mesh.validate.self_intersections",
-      "revision": 1,
-      "status": "VALIDATED",
-      "role": "validator",
-      "summary": "Recompute every triangle/triangle intersection exactly with the shared-simplex rule and compare the reported face pairs and flag.",
-      "package": "Polygon_mesh_processing",
-      "aliases": [
-        "mesh validate self intersections"
-      ],
-      "sources": [
-        {
-          "kind": "cgal_package",
-          "identifier": "Polygon_mesh_processing"
-        },
-        {
-          "kind": "operation_reference",
-          "identifier": "mesh.intersections.self"
-        }
-      ],
-      "license": {
-        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
-        "package": "Polygon_mesh_processing",
-        "commercial_option": true,
-        "evidence": [
-          {
-            "path": "include/CGAL/Polygon_mesh_processing/self_intersections.h",
-            "sha256": "d459c0e6480a9e1c2cbef291340ae61a0bf4e79ceb182365c1b922dd7e38ae8f"
-          },
-          {
-            "path": "LICENSE.GPL",
-            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
-          }
-        ]
-      },
-      "io": {
-        "inputs": [
-          {
-            "slot": "candidate",
-            "types": [
-              "GeometryQueryReport"
-            ],
-            "formats": [
-              "json"
-            ],
-            "unit": "none"
-          },
-          {
-            "slot": "mesh",
-            "types": [
-              "TriangleSurfaceMesh"
-            ],
-            "formats": [
-              "off"
-            ],
-            "unit_dimension": "length",
-            "units": [
-              "mm",
-              "cm",
-              "m"
-            ]
-          }
-        ],
-        "outputs": [
-          {
-            "slot": "validation",
-            "type": "ValidationReport",
-            "format": "json",
-            "unit": "none"
-          }
-        ]
-      },
-      "parameters": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [],
-        "properties": {}
-      },
-      "preconditions": [],
-      "validation": {
-        "required": false,
-        "validators": [],
-        "bindings": {},
-        "terminal_validator": true,
-        "validates": "mesh.intersections.self",
-        "validates_all": [
-          "mesh.intersections.self"
-        ],
-        "required_report_checks": {
-          "status": "pass",
-          "passed": true,
-          "validator": "mesh.validate.self_intersections",
-          "checks.parameters_match": true,
-          "checks.source_matches": true,
-          "checks.intersecting_pairs_exact": true,
-          "checks.flag_consistent_exact": true
-        }
-      },
-      "output_contract": {
-        "schema": "ValidationReport/v1",
-        "required_true_checks": [
-          "parameters_match",
-          "source_matches",
-          "intersecting_pairs_exact",
-          "flag_consistent_exact"
-        ],
-        "status": "pass",
-        "failure_or_indeterminate_publish": false,
-        "independence": "exact rational triangle/triangle intersection polygon vertices and shared-simplex test; no CGAL header"
-      },
-      "dependencies": [
-        "Polygon_mesh_processing"
-      ],
-      "worker_manifest": {
-        "require_dependencies": true,
-        "effective_kernel": "exact:GMP",
-        "info": {
-          "checks": [
-            "parameters_match",
-            "source_matches",
-            "intersecting_pairs_exact",
-            "flag_consistent_exact"
-          ],
-          "independence": "exact rational triangle/triangle intersection polygon vertices and shared-simplex test; no CGAL header",
-          "input_slots": [
-            "candidate",
-            "mesh"
-          ],
-          "output_slot": "validation"
-        }
-      },
-      "kernel": {
-        "supported": [
-          "package_recommended"
-        ],
-        "default": "package_recommended"
-      },
-      "precision": {
-        "effective_kernel": "exact arithmetic: GMP rationals (no CGAL header)",
-        "coordinate_storage": "IEEE-754 binary64 converted to exact rationals",
-        "predicate_policy": "exact rational predicates and constructions; textbook-formula checks use an explicit tolerance stated in the report",
-        "exact_constructions": "all compared quantities are exact rationals except where the report states a tolerance",
-        "requested_policy": "package_recommended only"
-      },
-      "evidence": {
-        "tests": [
-          "tests/master_batch2_cases.py"
-        ],
-        "worker_manifest_operation": "mesh.validate.self_intersections",
         "build": "build-master/Release/cgal-master-worker.exe",
         "source_kind": "official_release",
         "cgal_version": "6.2.1",
@@ -31299,6 +30635,185 @@
           "tests/master_batch2_cases.py"
         ],
         "worker_manifest_operation": "polygon.validate.boolean",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "pointset.validate.outliers_removed",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "validator",
+      "summary": "Recompute every point's average squared neighbour distance by brute force and check the kept set, the removal quota and the ordering of kept versus removed points.",
+      "package": "Point_set_processing_3",
+      "aliases": [
+        "pointset validate outliers removed"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Point_set_processing_3"
+        },
+        {
+          "kind": "operation_reference",
+          "identifier": "pointset.remove_outliers"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Point_set_processing_3",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/remove_outliers.h",
+            "sha256": "c3ab7f2e09f1ef03296a9ce702731bcbff5ef54be161dc5ed3cf452f9f5d1517"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "PointSet3"
+            ],
+            "formats": [
+              "xyz"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          },
+          {
+            "slot": "source",
+            "types": [
+              "PointSet3"
+            ],
+            "formats": [
+              "xyz"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "neighbors",
+          "threshold_percent",
+          "threshold_distance"
+        ],
+        "properties": {
+          "neighbors": {
+            "type": "integer",
+            "minimum": 2,
+            "maximum": 1000,
+            "description": "Neighbourhood size k (the k+1 nearest points including the point itself)."
+          },
+          "threshold_percent": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "Maximum percentage of points removed as outliers."
+          },
+          "threshold_distance": {
+            "type": "TypedLength",
+            "minimum": 0,
+            "description": "Points whose average squared neighbour distance exceeds the square of this distance are outliers (artifact length units)."
+          }
+        }
+      },
+      "preconditions": [],
+      "validation": {
+        "required": false,
+        "validators": [],
+        "bindings": {},
+        "terminal_validator": true,
+        "validates": "pointset.remove_outliers",
+        "validates_all": [
+          "pointset.remove_outliers"
+        ],
+        "required_report_checks": {
+          "status": "pass",
+          "passed": true,
+          "validator": "pointset.validate.outliers_removed",
+          "checks.candidate_is_source_multiset_subset": true,
+          "checks.kept_count_matches_thresholds": true,
+          "checks.kept_points_have_lowest_measures": true
+        }
+      },
+      "output_contract": {
+        "schema": "ValidationReport/v1",
+        "required_true_checks": [
+          "candidate_is_source_multiset_subset",
+          "kept_count_matches_thresholds",
+          "kept_points_have_lowest_measures"
+        ],
+        "status": "pass",
+        "failure_or_indeterminate_publish": false,
+        "independence": "brute-force average squared distance to the k+1 nearest points (self included) in long double; no CGAL header"
+      },
+      "dependencies": [
+        "Point_set_processing_3"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "float:long_double",
+        "info": {
+          "checks": [
+            "candidate_is_source_multiset_subset",
+            "kept_count_matches_thresholds",
+            "kept_points_have_lowest_measures"
+          ],
+          "independence": "brute-force average squared distance to the k+1 nearest points (self included) in long double; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "long double floating point with an explicit tolerance (no CGAL header, no exact arithmetic)",
+        "coordinate_storage": "IEEE-754 binary64 converted to long double",
+        "predicate_policy": "no exact predicates: the subdivision masks are recomputed in long double and compared with an explicit tolerance stated in the report",
+        "exact_constructions": "none: all compared quantities are long double values checked within the stated tolerance",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_batch2_cases.py"
+        ],
+        "worker_manifest_operation": "pointset.validate.outliers_removed",
         "build": "build-master/Release/cgal-master-worker.exe",
         "source_kind": "official_release",
         "cgal_version": "6.2.1",

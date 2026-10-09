@@ -754,6 +754,7 @@ class MasterCoreTest(unittest.TestCase):
         ]})
         self.assertEqual([step["operation"] for step in workflow["steps"]], [
             "pointset.remove_outliers", "pointset.validate.basic", "pointset.validate.subset",
+        "pointset.validate.outliers_removed",
             "pointset.normals.estimate", "pointset.validate.basic",
             "pointset.validate.normals_estimated", "pointset.normals.orient_mst",
             "pointset.validate.basic", "pointset.validate.normals_oriented"])

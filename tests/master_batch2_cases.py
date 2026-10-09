@@ -1,4 +1,4 @@
-"""Real CGAL 6.2.1 batch-2 production-worker cases (7.3.05, 7.3.07, 7.5.03, 7.5.04, 7.9.02, 7.9.06,
+"""Real CGAL 6.2.1 batch-2 production-worker cases (7.3.05, 7.5.03, 7.5.04, 7.9.02, 7.9.06,
 7.12.04, 7.13.04).
 
 Usage: python tests/master_batch2_cases.py <cgal-master-worker>
@@ -21,7 +21,6 @@ import master_query_cases as q
 ROOT = q.ROOT
 B2 = ROOT / "tests" / "fixtures" / "master" / "batch2"
 QUERY = ROOT / "tests" / "fixtures" / "master" / "query"
-REPLAY = ROOT / "tests" / "fixtures" / "master" / "replay"
 
 
 def art(path: pathlib.Path, type_: str, unit: str = "mm") -> dict:
@@ -52,11 +51,11 @@ def main() -> None:
     manifest = json.loads(subprocess.run([q.WORKER, "--manifest"], text=True, encoding="utf-8",
                                          capture_output=True, timeout=30, check=True).stdout)
     operations = {operation["id"]: operation for operation in manifest["operations"]}
-    for operation in ("pointset.spacing.average", "pointset.outliers.remove", "shape.bounding.circle",
-                      "shape.bounding.sphere", "mesh.features.detect", "mesh.intersections.self",
+    for operation in ("pointset.spacing.average", "pointset.remove_outliers", "shape.bounding.circle",
+                      "shape.bounding.sphere", "mesh.features.detect",
                       "mesh.clip.plane", "mesh.split.plane", "mesh.corefine", "polygon.boolean"):
-        validator = operations[operation]["info"]["validators"][0]
-        assert operations[validator]["role"] == "validator", validator
+        for validator in operations[operation]["info"]["validators"]:
+            assert operations[validator]["role"] == "validator", validator
     mesh = lambda path: art(path, "TriangleSurfaceMesh")
     report = lambda name: art(B2 / name, "GeometryQueryReport", "none")
     cube, tetra, bent = mesh(QUERY / "cube12.off"), mesh(QUERY / "tetra.off"), mesh(B2 / "bent_plate.off")
@@ -71,9 +70,16 @@ def main() -> None:
         assert abs(result["metrics"]["average_spacing"] - 11 / 15) < 1e-12, result
         cluster = art(B2 / "cluster_outlier.xyz", "PointSet3")
         for percent, distance, kept in ((10, 3, 9), (0, 3, 10), (50, 0, 5)):
-            _, result = pair(scratch, "pointset.outliers.remove", "pointset.validate.outliers_removed", [cluster],
+            _, result = pair(scratch, "pointset.remove_outliers", "pointset.validate.outliers_removed", [cluster],
                              {"neighbors": 3, "threshold_percent": percent, "threshold_distance": length(distance)})
             assert result["metrics"]["output_point_count"] == kept, result
+        # Chain: the measured spacing of the cluster is the distance bound of the outlier filter.
+        _, result = pair(scratch, "pointset.spacing.average", "pointset.validate.average_spacing", [cluster],
+                         {"neighbors": 3})
+        spacing = result["metrics"]["average_spacing"]
+        _, result = pair(scratch, "pointset.remove_outliers", "pointset.validate.outliers_removed", [cluster],
+                         {"neighbors": 3, "threshold_percent": 30, "threshold_distance": length(spacing)})
+        assert result["metrics"]["output_point_count"] == 9, result
         reject(scratch, "pointset.spacing.average", [line], {"neighbors": 10}, "NEIGHBORHOOD_TOO_LARGE",
                "PRECONDITION_FAILED")
         reject(scratch, "pointset.validate.average_spacing", [report("tampered_spacing_report.json"), line],
@@ -101,7 +107,7 @@ def main() -> None:
         reject(scratch, "shape.validate.min_sphere", [report("tampered_sphere_report.json"), corners],
                {"radius": length(0)}, "RADIUS_MISMATCH")
 
-        # 7.3.05 features and 7.3.07 self-intersections.
+        # 7.3.05 features.
         for source, angle, sharp, patches in ((cube, 30, 12, 6), (cube, 100, 0, 1), (bent, 30, 7, 2),
                                               (bent, 60, 6, 1), (open_square, 10, 4, 1)):
             _, result = pair(scratch, "mesh.features.detect", "mesh.validate.features", [source],
@@ -110,12 +116,6 @@ def main() -> None:
         reject(scratch, "mesh.features.detect", [cube], {"angle_degrees": 200}, "INVALID_PARAMETER", "INVALID_REQUEST")
         reject(scratch, "mesh.validate.features", [report("tampered_features_report.json"), bent],
                {"angle_degrees": 30}, "SHARP_EDGES_MISMATCH")
-        for source, intersects in ((tetra, False), (cube, False), (mesh(REPLAY / "intersecting_tetrahedra.off"), True)):
-            _, result = pair(scratch, "mesh.intersections.self", "mesh.validate.self_intersections", [source], {})
-            assert result["metrics"]["does_self_intersect"] is intersects, result
-        reject(scratch, "mesh.validate.self_intersections",
-               [report("tampered_selfint_report.json"), mesh(REPLAY / "intersecting_tetrahedra.off")], {},
-               "INTERSECTING_PAIRS_MISMATCH")
 
         # 7.5.03 clip and 7.5.04 split / corefine.
         x1 = {"normal": [1, 0, 0], "offset": length(1)}

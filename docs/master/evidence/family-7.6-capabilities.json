@@ -98,14 +98,14 @@
   "unbound_requirements": {},
   "family_contract_sha256": "3443afbf3b401972ca3779450ed751c50a46a84c05cd45386c23172281aecb00",
   "family_contract_source_path": "scripts/master_replay_families.py",
-  "family_contract_source_sha256": "8074a42ec540bf6de02610fdca1507f463a726f2239cebd648176fd1642db918",
+  "family_contract_source_sha256": "3188cb5580e18f7a6e3309070d04980fcaaeb1def3524578ad81e5d7f3acd715",
   "family_contract_source_hash_encoding": "utf8-lf",
   "catalog_baseline_sha256": "143ec18a5b64d506aad60dc24b0a1ea30940c715d1223b3465fa140aeb9d02a7",
-  "operation_registry_sha256": "724744997d2f9d833ce60c617e647d2e7d17b748bf39dc7c20adaa9825839858",
+  "operation_registry_sha256": "25e936723e6cfbe3de1a68847a0d575b3275eb4dc473823862be40004bd26b66",
   "operation_registry_hash_encoding": "utf8-lf",
   "policy_catalog_sha256": "45f4be759288aaeb834a3ce97aa64ee7768048b15534618fc8c19512801f9a9f",
   "policy_catalog_hash_encoding": "utf8-lf",
-  "worker_sha256": "398362d1745fc6d8ef61fe96900b1845072793014c545ded0be5d66023b77500",
+  "worker_sha256": "2f56a91a31af1c972ec059b5fa0bf2d15fdd79f618b62b7bbf6cc7fd640c0926",
   "worker_binary_format": "pe",
   "worker_manifest": {
     "actual_cgal_version": "6.2.1",
@@ -321,6 +321,11 @@
           ],
           "source_header": "CGAL/remove_outliers.h",
           "validator_parameter_bindings": {
+            "pointset.validate.outliers_removed": {
+              "neighbors": "neighbors",
+              "threshold_distance": "threshold_distance",
+              "threshold_percent": "threshold_percent"
+            },
             "pointset.validate.subset": {
               "neighbors": "neighbors",
               "threshold_distance": "threshold_distance",
@@ -329,7 +334,8 @@
           },
           "validators": [
             "pointset.validate.basic",
-            "pointset.validate.subset"
+            "pointset.validate.subset",
+            "pointset.validate.outliers_removed"
           ]
         },
         "input_types": [
@@ -6172,39 +6178,6 @@
       },
       {
         "dependencies": [
-          "Point_set_processing_3"
-        ],
-        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
-        "id": "pointset.outliers.remove",
-        "info": {
-          "input_slots": [
-            "points"
-          ],
-          "maximum_input_points": 400,
-          "source_header": "CGAL/remove_outliers.h",
-          "validator_parameter_bindings": {
-            "pointset.validate.outliers_removed": {
-              "neighbors": "neighbors",
-              "threshold_distance": "threshold_distance",
-              "threshold_percent": "threshold_percent"
-            }
-          },
-          "validators": [
-            "pointset.validate.outliers_removed"
-          ]
-        },
-        "input_types": [
-          "PointSet3"
-        ],
-        "output_type": "PointSet3",
-        "revision": 1,
-        "role": "transform",
-        "supported_kernels": [
-          "package_recommended"
-        ]
-      },
-      {
-        "dependencies": [
           "Bounding_volumes"
         ],
         "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
@@ -6279,32 +6252,6 @@
           },
           "validators": [
             "mesh.validate.features"
-          ]
-        },
-        "input_types": [
-          "TriangleSurfaceMesh"
-        ],
-        "output_type": "GeometryQueryReport",
-        "revision": 1,
-        "role": "analysis",
-        "supported_kernels": [
-          "package_recommended"
-        ]
-      },
-      {
-        "dependencies": [
-          "Polygon_mesh_processing"
-        ],
-        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
-        "id": "mesh.intersections.self",
-        "info": {
-          "input_slots": [
-            "mesh"
-          ],
-          "maximum_input_faces": 600,
-          "source_header": "CGAL/Polygon_mesh_processing/self_intersections.h",
-          "validators": [
-            "mesh.validate.self_intersections"
           ]
         },
         "input_types": [
@@ -6605,37 +6552,6 @@
       },
       {
         "dependencies": [
-          "Polygon_mesh_processing"
-        ],
-        "effective_kernel": "exact:GMP",
-        "id": "mesh.validate.self_intersections",
-        "info": {
-          "checks": [
-            "parameters_match",
-            "source_matches",
-            "intersecting_pairs_exact",
-            "flag_consistent_exact"
-          ],
-          "independence": "exact rational triangle/triangle intersection polygon vertices and shared-simplex test; no CGAL header",
-          "input_slots": [
-            "candidate",
-            "mesh"
-          ],
-          "output_slot": "validation"
-        },
-        "input_types": [
-          "GeometryQueryReport",
-          "TriangleSurfaceMesh"
-        ],
-        "output_type": "ValidationReport",
-        "revision": 1,
-        "role": "validator",
-        "supported_kernels": [
-          "package_recommended"
-        ]
-      },
-      {
-        "dependencies": [
           "PMP_Boolean_operations"
         ],
         "effective_kernel": "exact:GMP",
@@ -6783,7 +6699,7 @@
     ],
     "worker": "cgal-master-worker"
   },
-  "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+  "worker_manifest_sha256": "e9dfe99e7b2a858f3d9f0cbf8c8dbb424f3c7c32776a0885e45b9e51bf6a1c9b",
   "tests": [
     {
       "id": "family-7.6-replay-cases",
@@ -7899,7 +7815,7 @@
       "case_id": "tri-lprism-faces",
       "operation_id": "mesh.triangulate.faces",
       "revision": 1,
-      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "worker_manifest_sha256": "e9dfe99e7b2a858f3d9f0cbf8c8dbb424f3c7c32776a0885e45b9e51bf6a1c9b",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -8096,7 +8012,7 @@
       "case_id": "tri-lprism-face",
       "operation_id": "mesh.triangulate.faces",
       "revision": 1,
-      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "worker_manifest_sha256": "e9dfe99e7b2a858f3d9f0cbf8c8dbb424f3c7c32776a0885e45b9e51bf6a1c9b",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -8293,7 +8209,7 @@
       "case_id": "tri-quadcube",
       "operation_id": "mesh.triangulate.faces",
       "revision": 1,
-      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "worker_manifest_sha256": "e9dfe99e7b2a858f3d9f0cbf8c8dbb424f3c7c32776a0885e45b9e51bf6a1c9b",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -8490,7 +8406,7 @@
       "case_id": "refine-hexadecagon",
       "operation_id": "mesh.refine.local",
       "revision": 1,
-      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "worker_manifest_sha256": "e9dfe99e7b2a858f3d9f0cbf8c8dbb424f3c7c32776a0885e45b9e51bf6a1c9b",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -8711,7 +8627,7 @@
       "case_id": "refine-hexadecagon-dense",
       "operation_id": "mesh.refine.local",
       "revision": 1,
-      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "worker_manifest_sha256": "e9dfe99e7b2a858f3d9f0cbf8c8dbb424f3c7c32776a0885e45b9e51bf6a1c9b",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -8932,7 +8848,7 @@
       "case_id": "iso-square",
       "operation_id": "mesh.remesh.isotropic",
       "revision": 1,
-      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "worker_manifest_sha256": "e9dfe99e7b2a858f3d9f0cbf8c8dbb424f3c7c32776a0885e45b9e51bf6a1c9b",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -9171,7 +9087,7 @@
       "case_id": "iso-sphere",
       "operation_id": "mesh.remesh.isotropic",
       "revision": 1,
-      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "worker_manifest_sha256": "e9dfe99e7b2a858f3d9f0cbf8c8dbb424f3c7c32776a0885e45b9e51bf6a1c9b",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -9410,7 +9326,7 @@
       "case_id": "iso-oblate-uniform",
       "operation_id": "mesh.remesh.isotropic",
       "revision": 1,
-      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "worker_manifest_sha256": "e9dfe99e7b2a858f3d9f0cbf8c8dbb424f3c7c32776a0885e45b9e51bf6a1c9b",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -9652,7 +9568,7 @@
       "case_id": "split-square",
       "operation_id": "mesh.remesh.split_long_edges",
       "revision": 1,
-      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "worker_manifest_sha256": "e9dfe99e7b2a858f3d9f0cbf8c8dbb424f3c7c32776a0885e45b9e51bf6a1c9b",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -9860,7 +9776,7 @@
       "case_id": "relax-grid3",
       "operation_id": "mesh.smooth.tangential_relaxation",
       "revision": 1,
-      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "worker_manifest_sha256": "e9dfe99e7b2a858f3d9f0cbf8c8dbb424f3c7c32776a0885e45b9e51bf6a1c9b",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -10071,7 +9987,7 @@
       "case_id": "smooth-grid5",
       "operation_id": "mesh.smooth.shape",
       "revision": 1,
-      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "worker_manifest_sha256": "e9dfe99e7b2a858f3d9f0cbf8c8dbb424f3c7c32776a0885e45b9e51bf6a1c9b",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -10292,7 +10208,7 @@
       "case_id": "smooth-sphere-volume",
       "operation_id": "mesh.smooth.shape",
       "revision": 1,
-      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "worker_manifest_sha256": "e9dfe99e7b2a858f3d9f0cbf8c8dbb424f3c7c32776a0885e45b9e51bf6a1c9b",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -10514,7 +10430,7 @@
       "case_id": "adaptive-oblate-isotropic",
       "operation_id": "mesh.remesh.adaptive",
       "revision": 1,
-      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "worker_manifest_sha256": "e9dfe99e7b2a858f3d9f0cbf8c8dbb424f3c7c32776a0885e45b9e51bf6a1c9b",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -10801,7 +10717,7 @@
       "case_id": "adaptive-oblate-split",
       "operation_id": "mesh.remesh.adaptive",
       "revision": 1,
-      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "worker_manifest_sha256": "e9dfe99e7b2a858f3d9f0cbf8c8dbb424f3c7c32776a0885e45b9e51bf6a1c9b",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -11088,7 +11004,7 @@
       "case_id": "tri-wrong-vertices-rejected",
       "operation_id": "mesh.validate.triangulated_faces",
       "revision": 1,
-      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "worker_manifest_sha256": "e9dfe99e7b2a858f3d9f0cbf8c8dbb424f3c7c32776a0885e45b9e51bf6a1c9b",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -11147,7 +11063,7 @@
       "case_id": "refine-nonmanifold-rejected",
       "operation_id": "mesh.refine.local",
       "revision": 1,
-      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "worker_manifest_sha256": "e9dfe99e7b2a858f3d9f0cbf8c8dbb424f3c7c32776a0885e45b9e51bf6a1c9b",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -11203,7 +11119,7 @@
       "case_id": "iso-unremeshed-rejected",
       "operation_id": "mesh.validate.isotropic_remesh",
       "revision": 1,
-      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "worker_manifest_sha256": "e9dfe99e7b2a858f3d9f0cbf8c8dbb424f3c7c32776a0885e45b9e51bf6a1c9b",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -11271,7 +11187,7 @@
       "case_id": "iso-nonpositive-length-rejected",
       "operation_id": "mesh.remesh.isotropic",
       "revision": 1,
-      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "worker_manifest_sha256": "e9dfe99e7b2a858f3d9f0cbf8c8dbb424f3c7c32776a0885e45b9e51bf6a1c9b",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -11332,7 +11248,7 @@
       "case_id": "split-unsplit-rejected",
       "operation_id": "mesh.validate.split_long_edges",
       "revision": 1,
-      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "worker_manifest_sha256": "e9dfe99e7b2a858f3d9f0cbf8c8dbb424f3c7c32776a0885e45b9e51bf6a1c9b",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -11396,7 +11312,7 @@
       "case_id": "relax-changed-connectivity-rejected",
       "operation_id": "mesh.validate.tangential_relaxation",
       "revision": 1,
-      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "worker_manifest_sha256": "e9dfe99e7b2a858f3d9f0cbf8c8dbb424f3c7c32776a0885e45b9e51bf6a1c9b",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -11460,7 +11376,7 @@
       "case_id": "smooth-unsmoothed-rejected",
       "operation_id": "mesh.validate.shape_smoothing",
       "revision": 1,
-      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "worker_manifest_sha256": "e9dfe99e7b2a858f3d9f0cbf8c8dbb424f3c7c32776a0885e45b9e51bf6a1c9b",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -11525,7 +11441,7 @@
       "case_id": "smooth-open-volume-rejected",
       "operation_id": "mesh.smooth.shape",
       "revision": 1,
-      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "worker_manifest_sha256": "e9dfe99e7b2a858f3d9f0cbf8c8dbb424f3c7c32776a0885e45b9e51bf6a1c9b",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -11583,7 +11499,7 @@
       "case_id": "adaptive-uniform-remesh-rejected",
       "operation_id": "mesh.validate.adaptive_remesh",
       "revision": 1,
-      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "worker_manifest_sha256": "e9dfe99e7b2a858f3d9f0cbf8c8dbb424f3c7c32776a0885e45b9e51bf6a1c9b",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -11660,7 +11576,7 @@
       "case_id": "adaptive-inverted-range-rejected",
       "operation_id": "mesh.remesh.adaptive",
       "revision": 1,
-      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "worker_manifest_sha256": "e9dfe99e7b2a858f3d9f0cbf8c8dbb424f3c7c32776a0885e45b9e51bf6a1c9b",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
