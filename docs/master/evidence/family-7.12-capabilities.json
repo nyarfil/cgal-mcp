@@ -133,6 +133,7 @@
       "case_ids": [
         "offset-holed-interior",
         "offset-lshape-consumed",
+        "offset-lshape-consumed-below-inradius",
         "offset-lshape-interior",
         "offset-rectangle-consumed",
         "offset-rectangle-exterior",
@@ -150,16 +151,16 @@
     }
   },
   "unbound_requirements": {},
-  "family_contract_sha256": "bb6ae8f5be0ff854d5d15e063806855e043b6fbf8bc09e1674278964751b0eec",
+  "family_contract_sha256": "039b985d48bc7b1168dd8bd5e9032b674bc6a3db89de2b4edf58a443e18d5db0",
   "family_contract_source_path": "scripts/master_replay_families.py",
-  "family_contract_source_sha256": "bb0c16519ef2e616d2a66acbe2e48eb17e345f8afbe031f0ed2ae9bd824c22fb",
+  "family_contract_source_sha256": "2ece85e0230ddfc45ec3d00bfd664192aa98233da598a7ccfbd1d7dd5fb35d16",
   "family_contract_source_hash_encoding": "utf8-lf",
   "catalog_baseline_sha256": "143ec18a5b64d506aad60dc24b0a1ea30940c715d1223b3465fa140aeb9d02a7",
-  "operation_registry_sha256": "7407d83f95218bdd287139cfa5fec71d9b7fa9e448ea82d3ffe23f12c7e45ea1",
+  "operation_registry_sha256": "4872d39945559dfb8dc50986c85d430cb9ce23c8fcac4e627d6713d02025da3b",
   "operation_registry_hash_encoding": "utf8-lf",
   "policy_catalog_sha256": "45f4be759288aaeb834a3ce97aa64ee7768048b15534618fc8c19512801f9a9f",
   "policy_catalog_hash_encoding": "utf8-lf",
-  "worker_sha256": "969a52cd00457085c38083e00c1903dec038a0ecaf98b4316844ba802653af5c",
+  "worker_sha256": "3ef20b5c6b430a1e6a7e2b219ab52fc3757c59c306ec50bda7dcbb61604b59f3",
   "worker_binary_format": "pe",
   "worker_manifest": {
     "actual_cgal_version": "6.2.1",
@@ -8265,7 +8266,7 @@
             "offset_vertices_on_correct_side",
             "offset_extent_verified_as_declared"
           ],
-          "independence": "long double parallel-line and segment distances, exact rational point-in-ring, half-plane intersection for convex sources, exact rational rectangle formula; completeness of non-empty offsets of non-convex sources is not certified; no CGAL header",
+          "independence": "long double parallel-line and segment distances, exact rational point-in-ring, half-plane intersection for convex sources, exact rational rectangle formula; non-convex sources are certified only when axis-parallel (exact square erosion or dilation on the offset grid), otherwise a non-empty offset is rejected; no CGAL header",
           "input_slots": [
             "candidate",
             "polygon"
@@ -8359,19 +8360,24 @@
     ],
     "worker": "cgal-master-worker"
   },
-  "worker_manifest_sha256": "617f14c5cbde64c56f0999ec8c0aba1c21ef396c5bfba6bfc68b4ad3cb3731cc",
+  "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
   "tests": [
     {
       "id": "family-7.12-replay-cases",
       "source_path": "tests/master_family_replay_cases.py",
       "source_sha256": "69b3216bf60de8b908dcf6f82e4fee3ffc438ee2a29cf2d756c4b558c6ce3e65",
       "source_hash_encoding": "utf8-lf",
-      "stdout_sha256": "a0002283a3f4f8b6f059a6b3c68d331da22b5fbe50d85a205dc59835aaa3e754",
+      "stdout_sha256": "21e868daf16e3080c6b49e98acfebdec570e96a519ca32f17a7fa5fb15f49e7c",
       "exit_code": 0,
       "status": "pass"
     }
   ],
   "blobs": {
+    "037fa3844fca7b4e492fcfec3c50cef6d97de9f65a3a36adaf7fab494f9e4ce1": {
+      "encoding": "base64",
+      "byte_size": 468,
+      "content": "eyJsZW5ndGhfdW5pdCI6Im1tIiwib3BlcmF0aW9uIjoicG9seWdvbi5vZmZzZXQuaW50ZXJpb3IiLCJwYXJhbWV0ZXJzIjp7Im9mZnNldCI6eyJ1bml0IjoibW0iLCJ2YWx1ZSI6MC4zfX0sInJlcG9ydF9raW5kIjoicG9seWdvbl9vZmZzZXQiLCJyZXBvcnRfdHlwZSI6Ikdlb21ldHJ5UXVlcnlSZXBvcnQiLCJyZXN1bHRzIjp7ImFyZWFfdW5pdCI6Im1tXjIiLCJsZW5ndGhfdW5pdCI6Im1tIiwib2Zmc2V0IjowLjMsIm9mZnNldF9raW5kIjoiaW50ZXJpb3IiLCJyaW5ncyI6W3sicG9pbnRzIjpbWzAuMywwLjNdLFs1LjcsMC4zXSxbNS43LDUuN10sWzAuMyw1LjddXX1dfSwic2NoZW1hX3ZlcnNpb24iOjEsInNvdXJjZSI6eyJwb2x5Z29uX3NoYTI1NiI6IjExODEyMGUxZmM4MzA5OGM3MDU0Mjc3MDM3YjJiYjk1MjgwYjhmYmY3YjUwNmMyZDIxYmJhNjA0ZmJlMTc1MmYifSwic3VtbWFyeSI6eyJyaW5nX2NvdW50IjoxfX0K"
+    },
     "03addd0f80f33b33bdbb5fad454e248a21e16d46affe2016db8422096b3b9f2f": {
       "encoding": "base64",
       "byte_size": 521,
@@ -8387,10 +8393,10 @@
       "byte_size": 515,
       "content": "eyJjaGVja3MiOnsiYm91bmRhcnlfY2hhaW5fZXF1YWxzX2V4YWN0X3NldF9vcGVyYXRpb24iOnRydWUsIm9wZXJhbmRzX3NpbXBsZV9ub256ZXJvX2FyZWEiOnRydWUsInBhcmFtZXRlcnNfbWF0Y2giOnRydWUsInJpbmdzX29yaWVudGVkX291dGVyX2Njd19ob2xlX2N3Ijp0cnVlLCJzb3VyY2VfbWF0Y2hlcyI6dHJ1ZX0sImV4cGVjdGVkX2JvdW5kYXJ5X3NlZ21lbnRfY291bnQiOjgsImluZGVwZW5kZW5jZSI6ImV4YWN0IHJhdGlvbmFsIGVkZ2Ugc3BsaXR0aW5nLCBwb2ludCBjbGFzc2lmaWNhdGlvbiBhbmQgdW5pdC1zZWdtZW50IGJvdW5kYXJ5IGNoYWluIGNvbXBhcmlzb247IG5vIENHQUwgaGVhZGVyIiwib3BlcmF0aW9uIjoiam9pbiIsInBhc3NlZCI6dHJ1ZSwicmVwb3J0X3R5cGUiOiJWYWxpZGF0aW9uUmVwb3J0IiwicmVwb3J0ZWRfcG9seWdvbl9jb3VudCI6Miwic2NoZW1hX3ZlcnNpb24iOjEsInN0YXR1cyI6InBhc3MiLCJ2YWxpZGF0b3IiOiJwb2x5Z29uLnZhbGlkYXRlLmJvb2xlYW4ifQo="
     },
-    "05bb34f515e365beb2c44ab54e7c0bb6e9167bb38f7161fdd740640bda5e2a76": {
+    "0be067297f58d8aa1c739d740a135a2ab359f6677a15b3ad39036f77f9c9c5b2": {
       "encoding": "base64",
-      "byte_size": 798,
-      "content": "eyJjaGVja3MiOnsib2Zmc2V0X2VkZ2VzX3BhcmFsbGVsX2F0X29mZnNldF9kaXN0YW5jZSI6dHJ1ZSwib2Zmc2V0X2V4dGVudF92ZXJpZmllZF9hc19kZWNsYXJlZCI6dHJ1ZSwib2Zmc2V0X3ZlcnRpY2VzX2NsZWFyX29mX3NvdXJjZV9ib3VuZGFyeSI6dHJ1ZSwib2Zmc2V0X3ZlcnRpY2VzX29uX2NvcnJlY3Rfc2lkZSI6dHJ1ZSwicGFyYW1ldGVyc19tYXRjaCI6dHJ1ZSwicmVwb3J0X3NjaGVtYV9hbmRfdW5pdHNfdmFsaWQiOnRydWUsInNvdXJjZV9tYXRjaGVzIjp0cnVlfSwiZXh0ZW50X2NlcnRpZmljYXRpb24iOiJlbXB0eV9jZXJ0aWZpZWRfYnlfaW5yYWRpdXNfYm91bmQiLCJpbmRlcGVuZGVuY2UiOiJsb25nIGRvdWJsZSBwYXJhbGxlbC1saW5lIGFuZCBzZWdtZW50IGRpc3RhbmNlcywgZXhhY3QgcmF0aW9uYWwgcG9pbnQtaW4tcmluZywgaGFsZi1wbGFuZSBpbnRlcnNlY3Rpb24gZm9yIGNvbnZleCBzb3VyY2VzLCBleGFjdCByYXRpb25hbCByZWN0YW5nbGUgZm9ybXVsYTsgY29tcGxldGVuZXNzIG9mIG5vbi1lbXB0eSBvZmZzZXRzIG9mIG5vbi1jb252ZXggc291cmNlcyBpcyBub3QgY2VydGlmaWVkOyBubyBDR0FMIGhlYWRlciIsImxlbmd0aF90b2xlcmFuY2VfcmVsYXRpdmVfdG9fZGlhZ29uYWwiOjFlLTA5LCJvZmZzZXRfYXJlYV9zdW0iOjAuMCwicGFzc2VkIjp0cnVlLCJyZXBvcnRfdHlwZSI6IlZhbGlkYXRpb25SZXBvcnQiLCJyaW5nX2NvdW50IjowLCJzY2hlbWFfdmVyc2lvbiI6MSwic3RhdHVzIjoicGFzcyIsInZhbGlkYXRvciI6InBvbHlnb24udmFsaWRhdGUub2Zmc2V0In0K"
+      "byte_size": 881,
+      "content": "eyJjaGVja3MiOnsib2Zmc2V0X2VkZ2VzX3BhcmFsbGVsX2F0X29mZnNldF9kaXN0YW5jZSI6dHJ1ZSwib2Zmc2V0X2V4dGVudF92ZXJpZmllZF9hc19kZWNsYXJlZCI6dHJ1ZSwib2Zmc2V0X3ZlcnRpY2VzX2NsZWFyX29mX3NvdXJjZV9ib3VuZGFyeSI6dHJ1ZSwib2Zmc2V0X3ZlcnRpY2VzX29uX2NvcnJlY3Rfc2lkZSI6dHJ1ZSwicGFyYW1ldGVyc19tYXRjaCI6dHJ1ZSwicmVwb3J0X3NjaGVtYV9hbmRfdW5pdHNfdmFsaWQiOnRydWUsInNvdXJjZV9tYXRjaGVzIjp0cnVlfSwiZXh0ZW50X2NlcnRpZmljYXRpb24iOiJheGlzX2FsaWduZWRfcmVjdGFuZ2xlX2V4YWN0X2Zvcm11bGEiLCJpbmRlcGVuZGVuY2UiOiJsb25nIGRvdWJsZSBwYXJhbGxlbC1saW5lIGFuZCBzZWdtZW50IGRpc3RhbmNlcywgZXhhY3QgcmF0aW9uYWwgcG9pbnQtaW4tcmluZywgaGFsZi1wbGFuZSBpbnRlcnNlY3Rpb24gZm9yIGNvbnZleCBzb3VyY2VzLCBleGFjdCByYXRpb25hbCByZWN0YW5nbGUgZm9ybXVsYTsgbm9uLWNvbnZleCBzb3VyY2VzIGFyZSBjZXJ0aWZpZWQgb25seSB3aGVuIGF4aXMtcGFyYWxsZWwgKGV4YWN0IHNxdWFyZSBlcm9zaW9uIG9yIGRpbGF0aW9uIG9uIHRoZSBvZmZzZXQgZ3JpZCksIG90aGVyd2lzZSBhIG5vbi1lbXB0eSBvZmZzZXQgaXMgcmVqZWN0ZWQ7IG5vIENHQUwgaGVhZGVyIiwibGVuZ3RoX3RvbGVyYW5jZV9yZWxhdGl2ZV90b19kaWFnb25hbCI6MWUtMDksIm9mZnNldF9hcmVhX3N1bSI6My4wLCJwYXNzZWQiOnRydWUsInJlcG9ydF90eXBlIjoiVmFsaWRhdGlvblJlcG9ydCIsInJpbmdfY291bnQiOjEsInNjaGVtYV92ZXJzaW9uIjoxLCJzdGF0dXMiOiJwYXNzIiwidmFsaWRhdG9yIjoicG9seWdvbi52YWxpZGF0ZS5vZmZzZXQifQo="
     },
     "0dd85a022da9fdcdd994ea8141691c0b06559f610b8ae2e1cef67e927a5598a7": {
       "encoding": "base64",
@@ -8427,6 +8433,11 @@
       "byte_size": 36,
       "content": "eyJwb2ludHMiOltbMCwwXSxbMywwXSxbMywzXSxbMCwzXV19"
     },
+    "14535c9a5749a02fb23992234ea1ee776b7bc37ad44a2cd49ee374212386eedb": {
+      "encoding": "base64",
+      "byte_size": 878,
+      "content": "eyJjaGVja3MiOnsib2Zmc2V0X2VkZ2VzX3BhcmFsbGVsX2F0X29mZnNldF9kaXN0YW5jZSI6dHJ1ZSwib2Zmc2V0X2V4dGVudF92ZXJpZmllZF9hc19kZWNsYXJlZCI6dHJ1ZSwib2Zmc2V0X3ZlcnRpY2VzX2NsZWFyX29mX3NvdXJjZV9ib3VuZGFyeSI6dHJ1ZSwib2Zmc2V0X3ZlcnRpY2VzX29uX2NvcnJlY3Rfc2lkZSI6dHJ1ZSwicGFyYW1ldGVyc19tYXRjaCI6dHJ1ZSwicmVwb3J0X3NjaGVtYV9hbmRfdW5pdHNfdmFsaWQiOnRydWUsInNvdXJjZV9tYXRjaGVzIjp0cnVlfSwiZXh0ZW50X2NlcnRpZmljYXRpb24iOiJheGlzX3BhcmFsbGVsX2V4YWN0X3NxdWFyZV9vZmZzZXQiLCJpbmRlcGVuZGVuY2UiOiJsb25nIGRvdWJsZSBwYXJhbGxlbC1saW5lIGFuZCBzZWdtZW50IGRpc3RhbmNlcywgZXhhY3QgcmF0aW9uYWwgcG9pbnQtaW4tcmluZywgaGFsZi1wbGFuZSBpbnRlcnNlY3Rpb24gZm9yIGNvbnZleCBzb3VyY2VzLCBleGFjdCByYXRpb25hbCByZWN0YW5nbGUgZm9ybXVsYTsgbm9uLWNvbnZleCBzb3VyY2VzIGFyZSBjZXJ0aWZpZWQgb25seSB3aGVuIGF4aXMtcGFyYWxsZWwgKGV4YWN0IHNxdWFyZSBlcm9zaW9uIG9yIGRpbGF0aW9uIG9uIHRoZSBvZmZzZXQgZ3JpZCksIG90aGVyd2lzZSBhIG5vbi1lbXB0eSBvZmZzZXQgaXMgcmVqZWN0ZWQ7IG5vIENHQUwgaGVhZGVyIiwibGVuZ3RoX3RvbGVyYW5jZV9yZWxhdGl2ZV90b19kaWFnb25hbCI6MWUtMDksIm9mZnNldF9hcmVhX3N1bSI6MC4wLCJwYXNzZWQiOnRydWUsInJlcG9ydF90eXBlIjoiVmFsaWRhdGlvblJlcG9ydCIsInJpbmdfY291bnQiOjAsInNjaGVtYV92ZXJzaW9uIjoxLCJzdGF0dXMiOiJwYXNzIiwidmFsaWRhdG9yIjoicG9seWdvbi52YWxpZGF0ZS5vZmZzZXQifQo="
+    },
     "14efe81d7198fa06ca1a22053b7e77d4a092effb23ce3db7869b969f1d335281": {
       "encoding": "base64",
       "byte_size": 496,
@@ -8451,6 +8462,11 @@
       "encoding": "base64",
       "byte_size": 725,
       "content": "eyJhbmFseXNpc19raW5kIjoicG9pbnRfY29udGFpbm1lbnQiLCJsZW5ndGhfdW5pdCI6Im1tIiwib3BlcmF0aW9uIjoicG9seWdvbi5xdWVyeS5jb250YWlubWVudCIsInJlcG9ydF90eXBlIjoiUG9seWdvbjJBbmFseXNpc1JlcG9ydCIsInJlc3VsdHMiOlt7ImxvY2F0aW9uIjoiaW5zaWRlIiwicXVlcnlfaW5kZXgiOjB9LHsibG9jYXRpb24iOiJvdXRzaWRlIiwicXVlcnlfaW5kZXgiOjF9LHsibG9jYXRpb24iOiJib3VuZGFyeSIsInF1ZXJ5X2luZGV4IjoyfSx7ImxvY2F0aW9uIjoiYm91bmRhcnkiLCJxdWVyeV9pbmRleCI6M30seyJsb2NhdGlvbiI6Im91dHNpZGUiLCJxdWVyeV9pbmRleCI6NH0seyJsb2NhdGlvbiI6ImJvdW5kYXJ5IiwicXVlcnlfaW5kZXgiOjV9LHsibG9jYXRpb24iOiJib3VuZGFyeSIsInF1ZXJ5X2luZGV4Ijo2fSx7ImxvY2F0aW9uIjoiaW5zaWRlIiwicXVlcnlfaW5kZXgiOjd9XSwic2NoZW1hX3ZlcnNpb24iOjEsInNvdXJjZSI6eyJxdWVyeV9zaGEyNTYiOiJkMDFmY2UyZjQ5MDkxYzE3MGI4YTZkYTViMTBjNDRhMzc0ZGM5Zjg5ZDRlNmFjOTY0N2U4OGMxNjdmY2VkNDhiIiwic2hhMjU2IjoiYjg4ZmQ4ZWVhY2RkYWEwMjE2OTcyMjdjZTVjYWEzYTJmZTIyYmQwMjY1OTJmOTY3NmE5N2JmMTc5NjNkNzk1OSIsInR5cGUiOiJQb2x5Z29uV2l0aEhvbGVzMiJ9LCJzdW1tYXJ5Ijp7ImJvdW5kYXJ5Ijo0LCJpbnNpZGUiOjIsIm91dHNpZGUiOjJ9fQo="
+    },
+    "208f8de6b2af5e843c00bf9ee5c84320609adf5ea40303142c3a5aa4e6eb3c3f": {
+      "encoding": "base64",
+      "byte_size": 889,
+      "content": "eyJjaGVja3MiOnsib2Zmc2V0X2VkZ2VzX3BhcmFsbGVsX2F0X29mZnNldF9kaXN0YW5jZSI6dHJ1ZSwib2Zmc2V0X2V4dGVudF92ZXJpZmllZF9hc19kZWNsYXJlZCI6dHJ1ZSwib2Zmc2V0X3ZlcnRpY2VzX2NsZWFyX29mX3NvdXJjZV9ib3VuZGFyeSI6dHJ1ZSwib2Zmc2V0X3ZlcnRpY2VzX29uX2NvcnJlY3Rfc2lkZSI6dHJ1ZSwicGFyYW1ldGVyc19tYXRjaCI6dHJ1ZSwicmVwb3J0X3NjaGVtYV9hbmRfdW5pdHNfdmFsaWQiOnRydWUsInNvdXJjZV9tYXRjaGVzIjp0cnVlfSwiZXh0ZW50X2NlcnRpZmljYXRpb24iOiJjb252ZXhfaGFsZl9wbGFuZV9pbnRlcnNlY3Rpb24iLCJpbmRlcGVuZGVuY2UiOiJsb25nIGRvdWJsZSBwYXJhbGxlbC1saW5lIGFuZCBzZWdtZW50IGRpc3RhbmNlcywgZXhhY3QgcmF0aW9uYWwgcG9pbnQtaW4tcmluZywgaGFsZi1wbGFuZSBpbnRlcnNlY3Rpb24gZm9yIGNvbnZleCBzb3VyY2VzLCBleGFjdCByYXRpb25hbCByZWN0YW5nbGUgZm9ybXVsYTsgbm9uLWNvbnZleCBzb3VyY2VzIGFyZSBjZXJ0aWZpZWQgb25seSB3aGVuIGF4aXMtcGFyYWxsZWwgKGV4YWN0IHNxdWFyZSBlcm9zaW9uIG9yIGRpbGF0aW9uIG9uIHRoZSBvZmZzZXQgZ3JpZCksIG90aGVyd2lzZSBhIG5vbi1lbXB0eSBvZmZzZXQgaXMgcmVqZWN0ZWQ7IG5vIENHQUwgaGVhZGVyIiwibGVuZ3RoX3RvbGVyYW5jZV9yZWxhdGl2ZV90b19kaWFnb25hbCI6MWUtMDksIm9mZnNldF9hcmVhX3N1bSI6NS45OTk5OTk5OTk5OTk5OTgsInBhc3NlZCI6dHJ1ZSwicmVwb3J0X3R5cGUiOiJWYWxpZGF0aW9uUmVwb3J0IiwicmluZ19jb3VudCI6MSwic2NoZW1hX3ZlcnNpb24iOjEsInN0YXR1cyI6InBhc3MiLCJ2YWxpZGF0b3IiOiJwb2x5Z29uLnZhbGlkYXRlLm9mZnNldCJ9Cg=="
     },
     "233c9b74c0d6e94b40291239f030a7a07de8695e4f65e1abd82018996d855335": {
       "encoding": "base64",
@@ -8477,11 +8493,6 @@
       "byte_size": 666,
       "content": "eyJsZW5ndGhfdW5pdCI6Im1tIiwib3BlcmF0aW9uIjoiYXJyYW5nZW1lbnQuYnVpbGQiLCJwYXJhbWV0ZXJzIjp7fSwicmVwb3J0X2tpbmQiOiJhcnJhbmdlbWVudF8yIiwicmVwb3J0X3R5cGUiOiJHZW9tZXRyeVF1ZXJ5UmVwb3J0IiwicmVzdWx0cyI6eyJlZGdlcyI6W1swLDFdLFswLDEwXSxbMSwxMV0sWzIsM10sWzQsNV0sWzQsNl0sWzUsN10sWzYsN10sWzgsOV0sWzEwLDExXV0sImZhY2VzIjpbeyJob2xlcyI6W1swLDEsMTEsMTBdXSwib3V0ZXIiOm51bGx9LHsiaG9sZXMiOltbMiwzXSxbNCw1LDcsNl0sWzgsOV1dLCJvdXRlciI6WzAsMTAsMTEsMV19LHsiaG9sZXMiOltdLCJvdXRlciI6WzQsNiw3LDVdfV0sInZlcnRpY2VzIjpbWyIwIiwiMCJdLFsiMCIsIjEwIl0sWyIxIiwiMSJdLFsiMiIsIjEiXSxbIjMiLCIzIl0sWyIzIiwiNyJdLFsiNyIsIjMiXSxbIjciLCI3Il0sWyI4IiwiMSJdLFsiOSIsIjEiXSxbIjEwIiwiMCJdLFsiMTAiLCIxMCJdXX0sInNjaGVtYV92ZXJzaW9uIjoxLCJzb3VyY2UiOnsic2VnbWVudHNfc2hhMjU2IjoiNGNlYWFhNzc4NmEyNmYwNTQ4NmMzYmVlOWJkOTdiYmYyNWM5OTE4OTVjNjYxMmYyMmFhNjE5MDUwNWFmZjljZiJ9LCJzdW1tYXJ5Ijp7ImVkZ2VfY291bnQiOjEwLCJmYWNlX2NvdW50IjozLCJ2ZXJ0ZXhfY291bnQiOjEyfX0K"
     },
-    "2c7d2cfa9b39b3196d7c62ef22a9ea5a4a34598e5709226f6372d6f430af1d97": {
-      "encoding": "base64",
-      "byte_size": 803,
-      "content": "eyJjaGVja3MiOnsib2Zmc2V0X2VkZ2VzX3BhcmFsbGVsX2F0X29mZnNldF9kaXN0YW5jZSI6dHJ1ZSwib2Zmc2V0X2V4dGVudF92ZXJpZmllZF9hc19kZWNsYXJlZCI6dHJ1ZSwib2Zmc2V0X3ZlcnRpY2VzX2NsZWFyX29mX3NvdXJjZV9ib3VuZGFyeSI6dHJ1ZSwib2Zmc2V0X3ZlcnRpY2VzX29uX2NvcnJlY3Rfc2lkZSI6dHJ1ZSwicGFyYW1ldGVyc19tYXRjaCI6dHJ1ZSwicmVwb3J0X3NjaGVtYV9hbmRfdW5pdHNfdmFsaWQiOnRydWUsInNvdXJjZV9tYXRjaGVzIjp0cnVlfSwiZXh0ZW50X2NlcnRpZmljYXRpb24iOiJub3RfY2VydGlmaWVkX25vbmNvbnZleF9jb21wbGV0ZW5lc3MiLCJpbmRlcGVuZGVuY2UiOiJsb25nIGRvdWJsZSBwYXJhbGxlbC1saW5lIGFuZCBzZWdtZW50IGRpc3RhbmNlcywgZXhhY3QgcmF0aW9uYWwgcG9pbnQtaW4tcmluZywgaGFsZi1wbGFuZSBpbnRlcnNlY3Rpb24gZm9yIGNvbnZleCBzb3VyY2VzLCBleGFjdCByYXRpb25hbCByZWN0YW5nbGUgZm9ybXVsYTsgY29tcGxldGVuZXNzIG9mIG5vbi1lbXB0eSBvZmZzZXRzIG9mIG5vbi1jb252ZXggc291cmNlcyBpcyBub3QgY2VydGlmaWVkOyBubyBDR0FMIGhlYWRlciIsImxlbmd0aF90b2xlcmFuY2VfcmVsYXRpdmVfdG9fZGlhZ29uYWwiOjFlLTA5LCJvZmZzZXRfYXJlYV9zdW0iOjM1LjkyLCJwYXNzZWQiOnRydWUsInJlcG9ydF90eXBlIjoiVmFsaWRhdGlvblJlcG9ydCIsInJpbmdfY291bnQiOjIsInNjaGVtYV92ZXJzaW9uIjoxLCJzdGF0dXMiOiJwYXNzIiwidmFsaWRhdG9yIjoicG9seWdvbi52YWxpZGF0ZS5vZmZzZXQifQo="
-    },
     "2d9456cbcc3ed7db7310512ae7d4e0741d04c4f628ee8acccfbf617d206cca70": {
       "encoding": "base64",
       "byte_size": 47,
@@ -8491,11 +8502,6 @@
       "encoding": "base64",
       "byte_size": 528,
       "content": "eyJsZW5ndGhfdW5pdCI6Im1tIiwib3BlcmF0aW9uIjoicG9seWdvbi5ib29sZWFuIiwicGFyYW1ldGVycyI6eyJvcGVyYXRpb24iOiJkaWZmZXJlbmNlIn0sInJlcG9ydF9raW5kIjoicG9seWdvbl9ib29sZWFuIiwicmVwb3J0X3R5cGUiOiJHZW9tZXRyeVF1ZXJ5UmVwb3J0IiwicmVzdWx0cyI6eyJwb2x5Z29ucyI6W3siaG9sZXMiOltbWyIzIiwiMyJdLFsiMyIsIjEiXSxbIjEiLCIxIl0sWyIxIiwiMyJdXV0sIm91dGVyIjpbWyIwIiwiMCJdLFsiNCIsIjAiXSxbIjQiLCI0Il0sWyIwIiwiNCJdXX1dfSwic2NoZW1hX3ZlcnNpb24iOjEsInNvdXJjZSI6eyJmaXJzdF9zaGEyNTYiOiJkOGJiYjNiOTI0ZjRhZWFlYzYwMDdmMTBlNGZlNGY2MDFiZjA5ODBkY2Y5YzMzZWM3ZGM4ZWFiZjZiOGQwOWM2Iiwic2Vjb25kX3NoYTI1NiI6IjVlZjdhMDZjYTMxMzhlNzM0MDM3NDcwNGI1ZWJjMjY4YTdjZmJlNmJmZmU2NDIyYTMyMTBiZWY4MWM3MTkwYjgifSwic3VtbWFyeSI6eyJob2xlX2NvdW50IjoxLCJwb2x5Z29uX2NvdW50IjoxfX0K"
-    },
-    "3e73feb713f0dbeb1fda082ee293af50e0d7d52d5c4fb88461d4b0417c538fde": {
-      "encoding": "base64",
-      "byte_size": 816,
-      "content": "eyJjaGVja3MiOnsib2Zmc2V0X2VkZ2VzX3BhcmFsbGVsX2F0X29mZnNldF9kaXN0YW5jZSI6dHJ1ZSwib2Zmc2V0X2V4dGVudF92ZXJpZmllZF9hc19kZWNsYXJlZCI6dHJ1ZSwib2Zmc2V0X3ZlcnRpY2VzX2NsZWFyX29mX3NvdXJjZV9ib3VuZGFyeSI6dHJ1ZSwib2Zmc2V0X3ZlcnRpY2VzX29uX2NvcnJlY3Rfc2lkZSI6dHJ1ZSwicGFyYW1ldGVyc19tYXRjaCI6dHJ1ZSwicmVwb3J0X3NjaGVtYV9hbmRfdW5pdHNfdmFsaWQiOnRydWUsInNvdXJjZV9tYXRjaGVzIjp0cnVlfSwiZXh0ZW50X2NlcnRpZmljYXRpb24iOiJub3RfY2VydGlmaWVkX25vbmNvbnZleF9jb21wbGV0ZW5lc3MiLCJpbmRlcGVuZGVuY2UiOiJsb25nIGRvdWJsZSBwYXJhbGxlbC1saW5lIGFuZCBzZWdtZW50IGRpc3RhbmNlcywgZXhhY3QgcmF0aW9uYWwgcG9pbnQtaW4tcmluZywgaGFsZi1wbGFuZSBpbnRlcnNlY3Rpb24gZm9yIGNvbnZleCBzb3VyY2VzLCBleGFjdCByYXRpb25hbCByZWN0YW5nbGUgZm9ybXVsYTsgY29tcGxldGVuZXNzIG9mIG5vbi1lbXB0eSBvZmZzZXRzIG9mIG5vbi1jb252ZXggc291cmNlcyBpcyBub3QgY2VydGlmaWVkOyBubyBDR0FMIGhlYWRlciIsImxlbmd0aF90b2xlcmFuY2VfcmVsYXRpdmVfdG9fZGlhZ29uYWwiOjFlLTA5LCJvZmZzZXRfYXJlYV9zdW0iOjEuNzYwMDAwMDAwMDAwMDAwNSwicGFzc2VkIjp0cnVlLCJyZXBvcnRfdHlwZSI6IlZhbGlkYXRpb25SZXBvcnQiLCJyaW5nX2NvdW50IjoxLCJzY2hlbWFfdmVyc2lvbiI6MSwic3RhdHVzIjoicGFzcyIsInZhbGlkYXRvciI6InBvbHlnb24udmFsaWRhdGUub2Zmc2V0In0K"
     },
     "3e780cbdfbffa7facf49b7bd88c3e9ec03fafb4de00feb5dea5f3da002eae3e9": {
       "encoding": "base64",
@@ -8532,10 +8538,20 @@
       "byte_size": 169,
       "content": "eyJwb2ludHMiOltbMCwwXSxbMTAsMF0sWzEwLDEwXSxbMCwxMF0sWzMsM10sWzcsM10sWzcsN10sWzMsN10sWzEsMV0sWzIsMV0sWzgsMV0sWzksMV0sWzUsNV1dLCJzZWdtZW50cyI6W1swLDFdLFsxLDJdLFsyLDNdLFszLDBdLFs0LDVdLFs1LDZdLFs2LDddLFs3LDRdLFs4LDldLFsxMCwxMV1dfQ=="
     },
+    "4f85f13d9f7601a44db36189e59ed318c59f4b194348b40a490e9666e9a81430": {
+      "encoding": "base64",
+      "byte_size": 882,
+      "content": "eyJjaGVja3MiOnsib2Zmc2V0X2VkZ2VzX3BhcmFsbGVsX2F0X29mZnNldF9kaXN0YW5jZSI6dHJ1ZSwib2Zmc2V0X2V4dGVudF92ZXJpZmllZF9hc19kZWNsYXJlZCI6dHJ1ZSwib2Zmc2V0X3ZlcnRpY2VzX2NsZWFyX29mX3NvdXJjZV9ib3VuZGFyeSI6dHJ1ZSwib2Zmc2V0X3ZlcnRpY2VzX29uX2NvcnJlY3Rfc2lkZSI6dHJ1ZSwicGFyYW1ldGVyc19tYXRjaCI6dHJ1ZSwicmVwb3J0X3NjaGVtYV9hbmRfdW5pdHNfdmFsaWQiOnRydWUsInNvdXJjZV9tYXRjaGVzIjp0cnVlfSwiZXh0ZW50X2NlcnRpZmljYXRpb24iOiJheGlzX2FsaWduZWRfcmVjdGFuZ2xlX2V4YWN0X2Zvcm11bGEiLCJpbmRlcGVuZGVuY2UiOiJsb25nIGRvdWJsZSBwYXJhbGxlbC1saW5lIGFuZCBzZWdtZW50IGRpc3RhbmNlcywgZXhhY3QgcmF0aW9uYWwgcG9pbnQtaW4tcmluZywgaGFsZi1wbGFuZSBpbnRlcnNlY3Rpb24gZm9yIGNvbnZleCBzb3VyY2VzLCBleGFjdCByYXRpb25hbCByZWN0YW5nbGUgZm9ybXVsYTsgbm9uLWNvbnZleCBzb3VyY2VzIGFyZSBjZXJ0aWZpZWQgb25seSB3aGVuIGF4aXMtcGFyYWxsZWwgKGV4YWN0IHNxdWFyZSBlcm9zaW9uIG9yIGRpbGF0aW9uIG9uIHRoZSBvZmZzZXQgZ3JpZCksIG90aGVyd2lzZSBhIG5vbi1lbXB0eSBvZmZzZXQgaXMgcmVqZWN0ZWQ7IG5vIENHQUwgaGVhZGVyIiwibGVuZ3RoX3RvbGVyYW5jZV9yZWxhdGl2ZV90b19kaWFnb25hbCI6MWUtMDksIm9mZnNldF9hcmVhX3N1bSI6MTUuMCwicGFzc2VkIjp0cnVlLCJyZXBvcnRfdHlwZSI6IlZhbGlkYXRpb25SZXBvcnQiLCJyaW5nX2NvdW50IjoxLCJzY2hlbWFfdmVyc2lvbiI6MSwic3RhdHVzIjoicGFzcyIsInZhbGlkYXRvciI6InBvbHlnb24udmFsaWRhdGUub2Zmc2V0In0K"
+    },
     "537c36dc5b8a1ab84f7fd5d50893363cf79212bc13abb2acebcdb7cb214bdd12": {
       "encoding": "base64",
       "byte_size": 468,
       "content": "eyJsZW5ndGhfdW5pdCI6Im1tIiwib3BlcmF0aW9uIjoicG9seWdvbi5vZmZzZXQuaW50ZXJpb3IiLCJwYXJhbWV0ZXJzIjp7Im9mZnNldCI6eyJ1bml0IjoibW0iLCJ2YWx1ZSI6MC41fX0sInJlcG9ydF9raW5kIjoicG9seWdvbl9vZmZzZXQiLCJyZXBvcnRfdHlwZSI6Ikdlb21ldHJ5UXVlcnlSZXBvcnQiLCJyZXN1bHRzIjp7ImFyZWFfdW5pdCI6Im1tXjIiLCJsZW5ndGhfdW5pdCI6Im1tIiwib2Zmc2V0IjowLjUsIm9mZnNldF9raW5kIjoiaW50ZXJpb3IiLCJyaW5ncyI6W3sicG9pbnRzIjpbWzAuNSwwLjVdLFszLjYsMC41XSxbMy42LDEuNV0sWzAuNSwxLjVdXX1dfSwic2NoZW1hX3ZlcnNpb24iOjEsInNvdXJjZSI6eyJwb2x5Z29uX3NoYTI1NiI6IjFlYTYxMDE3ZDVlOGQ0OGQ4YjYyZGZmYjE5NWQ4N2U1YTk1ZjQ2YjRiZTE4NDg3ZmJlNGRmM2Q1ZmI1ZjVjNjAifSwic3VtbWFyeSI6eyJyaW5nX2NvdW50IjoxfX0K"
+    },
+    "5523978230fb24489de0d0eb605fadaed5a67867a0b4b9352a3368ccf328d5f3": {
+      "encoding": "base64",
+      "byte_size": 468,
+      "content": "eyJsZW5ndGhfdW5pdCI6Im1tIiwib3BlcmF0aW9uIjoicG9seWdvbi5vZmZzZXQuaW50ZXJpb3IiLCJwYXJhbWV0ZXJzIjp7Im9mZnNldCI6eyJ1bml0IjoibW0iLCJ2YWx1ZSI6MC4zfX0sInJlcG9ydF9raW5kIjoicG9seWdvbl9vZmZzZXQiLCJyZXBvcnRfdHlwZSI6Ikdlb21ldHJ5UXVlcnlSZXBvcnQiLCJyZXN1bHRzIjp7ImFyZWFfdW5pdCI6Im1tXjIiLCJsZW5ndGhfdW5pdCI6Im1tIiwib2Zmc2V0IjowLjMsIm9mZnNldF9raW5kIjoiaW50ZXJpb3IiLCJyaW5ncyI6W3sicG9pbnRzIjpbWzAuMywwLjNdLFsyLjcsMC4zXSxbMi43LDAuN10sWzAuMywwLjddXX1dfSwic2NoZW1hX3ZlcnNpb24iOjEsInNvdXJjZSI6eyJwb2x5Z29uX3NoYTI1NiI6Ijk3MjMwYTNlOTMxZTc2NjM2NzU4NDE0NzU3MjgzNTk2M2IyYWVmY2EwZmU3ODVkYjNjMGE4MGUyYWFhM2YxZDUifSwic3VtbWFyeSI6eyJyaW5nX2NvdW50IjoxfX0K"
     },
     "56d19bb3a00f04b5f2ea006f925f19065ea8a0cf828cc37871931952adf227a5": {
       "encoding": "base64",
@@ -8576,11 +8592,6 @@
       "encoding": "base64",
       "byte_size": 872,
       "content": "eyJhbmFseXNpc19raW5kIjoicG9seWdvbl9wcm9wZXJ0aWVzIiwibGVuZ3RoX3VuaXQiOiJtbSIsIm9wZXJhdGlvbiI6InBvbHlnb24uYW5hbHlzaXMucHJvcGVydGllcyIsInJlcG9ydF90eXBlIjoiUG9seWdvbjJBbmFseXNpc1JlcG9ydCIsInJlc3VsdHMiOnsiYXJlYSI6eyJhdmFpbGFibGUiOmZhbHNlLCJyZWFzb24iOiJhcmVhIGFuZCBjZW50cm9pZCByZXF1aXJlIGEgdmFsaWQgcG9seWdvbiB3aXRoIGhvbGVzIn0sImJib3giOnsibWF4IjpbMi4wLDIuMF0sIm1pbiI6WzAuMCwwLjBdfSwiY2Fub25pY2FsX29yaWVudGF0aW9uIjpmYWxzZSwiY2VudHJvaWQiOnsiYXZhaWxhYmxlIjpmYWxzZSwicmVhc29uIjoiYXJlYSBhbmQgY2VudHJvaWQgcmVxdWlyZSBhIHZhbGlkIHBvbHlnb24gd2l0aCBob2xlcyJ9LCJob2xlX2NvdW50IjowLCJyaW5ncyI6W3siY29udmV4IjpmYWxzZSwib3JpZW50YXRpb24iOiJ1bmF2YWlsYWJsZSIsInBlcmltZXRlciI6eyJhcHByb3hpbWF0ZSI6OS42NTY4NTQyNDk0OTIzOCwidW5pdCI6Im1tIn0sInJpbmdfaW5kZXgiOjAsInJvbGUiOiJvdXRlciIsInNpZ25lZF9hcmVhIjp7ImFwcHJveGltYXRlIjotMC4wLCJleGFjdCI6IjAiLCJ1bml0IjoibW1eMiJ9LCJzaW1wbGUiOmZhbHNlLCJ2ZXJ0ZXhfY291bnQiOjR9XSwidmFsaWRfcG9seWdvbl93aXRoX2hvbGVzIjpmYWxzZSwidmFsaWRpdHlfcmVhc29ucyI6WyJvdXRlciByaW5nIGlzIG5vdCBzaW1wbGUiXX0sInNjaGVtYV92ZXJzaW9uIjoxLCJzb3VyY2UiOnsic2hhMjU2IjoiNDQzNTE0MThiMGIyYzRhZjU4MmNmMDFhMzJlZGE2MzQ4NjBiNTAyYjAwMjY0NTllNzY3ZjA5MjRiYTRjYzcxZiIsInR5cGUiOiJQb2x5Z29uV2l0aEhvbGVzMiJ9fQo="
-    },
-    "690a2380d978d27007291f932c04e4614fefebad8eec8531b9b10b4ad4932747": {
-      "encoding": "base64",
-      "byte_size": 802,
-      "content": "eyJjaGVja3MiOnsib2Zmc2V0X2VkZ2VzX3BhcmFsbGVsX2F0X29mZnNldF9kaXN0YW5jZSI6dHJ1ZSwib2Zmc2V0X2V4dGVudF92ZXJpZmllZF9hc19kZWNsYXJlZCI6dHJ1ZSwib2Zmc2V0X3ZlcnRpY2VzX2NsZWFyX29mX3NvdXJjZV9ib3VuZGFyeSI6dHJ1ZSwib2Zmc2V0X3ZlcnRpY2VzX29uX2NvcnJlY3Rfc2lkZSI6dHJ1ZSwicGFyYW1ldGVyc19tYXRjaCI6dHJ1ZSwicmVwb3J0X3NjaGVtYV9hbmRfdW5pdHNfdmFsaWQiOnRydWUsInNvdXJjZV9tYXRjaGVzIjp0cnVlfSwiZXh0ZW50X2NlcnRpZmljYXRpb24iOiJheGlzX2FsaWduZWRfcmVjdGFuZ2xlX2V4YWN0X2Zvcm11bGEiLCJpbmRlcGVuZGVuY2UiOiJsb25nIGRvdWJsZSBwYXJhbGxlbC1saW5lIGFuZCBzZWdtZW50IGRpc3RhbmNlcywgZXhhY3QgcmF0aW9uYWwgcG9pbnQtaW4tcmluZywgaGFsZi1wbGFuZSBpbnRlcnNlY3Rpb24gZm9yIGNvbnZleCBzb3VyY2VzLCBleGFjdCByYXRpb25hbCByZWN0YW5nbGUgZm9ybXVsYTsgY29tcGxldGVuZXNzIG9mIG5vbi1lbXB0eSBvZmZzZXRzIG9mIG5vbi1jb252ZXggc291cmNlcyBpcyBub3QgY2VydGlmaWVkOyBubyBDR0FMIGhlYWRlciIsImxlbmd0aF90b2xlcmFuY2VfcmVsYXRpdmVfdG9fZGlhZ29uYWwiOjFlLTA5LCJvZmZzZXRfYXJlYV9zdW0iOjE1LjAsInBhc3NlZCI6dHJ1ZSwicmVwb3J0X3R5cGUiOiJWYWxpZGF0aW9uUmVwb3J0IiwicmluZ19jb3VudCI6MSwic2NoZW1hX3ZlcnNpb24iOjEsInN0YXR1cyI6InBhc3MiLCJ2YWxpZGF0b3IiOiJwb2x5Z29uLnZhbGlkYXRlLm9mZnNldCJ9Cg=="
     },
     "6b6c542d791c9d76a4e0c03170ff42a77c29ea199397d67c32a930eebbffa57f": {
       "encoding": "base64",
@@ -8657,11 +8668,6 @@
       "byte_size": 59,
       "content": "eyJvdXRlciI6W1swLDBdLFszLDBdLFszLDFdLFsxLDFdLFsxLDNdLFswLDNdXSwiaG9sZXMiOltdfQo="
     },
-    "97606fdf6d18305ff62778a21a229dd7fb80c5adab32e02f087e131231488926": {
-      "encoding": "base64",
-      "byte_size": 801,
-      "content": "eyJjaGVja3MiOnsib2Zmc2V0X2VkZ2VzX3BhcmFsbGVsX2F0X29mZnNldF9kaXN0YW5jZSI6dHJ1ZSwib2Zmc2V0X2V4dGVudF92ZXJpZmllZF9hc19kZWNsYXJlZCI6dHJ1ZSwib2Zmc2V0X3ZlcnRpY2VzX2NsZWFyX29mX3NvdXJjZV9ib3VuZGFyeSI6dHJ1ZSwib2Zmc2V0X3ZlcnRpY2VzX29uX2NvcnJlY3Rfc2lkZSI6dHJ1ZSwicGFyYW1ldGVyc19tYXRjaCI6dHJ1ZSwicmVwb3J0X3NjaGVtYV9hbmRfdW5pdHNfdmFsaWQiOnRydWUsInNvdXJjZV9tYXRjaGVzIjp0cnVlfSwiZXh0ZW50X2NlcnRpZmljYXRpb24iOiJheGlzX2FsaWduZWRfcmVjdGFuZ2xlX2V4YWN0X2Zvcm11bGEiLCJpbmRlcGVuZGVuY2UiOiJsb25nIGRvdWJsZSBwYXJhbGxlbC1saW5lIGFuZCBzZWdtZW50IGRpc3RhbmNlcywgZXhhY3QgcmF0aW9uYWwgcG9pbnQtaW4tcmluZywgaGFsZi1wbGFuZSBpbnRlcnNlY3Rpb24gZm9yIGNvbnZleCBzb3VyY2VzLCBleGFjdCByYXRpb25hbCByZWN0YW5nbGUgZm9ybXVsYTsgY29tcGxldGVuZXNzIG9mIG5vbi1lbXB0eSBvZmZzZXRzIG9mIG5vbi1jb252ZXggc291cmNlcyBpcyBub3QgY2VydGlmaWVkOyBubyBDR0FMIGhlYWRlciIsImxlbmd0aF90b2xlcmFuY2VfcmVsYXRpdmVfdG9fZGlhZ29uYWwiOjFlLTA5LCJvZmZzZXRfYXJlYV9zdW0iOjAuMCwicGFzc2VkIjp0cnVlLCJyZXBvcnRfdHlwZSI6IlZhbGlkYXRpb25SZXBvcnQiLCJyaW5nX2NvdW50IjowLCJzY2hlbWFfdmVyc2lvbiI6MSwic3RhdHVzIjoicGFzcyIsInZhbGlkYXRvciI6InBvbHlnb24udmFsaWRhdGUub2Zmc2V0In0K"
-    },
     "9d03fa6ec1b84cd379297862ef484e9e29e4d54489c7d025d090a18bfc8d769e": {
       "encoding": "base64",
       "byte_size": 1472,
@@ -8682,11 +8688,6 @@
       "byte_size": 493,
       "content": "eyJjYW5kaWRhdGVfcGllY2VfY291bnQiOjk4LCJjaGVja3MiOnsiYm91bmRhcnlfY2hhaW5fZXF1YWxzX2V4YWN0X21pbmtvd3NraV9zdW0iOnRydWUsIm9wZXJhbmRzX3NpbXBsZV9ub256ZXJvX2FyZWEiOnRydWUsInBhcmFtZXRlcnNfbWF0Y2giOnRydWUsInJpbmdzX29yaWVudGVkX291dGVyX2Njd19ob2xlX2N3Ijp0cnVlLCJzb3VyY2VfbWF0Y2hlcyI6dHJ1ZX0sImV4cGVjdGVkX2JvdW5kYXJ5X3NlZ21lbnRfY291bnQiOjIwLCJpbmRlcGVuZGVuY2UiOiJjb252b2x1dGlvbi1zZWdtZW50IHNwbGl0dGluZyB3aXRoIGV4YWN0IHNldC1tZW1iZXJzaGlwIG9uIGJvdGggc2lkZXMgb2YgZXZlcnkgcGllY2U7IG5vIENHQUwgaGVhZGVyIiwicGFzc2VkIjp0cnVlLCJyZXBvcnRfdHlwZSI6IlZhbGlkYXRpb25SZXBvcnQiLCJzY2hlbWFfdmVyc2lvbiI6MSwic3RhdHVzIjoicGFzcyIsInZhbGlkYXRvciI6InBvbHlnb24udmFsaWRhdGUubWlua293c2tpX3N1bSJ9Cg=="
     },
-    "a481b7bc0de402899da8a29d01ed0f05ef36557b7cb7c8feea0640bfab20226c": {
-      "encoding": "base64",
-      "byte_size": 809,
-      "content": "eyJjaGVja3MiOnsib2Zmc2V0X2VkZ2VzX3BhcmFsbGVsX2F0X29mZnNldF9kaXN0YW5jZSI6dHJ1ZSwib2Zmc2V0X2V4dGVudF92ZXJpZmllZF9hc19kZWNsYXJlZCI6dHJ1ZSwib2Zmc2V0X3ZlcnRpY2VzX2NsZWFyX29mX3NvdXJjZV9ib3VuZGFyeSI6dHJ1ZSwib2Zmc2V0X3ZlcnRpY2VzX29uX2NvcnJlY3Rfc2lkZSI6dHJ1ZSwicGFyYW1ldGVyc19tYXRjaCI6dHJ1ZSwicmVwb3J0X3NjaGVtYV9hbmRfdW5pdHNfdmFsaWQiOnRydWUsInNvdXJjZV9tYXRjaGVzIjp0cnVlfSwiZXh0ZW50X2NlcnRpZmljYXRpb24iOiJjb252ZXhfaGFsZl9wbGFuZV9pbnRlcnNlY3Rpb24iLCJpbmRlcGVuZGVuY2UiOiJsb25nIGRvdWJsZSBwYXJhbGxlbC1saW5lIGFuZCBzZWdtZW50IGRpc3RhbmNlcywgZXhhY3QgcmF0aW9uYWwgcG9pbnQtaW4tcmluZywgaGFsZi1wbGFuZSBpbnRlcnNlY3Rpb24gZm9yIGNvbnZleCBzb3VyY2VzLCBleGFjdCByYXRpb25hbCByZWN0YW5nbGUgZm9ybXVsYTsgY29tcGxldGVuZXNzIG9mIG5vbi1lbXB0eSBvZmZzZXRzIG9mIG5vbi1jb252ZXggc291cmNlcyBpcyBub3QgY2VydGlmaWVkOyBubyBDR0FMIGhlYWRlciIsImxlbmd0aF90b2xlcmFuY2VfcmVsYXRpdmVfdG9fZGlhZ29uYWwiOjFlLTA5LCJvZmZzZXRfYXJlYV9zdW0iOjUuOTk5OTk5OTk5OTk5OTk4LCJwYXNzZWQiOnRydWUsInJlcG9ydF90eXBlIjoiVmFsaWRhdGlvblJlcG9ydCIsInJpbmdfY291bnQiOjEsInNjaGVtYV92ZXJzaW9uIjoxLCJzdGF0dXMiOiJwYXNzIiwidmFsaWRhdG9yIjoicG9seWdvbi52YWxpZGF0ZS5vZmZzZXQifQo="
-    },
     "a5cbd96391e7e4658da0b74461783cd2073919c4571f5f91b0402c15ebba4cbc": {
       "encoding": "base64",
       "byte_size": 41,
@@ -8702,6 +8703,11 @@
       "byte_size": 496,
       "content": "eyJjaGVja3MiOnsiYXJyYW5nZW1lbnRfdmVydGljZXNfZXF1YWxfZXhhY3QiOnRydWUsInBhcmFtZXRlcnNfbWF0Y2giOnRydWUsInNvdXJjZV9tYXRjaGVzIjp0cnVlLCJ6b25lX2VkZ2VzX2VxdWFsX2V4YWN0Ijp0cnVlLCJ6b25lX2ZhY2VzX2VxdWFsX2V4YWN0Ijp0cnVlLCJ6b25lX3ZlcnRpY2VzX2VxdWFsX2V4YWN0Ijp0cnVlfSwiaW5kZXBlbmRlbmNlIjoiZXhhY3Qgc3BsaXR0aW5nIG9mIHRoZSBxdWVyeSBhdCBhcnJhbmdlbWVudCB2ZXJ0aWNlcyBhbmQgZWRnZXMgYW5kIGV4YWN0IGZhY2UgbG9jYXRpb247IG5vIENHQUwgaGVhZGVyIiwicGFzc2VkIjp0cnVlLCJyZXBvcnRfdHlwZSI6IlZhbGlkYXRpb25SZXBvcnQiLCJzY2hlbWFfdmVyc2lvbiI6MSwic3RhdHVzIjoicGFzcyIsInZhbGlkYXRvciI6ImFycmFuZ2VtZW50LnZhbGlkYXRlLnpvbmUiLCJ6b25lX2VkZ2VfY291bnQiOjAsInpvbmVfZmFjZV9jb3VudCI6MSwiem9uZV92ZXJ0ZXhfY291bnQiOjB9Cg=="
     },
+    "aeb75050e96bbcc69b862b354230a9403140d50d62d2b764e8cf1b01e2c26917": {
+      "encoding": "base64",
+      "byte_size": 881,
+      "content": "eyJjaGVja3MiOnsib2Zmc2V0X2VkZ2VzX3BhcmFsbGVsX2F0X29mZnNldF9kaXN0YW5jZSI6dHJ1ZSwib2Zmc2V0X2V4dGVudF92ZXJpZmllZF9hc19kZWNsYXJlZCI6dHJ1ZSwib2Zmc2V0X3ZlcnRpY2VzX2NsZWFyX29mX3NvdXJjZV9ib3VuZGFyeSI6dHJ1ZSwib2Zmc2V0X3ZlcnRpY2VzX29uX2NvcnJlY3Rfc2lkZSI6dHJ1ZSwicGFyYW1ldGVyc19tYXRjaCI6dHJ1ZSwicmVwb3J0X3NjaGVtYV9hbmRfdW5pdHNfdmFsaWQiOnRydWUsInNvdXJjZV9tYXRjaGVzIjp0cnVlfSwiZXh0ZW50X2NlcnRpZmljYXRpb24iOiJheGlzX2FsaWduZWRfcmVjdGFuZ2xlX2V4YWN0X2Zvcm11bGEiLCJpbmRlcGVuZGVuY2UiOiJsb25nIGRvdWJsZSBwYXJhbGxlbC1saW5lIGFuZCBzZWdtZW50IGRpc3RhbmNlcywgZXhhY3QgcmF0aW9uYWwgcG9pbnQtaW4tcmluZywgaGFsZi1wbGFuZSBpbnRlcnNlY3Rpb24gZm9yIGNvbnZleCBzb3VyY2VzLCBleGFjdCByYXRpb25hbCByZWN0YW5nbGUgZm9ybXVsYTsgbm9uLWNvbnZleCBzb3VyY2VzIGFyZSBjZXJ0aWZpZWQgb25seSB3aGVuIGF4aXMtcGFyYWxsZWwgKGV4YWN0IHNxdWFyZSBlcm9zaW9uIG9yIGRpbGF0aW9uIG9uIHRoZSBvZmZzZXQgZ3JpZCksIG90aGVyd2lzZSBhIG5vbi1lbXB0eSBvZmZzZXQgaXMgcmVqZWN0ZWQ7IG5vIENHQUwgaGVhZGVyIiwibGVuZ3RoX3RvbGVyYW5jZV9yZWxhdGl2ZV90b19kaWFnb25hbCI6MWUtMDksIm9mZnNldF9hcmVhX3N1bSI6MC4wLCJwYXNzZWQiOnRydWUsInJlcG9ydF90eXBlIjoiVmFsaWRhdGlvblJlcG9ydCIsInJpbmdfY291bnQiOjAsInNjaGVtYV92ZXJzaW9uIjoxLCJzdGF0dXMiOiJwYXNzIiwidmFsaWRhdG9yIjoicG9seWdvbi52YWxpZGF0ZS5vZmZzZXQifQo="
+    },
     "aef61baa78b676a7c7c0761de509584d3b180597d5f698066c2b100ccc32ec01": {
       "encoding": "base64",
       "byte_size": 523,
@@ -8711,6 +8717,11 @@
       "encoding": "base64",
       "byte_size": 637,
       "content": "eyJsZW5ndGhfdW5pdCI6Im1tIiwib3BlcmF0aW9uIjoicG9seWdvbi5vZmZzZXQuaW50ZXJpb3IiLCJwYXJhbWV0ZXJzIjp7Im9mZnNldCI6eyJ1bml0IjoibW0iLCJ2YWx1ZSI6MC4zfX0sInJlcG9ydF9raW5kIjoicG9seWdvbl9vZmZzZXQiLCJyZXBvcnRfdHlwZSI6Ikdlb21ldHJ5UXVlcnlSZXBvcnQiLCJyZXN1bHRzIjp7ImFyZWFfdW5pdCI6Im1tXjIiLCJsZW5ndGhfdW5pdCI6Im1tIiwib2Zmc2V0IjowLjMsIm9mZnNldF9raW5kIjoiaW50ZXJpb3IiLCJyaW5ncyI6W3sicG9pbnRzIjpbWzAuMywwLjNdLFs1LjcsMC4zXSxbNS43LDUuN10sWzAuMyw1LjddXX0seyJwb2ludHMiOltbMS43MDAwMDAwMDAwMDAwMDAyLDEuNzAwMDAwMDAwMDAwMDAwMl0sWzEuNzAwMDAwMDAwMDAwMDAwMiw0LjMwMDAwMDAwMDAwMDAwMV0sWzQuMzAwMDAwMDAwMDAwMDAxLDQuMzAwMDAwMDAwMDAwMDAxXSxbNC4zMDAwMDAwMDAwMDAwMDEsMS43MDAwMDAwMDAwMDAwMDAyXV19XX0sInNjaGVtYV92ZXJzaW9uIjoxLCJzb3VyY2UiOnsicG9seWdvbl9zaGEyNTYiOiIxMTgxMjBlMWZjODMwOThjNzA1NDI3NzAzN2IyYmI5NTI4MGI4ZmJmN2I1MDZjMmQyMWJiYTYwNGZiZTE3NTJmIn0sInN1bW1hcnkiOnsicmluZ19jb3VudCI6Mn19Cg=="
+    },
+    "b3b6d6bdaa69af6093647a97becc599f5ddd83b32d0386e444a0970ed21ee7e1": {
+      "encoding": "base64",
+      "byte_size": 880,
+      "content": "eyJjaGVja3MiOnsib2Zmc2V0X2VkZ2VzX3BhcmFsbGVsX2F0X29mZnNldF9kaXN0YW5jZSI6dHJ1ZSwib2Zmc2V0X2V4dGVudF92ZXJpZmllZF9hc19kZWNsYXJlZCI6dHJ1ZSwib2Zmc2V0X3ZlcnRpY2VzX2NsZWFyX29mX3NvdXJjZV9ib3VuZGFyeSI6dHJ1ZSwib2Zmc2V0X3ZlcnRpY2VzX29uX2NvcnJlY3Rfc2lkZSI6dHJ1ZSwicGFyYW1ldGVyc19tYXRjaCI6dHJ1ZSwicmVwb3J0X3NjaGVtYV9hbmRfdW5pdHNfdmFsaWQiOnRydWUsInNvdXJjZV9tYXRjaGVzIjp0cnVlfSwiZXh0ZW50X2NlcnRpZmljYXRpb24iOiJheGlzX3BhcmFsbGVsX2V4YWN0X3NxdWFyZV9vZmZzZXQiLCJpbmRlcGVuZGVuY2UiOiJsb25nIGRvdWJsZSBwYXJhbGxlbC1saW5lIGFuZCBzZWdtZW50IGRpc3RhbmNlcywgZXhhY3QgcmF0aW9uYWwgcG9pbnQtaW4tcmluZywgaGFsZi1wbGFuZSBpbnRlcnNlY3Rpb24gZm9yIGNvbnZleCBzb3VyY2VzLCBleGFjdCByYXRpb25hbCByZWN0YW5nbGUgZm9ybXVsYTsgbm9uLWNvbnZleCBzb3VyY2VzIGFyZSBjZXJ0aWZpZWQgb25seSB3aGVuIGF4aXMtcGFyYWxsZWwgKGV4YWN0IHNxdWFyZSBlcm9zaW9uIG9yIGRpbGF0aW9uIG9uIHRoZSBvZmZzZXQgZ3JpZCksIG90aGVyd2lzZSBhIG5vbi1lbXB0eSBvZmZzZXQgaXMgcmVqZWN0ZWQ7IG5vIENHQUwgaGVhZGVyIiwibGVuZ3RoX3RvbGVyYW5jZV9yZWxhdGl2ZV90b19kaWFnb25hbCI6MWUtMDksIm9mZnNldF9hcmVhX3N1bSI6MzUuOTIsInBhc3NlZCI6dHJ1ZSwicmVwb3J0X3R5cGUiOiJWYWxpZGF0aW9uUmVwb3J0IiwicmluZ19jb3VudCI6Miwic2NoZW1hX3ZlcnNpb24iOjEsInN0YXR1cyI6InBhc3MiLCJ2YWxpZGF0b3IiOiJwb2x5Z29uLnZhbGlkYXRlLm9mZnNldCJ9Cg=="
     },
     "b675ce9e8b6a0e2ac5b41b3b6c51bb4ef8cc08f0ad55cb1442c8ff4b86a988af": {
       "encoding": "base64",
@@ -8847,11 +8858,6 @@
       "byte_size": 429,
       "content": "eyJjaGVja3MiOnsiYXJlYV9tYXRjaGVzIjp0cnVlLCJiYm94X21hdGNoZXMiOnRydWUsImNlbnRyb2lkX21hdGNoZXMiOnRydWUsInJpbmdfcHJvcGVydGllc19tYXRjaCI6dHJ1ZSwidmFsaWRpdHlfbWF0Y2hlcyI6dHJ1ZX0sImV4YWN0X2FyZWEiOiI5MSIsImV4YWN0X2NlbnRyb2lkIjpbIjkxOS8xODIiLCI5MTkvMTgyIl0sImluZGVwZW5kZW5jZSI6ImV4YWN0IHJhdGlvbmFsIGZhbiBkZWNvbXBvc2l0aW9uIGFuZCBwYWlyd2lzZSBlZGdlIHRlc3RzOyBDR0FMIFBvbHlnb25fMiBhbGdvcml0aG1zIGFyZSBub3QgY2FsbGVkIiwicGFzc2VkIjp0cnVlLCJyaW5nX2NvdW50IjoyLCJzdGF0dXMiOiJwYXNzIiwidmFsaWRfcG9seWdvbl93aXRoX2hvbGVzIjp0cnVlLCJ2YWxpZGF0b3IiOiJwb2x5Z29uLnZhbGlkYXRlLnByb3BlcnRpZXNfcmVwb3J0In0K"
     },
-    "eb9860ab62fac31d83f7a56d9492429e97b095b89f8f1d2cca377d207edce382": {
-      "encoding": "base64",
-      "byte_size": 801,
-      "content": "eyJjaGVja3MiOnsib2Zmc2V0X2VkZ2VzX3BhcmFsbGVsX2F0X29mZnNldF9kaXN0YW5jZSI6dHJ1ZSwib2Zmc2V0X2V4dGVudF92ZXJpZmllZF9hc19kZWNsYXJlZCI6dHJ1ZSwib2Zmc2V0X3ZlcnRpY2VzX2NsZWFyX29mX3NvdXJjZV9ib3VuZGFyeSI6dHJ1ZSwib2Zmc2V0X3ZlcnRpY2VzX29uX2NvcnJlY3Rfc2lkZSI6dHJ1ZSwicGFyYW1ldGVyc19tYXRjaCI6dHJ1ZSwicmVwb3J0X3NjaGVtYV9hbmRfdW5pdHNfdmFsaWQiOnRydWUsInNvdXJjZV9tYXRjaGVzIjp0cnVlfSwiZXh0ZW50X2NlcnRpZmljYXRpb24iOiJheGlzX2FsaWduZWRfcmVjdGFuZ2xlX2V4YWN0X2Zvcm11bGEiLCJpbmRlcGVuZGVuY2UiOiJsb25nIGRvdWJsZSBwYXJhbGxlbC1saW5lIGFuZCBzZWdtZW50IGRpc3RhbmNlcywgZXhhY3QgcmF0aW9uYWwgcG9pbnQtaW4tcmluZywgaGFsZi1wbGFuZSBpbnRlcnNlY3Rpb24gZm9yIGNvbnZleCBzb3VyY2VzLCBleGFjdCByYXRpb25hbCByZWN0YW5nbGUgZm9ybXVsYTsgY29tcGxldGVuZXNzIG9mIG5vbi1lbXB0eSBvZmZzZXRzIG9mIG5vbi1jb252ZXggc291cmNlcyBpcyBub3QgY2VydGlmaWVkOyBubyBDR0FMIGhlYWRlciIsImxlbmd0aF90b2xlcmFuY2VfcmVsYXRpdmVfdG9fZGlhZ29uYWwiOjFlLTA5LCJvZmZzZXRfYXJlYV9zdW0iOjMuMCwicGFzc2VkIjp0cnVlLCJyZXBvcnRfdHlwZSI6IlZhbGlkYXRpb25SZXBvcnQiLCJyaW5nX2NvdW50IjoxLCJzY2hlbWFfdmVyc2lvbiI6MSwic3RhdHVzIjoicGFzcyIsInZhbGlkYXRvciI6InBvbHlnb24udmFsaWRhdGUub2Zmc2V0In0K"
-    },
     "efb99bdf178eafca2316adc7dd2ddee7e9ee2cf9740bd14cb13800edd38411fb": {
       "encoding": "base64",
       "byte_size": 41,
@@ -8872,10 +8878,20 @@
       "byte_size": 496,
       "content": "eyJjaGVja3MiOnsiYXJyYW5nZW1lbnRfdmVydGljZXNfZXF1YWxfZXhhY3QiOnRydWUsInBhcmFtZXRlcnNfbWF0Y2giOnRydWUsInNvdXJjZV9tYXRjaGVzIjp0cnVlLCJ6b25lX2VkZ2VzX2VxdWFsX2V4YWN0Ijp0cnVlLCJ6b25lX2ZhY2VzX2VxdWFsX2V4YWN0Ijp0cnVlLCJ6b25lX3ZlcnRpY2VzX2VxdWFsX2V4YWN0Ijp0cnVlfSwiaW5kZXBlbmRlbmNlIjoiZXhhY3Qgc3BsaXR0aW5nIG9mIHRoZSBxdWVyeSBhdCBhcnJhbmdlbWVudCB2ZXJ0aWNlcyBhbmQgZWRnZXMgYW5kIGV4YWN0IGZhY2UgbG9jYXRpb247IG5vIENHQUwgaGVhZGVyIiwicGFzc2VkIjp0cnVlLCJyZXBvcnRfdHlwZSI6IlZhbGlkYXRpb25SZXBvcnQiLCJzY2hlbWFfdmVyc2lvbiI6MSwic3RhdHVzIjoicGFzcyIsInZhbGlkYXRvciI6ImFycmFuZ2VtZW50LnZhbGlkYXRlLnpvbmUiLCJ6b25lX2VkZ2VfY291bnQiOjIsInpvbmVfZmFjZV9jb3VudCI6MSwiem9uZV92ZXJ0ZXhfY291bnQiOjN9Cg=="
     },
+    "f4ba898297c1a69ba576d22a1dee4ee8accf5cd7a7cccbfc2f12f3d9b919d40a": {
+      "encoding": "base64",
+      "byte_size": 893,
+      "content": "eyJjaGVja3MiOnsib2Zmc2V0X2VkZ2VzX3BhcmFsbGVsX2F0X29mZnNldF9kaXN0YW5jZSI6dHJ1ZSwib2Zmc2V0X2V4dGVudF92ZXJpZmllZF9hc19kZWNsYXJlZCI6dHJ1ZSwib2Zmc2V0X3ZlcnRpY2VzX2NsZWFyX29mX3NvdXJjZV9ib3VuZGFyeSI6dHJ1ZSwib2Zmc2V0X3ZlcnRpY2VzX29uX2NvcnJlY3Rfc2lkZSI6dHJ1ZSwicGFyYW1ldGVyc19tYXRjaCI6dHJ1ZSwicmVwb3J0X3NjaGVtYV9hbmRfdW5pdHNfdmFsaWQiOnRydWUsInNvdXJjZV9tYXRjaGVzIjp0cnVlfSwiZXh0ZW50X2NlcnRpZmljYXRpb24iOiJheGlzX3BhcmFsbGVsX2V4YWN0X3NxdWFyZV9vZmZzZXQiLCJpbmRlcGVuZGVuY2UiOiJsb25nIGRvdWJsZSBwYXJhbGxlbC1saW5lIGFuZCBzZWdtZW50IGRpc3RhbmNlcywgZXhhY3QgcmF0aW9uYWwgcG9pbnQtaW4tcmluZywgaGFsZi1wbGFuZSBpbnRlcnNlY3Rpb24gZm9yIGNvbnZleCBzb3VyY2VzLCBleGFjdCByYXRpb25hbCByZWN0YW5nbGUgZm9ybXVsYTsgbm9uLWNvbnZleCBzb3VyY2VzIGFyZSBjZXJ0aWZpZWQgb25seSB3aGVuIGF4aXMtcGFyYWxsZWwgKGV4YWN0IHNxdWFyZSBlcm9zaW9uIG9yIGRpbGF0aW9uIG9uIHRoZSBvZmZzZXQgZ3JpZCksIG90aGVyd2lzZSBhIG5vbi1lbXB0eSBvZmZzZXQgaXMgcmVqZWN0ZWQ7IG5vIENHQUwgaGVhZGVyIiwibGVuZ3RoX3RvbGVyYW5jZV9yZWxhdGl2ZV90b19kaWFnb25hbCI6MWUtMDksIm9mZnNldF9hcmVhX3N1bSI6MS43NjAwMDAwMDAwMDAwMDA1LCJwYXNzZWQiOnRydWUsInJlcG9ydF90eXBlIjoiVmFsaWRhdGlvblJlcG9ydCIsInJpbmdfY291bnQiOjEsInNjaGVtYV92ZXJzaW9uIjoxLCJzdGF0dXMiOiJwYXNzIiwidmFsaWRhdG9yIjoicG9seWdvbi52YWxpZGF0ZS5vZmZzZXQifQo="
+    },
     "f4c430c5f2a7b012aefe8911b353ab71b33f115408d465b115663af1ab46c4ee": {
       "encoding": "base64",
       "byte_size": 489,
       "content": "eyJsZW5ndGhfdW5pdCI6Im1tIiwib3BlcmF0aW9uIjoicG9seWdvbi5ib29sZWFuIiwicGFyYW1ldGVycyI6eyJvcGVyYXRpb24iOiJpbnRlcnNlY3Rpb24ifSwicmVwb3J0X2tpbmQiOiJwb2x5Z29uX2Jvb2xlYW4iLCJyZXBvcnRfdHlwZSI6Ikdlb21ldHJ5UXVlcnlSZXBvcnQiLCJyZXN1bHRzIjp7InBvbHlnb25zIjpbeyJob2xlcyI6W10sIm91dGVyIjpbWyIyIiwiMiJdLFsiNCIsIjIiXSxbIjQiLCI0Il0sWyIyIiwiNCJdXX1dfSwic2NoZW1hX3ZlcnNpb24iOjEsInNvdXJjZSI6eyJmaXJzdF9zaGEyNTYiOiJkOGJiYjNiOTI0ZjRhZWFlYzYwMDdmMTBlNGZlNGY2MDFiZjA5ODBkY2Y5YzMzZWM3ZGM4ZWFiZjZiOGQwOWM2Iiwic2Vjb25kX3NoYTI1NiI6ImE3MTgzNjZlMTM3ODhkNDg2YTcwZGNmN2U4NzFiZjMyM2E1MjljYzJlZTVmZGU2MzU0ZDMzOGRlY2E3YzYxOTEifSwic3VtbWFyeSI6eyJob2xlX2NvdW50IjowLCJwb2x5Z29uX2NvdW50IjoxfX0K"
+    },
+    "f8104a53dff6367ce61fd1ff2098055ae7847c03073df60487613fa3af3d3052": {
+      "encoding": "base64",
+      "byte_size": 418,
+      "content": "eyJsZW5ndGhfdW5pdCI6Im1tIiwib3BlcmF0aW9uIjoicG9seWdvbi5vZmZzZXQuaW50ZXJpb3IiLCJwYXJhbWV0ZXJzIjp7Im9mZnNldCI6eyJ1bml0IjoibW0iLCJ2YWx1ZSI6MC41NX19LCJyZXBvcnRfa2luZCI6InBvbHlnb25fb2Zmc2V0IiwicmVwb3J0X3R5cGUiOiJHZW9tZXRyeVF1ZXJ5UmVwb3J0IiwicmVzdWx0cyI6eyJhcmVhX3VuaXQiOiJtbV4yIiwibGVuZ3RoX3VuaXQiOiJtbSIsIm9mZnNldCI6MC41NSwib2Zmc2V0X2tpbmQiOiJpbnRlcmlvciIsInJpbmdzIjpbXX0sInNjaGVtYV92ZXJzaW9uIjoxLCJzb3VyY2UiOnsicG9seWdvbl9zaGEyNTYiOiI5NzIzMGEzZTkzMWU3NjYzNjc1ODQxNDc1NzI4MzU5NjNiMmFlZmNhMGZlNzg1ZGIzYzBhODBlMmFhYTNmMWQ1In0sInN1bW1hcnkiOnsicmluZ19jb3VudCI6MH19Cg=="
     },
     "fce05e7de4410ba2a05128b7a83dba333db7caa23803fd0abfed555bc7ce8b50": {
       "encoding": "base64",
@@ -9392,7 +9408,7 @@
       "status": "pass",
       "validator": "polygon.validate.straight_skeleton"
     },
-    "bdb93910c6ef64bb4838b229501048f88fb9183436040971a9ba155b02b721af": {
+    "9183b583830f4a85469cd3082d57307250fa5efb3ffb5698c4d7d8c60b5fca9e": {
       "checks": {
         "offset_edges_parallel_at_offset_distance": true,
         "offset_extent_verified_as_declared": true,
@@ -9403,7 +9419,7 @@
         "source_matches": true
       },
       "extent_certification": "axis_aligned_rectangle_exact_formula",
-      "independence": "long double parallel-line and segment distances, exact rational point-in-ring, half-plane intersection for convex sources, exact rational rectangle formula; completeness of non-empty offsets of non-convex sources is not certified; no CGAL header",
+      "independence": "long double parallel-line and segment distances, exact rational point-in-ring, half-plane intersection for convex sources, exact rational rectangle formula; non-convex sources are certified only when axis-parallel (exact square erosion or dilation on the offset grid), otherwise a non-empty offset is rejected; no CGAL header",
       "length_tolerance_relative_to_diagonal": 1e-09,
       "offset_area_sum": 3.0,
       "passed": true,
@@ -9413,7 +9429,7 @@
       "status": "pass",
       "validator": "polygon.validate.offset"
     },
-    "d8738ce277ad128ecc275b2b6aaa9c12ac862be79307735d9cd3d6ff7c005831": {
+    "e1f2736f5b5908a0904720333689d21bf6f4cae2ae1ccb5fb3e5dd724994f3b4": {
       "checks": {
         "offset_edges_parallel_at_offset_distance": true,
         "offset_extent_verified_as_declared": true,
@@ -9424,7 +9440,7 @@
         "source_matches": true
       },
       "extent_certification": "axis_aligned_rectangle_exact_formula",
-      "independence": "long double parallel-line and segment distances, exact rational point-in-ring, half-plane intersection for convex sources, exact rational rectangle formula; completeness of non-empty offsets of non-convex sources is not certified; no CGAL header",
+      "independence": "long double parallel-line and segment distances, exact rational point-in-ring, half-plane intersection for convex sources, exact rational rectangle formula; non-convex sources are certified only when axis-parallel (exact square erosion or dilation on the offset grid), otherwise a non-empty offset is rejected; no CGAL header",
       "length_tolerance_relative_to_diagonal": 1e-09,
       "offset_area_sum": 15.0,
       "passed": true,
@@ -9434,7 +9450,7 @@
       "status": "pass",
       "validator": "polygon.validate.offset"
     },
-    "9d47f97225219541de4527b575e311923094c698228ca0a7797046b13e532940": {
+    "cf4dfc8ac3ebc43d0de4cd63ed12f81c7223298f4d70ae67c6972a202bf74a1e": {
       "checks": {
         "offset_edges_parallel_at_offset_distance": true,
         "offset_extent_verified_as_declared": true,
@@ -9445,7 +9461,7 @@
         "source_matches": true
       },
       "extent_certification": "axis_aligned_rectangle_exact_formula",
-      "independence": "long double parallel-line and segment distances, exact rational point-in-ring, half-plane intersection for convex sources, exact rational rectangle formula; completeness of non-empty offsets of non-convex sources is not certified; no CGAL header",
+      "independence": "long double parallel-line and segment distances, exact rational point-in-ring, half-plane intersection for convex sources, exact rational rectangle formula; non-convex sources are certified only when axis-parallel (exact square erosion or dilation on the offset grid), otherwise a non-empty offset is rejected; no CGAL header",
       "length_tolerance_relative_to_diagonal": 1e-09,
       "offset_area_sum": 0.0,
       "passed": true,
@@ -9455,7 +9471,7 @@
       "status": "pass",
       "validator": "polygon.validate.offset"
     },
-    "bf853f247dd6a5415b744a61b8712116d1c18e45641314439781d29038e7d10c": {
+    "904fdb41d1a45ae006f1ced273adbe28a810b83cd2ccac61afcfbde4a263e1a9": {
       "checks": {
         "offset_edges_parallel_at_offset_distance": true,
         "offset_extent_verified_as_declared": true,
@@ -9466,7 +9482,7 @@
         "source_matches": true
       },
       "extent_certification": "convex_half_plane_intersection",
-      "independence": "long double parallel-line and segment distances, exact rational point-in-ring, half-plane intersection for convex sources, exact rational rectangle formula; completeness of non-empty offsets of non-convex sources is not certified; no CGAL header",
+      "independence": "long double parallel-line and segment distances, exact rational point-in-ring, half-plane intersection for convex sources, exact rational rectangle formula; non-convex sources are certified only when axis-parallel (exact square erosion or dilation on the offset grid), otherwise a non-empty offset is rejected; no CGAL header",
       "length_tolerance_relative_to_diagonal": 1e-09,
       "offset_area_sum": 5.999999999999998,
       "passed": true,
@@ -9476,7 +9492,7 @@
       "status": "pass",
       "validator": "polygon.validate.offset"
     },
-    "e4f4dacba31542cef03bd7a6202eca4eb619c9ff8ea880c5bd71568fd7648033": {
+    "eeda3545804df5548266f003dfe015e629a4fbae627a0046163db5a96afb10d1": {
       "checks": {
         "offset_edges_parallel_at_offset_distance": true,
         "offset_extent_verified_as_declared": true,
@@ -9486,8 +9502,8 @@
         "report_schema_and_units_valid": true,
         "source_matches": true
       },
-      "extent_certification": "not_certified_nonconvex_completeness",
-      "independence": "long double parallel-line and segment distances, exact rational point-in-ring, half-plane intersection for convex sources, exact rational rectangle formula; completeness of non-empty offsets of non-convex sources is not certified; no CGAL header",
+      "extent_certification": "axis_parallel_exact_square_offset",
+      "independence": "long double parallel-line and segment distances, exact rational point-in-ring, half-plane intersection for convex sources, exact rational rectangle formula; non-convex sources are certified only when axis-parallel (exact square erosion or dilation on the offset grid), otherwise a non-empty offset is rejected; no CGAL header",
       "length_tolerance_relative_to_diagonal": 1e-09,
       "offset_area_sum": 1.7600000000000005,
       "passed": true,
@@ -9497,7 +9513,7 @@
       "status": "pass",
       "validator": "polygon.validate.offset"
     },
-    "c435263330cb484d6845bab5459b0888609288da1a30de8ad5d8a737a9ab5681": {
+    "25293ef49b8892b7905be1209ab9e93a92e6f8bacf754be1c3ff05fc78695f87": {
       "checks": {
         "offset_edges_parallel_at_offset_distance": true,
         "offset_extent_verified_as_declared": true,
@@ -9507,8 +9523,8 @@
         "report_schema_and_units_valid": true,
         "source_matches": true
       },
-      "extent_certification": "empty_certified_by_inradius_bound",
-      "independence": "long double parallel-line and segment distances, exact rational point-in-ring, half-plane intersection for convex sources, exact rational rectangle formula; completeness of non-empty offsets of non-convex sources is not certified; no CGAL header",
+      "extent_certification": "axis_parallel_exact_square_offset",
+      "independence": "long double parallel-line and segment distances, exact rational point-in-ring, half-plane intersection for convex sources, exact rational rectangle formula; non-convex sources are certified only when axis-parallel (exact square erosion or dilation on the offset grid), otherwise a non-empty offset is rejected; no CGAL header",
       "length_tolerance_relative_to_diagonal": 1e-09,
       "offset_area_sum": 0.0,
       "passed": true,
@@ -9518,7 +9534,7 @@
       "status": "pass",
       "validator": "polygon.validate.offset"
     },
-    "a4bbee01209b54c0d8cbf18ce9a0a0aa534f79469f2750bb92ee4656926c0e4f": {
+    "58835baa911904be6e6f5c07f633d678233f2e7fa530a4333f9f50fff3c374ca": {
       "checks": {
         "offset_edges_parallel_at_offset_distance": true,
         "offset_extent_verified_as_declared": true,
@@ -9528,8 +9544,8 @@
         "report_schema_and_units_valid": true,
         "source_matches": true
       },
-      "extent_certification": "not_certified_nonconvex_completeness",
-      "independence": "long double parallel-line and segment distances, exact rational point-in-ring, half-plane intersection for convex sources, exact rational rectangle formula; completeness of non-empty offsets of non-convex sources is not certified; no CGAL header",
+      "extent_certification": "axis_parallel_exact_square_offset",
+      "independence": "long double parallel-line and segment distances, exact rational point-in-ring, half-plane intersection for convex sources, exact rational rectangle formula; non-convex sources are certified only when axis-parallel (exact square erosion or dilation on the offset grid), otherwise a non-empty offset is rejected; no CGAL header",
       "length_tolerance_relative_to_diagonal": 1e-09,
       "offset_area_sum": 35.92,
       "passed": true,
@@ -9545,7 +9561,7 @@
       "case_id": "polygon-join-overlap",
       "operation_id": "polygon.boolean",
       "revision": 1,
-      "worker_manifest_sha256": "617f14c5cbde64c56f0999ec8c0aba1c21ef396c5bfba6bfc68b4ad3cb3731cc",
+      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -9718,7 +9734,7 @@
       "case_id": "polygon-intersection-overlap",
       "operation_id": "polygon.boolean",
       "revision": 1,
-      "worker_manifest_sha256": "617f14c5cbde64c56f0999ec8c0aba1c21ef396c5bfba6bfc68b4ad3cb3731cc",
+      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -9891,7 +9907,7 @@
       "case_id": "polygon-difference-overlap",
       "operation_id": "polygon.boolean",
       "revision": 1,
-      "worker_manifest_sha256": "617f14c5cbde64c56f0999ec8c0aba1c21ef396c5bfba6bfc68b4ad3cb3731cc",
+      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -10064,7 +10080,7 @@
       "case_id": "polygon-difference-hole",
       "operation_id": "polygon.boolean",
       "revision": 1,
-      "worker_manifest_sha256": "617f14c5cbde64c56f0999ec8c0aba1c21ef396c5bfba6bfc68b4ad3cb3731cc",
+      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -10237,7 +10253,7 @@
       "case_id": "polygon-join-disjoint",
       "operation_id": "polygon.boolean",
       "revision": 1,
-      "worker_manifest_sha256": "617f14c5cbde64c56f0999ec8c0aba1c21ef396c5bfba6bfc68b4ad3cb3731cc",
+      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -10410,7 +10426,7 @@
       "case_id": "polygon-intersection-disjoint",
       "operation_id": "polygon.boolean",
       "revision": 1,
-      "worker_manifest_sha256": "617f14c5cbde64c56f0999ec8c0aba1c21ef396c5bfba6bfc68b4ad3cb3731cc",
+      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -10583,7 +10599,7 @@
       "case_id": "polygon-intersection-clockwise-hexagon",
       "operation_id": "polygon.boolean",
       "revision": 1,
-      "worker_manifest_sha256": "617f14c5cbde64c56f0999ec8c0aba1c21ef396c5bfba6bfc68b4ad3cb3731cc",
+      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -10756,7 +10772,7 @@
       "case_id": "minkowski-square-triangle",
       "operation_id": "polygon.minkowski_sum",
       "revision": 1,
-      "worker_manifest_sha256": "617f14c5cbde64c56f0999ec8c0aba1c21ef396c5bfba6bfc68b4ad3cb3731cc",
+      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -10923,7 +10939,7 @@
       "case_id": "minkowski-closed-gap-hole",
       "operation_id": "polygon.minkowski_sum",
       "revision": 1,
-      "worker_manifest_sha256": "617f14c5cbde64c56f0999ec8c0aba1c21ef396c5bfba6bfc68b4ad3cb3731cc",
+      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -11090,7 +11106,7 @@
       "case_id": "minkowski-nonconvex-no-hole",
       "operation_id": "polygon.minkowski_sum",
       "revision": 1,
-      "worker_manifest_sha256": "617f14c5cbde64c56f0999ec8c0aba1c21ef396c5bfba6bfc68b4ad3cb3731cc",
+      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -11257,7 +11273,7 @@
       "case_id": "minkowski-reduced-square-triangle",
       "operation_id": "polygon.minkowski_sum_reduced_convolution",
       "revision": 1,
-      "worker_manifest_sha256": "617f14c5cbde64c56f0999ec8c0aba1c21ef396c5bfba6bfc68b4ad3cb3731cc",
+      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -11424,7 +11440,7 @@
       "case_id": "minkowski-reduced-closed-gap-hole",
       "operation_id": "polygon.minkowski_sum_reduced_convolution",
       "revision": 1,
-      "worker_manifest_sha256": "617f14c5cbde64c56f0999ec8c0aba1c21ef396c5bfba6bfc68b4ad3cb3731cc",
+      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -11591,7 +11607,7 @@
       "case_id": "minkowski-reduced-nonconvex-no-hole",
       "operation_id": "polygon.minkowski_sum_reduced_convolution",
       "revision": 1,
-      "worker_manifest_sha256": "617f14c5cbde64c56f0999ec8c0aba1c21ef396c5bfba6bfc68b4ad3cb3731cc",
+      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -11758,7 +11774,7 @@
       "case_id": "arrangement-concurrent-segments",
       "operation_id": "arrangement.build",
       "revision": 1,
-      "worker_manifest_sha256": "617f14c5cbde64c56f0999ec8c0aba1c21ef396c5bfba6bfc68b4ad3cb3731cc",
+      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -11910,7 +11926,7 @@
       "case_id": "arrangement-nested-components",
       "operation_id": "arrangement.build",
       "revision": 1,
-      "worker_manifest_sha256": "617f14c5cbde64c56f0999ec8c0aba1c21ef396c5bfba6bfc68b4ad3cb3731cc",
+      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -12062,7 +12078,7 @@
       "case_id": "zone-through-vertices",
       "operation_id": "arrangement.zone",
       "revision": 1,
-      "worker_manifest_sha256": "617f14c5cbde64c56f0999ec8c0aba1c21ef396c5bfba6bfc68b4ad3cb3731cc",
+      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -12232,7 +12248,7 @@
       "case_id": "zone-crossing-edges",
       "operation_id": "arrangement.zone",
       "revision": 1,
-      "worker_manifest_sha256": "617f14c5cbde64c56f0999ec8c0aba1c21ef396c5bfba6bfc68b4ad3cb3731cc",
+      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -12402,7 +12418,7 @@
       "case_id": "zone-diagonal-vertices-faces",
       "operation_id": "arrangement.zone",
       "revision": 1,
-      "worker_manifest_sha256": "617f14c5cbde64c56f0999ec8c0aba1c21ef396c5bfba6bfc68b4ad3cb3731cc",
+      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -12572,7 +12588,7 @@
       "case_id": "zone-outside",
       "operation_id": "arrangement.zone",
       "revision": 1,
-      "worker_manifest_sha256": "617f14c5cbde64c56f0999ec8c0aba1c21ef396c5bfba6bfc68b4ad3cb3731cc",
+      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -12742,7 +12758,7 @@
       "case_id": "overlay-square-corner",
       "operation_id": "arrangement.overlay",
       "revision": 1,
-      "worker_manifest_sha256": "617f14c5cbde64c56f0999ec8c0aba1c21ef396c5bfba6bfc68b4ad3cb3731cc",
+      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -12912,7 +12928,7 @@
       "case_id": "overlay-inscribed-triangle",
       "operation_id": "arrangement.overlay",
       "revision": 1,
-      "worker_manifest_sha256": "617f14c5cbde64c56f0999ec8c0aba1c21ef396c5bfba6bfc68b4ad3cb3731cc",
+      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -13082,7 +13098,7 @@
       "case_id": "overlay-nonconvex",
       "operation_id": "arrangement.overlay",
       "revision": 1,
-      "worker_manifest_sha256": "617f14c5cbde64c56f0999ec8c0aba1c21ef396c5bfba6bfc68b4ad3cb3731cc",
+      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -13252,7 +13268,7 @@
       "case_id": "polygon-with-hole",
       "operation_id": "polygon.analysis.properties",
       "revision": 1,
-      "worker_manifest_sha256": "617f14c5cbde64c56f0999ec8c0aba1c21ef396c5bfba6bfc68b4ad3cb3731cc",
+      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -13405,7 +13421,7 @@
       "case_id": "polygon-l-shape",
       "operation_id": "polygon.analysis.properties",
       "revision": 1,
-      "worker_manifest_sha256": "617f14c5cbde64c56f0999ec8c0aba1c21ef396c5bfba6bfc68b4ad3cb3731cc",
+      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -13558,7 +13574,7 @@
       "case_id": "polygon-bowtie",
       "operation_id": "polygon.analysis.properties",
       "revision": 1,
-      "worker_manifest_sha256": "617f14c5cbde64c56f0999ec8c0aba1c21ef396c5bfba6bfc68b4ad3cb3731cc",
+      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -13708,7 +13724,7 @@
       "case_id": "containment-with-hole",
       "operation_id": "polygon.query.containment",
       "revision": 1,
-      "worker_manifest_sha256": "617f14c5cbde64c56f0999ec8c0aba1c21ef396c5bfba6bfc68b4ad3cb3731cc",
+      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -13874,7 +13890,7 @@
       "case_id": "skeleton-rectangle-interior",
       "operation_id": "polygon.straight_skeleton.interior",
       "revision": 1,
-      "worker_manifest_sha256": "617f14c5cbde64c56f0999ec8c0aba1c21ef396c5bfba6bfc68b4ad3cb3731cc",
+      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -14032,7 +14048,7 @@
       "case_id": "skeleton-lshape-interior",
       "operation_id": "polygon.straight_skeleton.interior",
       "revision": 1,
-      "worker_manifest_sha256": "617f14c5cbde64c56f0999ec8c0aba1c21ef396c5bfba6bfc68b4ad3cb3731cc",
+      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -14177,7 +14193,7 @@
           },
           "behaviour_assertions": {
             "pass": true,
-            "count": 5
+            "count": 11
           },
           "validator:polygon.validate.straight_skeleton": {
             "pass": true,
@@ -14190,7 +14206,7 @@
       "case_id": "skeleton-holed-interior",
       "operation_id": "polygon.straight_skeleton.interior",
       "revision": 1,
-      "worker_manifest_sha256": "617f14c5cbde64c56f0999ec8c0aba1c21ef396c5bfba6bfc68b4ad3cb3731cc",
+      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -14335,7 +14351,7 @@
           },
           "behaviour_assertions": {
             "pass": true,
-            "count": 4
+            "count": 14
           },
           "validator:polygon.validate.straight_skeleton": {
             "pass": true,
@@ -14348,7 +14364,7 @@
       "case_id": "skeleton-rectangle-exterior",
       "operation_id": "polygon.straight_skeleton.exterior",
       "revision": 1,
-      "worker_manifest_sha256": "617f14c5cbde64c56f0999ec8c0aba1c21ef396c5bfba6bfc68b4ad3cb3731cc",
+      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -14516,7 +14532,7 @@
       "case_id": "offset-rectangle-interior",
       "operation_id": "polygon.offset.interior",
       "revision": 1,
-      "worker_manifest_sha256": "617f14c5cbde64c56f0999ec8c0aba1c21ef396c5bfba6bfc68b4ad3cb3731cc",
+      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -14622,7 +14638,7 @@
                 "source_matches": true
               },
               "extent_certification": "axis_aligned_rectangle_exact_formula",
-              "independence": "long double parallel-line and segment distances, exact rational point-in-ring, half-plane intersection for convex sources, exact rational rectangle formula; completeness of non-empty offsets of non-convex sources is not certified; no CGAL header",
+              "independence": "long double parallel-line and segment distances, exact rational point-in-ring, half-plane intersection for convex sources, exact rational rectangle formula; non-convex sources are certified only when axis-parallel (exact square erosion or dilation on the offset grid), otherwise a non-empty offset is rejected; no CGAL header",
               "length_tolerance_relative_to_diagonal": 1e-09,
               "offset_area_sum": 3.0,
               "passed": true,
@@ -14634,7 +14650,7 @@
             },
             "outputs": [
               {
-                "blob_sha256": "eb9860ab62fac31d83f7a56d9492429e97b095b89f8f1d2cca377d207edce382",
+                "blob_sha256": "0be067297f58d8aa1c739d740a135a2ab359f6677a15b3ad39036f77f9c9c5b2",
                 "format": "json",
                 "slot": "validation",
                 "type": "ValidationReport",
@@ -14645,16 +14661,16 @@
             "request_id": "offset-rectangle-interior--polygon.validate.offset",
             "status": "ok"
           },
-          "response_sha256": "f70cb180cab2321ca198c508790f7504ba3032e9a9b1c9e40de894910ff8048e",
+          "response_sha256": "b91de317502706c08cb9c9219e9337c660f35f67f6d5f33981f9db5864510cca",
           "input_hashes": [
             "745aa0f304d558f7930878280ab8ece42aa743f91c7612c727dcb0c28dc4759d",
             "1ea61017d5e8d48d8b62dffb195d87e5a95f46b4be18487fbe4df3d5fb5f5c60"
           ],
           "output_hashes": [
-            "eb9860ab62fac31d83f7a56d9492429e97b095b89f8f1d2cca377d207edce382"
+            "0be067297f58d8aa1c739d740a135a2ab359f6677a15b3ad39036f77f9c9c5b2"
           ],
-          "report_blob_sha256": "eb9860ab62fac31d83f7a56d9492429e97b095b89f8f1d2cca377d207edce382",
-          "report_sha256": "bdb93910c6ef64bb4838b229501048f88fb9183436040971a9ba155b02b721af",
+          "report_blob_sha256": "0be067297f58d8aa1c739d740a135a2ab359f6677a15b3ad39036f77f9c9c5b2",
+          "report_sha256": "9183b583830f4a85469cd3082d57307250fa5efb3ffb5698c4d7d8c60b5fca9e",
           "status": "pass"
         }
       ],
@@ -14670,7 +14686,7 @@
           },
           "validator:polygon.validate.offset": {
             "pass": true,
-            "report_sha256": "bdb93910c6ef64bb4838b229501048f88fb9183436040971a9ba155b02b721af"
+            "report_sha256": "9183b583830f4a85469cd3082d57307250fa5efb3ffb5698c4d7d8c60b5fca9e"
           }
         }
       }
@@ -14679,7 +14695,7 @@
       "case_id": "offset-rectangle-exterior",
       "operation_id": "polygon.offset.exterior",
       "revision": 1,
-      "worker_manifest_sha256": "617f14c5cbde64c56f0999ec8c0aba1c21ef396c5bfba6bfc68b4ad3cb3731cc",
+      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -14784,7 +14800,7 @@
                 "source_matches": true
               },
               "extent_certification": "axis_aligned_rectangle_exact_formula",
-              "independence": "long double parallel-line and segment distances, exact rational point-in-ring, half-plane intersection for convex sources, exact rational rectangle formula; completeness of non-empty offsets of non-convex sources is not certified; no CGAL header",
+              "independence": "long double parallel-line and segment distances, exact rational point-in-ring, half-plane intersection for convex sources, exact rational rectangle formula; non-convex sources are certified only when axis-parallel (exact square erosion or dilation on the offset grid), otherwise a non-empty offset is rejected; no CGAL header",
               "length_tolerance_relative_to_diagonal": 1e-09,
               "offset_area_sum": 15.0,
               "passed": true,
@@ -14796,7 +14812,7 @@
             },
             "outputs": [
               {
-                "blob_sha256": "690a2380d978d27007291f932c04e4614fefebad8eec8531b9b10b4ad4932747",
+                "blob_sha256": "4f85f13d9f7601a44db36189e59ed318c59f4b194348b40a490e9666e9a81430",
                 "format": "json",
                 "slot": "validation",
                 "type": "ValidationReport",
@@ -14807,16 +14823,16 @@
             "request_id": "offset-rectangle-exterior--polygon.validate.offset",
             "status": "ok"
           },
-          "response_sha256": "73b21e20f01d0b6e25e6345abb803df5f14c78e08e95fad2a5e08f6c59bd6bff",
+          "response_sha256": "8aeb38616677b27d877a0fee219398a9595fa057520ede96792c4b13ed1399b9",
           "input_hashes": [
             "410fdeb8f066a243a147eb2dce5f3f7e5c1902bc8799ca8f596c834b91c0e0c8",
             "1ea61017d5e8d48d8b62dffb195d87e5a95f46b4be18487fbe4df3d5fb5f5c60"
           ],
           "output_hashes": [
-            "690a2380d978d27007291f932c04e4614fefebad8eec8531b9b10b4ad4932747"
+            "4f85f13d9f7601a44db36189e59ed318c59f4b194348b40a490e9666e9a81430"
           ],
-          "report_blob_sha256": "690a2380d978d27007291f932c04e4614fefebad8eec8531b9b10b4ad4932747",
-          "report_sha256": "d8738ce277ad128ecc275b2b6aaa9c12ac862be79307735d9cd3d6ff7c005831",
+          "report_blob_sha256": "4f85f13d9f7601a44db36189e59ed318c59f4b194348b40a490e9666e9a81430",
+          "report_sha256": "e1f2736f5b5908a0904720333689d21bf6f4cae2ae1ccb5fb3e5dd724994f3b4",
           "status": "pass"
         }
       ],
@@ -14832,7 +14848,7 @@
           },
           "validator:polygon.validate.offset": {
             "pass": true,
-            "report_sha256": "d8738ce277ad128ecc275b2b6aaa9c12ac862be79307735d9cd3d6ff7c005831"
+            "report_sha256": "e1f2736f5b5908a0904720333689d21bf6f4cae2ae1ccb5fb3e5dd724994f3b4"
           }
         }
       }
@@ -14841,7 +14857,7 @@
       "case_id": "offset-rectangle-consumed",
       "operation_id": "polygon.offset.interior",
       "revision": 1,
-      "worker_manifest_sha256": "617f14c5cbde64c56f0999ec8c0aba1c21ef396c5bfba6bfc68b4ad3cb3731cc",
+      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -14947,7 +14963,7 @@
                 "source_matches": true
               },
               "extent_certification": "axis_aligned_rectangle_exact_formula",
-              "independence": "long double parallel-line and segment distances, exact rational point-in-ring, half-plane intersection for convex sources, exact rational rectangle formula; completeness of non-empty offsets of non-convex sources is not certified; no CGAL header",
+              "independence": "long double parallel-line and segment distances, exact rational point-in-ring, half-plane intersection for convex sources, exact rational rectangle formula; non-convex sources are certified only when axis-parallel (exact square erosion or dilation on the offset grid), otherwise a non-empty offset is rejected; no CGAL header",
               "length_tolerance_relative_to_diagonal": 1e-09,
               "offset_area_sum": 0.0,
               "passed": true,
@@ -14959,7 +14975,7 @@
             },
             "outputs": [
               {
-                "blob_sha256": "97606fdf6d18305ff62778a21a229dd7fb80c5adab32e02f087e131231488926",
+                "blob_sha256": "aeb75050e96bbcc69b862b354230a9403140d50d62d2b764e8cf1b01e2c26917",
                 "format": "json",
                 "slot": "validation",
                 "type": "ValidationReport",
@@ -14970,16 +14986,16 @@
             "request_id": "offset-rectangle-consumed--polygon.validate.offset",
             "status": "ok"
           },
-          "response_sha256": "638002bc5b21286b8f811414c6ae40ca9f798c8e6e7716b18ee116ebe76a9dea",
+          "response_sha256": "b5dfa9e2c510326fec76d0519810457396a0a365470995f8a41948dcfbb97710",
           "input_hashes": [
             "864fd6186a0ccd688cadb677606b7bbe1f8ee5690c41b41e8b1dec2a61a03375",
             "1ea61017d5e8d48d8b62dffb195d87e5a95f46b4be18487fbe4df3d5fb5f5c60"
           ],
           "output_hashes": [
-            "97606fdf6d18305ff62778a21a229dd7fb80c5adab32e02f087e131231488926"
+            "aeb75050e96bbcc69b862b354230a9403140d50d62d2b764e8cf1b01e2c26917"
           ],
-          "report_blob_sha256": "97606fdf6d18305ff62778a21a229dd7fb80c5adab32e02f087e131231488926",
-          "report_sha256": "9d47f97225219541de4527b575e311923094c698228ca0a7797046b13e532940",
+          "report_blob_sha256": "aeb75050e96bbcc69b862b354230a9403140d50d62d2b764e8cf1b01e2c26917",
+          "report_sha256": "cf4dfc8ac3ebc43d0de4cd63ed12f81c7223298f4d70ae67c6972a202bf74a1e",
           "status": "pass"
         }
       ],
@@ -14995,7 +15011,7 @@
           },
           "validator:polygon.validate.offset": {
             "pass": true,
-            "report_sha256": "9d47f97225219541de4527b575e311923094c698228ca0a7797046b13e532940"
+            "report_sha256": "cf4dfc8ac3ebc43d0de4cd63ed12f81c7223298f4d70ae67c6972a202bf74a1e"
           }
         }
       }
@@ -15004,7 +15020,7 @@
       "case_id": "offset-triangle-incircle",
       "operation_id": "polygon.offset.interior",
       "revision": 1,
-      "worker_manifest_sha256": "617f14c5cbde64c56f0999ec8c0aba1c21ef396c5bfba6bfc68b4ad3cb3731cc",
+      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -15110,7 +15126,7 @@
                 "source_matches": true
               },
               "extent_certification": "convex_half_plane_intersection",
-              "independence": "long double parallel-line and segment distances, exact rational point-in-ring, half-plane intersection for convex sources, exact rational rectangle formula; completeness of non-empty offsets of non-convex sources is not certified; no CGAL header",
+              "independence": "long double parallel-line and segment distances, exact rational point-in-ring, half-plane intersection for convex sources, exact rational rectangle formula; non-convex sources are certified only when axis-parallel (exact square erosion or dilation on the offset grid), otherwise a non-empty offset is rejected; no CGAL header",
               "length_tolerance_relative_to_diagonal": 1e-09,
               "offset_area_sum": 5.999999999999998,
               "passed": true,
@@ -15122,7 +15138,7 @@
             },
             "outputs": [
               {
-                "blob_sha256": "a481b7bc0de402899da8a29d01ed0f05ef36557b7cb7c8feea0640bfab20226c",
+                "blob_sha256": "208f8de6b2af5e843c00bf9ee5c84320609adf5ea40303142c3a5aa4e6eb3c3f",
                 "format": "json",
                 "slot": "validation",
                 "type": "ValidationReport",
@@ -15133,16 +15149,16 @@
             "request_id": "offset-triangle-incircle--polygon.validate.offset",
             "status": "ok"
           },
-          "response_sha256": "35fe2dd77caf717e6c29929a94b1305a2a0a490ad61de8f2191ac7cf0edf1d07",
+          "response_sha256": "7211c040a082b3669767eb9067a5bf1ae6ad4a6d754d8bcc033b361192b97264",
           "input_hashes": [
             "47d2eb0751a7a670806206b80c9027d86943f02ecdf5b2245f6acc9b9f6e3e30",
             "a5cbd96391e7e4658da0b74461783cd2073919c4571f5f91b0402c15ebba4cbc"
           ],
           "output_hashes": [
-            "a481b7bc0de402899da8a29d01ed0f05ef36557b7cb7c8feea0640bfab20226c"
+            "208f8de6b2af5e843c00bf9ee5c84320609adf5ea40303142c3a5aa4e6eb3c3f"
           ],
-          "report_blob_sha256": "a481b7bc0de402899da8a29d01ed0f05ef36557b7cb7c8feea0640bfab20226c",
-          "report_sha256": "bf853f247dd6a5415b744a61b8712116d1c18e45641314439781d29038e7d10c",
+          "report_blob_sha256": "208f8de6b2af5e843c00bf9ee5c84320609adf5ea40303142c3a5aa4e6eb3c3f",
+          "report_sha256": "904fdb41d1a45ae006f1ced273adbe28a810b83cd2ccac61afcfbde4a263e1a9",
           "status": "pass"
         }
       ],
@@ -15158,7 +15174,7 @@
           },
           "validator:polygon.validate.offset": {
             "pass": true,
-            "report_sha256": "bf853f247dd6a5415b744a61b8712116d1c18e45641314439781d29038e7d10c"
+            "report_sha256": "904fdb41d1a45ae006f1ced273adbe28a810b83cd2ccac61afcfbde4a263e1a9"
           }
         }
       }
@@ -15167,7 +15183,7 @@
       "case_id": "offset-lshape-interior",
       "operation_id": "polygon.offset.interior",
       "revision": 1,
-      "worker_manifest_sha256": "617f14c5cbde64c56f0999ec8c0aba1c21ef396c5bfba6bfc68b4ad3cb3731cc",
+      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -15272,8 +15288,8 @@
                 "report_schema_and_units_valid": true,
                 "source_matches": true
               },
-              "extent_certification": "not_certified_nonconvex_completeness",
-              "independence": "long double parallel-line and segment distances, exact rational point-in-ring, half-plane intersection for convex sources, exact rational rectangle formula; completeness of non-empty offsets of non-convex sources is not certified; no CGAL header",
+              "extent_certification": "axis_parallel_exact_square_offset",
+              "independence": "long double parallel-line and segment distances, exact rational point-in-ring, half-plane intersection for convex sources, exact rational rectangle formula; non-convex sources are certified only when axis-parallel (exact square erosion or dilation on the offset grid), otherwise a non-empty offset is rejected; no CGAL header",
               "length_tolerance_relative_to_diagonal": 1e-09,
               "offset_area_sum": 1.7600000000000005,
               "passed": true,
@@ -15285,7 +15301,7 @@
             },
             "outputs": [
               {
-                "blob_sha256": "3e73feb713f0dbeb1fda082ee293af50e0d7d52d5c4fb88461d4b0417c538fde",
+                "blob_sha256": "f4ba898297c1a69ba576d22a1dee4ee8accf5cd7a7cccbfc2f12f3d9b919d40a",
                 "format": "json",
                 "slot": "validation",
                 "type": "ValidationReport",
@@ -15296,16 +15312,16 @@
             "request_id": "offset-lshape-interior--polygon.validate.offset",
             "status": "ok"
           },
-          "response_sha256": "4e568b58b681d8277660ff253ee79e2cf48894a53074909c3bab4cb273819198",
+          "response_sha256": "571356d08a9dd753bf4f39716f0449f98d7caaf1c62de0c3d7c0b75e3a64c18a",
           "input_hashes": [
             "7584a78505c92d40003a7649c39b54b0db652f6377008a16a473bff50a7f3a75",
             "97230a3e931e766367584147572835963b2aefca0fe785db3c0a80e2aaa3f1d5"
           ],
           "output_hashes": [
-            "3e73feb713f0dbeb1fda082ee293af50e0d7d52d5c4fb88461d4b0417c538fde"
+            "f4ba898297c1a69ba576d22a1dee4ee8accf5cd7a7cccbfc2f12f3d9b919d40a"
           ],
-          "report_blob_sha256": "3e73feb713f0dbeb1fda082ee293af50e0d7d52d5c4fb88461d4b0417c538fde",
-          "report_sha256": "e4f4dacba31542cef03bd7a6202eca4eb619c9ff8ea880c5bd71568fd7648033",
+          "report_blob_sha256": "f4ba898297c1a69ba576d22a1dee4ee8accf5cd7a7cccbfc2f12f3d9b919d40a",
+          "report_sha256": "eeda3545804df5548266f003dfe015e629a4fbae627a0046163db5a96afb10d1",
           "status": "pass"
         }
       ],
@@ -15317,11 +15333,11 @@
           },
           "behaviour_assertions": {
             "pass": true,
-            "count": 3
+            "count": 2
           },
           "validator:polygon.validate.offset": {
             "pass": true,
-            "report_sha256": "e4f4dacba31542cef03bd7a6202eca4eb619c9ff8ea880c5bd71568fd7648033"
+            "report_sha256": "eeda3545804df5548266f003dfe015e629a4fbae627a0046163db5a96afb10d1"
           }
         }
       }
@@ -15330,7 +15346,7 @@
       "case_id": "offset-lshape-consumed",
       "operation_id": "polygon.offset.interior",
       "revision": 1,
-      "worker_manifest_sha256": "617f14c5cbde64c56f0999ec8c0aba1c21ef396c5bfba6bfc68b4ad3cb3731cc",
+      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -15435,8 +15451,8 @@
                 "report_schema_and_units_valid": true,
                 "source_matches": true
               },
-              "extent_certification": "empty_certified_by_inradius_bound",
-              "independence": "long double parallel-line and segment distances, exact rational point-in-ring, half-plane intersection for convex sources, exact rational rectangle formula; completeness of non-empty offsets of non-convex sources is not certified; no CGAL header",
+              "extent_certification": "axis_parallel_exact_square_offset",
+              "independence": "long double parallel-line and segment distances, exact rational point-in-ring, half-plane intersection for convex sources, exact rational rectangle formula; non-convex sources are certified only when axis-parallel (exact square erosion or dilation on the offset grid), otherwise a non-empty offset is rejected; no CGAL header",
               "length_tolerance_relative_to_diagonal": 1e-09,
               "offset_area_sum": 0.0,
               "passed": true,
@@ -15448,7 +15464,7 @@
             },
             "outputs": [
               {
-                "blob_sha256": "05bb34f515e365beb2c44ab54e7c0bb6e9167bb38f7161fdd740640bda5e2a76",
+                "blob_sha256": "14535c9a5749a02fb23992234ea1ee776b7bc37ad44a2cd49ee374212386eedb",
                 "format": "json",
                 "slot": "validation",
                 "type": "ValidationReport",
@@ -15459,16 +15475,16 @@
             "request_id": "offset-lshape-consumed--polygon.validate.offset",
             "status": "ok"
           },
-          "response_sha256": "12fb77888e3c2f29ab7b9f0da417c68a8d3076c0b8dbebdc5f4c5e6ba6143a12",
+          "response_sha256": "bf85516f1425326b46115c970bec44cfad4a350e6071e5c0c14ee97b2feb21f7",
           "input_hashes": [
             "85f291aaedd0973ace5e7fe8b88931a7e57cbda4715825560c1a7228519ce37f",
             "97230a3e931e766367584147572835963b2aefca0fe785db3c0a80e2aaa3f1d5"
           ],
           "output_hashes": [
-            "05bb34f515e365beb2c44ab54e7c0bb6e9167bb38f7161fdd740640bda5e2a76"
+            "14535c9a5749a02fb23992234ea1ee776b7bc37ad44a2cd49ee374212386eedb"
           ],
-          "report_blob_sha256": "05bb34f515e365beb2c44ab54e7c0bb6e9167bb38f7161fdd740640bda5e2a76",
-          "report_sha256": "c435263330cb484d6845bab5459b0888609288da1a30de8ad5d8a737a9ab5681",
+          "report_blob_sha256": "14535c9a5749a02fb23992234ea1ee776b7bc37ad44a2cd49ee374212386eedb",
+          "report_sha256": "25293ef49b8892b7905be1209ab9e93a92e6f8bacf754be1c3ff05fc78695f87",
           "status": "pass"
         }
       ],
@@ -15484,7 +15500,170 @@
           },
           "validator:polygon.validate.offset": {
             "pass": true,
-            "report_sha256": "c435263330cb484d6845bab5459b0888609288da1a30de8ad5d8a737a9ab5681"
+            "report_sha256": "25293ef49b8892b7905be1209ab9e93a92e6f8bacf754be1c3ff05fc78695f87"
+          }
+        }
+      }
+    },
+    {
+      "case_id": "offset-lshape-consumed-below-inradius",
+      "operation_id": "polygon.offset.interior",
+      "revision": 1,
+      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
+      "test_id": "family-7.12-replay-cases",
+      "request": {
+        "inputs": [
+          {
+            "artifact_id": "input-0",
+            "blob_sha256": "97230a3e931e766367584147572835963b2aefca0fe785db3c0a80e2aaa3f1d5",
+            "format": "json",
+            "sha256": "97230a3e931e766367584147572835963b2aefca0fe785db3c0a80e2aaa3f1d5",
+            "type": "PolygonWithHoles2",
+            "unit": "mm"
+          }
+        ],
+        "kernel": "package_recommended",
+        "limits": {
+          "memory_mb": 2048,
+          "wall_time_ms": 120000
+        },
+        "operation": "polygon.offset.interior",
+        "parameters": {
+          "offset": {
+            "unit": "mm",
+            "value": 0.55
+          }
+        },
+        "protocol": 1,
+        "request_id": "offset-lshape-consumed-below-inradius"
+      },
+      "request_sha256": "9db7a2a919ce915c475ac6000c526dc0850d3931f935251e1b3aa2ba3baeaead",
+      "response": {
+        "metrics": {
+          "algorithm": "CGAL::create_interior_skeleton_and_offset_polygons_2",
+          "empty": true,
+          "ring_count": 0
+        },
+        "outputs": [
+          {
+            "blob_sha256": "f8104a53dff6367ce61fd1ff2098055ae7847c03073df60487613fa3af3d3052",
+            "format": "json",
+            "slot": "analysis",
+            "type": "GeometryQueryReport",
+            "unit": "none"
+          }
+        ],
+        "protocol": 1,
+        "request_id": "offset-lshape-consumed-below-inradius",
+        "status": "ok"
+      },
+      "response_sha256": "64d1c21fcdcda3f11254f17deb77121ae0a883fcadb8613bdba3c6c2ac324a5f",
+      "input_hashes": [
+        "97230a3e931e766367584147572835963b2aefca0fe785db3c0a80e2aaa3f1d5"
+      ],
+      "output_hashes": [
+        "f8104a53dff6367ce61fd1ff2098055ae7847c03073df60487613fa3af3d3052"
+      ],
+      "validators": [
+        {
+          "operation_id": "polygon.validate.offset",
+          "revision": 1,
+          "request": {
+            "inputs": [
+              {
+                "artifact_id": "offset-lshape-consumed-below-inradius-analysis-0",
+                "blob_sha256": "f8104a53dff6367ce61fd1ff2098055ae7847c03073df60487613fa3af3d3052",
+                "format": "json",
+                "sha256": "f8104a53dff6367ce61fd1ff2098055ae7847c03073df60487613fa3af3d3052",
+                "type": "GeometryQueryReport",
+                "unit": "none"
+              },
+              {
+                "artifact_id": "input-0",
+                "blob_sha256": "97230a3e931e766367584147572835963b2aefca0fe785db3c0a80e2aaa3f1d5",
+                "format": "json",
+                "sha256": "97230a3e931e766367584147572835963b2aefca0fe785db3c0a80e2aaa3f1d5",
+                "type": "PolygonWithHoles2",
+                "unit": "mm"
+              }
+            ],
+            "kernel": "package_recommended",
+            "limits": {
+              "memory_mb": 2048,
+              "wall_time_ms": 120000
+            },
+            "operation": "polygon.validate.offset",
+            "parameters": {
+              "offset": {
+                "unit": "mm",
+                "value": 0.55
+              }
+            },
+            "protocol": 1,
+            "request_id": "offset-lshape-consumed-below-inradius--polygon.validate.offset"
+          },
+          "request_sha256": "4e20364c01e91230972e60c7f682e56127caa804cb672392872fc1d991b60ab5",
+          "response": {
+            "metrics": {
+              "checks": {
+                "offset_edges_parallel_at_offset_distance": true,
+                "offset_extent_verified_as_declared": true,
+                "offset_vertices_clear_of_source_boundary": true,
+                "offset_vertices_on_correct_side": true,
+                "parameters_match": true,
+                "report_schema_and_units_valid": true,
+                "source_matches": true
+              },
+              "extent_certification": "axis_parallel_exact_square_offset",
+              "independence": "long double parallel-line and segment distances, exact rational point-in-ring, half-plane intersection for convex sources, exact rational rectangle formula; non-convex sources are certified only when axis-parallel (exact square erosion or dilation on the offset grid), otherwise a non-empty offset is rejected; no CGAL header",
+              "length_tolerance_relative_to_diagonal": 1e-09,
+              "offset_area_sum": 0.0,
+              "passed": true,
+              "report_type": "ValidationReport",
+              "ring_count": 0,
+              "schema_version": 1,
+              "status": "pass",
+              "validator": "polygon.validate.offset"
+            },
+            "outputs": [
+              {
+                "blob_sha256": "14535c9a5749a02fb23992234ea1ee776b7bc37ad44a2cd49ee374212386eedb",
+                "format": "json",
+                "slot": "validation",
+                "type": "ValidationReport",
+                "unit": "none"
+              }
+            ],
+            "protocol": 1,
+            "request_id": "offset-lshape-consumed-below-inradius--polygon.validate.offset",
+            "status": "ok"
+          },
+          "response_sha256": "a94e7014a117cfb2a1af958e53d271cc1814d8390688d2cbb4674717b3d073b9",
+          "input_hashes": [
+            "f8104a53dff6367ce61fd1ff2098055ae7847c03073df60487613fa3af3d3052",
+            "97230a3e931e766367584147572835963b2aefca0fe785db3c0a80e2aaa3f1d5"
+          ],
+          "output_hashes": [
+            "14535c9a5749a02fb23992234ea1ee776b7bc37ad44a2cd49ee374212386eedb"
+          ],
+          "report_blob_sha256": "14535c9a5749a02fb23992234ea1ee776b7bc37ad44a2cd49ee374212386eedb",
+          "report_sha256": "25293ef49b8892b7905be1209ab9e93a92e6f8bacf754be1c3ff05fc78695f87",
+          "status": "pass"
+        }
+      ],
+      "validation": {
+        "status": "pass",
+        "checks": {
+          "transform_executed": {
+            "pass": true
+          },
+          "behaviour_assertions": {
+            "pass": true,
+            "count": 2
+          },
+          "validator:polygon.validate.offset": {
+            "pass": true,
+            "report_sha256": "25293ef49b8892b7905be1209ab9e93a92e6f8bacf754be1c3ff05fc78695f87"
           }
         }
       }
@@ -15493,7 +15672,7 @@
       "case_id": "offset-holed-interior",
       "operation_id": "polygon.offset.interior",
       "revision": 1,
-      "worker_manifest_sha256": "617f14c5cbde64c56f0999ec8c0aba1c21ef396c5bfba6bfc68b4ad3cb3731cc",
+      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -15598,8 +15777,8 @@
                 "report_schema_and_units_valid": true,
                 "source_matches": true
               },
-              "extent_certification": "not_certified_nonconvex_completeness",
-              "independence": "long double parallel-line and segment distances, exact rational point-in-ring, half-plane intersection for convex sources, exact rational rectangle formula; completeness of non-empty offsets of non-convex sources is not certified; no CGAL header",
+              "extent_certification": "axis_parallel_exact_square_offset",
+              "independence": "long double parallel-line and segment distances, exact rational point-in-ring, half-plane intersection for convex sources, exact rational rectangle formula; non-convex sources are certified only when axis-parallel (exact square erosion or dilation on the offset grid), otherwise a non-empty offset is rejected; no CGAL header",
               "length_tolerance_relative_to_diagonal": 1e-09,
               "offset_area_sum": 35.92,
               "passed": true,
@@ -15611,7 +15790,7 @@
             },
             "outputs": [
               {
-                "blob_sha256": "2c7d2cfa9b39b3196d7c62ef22a9ea5a4a34598e5709226f6372d6f430af1d97",
+                "blob_sha256": "b3b6d6bdaa69af6093647a97becc599f5ddd83b32d0386e444a0970ed21ee7e1",
                 "format": "json",
                 "slot": "validation",
                 "type": "ValidationReport",
@@ -15622,16 +15801,16 @@
             "request_id": "offset-holed-interior--polygon.validate.offset",
             "status": "ok"
           },
-          "response_sha256": "3973631130b46d9f48c6445134eb6d81a744f50fd616ad9f74ccf1e6cfd544ac",
+          "response_sha256": "b69b21781f6a534033b1f81e4f161e0f674ac5160ad050556c361c5cc4d13747",
           "input_hashes": [
             "b0b7831bb8db71456809bca0dc453db48425db11b8cf17407b4b5aeb55bfaa1b",
             "118120e1fc83098c7054277037b2bb95280b8fbf7b506c2d21bba604fbe1752f"
           ],
           "output_hashes": [
-            "2c7d2cfa9b39b3196d7c62ef22a9ea5a4a34598e5709226f6372d6f430af1d97"
+            "b3b6d6bdaa69af6093647a97becc599f5ddd83b32d0386e444a0970ed21ee7e1"
           ],
-          "report_blob_sha256": "2c7d2cfa9b39b3196d7c62ef22a9ea5a4a34598e5709226f6372d6f430af1d97",
-          "report_sha256": "a4bbee01209b54c0d8cbf18ce9a0a0aa534f79469f2750bb92ee4656926c0e4f",
+          "report_blob_sha256": "b3b6d6bdaa69af6093647a97becc599f5ddd83b32d0386e444a0970ed21ee7e1",
+          "report_sha256": "58835baa911904be6e6f5c07f633d678233f2e7fa530a4333f9f50fff3c374ca",
           "status": "pass"
         }
       ],
@@ -15643,11 +15822,11 @@
           },
           "behaviour_assertions": {
             "pass": true,
-            "count": 1
+            "count": 2
           },
           "validator:polygon.validate.offset": {
             "pass": true,
-            "report_sha256": "a4bbee01209b54c0d8cbf18ce9a0a0aa534f79469f2750bb92ee4656926c0e4f"
+            "report_sha256": "58835baa911904be6e6f5c07f633d678233f2e7fa530a4333f9f50fff3c374ca"
           }
         }
       }
@@ -15658,7 +15837,7 @@
       "case_id": "polygon-bowtie-operand-rejected",
       "operation_id": "polygon.boolean",
       "revision": 1,
-      "worker_manifest_sha256": "617f14c5cbde64c56f0999ec8c0aba1c21ef396c5bfba6bfc68b4ad3cb3731cc",
+      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -15719,7 +15898,7 @@
       "case_id": "polygon-tampered-vertex-dropped-rejected",
       "operation_id": "polygon.validate.boolean",
       "revision": 1,
-      "worker_manifest_sha256": "617f14c5cbde64c56f0999ec8c0aba1c21ef396c5bfba6bfc68b4ad3cb3731cc",
+      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -15789,7 +15968,7 @@
       "case_id": "containment-bowtie-rejected",
       "operation_id": "polygon.query.containment",
       "revision": 1,
-      "worker_manifest_sha256": "617f14c5cbde64c56f0999ec8c0aba1c21ef396c5bfba6bfc68b4ad3cb3731cc",
+      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -15848,7 +16027,7 @@
       "case_id": "skeleton-tampered-node-moved-rejected",
       "operation_id": "polygon.validate.straight_skeleton",
       "revision": 1,
-      "worker_manifest_sha256": "617f14c5cbde64c56f0999ec8c0aba1c21ef396c5bfba6bfc68b4ad3cb3731cc",
+      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -15907,7 +16086,7 @@
       "case_id": "skeleton-tampered-time-changed-rejected",
       "operation_id": "polygon.validate.straight_skeleton",
       "revision": 1,
-      "worker_manifest_sha256": "617f14c5cbde64c56f0999ec8c0aba1c21ef396c5bfba6bfc68b4ad3cb3731cc",
+      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -15966,7 +16145,7 @@
       "case_id": "skeleton-tampered-face-dropped-rejected",
       "operation_id": "polygon.validate.straight_skeleton",
       "revision": 1,
-      "worker_manifest_sha256": "617f14c5cbde64c56f0999ec8c0aba1c21ef396c5bfba6bfc68b4ad3cb3731cc",
+      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -16025,7 +16204,7 @@
       "case_id": "offset-tampered-edge-shifted-rejected",
       "operation_id": "polygon.validate.offset",
       "revision": 1,
-      "worker_manifest_sha256": "617f14c5cbde64c56f0999ec8c0aba1c21ef396c5bfba6bfc68b4ad3cb3731cc",
+      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -16089,7 +16268,7 @@
       "case_id": "offset-forged-empty-rejected",
       "operation_id": "polygon.validate.offset",
       "revision": 1,
-      "worker_manifest_sha256": "617f14c5cbde64c56f0999ec8c0aba1c21ef396c5bfba6bfc68b4ad3cb3731cc",
+      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -16149,11 +16328,139 @@
       "expected_error_class": "VALIDATION_FAILED",
       "status": "expected_rejection"
     },
+    "offset-tampered-lshape-ring-truncated-rejected": {
+      "case_id": "offset-tampered-lshape-ring-truncated-rejected",
+      "operation_id": "polygon.validate.offset",
+      "revision": 1,
+      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
+      "test_id": "family-7.12-replay-cases",
+      "request": {
+        "inputs": [
+          {
+            "artifact_id": "input-0",
+            "blob_sha256": "5523978230fb24489de0d0eb605fadaed5a67867a0b4b9352a3368ccf328d5f3",
+            "format": "json",
+            "sha256": "5523978230fb24489de0d0eb605fadaed5a67867a0b4b9352a3368ccf328d5f3",
+            "type": "GeometryQueryReport",
+            "unit": "none"
+          },
+          {
+            "artifact_id": "input-1",
+            "blob_sha256": "97230a3e931e766367584147572835963b2aefca0fe785db3c0a80e2aaa3f1d5",
+            "format": "json",
+            "sha256": "97230a3e931e766367584147572835963b2aefca0fe785db3c0a80e2aaa3f1d5",
+            "type": "PolygonWithHoles2",
+            "unit": "mm"
+          }
+        ],
+        "kernel": "package_recommended",
+        "limits": {
+          "memory_mb": 2048,
+          "wall_time_ms": 120000
+        },
+        "operation": "polygon.validate.offset",
+        "parameters": {
+          "offset": {
+            "unit": "mm",
+            "value": 0.3
+          }
+        },
+        "protocol": 1,
+        "request_id": "offset-tampered-lshape-ring-truncated-rejected"
+      },
+      "request_sha256": "35d4673b8e942d2c3a0f561806f7c270b0885a2e6605935d6cb7cff00fb7bb0a",
+      "response": {
+        "error": {
+          "class": "VALIDATION_FAILED",
+          "code": "OFFSET_EXTENT_MISMATCH",
+          "message": "The offset rings do not follow the boundary of the exact offset region",
+          "recoverable": false,
+          "suggested_operations": []
+        },
+        "metrics": {},
+        "outputs": [],
+        "protocol": 1,
+        "request_id": "offset-tampered-lshape-ring-truncated-rejected",
+        "status": "error"
+      },
+      "response_sha256": "eb3f9816bbd4450d85a02c7a4f2c731fd86e12f5dd8c73c153ab91bed12ad8f9",
+      "input_hashes": [
+        "5523978230fb24489de0d0eb605fadaed5a67867a0b4b9352a3368ccf328d5f3",
+        "97230a3e931e766367584147572835963b2aefca0fe785db3c0a80e2aaa3f1d5"
+      ],
+      "output_hashes": [],
+      "expected_error_class": "VALIDATION_FAILED",
+      "status": "expected_rejection"
+    },
+    "offset-tampered-hole-ring-dropped-rejected": {
+      "case_id": "offset-tampered-hole-ring-dropped-rejected",
+      "operation_id": "polygon.validate.offset",
+      "revision": 1,
+      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
+      "test_id": "family-7.12-replay-cases",
+      "request": {
+        "inputs": [
+          {
+            "artifact_id": "input-0",
+            "blob_sha256": "037fa3844fca7b4e492fcfec3c50cef6d97de9f65a3a36adaf7fab494f9e4ce1",
+            "format": "json",
+            "sha256": "037fa3844fca7b4e492fcfec3c50cef6d97de9f65a3a36adaf7fab494f9e4ce1",
+            "type": "GeometryQueryReport",
+            "unit": "none"
+          },
+          {
+            "artifact_id": "input-1",
+            "blob_sha256": "118120e1fc83098c7054277037b2bb95280b8fbf7b506c2d21bba604fbe1752f",
+            "format": "json",
+            "sha256": "118120e1fc83098c7054277037b2bb95280b8fbf7b506c2d21bba604fbe1752f",
+            "type": "PolygonWithHoles2",
+            "unit": "mm"
+          }
+        ],
+        "kernel": "package_recommended",
+        "limits": {
+          "memory_mb": 2048,
+          "wall_time_ms": 120000
+        },
+        "operation": "polygon.validate.offset",
+        "parameters": {
+          "offset": {
+            "unit": "mm",
+            "value": 0.3
+          }
+        },
+        "protocol": 1,
+        "request_id": "offset-tampered-hole-ring-dropped-rejected"
+      },
+      "request_sha256": "0c4201879ed19c89f96fb9c2ebcf579656c42cad914de409d22322b0f97946fa",
+      "response": {
+        "error": {
+          "class": "VALIDATION_FAILED",
+          "code": "OFFSET_RING_COUNT_MISMATCH",
+          "message": "The number of offset rings differs from the boundary components of the exact offset region",
+          "recoverable": false,
+          "suggested_operations": []
+        },
+        "metrics": {},
+        "outputs": [],
+        "protocol": 1,
+        "request_id": "offset-tampered-hole-ring-dropped-rejected",
+        "status": "error"
+      },
+      "response_sha256": "733b9ef800ac40014c2d7a53854ca3cff7377fb019c7fed7f1c8ef4233a8c602",
+      "input_hashes": [
+        "037fa3844fca7b4e492fcfec3c50cef6d97de9f65a3a36adaf7fab494f9e4ce1",
+        "118120e1fc83098c7054277037b2bb95280b8fbf7b506c2d21bba604fbe1752f"
+      ],
+      "output_hashes": [],
+      "expected_error_class": "VALIDATION_FAILED",
+      "status": "expected_rejection"
+    },
     "skeleton-self-intersecting-polygon-rejected": {
       "case_id": "skeleton-self-intersecting-polygon-rejected",
       "operation_id": "polygon.straight_skeleton.interior",
       "revision": 1,
-      "worker_manifest_sha256": "617f14c5cbde64c56f0999ec8c0aba1c21ef396c5bfba6bfc68b4ad3cb3731cc",
+      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -16203,7 +16510,7 @@
       "case_id": "skeleton-zero-area-polygon-rejected",
       "operation_id": "polygon.straight_skeleton.interior",
       "revision": 1,
-      "worker_manifest_sha256": "617f14c5cbde64c56f0999ec8c0aba1c21ef396c5bfba6bfc68b4ad3cb3731cc",
+      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -16253,7 +16560,7 @@
       "case_id": "skeleton-exterior-holes-rejected",
       "operation_id": "polygon.straight_skeleton.exterior",
       "revision": 1,
-      "worker_manifest_sha256": "617f14c5cbde64c56f0999ec8c0aba1c21ef396c5bfba6bfc68b4ad3cb3731cc",
+      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -16308,7 +16615,7 @@
       "case_id": "offset-self-intersecting-polygon-rejected",
       "operation_id": "polygon.offset.interior",
       "revision": 1,
-      "worker_manifest_sha256": "617f14c5cbde64c56f0999ec8c0aba1c21ef396c5bfba6bfc68b4ad3cb3731cc",
+      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -16363,7 +16670,7 @@
       "case_id": "offset-zero-distance-rejected",
       "operation_id": "polygon.offset.interior",
       "revision": 1,
-      "worker_manifest_sha256": "617f14c5cbde64c56f0999ec8c0aba1c21ef396c5bfba6bfc68b4ad3cb3731cc",
+      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -16418,7 +16725,7 @@
       "case_id": "offset-missing-distance-rejected",
       "operation_id": "polygon.offset.exterior",
       "revision": 1,
-      "worker_manifest_sha256": "617f14c5cbde64c56f0999ec8c0aba1c21ef396c5bfba6bfc68b4ad3cb3731cc",
+      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -16465,5 +16772,5 @@
       "status": "expected_rejection"
     }
   },
-  "coverage_note": "Family 7.12: 7 requirement(s) bound by 37 replayed cases with registry-derived mandatory validators; 0 requirement(s) remain unbound with recorded gaps. The immutable 80-requirement denominator and full standalone acceptance remain incomplete."
+  "coverage_note": "Family 7.12: 7 requirement(s) bound by 38 replayed cases with registry-derived mandatory validators; 0 requirement(s) remain unbound with recorded gaps. The immutable 80-requirement denominator and full standalone acceptance remain incomplete."
 }
