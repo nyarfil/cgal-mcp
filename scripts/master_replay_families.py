@@ -247,12 +247,401 @@ CUBE_VERTEX_NORMALS = [[c * SQRT3_INV for c in corner] for corner in [
 INWARD_FACE_NORMALS = [[-c if c else 0.0 for c in normal] for normal in CUBE_FACE_NORMALS]
 INWARD_VERTEX_NORMALS = [[-c if c else 0.0 for c in normal] for normal in CUBE_VERTEX_NORMALS]
 
+# --- Batch 2 (7.3.05, 7.3.07, 7.5.03, 7.5.04, 7.9.02, 7.9.06, 7.12.04, 7.13.04) -------------------
+B2_FIXTURES = {
+    "bent_plate.off": "301cd43811e30698b235dbfae581f808c3f1ea9be881f2c98db7b7055b727865",
+    "circle_points.json": "16d3d1c519f73353877166417d81c196f6439f612212f477b47adc89eed4e92e",
+    "circle_two.json": "6b4dd51c0dc755182ad00542dae4788a2b64433e6d507153808506f8e3384750",
+    "clip_tampered_strip.off": "2d634c608120ad27364b856c51045b13a897d3152658067c9ec2fbc95fc0c205",
+    "cluster_outlier.xyz": "362d924e2dff51f4da699158ada35c2be08868df85f44cc89826f15e9cf715c5",
+    "cube_corners.xyz": "2a71cbe76f2ab94766500168f571a5bd664a4e9a8fc5050e5d620addeef271bf",
+    "line10.xyz": "7d6e08867be12f61ccb63a6755de0b0f8f128d1f90277fbfa8ded3129cda34d6",
+    "square_far.json": "716a2b1b82b0e8986975e02b75a52c05238ccd86147ec074a023a1a6faa50380",
+    "square_inner.json": "5ef7a06ca3138e7340374704b5ebc268a7cfbe6bffe6422a3210bef81c7190b8",
+    "square_shift.json": "a718366e13788d486a70dcf7e871bf323a529cc2ee5fde6354d338deca7c6191",
+    "tampered_circle_report.json": "a0ada6198ec8817c47144dc12b04e7834d455ca333611b8201427b54d19a9921",
+    "tampered_features_report.json": "fb1fb0121c2f3242a1e033a9eb901216051bd3e32273ca58829e418d37e2c92d",
+    "tampered_outliers.xyz": "76c43c76a7181019cece42a534455d5c6a1ec5527621965f7430306d8d10dc21",
+    "tampered_polygon_report.json": "df1ab315d40d581e81d226ec738b2845caea99e21baa300f78ec442c7efc7135",
+    "tampered_selfint_report.json": "56cc4236c2d436d2431b0f176dd1672ac5a895ac6e328f385e5e8faf6f758438",
+    "tampered_spacing_report.json": "c648a26cbec864f42b42d921d7aab32ac9ac0afa64418f85114688b58a1977ef",
+    "tampered_sphere_report.json": "d8b87b6f0bde1ee5f2844b6c56e01edb4e689c9c7646e6674c2233255fff077d",
+    "tetra_b.off": "a71b52c4299519944398644e065224c526aa4d61f03b76e04b5578d8b7ce4433",
+}
+
+
+def _bfx(name: str) -> dict:
+    return {"fixture": f"batch2/{name}", "sha256": B2_FIXTURES[name]}
+
+
+def _bmesh(name: str, type_: str = "TriangleSurfaceMesh") -> dict:
+    return {**_bfx(name), "type": type_, "format": "off", "unit": "mm"}
+
+
+def _bpoints(name: str) -> dict:
+    return {**_bfx(name), "type": "PointSet3", "format": "xyz", "unit": "mm"}
+
+
+def _bjson(name: str, type_: str) -> dict:
+    return {**_bfx(name), "type": type_, "format": "json", "unit": "mm"}
+
+
+def _breport(name: str) -> dict:
+    return {**_bfx(name), "type": "GeometryQueryReport", "format": "json", "unit": "none"}
+
+
+def _mm_length(value: float) -> dict:
+    return {"value": value, "unit": "mm"}
+
+
+B_BENT = _bmesh("bent_plate.off")
+B_TETRA_B = _bmesh("tetra_b.off")
+B_LINE = _bpoints("line10.xyz")
+B_CLUSTER = _bpoints("cluster_outlier.xyz")
+B_CUBE_CORNERS = _bpoints("cube_corners.xyz")
+B_CIRCLE = _bjson("circle_points.json", "PointSet2")
+B_CIRCLE_TWO = _bjson("circle_two.json", "PointSet2")
+B_SQUARE_SHIFT = _bjson("square_shift.json", "Polygon2")
+B_SQUARE_INNER = _bjson("square_inner.json", "Polygon2")
+B_SQUARE_FAR = _bjson("square_far.json", "Polygon2")
+B_HEXAGON_CW = _qjson("polygon_clockwise.json", "Polygon2")
+B_BOWTIE = _qjson("polygon_bowtie.json", "Polygon2")
+B_PLANE_X1 = {"normal": [1, 0, 0], "offset": _mm_length(1)}
+B_PLANE_DIAGONAL = {"normal": [1, 1, 1], "offset": _mm_length(3)}
+SQRT3 = math.sqrt(3.0)
+
+B2_CASES_7_3 = [
+    _case("features-cube-30", "mesh.features.detect", [Q_CUBE], {"angle_degrees": 30}, [
+        ["metrics.face_count", "==", 12],
+        ["metrics.sharp_edge_count", "==", 12],
+        ["metrics.patch_count", "==", 6],
+        ["metrics.algorithm", "==", "CGAL::Polygon_mesh_processing::sharp_edges_segmentation"],
+        ["output:analysis:json:report_kind", "==", "mesh_features"],
+        # The 12 cube edges (90 degrees between face normals) are sharp, the 6 face diagonals are flat:
+        # every cube corner is on exactly three sharp edges and the cube falls into its six faces.
+        ["output:analysis:json:results.vertex_feature_degree", "==", [3, 3, 3, 3, 3, 3, 3, 3]],
+        ["output:analysis:json:results.segmentation.patch_count", "==", 6],
+    ]),
+    _case("features-cube-100", "mesh.features.detect", [Q_CUBE], {"angle_degrees": 100}, [
+        ["metrics.sharp_edge_count", "==", 0],
+        ["metrics.patch_count", "==", 1],
+        ["output:analysis:json:results.sharp_edges", "==", []],
+        ["output:analysis:json:results.vertex_feature_degree", "==", [0, 0, 0, 0, 0, 0, 0, 0]],
+        # Only feature vertices carry an incident patch set (CGAL detect_vertex_incident_patches).
+        ["output:analysis:json:results.segmentation.vertex_incident_patches", "==",
+         [[], [], [], [], [], [], [], []]],
+    ]),
+    _case("features-bent-30", "mesh.features.detect", [B_BENT], {"angle_degrees": 30}, [
+        # Two quads folded by 45 degrees along the edge (1,4): bound 30 splits them, with the six
+        # border edges always being feature edges.
+        ["metrics.sharp_edge_count", "==", 7],
+        ["metrics.patch_count", "==", 2],
+        ["output:analysis:json:results.sharp_edges", "==",
+         [[0, 1], [0, 3], [1, 2], [1, 4], [2, 5], [3, 4], [4, 5]]],
+        ["output:analysis:json:results.vertex_feature_degree", "==", [2, 3, 2, 2, 3, 2]],
+    ]),
+    _case("features-bent-60", "mesh.features.detect", [B_BENT], {"angle_degrees": 60}, [
+        # The 45 degree fold is below the bound: only the border edges remain and the plate is one patch.
+        ["metrics.sharp_edge_count", "==", 6],
+        ["metrics.patch_count", "==", 1],
+        ["output:analysis:json:results.sharp_edges", "==",
+         [[0, 1], [0, 3], [1, 2], [2, 5], [3, 4], [4, 5]]],
+        ["output:analysis:json:results.vertex_feature_degree", "==", [2, 2, 2, 2, 2, 2]],
+    ]),
+    _case("features-open-square", "mesh.features.detect", [Q_OPEN_SQUARE], {"angle_degrees": 10}, [
+        ["metrics.sharp_edge_count", "==", 4],
+        ["metrics.patch_count", "==", 1],
+    ]),
+    _case("selfint-tetra-clean", "mesh.intersections.self", [Q_TETRA], {}, [
+        ["metrics.face_count", "==", 4],
+        ["metrics.does_self_intersect", "==", False],
+        ["metrics.intersecting_pair_count", "==", 0],
+        ["output:analysis:json:report_kind", "==", "self_intersections"],
+        ["output:analysis:json:results.intersecting_face_pairs", "==", []],
+        ["output:analysis:json:results.does_self_intersect", "==", False],
+    ]),
+    _case("selfint-cube-clean", "mesh.intersections.self", [Q_CUBE], {}, [
+        # Faces meeting along an edge or at a corner do not count as intersecting.
+        ["metrics.face_count", "==", 12],
+        ["metrics.does_self_intersect", "==", False],
+        ["output:analysis:json:results.intersecting_face_pairs", "==", []],
+    ]),
+    _case("selfint-tetrahedra", "mesh.intersections.self", [_mesh(INTERSECTING)], {}, [
+        ["metrics.face_count", "==", 8],
+        ["metrics.does_self_intersect", "==", True],
+        ["metrics.intersecting_pair_count", ">", 0],
+        ["output:analysis:json:results.does_self_intersect", "==", True],
+    ]),
+]
+B2_NEG_7_3 = [
+    {"id": "features-angle-out-of-range-rejected", "operation": "mesh.features.detect", "inputs": [Q_CUBE],
+     "parameters": {"angle_degrees": 200}, "expect_error_class": "INVALID_REQUEST",
+     "expect_error_code": "INVALID_PARAMETER"},
+    {"id": "features-tampered-missing-sharp-edge-rejected", "operation": "mesh.validate.features",
+     "inputs": [_breport("tampered_features_report.json"), B_BENT], "parameters": {"angle_degrees": 30},
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "SHARP_EDGES_MISMATCH"},
+    {"id": "selfint-tampered-missing-pair-rejected", "operation": "mesh.validate.self_intersections",
+     "inputs": [_breport("tampered_selfint_report.json"), _mesh(INTERSECTING)], "parameters": {},
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "INTERSECTING_PAIRS_MISMATCH"},
+]
+
+B2_CASES_7_5 = [
+    _case("clip-cube-volume-x1", "mesh.clip.plane", [Q_CUBE], {**B_PLANE_X1, "clip_volume": True}, [
+        # The half x <= 1 of the 0..2 cube is a closed box of volume 4 (cap in the plane x=1).
+        ["metrics.input_face_count", "==", 12],
+        ["metrics.algorithm", "==", "CGAL::Polygon_mesh_processing::clip"],
+        ["output:geometry:measure:off.boundary_edge_count", "==", 0],
+        ["output:geometry:measure:off.signed_volume", "approx", [4.0, 1e-9]],
+        ["output:geometry:measure:off.area", "approx", [16.0, 1e-9]],
+    ]),
+    _case("clip-cube-surface-x1", "mesh.clip.plane", [Q_CUBE], {**B_PLANE_X1, "clip_volume": False}, [
+        # Surface clipping leaves the cube surface at x <= 1 open: 4 + 4 * 2 = 12 square units.
+        ["output:geometry:measure:off.area", "approx", [12.0, 1e-9]],
+        ["output:geometry:measure:off.boundary_edge_count", ">", 0],
+    ]),
+    _case("clip-cube-volume-diagonal", "mesh.clip.plane", [Q_CUBE], {**B_PLANE_DIAGONAL, "clip_volume": True}, [
+        # x+y+z <= 3 passes through the cube centre: exactly half of the volume 8 remains.
+        ["output:geometry:measure:off.boundary_edge_count", "==", 0],
+        ["output:geometry:measure:off.signed_volume", "approx", [4.0, 1e-9]],
+    ]),
+    _case("clip-open-square-surface", "mesh.clip.plane", [Q_OPEN_SQUARE], {**B_PLANE_X1, "clip_volume": True}, [
+        # An open mesh is clipped as a surface even when volume clipping is requested: half of 2x2.
+        ["output:geometry:measure:off.area", "approx", [2.0, 1e-9]],
+        ["output:geometry:measure:off.boundary_edge_count", ">", 0],
+    ]),
+    _case("split-cube-x1", "mesh.split.plane", [Q_CUBE], B_PLANE_X1, [
+        # Splitting only refines and separates: the surface area 6 * 4 is preserved.
+        ["metrics.algorithm", "==", "CGAL::Polygon_mesh_processing::split"],
+        ["output:geometry:measure:off.area", "approx", [24.0, 1e-9]],
+    ]),
+    _case("split-cube-diagonal", "mesh.split.plane", [Q_CUBE], B_PLANE_DIAGONAL, [
+        ["output:geometry:measure:off.area", "approx", [24.0, 1e-9]],
+    ]),
+    _case("corefine-tetrahedra", "mesh.corefine", [Q_TETRA, B_TETRA_B], {}, [
+        # Corefinement only refines the first tetrahedron (legs 2): area 6 + 2 sqrt(3), volume 4/3.
+        ["metrics.input_face_count", "==", 4],
+        ["metrics.output_face_count", ">", 4],
+        ["metrics.algorithm", "==", "CGAL::Polygon_mesh_processing::corefine"],
+        ["output:geometry:measure:off.area", "approx", [6.0 + 2.0 * SQRT3, 1e-9]],
+        ["output:geometry:measure:off.signed_volume", "approx", [4.0 / 3.0, 1e-9]],
+        ["output:geometry:measure:off.boundary_edge_count", "==", 0],
+    ]),
+]
+B2_NEG_7_5 = [
+    {"id": "clip-coplanar-face-rejected", "operation": "mesh.clip.plane", "inputs": [Q_CUBE],
+     "parameters": {"normal": [0, 0, 1], "offset": _mm_length(0), "clip_volume": True},
+     "expect_error_class": "PRECONDITION_FAILED", "expect_error_code": "COPLANAR_FACE"},
+    {"id": "clip-zero-normal-rejected", "operation": "mesh.clip.plane", "inputs": [Q_CUBE],
+     "parameters": {"normal": [0, 0, 0], "offset": _mm_length(1), "clip_volume": True},
+     "expect_error_class": "PRECONDITION_FAILED", "expect_error_code": "ZERO_NORMAL"},
+    {"id": "split-coplanar-face-rejected", "operation": "mesh.split.plane", "inputs": [Q_CUBE],
+     "parameters": {"normal": [0, 0, 1], "offset": _mm_length(0)},
+     "expect_error_class": "PRECONDITION_FAILED", "expect_error_code": "COPLANAR_FACE"},
+    {"id": "clip-uncut-candidate-rejected", "operation": "mesh.validate.clip", "inputs": [Q_CUBE, Q_CUBE],
+     "parameters": {**B_PLANE_X1, "clip_volume": True}, "expect_error_class": "VALIDATION_FAILED",
+     "expect_error_code": "VERTEX_ON_REMOVED_SIDE"},
+    {"id": "clip-missing-region-rejected", "operation": "mesh.validate.clip",
+     "inputs": [_bmesh("clip_tampered_strip.off"), Q_OPEN_SQUARE],
+     "parameters": {**B_PLANE_X1, "clip_volume": False}, "expect_error_class": "VALIDATION_FAILED",
+     "expect_error_code": "REGION_NOT_COVERED_EXACTLY"},
+    {"id": "split-straddling-candidate-rejected", "operation": "mesh.validate.split",
+     "inputs": [_qmesh("cube12.off", "PolygonSoup3"), Q_CUBE], "parameters": B_PLANE_X1,
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "TRIANGLE_STRADDLES_PLANE"},
+    {"id": "corefine-unrefined-candidate-rejected", "operation": "mesh.validate.corefine",
+     "inputs": [Q_TETRA, Q_TETRA, B_TETRA_B], "parameters": {},
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "TRIANGLE_CROSSED_BY_OTHER_SURFACE"},
+]
+
+B2_CASES_7_9 = [
+    _case("spacing-line10", "pointset.spacing.average", [B_LINE], {"neighbors": 2}, [
+        # Ten collinear points at unit spacing, k=2 (k+1 nearest including the point itself): the two
+        # end points average (0+1+2)/3, the eight inner points (0+1+1)/3, so (2*3+8*2)/(3*10) = 11/15.
+        ["metrics.point_count", "==", 10],
+        ["metrics.neighbors", "==", 2],
+        ["metrics.algorithm", "==", "CGAL::compute_average_spacing"],
+        ["metrics.average_spacing", "approx", [11.0 / 15.0, 1e-12]],
+        ["output:analysis:json:report_kind", "==", "average_spacing"],
+        ["output:analysis:json:results.average_spacing.value", "approx", [11.0 / 15.0, 1e-12]],
+        ["output:analysis:json:results.average_spacing.unit", "==", "mm"],
+    ]),
+    _case("outliers-remove-far-point", "pointset.outliers.remove", [B_CLUSTER],
+          {"neighbors": 3, "threshold_percent": 10, "threshold_distance": _mm_length(3)}, [
+        # A 3x3 unit grid and one point at (10,10,10): the far point exceeds the distance bound and is
+        # the single removable point (10 percent of 10), the nine grid points stay.
+        ["metrics.input_point_count", "==", 10],
+        ["metrics.output_point_count", "==", 9],
+        ["metrics.removed_point_count", "==", 1],
+        ["metrics.algorithm", "==", "CGAL::remove_outliers"],
+        ["input:points:measure:points.count", "==", 10],
+        ["output:points:measure:points.count", "==", 9],
+    ]),
+    _case("outliers-quota-zero-percent", "pointset.outliers.remove", [B_CLUSTER],
+          {"neighbors": 3, "threshold_percent": 0, "threshold_distance": _mm_length(3)}, [
+        # At most 0 percent may be removed: every point is kept even though one exceeds the bound.
+        ["metrics.output_point_count", "==", 10],
+        ["metrics.removed_point_count", "==", 0],
+    ]),
+    _case("outliers-quota-half", "pointset.outliers.remove", [B_CLUSTER],
+          {"neighbors": 3, "threshold_percent": 50, "threshold_distance": _mm_length(0)}, [
+        # Distance 0 declares no point good, so CGAL keeps floor(10 * (100-50) / 100) = 5 points.
+        ["metrics.output_point_count", "==", 5],
+        ["metrics.removed_point_count", "==", 5],
+        ["output:points:measure:points.count", "==", 5],
+    ]),
+]
+B2_PAIRS_7_9 = [
+    {"kind": "different_outputs", "cases": ["outliers-remove-far-point", "outliers-quota-zero-percent"]},
+]
+B2_NEG_7_9 = [
+    {"id": "spacing-neighborhood-too-large-rejected", "operation": "pointset.spacing.average", "inputs": [B_LINE],
+     "parameters": {"neighbors": 10}, "expect_error_class": "PRECONDITION_FAILED",
+     "expect_error_code": "NEIGHBORHOOD_TOO_LARGE"},
+    {"id": "spacing-tampered-value-rejected", "operation": "pointset.validate.average_spacing",
+     "inputs": [_breport("tampered_spacing_report.json"), B_LINE], "parameters": {"neighbors": 2},
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "AVERAGE_SPACING_MISMATCH"},
+    {"id": "outliers-good-point-removed-rejected", "operation": "pointset.validate.outliers_removed",
+     "inputs": [_bpoints("tampered_outliers.xyz"), B_CLUSTER],
+     "parameters": {"neighbors": 3, "threshold_percent": 10, "threshold_distance": _mm_length(3)},
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "REMOVED_POINT_LESS_OUTLYING"},
+]
+
+B2_CASES_7_12 = [
+    _case("polygon-join-overlap", "polygon.boolean", [Q_SQUARE, B_SQUARE_SHIFT], {"operation": "join"}, [
+        # [0,4]^2 joined with [2,6]^2: one octagon of area 28.
+        ["metrics.polygon_count", "==", 1],
+        ["metrics.hole_count", "==", 0],
+        ["metrics.algorithm", "==", "CGAL::Polygon_set_2"],
+        ["output:analysis:json:report_kind", "==", "polygon_boolean"],
+        ["output:analysis:json:results.polygons.0.outer", "==",
+         [["2", "6"], ["2", "4"], ["0", "4"], ["0", "0"], ["4", "0"], ["4", "2"], ["6", "2"], ["6", "6"]]],
+    ]),
+    _case("polygon-intersection-overlap", "polygon.boolean", [Q_SQUARE, B_SQUARE_SHIFT],
+          {"operation": "intersection"}, [
+        ["metrics.polygon_count", "==", 1],
+        ["output:analysis:json:results.polygons.0.outer", "==", [["2", "2"], ["4", "2"], ["4", "4"], ["2", "4"]]],
+    ]),
+    _case("polygon-difference-overlap", "polygon.boolean", [Q_SQUARE, B_SQUARE_SHIFT],
+          {"operation": "difference"}, [
+        # [0,4]^2 minus [2,6]^2 is the hexagonal L of area 12.
+        ["metrics.polygon_count", "==", 1],
+        ["metrics.hole_count", "==", 0],
+        ["output:analysis:json:results.polygons.0.outer", "==",
+         [["0", "0"], ["4", "0"], ["4", "2"], ["2", "2"], ["2", "4"], ["0", "4"]]],
+    ]),
+    _case("polygon-difference-hole", "polygon.boolean", [Q_SQUARE, B_SQUARE_INNER], {"operation": "difference"}, [
+        # [0,4]^2 minus the inner square [1,3]^2: one polygon with one clockwise hole.
+        ["metrics.polygon_count", "==", 1],
+        ["metrics.hole_count", "==", 1],
+        ["output:analysis:json:results.polygons.0.outer", "==", [["0", "0"], ["4", "0"], ["4", "4"], ["0", "4"]]],
+        ["output:analysis:json:results.polygons.0.holes", "==", [[["3", "3"], ["3", "1"], ["1", "1"], ["1", "3"]]]],
+    ]),
+    _case("polygon-join-disjoint", "polygon.boolean", [Q_SQUARE, B_SQUARE_FAR], {"operation": "join"}, [
+        ["metrics.polygon_count", "==", 2],
+        ["metrics.hole_count", "==", 0],
+    ]),
+    _case("polygon-intersection-disjoint", "polygon.boolean", [Q_SQUARE, B_SQUARE_FAR],
+          {"operation": "intersection"}, [
+        ["metrics.polygon_count", "==", 0],
+        ["output:analysis:json:results.polygons", "==", []],
+    ]),
+    _case("polygon-intersection-clockwise-hexagon", "polygon.boolean", [B_HEXAGON_CW, Q_SQUARE],
+          {"operation": "intersection"}, [
+        # A clockwise operand is reversed. The hexagon (+-4, 0), (+-2, +-3.5) meets [0,4]^2 in the
+        # quadrilateral (0,0), (4,0), (2,7/2), (0,7/2), one corner of which is a hexagon vertex.
+        ["metrics.polygon_count", "==", 1],
+        ["output:analysis:json:results.polygons.0.outer", "==",
+         [["0", "0"], ["4", "0"], ["2", "7/2"], ["0", "7/2"]]],
+    ]),
+]
+B2_NEG_7_12 = [
+    {"id": "polygon-bowtie-operand-rejected", "operation": "polygon.boolean", "inputs": [B_BOWTIE, Q_SQUARE],
+     "parameters": {"operation": "join"}, "expect_error_class": "PRECONDITION_FAILED",
+     "expect_error_code": "POLYGON_NOT_SIMPLE"},
+    {"id": "polygon-tampered-vertex-dropped-rejected", "operation": "polygon.validate.boolean",
+     "inputs": [_breport("tampered_polygon_report.json"), Q_SQUARE, B_SQUARE_SHIFT],
+     "parameters": {"operation": "join"}, "expect_error_class": "VALIDATION_FAILED",
+     "expect_error_code": "BOUNDARY_CHAIN_MISMATCH"},
+]
+
+B2_CASES_7_13 = [
+    _case("circle-right-triangle", "shape.bounding.circle", [B_CIRCLE], {}, [
+        # (0,0), (4,0), (0,3) and the interior point (1,1): the hypotenuse (4,0)-(0,3) is a diameter,
+        # so the circle has centre (2, 3/2) and radius 5/2.
+        ["metrics.point_count", "==", 4],
+        ["metrics.algorithm", "==", "CGAL::Min_circle_2"],
+        ["metrics.radius", "approx", [2.5, 1e-12]],
+        ["output:analysis:json:report_kind", "==", "minimum_bounding_ball"],
+        ["output:analysis:json:results.center", "approx", [[2.0, 1.5], 1e-12]],
+        ["output:analysis:json:results.radius.value", "approx", [2.5, 1e-12]],
+    ]),
+    _case("circle-two-points", "shape.bounding.circle", [B_CIRCLE_TWO], {}, [
+        # Two points (0,0), (6,8) at distance 10: the diameter circle, centre (3,4), radius 5.
+        ["metrics.radius", "approx", [5.0, 1e-12]],
+        ["output:analysis:json:results.center", "approx", [[3.0, 4.0], 1e-12]],
+    ]),
+    _case("sphere-cube-corners", "shape.bounding.sphere", [B_CUBE_CORNERS], {"radius": _mm_length(0)}, [
+        # The eight corners of the 0..2 cube: circumscribed sphere, centre (1,1,1), radius sqrt(3).
+        ["metrics.point_count", "==", 8],
+        ["metrics.algorithm", "==", "CGAL::Min_sphere_of_spheres_d"],
+        ["metrics.radius", "approx", [SQRT3, 1e-12]],
+        ["output:analysis:json:results.center", "approx", [[1.0, 1.0, 1.0], 1e-12]],
+        ["output:analysis:json:results.radius.value", "approx", [SQRT3, 1e-12]],
+    ]),
+    _case("sphere-cube-corners-radius-half", "shape.bounding.sphere", [B_CUBE_CORNERS],
+          {"radius": _mm_length(0.5)}, [
+        # Balls of radius 1/2 around the same corners: the enclosing radius grows by exactly 1/2.
+        ["metrics.radius", "approx", [SQRT3 + 0.5, 1e-12]],
+        ["output:analysis:json:results.center", "approx", [[1.0, 1.0, 1.0], 1e-12]],
+    ]),
+]
+B2_NEG_7_13 = [
+    {"id": "sphere-negative-radius-rejected", "operation": "shape.bounding.sphere", "inputs": [B_CUBE_CORNERS],
+     "parameters": {"radius": _mm_length(-1)}, "expect_error_class": "INVALID_REQUEST",
+     "expect_error_code": "INVALID_PARAMETER"},
+    {"id": "circle-tampered-radius-rejected", "operation": "shape.validate.min_circle",
+     "inputs": [_breport("tampered_circle_report.json"), B_CIRCLE], "parameters": {},
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "RADIUS_MISMATCH"},
+    {"id": "sphere-tampered-radius-rejected", "operation": "shape.validate.min_sphere",
+     "inputs": [_breport("tampered_sphere_report.json"), B_CUBE_CORNERS], "parameters": {"radius": _mm_length(0)},
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "RADIUS_MISMATCH"},
+]
+
+
 FAMILY_7_3 = {
     "family": "7.3",
     "scope": "family_7_3_polygon_mesh_processing_core_partial",
     "evidence_path": "docs/master/evidence/family-7.3-capabilities.json",
     "test_id": "family-7.3-replay-cases",
     "requirements": {
+        "major.7.3.05": {
+            "operation_ids": ["mesh.features.detect"],
+            "symbols": ["detect_sharp_edges", "sharp_edges_segmentation"],
+            "symbol_notes": "CGAL::Polygon_mesh_processing::detect_sharp_edges and sharp_edges_segmentation run on the "
+                            "0..2 cube (bound 30: the 12 cube edges are sharp, every corner has feature degree 3 and "
+                            "the cube splits into its six faces; bound 100: no sharp edge, one patch), on a two-quad "
+                            "plate folded by 45 degrees (bound 30 splits it into two patches along the fold edge, "
+                            "bound 60 leaves one patch; the six border edges are always feature edges) and on an open "
+                            "square. detect_sharp_edges and the segmentation must agree on the feature set. The "
+                            "independent validator recomputes each edge decision from exact rational face normals "
+                            "(only the irrational cosine of the bound is long double; edges within 1e-9 relative of "
+                            "the bound are rejected as ambiguous, not guessed), the vertex feature degrees, the face "
+                            "components across non-sharp interior edges and the per-vertex incident patch sets "
+                            "(defined only at feature vertices, as in CGAL detect_vertex_incident_patches).",
+            "case_ids": ["features-cube-30", "features-cube-100", "features-bent-30", "features-bent-60",
+                         "features-open-square"],
+        },
+        "major.7.3.07": {
+            "operation_ids": ["mesh.intersections.self"],
+            "symbols": ["self_intersections", "does_self_intersect"],
+            "symbol_notes": "PMP::self_intersections lists the intersecting face pairs and PMP::does_self_intersect must "
+                            "agree with it. A clean tetrahedron and the triangulated cube (faces sharing edges and "
+                            "corners only) give no pair; two interpenetrating tetrahedra give pairs. The independent "
+                            "validator decides every face pair exactly (GMP rationals, triangle/triangle "
+                            "intersection polygon vertices, shared-simplex rule for faces with common vertices) and "
+                            "compares the pair set and the flag. Intersections between two different meshes are "
+                            "not part of this operation.",
+            "case_ids": ["selfint-tetra-clean", "selfint-cube-clean", "selfint-tetrahedra"],
+        },
         "major.7.3.01": {
             "operation_ids": ["mesh.inspect.pmp", "mesh.analysis.self_intersections"],
             "symbols": ["does_self_intersect", "is_closed", "is_triangle_mesh"],
@@ -303,17 +692,13 @@ FAMILY_7_3 = {
         },
     },
     "unbound": {
-        "major.7.3.05": "mesh.analysis.sharp_features exposes detect_sharp_edges only; "
-                        "sharp_edges_segmentation is not exposed.",
         "major.7.3.06": "Only bounded_error_symmetric_Hausdorff_distance is executable, as the "
                         "simplification validator; sample_triangle_mesh, max_distance_to_triangle_mesh, "
                         "approximate/one-sided Hausdorff and approximate_max_distance_to_point_set "
                         "are not exposed.",
-        "major.7.3.07": "Self-intersection (self_intersections, does_self_intersect) is replayed, but "
-                        "intersections between two meshes (do_intersect/surface_intersection) are not "
-                        "an executable operation.",
     },
     "cases": [
+        *B2_CASES_7_3,
         _case("inspect-closed-tetra", "mesh.inspect.pmp", [_mesh(TETRA)], {}, [
             ["output:analysis:json:mesh_summary.closed", "==", True],
             ["output:analysis:json:mesh_summary.triangulated", "==", True],
@@ -414,6 +799,7 @@ FAMILY_7_3 = {
     ],
     "pairs": [],
     "negative_controls": [
+        *B2_NEG_7_3,
         {"id": "components-keep-one-tie-rejected", "operation": "mesh.components.keep_largest",
          "inputs": [Q_THREE], "parameters": {"count": 1},
          "expect_error_class": "PRECONDITION_FAILED", "expect_error_code": "AMBIGUOUS_COMPONENT_TIE"},
@@ -560,6 +946,33 @@ FAMILY_7_5 = {
     "evidence_path": "docs/master/evidence/family-7.5-capabilities.json",
     "test_id": "family-7.5-replay-cases",
     "requirements": {
+        "major.7.5.03": {
+            "operation_ids": ["mesh.boolean.intersection", "mesh.clip.plane"],
+            "symbols": ["clip", "corefine_and_compute_intersection"],
+            "symbol_notes": "PMP::clip cuts the 0..2 cube with x=1 (volume 4, a closed half box of area 16) and with "
+                            "x+y+z=3 through the centre (volume 4), as a surface (area 12, open) and, for an open "
+                            "square, as a surface even with volume clipping requested (area 2). Its independent "
+                            "validator tiles the negative side of every source face exactly (Sutherland-Hodgman "
+                            "clipping, weighted areas in GMP rationals), requires every candidate vertex on the "
+                            "negative side and, for a volume clip of a closed mesh, an outward cap and a closed "
+                            "oriented candidate. corefine_and_compute_intersection is exercised by the validated "
+                            "mesh.boolean.intersection cases. Planes containing a face or with a zero normal are "
+                            "rejected.",
+            "case_ids": ["intersection-overlap", "intersection-contained", "clip-cube-volume-x1",
+                         "clip-cube-surface-x1", "clip-cube-volume-diagonal", "clip-open-square-surface"],
+        },
+        "major.7.5.04": {
+            "operation_ids": ["mesh.split.plane", "mesh.corefine"],
+            "symbols": ["split", "corefine"],
+            "symbol_notes": "PMP::split(mesh, plane) refines the cube along x=1 and along x+y+z=3 and separates the "
+                            "two sides (area 24 preserved); PMP::corefine refines one tetrahedron along its "
+                            "intersection with a second one that is left unchanged (area 6 + 2 sqrt(3) and "
+                            "volume 4/3 preserved). The independent validators tile every source face exactly "
+                            "(GMP rationals), require that no triangle crosses the plane or the other surface "
+                            "and, for a split, that the two sides form separate connected components. Output "
+                            "coordinates must be exactly representable as binary64 or the operation fails.",
+            "case_ids": ["split-cube-x1", "split-cube-diagonal", "corefine-tetrahedra"],
+        },
         "major.7.5.02": {
             "operation_ids": ["mesh.boolean.union", "mesh.boolean.intersection",
                               "mesh.boolean.difference"],
@@ -586,10 +999,9 @@ FAMILY_7_5 = {
     "unbound": {
         "major.7.5.01": "corefine and autorefine are used only inside the three Boolean "
                         "operations; standalone corefinement output is not an operation.",
-        "major.7.5.03": "No validated clip operation.",
-        "major.7.5.04": "No validated split operation.",
     },
     "cases": [
+        *B2_CASES_7_5,
         _case("union-overlap", "mesh.boolean.union",
               [_mesh(CUBE_A), _mesh(CUBE_OVERLAP)], {"operation": "union"}, [
             ["metrics.exact_volume", "==", "12"], ["metrics.result_status", "==", "volume"],
@@ -649,6 +1061,7 @@ FAMILY_7_5 = {
     ],
     "pairs": [],
     "negative_controls": [
+        *B2_NEG_7_5,
         {"id": "union-open-input-rejected", "operation": "mesh.boolean.union",
          "inputs": [_mesh(OPEN_CUBE), _mesh(CUBE_OVERLAP)], "parameters": {"operation": "union"},
          "expect_error_class": "PRECONDITION_FAILED"},
@@ -671,6 +1084,31 @@ FAMILY_7_9 = {
     "evidence_path": "docs/master/evidence/family-7.9-capabilities.json",
     "test_id": "family-7.9-replay-cases",
     "requirements": {
+        "major.7.9.02": {
+            "operation_ids": ["pointset.outliers.remove", "pointset.spacing.average"],
+            "symbols": ["remove_outliers", "compute_average_spacing"],
+            "symbol_notes": "CGAL::remove_outliers on a 3x3 unit grid plus a far point (10,10,10): the far point is "
+                            "removed under 10 percent, nothing is removed under 0 percent, and distance 0 with "
+                            "50 percent keeps floor(10*50/100)=5 points. CGAL::compute_average_spacing on ten "
+                            "collinear unit-spaced points with k=2 is hand-derived as 11/15. The independent "
+                            "validators recompute the k+1 nearest distances by brute force (point itself "
+                            "included, as the CGAL neighbour query) in long double and compare within a 1e-9 "
+                            "relative tolerance; points whose measure is within that tolerance of the bound are "
+                            "rejected as ambiguous.",
+            "case_ids": ["spacing-line10", "outliers-remove-far-point", "outliers-quota-zero-percent",
+                         "outliers-quota-half"],
+        },
+        "major.7.9.06": {
+            "operation_ids": ["pointset.outliers.remove", "pointset.spacing.average"],
+            "symbols": ["compute_average_spacing", "remove_outliers"],
+            "symbol_notes": "The reconstruction-preprocessing subcapabilities listed in the ledger are "
+                            "compute_average_spacing and remove_outliers (the scale estimate and the outlier "
+                            "filter that precede surface reconstruction); both are replayed with their "
+                            "independent validators, with the same cases as the outlier-removal requirement. "
+                            "Normal estimation and orientation are separate requirements (7.9.01).",
+            "case_ids": ["spacing-line10", "outliers-remove-far-point", "outliers-quota-zero-percent",
+                         "outliers-quota-half"],
+        },
         "major.7.9.01": {
             "operation_ids": ["pointset.normals.estimate", "pointset.normals.orient_mst"],
             "symbols": ["jet_estimate_normals", "pca_estimate_normals"],
@@ -685,16 +1123,13 @@ FAMILY_7_9 = {
         },
     },
     "unbound": {
-        "major.7.9.02": "pointset.remove_outliers is replayable, but compute_average_spacing is "
-                        "not exposed (the threshold distance must be supplied explicitly).",
         "major.7.9.03": "pointset.smooth.jet exposes jet_smooth_point_set only; "
                         "bilateral_smooth_point_set is not exposed.",
         "major.7.9.05": "No validated registration operation (register_point_sets, "
                         "compute_registration_transformation).",
-        "major.7.9.06": "compute_average_spacing is not exposed; remove_outliers alone does not "
-                        "cover the listed reconstruction-preprocessing subcapabilities.",
     },
     "cases": [
+        *B2_CASES_7_9,
         _case("normals-pca-plane", "pointset.normals.estimate", [_points(PLANE)],
               {"method": "pca", "neighbors": 8}, [
             ["metrics.method", "==", "pca"],
@@ -740,11 +1175,12 @@ FAMILY_7_9 = {
         ]),
     ],
     "pairs": [
+        *B2_PAIRS_7_9,
         {"kind": "equal_outputs", "cases": ["simplify-random-seed-a", "simplify-random-seed-a-repeat"]},
         {"kind": "different_outputs", "cases": ["simplify-random-seed-a", "simplify-random-seed-b"]},
         {"kind": "different_outputs", "cases": ["normals-pca-plane", "normals-jet-plane"]},
     ],
-    "negative_controls": [],
+    "negative_controls": [*B2_NEG_7_9],
 }
 
 # ---- Wave C families (fixtures under tests/fixtures/master/wave_c) ----------
@@ -779,6 +1215,20 @@ FAMILY_7_13 = {
     "evidence_path": "docs/master/evidence/family-7.13-capabilities.json",
     "test_id": "family-7.13-replay-cases",
     "requirements": {
+        "major.7.13.04": {
+            "operation_ids": ["shape.bounding.circle", "shape.bounding.sphere"],
+            "symbols": ["Min_sphere_of_spheres_d", "Min_circle_2", "Min_sphere_of_spheres_d_traits_3"],
+            "symbol_notes": "CGAL::Min_circle_2 (Min_circle_2_traits_2) gives the circle (2, 3/2) radius 5/2 for a "
+                            "right triangle with an interior point and the diameter circle (3,4) radius 5 for two "
+                            "points; CGAL::Min_sphere_of_spheres_d with Min_sphere_of_spheres_d_traits_3 gives the "
+                            "sphere (1,1,1) radius sqrt(3) for the cube corners, and sqrt(3)+1/2 for balls of radius "
+                            "1/2. The independent validators enumerate every support set exactly in GMP rationals "
+                            "and require the unique minimum ball; the radius is a square root, so centre and "
+                            "radius are compared within a stated relative tolerance and every input ball must be "
+                            "enclosed.",
+            "case_ids": ["circle-right-triangle", "circle-two-points", "sphere-cube-corners",
+                         "sphere-cube-corners-radius-half"],
+        },
         "major.7.13.01": {
             "operation_ids": ["hull.convex_2", "hull.convex_3"],
             "symbols": ["convex_hull_2", "convex_hull_3"],
@@ -809,10 +1259,9 @@ FAMILY_7_13 = {
     "unbound": {
         "major.7.13.02": "No alpha shape operation (Alpha_shape_2, Alpha_shape_3).",
         "major.7.13.03": "No alpha wrapping operation (alpha_wrap_3).",
-        "major.7.13.04": "No bounding-volume operation (Min_sphere_of_spheres_d, Min_circle_2); "
-                         "spatial.bbox_2/3 are axis-aligned boxes only.",
     },
     "cases": [
+        *B2_CASES_7_13,
         _case("hull2-grid", "hull.convex_2", [_json_input(PLANAR, "PointSet2")], {}, [
             ["output:polygon:json:points", "==", [[0.0, 0.0], [3.0, 0.0], [3.0, 3.0], [0.0, 3.0]]],
             ["metrics.hull_vertex_count", "==", 4],
@@ -841,6 +1290,7 @@ FAMILY_7_13 = {
     ],
     "pairs": [],
     "negative_controls": [
+        *B2_NEG_7_13,
         {"id": "hull2-collinear-rejected", "operation": "hull.convex_2",
          "inputs": [_json_input(COLLINEAR, "PointSet2")], "parameters": {},
          "expect_error_class": "PRECONDITION_FAILED"},
@@ -948,6 +1398,21 @@ FAMILY_7_12 = {
     "evidence_path": "docs/master/evidence/family-7.12-capabilities.json",
     "test_id": "family-7.12-replay-cases",
     "requirements": {
+        "major.7.12.04": {
+            "operation_ids": ["polygon.boolean"],
+            "symbols": ["Polygon_set_2", "join", "difference"],
+            "symbol_notes": "CGAL::Polygon_set_2 (EPECK) joins, intersects and subtracts simple polygons: [0,4]^2 and "
+                            "[2,6]^2 give an octagon (join), the square [2,4]^2 (intersection) and a hexagonal L "
+                            "(difference); subtracting the inner square [1,3]^2 gives one polygon with a clockwise "
+                            "hole; disjoint operands give two polygons (join) or none (intersection); a clockwise "
+                            "hexagon is accepted after reversal. The independent validator rebuilds the boundary "
+                            "chain of the set operation in GMP rationals by edge splitting and point "
+                            "classification and compares it with the reported counter-clockwise outer and clockwise "
+                            "hole rings. Operands must be simple with non-zero area.",
+            "case_ids": ["polygon-join-overlap", "polygon-intersection-overlap", "polygon-difference-overlap",
+                         "polygon-difference-hole", "polygon-join-disjoint", "polygon-intersection-disjoint",
+                         "polygon-intersection-clockwise-hexagon"],
+        },
         "major.7.12.01": {
             "operation_ids": ["polygon.analysis.properties", "polygon.query.containment"],
             "symbols": ["Polygon_2", "Polygon_with_holes_2", "is_simple"],
@@ -963,12 +1428,12 @@ FAMILY_7_12 = {
     "unbound": {
         "major.7.12.02": "No Arrangement_2 operation.",
         "major.7.12.03": "No overlay operation.",
-        "major.7.12.04": "No Polygon_set_2 Boolean operation.",
         "major.7.12.05": "No straight-skeleton operation.",
         "major.7.12.06": "No skeleton-offset operation.",
         "major.7.12.07": "No Minkowski sum operation.",
     },
     "cases": [
+        *B2_CASES_7_12,
         _case("polygon-with-hole", "polygon.analysis.properties",
               [_json_input(POLYGON_HOLE, "PolygonWithHoles2")], {}, [
             ["output:analysis:json:results.valid_polygon_with_holes", "==", True],
@@ -1009,6 +1474,7 @@ FAMILY_7_12 = {
     ],
     "pairs": [],
     "negative_controls": [
+        *B2_NEG_7_12,
         {"id": "containment-bowtie-rejected", "operation": "polygon.query.containment",
          "inputs": [_json_input(POLYGON_BOWTIE, "PolygonWithHoles2"),
                     _json_input(CONTAINMENT_QUERIES, "PointSet2")], "parameters": {},

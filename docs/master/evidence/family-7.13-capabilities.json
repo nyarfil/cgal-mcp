@@ -17,10 +17,28 @@
   ],
   "binding_rule": "A requirement is bound only when replayed cases exercise every enumerated variant in its original description and every subcapability symbol listed for it in catalog/major_capability_inventory.json, each through a VALIDATED operation whose registry-mandated validators pass.",
   "requirements": [
+    "major.7.13.04",
     "major.7.13.01",
     "major.7.13.05"
   ],
   "requirement_coverage": {
+    "major.7.13.04": {
+      "case_ids": [
+        "circle-right-triangle",
+        "circle-two-points",
+        "sphere-cube-corners",
+        "sphere-cube-corners-radius-half"
+      ],
+      "operation_ids": [
+        "shape.bounding.circle",
+        "shape.bounding.sphere"
+      ],
+      "symbols": [
+        "Min_sphere_of_spheres_d",
+        "Min_circle_2",
+        "Min_sphere_of_spheres_d_traits_3"
+      ]
+    },
     "major.7.13.01": {
       "case_ids": [
         "hull2-grid",
@@ -54,19 +72,18 @@
   },
   "unbound_requirements": {
     "major.7.13.02": "No alpha shape operation (Alpha_shape_2, Alpha_shape_3).",
-    "major.7.13.03": "No alpha wrapping operation (alpha_wrap_3).",
-    "major.7.13.04": "No bounding-volume operation (Min_sphere_of_spheres_d, Min_circle_2); spatial.bbox_2/3 are axis-aligned boxes only."
+    "major.7.13.03": "No alpha wrapping operation (alpha_wrap_3)."
   },
-  "family_contract_sha256": "22470c58a5dec334eb2f6e38a2402765ec0ef0522356856344d627fe74a6b3e7",
+  "family_contract_sha256": "8d7d4744847cb8515103bd8bbd24667db08c5380ecf0c45165238664787fd19e",
   "family_contract_source_path": "scripts/master_replay_families.py",
-  "family_contract_source_sha256": "50326dee3652f42b70b9ca41065c8c766d0f792cef027f386c448229191db74e",
+  "family_contract_source_sha256": "8074a42ec540bf6de02610fdca1507f463a726f2239cebd648176fd1642db918",
   "family_contract_source_hash_encoding": "utf8-lf",
   "catalog_baseline_sha256": "143ec18a5b64d506aad60dc24b0a1ea30940c715d1223b3465fa140aeb9d02a7",
-  "operation_registry_sha256": "538274f52bb7eb4372e5eb6ab9491ab826f3f17a4d5505456e0c534ff56d2588",
+  "operation_registry_sha256": "724744997d2f9d833ce60c617e647d2e7d17b748bf39dc7c20adaa9825839858",
   "operation_registry_hash_encoding": "utf8-lf",
   "policy_catalog_sha256": "45f4be759288aaeb834a3ce97aa64ee7768048b15534618fc8c19512801f9a9f",
   "policy_catalog_hash_encoding": "utf8-lf",
-  "worker_sha256": "15620f16a171cc5392f986bb18b23c08ad33b52b29c4cb525aad30d131b9d73e",
+  "worker_sha256": "398362d1745fc6d8ef61fe96900b1845072793014c545ded0be5d66023b77500",
   "worker_binary_format": "pe",
   "worker_manifest": {
     "actual_cgal_version": "6.2.1",
@@ -6099,6 +6116,640 @@
         "supported_kernels": [
           "package_recommended"
         ]
+      },
+      {
+        "dependencies": [
+          "Point_set_processing_3"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "pointset.spacing.average",
+        "info": {
+          "input_slots": [
+            "points"
+          ],
+          "maximum_input_points": 400,
+          "source_header": "CGAL/compute_average_spacing.h",
+          "validator_parameter_bindings": {
+            "pointset.validate.average_spacing": {
+              "neighbors": "neighbors"
+            }
+          },
+          "validators": [
+            "pointset.validate.average_spacing"
+          ]
+        },
+        "input_types": [
+          "PointSet3"
+        ],
+        "output_type": "GeometryQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Point_set_processing_3"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "pointset.outliers.remove",
+        "info": {
+          "input_slots": [
+            "points"
+          ],
+          "maximum_input_points": 400,
+          "source_header": "CGAL/remove_outliers.h",
+          "validator_parameter_bindings": {
+            "pointset.validate.outliers_removed": {
+              "neighbors": "neighbors",
+              "threshold_distance": "threshold_distance",
+              "threshold_percent": "threshold_percent"
+            }
+          },
+          "validators": [
+            "pointset.validate.outliers_removed"
+          ]
+        },
+        "input_types": [
+          "PointSet3"
+        ],
+        "output_type": "PointSet3",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Bounding_volumes"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "shape.bounding.circle",
+        "info": {
+          "input_slots": [
+            "points"
+          ],
+          "maximum_input_points": 64,
+          "source_header": "CGAL/Min_circle_2.h",
+          "validators": [
+            "shape.validate.min_circle"
+          ]
+        },
+        "input_types": [
+          "PointSet2"
+        ],
+        "output_type": "GeometryQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Bounding_volumes"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "shape.bounding.sphere",
+        "info": {
+          "input_slots": [
+            "points"
+          ],
+          "maximum_input_points": 32,
+          "source_header": "CGAL/Min_sphere_of_spheres_d.h",
+          "validator_parameter_bindings": {
+            "shape.validate.min_sphere": {
+              "radius": "radius"
+            }
+          },
+          "validators": [
+            "shape.validate.min_sphere"
+          ]
+        },
+        "input_types": [
+          "PointSet3"
+        ],
+        "output_type": "GeometryQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "mesh.features.detect",
+        "info": {
+          "input_slots": [
+            "mesh"
+          ],
+          "maximum_input_faces": 600,
+          "source_header": "CGAL/Polygon_mesh_processing/detect_features.h",
+          "validator_parameter_bindings": {
+            "mesh.validate.features": {
+              "angle_degrees": "angle_degrees"
+            }
+          },
+          "validators": [
+            "mesh.validate.features"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "GeometryQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "mesh.intersections.self",
+        "info": {
+          "input_slots": [
+            "mesh"
+          ],
+          "maximum_input_faces": 600,
+          "source_header": "CGAL/Polygon_mesh_processing/self_intersections.h",
+          "validators": [
+            "mesh.validate.self_intersections"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "GeometryQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "PMP_Boolean_operations"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "mesh.clip.plane",
+        "info": {
+          "input_slots": [
+            "source"
+          ],
+          "maximum_input_faces": 600,
+          "maximum_output_faces": 4000,
+          "source_header": "CGAL/Polygon_mesh_processing/clip.h",
+          "validator_parameter_bindings": {
+            "mesh.validate.clip": {
+              "clip_volume": "clip_volume",
+              "normal": "normal",
+              "offset": "offset"
+            }
+          },
+          "validators": [
+            "mesh.validate.clip"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "TriangleSurfaceMesh",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "PMP_Boolean_operations"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "mesh.split.plane",
+        "info": {
+          "input_slots": [
+            "source"
+          ],
+          "maximum_input_faces": 600,
+          "maximum_output_faces": 4000,
+          "source_header": "CGAL/Polygon_mesh_processing/clip.h",
+          "validator_parameter_bindings": {
+            "mesh.validate.split": {
+              "normal": "normal",
+              "offset": "offset"
+            }
+          },
+          "validators": [
+            "mesh.validate.split"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "PolygonSoup3",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "PMP_Boolean_operations"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "mesh.corefine",
+        "info": {
+          "input_slots": [
+            "source",
+            "other"
+          ],
+          "maximum_input_faces": 600,
+          "maximum_output_faces": 4000,
+          "source_header": "CGAL/Polygon_mesh_processing/corefinement.h",
+          "validators": [
+            "mesh.validate.corefine"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "TriangleSurfaceMesh",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Boolean_set_operations_2"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "polygon.boolean",
+        "info": {
+          "input_slots": [
+            "first",
+            "second"
+          ],
+          "source_header": "CGAL/Boolean_set_operations_2.h",
+          "validator_parameter_bindings": {
+            "polygon.validate.boolean": {
+              "operation": "operation"
+            }
+          },
+          "validators": [
+            "polygon.validate.boolean"
+          ]
+        },
+        "input_types": [
+          "Polygon2",
+          "Polygon2"
+        ],
+        "output_type": "GeometryQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Point_set_processing_3"
+        ],
+        "effective_kernel": "float:long_double",
+        "id": "pointset.validate.average_spacing",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "average_spacing_matches_bruteforce"
+          ],
+          "independence": "brute-force k+1 nearest distances in long double (self included, as the CGAL neighbour query); no CGAL header",
+          "input_slots": [
+            "candidate",
+            "points"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "GeometryQueryReport",
+          "PointSet3"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Point_set_processing_3"
+        ],
+        "effective_kernel": "float:long_double",
+        "id": "pointset.validate.outliers_removed",
+        "info": {
+          "checks": [
+            "candidate_is_source_multiset_subset",
+            "kept_count_matches_thresholds",
+            "kept_points_have_lowest_measures"
+          ],
+          "independence": "brute-force average squared distance to the k+1 nearest points (self included) in long double; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "PointSet3",
+          "PointSet3"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Bounding_volumes"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "shape.validate.min_circle",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "center_matches_exact_minimum",
+            "radius_matches_exact_minimum",
+            "all_balls_enclosed"
+          ],
+          "independence": "exact rational enumeration of every support set of 1..d+1 points (center in the affine hull); no CGAL header",
+          "input_slots": [
+            "candidate",
+            "points"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "GeometryQueryReport",
+          "PointSet2"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Bounding_volumes"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "shape.validate.min_sphere",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "center_matches_exact_minimum",
+            "radius_matches_exact_minimum",
+            "all_balls_enclosed"
+          ],
+          "independence": "exact rational enumeration of every support set of 1..d+1 points (center in the affine hull); no CGAL header",
+          "input_slots": [
+            "candidate",
+            "points"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "GeometryQueryReport",
+          "PointSet3"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing"
+        ],
+        "effective_kernel": "float:long_double",
+        "id": "mesh.validate.features",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "mesh_is_oriented_edge_manifold",
+            "sharp_edges_exact",
+            "vertex_feature_degree_exact",
+            "patch_partition_exact",
+            "vertex_incident_patches_exact"
+          ],
+          "independence": "exact rational face normals; the irrational cosine of the bound is long double and ambiguous edges are rejected; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "mesh"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "GeometryQueryReport",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "mesh.validate.self_intersections",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "intersecting_pairs_exact",
+            "flag_consistent_exact"
+          ],
+          "independence": "exact rational triangle/triangle intersection polygon vertices and shared-simplex test; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "mesh"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "GeometryQueryReport",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "PMP_Boolean_operations"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "mesh.validate.clip",
+        "info": {
+          "checks": [
+            "source_triangles_nondegenerate",
+            "plane_avoids_source_faces",
+            "candidate_on_negative_side",
+            "triangles_inside_source_faces",
+            "orientation_preserved",
+            "no_overlap_within_source_face",
+            "clipped_region_covered_exactly",
+            "cap_consistent"
+          ],
+          "independence": "Sutherland-Hodgman polygon clipping and exact weighted-area tiling per source face; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "TriangleSurfaceMesh",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "PMP_Boolean_operations"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "mesh.validate.split",
+        "info": {
+          "checks": [
+            "source_triangles_nondegenerate",
+            "plane_avoids_source_faces",
+            "triangles_inside_source_faces",
+            "orientation_preserved",
+            "no_overlap_within_source_face",
+            "surface_covered_exactly",
+            "no_triangle_crosses_plane",
+            "sides_separated_into_components"
+          ],
+          "independence": "exact weighted-area tiling of each source face, per-triangle plane side and index-space connected components; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "PolygonSoup3",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "PMP_Boolean_operations"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "mesh.validate.corefine",
+        "info": {
+          "checks": [
+            "source_triangles_nondegenerate",
+            "triangles_inside_source_faces",
+            "orientation_preserved",
+            "no_overlap_within_source_face",
+            "surface_covered_exactly",
+            "intersection_is_in_candidate_edges"
+          ],
+          "independence": "exact weighted-area tiling and exact triangle/triangle intersection polygon vertices; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "source",
+            "other"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "TriangleSurfaceMesh",
+          "TriangleSurfaceMesh",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Boolean_set_operations_2"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "polygon.validate.boolean",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "operands_simple_nonzero_area",
+            "rings_oriented_outer_ccw_hole_cw",
+            "boundary_chain_equals_exact_set_operation"
+          ],
+          "independence": "exact rational edge splitting, point classification and unit-segment boundary chain comparison; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "first",
+            "second"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "GeometryQueryReport",
+          "Polygon2",
+          "Polygon2"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
       }
     ],
     "protocol": 1,
@@ -6110,19 +6761,24 @@
     ],
     "worker": "cgal-master-worker"
   },
-  "worker_manifest_sha256": "bd6f52527218dda8bc87410743af0d9ef34ad2e47913073a5754fd48ac8e0f11",
+  "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
   "tests": [
     {
       "id": "family-7.13-replay-cases",
       "source_path": "tests/master_family_replay_cases.py",
       "source_sha256": "69b3216bf60de8b908dcf6f82e4fee3ffc438ee2a29cf2d756c4b558c6ce3e65",
       "source_hash_encoding": "utf8-lf",
-      "stdout_sha256": "79dc0bee422e04758aa2458bba221cc4b89f90c7206f131d9c44dc57e2fc4422",
+      "stdout_sha256": "ea4e31ae8994f3dd88454cd61c1c9f65c716e7a2b07427d07528dbb21c538d80",
       "exit_code": 0,
       "status": "pass"
     }
   ],
   "blobs": {
+    "015e54bf09cb5a30d4e4346b20d4a6fc7b961995549270b5ea89e5081aa3e76f": {
+      "encoding": "base64",
+      "byte_size": 524,
+      "content": "eyJjaGVja3MiOnsiYWxsX2JhbGxzX2VuY2xvc2VkIjp0cnVlLCJjZW50ZXJfbWF0Y2hlc19leGFjdF9taW5pbXVtIjp0cnVlLCJwYXJhbWV0ZXJzX21hdGNoIjp0cnVlLCJyYWRpdXNfbWF0Y2hlc19leGFjdF9taW5pbXVtIjp0cnVlLCJzb3VyY2VfbWF0Y2hlcyI6dHJ1ZX0sImNvbW1vbl9iYWxsX3JhZGl1cyI6MC4wLCJkaW1lbnNpb24iOjMsImV4YWN0X3NxdWFyZWRfcmFkaXVzX29mX3BvaW50cyI6IjMiLCJpbmRlcGVuZGVuY2UiOiJleGFjdCByYXRpb25hbCBlbnVtZXJhdGlvbiBvZiBldmVyeSBzdXBwb3J0IHNldCBvZiAxLi5kKzEgcG9pbnRzIChjZW50ZXIgaW4gdGhlIGFmZmluZSBodWxsKTsgbm8gQ0dBTCBoZWFkZXIiLCJwYXNzZWQiOnRydWUsInBvaW50X2NvdW50Ijo4LCJyZWxhdGl2ZV90b2xlcmFuY2UiOjFlLTA5LCJyZXBvcnRfdHlwZSI6IlZhbGlkYXRpb25SZXBvcnQiLCJzY2hlbWFfdmVyc2lvbiI6MSwic3RhdHVzIjoicGFzcyIsInZhbGlkYXRvciI6InNoYXBlLnZhbGlkYXRlLm1pbl9zcGhlcmUifQo="
+    },
     "02ccc6731364de251bf14fb0873732624e10265c3ba014a2df436d5543accf7d": {
       "encoding": "base64",
       "byte_size": 576,
@@ -6133,10 +6789,30 @@
       "byte_size": 25,
       "content": "eyJwb2ludHMiOltbMCwwXSxbOSw5XV19Cg=="
     },
+    "07c1e0071f660e0252626c3f3216d9d34230172605fc28caa04d070109468733": {
+      "encoding": "base64",
+      "byte_size": 354,
+      "content": "eyJsZW5ndGhfdW5pdCI6Im1tIiwib3BlcmF0aW9uIjoic2hhcGUuYm91bmRpbmcuY2lyY2xlIiwicGFyYW1ldGVycyI6e30sInJlcG9ydF9raW5kIjoibWluaW11bV9ib3VuZGluZ19iYWxsIiwicmVwb3J0X3R5cGUiOiJHZW9tZXRyeVF1ZXJ5UmVwb3J0IiwicmVzdWx0cyI6eyJjZW50ZXIiOlsyLjAsMS41XSwicmFkaXVzIjp7InVuaXQiOiJtbSIsInZhbHVlIjoyLjV9fSwic2NoZW1hX3ZlcnNpb24iOjEsInNvdXJjZSI6eyJwb2ludHNfc2hhMjU2IjoiMTZkM2QxYzUxOWY3MzM1Mzg3NzE2NjQxN2Q4MWMxOTZmNjQzOWY2MTIyMTJmNDc3YjQ3YWRjODllZWQ0ZTkyZSJ9LCJzdW1tYXJ5Ijp7InBvaW50X2NvdW50Ijo0fX0K"
+    },
     "087f7019a38d090185c7819a8218e88b0d5be18c4636bf558534818186ae14f5": {
       "encoding": "base64",
       "byte_size": 37,
       "content": "eyJwb2ludHMiOltbMCwwXSxbMSwxXSxbMiwyXSxbMywzXV19Cg=="
+    },
+    "08f12e862b1cca9b5a39af042bcc055e7a96ca026112cc77fae4a400f2d23b56": {
+      "encoding": "base64",
+      "byte_size": 525,
+      "content": "eyJjaGVja3MiOnsiYWxsX2JhbGxzX2VuY2xvc2VkIjp0cnVlLCJjZW50ZXJfbWF0Y2hlc19leGFjdF9taW5pbXVtIjp0cnVlLCJwYXJhbWV0ZXJzX21hdGNoIjp0cnVlLCJyYWRpdXNfbWF0Y2hlc19leGFjdF9taW5pbXVtIjp0cnVlLCJzb3VyY2VfbWF0Y2hlcyI6dHJ1ZX0sImNvbW1vbl9iYWxsX3JhZGl1cyI6MC4wLCJkaW1lbnNpb24iOjIsImV4YWN0X3NxdWFyZWRfcmFkaXVzX29mX3BvaW50cyI6IjI1IiwiaW5kZXBlbmRlbmNlIjoiZXhhY3QgcmF0aW9uYWwgZW51bWVyYXRpb24gb2YgZXZlcnkgc3VwcG9ydCBzZXQgb2YgMS4uZCsxIHBvaW50cyAoY2VudGVyIGluIHRoZSBhZmZpbmUgaHVsbCk7IG5vIENHQUwgaGVhZGVyIiwicGFzc2VkIjp0cnVlLCJwb2ludF9jb3VudCI6MiwicmVsYXRpdmVfdG9sZXJhbmNlIjoxZS0wOSwicmVwb3J0X3R5cGUiOiJWYWxpZGF0aW9uUmVwb3J0Iiwic2NoZW1hX3ZlcnNpb24iOjEsInN0YXR1cyI6InBhc3MiLCJ2YWxpZGF0b3IiOiJzaGFwZS52YWxpZGF0ZS5taW5fY2lyY2xlIn0K"
+    },
+    "16d3d1c519f73353877166417d81c196f6439f612212f477b47adc89eed4e92e": {
+      "encoding": "base64",
+      "byte_size": 36,
+      "content": "eyJwb2ludHMiOltbMCwwXSxbNCwwXSxbMCwzXSxbMSwxXV19"
+    },
+    "20c9abcdd4b841c70c8887f495a698455db2ef964108e0f88ab27912eb62c9fe": {
+      "encoding": "base64",
+      "byte_size": 354,
+      "content": "eyJsZW5ndGhfdW5pdCI6Im1tIiwib3BlcmF0aW9uIjoic2hhcGUuYm91bmRpbmcuY2lyY2xlIiwicGFyYW1ldGVycyI6e30sInJlcG9ydF9raW5kIjoibWluaW11bV9ib3VuZGluZ19iYWxsIiwicmVwb3J0X3R5cGUiOiJHZW9tZXRyeVF1ZXJ5UmVwb3J0IiwicmVzdWx0cyI6eyJjZW50ZXIiOlszLjAsNC4wXSwicmFkaXVzIjp7InVuaXQiOiJtbSIsInZhbHVlIjo1LjB9fSwic2NoZW1hX3ZlcnNpb24iOjEsInNvdXJjZSI6eyJwb2ludHNfc2hhMjU2IjoiNmI0ZGQ1MWMwZGM3NTUxODJhZDAwNTQyZGFlNDc4OGEyYjY0NDMzZTZkNTA3MTUzODA4NTA2ZjhlMzM4NDc1MCJ9LCJzdW1tYXJ5Ijp7InBvaW50X2NvdW50IjoyfX0K"
     },
     "269b4523e9fd8d820fd9bd587b77cc553557bf354521e8bec668c6e7fbbc68c7": {
       "encoding": "base64",
@@ -6147,6 +6823,16 @@
       "encoding": "base64",
       "byte_size": 66,
       "content": "LTEgLTEgLTEKMSAtMSAtMQotMSAxIC0xCjEgMSAtMQotMSAtMSAxCjEgLTEgMQotMSAxIDEKMSAxIDEKMCAwIDAK"
+    },
+    "2a4f68de0028be59fb2c048d966d0d0dd9a97a67fc93b50762269b44239877dd": {
+      "encoding": "base64",
+      "byte_size": 527,
+      "content": "eyJjaGVja3MiOnsiYWxsX2JhbGxzX2VuY2xvc2VkIjp0cnVlLCJjZW50ZXJfbWF0Y2hlc19leGFjdF9taW5pbXVtIjp0cnVlLCJwYXJhbWV0ZXJzX21hdGNoIjp0cnVlLCJyYWRpdXNfbWF0Y2hlc19leGFjdF9taW5pbXVtIjp0cnVlLCJzb3VyY2VfbWF0Y2hlcyI6dHJ1ZX0sImNvbW1vbl9iYWxsX3JhZGl1cyI6MC4wLCJkaW1lbnNpb24iOjIsImV4YWN0X3NxdWFyZWRfcmFkaXVzX29mX3BvaW50cyI6IjI1LzQiLCJpbmRlcGVuZGVuY2UiOiJleGFjdCByYXRpb25hbCBlbnVtZXJhdGlvbiBvZiBldmVyeSBzdXBwb3J0IHNldCBvZiAxLi5kKzEgcG9pbnRzIChjZW50ZXIgaW4gdGhlIGFmZmluZSBodWxsKTsgbm8gQ0dBTCBoZWFkZXIiLCJwYXNzZWQiOnRydWUsInBvaW50X2NvdW50Ijo0LCJyZWxhdGl2ZV90b2xlcmFuY2UiOjFlLTA5LCJyZXBvcnRfdHlwZSI6IlZhbGlkYXRpb25SZXBvcnQiLCJzY2hlbWFfdmVyc2lvbiI6MSwic3RhdHVzIjoicGFzcyIsInZhbGlkYXRvciI6InNoYXBlLnZhbGlkYXRlLm1pbl9jaXJjbGUifQo="
+    },
+    "2a71cbe76f2ab94766500168f571a5bd664a4e9a8fc5050e5d620addeef271bf": {
+      "encoding": "base64",
+      "byte_size": 48,
+      "content": "MCAwIDAKMiAwIDAKMCAyIDAKMCAwIDIKMiAyIDAKMiAwIDIKMCAyIDIKMiAyIDIK"
     },
     "2d00fc5801c798e52cdfd7f4b1ef79db1395fa517810c85b03ffeaea78d17118": {
       "encoding": "base64",
@@ -6167,6 +6853,11 @@
       "encoding": "base64",
       "byte_size": 49,
       "content": "eyJwb2ludHMiOltbMCwwXSxbNCwwXSxbNCwxXSxbMSwxXSxbMSw0XSxbMCw0XV19Cg=="
+    },
+    "3e411f8b94cb768277fc6ade0557c0aacea48e680f9aa3f6cdb7fb5606402e46": {
+      "encoding": "base64",
+      "byte_size": 407,
+      "content": "eyJsZW5ndGhfdW5pdCI6Im1tIiwib3BlcmF0aW9uIjoic2hhcGUuYm91bmRpbmcuc3BoZXJlIiwicGFyYW1ldGVycyI6eyJyYWRpdXMiOnsidW5pdCI6Im1tIiwidmFsdWUiOjAuMH19LCJyZXBvcnRfa2luZCI6Im1pbmltdW1fYm91bmRpbmdfYmFsbCIsInJlcG9ydF90eXBlIjoiR2VvbWV0cnlRdWVyeVJlcG9ydCIsInJlc3VsdHMiOnsiY2VudGVyIjpbMS4wLDEuMCwxLjBdLCJyYWRpdXMiOnsidW5pdCI6Im1tIiwidmFsdWUiOjEuNzMyMDUwODA3NTY4ODc3NH19LCJzY2hlbWFfdmVyc2lvbiI6MSwic291cmNlIjp7InBvaW50c19zaGEyNTYiOiIyYTcxY2JlNzZmMmFiOTQ3NjY1MDAxNjhmNTcxYTViZDY2NGE0ZTlhOGZjNTA1MGU1ZDYyMGFkZGVlZjI3MWJmIn0sInN1bW1hcnkiOnsicG9pbnRfY291bnQiOjh9fQo="
     },
     "4113a13c691a099ca60654f9e92aef4fb9dc7909f1e7f3f4238ca249dfbfa25c": {
       "encoding": "base64",
@@ -6208,6 +6899,11 @@
       "byte_size": 676,
       "content": "eyJjaGVja3MiOnsiY29vcmRpbmF0ZXNfbWF0Y2hfZm9ybXVsYSI6dHJ1ZSwibGluZWFyX3ByZWNpc2lvbiI6dHJ1ZSwicGFyYW1ldGVyc19tYXRjaCI6dHJ1ZSwicGFydGl0aW9uX29mX3VuaXR5Ijp0cnVlLCJwb2x5Z29uX3NpbXBsZV9jb3VudGVyY2xvY2t3aXNlIjp0cnVlLCJxdWVyeV9zdHJpY3RseV9pbnNpZGUiOnRydWUsInNvdXJjZV9tYXRjaGVzIjp0cnVlfSwiaW5kZXBlbmRlbmNlIjoiZXhhY3QgcmF0aW9uYWwgd2VpZ2h0cyAoV2FjaHNwcmVzcywgZGlzY3JldGUgaGFybW9uaWMpIGFuZCBsb25nIGRvdWJsZSBtZWFuIHZhbHVlIGZvcm11bGE7IG5vIENHQUwgaGVhZGVyIiwibWF4aW11bV9mb3JtdWxhX2Vycm9yIjo1LjU1MTExNTEyMzEyNTc4M2UtMTcsIm1heGltdW1fbGluZWFyX3ByZWNpc2lvbl9lcnJvciI6Mi4yMjA0NDYwNDkyNTAzMTNlLTE2LCJtYXhpbXVtX3N1bV9lcnJvciI6MC4wLCJtZXRob2QiOiJtZWFuX3ZhbHVlIiwicGFzc2VkIjp0cnVlLCJwb2x5Z29uX2NvbnZleCI6dHJ1ZSwicXVlcnlfY291bnQiOjIsInJlcG9ydF90eXBlIjoiVmFsaWRhdGlvblJlcG9ydCIsInNjaGVtYV92ZXJzaW9uIjoxLCJzdGF0dXMiOiJwYXNzIiwidG9sZXJhbmNlIjoxZS0xMSwidmFsaWRhdG9yIjoic2hhcGUudmFsaWRhdGUuYmFyeWNlbnRyaWMiLCJ2ZXJ0ZXhfY291bnQiOjR9Cg=="
     },
+    "6b4dd51c0dc755182ad00542dae4788a2b64433e6d507153808506f8e3384750": {
+      "encoding": "base64",
+      "byte_size": 24,
+      "content": "eyJwb2ludHMiOltbMCwwXSxbNiw4XV19"
+    },
     "727bedd5d13712e7506e15aeb1ea35b5da660bf2143bf28e8f257b0aa7eb2164": {
       "encoding": "base64",
       "byte_size": 155,
@@ -6227,6 +6923,11 @@
       "encoding": "base64",
       "byte_size": 510,
       "content": "eyJhcmVhIjp7ImFwcHJveGltYXRlIjo5LjAsImV4YWN0IjoiOSIsInVuaXQiOiJtbV4yIn0sImJvdW5kYXJ5X3BvaW50X2NvdW50IjoxNCwiY2hlY2tzIjp7ImFsbF9zb3VyY2VfcG9pbnRzX2VuY2xvc2VkIjp0cnVlLCJtaW5pbWFsX2NvbnZleF9lbmNsb3N1cmUiOnRydWUsInNpbXBsZV9yaW5nIjp0cnVlLCJzdHJpY3RseV9jb252ZXhfY291bnRlcmNsb2Nrd2lzZSI6dHJ1ZSwidmVydGljZXNfYXJlX3NvdXJjZV9wb2ludHMiOnRydWV9LCJkaXN0aW5jdF9zb3VyY2VfcG9pbnRfY291bnQiOjIwLCJodWxsX3ZlcnRleF9jb3VudCI6NCwiaW5kZXBlbmRlbmNlIjoiZXhhY3Qgb3JpZW50YXRpb24gcHJlZGljYXRlcyBhbmQgb3JkZXItY2hhbmdlIHRlc3Q7IENHQUw6OmNvbnZleF9odWxsXzIgaXMgbm90IGNhbGxlZCIsInBhc3NlZCI6dHJ1ZSwic291cmNlX3BvaW50X2NvdW50IjoyMSwic3RhdHVzIjoicGFzcyIsInZhbGlkYXRvciI6Imh1bGwudmFsaWRhdGUuY29udmV4X2VuY2xvc3VyZV8yIn0K"
+    },
+    "a0ada6198ec8817c47144dc12b04e7834d455ca333611b8201427b54d19a9921": {
+      "encoding": "base64",
+      "byte_size": 379,
+      "content": "eyJsZW5ndGhfdW5pdCI6ICJtbSIsICJvcGVyYXRpb24iOiAic2hhcGUuYm91bmRpbmcuY2lyY2xlIiwgInBhcmFtZXRlcnMiOiB7fSwgInJlcG9ydF9raW5kIjogIm1pbmltdW1fYm91bmRpbmdfYmFsbCIsICJyZXBvcnRfdHlwZSI6ICJHZW9tZXRyeVF1ZXJ5UmVwb3J0IiwgInJlc3VsdHMiOiB7ImNlbnRlciI6IFsyLjAsIDEuNV0sICJyYWRpdXMiOiB7InVuaXQiOiAibW0iLCAidmFsdWUiOiAyLjZ9fSwgInNjaGVtYV92ZXJzaW9uIjogMSwgInNvdXJjZSI6IHsicG9pbnRzX3NoYTI1NiI6ICIxNmQzZDFjNTE5ZjczMzUzODc3MTY2NDE3ZDgxYzE5NmY2NDM5ZjYxMjIxMmY0NzdiNDdhZGM4OWVlZDRlOTJlIn0sICJzdW1tYXJ5IjogeyJwb2ludF9jb3VudCI6IDR9fQ=="
     },
     "a4ecabfc95d772e2beb5d0d6dc58d8c8f0e024e7aaf30460fd80ff44c02c198c": {
       "encoding": "base64",
@@ -6253,18 +6954,113 @@
       "byte_size": 640,
       "content": "eyJjaGVja3MiOnsiY29vcmRpbmF0ZXNfbWF0Y2hfZm9ybXVsYSI6dHJ1ZSwibGluZWFyX3ByZWNpc2lvbiI6dHJ1ZSwicGFyYW1ldGVyc19tYXRjaCI6dHJ1ZSwicGFydGl0aW9uX29mX3VuaXR5Ijp0cnVlLCJwb2x5Z29uX3NpbXBsZV9jb3VudGVyY2xvY2t3aXNlIjp0cnVlLCJxdWVyeV9zdHJpY3RseV9pbnNpZGUiOnRydWUsInNvdXJjZV9tYXRjaGVzIjp0cnVlfSwiaW5kZXBlbmRlbmNlIjoiZXhhY3QgcmF0aW9uYWwgd2VpZ2h0cyAoV2FjaHNwcmVzcywgZGlzY3JldGUgaGFybW9uaWMpIGFuZCBsb25nIGRvdWJsZSBtZWFuIHZhbHVlIGZvcm11bGE7IG5vIENHQUwgaGVhZGVyIiwibWF4aW11bV9mb3JtdWxhX2Vycm9yIjowLjAsIm1heGltdW1fbGluZWFyX3ByZWNpc2lvbl9lcnJvciI6MC4wLCJtYXhpbXVtX3N1bV9lcnJvciI6MC4wLCJtZXRob2QiOiJ3YWNoc3ByZXNzIiwicGFzc2VkIjp0cnVlLCJwb2x5Z29uX2NvbnZleCI6dHJ1ZSwicXVlcnlfY291bnQiOjIsInJlcG9ydF90eXBlIjoiVmFsaWRhdGlvblJlcG9ydCIsInNjaGVtYV92ZXJzaW9uIjoxLCJzdGF0dXMiOiJwYXNzIiwidG9sZXJhbmNlIjoxZS0xMSwidmFsaWRhdG9yIjoic2hhcGUudmFsaWRhdGUuYmFyeWNlbnRyaWMiLCJ2ZXJ0ZXhfY291bnQiOjR9Cg=="
     },
+    "d8b87b6f0bde1ee5f2844b6c56e01edb4e689c9c7646e6674c2233255fff077d": {
+      "encoding": "base64",
+      "byte_size": 422,
+      "content": "eyJsZW5ndGhfdW5pdCI6ICJtbSIsICJvcGVyYXRpb24iOiAic2hhcGUuYm91bmRpbmcuc3BoZXJlIiwgInBhcmFtZXRlcnMiOiB7InJhZGl1cyI6IHsidW5pdCI6ICJtbSIsICJ2YWx1ZSI6IDAuMH19LCAicmVwb3J0X2tpbmQiOiAibWluaW11bV9ib3VuZGluZ19iYWxsIiwgInJlcG9ydF90eXBlIjogIkdlb21ldHJ5UXVlcnlSZXBvcnQiLCAicmVzdWx0cyI6IHsiY2VudGVyIjogWzEuMCwgMS4wLCAxLjBdLCAicmFkaXVzIjogeyJ1bml0IjogIm1tIiwgInZhbHVlIjogMS43fX0sICJzY2hlbWFfdmVyc2lvbiI6IDEsICJzb3VyY2UiOiB7InBvaW50c19zaGEyNTYiOiAiMmE3MWNiZTc2ZjJhYjk0NzY2NTAwMTY4ZjU3MWE1YmQ2NjRhNGU5YThmYzUwNTBlNWQ2MjBhZGRlZWYyNzFiZiJ9LCAic3VtbWFyeSI6IHsicG9pbnRfY291bnQiOiA4fX0="
+    },
     "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6": {
       "encoding": "base64",
       "byte_size": 37,
       "content": "eyJwb2ludHMiOltbMCwwXSxbNCwwXSxbNCw0XSxbMCw0XV19Cg=="
     },
+    "ec88ae9cde0c772b2f2958c135d252b85a9e63ce8c913e457308e0132cbb7e64": {
+      "encoding": "base64",
+      "byte_size": 406,
+      "content": "eyJsZW5ndGhfdW5pdCI6Im1tIiwib3BlcmF0aW9uIjoic2hhcGUuYm91bmRpbmcuc3BoZXJlIiwicGFyYW1ldGVycyI6eyJyYWRpdXMiOnsidW5pdCI6Im1tIiwidmFsdWUiOjAuNX19LCJyZXBvcnRfa2luZCI6Im1pbmltdW1fYm91bmRpbmdfYmFsbCIsInJlcG9ydF90eXBlIjoiR2VvbWV0cnlRdWVyeVJlcG9ydCIsInJlc3VsdHMiOnsiY2VudGVyIjpbMS4wLDEuMCwxLjBdLCJyYWRpdXMiOnsidW5pdCI6Im1tIiwidmFsdWUiOjIuMjMyMDUwODA3NTY4ODc3fX0sInNjaGVtYV92ZXJzaW9uIjoxLCJzb3VyY2UiOnsicG9pbnRzX3NoYTI1NiI6IjJhNzFjYmU3NmYyYWI5NDc2NjUwMDE2OGY1NzFhNWJkNjY0YTRlOWE4ZmM1MDUwZTVkNjIwYWRkZWVmMjcxYmYifSwic3VtbWFyeSI6eyJwb2ludF9jb3VudCI6OH19Cg=="
+    },
     "ecb9014d4630db8e5c1a598a71b59db1f98ab29a802ba7ea3abbda7bdfb6eb62": {
       "encoding": "base64",
       "byte_size": 696,
       "content": "eyJjaGVja3MiOnsiY29vcmRpbmF0ZXNfbWF0Y2hfZm9ybXVsYSI6dHJ1ZSwibGluZWFyX3ByZWNpc2lvbiI6dHJ1ZSwicGFyYW1ldGVyc19tYXRjaCI6dHJ1ZSwicGFydGl0aW9uX29mX3VuaXR5Ijp0cnVlLCJwb2x5Z29uX3NpbXBsZV9jb3VudGVyY2xvY2t3aXNlIjp0cnVlLCJxdWVyeV9zdHJpY3RseV9pbnNpZGUiOnRydWUsInNvdXJjZV9tYXRjaGVzIjp0cnVlfSwiaW5kZXBlbmRlbmNlIjoiZXhhY3QgcmF0aW9uYWwgd2VpZ2h0cyAoV2FjaHNwcmVzcywgZGlzY3JldGUgaGFybW9uaWMpIGFuZCBsb25nIGRvdWJsZSBtZWFuIHZhbHVlIGZvcm11bGE7IG5vIENHQUwgaGVhZGVyIiwibWF4aW11bV9mb3JtdWxhX2Vycm9yIjoxLjExMDIyMzAyNDYyNTE1NjVlLTE2LCJtYXhpbXVtX2xpbmVhcl9wcmVjaXNpb25fZXJyb3IiOjQuNDQwODkyMDk4NTAwNjI2ZS0xNiwibWF4aW11bV9zdW1fZXJyb3IiOjIuMjIwNDQ2MDQ5MjUwMzEzZS0xNiwibWV0aG9kIjoibWVhbl92YWx1ZSIsInBhc3NlZCI6dHJ1ZSwicG9seWdvbl9jb252ZXgiOmZhbHNlLCJxdWVyeV9jb3VudCI6NCwicmVwb3J0X3R5cGUiOiJWYWxpZGF0aW9uUmVwb3J0Iiwic2NoZW1hX3ZlcnNpb24iOjEsInN0YXR1cyI6InBhc3MiLCJ0b2xlcmFuY2UiOjFlLTExLCJ2YWxpZGF0b3IiOiJzaGFwZS52YWxpZGF0ZS5iYXJ5Y2VudHJpYyIsInZlcnRleF9jb3VudCI6Nn0K"
+    },
+    "f9c4b438a8c56b6c786b1e044ad4d1690c35bf2164d6f8ea99ee12893bef4187": {
+      "encoding": "base64",
+      "byte_size": 524,
+      "content": "eyJjaGVja3MiOnsiYWxsX2JhbGxzX2VuY2xvc2VkIjp0cnVlLCJjZW50ZXJfbWF0Y2hlc19leGFjdF9taW5pbXVtIjp0cnVlLCJwYXJhbWV0ZXJzX21hdGNoIjp0cnVlLCJyYWRpdXNfbWF0Y2hlc19leGFjdF9taW5pbXVtIjp0cnVlLCJzb3VyY2VfbWF0Y2hlcyI6dHJ1ZX0sImNvbW1vbl9iYWxsX3JhZGl1cyI6MC41LCJkaW1lbnNpb24iOjMsImV4YWN0X3NxdWFyZWRfcmFkaXVzX29mX3BvaW50cyI6IjMiLCJpbmRlcGVuZGVuY2UiOiJleGFjdCByYXRpb25hbCBlbnVtZXJhdGlvbiBvZiBldmVyeSBzdXBwb3J0IHNldCBvZiAxLi5kKzEgcG9pbnRzIChjZW50ZXIgaW4gdGhlIGFmZmluZSBodWxsKTsgbm8gQ0dBTCBoZWFkZXIiLCJwYXNzZWQiOnRydWUsInBvaW50X2NvdW50Ijo4LCJyZWxhdGl2ZV90b2xlcmFuY2UiOjFlLTA5LCJyZXBvcnRfdHlwZSI6IlZhbGlkYXRpb25SZXBvcnQiLCJzY2hlbWFfdmVyc2lvbiI6MSwic3RhdHVzIjoicGFzcyIsInZhbGlkYXRvciI6InNoYXBlLnZhbGlkYXRlLm1pbl9zcGhlcmUifQo="
     }
   },
   "reports": {
+    "4abc8e44449cd455b41e68019e6caa37d9b0f4e522243a5e826583b07500ff8d": {
+      "checks": {
+        "all_balls_enclosed": true,
+        "center_matches_exact_minimum": true,
+        "parameters_match": true,
+        "radius_matches_exact_minimum": true,
+        "source_matches": true
+      },
+      "common_ball_radius": 0.0,
+      "dimension": 2,
+      "exact_squared_radius_of_points": "25/4",
+      "independence": "exact rational enumeration of every support set of 1..d+1 points (center in the affine hull); no CGAL header",
+      "passed": true,
+      "point_count": 4,
+      "relative_tolerance": 1e-09,
+      "report_type": "ValidationReport",
+      "schema_version": 1,
+      "status": "pass",
+      "validator": "shape.validate.min_circle"
+    },
+    "4a906af4323f2ffe9245b10e7db235080fe70f71e5f3c2249deab8b7bc71872b": {
+      "checks": {
+        "all_balls_enclosed": true,
+        "center_matches_exact_minimum": true,
+        "parameters_match": true,
+        "radius_matches_exact_minimum": true,
+        "source_matches": true
+      },
+      "common_ball_radius": 0.0,
+      "dimension": 2,
+      "exact_squared_radius_of_points": "25",
+      "independence": "exact rational enumeration of every support set of 1..d+1 points (center in the affine hull); no CGAL header",
+      "passed": true,
+      "point_count": 2,
+      "relative_tolerance": 1e-09,
+      "report_type": "ValidationReport",
+      "schema_version": 1,
+      "status": "pass",
+      "validator": "shape.validate.min_circle"
+    },
+    "260bcdb23558012ac74378ca43900c01d2c94337cb1d40d13c846c4816ca5515": {
+      "checks": {
+        "all_balls_enclosed": true,
+        "center_matches_exact_minimum": true,
+        "parameters_match": true,
+        "radius_matches_exact_minimum": true,
+        "source_matches": true
+      },
+      "common_ball_radius": 0.0,
+      "dimension": 3,
+      "exact_squared_radius_of_points": "3",
+      "independence": "exact rational enumeration of every support set of 1..d+1 points (center in the affine hull); no CGAL header",
+      "passed": true,
+      "point_count": 8,
+      "relative_tolerance": 1e-09,
+      "report_type": "ValidationReport",
+      "schema_version": 1,
+      "status": "pass",
+      "validator": "shape.validate.min_sphere"
+    },
+    "7630169adf669552f7a298746ff04455a7d9dd21b9c376efab1383ed409b1549": {
+      "checks": {
+        "all_balls_enclosed": true,
+        "center_matches_exact_minimum": true,
+        "parameters_match": true,
+        "radius_matches_exact_minimum": true,
+        "source_matches": true
+      },
+      "common_ball_radius": 0.5,
+      "dimension": 3,
+      "exact_squared_radius_of_points": "3",
+      "independence": "exact rational enumeration of every support set of 1..d+1 points (center in the affine hull); no CGAL header",
+      "passed": true,
+      "point_count": 8,
+      "relative_tolerance": 1e-09,
+      "report_type": "ValidationReport",
+      "schema_version": 1,
+      "status": "pass",
+      "validator": "shape.validate.min_sphere"
+    },
     "cf3cc07096e6491cd551d551c9f5ecdc7e20ac99ca624885b55cee006773913f": {
       "area": {
         "approximate": 9.0,
@@ -6408,10 +7204,638 @@
   },
   "operation_results": [
     {
+      "case_id": "circle-right-triangle",
+      "operation_id": "shape.bounding.circle",
+      "revision": 1,
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "test_id": "family-7.13-replay-cases",
+      "request": {
+        "inputs": [
+          {
+            "artifact_id": "input-0",
+            "blob_sha256": "16d3d1c519f73353877166417d81c196f6439f612212f477b47adc89eed4e92e",
+            "format": "json",
+            "sha256": "16d3d1c519f73353877166417d81c196f6439f612212f477b47adc89eed4e92e",
+            "type": "PointSet2",
+            "unit": "mm"
+          }
+        ],
+        "kernel": "package_recommended",
+        "limits": {
+          "memory_mb": 2048,
+          "wall_time_ms": 120000
+        },
+        "operation": "shape.bounding.circle",
+        "parameters": {},
+        "protocol": 1,
+        "request_id": "circle-right-triangle"
+      },
+      "request_sha256": "a3cc5ed6ffe4d6f42b9368f62a6666d55a63aaaaf32fe4557a655686eab41c9c",
+      "response": {
+        "metrics": {
+          "algorithm": "CGAL::Min_circle_2",
+          "point_count": 4,
+          "radius": 2.5
+        },
+        "outputs": [
+          {
+            "blob_sha256": "07c1e0071f660e0252626c3f3216d9d34230172605fc28caa04d070109468733",
+            "format": "json",
+            "slot": "analysis",
+            "type": "GeometryQueryReport",
+            "unit": "none"
+          }
+        ],
+        "protocol": 1,
+        "request_id": "circle-right-triangle",
+        "status": "ok"
+      },
+      "response_sha256": "8200fc870c07ae4c4348c1f873655f0d7601c797257480149df070f18828b77b",
+      "input_hashes": [
+        "16d3d1c519f73353877166417d81c196f6439f612212f477b47adc89eed4e92e"
+      ],
+      "output_hashes": [
+        "07c1e0071f660e0252626c3f3216d9d34230172605fc28caa04d070109468733"
+      ],
+      "validators": [
+        {
+          "operation_id": "shape.validate.min_circle",
+          "revision": 1,
+          "request": {
+            "inputs": [
+              {
+                "artifact_id": "circle-right-triangle-analysis-0",
+                "blob_sha256": "07c1e0071f660e0252626c3f3216d9d34230172605fc28caa04d070109468733",
+                "format": "json",
+                "sha256": "07c1e0071f660e0252626c3f3216d9d34230172605fc28caa04d070109468733",
+                "type": "GeometryQueryReport",
+                "unit": "none"
+              },
+              {
+                "artifact_id": "input-0",
+                "blob_sha256": "16d3d1c519f73353877166417d81c196f6439f612212f477b47adc89eed4e92e",
+                "format": "json",
+                "sha256": "16d3d1c519f73353877166417d81c196f6439f612212f477b47adc89eed4e92e",
+                "type": "PointSet2",
+                "unit": "mm"
+              }
+            ],
+            "kernel": "package_recommended",
+            "limits": {
+              "memory_mb": 2048,
+              "wall_time_ms": 120000
+            },
+            "operation": "shape.validate.min_circle",
+            "parameters": {},
+            "protocol": 1,
+            "request_id": "circle-right-triangle--shape.validate.min_circle"
+          },
+          "request_sha256": "95303b8a89f52627ff596d4d04d816f21f688434c77093896219d71df558c250",
+          "response": {
+            "metrics": {
+              "checks": {
+                "all_balls_enclosed": true,
+                "center_matches_exact_minimum": true,
+                "parameters_match": true,
+                "radius_matches_exact_minimum": true,
+                "source_matches": true
+              },
+              "common_ball_radius": 0.0,
+              "dimension": 2,
+              "exact_squared_radius_of_points": "25/4",
+              "independence": "exact rational enumeration of every support set of 1..d+1 points (center in the affine hull); no CGAL header",
+              "passed": true,
+              "point_count": 4,
+              "relative_tolerance": 1e-09,
+              "report_type": "ValidationReport",
+              "schema_version": 1,
+              "status": "pass",
+              "validator": "shape.validate.min_circle"
+            },
+            "outputs": [
+              {
+                "blob_sha256": "2a4f68de0028be59fb2c048d966d0d0dd9a97a67fc93b50762269b44239877dd",
+                "format": "json",
+                "slot": "validation",
+                "type": "ValidationReport",
+                "unit": "none"
+              }
+            ],
+            "protocol": 1,
+            "request_id": "circle-right-triangle--shape.validate.min_circle",
+            "status": "ok"
+          },
+          "response_sha256": "78ad2d245eb7030447936d89bdff5ecc0ef8cb8950fc22d8eb14feea06a46504",
+          "input_hashes": [
+            "07c1e0071f660e0252626c3f3216d9d34230172605fc28caa04d070109468733",
+            "16d3d1c519f73353877166417d81c196f6439f612212f477b47adc89eed4e92e"
+          ],
+          "output_hashes": [
+            "2a4f68de0028be59fb2c048d966d0d0dd9a97a67fc93b50762269b44239877dd"
+          ],
+          "report_blob_sha256": "2a4f68de0028be59fb2c048d966d0d0dd9a97a67fc93b50762269b44239877dd",
+          "report_sha256": "4abc8e44449cd455b41e68019e6caa37d9b0f4e522243a5e826583b07500ff8d",
+          "status": "pass"
+        }
+      ],
+      "validation": {
+        "status": "pass",
+        "checks": {
+          "transform_executed": {
+            "pass": true
+          },
+          "behaviour_assertions": {
+            "pass": true,
+            "count": 6
+          },
+          "validator:shape.validate.min_circle": {
+            "pass": true,
+            "report_sha256": "4abc8e44449cd455b41e68019e6caa37d9b0f4e522243a5e826583b07500ff8d"
+          }
+        }
+      }
+    },
+    {
+      "case_id": "circle-two-points",
+      "operation_id": "shape.bounding.circle",
+      "revision": 1,
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "test_id": "family-7.13-replay-cases",
+      "request": {
+        "inputs": [
+          {
+            "artifact_id": "input-0",
+            "blob_sha256": "6b4dd51c0dc755182ad00542dae4788a2b64433e6d507153808506f8e3384750",
+            "format": "json",
+            "sha256": "6b4dd51c0dc755182ad00542dae4788a2b64433e6d507153808506f8e3384750",
+            "type": "PointSet2",
+            "unit": "mm"
+          }
+        ],
+        "kernel": "package_recommended",
+        "limits": {
+          "memory_mb": 2048,
+          "wall_time_ms": 120000
+        },
+        "operation": "shape.bounding.circle",
+        "parameters": {},
+        "protocol": 1,
+        "request_id": "circle-two-points"
+      },
+      "request_sha256": "94b15d0b365f2027559e3720fd390e49458d6f0eb8e634825ef57b4be9984eaa",
+      "response": {
+        "metrics": {
+          "algorithm": "CGAL::Min_circle_2",
+          "point_count": 2,
+          "radius": 5.0
+        },
+        "outputs": [
+          {
+            "blob_sha256": "20c9abcdd4b841c70c8887f495a698455db2ef964108e0f88ab27912eb62c9fe",
+            "format": "json",
+            "slot": "analysis",
+            "type": "GeometryQueryReport",
+            "unit": "none"
+          }
+        ],
+        "protocol": 1,
+        "request_id": "circle-two-points",
+        "status": "ok"
+      },
+      "response_sha256": "12c88bebe60e8eb66b694a5fcbc56db57bf02175ebca16f7919d993ac4a5bf67",
+      "input_hashes": [
+        "6b4dd51c0dc755182ad00542dae4788a2b64433e6d507153808506f8e3384750"
+      ],
+      "output_hashes": [
+        "20c9abcdd4b841c70c8887f495a698455db2ef964108e0f88ab27912eb62c9fe"
+      ],
+      "validators": [
+        {
+          "operation_id": "shape.validate.min_circle",
+          "revision": 1,
+          "request": {
+            "inputs": [
+              {
+                "artifact_id": "circle-two-points-analysis-0",
+                "blob_sha256": "20c9abcdd4b841c70c8887f495a698455db2ef964108e0f88ab27912eb62c9fe",
+                "format": "json",
+                "sha256": "20c9abcdd4b841c70c8887f495a698455db2ef964108e0f88ab27912eb62c9fe",
+                "type": "GeometryQueryReport",
+                "unit": "none"
+              },
+              {
+                "artifact_id": "input-0",
+                "blob_sha256": "6b4dd51c0dc755182ad00542dae4788a2b64433e6d507153808506f8e3384750",
+                "format": "json",
+                "sha256": "6b4dd51c0dc755182ad00542dae4788a2b64433e6d507153808506f8e3384750",
+                "type": "PointSet2",
+                "unit": "mm"
+              }
+            ],
+            "kernel": "package_recommended",
+            "limits": {
+              "memory_mb": 2048,
+              "wall_time_ms": 120000
+            },
+            "operation": "shape.validate.min_circle",
+            "parameters": {},
+            "protocol": 1,
+            "request_id": "circle-two-points--shape.validate.min_circle"
+          },
+          "request_sha256": "627b7131bd7bc7587b3094cfdd2a0e24c2f472c63c90d328aaec0dec24c7c33e",
+          "response": {
+            "metrics": {
+              "checks": {
+                "all_balls_enclosed": true,
+                "center_matches_exact_minimum": true,
+                "parameters_match": true,
+                "radius_matches_exact_minimum": true,
+                "source_matches": true
+              },
+              "common_ball_radius": 0.0,
+              "dimension": 2,
+              "exact_squared_radius_of_points": "25",
+              "independence": "exact rational enumeration of every support set of 1..d+1 points (center in the affine hull); no CGAL header",
+              "passed": true,
+              "point_count": 2,
+              "relative_tolerance": 1e-09,
+              "report_type": "ValidationReport",
+              "schema_version": 1,
+              "status": "pass",
+              "validator": "shape.validate.min_circle"
+            },
+            "outputs": [
+              {
+                "blob_sha256": "08f12e862b1cca9b5a39af042bcc055e7a96ca026112cc77fae4a400f2d23b56",
+                "format": "json",
+                "slot": "validation",
+                "type": "ValidationReport",
+                "unit": "none"
+              }
+            ],
+            "protocol": 1,
+            "request_id": "circle-two-points--shape.validate.min_circle",
+            "status": "ok"
+          },
+          "response_sha256": "dcd590ce41e85a1a4687e0419ced1c2d1e640394ccc5c69100590882673d6ead",
+          "input_hashes": [
+            "20c9abcdd4b841c70c8887f495a698455db2ef964108e0f88ab27912eb62c9fe",
+            "6b4dd51c0dc755182ad00542dae4788a2b64433e6d507153808506f8e3384750"
+          ],
+          "output_hashes": [
+            "08f12e862b1cca9b5a39af042bcc055e7a96ca026112cc77fae4a400f2d23b56"
+          ],
+          "report_blob_sha256": "08f12e862b1cca9b5a39af042bcc055e7a96ca026112cc77fae4a400f2d23b56",
+          "report_sha256": "4a906af4323f2ffe9245b10e7db235080fe70f71e5f3c2249deab8b7bc71872b",
+          "status": "pass"
+        }
+      ],
+      "validation": {
+        "status": "pass",
+        "checks": {
+          "transform_executed": {
+            "pass": true
+          },
+          "behaviour_assertions": {
+            "pass": true,
+            "count": 2
+          },
+          "validator:shape.validate.min_circle": {
+            "pass": true,
+            "report_sha256": "4a906af4323f2ffe9245b10e7db235080fe70f71e5f3c2249deab8b7bc71872b"
+          }
+        }
+      }
+    },
+    {
+      "case_id": "sphere-cube-corners",
+      "operation_id": "shape.bounding.sphere",
+      "revision": 1,
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "test_id": "family-7.13-replay-cases",
+      "request": {
+        "inputs": [
+          {
+            "artifact_id": "input-0",
+            "blob_sha256": "2a71cbe76f2ab94766500168f571a5bd664a4e9a8fc5050e5d620addeef271bf",
+            "format": "xyz",
+            "sha256": "2a71cbe76f2ab94766500168f571a5bd664a4e9a8fc5050e5d620addeef271bf",
+            "type": "PointSet3",
+            "unit": "mm"
+          }
+        ],
+        "kernel": "package_recommended",
+        "limits": {
+          "memory_mb": 2048,
+          "wall_time_ms": 120000
+        },
+        "operation": "shape.bounding.sphere",
+        "parameters": {
+          "radius": {
+            "unit": "mm",
+            "value": 0
+          }
+        },
+        "protocol": 1,
+        "request_id": "sphere-cube-corners"
+      },
+      "request_sha256": "798f9ec2b8e402fa47c3756edc3ccfa56dc2c6e950029dbe0c1975f3c78a9fa0",
+      "response": {
+        "metrics": {
+          "algorithm": "CGAL::Min_sphere_of_spheres_d",
+          "point_count": 8,
+          "radius": 1.7320508075688774
+        },
+        "outputs": [
+          {
+            "blob_sha256": "3e411f8b94cb768277fc6ade0557c0aacea48e680f9aa3f6cdb7fb5606402e46",
+            "format": "json",
+            "slot": "analysis",
+            "type": "GeometryQueryReport",
+            "unit": "none"
+          }
+        ],
+        "protocol": 1,
+        "request_id": "sphere-cube-corners",
+        "status": "ok"
+      },
+      "response_sha256": "0f7da418de9b75ba91730ddcc54e88e6c95f7bb6143aa8bc12bb4bdab0808f34",
+      "input_hashes": [
+        "2a71cbe76f2ab94766500168f571a5bd664a4e9a8fc5050e5d620addeef271bf"
+      ],
+      "output_hashes": [
+        "3e411f8b94cb768277fc6ade0557c0aacea48e680f9aa3f6cdb7fb5606402e46"
+      ],
+      "validators": [
+        {
+          "operation_id": "shape.validate.min_sphere",
+          "revision": 1,
+          "request": {
+            "inputs": [
+              {
+                "artifact_id": "sphere-cube-corners-analysis-0",
+                "blob_sha256": "3e411f8b94cb768277fc6ade0557c0aacea48e680f9aa3f6cdb7fb5606402e46",
+                "format": "json",
+                "sha256": "3e411f8b94cb768277fc6ade0557c0aacea48e680f9aa3f6cdb7fb5606402e46",
+                "type": "GeometryQueryReport",
+                "unit": "none"
+              },
+              {
+                "artifact_id": "input-0",
+                "blob_sha256": "2a71cbe76f2ab94766500168f571a5bd664a4e9a8fc5050e5d620addeef271bf",
+                "format": "xyz",
+                "sha256": "2a71cbe76f2ab94766500168f571a5bd664a4e9a8fc5050e5d620addeef271bf",
+                "type": "PointSet3",
+                "unit": "mm"
+              }
+            ],
+            "kernel": "package_recommended",
+            "limits": {
+              "memory_mb": 2048,
+              "wall_time_ms": 120000
+            },
+            "operation": "shape.validate.min_sphere",
+            "parameters": {
+              "radius": {
+                "unit": "mm",
+                "value": 0
+              }
+            },
+            "protocol": 1,
+            "request_id": "sphere-cube-corners--shape.validate.min_sphere"
+          },
+          "request_sha256": "328ee78e96eaad7e1c129fe62d52847223cfdaabc9dedefed0f530b64df2faac",
+          "response": {
+            "metrics": {
+              "checks": {
+                "all_balls_enclosed": true,
+                "center_matches_exact_minimum": true,
+                "parameters_match": true,
+                "radius_matches_exact_minimum": true,
+                "source_matches": true
+              },
+              "common_ball_radius": 0.0,
+              "dimension": 3,
+              "exact_squared_radius_of_points": "3",
+              "independence": "exact rational enumeration of every support set of 1..d+1 points (center in the affine hull); no CGAL header",
+              "passed": true,
+              "point_count": 8,
+              "relative_tolerance": 1e-09,
+              "report_type": "ValidationReport",
+              "schema_version": 1,
+              "status": "pass",
+              "validator": "shape.validate.min_sphere"
+            },
+            "outputs": [
+              {
+                "blob_sha256": "015e54bf09cb5a30d4e4346b20d4a6fc7b961995549270b5ea89e5081aa3e76f",
+                "format": "json",
+                "slot": "validation",
+                "type": "ValidationReport",
+                "unit": "none"
+              }
+            ],
+            "protocol": 1,
+            "request_id": "sphere-cube-corners--shape.validate.min_sphere",
+            "status": "ok"
+          },
+          "response_sha256": "0f6283e1c5e098abb273271a0dd67d0ce5909c34396c1efe6748f29b49e084e2",
+          "input_hashes": [
+            "3e411f8b94cb768277fc6ade0557c0aacea48e680f9aa3f6cdb7fb5606402e46",
+            "2a71cbe76f2ab94766500168f571a5bd664a4e9a8fc5050e5d620addeef271bf"
+          ],
+          "output_hashes": [
+            "015e54bf09cb5a30d4e4346b20d4a6fc7b961995549270b5ea89e5081aa3e76f"
+          ],
+          "report_blob_sha256": "015e54bf09cb5a30d4e4346b20d4a6fc7b961995549270b5ea89e5081aa3e76f",
+          "report_sha256": "260bcdb23558012ac74378ca43900c01d2c94337cb1d40d13c846c4816ca5515",
+          "status": "pass"
+        }
+      ],
+      "validation": {
+        "status": "pass",
+        "checks": {
+          "transform_executed": {
+            "pass": true
+          },
+          "behaviour_assertions": {
+            "pass": true,
+            "count": 5
+          },
+          "validator:shape.validate.min_sphere": {
+            "pass": true,
+            "report_sha256": "260bcdb23558012ac74378ca43900c01d2c94337cb1d40d13c846c4816ca5515"
+          }
+        }
+      }
+    },
+    {
+      "case_id": "sphere-cube-corners-radius-half",
+      "operation_id": "shape.bounding.sphere",
+      "revision": 1,
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "test_id": "family-7.13-replay-cases",
+      "request": {
+        "inputs": [
+          {
+            "artifact_id": "input-0",
+            "blob_sha256": "2a71cbe76f2ab94766500168f571a5bd664a4e9a8fc5050e5d620addeef271bf",
+            "format": "xyz",
+            "sha256": "2a71cbe76f2ab94766500168f571a5bd664a4e9a8fc5050e5d620addeef271bf",
+            "type": "PointSet3",
+            "unit": "mm"
+          }
+        ],
+        "kernel": "package_recommended",
+        "limits": {
+          "memory_mb": 2048,
+          "wall_time_ms": 120000
+        },
+        "operation": "shape.bounding.sphere",
+        "parameters": {
+          "radius": {
+            "unit": "mm",
+            "value": 0.5
+          }
+        },
+        "protocol": 1,
+        "request_id": "sphere-cube-corners-radius-half"
+      },
+      "request_sha256": "06277c7f89f1c85b5d8548a94f3e478932f294059d2a6f1ab5d03b5acc92619d",
+      "response": {
+        "metrics": {
+          "algorithm": "CGAL::Min_sphere_of_spheres_d",
+          "point_count": 8,
+          "radius": 2.232050807568877
+        },
+        "outputs": [
+          {
+            "blob_sha256": "ec88ae9cde0c772b2f2958c135d252b85a9e63ce8c913e457308e0132cbb7e64",
+            "format": "json",
+            "slot": "analysis",
+            "type": "GeometryQueryReport",
+            "unit": "none"
+          }
+        ],
+        "protocol": 1,
+        "request_id": "sphere-cube-corners-radius-half",
+        "status": "ok"
+      },
+      "response_sha256": "4da2d129c11d9c4c477d413c0c16916b3ee36a44bc268d4214ea4a6004b72325",
+      "input_hashes": [
+        "2a71cbe76f2ab94766500168f571a5bd664a4e9a8fc5050e5d620addeef271bf"
+      ],
+      "output_hashes": [
+        "ec88ae9cde0c772b2f2958c135d252b85a9e63ce8c913e457308e0132cbb7e64"
+      ],
+      "validators": [
+        {
+          "operation_id": "shape.validate.min_sphere",
+          "revision": 1,
+          "request": {
+            "inputs": [
+              {
+                "artifact_id": "sphere-cube-corners-radius-half-analysis-0",
+                "blob_sha256": "ec88ae9cde0c772b2f2958c135d252b85a9e63ce8c913e457308e0132cbb7e64",
+                "format": "json",
+                "sha256": "ec88ae9cde0c772b2f2958c135d252b85a9e63ce8c913e457308e0132cbb7e64",
+                "type": "GeometryQueryReport",
+                "unit": "none"
+              },
+              {
+                "artifact_id": "input-0",
+                "blob_sha256": "2a71cbe76f2ab94766500168f571a5bd664a4e9a8fc5050e5d620addeef271bf",
+                "format": "xyz",
+                "sha256": "2a71cbe76f2ab94766500168f571a5bd664a4e9a8fc5050e5d620addeef271bf",
+                "type": "PointSet3",
+                "unit": "mm"
+              }
+            ],
+            "kernel": "package_recommended",
+            "limits": {
+              "memory_mb": 2048,
+              "wall_time_ms": 120000
+            },
+            "operation": "shape.validate.min_sphere",
+            "parameters": {
+              "radius": {
+                "unit": "mm",
+                "value": 0.5
+              }
+            },
+            "protocol": 1,
+            "request_id": "sphere-cube-corners-radius-half--shape.validate.min_sphere"
+          },
+          "request_sha256": "a54c7147f4fbf549729feaf434e4144c7e5991d678521e3b5e52600917e2238f",
+          "response": {
+            "metrics": {
+              "checks": {
+                "all_balls_enclosed": true,
+                "center_matches_exact_minimum": true,
+                "parameters_match": true,
+                "radius_matches_exact_minimum": true,
+                "source_matches": true
+              },
+              "common_ball_radius": 0.5,
+              "dimension": 3,
+              "exact_squared_radius_of_points": "3",
+              "independence": "exact rational enumeration of every support set of 1..d+1 points (center in the affine hull); no CGAL header",
+              "passed": true,
+              "point_count": 8,
+              "relative_tolerance": 1e-09,
+              "report_type": "ValidationReport",
+              "schema_version": 1,
+              "status": "pass",
+              "validator": "shape.validate.min_sphere"
+            },
+            "outputs": [
+              {
+                "blob_sha256": "f9c4b438a8c56b6c786b1e044ad4d1690c35bf2164d6f8ea99ee12893bef4187",
+                "format": "json",
+                "slot": "validation",
+                "type": "ValidationReport",
+                "unit": "none"
+              }
+            ],
+            "protocol": 1,
+            "request_id": "sphere-cube-corners-radius-half--shape.validate.min_sphere",
+            "status": "ok"
+          },
+          "response_sha256": "bc2ed3f6e93cb031419fd35ffd96b2474d2b6ecadae80751f55c258b91fcc6a7",
+          "input_hashes": [
+            "ec88ae9cde0c772b2f2958c135d252b85a9e63ce8c913e457308e0132cbb7e64",
+            "2a71cbe76f2ab94766500168f571a5bd664a4e9a8fc5050e5d620addeef271bf"
+          ],
+          "output_hashes": [
+            "f9c4b438a8c56b6c786b1e044ad4d1690c35bf2164d6f8ea99ee12893bef4187"
+          ],
+          "report_blob_sha256": "f9c4b438a8c56b6c786b1e044ad4d1690c35bf2164d6f8ea99ee12893bef4187",
+          "report_sha256": "7630169adf669552f7a298746ff04455a7d9dd21b9c376efab1383ed409b1549",
+          "status": "pass"
+        }
+      ],
+      "validation": {
+        "status": "pass",
+        "checks": {
+          "transform_executed": {
+            "pass": true
+          },
+          "behaviour_assertions": {
+            "pass": true,
+            "count": 2
+          },
+          "validator:shape.validate.min_sphere": {
+            "pass": true,
+            "report_sha256": "7630169adf669552f7a298746ff04455a7d9dd21b9c376efab1383ed409b1549"
+          }
+        }
+      }
+    },
+    {
       "case_id": "hull2-grid",
       "operation_id": "hull.convex_2",
       "revision": 1,
-      "worker_manifest_sha256": "bd6f52527218dda8bc87410743af0d9ef34ad2e47913073a5754fd48ac8e0f11",
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -6572,7 +7996,7 @@
       "case_id": "hull3-cube",
       "operation_id": "hull.convex_3",
       "revision": 1,
-      "worker_manifest_sha256": "bd6f52527218dda8bc87410743af0d9ef34ad2e47913073a5754fd48ac8e0f11",
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -6728,7 +8152,7 @@
       "case_id": "bary-square-wachspress",
       "operation_id": "shape.barycentric",
       "revision": 1,
-      "worker_manifest_sha256": "bd6f52527218dda8bc87410743af0d9ef34ad2e47913073a5754fd48ac8e0f11",
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -6908,7 +8332,7 @@
       "case_id": "bary-square-mean-value",
       "operation_id": "shape.barycentric",
       "revision": 1,
-      "worker_manifest_sha256": "bd6f52527218dda8bc87410743af0d9ef34ad2e47913073a5754fd48ac8e0f11",
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -7088,7 +8512,7 @@
       "case_id": "bary-square-discrete-harmonic",
       "operation_id": "shape.barycentric",
       "revision": 1,
-      "worker_manifest_sha256": "bd6f52527218dda8bc87410743af0d9ef34ad2e47913073a5754fd48ac8e0f11",
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -7268,7 +8692,7 @@
       "case_id": "bary-l-mean-value",
       "operation_id": "shape.barycentric",
       "revision": 1,
-      "worker_manifest_sha256": "bd6f52527218dda8bc87410743af0d9ef34ad2e47913073a5754fd48ac8e0f11",
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -7446,11 +8870,189 @@
     }
   ],
   "negative_control_proofs": {
+    "sphere-negative-radius-rejected": {
+      "case_id": "sphere-negative-radius-rejected",
+      "operation_id": "shape.bounding.sphere",
+      "revision": 1,
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "test_id": "family-7.13-replay-cases",
+      "request": {
+        "inputs": [
+          {
+            "artifact_id": "input-0",
+            "blob_sha256": "2a71cbe76f2ab94766500168f571a5bd664a4e9a8fc5050e5d620addeef271bf",
+            "format": "xyz",
+            "sha256": "2a71cbe76f2ab94766500168f571a5bd664a4e9a8fc5050e5d620addeef271bf",
+            "type": "PointSet3",
+            "unit": "mm"
+          }
+        ],
+        "kernel": "package_recommended",
+        "limits": {
+          "memory_mb": 2048,
+          "wall_time_ms": 120000
+        },
+        "operation": "shape.bounding.sphere",
+        "parameters": {
+          "radius": {
+            "unit": "mm",
+            "value": -1
+          }
+        },
+        "protocol": 1,
+        "request_id": "sphere-negative-radius-rejected"
+      },
+      "request_sha256": "698ba29eb5d309caf50ab8137c9150dae6d383868be4f7a1eb3218ae8dc214fe",
+      "response": {
+        "error": {
+          "class": "INVALID_REQUEST",
+          "code": "INVALID_PARAMETER",
+          "message": "radius must be >= 0",
+          "recoverable": false,
+          "suggested_operations": []
+        },
+        "metrics": {},
+        "outputs": [],
+        "protocol": 1,
+        "request_id": "sphere-negative-radius-rejected",
+        "status": "error"
+      },
+      "response_sha256": "8c27a22a0d519a24ecd333f5d7fbcec7f73cad520605a788688c664425960312",
+      "input_hashes": [
+        "2a71cbe76f2ab94766500168f571a5bd664a4e9a8fc5050e5d620addeef271bf"
+      ],
+      "output_hashes": [],
+      "expected_error_class": "INVALID_REQUEST",
+      "status": "expected_rejection"
+    },
+    "circle-tampered-radius-rejected": {
+      "case_id": "circle-tampered-radius-rejected",
+      "operation_id": "shape.validate.min_circle",
+      "revision": 1,
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "test_id": "family-7.13-replay-cases",
+      "request": {
+        "inputs": [
+          {
+            "artifact_id": "input-0",
+            "blob_sha256": "a0ada6198ec8817c47144dc12b04e7834d455ca333611b8201427b54d19a9921",
+            "format": "json",
+            "sha256": "a0ada6198ec8817c47144dc12b04e7834d455ca333611b8201427b54d19a9921",
+            "type": "GeometryQueryReport",
+            "unit": "none"
+          },
+          {
+            "artifact_id": "input-1",
+            "blob_sha256": "16d3d1c519f73353877166417d81c196f6439f612212f477b47adc89eed4e92e",
+            "format": "json",
+            "sha256": "16d3d1c519f73353877166417d81c196f6439f612212f477b47adc89eed4e92e",
+            "type": "PointSet2",
+            "unit": "mm"
+          }
+        ],
+        "kernel": "package_recommended",
+        "limits": {
+          "memory_mb": 2048,
+          "wall_time_ms": 120000
+        },
+        "operation": "shape.validate.min_circle",
+        "parameters": {},
+        "protocol": 1,
+        "request_id": "circle-tampered-radius-rejected"
+      },
+      "request_sha256": "1080a37b4cb857e4e680a29b9cea401a37d0687fc15008845a22a78fedf30ac8",
+      "response": {
+        "error": {
+          "class": "VALIDATION_FAILED",
+          "code": "RADIUS_MISMATCH",
+          "message": "The reported radius differs from the exact minimum ball radius",
+          "recoverable": false,
+          "suggested_operations": []
+        },
+        "metrics": {},
+        "outputs": [],
+        "protocol": 1,
+        "request_id": "circle-tampered-radius-rejected",
+        "status": "error"
+      },
+      "response_sha256": "b71b918d72e80cadeb9e788de809343f3364fbd43386ef59d081068918338fd9",
+      "input_hashes": [
+        "a0ada6198ec8817c47144dc12b04e7834d455ca333611b8201427b54d19a9921",
+        "16d3d1c519f73353877166417d81c196f6439f612212f477b47adc89eed4e92e"
+      ],
+      "output_hashes": [],
+      "expected_error_class": "VALIDATION_FAILED",
+      "status": "expected_rejection"
+    },
+    "sphere-tampered-radius-rejected": {
+      "case_id": "sphere-tampered-radius-rejected",
+      "operation_id": "shape.validate.min_sphere",
+      "revision": 1,
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "test_id": "family-7.13-replay-cases",
+      "request": {
+        "inputs": [
+          {
+            "artifact_id": "input-0",
+            "blob_sha256": "d8b87b6f0bde1ee5f2844b6c56e01edb4e689c9c7646e6674c2233255fff077d",
+            "format": "json",
+            "sha256": "d8b87b6f0bde1ee5f2844b6c56e01edb4e689c9c7646e6674c2233255fff077d",
+            "type": "GeometryQueryReport",
+            "unit": "none"
+          },
+          {
+            "artifact_id": "input-1",
+            "blob_sha256": "2a71cbe76f2ab94766500168f571a5bd664a4e9a8fc5050e5d620addeef271bf",
+            "format": "xyz",
+            "sha256": "2a71cbe76f2ab94766500168f571a5bd664a4e9a8fc5050e5d620addeef271bf",
+            "type": "PointSet3",
+            "unit": "mm"
+          }
+        ],
+        "kernel": "package_recommended",
+        "limits": {
+          "memory_mb": 2048,
+          "wall_time_ms": 120000
+        },
+        "operation": "shape.validate.min_sphere",
+        "parameters": {
+          "radius": {
+            "unit": "mm",
+            "value": 0
+          }
+        },
+        "protocol": 1,
+        "request_id": "sphere-tampered-radius-rejected"
+      },
+      "request_sha256": "e9a46d5175ba57b7ce629a41ceb439de792b7f37a672406125ee2d41af69ffa8",
+      "response": {
+        "error": {
+          "class": "VALIDATION_FAILED",
+          "code": "RADIUS_MISMATCH",
+          "message": "The reported radius differs from the exact minimum ball radius",
+          "recoverable": false,
+          "suggested_operations": []
+        },
+        "metrics": {},
+        "outputs": [],
+        "protocol": 1,
+        "request_id": "sphere-tampered-radius-rejected",
+        "status": "error"
+      },
+      "response_sha256": "fe828377d30c4a59d1b59fbf063b97a02f4d65a4207bc395186c4c0f2f4f26ec",
+      "input_hashes": [
+        "d8b87b6f0bde1ee5f2844b6c56e01edb4e689c9c7646e6674c2233255fff077d",
+        "2a71cbe76f2ab94766500168f571a5bd664a4e9a8fc5050e5d620addeef271bf"
+      ],
+      "output_hashes": [],
+      "expected_error_class": "VALIDATION_FAILED",
+      "status": "expected_rejection"
+    },
     "hull2-collinear-rejected": {
       "case_id": "hull2-collinear-rejected",
       "operation_id": "hull.convex_2",
       "revision": 1,
-      "worker_manifest_sha256": "bd6f52527218dda8bc87410743af0d9ef34ad2e47913073a5754fd48ac8e0f11",
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -7500,7 +9102,7 @@
       "case_id": "hull3-oversized-shell-rejected",
       "operation_id": "hull.validate.convex_enclosure",
       "revision": 1,
-      "worker_manifest_sha256": "bd6f52527218dda8bc87410743af0d9ef34ad2e47913073a5754fd48ac8e0f11",
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -7559,7 +9161,7 @@
       "case_id": "bary-clockwise-polygon-rejected",
       "operation_id": "shape.barycentric",
       "revision": 1,
-      "worker_manifest_sha256": "bd6f52527218dda8bc87410743af0d9ef34ad2e47913073a5754fd48ac8e0f11",
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -7620,7 +9222,7 @@
       "case_id": "bary-bowtie-polygon-rejected",
       "operation_id": "shape.barycentric",
       "revision": 1,
-      "worker_manifest_sha256": "bd6f52527218dda8bc87410743af0d9ef34ad2e47913073a5754fd48ac8e0f11",
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -7681,7 +9283,7 @@
       "case_id": "bary-nonconvex-wachspress-rejected",
       "operation_id": "shape.barycentric",
       "revision": 1,
-      "worker_manifest_sha256": "bd6f52527218dda8bc87410743af0d9ef34ad2e47913073a5754fd48ac8e0f11",
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -7742,7 +9344,7 @@
       "case_id": "bary-query-outside-rejected",
       "operation_id": "shape.barycentric",
       "revision": 1,
-      "worker_manifest_sha256": "bd6f52527218dda8bc87410743af0d9ef34ad2e47913073a5754fd48ac8e0f11",
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -7803,7 +9405,7 @@
       "case_id": "bary-query-on-boundary-rejected",
       "operation_id": "shape.barycentric",
       "revision": 1,
-      "worker_manifest_sha256": "bd6f52527218dda8bc87410743af0d9ef34ad2e47913073a5754fd48ac8e0f11",
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -7864,7 +9466,7 @@
       "case_id": "bary-tampered-coordinates-rejected",
       "operation_id": "shape.validate.barycentric",
       "revision": 1,
-      "worker_manifest_sha256": "bd6f52527218dda8bc87410743af0d9ef34ad2e47913073a5754fd48ac8e0f11",
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -7931,5 +9533,5 @@
       "status": "expected_rejection"
     }
   },
-  "coverage_note": "Family 7.13: 2 requirement(s) bound by 6 replayed cases with registry-derived mandatory validators; 3 requirement(s) remain unbound with recorded gaps. The immutable 80-requirement denominator and full standalone acceptance remain incomplete."
+  "coverage_note": "Family 7.13: 3 requirement(s) bound by 10 replayed cases with registry-derived mandatory validators; 2 requirement(s) remain unbound with recorded gaps. The immutable 80-requirement denominator and full standalone acceptance remain incomplete."
 }

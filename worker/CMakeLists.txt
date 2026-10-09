@@ -76,6 +76,14 @@ add_executable(cgal-master-worker
   master/query_ops/query_common.cpp
   master/query_ops/query_operations.cpp
   master/query_ops/query_validators.cpp
+  master/batch2/b2_geometry.cpp
+  master/batch2/b2_validators_mesh.cpp
+  master/batch2/b2_validators_points.cpp
+  master/batch2/b2_validators_polygon.cpp
+  master/batch2/b2_ops_points.cpp
+  master/batch2/b2_ops_mesh.cpp
+  master/batch2/b2_ops_polygon.cpp
+  master/batch2/b2_registry.cpp
 )
 # smooth_shape needs CGAL's Eigen sparse solver; enable it only where used.
 set_source_files_properties(master/wave_d/remesh_operations.cpp PROPERTIES

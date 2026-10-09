@@ -10,6 +10,7 @@
 #include "kernel/kernel_query_set.h"
 #include "optimization/optimization_common.h"
 #include "query_ops/query_common.h"
+#include "batch2/b2_registry.h"
 #include "reconstruction/reconstruction_common.h"
 
 #include <CGAL/version.h>
@@ -119,6 +120,12 @@ const std::vector<OperationDefinition>& operation_registry() {
     operations.push_back(std::move(operation));
   }
   for (auto& operation : reconstruction_ops::validator_operations()) {
+    operations.push_back(std::move(operation));
+  }
+  for (auto& operation : batch2::producer_operations()) {
+    operations.push_back(std::move(operation));
+  }
+  for (auto& operation : batch2::validator_operations()) {
     operations.push_back(std::move(operation));
   }
   return operations;

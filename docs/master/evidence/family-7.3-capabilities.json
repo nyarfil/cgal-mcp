@@ -17,6 +17,8 @@
   ],
   "binding_rule": "A requirement is bound only when replayed cases exercise every enumerated variant in its original description and every subcapability symbol listed for it in catalog/major_capability_inventory.json, each through a VALIDATED operation whose registry-mandated validators pass.",
   "requirements": [
+    "major.7.3.05",
+    "major.7.3.07",
     "major.7.3.01",
     "major.7.3.02",
     "major.7.3.03",
@@ -24,6 +26,36 @@
     "major.7.3.08"
   ],
   "requirement_coverage": {
+    "major.7.3.05": {
+      "case_ids": [
+        "features-bent-30",
+        "features-bent-60",
+        "features-cube-100",
+        "features-cube-30",
+        "features-open-square"
+      ],
+      "operation_ids": [
+        "mesh.features.detect"
+      ],
+      "symbols": [
+        "detect_sharp_edges",
+        "sharp_edges_segmentation"
+      ]
+    },
+    "major.7.3.07": {
+      "case_ids": [
+        "selfint-cube-clean",
+        "selfint-tetra-clean",
+        "selfint-tetrahedra"
+      ],
+      "operation_ids": [
+        "mesh.intersections.self"
+      ],
+      "symbols": [
+        "self_intersections",
+        "does_self_intersect"
+      ]
+    },
     "major.7.3.01": {
       "case_ids": [
         "inspect-closed-tetra",
@@ -104,20 +136,18 @@
     }
   },
   "unbound_requirements": {
-    "major.7.3.05": "mesh.analysis.sharp_features exposes detect_sharp_edges only; sharp_edges_segmentation is not exposed.",
-    "major.7.3.06": "Only bounded_error_symmetric_Hausdorff_distance is executable, as the simplification validator; sample_triangle_mesh, max_distance_to_triangle_mesh, approximate/one-sided Hausdorff and approximate_max_distance_to_point_set are not exposed.",
-    "major.7.3.07": "Self-intersection (self_intersections, does_self_intersect) is replayed, but intersections between two meshes (do_intersect/surface_intersection) are not an executable operation."
+    "major.7.3.06": "Only bounded_error_symmetric_Hausdorff_distance is executable, as the simplification validator; sample_triangle_mesh, max_distance_to_triangle_mesh, approximate/one-sided Hausdorff and approximate_max_distance_to_point_set are not exposed."
   },
-  "family_contract_sha256": "4d4c73f2fdb9c4ae82bae55e2f0263d31b787f0d3d91c169c3898a9fbf108569",
+  "family_contract_sha256": "fea1467a8328ba509415a2081149c7c9a79b8e41c86669701dd4772302ada901",
   "family_contract_source_path": "scripts/master_replay_families.py",
-  "family_contract_source_sha256": "50326dee3652f42b70b9ca41065c8c766d0f792cef027f386c448229191db74e",
+  "family_contract_source_sha256": "8074a42ec540bf6de02610fdca1507f463a726f2239cebd648176fd1642db918",
   "family_contract_source_hash_encoding": "utf8-lf",
   "catalog_baseline_sha256": "143ec18a5b64d506aad60dc24b0a1ea30940c715d1223b3465fa140aeb9d02a7",
-  "operation_registry_sha256": "538274f52bb7eb4372e5eb6ab9491ab826f3f17a4d5505456e0c534ff56d2588",
+  "operation_registry_sha256": "724744997d2f9d833ce60c617e647d2e7d17b748bf39dc7c20adaa9825839858",
   "operation_registry_hash_encoding": "utf8-lf",
   "policy_catalog_sha256": "45f4be759288aaeb834a3ce97aa64ee7768048b15534618fc8c19512801f9a9f",
   "policy_catalog_hash_encoding": "utf8-lf",
-  "worker_sha256": "15620f16a171cc5392f986bb18b23c08ad33b52b29c4cb525aad30d131b9d73e",
+  "worker_sha256": "398362d1745fc6d8ef61fe96900b1845072793014c545ded0be5d66023b77500",
   "worker_binary_format": "pe",
   "worker_manifest": {
     "actual_cgal_version": "6.2.1",
@@ -6150,6 +6180,640 @@
         "supported_kernels": [
           "package_recommended"
         ]
+      },
+      {
+        "dependencies": [
+          "Point_set_processing_3"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "pointset.spacing.average",
+        "info": {
+          "input_slots": [
+            "points"
+          ],
+          "maximum_input_points": 400,
+          "source_header": "CGAL/compute_average_spacing.h",
+          "validator_parameter_bindings": {
+            "pointset.validate.average_spacing": {
+              "neighbors": "neighbors"
+            }
+          },
+          "validators": [
+            "pointset.validate.average_spacing"
+          ]
+        },
+        "input_types": [
+          "PointSet3"
+        ],
+        "output_type": "GeometryQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Point_set_processing_3"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "pointset.outliers.remove",
+        "info": {
+          "input_slots": [
+            "points"
+          ],
+          "maximum_input_points": 400,
+          "source_header": "CGAL/remove_outliers.h",
+          "validator_parameter_bindings": {
+            "pointset.validate.outliers_removed": {
+              "neighbors": "neighbors",
+              "threshold_distance": "threshold_distance",
+              "threshold_percent": "threshold_percent"
+            }
+          },
+          "validators": [
+            "pointset.validate.outliers_removed"
+          ]
+        },
+        "input_types": [
+          "PointSet3"
+        ],
+        "output_type": "PointSet3",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Bounding_volumes"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "shape.bounding.circle",
+        "info": {
+          "input_slots": [
+            "points"
+          ],
+          "maximum_input_points": 64,
+          "source_header": "CGAL/Min_circle_2.h",
+          "validators": [
+            "shape.validate.min_circle"
+          ]
+        },
+        "input_types": [
+          "PointSet2"
+        ],
+        "output_type": "GeometryQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Bounding_volumes"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "shape.bounding.sphere",
+        "info": {
+          "input_slots": [
+            "points"
+          ],
+          "maximum_input_points": 32,
+          "source_header": "CGAL/Min_sphere_of_spheres_d.h",
+          "validator_parameter_bindings": {
+            "shape.validate.min_sphere": {
+              "radius": "radius"
+            }
+          },
+          "validators": [
+            "shape.validate.min_sphere"
+          ]
+        },
+        "input_types": [
+          "PointSet3"
+        ],
+        "output_type": "GeometryQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "mesh.features.detect",
+        "info": {
+          "input_slots": [
+            "mesh"
+          ],
+          "maximum_input_faces": 600,
+          "source_header": "CGAL/Polygon_mesh_processing/detect_features.h",
+          "validator_parameter_bindings": {
+            "mesh.validate.features": {
+              "angle_degrees": "angle_degrees"
+            }
+          },
+          "validators": [
+            "mesh.validate.features"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "GeometryQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "mesh.intersections.self",
+        "info": {
+          "input_slots": [
+            "mesh"
+          ],
+          "maximum_input_faces": 600,
+          "source_header": "CGAL/Polygon_mesh_processing/self_intersections.h",
+          "validators": [
+            "mesh.validate.self_intersections"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "GeometryQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "PMP_Boolean_operations"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "mesh.clip.plane",
+        "info": {
+          "input_slots": [
+            "source"
+          ],
+          "maximum_input_faces": 600,
+          "maximum_output_faces": 4000,
+          "source_header": "CGAL/Polygon_mesh_processing/clip.h",
+          "validator_parameter_bindings": {
+            "mesh.validate.clip": {
+              "clip_volume": "clip_volume",
+              "normal": "normal",
+              "offset": "offset"
+            }
+          },
+          "validators": [
+            "mesh.validate.clip"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "TriangleSurfaceMesh",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "PMP_Boolean_operations"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "mesh.split.plane",
+        "info": {
+          "input_slots": [
+            "source"
+          ],
+          "maximum_input_faces": 600,
+          "maximum_output_faces": 4000,
+          "source_header": "CGAL/Polygon_mesh_processing/clip.h",
+          "validator_parameter_bindings": {
+            "mesh.validate.split": {
+              "normal": "normal",
+              "offset": "offset"
+            }
+          },
+          "validators": [
+            "mesh.validate.split"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "PolygonSoup3",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "PMP_Boolean_operations"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "mesh.corefine",
+        "info": {
+          "input_slots": [
+            "source",
+            "other"
+          ],
+          "maximum_input_faces": 600,
+          "maximum_output_faces": 4000,
+          "source_header": "CGAL/Polygon_mesh_processing/corefinement.h",
+          "validators": [
+            "mesh.validate.corefine"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "TriangleSurfaceMesh",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Boolean_set_operations_2"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "polygon.boolean",
+        "info": {
+          "input_slots": [
+            "first",
+            "second"
+          ],
+          "source_header": "CGAL/Boolean_set_operations_2.h",
+          "validator_parameter_bindings": {
+            "polygon.validate.boolean": {
+              "operation": "operation"
+            }
+          },
+          "validators": [
+            "polygon.validate.boolean"
+          ]
+        },
+        "input_types": [
+          "Polygon2",
+          "Polygon2"
+        ],
+        "output_type": "GeometryQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Point_set_processing_3"
+        ],
+        "effective_kernel": "float:long_double",
+        "id": "pointset.validate.average_spacing",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "average_spacing_matches_bruteforce"
+          ],
+          "independence": "brute-force k+1 nearest distances in long double (self included, as the CGAL neighbour query); no CGAL header",
+          "input_slots": [
+            "candidate",
+            "points"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "GeometryQueryReport",
+          "PointSet3"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Point_set_processing_3"
+        ],
+        "effective_kernel": "float:long_double",
+        "id": "pointset.validate.outliers_removed",
+        "info": {
+          "checks": [
+            "candidate_is_source_multiset_subset",
+            "kept_count_matches_thresholds",
+            "kept_points_have_lowest_measures"
+          ],
+          "independence": "brute-force average squared distance to the k+1 nearest points (self included) in long double; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "PointSet3",
+          "PointSet3"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Bounding_volumes"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "shape.validate.min_circle",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "center_matches_exact_minimum",
+            "radius_matches_exact_minimum",
+            "all_balls_enclosed"
+          ],
+          "independence": "exact rational enumeration of every support set of 1..d+1 points (center in the affine hull); no CGAL header",
+          "input_slots": [
+            "candidate",
+            "points"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "GeometryQueryReport",
+          "PointSet2"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Bounding_volumes"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "shape.validate.min_sphere",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "center_matches_exact_minimum",
+            "radius_matches_exact_minimum",
+            "all_balls_enclosed"
+          ],
+          "independence": "exact rational enumeration of every support set of 1..d+1 points (center in the affine hull); no CGAL header",
+          "input_slots": [
+            "candidate",
+            "points"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "GeometryQueryReport",
+          "PointSet3"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing"
+        ],
+        "effective_kernel": "float:long_double",
+        "id": "mesh.validate.features",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "mesh_is_oriented_edge_manifold",
+            "sharp_edges_exact",
+            "vertex_feature_degree_exact",
+            "patch_partition_exact",
+            "vertex_incident_patches_exact"
+          ],
+          "independence": "exact rational face normals; the irrational cosine of the bound is long double and ambiguous edges are rejected; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "mesh"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "GeometryQueryReport",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "mesh.validate.self_intersections",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "intersecting_pairs_exact",
+            "flag_consistent_exact"
+          ],
+          "independence": "exact rational triangle/triangle intersection polygon vertices and shared-simplex test; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "mesh"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "GeometryQueryReport",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "PMP_Boolean_operations"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "mesh.validate.clip",
+        "info": {
+          "checks": [
+            "source_triangles_nondegenerate",
+            "plane_avoids_source_faces",
+            "candidate_on_negative_side",
+            "triangles_inside_source_faces",
+            "orientation_preserved",
+            "no_overlap_within_source_face",
+            "clipped_region_covered_exactly",
+            "cap_consistent"
+          ],
+          "independence": "Sutherland-Hodgman polygon clipping and exact weighted-area tiling per source face; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "TriangleSurfaceMesh",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "PMP_Boolean_operations"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "mesh.validate.split",
+        "info": {
+          "checks": [
+            "source_triangles_nondegenerate",
+            "plane_avoids_source_faces",
+            "triangles_inside_source_faces",
+            "orientation_preserved",
+            "no_overlap_within_source_face",
+            "surface_covered_exactly",
+            "no_triangle_crosses_plane",
+            "sides_separated_into_components"
+          ],
+          "independence": "exact weighted-area tiling of each source face, per-triangle plane side and index-space connected components; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "PolygonSoup3",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "PMP_Boolean_operations"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "mesh.validate.corefine",
+        "info": {
+          "checks": [
+            "source_triangles_nondegenerate",
+            "triangles_inside_source_faces",
+            "orientation_preserved",
+            "no_overlap_within_source_face",
+            "surface_covered_exactly",
+            "intersection_is_in_candidate_edges"
+          ],
+          "independence": "exact weighted-area tiling and exact triangle/triangle intersection polygon vertices; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "source",
+            "other"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "TriangleSurfaceMesh",
+          "TriangleSurfaceMesh",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Boolean_set_operations_2"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "polygon.validate.boolean",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "operands_simple_nonzero_area",
+            "rings_oriented_outer_ccw_hole_cw",
+            "boundary_chain_equals_exact_set_operation"
+          ],
+          "independence": "exact rational edge splitting, point classification and unit-segment boundary chain comparison; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "first",
+            "second"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "GeometryQueryReport",
+          "Polygon2",
+          "Polygon2"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
       }
     ],
     "protocol": 1,
@@ -6161,14 +6825,14 @@
     ],
     "worker": "cgal-master-worker"
   },
-  "worker_manifest_sha256": "bd6f52527218dda8bc87410743af0d9ef34ad2e47913073a5754fd48ac8e0f11",
+  "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
   "tests": [
     {
       "id": "family-7.3-replay-cases",
       "source_path": "tests/master_family_replay_cases.py",
       "source_sha256": "69b3216bf60de8b908dcf6f82e4fee3ffc438ee2a29cf2d756c4b558c6ce3e65",
       "source_hash_encoding": "utf8-lf",
-      "stdout_sha256": "9acf08ad5a39900f3a3021172a76cea153fa32225a13d72078e05379fdd235cf",
+      "stdout_sha256": "551fe3c748576c92ff1fb8ceabf5be1cc63bb5e8ad4c1abb3a1b17c0793d642b",
       "exit_code": 0,
       "status": "pass"
     }
@@ -6179,10 +6843,50 @@
       "byte_size": 158,
       "content": "T0ZGCjggOCAwCjAgMCAwCjEgMCAwCjAgMSAwCjAgMCAxCjAuMjUgMC4yNSAwLjI1CjEuMjUgMC4yNSAwLjI1CjAuMjUgMS4yNSAwLjI1CjAuMjUgMC4yNSAxLjI1CjMgMCAyIDEKMyAwIDEgMwozIDEgMiAzCjMgMiAwIDMKMyA0IDYgNQozIDQgNSA3CjMgNSA2IDcKMyA2IDQgNwo="
     },
+    "0fa2df7696348e9850f8d2cdb31bc91e5b6fb5f4b7511f86a028dd199595fe32": {
+      "encoding": "base64",
+      "byte_size": 616,
+      "content": "eyJhbmdsZV9kZWdyZWVzIjoxMDAuMCwiY2hlY2tzIjp7Im1lc2hfaXNfb3JpZW50ZWRfZWRnZV9tYW5pZm9sZCI6dHJ1ZSwicGFyYW1ldGVyc19tYXRjaCI6dHJ1ZSwicGF0Y2hfcGFydGl0aW9uX2V4YWN0Ijp0cnVlLCJzaGFycF9lZGdlc19leGFjdCI6dHJ1ZSwic291cmNlX21hdGNoZXMiOnRydWUsInZlcnRleF9mZWF0dXJlX2RlZ3JlZV9leGFjdCI6dHJ1ZSwidmVydGV4X2luY2lkZW50X3BhdGNoZXNfZXhhY3QiOnRydWV9LCJjb3NpbmVfb2ZfYm91bmQiOi0wLjE3MzY0ODE3NzY2NjkzMDMsImZhY2VfY291bnQiOjEyLCJpbmRlcGVuZGVuY2UiOiJleGFjdCByYXRpb25hbCBmYWNlIG5vcm1hbHM7IG9ubHkgdGhlIGlycmF0aW9uYWwgY29zaW5lIG9mIHRoZSBib3VuZCBpcyBmbG9hdGluZyBwb2ludCBhbmQgYW1iaWd1b3VzIGVkZ2VzIGFyZSByZWplY3RlZCIsInBhc3NlZCI6dHJ1ZSwicGF0Y2hfY291bnQiOjEsInJlbGF0aXZlX21hcmdpbiI6MWUtMDksInJlcG9ydF90eXBlIjoiVmFsaWRhdGlvblJlcG9ydCIsInNjaGVtYV92ZXJzaW9uIjoxLCJzaGFycF9lZGdlX2NvdW50IjowLCJzdGF0dXMiOiJwYXNzIiwidmFsaWRhdG9yIjoibWVzaC52YWxpZGF0ZS5mZWF0dXJlcyJ9Cg=="
+    },
+    "12ad26ccf48bef217157d6d5cb9ad84637bf4c2086a87825d63478e3882c4e3e": {
+      "encoding": "base64",
+      "byte_size": 612,
+      "content": "eyJhbmdsZV9kZWdyZWVzIjoxMC4wLCJjaGVja3MiOnsibWVzaF9pc19vcmllbnRlZF9lZGdlX21hbmlmb2xkIjp0cnVlLCJwYXJhbWV0ZXJzX21hdGNoIjp0cnVlLCJwYXRjaF9wYXJ0aXRpb25fZXhhY3QiOnRydWUsInNoYXJwX2VkZ2VzX2V4YWN0Ijp0cnVlLCJzb3VyY2VfbWF0Y2hlcyI6dHJ1ZSwidmVydGV4X2ZlYXR1cmVfZGVncmVlX2V4YWN0Ijp0cnVlLCJ2ZXJ0ZXhfaW5jaWRlbnRfcGF0Y2hlc19leGFjdCI6dHJ1ZX0sImNvc2luZV9vZl9ib3VuZCI6MC45ODQ4MDc3NTMwMTIyMDgsImZhY2VfY291bnQiOjIsImluZGVwZW5kZW5jZSI6ImV4YWN0IHJhdGlvbmFsIGZhY2Ugbm9ybWFsczsgb25seSB0aGUgaXJyYXRpb25hbCBjb3NpbmUgb2YgdGhlIGJvdW5kIGlzIGZsb2F0aW5nIHBvaW50IGFuZCBhbWJpZ3VvdXMgZWRnZXMgYXJlIHJlamVjdGVkIiwicGFzc2VkIjp0cnVlLCJwYXRjaF9jb3VudCI6MSwicmVsYXRpdmVfbWFyZ2luIjoxZS0wOSwicmVwb3J0X3R5cGUiOiJWYWxpZGF0aW9uUmVwb3J0Iiwic2NoZW1hX3ZlcnNpb24iOjEsInNoYXJwX2VkZ2VfY291bnQiOjQsInN0YXR1cyI6InBhc3MiLCJ2YWxpZGF0b3IiOiJtZXNoLnZhbGlkYXRlLmZlYXR1cmVzIn0K"
+    },
     "1452787f329bd203e8c101dbe164d2d4401b34dc09d19111d51ab5ab77efa7de": {
       "encoding": "base64",
       "byte_size": 440,
       "content": "eyJjaGVja3MiOnsiYmFyeWNlbnRyaWNfdmFsaWQiOnRydWUsImRpc3RhbmNlX21hdGNoZXNfbG9jYXRpb24iOnRydWUsImV2ZXJ5X3F1ZXJ5X2Fuc3dlcmVkIjp0cnVlLCJsb2NhdGlvbl9pc19jbG9zZXN0X2V4YWN0Ijp0cnVlLCJwYXJhbWV0ZXJzX21hdGNoIjp0cnVlLCJwb2ludF9pc19mYWNlX2NvbWJpbmF0aW9uIjp0cnVlLCJzb3VyY2VfbWF0Y2hlcyI6dHJ1ZX0sImZhY2VfY291bnQiOjEyLCJpbmRlcGVuZGVuY2UiOiJleGFjdCByYXRpb25hbCBjbG9zZXN0IHBvaW50IG9uIGV2ZXJ5IHRyaWFuZ2xlOyBubyBBQUJCIHRyZWUiLCJwYXNzZWQiOnRydWUsInF1ZXJ5X2NvdW50Ijo3LCJyZXBvcnRfdHlwZSI6IlZhbGlkYXRpb25SZXBvcnQiLCJzY2hlbWFfdmVyc2lvbiI6MSwic3RhdHVzIjoicGFzcyIsInZhbGlkYXRvciI6Im1lc2gudmFsaWRhdGUubG9jYXRpb24ifQo="
+    },
+    "1b76c83fce531d9d5b2a33cd741fe18905d6bb08c9fd109de5c39621e61eabb5": {
+      "encoding": "base64",
+      "byte_size": 66,
+      "content": "T0ZGCjQgNCAwCjAgMCAwCjIgMCAwCjAgMiAwCjAgMCAyCjMgMCAyIDEKMyAwIDEgMwozIDAgMyAyCjMgMSAyIDMK"
+    },
+    "1c77b1b088f25dcbb84a62881c51aff49a0a8c7ac74115ddc25a56e217534ced": {
+      "encoding": "base64",
+      "byte_size": 381,
+      "content": "eyJsZW5ndGhfdW5pdCI6Im1tIiwib3BlcmF0aW9uIjoibWVzaC5pbnRlcnNlY3Rpb25zLnNlbGYiLCJwYXJhbWV0ZXJzIjp7fSwicmVwb3J0X2tpbmQiOiJzZWxmX2ludGVyc2VjdGlvbnMiLCJyZXBvcnRfdHlwZSI6Ikdlb21ldHJ5UXVlcnlSZXBvcnQiLCJyZXN1bHRzIjp7ImRvZXNfc2VsZl9pbnRlcnNlY3QiOmZhbHNlLCJpbnRlcnNlY3RpbmdfZmFjZV9wYWlycyI6W119LCJzY2hlbWFfdmVyc2lvbiI6MSwic291cmNlIjp7Im1lc2hfc2hhMjU2IjoiMWI3NmM4M2ZjZTUzMWQ5ZDViMmEzM2NkNzQxZmUxODkwNWQ2YmIwOGM5ZmQxMDlkZTVjMzk2MjFlNjFlYWJiNSJ9LCJzdW1tYXJ5Ijp7ImZhY2VfY291bnQiOjQsImludGVyc2VjdGluZ19wYWlyX2NvdW50IjowfX0K"
+    },
+    "301cd43811e30698b235dbfae581f808c3f1ea9be881f2c98db7b7055b727865": {
+      "encoding": "base64",
+      "byte_size": 78,
+      "content": "T0ZGCjYgNCAwCjAgMCAwCjEgMCAwCjIgMCAxCjAgMSAwCjEgMSAwCjIgMSAxCjMgMCAxIDQKMyAwIDQgMwozIDEgMiA1CjMgMSA1IDQK"
+    },
+    "32324bd57c064249c313c1725188514f1035b69ec1e37df79ed8741a42eb9d59": {
+      "encoding": "base64",
+      "byte_size": 412,
+      "content": "eyJjaGVja3MiOnsiZmxhZ19jb25zaXN0ZW50X2V4YWN0Ijp0cnVlLCJpbnRlcnNlY3RpbmdfcGFpcnNfZXhhY3QiOnRydWUsInBhcmFtZXRlcnNfbWF0Y2giOnRydWUsInNvdXJjZV9tYXRjaGVzIjp0cnVlfSwiZmFjZV9jb3VudCI6OCwiaW5kZXBlbmRlbmNlIjoiZXhhY3QgcmF0aW9uYWwgdHJpYW5nbGUvdHJpYW5nbGUgaW50ZXJzZWN0aW9uIHBvbHlnb24gdmVydGljZXMgYW5kIHNoYXJlZC1zaW1wbGV4IHRlc3Q7IG5vIENHQUwgaGVhZGVyIiwiaW50ZXJzZWN0aW5nX3BhaXJfY291bnQiOjMsInBhc3NlZCI6dHJ1ZSwicmVwb3J0X3R5cGUiOiJWYWxpZGF0aW9uUmVwb3J0Iiwic2NoZW1hX3ZlcnNpb24iOjEsInN0YXR1cyI6InBhc3MiLCJ2YWxpZGF0b3IiOiJtZXNoLnZhbGlkYXRlLnNlbGZfaW50ZXJzZWN0aW9ucyJ9Cg=="
+    },
+    "34e32863b007f0189c8614a0c0788fe38fa642305d766a1db96d0aaa1bd3d129": {
+      "encoding": "base64",
+      "byte_size": 554,
+      "content": "eyJsZW5ndGhfdW5pdCI6Im1tIiwib3BlcmF0aW9uIjoibWVzaC5mZWF0dXJlcy5kZXRlY3QiLCJwYXJhbWV0ZXJzIjp7ImFuZ2xlX2RlZ3JlZXMiOjEwLjB9LCJyZXBvcnRfa2luZCI6Im1lc2hfZmVhdHVyZXMiLCJyZXBvcnRfdHlwZSI6Ikdlb21ldHJ5UXVlcnlSZXBvcnQiLCJyZXN1bHRzIjp7InNlZ21lbnRhdGlvbiI6eyJwYXRjaF9jb3VudCI6MSwicGF0Y2hfaWRzIjpbMSwxXSwic2hhcnBfZWRnZXMiOltbMCwxXSxbMCwzXSxbMSwyXSxbMiwzXV0sInZlcnRleF9pbmNpZGVudF9wYXRjaGVzIjpbWzFdLFsxXSxbMV0sWzFdXX0sInNoYXJwX2VkZ2VzIjpbWzAsMV0sWzAsM10sWzEsMl0sWzIsM11dLCJ2ZXJ0ZXhfZmVhdHVyZV9kZWdyZWUiOlsyLDIsMiwyXX0sInNjaGVtYV92ZXJzaW9uIjoxLCJzb3VyY2UiOnsibWVzaF9zaGEyNTYiOiI2ODhhM2U3MDQ4MDAwZWNiZWJjZDdkZWU5OGU1M2YwN2Y5YTQwMTNhYTc2ZDU2ZGRjNWZlN2Y4ZGQ3NGQ4MmJjIn0sInN1bW1hcnkiOnsiZmFjZV9jb3VudCI6MiwicGF0Y2hfY291bnQiOjEsInNoYXJwX2VkZ2VfY291bnQiOjR9fQo="
+    },
+    "3cb3ad54e0c941b344d82a6fbedb8d783459fd725840c81eeb2c945bf991a29f": {
+      "encoding": "base64",
+      "byte_size": 613,
+      "content": "eyJhbmdsZV9kZWdyZWVzIjo2MC4wLCJjaGVja3MiOnsibWVzaF9pc19vcmllbnRlZF9lZGdlX21hbmlmb2xkIjp0cnVlLCJwYXJhbWV0ZXJzX21hdGNoIjp0cnVlLCJwYXRjaF9wYXJ0aXRpb25fZXhhY3QiOnRydWUsInNoYXJwX2VkZ2VzX2V4YWN0Ijp0cnVlLCJzb3VyY2VfbWF0Y2hlcyI6dHJ1ZSwidmVydGV4X2ZlYXR1cmVfZGVncmVlX2V4YWN0Ijp0cnVlLCJ2ZXJ0ZXhfaW5jaWRlbnRfcGF0Y2hlc19leGFjdCI6dHJ1ZX0sImNvc2luZV9vZl9ib3VuZCI6MC41MDAwMDAwMDAwMDAwMDAxLCJmYWNlX2NvdW50Ijo0LCJpbmRlcGVuZGVuY2UiOiJleGFjdCByYXRpb25hbCBmYWNlIG5vcm1hbHM7IG9ubHkgdGhlIGlycmF0aW9uYWwgY29zaW5lIG9mIHRoZSBib3VuZCBpcyBmbG9hdGluZyBwb2ludCBhbmQgYW1iaWd1b3VzIGVkZ2VzIGFyZSByZWplY3RlZCIsInBhc3NlZCI6dHJ1ZSwicGF0Y2hfY291bnQiOjEsInJlbGF0aXZlX21hcmdpbiI6MWUtMDksInJlcG9ydF90eXBlIjoiVmFsaWRhdGlvblJlcG9ydCIsInNjaGVtYV92ZXJzaW9uIjoxLCJzaGFycF9lZGdlX2NvdW50Ijo2LCJzdGF0dXMiOiJwYXNzIiwidmFsaWRhdG9yIjoibWVzaC52YWxpZGF0ZS5mZWF0dXJlcyJ9Cg=="
     },
     "3eb508791f4ae9b98a6435b01e7e7d336283ff3b683c1158a0a46ef612049720": {
       "encoding": "base64",
@@ -6199,6 +6903,16 @@
       "byte_size": 797,
       "content": "eyJhbmFseXNpc19raW5kIjoicG1wX2luc3BlY3Rpb24iLCJtZXNoX3N1bW1hcnkiOnsiY2xvc2VkIjp0cnVlLCJlZGdlX2NvdW50IjoxMiwiZmFjZV9jb3VudCI6NiwiZmluaXRlX2Nvb3JkaW5hdGVzIjp0cnVlLCJpbmRpY2VzX3ZhbGlkIjp0cnVlLCJyYXdfZmFjZV9jb3VudCI6NiwicmF3X3ZlcnRleF9jb3VudCI6OCwic3VyZmFjZV9tZXNoX2NvbnN0cnVjdGlibGUiOnRydWUsInRyaWFuZ3VsYXRlZCI6ZmFsc2UsInZlcnRleF9jb3VudCI6OH0sInJlc3VsdHMiOnsiY2xvc2VkIjp0cnVlLCJjb3VudF91bml0IjoiY291bnQiLCJkZWdlbmVyYXRlX2ZhY2VfY291bnQiOm51bGwsImlzb2xhdGVkX3ZlcnRleF9jb3VudCI6bnVsbCwibm9uX21hbmlmb2xkX3ZlcnRleF9jb3VudCI6bnVsbCwicGFyc2VfaXNzdWVzIjpbXSwicG9seWdvbl9tZXNoX3ZhbGlkIjp0cnVlfSwic2NoZW1hX3ZlcnNpb24iOjEsInNvdXJjZSI6eyJhcnRpZmFjdF9pZCI6ImlucHV0LTAiLCJmb3JtYXQiOiJvZmYiLCJzaGEyNTYiOiIzZWI1MDg3OTFmNGFlOWI5OGE2NDM1YjAxZTdlN2QzMzYyODNmZjNiNjgzYzExNThhMGE0NmVmNjEyMDQ5NzIwIiwidHlwZSI6IlBvbHlnb25Tb3VwMyIsInVuaXQiOiJtbSJ9LCJ2YWxpZGF0aW9uIjp7ImF1dGhvcml0YXRpdmUiOmZhbHNlLCJjaGVja3MiOlsicmF3X2NvdW50c19wcmVzZW50IiwiZ3JhcGhfc3RhdGVfZXhwbGljaXQiLCJmaW5kaW5nc19ub3RfcmVwYWlyIl0sInBhc3NlZCI6dHJ1ZSwidmFsaWRhdG9yX2lkIjoibWVzaC5wcm9kdWNlcl9jaGVjay5wbXBfaW5zcGVjdGlvbiJ9fQo="
     },
+    "56cc4236c2d436d2431b0f176dd1672ac5a895ac6e328f385e5e8faf6f758438": {
+      "encoding": "base64",
+      "byte_size": 417,
+      "content": "eyJsZW5ndGhfdW5pdCI6ICJtbSIsICJvcGVyYXRpb24iOiAibWVzaC5pbnRlcnNlY3Rpb25zLnNlbGYiLCAicGFyYW1ldGVycyI6IHt9LCAicmVwb3J0X2tpbmQiOiAic2VsZl9pbnRlcnNlY3Rpb25zIiwgInJlcG9ydF90eXBlIjogIkdlb21ldHJ5UXVlcnlSZXBvcnQiLCAicmVzdWx0cyI6IHsiZG9lc19zZWxmX2ludGVyc2VjdCI6IHRydWUsICJpbnRlcnNlY3RpbmdfZmFjZV9wYWlycyI6IFtbMiwgNF0sIFsyLCA1XV19LCAic2NoZW1hX3ZlcnNpb24iOiAxLCAic291cmNlIjogeyJtZXNoX3NoYTI1NiI6ICIwODhjMGZiNzhlNWM1NTlkZmE4MDljODk5Y2IwYjRhNTFiZTYwMzRmZTFiZmUzY2QzODBlNjUyOTYzMjAzMjg3In0sICJzdW1tYXJ5IjogeyJmYWNlX2NvdW50IjogOCwgImludGVyc2VjdGluZ19wYWlyX2NvdW50IjogM319"
+    },
+    "56eb379283d00fe3dd40ad165276a34245dd50e7aa2e0a1bd87f548ba64461fc": {
+      "encoding": "base64",
+      "byte_size": 413,
+      "content": "eyJjaGVja3MiOnsiZmxhZ19jb25zaXN0ZW50X2V4YWN0Ijp0cnVlLCJpbnRlcnNlY3RpbmdfcGFpcnNfZXhhY3QiOnRydWUsInBhcmFtZXRlcnNfbWF0Y2giOnRydWUsInNvdXJjZV9tYXRjaGVzIjp0cnVlfSwiZmFjZV9jb3VudCI6MTIsImluZGVwZW5kZW5jZSI6ImV4YWN0IHJhdGlvbmFsIHRyaWFuZ2xlL3RyaWFuZ2xlIGludGVyc2VjdGlvbiBwb2x5Z29uIHZlcnRpY2VzIGFuZCBzaGFyZWQtc2ltcGxleCB0ZXN0OyBubyBDR0FMIGhlYWRlciIsImludGVyc2VjdGluZ19wYWlyX2NvdW50IjowLCJwYXNzZWQiOnRydWUsInJlcG9ydF90eXBlIjoiVmFsaWRhdGlvblJlcG9ydCIsInNjaGVtYV92ZXJzaW9uIjoxLCJzdGF0dXMiOiJwYXNzIiwidmFsaWRhdG9yIjoibWVzaC52YWxpZGF0ZS5zZWxmX2ludGVyc2VjdGlvbnMifQo="
+    },
     "5be52afe46f1df906e4440c2b4f3d377449964d98abd20829db7d681f8bdc47f": {
       "encoding": "base64",
       "byte_size": 495,
@@ -6209,10 +6923,25 @@
       "byte_size": 822,
       "content": "eyJhbmFseXNpc19raW5kIjoic2VsZl9pbnRlcnNlY3Rpb25zIiwibWVzaF9zdW1tYXJ5Ijp7ImNsb3NlZCI6dHJ1ZSwiZWRnZV9jb3VudCI6MTIsImZhY2VfY291bnQiOjgsImZpbml0ZV9jb29yZGluYXRlcyI6dHJ1ZSwiaW5kaWNlc192YWxpZCI6dHJ1ZSwicmF3X2ZhY2VfY291bnQiOjgsInJhd192ZXJ0ZXhfY291bnQiOjgsInN1cmZhY2VfbWVzaF9jb25zdHJ1Y3RpYmxlIjp0cnVlLCJ0cmlhbmd1bGF0ZWQiOnRydWUsInZlcnRleF9jb3VudCI6OH0sInJlc3VsdHMiOnsiYXZhaWxhYmxlIjp0cnVlLCJjb3VudF91bml0IjoiY291bnQiLCJkb2VzX3NlbGZfaW50ZXJzZWN0Ijp0cnVlLCJpbnRlcnNlY3Rpb25fcGFpcl9jb3VudCI6MywicGFpcl9saW1pdCI6MTAwMDAsInBhaXJzIjpbWzQsMl0sWzUsMl0sWzcsMl1dfSwic2NoZW1hX3ZlcnNpb24iOjEsInNvdXJjZSI6eyJhcnRpZmFjdF9pZCI6ImlucHV0LTAiLCJmb3JtYXQiOiJvZmYiLCJzaGEyNTYiOiIwODhjMGZiNzhlNWM1NTlkZmE4MDljODk5Y2IwYjRhNTFiZTYwMzRmZTFiZmUzY2QzODBlNjUyOTYzMjAzMjg3IiwidHlwZSI6IlRyaWFuZ2xlU3VyZmFjZU1lc2giLCJ1bml0IjoibW0ifSwidmFsaWRhdGlvbiI6eyJhdXRob3JpdGF0aXZlIjpmYWxzZSwiY2hlY2tzIjpbInNvdXJjZV9mYWNlX3BhaXJzIiwicGFpcl9jb3VudF9jb25zaXN0ZW50IiwiYm91bmRlZF9wYWlyX2NvbGxlY3Rpb24iLCJkZWdlbmVyYXRlX3VuYXZhaWxhYmlsaXR5X2V4cGxpY2l0Il0sInBhc3NlZCI6dHJ1ZSwidmFsaWRhdG9yX2lkIjoibWVzaC5wcm9kdWNlcl9jaGVjay5zZWxmX2ludGVyc2VjdGlvbnMifX0K"
     },
+    "62fdf321b0f9bdb88cba65a5feba3294547d46f957d0ed5a3ebb3fd1df32bc50": {
+      "encoding": "base64",
+      "byte_size": 613,
+      "content": "eyJhbmdsZV9kZWdyZWVzIjozMC4wLCJjaGVja3MiOnsibWVzaF9pc19vcmllbnRlZF9lZGdlX21hbmlmb2xkIjp0cnVlLCJwYXJhbWV0ZXJzX21hdGNoIjp0cnVlLCJwYXRjaF9wYXJ0aXRpb25fZXhhY3QiOnRydWUsInNoYXJwX2VkZ2VzX2V4YWN0Ijp0cnVlLCJzb3VyY2VfbWF0Y2hlcyI6dHJ1ZSwidmVydGV4X2ZlYXR1cmVfZGVncmVlX2V4YWN0Ijp0cnVlLCJ2ZXJ0ZXhfaW5jaWRlbnRfcGF0Y2hlc19leGFjdCI6dHJ1ZX0sImNvc2luZV9vZl9ib3VuZCI6MC44NjYwMjU0MDM3ODQ0Mzg3LCJmYWNlX2NvdW50Ijo0LCJpbmRlcGVuZGVuY2UiOiJleGFjdCByYXRpb25hbCBmYWNlIG5vcm1hbHM7IG9ubHkgdGhlIGlycmF0aW9uYWwgY29zaW5lIG9mIHRoZSBib3VuZCBpcyBmbG9hdGluZyBwb2ludCBhbmQgYW1iaWd1b3VzIGVkZ2VzIGFyZSByZWplY3RlZCIsInBhc3NlZCI6dHJ1ZSwicGF0Y2hfY291bnQiOjIsInJlbGF0aXZlX21hcmdpbiI6MWUtMDksInJlcG9ydF90eXBlIjoiVmFsaWRhdGlvblJlcG9ydCIsInNjaGVtYV92ZXJzaW9uIjoxLCJzaGFycF9lZGdlX2NvdW50Ijo3LCJzdGF0dXMiOiJwYXNzIiwidmFsaWRhdG9yIjoibWVzaC52YWxpZGF0ZS5mZWF0dXJlcyJ9Cg=="
+    },
+    "65cbe4be41145a5232abcaa5302035a86d7aea30dc4541361de3dca6ed3129b3": {
+      "encoding": "base64",
+      "byte_size": 615,
+      "content": "eyJhbmdsZV9kZWdyZWVzIjozMC4wLCJjaGVja3MiOnsibWVzaF9pc19vcmllbnRlZF9lZGdlX21hbmlmb2xkIjp0cnVlLCJwYXJhbWV0ZXJzX21hdGNoIjp0cnVlLCJwYXRjaF9wYXJ0aXRpb25fZXhhY3QiOnRydWUsInNoYXJwX2VkZ2VzX2V4YWN0Ijp0cnVlLCJzb3VyY2VfbWF0Y2hlcyI6dHJ1ZSwidmVydGV4X2ZlYXR1cmVfZGVncmVlX2V4YWN0Ijp0cnVlLCJ2ZXJ0ZXhfaW5jaWRlbnRfcGF0Y2hlc19leGFjdCI6dHJ1ZX0sImNvc2luZV9vZl9ib3VuZCI6MC44NjYwMjU0MDM3ODQ0Mzg3LCJmYWNlX2NvdW50IjoxMiwiaW5kZXBlbmRlbmNlIjoiZXhhY3QgcmF0aW9uYWwgZmFjZSBub3JtYWxzOyBvbmx5IHRoZSBpcnJhdGlvbmFsIGNvc2luZSBvZiB0aGUgYm91bmQgaXMgZmxvYXRpbmcgcG9pbnQgYW5kIGFtYmlndW91cyBlZGdlcyBhcmUgcmVqZWN0ZWQiLCJwYXNzZWQiOnRydWUsInBhdGNoX2NvdW50Ijo2LCJyZWxhdGl2ZV9tYXJnaW4iOjFlLTA5LCJyZXBvcnRfdHlwZSI6IlZhbGlkYXRpb25SZXBvcnQiLCJzY2hlbWFfdmVyc2lvbiI6MSwic2hhcnBfZWRnZV9jb3VudCI6MTIsInN0YXR1cyI6InBhc3MiLCJ2YWxpZGF0b3IiOiJtZXNoLnZhbGlkYXRlLmZlYXR1cmVzIn0K"
+    },
     "666387550c560da5f4f7c0f390b2692d4ff3caa513d4f79d926d8bc6215be7aa": {
       "encoding": "base64",
       "byte_size": 381,
       "content": "eyJjaGVja3MiOnsiY29tcG9uZW50X2NvdW50X2V4YWN0Ijp0cnVlLCJsYWJlbHNfcGFydGl0aW9uX2VxdWFsIjp0cnVlLCJwYXJhbWV0ZXJzX21hdGNoIjp0cnVlLCJzaXplc19tYXRjaCI6dHJ1ZSwic291cmNlX21hdGNoZXMiOnRydWV9LCJjb21wb25lbnRfY291bnQiOjMsImZhY2VfY291bnQiOjksImluZGVwZW5kZW5jZSI6InVuaW9uLWZpbmQgb3ZlciBmYWNlcyBzaGFyaW5nIGFuIHVuZGlyZWN0ZWQgZWRnZTsgbm8gQ0dBTCBoZWFkZXIiLCJwYXNzZWQiOnRydWUsInJlcG9ydF90eXBlIjoiVmFsaWRhdGlvblJlcG9ydCIsInNjaGVtYV92ZXJzaW9uIjoxLCJzdGF0dXMiOiJwYXNzIiwidmFsaWRhdG9yIjoibWVzaC52YWxpZGF0ZS5jb21wb25lbnRzX2xhYmVsIn0K"
+    },
+    "688a3e7048000ecbebcd7dee98e53f07f9a4013aa76d56ddc5fe7f8dd74d82bc": {
+      "encoding": "base64",
+      "byte_size": 50,
+      "content": "T0ZGCjQgMiAwCjAgMCAwCjIgMCAwCjIgMiAwCjAgMiAwCjMgMCAxIDIKMyAwIDIgMwo="
     },
     "6b13bbbc9adfe00825d0112c33a011a03e5cb68d32f0e57dcf7480373ffc7435": {
       "encoding": "base64",
@@ -6228,6 +6957,11 @@
       "encoding": "base64",
       "byte_size": 155,
       "content": "T0ZGCjggMTIgMAowIDAgMAoyIDAgMAoyIDIgMAowIDIgMAowIDAgMgoyIDAgMgoyIDIgMgowIDIgMgozIDAgMyAyCjMgMCAyIDEKMyA0IDUgNgozIDQgNiA3CjMgMCAxIDUKMyAwIDUgNAozIDEgMiA2CjMgMSA2IDUKMyAyIDMgNwozIDIgNyA2CjMgMyAwIDQKMyAzIDQgNwo="
+    },
+    "74eff52848f67034f429cbedd8417224ed4bdbfb541d01a5571d6510ed28f683": {
+      "encoding": "base64",
+      "byte_size": 610,
+      "content": "eyJsZW5ndGhfdW5pdCI6Im1tIiwib3BlcmF0aW9uIjoibWVzaC5mZWF0dXJlcy5kZXRlY3QiLCJwYXJhbWV0ZXJzIjp7ImFuZ2xlX2RlZ3JlZXMiOjMwLjB9LCJyZXBvcnRfa2luZCI6Im1lc2hfZmVhdHVyZXMiLCJyZXBvcnRfdHlwZSI6Ikdlb21ldHJ5UXVlcnlSZXBvcnQiLCJyZXN1bHRzIjp7InNlZ21lbnRhdGlvbiI6eyJwYXRjaF9jb3VudCI6MiwicGF0Y2hfaWRzIjpbMSwxLDIsMl0sInNoYXJwX2VkZ2VzIjpbWzAsMV0sWzAsM10sWzEsMl0sWzEsNF0sWzIsNV0sWzMsNF0sWzQsNV1dLCJ2ZXJ0ZXhfaW5jaWRlbnRfcGF0Y2hlcyI6W1sxXSxbMSwyXSxbMl0sWzFdLFsxLDJdLFsyXV19LCJzaGFycF9lZGdlcyI6W1swLDFdLFswLDNdLFsxLDJdLFsxLDRdLFsyLDVdLFszLDRdLFs0LDVdXSwidmVydGV4X2ZlYXR1cmVfZGVncmVlIjpbMiwzLDIsMiwzLDJdfSwic2NoZW1hX3ZlcnNpb24iOjEsInNvdXJjZSI6eyJtZXNoX3NoYTI1NiI6IjMwMWNkNDM4MTFlMzA2OThiMjM1ZGJmYWU1ODFmODA4YzNmMWVhOWJlODgxZjJjOThkYjdiNzA1NWI3Mjc4NjUifSwic3VtbWFyeSI6eyJmYWNlX2NvdW50Ijo0LCJwYXRjaF9jb3VudCI6Miwic2hhcnBfZWRnZV9jb3VudCI6N319Cg=="
     },
     "7cc77a7f8ab5537028bb389a440b0df5528a48c34f3b9b47b8a09e4fc3817a5e": {
       "encoding": "base64",
@@ -6249,6 +6983,11 @@
       "byte_size": 488,
       "content": "eyJjYW5kaWRhdGVfc2hhMjU2IjoiYzAyYzE2MTM5NjMzZDc3MTUxODVhY2ZiZTg1YWUzNzBiMGE4ZjM1NWJhM2UyMTlhMmU5YzllMGE4MGRjNGI5OCIsImNoZWNrcyI6eyJhbmFseXNpc19raW5kX21hdGNoZXMiOnRydWUsImRpbWVuc2lvbl91bml0c192YWxpZCI6dHJ1ZSwib2ZmaWNpYWxfY2dhbF9yZWZlcmVuY2VfbWF0Y2giOnRydWUsInByb2R1Y2VyX2RpYWdub3N0aWNfbWF0Y2hlcyI6dHJ1ZSwicmVzdWx0X3NlbWFudGljc192YWxpZCI6dHJ1ZSwic2NoZW1hX3ZhbGlkIjp0cnVlLCJzb3VyY2VfaWRlbnRpdHlfbWF0Y2hlcyI6dHJ1ZX0sInBhc3NlZCI6dHJ1ZSwic2NoZW1hX3ZlcnNpb24iOjEsInNvdXJjZV9zaGEyNTYiOiJiNjE0ODhiYTY3ODkyZjM4NTliMGY2MTgwYjA5NjE4MmM2MjYxNDllN2JhNDM1MjE1Mjg2Y2IyYzJkYmE2MmVhIiwic3RhdHVzIjoicGFzcyIsInZhbGlkYXRvcl9pZCI6Im1lc2gudmFsaWRhdGUubm9ybWFsc19yZXBvcnQifQo="
     },
+    "92836e83c227ec1a537dbfbf9a1ffed160ae5993e2ef7464b6419597c55a1b2b": {
+      "encoding": "base64",
+      "byte_size": 546,
+      "content": "eyJsZW5ndGhfdW5pdCI6Im1tIiwib3BlcmF0aW9uIjoibWVzaC5mZWF0dXJlcy5kZXRlY3QiLCJwYXJhbWV0ZXJzIjp7ImFuZ2xlX2RlZ3JlZXMiOjEwMC4wfSwicmVwb3J0X2tpbmQiOiJtZXNoX2ZlYXR1cmVzIiwicmVwb3J0X3R5cGUiOiJHZW9tZXRyeVF1ZXJ5UmVwb3J0IiwicmVzdWx0cyI6eyJzZWdtZW50YXRpb24iOnsicGF0Y2hfY291bnQiOjEsInBhdGNoX2lkcyI6WzEsMSwxLDEsMSwxLDEsMSwxLDEsMSwxXSwic2hhcnBfZWRnZXMiOltdLCJ2ZXJ0ZXhfaW5jaWRlbnRfcGF0Y2hlcyI6W1tdLFtdLFtdLFtdLFtdLFtdLFtdLFtdXX0sInNoYXJwX2VkZ2VzIjpbXSwidmVydGV4X2ZlYXR1cmVfZGVncmVlIjpbMCwwLDAsMCwwLDAsMCwwXX0sInNjaGVtYV92ZXJzaW9uIjoxLCJzb3VyY2UiOnsibWVzaF9zaGEyNTYiOiI3ZTA1M2RhMzY0YmMxOTVjYjdkOGYwNTUwZGMxMTM4MTBiNzA4OTIwMjdiMmNmNGUxOTljMTI4MTcxZmRhNzE3In0sInN1bW1hcnkiOnsiZmFjZV9jb3VudCI6MTIsInBhdGNoX2NvdW50IjoxLCJzaGFycF9lZGdlX2NvdW50IjowfX0K"
+    },
     "951c412176d8d976b2443760d46cab6d177ee6d46facf8e7ec0efeb7e5d24c5e": {
       "encoding": "base64",
       "byte_size": 126,
@@ -6263,6 +7002,11 @@
       "encoding": "base64",
       "byte_size": 476,
       "content": "eyJjaGVja3MiOnsiY2FuZGlkYXRlX2hhc19ub191bnJlZmVyZW5jZWRfdmVydGljZXMiOnRydWUsImZhY2VzX2VxdWFsX3NlbGVjdGVkX3NvdXJjZV9mYWNlcyI6dHJ1ZSwia2VwdF9zZXRfdW5hbWJpZ3VvdXMiOnRydWUsInBhcmFtZXRlcnNfbWF0Y2giOnRydWUsInNvdXJjZV9pc19tYW5pZm9sZCI6dHJ1ZX0sImNvbXBvbmVudF9jb3VudCI6MywiY29tcG9uZW50c19yZXF1ZXN0ZWQiOjIsImluZGVwZW5kZW5jZSI6InVuaW9uLWZpbmQgY29tcG9uZW50IHNpemVzIGFuZCBleGFjdCB2ZXJ0ZXggY29vcmRpbmF0ZSBjb21wYXJpc29uOyBubyBDR0FMIGhlYWRlciIsImtlcHRfZmFjZV9jb3VudCI6OCwicGFzc2VkIjp0cnVlLCJyZXBvcnRfdHlwZSI6IlZhbGlkYXRpb25SZXBvcnQiLCJzY2hlbWFfdmVyc2lvbiI6MSwic3RhdHVzIjoicGFzcyIsInZhbGlkYXRvciI6Im1lc2gudmFsaWRhdGUuY29tcG9uZW50c19rZWVwX2xhcmdlc3QifQo="
+    },
+    "9f0ab46547043c341593ef2635b62d9a4c82d3ac1e7561d9e506f718b2a59f2e": {
+      "encoding": "base64",
+      "byte_size": 594,
+      "content": "eyJsZW5ndGhfdW5pdCI6Im1tIiwib3BlcmF0aW9uIjoibWVzaC5mZWF0dXJlcy5kZXRlY3QiLCJwYXJhbWV0ZXJzIjp7ImFuZ2xlX2RlZ3JlZXMiOjYwLjB9LCJyZXBvcnRfa2luZCI6Im1lc2hfZmVhdHVyZXMiLCJyZXBvcnRfdHlwZSI6Ikdlb21ldHJ5UXVlcnlSZXBvcnQiLCJyZXN1bHRzIjp7InNlZ21lbnRhdGlvbiI6eyJwYXRjaF9jb3VudCI6MSwicGF0Y2hfaWRzIjpbMSwxLDEsMV0sInNoYXJwX2VkZ2VzIjpbWzAsMV0sWzAsM10sWzEsMl0sWzIsNV0sWzMsNF0sWzQsNV1dLCJ2ZXJ0ZXhfaW5jaWRlbnRfcGF0Y2hlcyI6W1sxXSxbMV0sWzFdLFsxXSxbMV0sWzFdXX0sInNoYXJwX2VkZ2VzIjpbWzAsMV0sWzAsM10sWzEsMl0sWzIsNV0sWzMsNF0sWzQsNV1dLCJ2ZXJ0ZXhfZmVhdHVyZV9kZWdyZWUiOlsyLDIsMiwyLDIsMl19LCJzY2hlbWFfdmVyc2lvbiI6MSwic291cmNlIjp7Im1lc2hfc2hhMjU2IjoiMzAxY2Q0MzgxMWUzMDY5OGIyMzVkYmZhZTU4MWY4MDhjM2YxZWE5YmU4ODFmMmM5OGRiN2I3MDU1YjcyNzg2NSJ9LCJzdW1tYXJ5Ijp7ImZhY2VfY291bnQiOjQsInBhdGNoX2NvdW50IjoxLCJzaGFycF9lZGdlX2NvdW50Ijo2fX0K"
     },
     "a1d1ecd3c4fec51dd84b8e0c7c008e6e8b6cdfeae7c64c0e03f3200dceb10327": {
       "encoding": "base64",
@@ -6289,6 +7033,11 @@
       "byte_size": 1285,
       "content": "eyJsZW5ndGhfdW5pdCI6ICJtbSIsICJvcGVyYXRpb24iOiAibWVzaC5sb2NhdGlvbi5sb2NhdGUiLCAicGFyYW1ldGVycyI6IHsic3RyYXRlZ3kiOiAibG9jYXRlIn0sICJyZXBvcnRfa2luZCI6ICJtZXNoX2xvY2F0aW9uIiwgInJlcG9ydF90eXBlIjogIkdlb21ldHJ5UXVlcnlSZXBvcnQiLCAicmVzdWx0cyI6IFt7ImJhcnljZW50cmljIjogWyIxLzIiLCAiMCIsICIxLzIiXSwgImZhY2UiOiAyLCAicG9pbnQiOiBbIjEiLCAiMSIsICIyIl0sICJxdWVyeV9pbmRleCI6IDAsICJzcXVhcmVkX2Rpc3RhbmNlIjogIjgifSwgeyJiYXJ5Y2VudHJpYyI6IFsiMy80IiwgIjEvOCIsICIxLzgiXSwgImZhY2UiOiAxLCAicG9pbnQiOiBbIjEvMiIsICIxLzQiLCAiMCJdLCAicXVlcnlfaW5kZXgiOiAxLCAic3F1YXJlZF9kaXN0YW5jZSI6ICIxIn0sIHsiYmFyeWNlbnRyaWMiOiBbIjEvMiIsICIwIiwgIjEvMiJdLCAiZmFjZSI6IDEwLCAicG9pbnQiOiBbIjIiLCAiMSIsICIxIl0sICJxdWVyeV9pbmRleCI6IDIsICJzcXVhcmVkX2Rpc3RhbmNlIjogIjEifSwgeyJiYXJ5Y2VudHJpYyI6IFsiMCIsICIwIiwgIjEiXSwgImZhY2UiOiAyLCAicG9pbnQiOiBbIjIiLCAiMiIsICIyIl0sICJxdWVyeV9pbmRleCI6IDMsICJzcXVhcmVkX2Rpc3RhbmNlIjogIjMifSwgeyJiYXJ5Y2VudHJpYyI6IFsiMS8yIiwgIjAiLCAiMS8yIl0sICJmYWNlIjogMTAsICJwb2ludCI6IFsiMiIsICIxIiwgIjEiXSwgInF1ZXJ5X2luZGV4IjogNCwgInNxdWFyZWRfZGlzdGFuY2UiOiAiMCJ9LCB7ImJhcnljZW50cmljIjogWyIxIiwgIjAiLCAiMCJdLCAiZmFjZSI6IDAsICJwb2ludCI6IFsiMCIsICIwIiwgIjAiXSwgInF1ZXJ5X2luZGV4IjogNSwgInNxdWFyZWRfZGlzdGFuY2UiOiAiMyJ9LCB7ImJhcnljZW50cmljIjogWyIxIiwgIjAiLCAiMCJdLCAiZmFjZSI6IDAsICJwb2ludCI6IFsiMCIsICIwIiwgIjAiXSwgInF1ZXJ5X2luZGV4IjogNiwgInNxdWFyZWRfZGlzdGFuY2UiOiAiMCJ9XSwgInNjaGVtYV92ZXJzaW9uIjogMSwgInNvdXJjZSI6IHsibWVzaF9zaGEyNTYiOiAiN2UwNTNkYTM2NGJjMTk1Y2I3ZDhmMDU1MGRjMTEzODEwYjcwODkyMDI3YjJjZjRlMTk5YzEyODE3MWZkYTcxNyIsICJxdWVyaWVzX3NoYTI1NiI6ICJkYzBhOTQ2ZDc1OWYyOTExYzcxNzQyYmYzNTgzM2E0NmU3YzY1MjJjNmFjNjhmYTY1YTAzNGZjZDVhMDE5YTE0In0sICJzdW1tYXJ5IjogeyJmYWNlX2NvdW50IjogMTIsICJxdWVyeV9jb3VudCI6IDcsICJzcXVhcmVkX2Rpc3RhbmNlX3VuaXQiOiAibW0yIn19Cg=="
     },
+    "bae8baf4d4dbb23078a214c0648e9efcbc480b9be6b096235f41e294def9c476": {
+      "encoding": "base64",
+      "byte_size": 382,
+      "content": "eyJsZW5ndGhfdW5pdCI6Im1tIiwib3BlcmF0aW9uIjoibWVzaC5pbnRlcnNlY3Rpb25zLnNlbGYiLCJwYXJhbWV0ZXJzIjp7fSwicmVwb3J0X2tpbmQiOiJzZWxmX2ludGVyc2VjdGlvbnMiLCJyZXBvcnRfdHlwZSI6Ikdlb21ldHJ5UXVlcnlSZXBvcnQiLCJyZXN1bHRzIjp7ImRvZXNfc2VsZl9pbnRlcnNlY3QiOmZhbHNlLCJpbnRlcnNlY3RpbmdfZmFjZV9wYWlycyI6W119LCJzY2hlbWFfdmVyc2lvbiI6MSwic291cmNlIjp7Im1lc2hfc2hhMjU2IjoiN2UwNTNkYTM2NGJjMTk1Y2I3ZDhmMDU1MGRjMTEzODEwYjcwODkyMDI3YjJjZjRlMTk5YzEyODE3MWZkYTcxNyJ9LCJzdW1tYXJ5Ijp7ImZhY2VfY291bnQiOjEyLCJpbnRlcnNlY3RpbmdfcGFpcl9jb3VudCI6MH19Cg=="
+    },
     "c02c16139633d7715185acfbe85ae370b0a8f355ba3e219a2e9c9e0a80dc4b98": {
       "encoding": "base64",
       "byte_size": 7834,
@@ -6308,6 +7057,11 @@
       "encoding": "base64",
       "byte_size": 157,
       "content": "T0ZGCjExIDkgMAowIDAgMAoyIDAgMAowIDIgMAowIDAgMgoxMCAwIDAKMTIgMCAwCjEwIDIgMAoxMCAwIDIKMjAgMCAwCjIxIDAgMAoyMCAxIDAKMyAwIDIgMQozIDAgMSAzCjMgMCAzIDIKMyAxIDIgMwozIDQgNiA1CjMgNCA1IDcKMyA0IDcgNgozIDUgNiA3CjMgOCA5IDEwCg=="
+    },
+    "ca437ea030e1ffad044eefe6273a0ab23e93111073f72527e3ed18555f3afd64": {
+      "encoding": "base64",
+      "byte_size": 412,
+      "content": "eyJjaGVja3MiOnsiZmxhZ19jb25zaXN0ZW50X2V4YWN0Ijp0cnVlLCJpbnRlcnNlY3RpbmdfcGFpcnNfZXhhY3QiOnRydWUsInBhcmFtZXRlcnNfbWF0Y2giOnRydWUsInNvdXJjZV9tYXRjaGVzIjp0cnVlfSwiZmFjZV9jb3VudCI6NCwiaW5kZXBlbmRlbmNlIjoiZXhhY3QgcmF0aW9uYWwgdHJpYW5nbGUvdHJpYW5nbGUgaW50ZXJzZWN0aW9uIHBvbHlnb24gdmVydGljZXMgYW5kIHNoYXJlZC1zaW1wbGV4IHRlc3Q7IG5vIENHQUwgaGVhZGVyIiwiaW50ZXJzZWN0aW5nX3BhaXJfY291bnQiOjAsInBhc3NlZCI6dHJ1ZSwicmVwb3J0X3R5cGUiOiJWYWxpZGF0aW9uUmVwb3J0Iiwic2NoZW1hX3ZlcnNpb24iOjEsInN0YXR1cyI6InBhc3MiLCJ2YWxpZGF0b3IiOiJtZXNoLnZhbGlkYXRlLnNlbGZfaW50ZXJzZWN0aW9ucyJ9Cg=="
     },
     "d7cd6262987b89a7fc77b7485e5febe82011e3a1a153d5ce41260295fc9a203d": {
       "encoding": "base64",
@@ -6329,6 +7083,11 @@
       "byte_size": 51,
       "content": "MSAxIDUKMC41IDAuMjUgLTEKMSAxIDEKMyAzIDMKMiAxIDEKLTEgLTEgLTEKMCAwIDAK"
     },
+    "e3f31f6a62d446af4bc3a38bfb928b965863e67842aedd22c7b35beb954df7ef": {
+      "encoding": "base64",
+      "byte_size": 728,
+      "content": "eyJsZW5ndGhfdW5pdCI6Im1tIiwib3BlcmF0aW9uIjoibWVzaC5mZWF0dXJlcy5kZXRlY3QiLCJwYXJhbWV0ZXJzIjp7ImFuZ2xlX2RlZ3JlZXMiOjMwLjB9LCJyZXBvcnRfa2luZCI6Im1lc2hfZmVhdHVyZXMiLCJyZXBvcnRfdHlwZSI6Ikdlb21ldHJ5UXVlcnlSZXBvcnQiLCJyZXN1bHRzIjp7InNlZ21lbnRhdGlvbiI6eyJwYXRjaF9jb3VudCI6NiwicGF0Y2hfaWRzIjpbMSwxLDIsMiwzLDMsNCw0LDUsNSw2LDZdLCJzaGFycF9lZGdlcyI6W1swLDFdLFswLDJdLFswLDRdLFsxLDNdLFsxLDVdLFsyLDNdLFsyLDZdLFszLDddLFs0LDVdLFs0LDZdLFs1LDddLFs2LDddXSwidmVydGV4X2luY2lkZW50X3BhdGNoZXMiOltbMSwzLDVdLFsxLDMsNl0sWzEsNCw1XSxbMSw0LDZdLFsyLDMsNV0sWzIsMyw2XSxbMiw0LDVdLFsyLDQsNl1dfSwic2hhcnBfZWRnZXMiOltbMCwxXSxbMCwyXSxbMCw0XSxbMSwzXSxbMSw1XSxbMiwzXSxbMiw2XSxbMyw3XSxbNCw1XSxbNCw2XSxbNSw3XSxbNiw3XV0sInZlcnRleF9mZWF0dXJlX2RlZ3JlZSI6WzMsMywzLDMsMywzLDMsM119LCJzY2hlbWFfdmVyc2lvbiI6MSwic291cmNlIjp7Im1lc2hfc2hhMjU2IjoiN2UwNTNkYTM2NGJjMTk1Y2I3ZDhmMDU1MGRjMTEzODEwYjcwODkyMDI3YjJjZjRlMTk5YzEyODE3MWZkYTcxNyJ9LCJzdW1tYXJ5Ijp7ImZhY2VfY291bnQiOjEyLCJwYXRjaF9jb3VudCI6Niwic2hhcnBfZWRnZV9jb3VudCI6MTJ9fQo="
+    },
     "e46fd0926a98c76a42ffa7d4ff9bcd0f837cede5e9c25e7c8d5021a756030bb3": {
       "encoding": "base64",
       "byte_size": 495,
@@ -6343,6 +7102,11 @@
       "encoding": "base64",
       "byte_size": 488,
       "content": "eyJjYW5kaWRhdGVfc2hhMjU2IjoiNDBjYTZkZmU1MDc3MzkzMjYwMDRlMTc3NTcwNmRkODhkMTY4OTk3YWUxMGNhMDE0OWY2YzlhZjg5OWY3Yjc3NiIsImNoZWNrcyI6eyJhbmFseXNpc19raW5kX21hdGNoZXMiOnRydWUsImRpbWVuc2lvbl91bml0c192YWxpZCI6dHJ1ZSwib2ZmaWNpYWxfY2dhbF9yZWZlcmVuY2VfbWF0Y2giOnRydWUsInByb2R1Y2VyX2RpYWdub3N0aWNfbWF0Y2hlcyI6dHJ1ZSwicmVzdWx0X3NlbWFudGljc192YWxpZCI6dHJ1ZSwic2NoZW1hX3ZhbGlkIjp0cnVlLCJzb3VyY2VfaWRlbnRpdHlfbWF0Y2hlcyI6dHJ1ZX0sInBhc3NlZCI6dHJ1ZSwic2NoZW1hX3ZlcnNpb24iOjEsInNvdXJjZV9zaGEyNTYiOiI3MjdiZWRkNWQxMzcxMmU3NTA2ZTE1YWViMWVhMzViNWRhNjYwYmYyMTQzYmYyOGU4ZjI1N2IwYWE3ZWIyMTY0Iiwic3RhdHVzIjoicGFzcyIsInZhbGlkYXRvcl9pZCI6Im1lc2gudmFsaWRhdGUubm9ybWFsc19yZXBvcnQifQo="
+    },
+    "eb409d9a84c641acdf766e8731fb0dd9c49c8b42b601947068acb643ca5f9951": {
+      "encoding": "base64",
+      "byte_size": 397,
+      "content": "eyJsZW5ndGhfdW5pdCI6Im1tIiwib3BlcmF0aW9uIjoibWVzaC5pbnRlcnNlY3Rpb25zLnNlbGYiLCJwYXJhbWV0ZXJzIjp7fSwicmVwb3J0X2tpbmQiOiJzZWxmX2ludGVyc2VjdGlvbnMiLCJyZXBvcnRfdHlwZSI6Ikdlb21ldHJ5UXVlcnlSZXBvcnQiLCJyZXN1bHRzIjp7ImRvZXNfc2VsZl9pbnRlcnNlY3QiOnRydWUsImludGVyc2VjdGluZ19mYWNlX3BhaXJzIjpbWzIsNF0sWzIsNV0sWzIsN11dfSwic2NoZW1hX3ZlcnNpb24iOjEsInNvdXJjZSI6eyJtZXNoX3NoYTI1NiI6IjA4OGMwZmI3OGU1YzU1OWRmYTgwOWM4OTljYjBiNGE1MWJlNjAzNGZlMWJmZTNjZDM4MGU2NTI5NjMyMDMyODcifSwic3VtbWFyeSI6eyJmYWNlX2NvdW50Ijo4LCJpbnRlcnNlY3RpbmdfcGFpcl9jb3VudCI6M319Cg=="
     },
     "ee93f7f82c9d23495b464ac2e26d99b7a476df371b85dde528c3d71b8c20286e": {
       "encoding": "base64",
@@ -6374,6 +7138,11 @@
       "byte_size": 3542,
       "content": "eyJhbmFseXNpc19raW5kIjoibm9ybWFscyIsIm1lc2hfc3VtbWFyeSI6eyJjbG9zZWQiOnRydWUsImVkZ2VfY291bnQiOjYsImZhY2VfY291bnQiOjQsImZpbml0ZV9jb29yZGluYXRlcyI6dHJ1ZSwiaW5kaWNlc192YWxpZCI6dHJ1ZSwicmF3X2ZhY2VfY291bnQiOjQsInJhd192ZXJ0ZXhfY291bnQiOjQsInN1cmZhY2VfbWVzaF9jb25zdHJ1Y3RpYmxlIjp0cnVlLCJ0cmlhbmd1bGF0ZWQiOnRydWUsInZlcnRleF9jb3VudCI6NH0sInJlc3VsdHMiOnsiY29ybmVyX25vcm1hbF9tb2RlIjoiZmxhdF9mYWNlX25vcm1hbCIsImNvcm5lcl9ub3JtYWxzIjpbeyJjb3JuZXIiOjAsImZhY2UiOjAsIm1vZGUiOiJmbGF0X2ZhY2Vfbm9ybWFsIiwibm9ybWFsIjp7ImlzX3VuaXQiOnRydWUsInVuaXQiOiJub25lIiwidmFsdWUiOlswLjAsMC4wLC0xLjBdLCJ6ZXJvIjpmYWxzZX0sInZlcnRleCI6MH0seyJjb3JuZXIiOjEsImZhY2UiOjAsIm1vZGUiOiJmbGF0X2ZhY2Vfbm9ybWFsIiwibm9ybWFsIjp7ImlzX3VuaXQiOnRydWUsInVuaXQiOiJub25lIiwidmFsdWUiOlswLjAsMC4wLC0xLjBdLCJ6ZXJvIjpmYWxzZX0sInZlcnRleCI6Mn0seyJjb3JuZXIiOjIsImZhY2UiOjAsIm1vZGUiOiJmbGF0X2ZhY2Vfbm9ybWFsIiwibm9ybWFsIjp7ImlzX3VuaXQiOnRydWUsInVuaXQiOiJub25lIiwidmFsdWUiOlswLjAsMC4wLC0xLjBdLCJ6ZXJvIjpmYWxzZX0sInZlcnRleCI6MX0seyJjb3JuZXIiOjAsImZhY2UiOjEsIm1vZGUiOiJmbGF0X2ZhY2Vfbm9ybWFsIiwibm9ybWFsIjp7ImlzX3VuaXQiOnRydWUsInVuaXQiOiJub25lIiwidmFsdWUiOlswLjAsLTEuMCwwLjBdLCJ6ZXJvIjpmYWxzZX0sInZlcnRleCI6MH0seyJjb3JuZXIiOjEsImZhY2UiOjEsIm1vZGUiOiJmbGF0X2ZhY2Vfbm9ybWFsIiwibm9ybWFsIjp7ImlzX3VuaXQiOnRydWUsInVuaXQiOiJub25lIiwidmFsdWUiOlswLjAsLTEuMCwwLjBdLCJ6ZXJvIjpmYWxzZX0sInZlcnRleCI6MX0seyJjb3JuZXIiOjIsImZhY2UiOjEsIm1vZGUiOiJmbGF0X2ZhY2Vfbm9ybWFsIiwibm9ybWFsIjp7ImlzX3VuaXQiOnRydWUsInVuaXQiOiJub25lIiwidmFsdWUiOlswLjAsLTEuMCwwLjBdLCJ6ZXJvIjpmYWxzZX0sInZlcnRleCI6M30seyJjb3JuZXIiOjAsImZhY2UiOjIsIm1vZGUiOiJmbGF0X2ZhY2Vfbm9ybWFsIiwibm9ybWFsIjp7ImlzX3VuaXQiOnRydWUsInVuaXQiOiJub25lIiwidmFsdWUiOlswLjU3NzM1MDI2OTE4OTYyNTcsMC41NzczNTAyNjkxODk2MjU3LDAuNTc3MzUwMjY5MTg5NjI1N10sInplcm8iOmZhbHNlfSwidmVydGV4IjoxfSx7ImNvcm5lciI6MSwiZmFjZSI6MiwibW9kZSI6ImZsYXRfZmFjZV9ub3JtYWwiLCJub3JtYWwiOnsiaXNfdW5pdCI6dHJ1ZSwidW5pdCI6Im5vbmUiLCJ2YWx1ZSI6WzAuNTc3MzUwMjY5MTg5NjI1NywwLjU3NzM1MDI2OTE4OTYyNTcsMC41NzczNTAyNjkxODk2MjU3XSwiemVybyI6ZmFsc2V9LCJ2ZXJ0ZXgiOjJ9LHsiY29ybmVyIjoyLCJmYWNlIjoyLCJtb2RlIjoiZmxhdF9mYWNlX25vcm1hbCIsIm5vcm1hbCI6eyJpc191bml0Ijp0cnVlLCJ1bml0Ijoibm9uZSIsInZhbHVlIjpbMC41NzczNTAyNjkxODk2MjU3LDAuNTc3MzUwMjY5MTg5NjI1NywwLjU3NzM1MDI2OTE4OTYyNTddLCJ6ZXJvIjpmYWxzZX0sInZlcnRleCI6M30seyJjb3JuZXIiOjAsImZhY2UiOjMsIm1vZGUiOiJmbGF0X2ZhY2Vfbm9ybWFsIiwibm9ybWFsIjp7ImlzX3VuaXQiOnRydWUsInVuaXQiOiJub25lIiwidmFsdWUiOlstMS4wLDAuMCwwLjBdLCJ6ZXJvIjpmYWxzZX0sInZlcnRleCI6Mn0seyJjb3JuZXIiOjEsImZhY2UiOjMsIm1vZGUiOiJmbGF0X2ZhY2Vfbm9ybWFsIiwibm9ybWFsIjp7ImlzX3VuaXQiOnRydWUsInVuaXQiOiJub25lIiwidmFsdWUiOlstMS4wLDAuMCwwLjBdLCJ6ZXJvIjpmYWxzZX0sInZlcnRleCI6MH0seyJjb3JuZXIiOjIsImZhY2UiOjMsIm1vZGUiOiJmbGF0X2ZhY2Vfbm9ybWFsIiwibm9ybWFsIjp7ImlzX3VuaXQiOnRydWUsInVuaXQiOiJub25lIiwidmFsdWUiOlstMS4wLDAuMCwwLjBdLCJ6ZXJvIjpmYWxzZX0sInZlcnRleCI6M31dLCJjb3VudF91bml0IjoiY291bnQiLCJkZWdlbmVyYXRlX2ZhY2VfY291bnQiOjAsImZhY2Vfbm9ybWFscyI6W3siZmFjZSI6MCwibm9ybWFsIjp7ImlzX3VuaXQiOnRydWUsInVuaXQiOiJub25lIiwidmFsdWUiOlswLjAsMC4wLC0xLjBdLCJ6ZXJvIjpmYWxzZX19LHsiZmFjZSI6MSwibm9ybWFsIjp7ImlzX3VuaXQiOnRydWUsInVuaXQiOiJub25lIiwidmFsdWUiOlswLjAsLTEuMCwwLjBdLCJ6ZXJvIjpmYWxzZX19LHsiZmFjZSI6Miwibm9ybWFsIjp7ImlzX3VuaXQiOnRydWUsInVuaXQiOiJub25lIiwidmFsdWUiOlswLjU3NzM1MDI2OTE4OTYyNTcsMC41NzczNTAyNjkxODk2MjU3LDAuNTc3MzUwMjY5MTg5NjI1N10sInplcm8iOmZhbHNlfX0seyJmYWNlIjozLCJub3JtYWwiOnsiaXNfdW5pdCI6dHJ1ZSwidW5pdCI6Im5vbmUiLCJ2YWx1ZSI6Wy0xLjAsMC4wLDAuMF0sInplcm8iOmZhbHNlfX1dLCJ2ZXJ0ZXhfbm9ybWFscyI6W3sibm9ybWFsIjp7ImlzX3VuaXQiOnRydWUsInVuaXQiOiJub25lIiwidmFsdWUiOlstMC41NzczNTAyNjkxODk2MjU3LC0wLjU3NzM1MDI2OTE4OTYyNTcsLTAuNTc3MzUwMjY5MTg5NjI1N10sInplcm8iOmZhbHNlfSwidmVydGV4IjowfSx7Im5vcm1hbCI6eyJpc191bml0Ijp0cnVlLCJ1bml0Ijoibm9uZSIsInZhbHVlIjpbMC45MzUxMTMxMjY1MzEwMjk0LC0wLjI1MDU2MjgwNzA4NTczMTYsLTAuMjUwNTYyODA3MDg1NzMxNTNdLCJ6ZXJvIjpmYWxzZX0sInZlcnRleCI6MX0seyJub3JtYWwiOnsiaXNfdW5pdCI6dHJ1ZSwidW5pdCI6Im5vbmUiLCJ2YWx1ZSI6Wy0wLjI1MDU2MjgwNzA4NTczMTMsMC45MzUxMTMxMjY1MzEwMjk1LC0wLjI1MDU2MjgwNzA4NTczMTZdLCJ6ZXJvIjpmYWxzZX0sInZlcnRleCI6Mn0seyJub3JtYWwiOnsiaXNfdW5pdCI6dHJ1ZSwidW5pdCI6Im5vbmUiLCJ2YWx1ZSI6Wy0wLjI1MDU2MjgwNzA4NTczMTUzLC0wLjI1MDU2MjgwNzA4NTczMTYsMC45MzUxMTMxMjY1MzEwMjk0XSwiemVybyI6ZmFsc2V9LCJ2ZXJ0ZXgiOjN9XSwiemVyb19mYWNlX25vcm1hbF9jb3VudCI6MCwiemVyb192ZXJ0ZXhfbm9ybWFsX2NvdW50IjowfSwic2NoZW1hX3ZlcnNpb24iOjEsInNvdXJjZSI6eyJhcnRpZmFjdF9pZCI6ImlucHV0LTAiLCJmb3JtYXQiOiJvZmYiLCJzaGEyNTYiOiI5NzEzZjkyYjI5NWY4YzQ3NjlkMmNiOGExZWE3OTNmZmZmMDQ0ZTA2ODliMWE3NjA1NTZkYWNhNDk3ZmY4YzcwIiwidHlwZSI6IlRyaWFuZ2xlU3VyZmFjZU1lc2giLCJ1bml0IjoibW0ifSwidmFsaWRhdGlvbiI6eyJhdXRob3JpdGF0aXZlIjpmYWxzZSwiY2hlY2tzIjpbImZhY2Vfbm9ybWFsX2NvdW50IiwidmVydGV4X25vcm1hbF9jb3VudCIsImNvcm5lcl9ub3JtYWxfY291bnQiLCJmaW5pdGVfdmVjdG9ycyIsInplcm9fbm9ybWFsc19leHBsaWNpdCJdLCJwYXNzZWQiOnRydWUsInZhbGlkYXRvcl9pZCI6Im1lc2gucHJvZHVjZXJfY2hlY2subm9ybWFscyJ9fQo="
     },
+    "fb1fb0121c2f3242a1e033a9eb901216051bd3e32273ca58829e418d37e2c92d": {
+      "encoding": "base64",
+      "byte_size": 678,
+      "content": "eyJsZW5ndGhfdW5pdCI6ICJtbSIsICJvcGVyYXRpb24iOiAibWVzaC5mZWF0dXJlcy5kZXRlY3QiLCAicGFyYW1ldGVycyI6IHsiYW5nbGVfZGVncmVlcyI6IDMwLjB9LCAicmVwb3J0X2tpbmQiOiAibWVzaF9mZWF0dXJlcyIsICJyZXBvcnRfdHlwZSI6ICJHZW9tZXRyeVF1ZXJ5UmVwb3J0IiwgInJlc3VsdHMiOiB7InNlZ21lbnRhdGlvbiI6IHsicGF0Y2hfY291bnQiOiAyLCAicGF0Y2hfaWRzIjogWzEsIDEsIDIsIDJdLCAic2hhcnBfZWRnZXMiOiBbWzAsIDFdLCBbMCwgM10sIFsxLCAyXSwgWzEsIDRdLCBbMiwgNV0sIFszLCA0XSwgWzQsIDVdXSwgInZlcnRleF9pbmNpZGVudF9wYXRjaGVzIjogW1sxXSwgWzEsIDJdLCBbMl0sIFsxXSwgWzEsIDJdLCBbMl1dfSwgInNoYXJwX2VkZ2VzIjogW1swLCAxXSwgWzAsIDNdLCBbMSwgMl0sIFsyLCA1XSwgWzMsIDRdLCBbNCwgNV1dLCAidmVydGV4X2ZlYXR1cmVfZGVncmVlIjogWzIsIDMsIDIsIDIsIDMsIDJdfSwgInNjaGVtYV92ZXJzaW9uIjogMSwgInNvdXJjZSI6IHsibWVzaF9zaGEyNTYiOiAiMzAxY2Q0MzgxMWUzMDY5OGIyMzVkYmZhZTU4MWY4MDhjM2YxZWE5YmU4ODFmMmM5OGRiN2I3MDU1YjcyNzg2NSJ9LCAic3VtbWFyeSI6IHsiZmFjZV9jb3VudCI6IDQsICJwYXRjaF9jb3VudCI6IDIsICJzaGFycF9lZGdlX2NvdW50IjogN319"
+    },
     "fcd3c9ebdb47c12b89443d40fc5c901b89a92d9b45db1532e0506e78c1492a22": {
       "encoding": "base64",
       "byte_size": 795,
@@ -6386,6 +7155,169 @@
     }
   },
   "reports": {
+    "bbd0930fd64c38df6dcaac558c0ad2af5881c22f63de85ca592c2f561d2046ab": {
+      "angle_degrees": 30.0,
+      "checks": {
+        "mesh_is_oriented_edge_manifold": true,
+        "parameters_match": true,
+        "patch_partition_exact": true,
+        "sharp_edges_exact": true,
+        "source_matches": true,
+        "vertex_feature_degree_exact": true,
+        "vertex_incident_patches_exact": true
+      },
+      "cosine_of_bound": 0.8660254037844387,
+      "face_count": 12,
+      "independence": "exact rational face normals; only the irrational cosine of the bound is floating point and ambiguous edges are rejected",
+      "passed": true,
+      "patch_count": 6,
+      "relative_margin": 1e-09,
+      "report_type": "ValidationReport",
+      "schema_version": 1,
+      "sharp_edge_count": 12,
+      "status": "pass",
+      "validator": "mesh.validate.features"
+    },
+    "00bc3ca29ab176b4768ab182648dffc927180771645206c1a873f2d7694a09e0": {
+      "angle_degrees": 100.0,
+      "checks": {
+        "mesh_is_oriented_edge_manifold": true,
+        "parameters_match": true,
+        "patch_partition_exact": true,
+        "sharp_edges_exact": true,
+        "source_matches": true,
+        "vertex_feature_degree_exact": true,
+        "vertex_incident_patches_exact": true
+      },
+      "cosine_of_bound": -0.1736481776669303,
+      "face_count": 12,
+      "independence": "exact rational face normals; only the irrational cosine of the bound is floating point and ambiguous edges are rejected",
+      "passed": true,
+      "patch_count": 1,
+      "relative_margin": 1e-09,
+      "report_type": "ValidationReport",
+      "schema_version": 1,
+      "sharp_edge_count": 0,
+      "status": "pass",
+      "validator": "mesh.validate.features"
+    },
+    "1a899f3db951ec9932fe36978e6d75f493a38645f6d941f5b2c84f8484661fef": {
+      "angle_degrees": 30.0,
+      "checks": {
+        "mesh_is_oriented_edge_manifold": true,
+        "parameters_match": true,
+        "patch_partition_exact": true,
+        "sharp_edges_exact": true,
+        "source_matches": true,
+        "vertex_feature_degree_exact": true,
+        "vertex_incident_patches_exact": true
+      },
+      "cosine_of_bound": 0.8660254037844387,
+      "face_count": 4,
+      "independence": "exact rational face normals; only the irrational cosine of the bound is floating point and ambiguous edges are rejected",
+      "passed": true,
+      "patch_count": 2,
+      "relative_margin": 1e-09,
+      "report_type": "ValidationReport",
+      "schema_version": 1,
+      "sharp_edge_count": 7,
+      "status": "pass",
+      "validator": "mesh.validate.features"
+    },
+    "8894853f0fe38eb8a87f213bb664cf9ab1c5d3207b88bf3916c30d7f1e8d9bd2": {
+      "angle_degrees": 60.0,
+      "checks": {
+        "mesh_is_oriented_edge_manifold": true,
+        "parameters_match": true,
+        "patch_partition_exact": true,
+        "sharp_edges_exact": true,
+        "source_matches": true,
+        "vertex_feature_degree_exact": true,
+        "vertex_incident_patches_exact": true
+      },
+      "cosine_of_bound": 0.5000000000000001,
+      "face_count": 4,
+      "independence": "exact rational face normals; only the irrational cosine of the bound is floating point and ambiguous edges are rejected",
+      "passed": true,
+      "patch_count": 1,
+      "relative_margin": 1e-09,
+      "report_type": "ValidationReport",
+      "schema_version": 1,
+      "sharp_edge_count": 6,
+      "status": "pass",
+      "validator": "mesh.validate.features"
+    },
+    "87dd7358973a3ce6638e1807be7210896ba2d6620ec4a53823f377df0c9abfad": {
+      "angle_degrees": 10.0,
+      "checks": {
+        "mesh_is_oriented_edge_manifold": true,
+        "parameters_match": true,
+        "patch_partition_exact": true,
+        "sharp_edges_exact": true,
+        "source_matches": true,
+        "vertex_feature_degree_exact": true,
+        "vertex_incident_patches_exact": true
+      },
+      "cosine_of_bound": 0.984807753012208,
+      "face_count": 2,
+      "independence": "exact rational face normals; only the irrational cosine of the bound is floating point and ambiguous edges are rejected",
+      "passed": true,
+      "patch_count": 1,
+      "relative_margin": 1e-09,
+      "report_type": "ValidationReport",
+      "schema_version": 1,
+      "sharp_edge_count": 4,
+      "status": "pass",
+      "validator": "mesh.validate.features"
+    },
+    "30769ad2e0a0039c69e7d95e15cef7529b634867df60081e9957dbcc4b9a50d0": {
+      "checks": {
+        "flag_consistent_exact": true,
+        "intersecting_pairs_exact": true,
+        "parameters_match": true,
+        "source_matches": true
+      },
+      "face_count": 4,
+      "independence": "exact rational triangle/triangle intersection polygon vertices and shared-simplex test; no CGAL header",
+      "intersecting_pair_count": 0,
+      "passed": true,
+      "report_type": "ValidationReport",
+      "schema_version": 1,
+      "status": "pass",
+      "validator": "mesh.validate.self_intersections"
+    },
+    "c07cf9898dd5a8b5188981c7360095bf5c461109ae1953b7678b2277b8108597": {
+      "checks": {
+        "flag_consistent_exact": true,
+        "intersecting_pairs_exact": true,
+        "parameters_match": true,
+        "source_matches": true
+      },
+      "face_count": 12,
+      "independence": "exact rational triangle/triangle intersection polygon vertices and shared-simplex test; no CGAL header",
+      "intersecting_pair_count": 0,
+      "passed": true,
+      "report_type": "ValidationReport",
+      "schema_version": 1,
+      "status": "pass",
+      "validator": "mesh.validate.self_intersections"
+    },
+    "5519b1fc54c631d5bfc25780af48ca004d48df921e1ae58934c78abee997d3b1": {
+      "checks": {
+        "flag_consistent_exact": true,
+        "intersecting_pairs_exact": true,
+        "parameters_match": true,
+        "source_matches": true
+      },
+      "face_count": 8,
+      "independence": "exact rational triangle/triangle intersection polygon vertices and shared-simplex test; no CGAL header",
+      "intersecting_pair_count": 3,
+      "passed": true,
+      "report_type": "ValidationReport",
+      "schema_version": 1,
+      "status": "pass",
+      "validator": "mesh.validate.self_intersections"
+    },
     "faacb076767e68ac99663329e2211844c90577fd28189a0147417162519d963e": {
       "candidate_sha256": "f0c6180a63c2085ff09af55f23f4abde0f2742edd8b8e644c6c2db0471511688",
       "checks": {
@@ -6647,10 +7579,1257 @@
   },
   "operation_results": [
     {
+      "case_id": "features-cube-30",
+      "operation_id": "mesh.features.detect",
+      "revision": 1,
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "test_id": "family-7.3-replay-cases",
+      "request": {
+        "inputs": [
+          {
+            "artifact_id": "input-0",
+            "blob_sha256": "7e053da364bc195cb7d8f0550dc113810b70892027b2cf4e199c128171fda717",
+            "format": "off",
+            "sha256": "7e053da364bc195cb7d8f0550dc113810b70892027b2cf4e199c128171fda717",
+            "type": "TriangleSurfaceMesh",
+            "unit": "mm"
+          }
+        ],
+        "kernel": "package_recommended",
+        "limits": {
+          "memory_mb": 2048,
+          "wall_time_ms": 120000
+        },
+        "operation": "mesh.features.detect",
+        "parameters": {
+          "angle_degrees": 30
+        },
+        "protocol": 1,
+        "request_id": "features-cube-30"
+      },
+      "request_sha256": "826dfebc2e783c3076c51591e1931247dfa3dcf7e76fa089c906fac9e057c12b",
+      "response": {
+        "metrics": {
+          "algorithm": "CGAL::Polygon_mesh_processing::sharp_edges_segmentation",
+          "face_count": 12,
+          "patch_count": 6,
+          "sharp_edge_count": 12
+        },
+        "outputs": [
+          {
+            "blob_sha256": "e3f31f6a62d446af4bc3a38bfb928b965863e67842aedd22c7b35beb954df7ef",
+            "format": "json",
+            "slot": "analysis",
+            "type": "GeometryQueryReport",
+            "unit": "none"
+          }
+        ],
+        "protocol": 1,
+        "request_id": "features-cube-30",
+        "status": "ok"
+      },
+      "response_sha256": "3cc771fff3fa1a6985955230c6f03b3ce18c4ce05c97a1b75a3c19f2ea307982",
+      "input_hashes": [
+        "7e053da364bc195cb7d8f0550dc113810b70892027b2cf4e199c128171fda717"
+      ],
+      "output_hashes": [
+        "e3f31f6a62d446af4bc3a38bfb928b965863e67842aedd22c7b35beb954df7ef"
+      ],
+      "validators": [
+        {
+          "operation_id": "mesh.validate.features",
+          "revision": 1,
+          "request": {
+            "inputs": [
+              {
+                "artifact_id": "features-cube-30-analysis-0",
+                "blob_sha256": "e3f31f6a62d446af4bc3a38bfb928b965863e67842aedd22c7b35beb954df7ef",
+                "format": "json",
+                "sha256": "e3f31f6a62d446af4bc3a38bfb928b965863e67842aedd22c7b35beb954df7ef",
+                "type": "GeometryQueryReport",
+                "unit": "none"
+              },
+              {
+                "artifact_id": "input-0",
+                "blob_sha256": "7e053da364bc195cb7d8f0550dc113810b70892027b2cf4e199c128171fda717",
+                "format": "off",
+                "sha256": "7e053da364bc195cb7d8f0550dc113810b70892027b2cf4e199c128171fda717",
+                "type": "TriangleSurfaceMesh",
+                "unit": "mm"
+              }
+            ],
+            "kernel": "package_recommended",
+            "limits": {
+              "memory_mb": 2048,
+              "wall_time_ms": 120000
+            },
+            "operation": "mesh.validate.features",
+            "parameters": {
+              "angle_degrees": 30
+            },
+            "protocol": 1,
+            "request_id": "features-cube-30--mesh.validate.features"
+          },
+          "request_sha256": "f13b29af5469bac42beca66c47886dc753ec915ceb4d469214139e6ec8150372",
+          "response": {
+            "metrics": {
+              "angle_degrees": 30.0,
+              "checks": {
+                "mesh_is_oriented_edge_manifold": true,
+                "parameters_match": true,
+                "patch_partition_exact": true,
+                "sharp_edges_exact": true,
+                "source_matches": true,
+                "vertex_feature_degree_exact": true,
+                "vertex_incident_patches_exact": true
+              },
+              "cosine_of_bound": 0.8660254037844387,
+              "face_count": 12,
+              "independence": "exact rational face normals; only the irrational cosine of the bound is floating point and ambiguous edges are rejected",
+              "passed": true,
+              "patch_count": 6,
+              "relative_margin": 1e-09,
+              "report_type": "ValidationReport",
+              "schema_version": 1,
+              "sharp_edge_count": 12,
+              "status": "pass",
+              "validator": "mesh.validate.features"
+            },
+            "outputs": [
+              {
+                "blob_sha256": "65cbe4be41145a5232abcaa5302035a86d7aea30dc4541361de3dca6ed3129b3",
+                "format": "json",
+                "slot": "validation",
+                "type": "ValidationReport",
+                "unit": "none"
+              }
+            ],
+            "protocol": 1,
+            "request_id": "features-cube-30--mesh.validate.features",
+            "status": "ok"
+          },
+          "response_sha256": "36e573d58f75946778d2adfc3010db88049efb44bb3ad6787cf708f8e5d48fab",
+          "input_hashes": [
+            "e3f31f6a62d446af4bc3a38bfb928b965863e67842aedd22c7b35beb954df7ef",
+            "7e053da364bc195cb7d8f0550dc113810b70892027b2cf4e199c128171fda717"
+          ],
+          "output_hashes": [
+            "65cbe4be41145a5232abcaa5302035a86d7aea30dc4541361de3dca6ed3129b3"
+          ],
+          "report_blob_sha256": "65cbe4be41145a5232abcaa5302035a86d7aea30dc4541361de3dca6ed3129b3",
+          "report_sha256": "bbd0930fd64c38df6dcaac558c0ad2af5881c22f63de85ca592c2f561d2046ab",
+          "status": "pass"
+        }
+      ],
+      "validation": {
+        "status": "pass",
+        "checks": {
+          "transform_executed": {
+            "pass": true
+          },
+          "behaviour_assertions": {
+            "pass": true,
+            "count": 7
+          },
+          "validator:mesh.validate.features": {
+            "pass": true,
+            "report_sha256": "bbd0930fd64c38df6dcaac558c0ad2af5881c22f63de85ca592c2f561d2046ab"
+          }
+        }
+      }
+    },
+    {
+      "case_id": "features-cube-100",
+      "operation_id": "mesh.features.detect",
+      "revision": 1,
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "test_id": "family-7.3-replay-cases",
+      "request": {
+        "inputs": [
+          {
+            "artifact_id": "input-0",
+            "blob_sha256": "7e053da364bc195cb7d8f0550dc113810b70892027b2cf4e199c128171fda717",
+            "format": "off",
+            "sha256": "7e053da364bc195cb7d8f0550dc113810b70892027b2cf4e199c128171fda717",
+            "type": "TriangleSurfaceMesh",
+            "unit": "mm"
+          }
+        ],
+        "kernel": "package_recommended",
+        "limits": {
+          "memory_mb": 2048,
+          "wall_time_ms": 120000
+        },
+        "operation": "mesh.features.detect",
+        "parameters": {
+          "angle_degrees": 100
+        },
+        "protocol": 1,
+        "request_id": "features-cube-100"
+      },
+      "request_sha256": "bead6445b4b7eae680b49e07521bf262d33e101a3596d6457c49ed68999372b1",
+      "response": {
+        "metrics": {
+          "algorithm": "CGAL::Polygon_mesh_processing::sharp_edges_segmentation",
+          "face_count": 12,
+          "patch_count": 1,
+          "sharp_edge_count": 0
+        },
+        "outputs": [
+          {
+            "blob_sha256": "92836e83c227ec1a537dbfbf9a1ffed160ae5993e2ef7464b6419597c55a1b2b",
+            "format": "json",
+            "slot": "analysis",
+            "type": "GeometryQueryReport",
+            "unit": "none"
+          }
+        ],
+        "protocol": 1,
+        "request_id": "features-cube-100",
+        "status": "ok"
+      },
+      "response_sha256": "94058e7e1ca01747425fbeca0f5d86d3a1dcf28ff4c134571d91e407f41f1b18",
+      "input_hashes": [
+        "7e053da364bc195cb7d8f0550dc113810b70892027b2cf4e199c128171fda717"
+      ],
+      "output_hashes": [
+        "92836e83c227ec1a537dbfbf9a1ffed160ae5993e2ef7464b6419597c55a1b2b"
+      ],
+      "validators": [
+        {
+          "operation_id": "mesh.validate.features",
+          "revision": 1,
+          "request": {
+            "inputs": [
+              {
+                "artifact_id": "features-cube-100-analysis-0",
+                "blob_sha256": "92836e83c227ec1a537dbfbf9a1ffed160ae5993e2ef7464b6419597c55a1b2b",
+                "format": "json",
+                "sha256": "92836e83c227ec1a537dbfbf9a1ffed160ae5993e2ef7464b6419597c55a1b2b",
+                "type": "GeometryQueryReport",
+                "unit": "none"
+              },
+              {
+                "artifact_id": "input-0",
+                "blob_sha256": "7e053da364bc195cb7d8f0550dc113810b70892027b2cf4e199c128171fda717",
+                "format": "off",
+                "sha256": "7e053da364bc195cb7d8f0550dc113810b70892027b2cf4e199c128171fda717",
+                "type": "TriangleSurfaceMesh",
+                "unit": "mm"
+              }
+            ],
+            "kernel": "package_recommended",
+            "limits": {
+              "memory_mb": 2048,
+              "wall_time_ms": 120000
+            },
+            "operation": "mesh.validate.features",
+            "parameters": {
+              "angle_degrees": 100
+            },
+            "protocol": 1,
+            "request_id": "features-cube-100--mesh.validate.features"
+          },
+          "request_sha256": "f9a1e24cc97c96a85a4d70b361a78d64296a084872a8b0218280f736411eff20",
+          "response": {
+            "metrics": {
+              "angle_degrees": 100.0,
+              "checks": {
+                "mesh_is_oriented_edge_manifold": true,
+                "parameters_match": true,
+                "patch_partition_exact": true,
+                "sharp_edges_exact": true,
+                "source_matches": true,
+                "vertex_feature_degree_exact": true,
+                "vertex_incident_patches_exact": true
+              },
+              "cosine_of_bound": -0.1736481776669303,
+              "face_count": 12,
+              "independence": "exact rational face normals; only the irrational cosine of the bound is floating point and ambiguous edges are rejected",
+              "passed": true,
+              "patch_count": 1,
+              "relative_margin": 1e-09,
+              "report_type": "ValidationReport",
+              "schema_version": 1,
+              "sharp_edge_count": 0,
+              "status": "pass",
+              "validator": "mesh.validate.features"
+            },
+            "outputs": [
+              {
+                "blob_sha256": "0fa2df7696348e9850f8d2cdb31bc91e5b6fb5f4b7511f86a028dd199595fe32",
+                "format": "json",
+                "slot": "validation",
+                "type": "ValidationReport",
+                "unit": "none"
+              }
+            ],
+            "protocol": 1,
+            "request_id": "features-cube-100--mesh.validate.features",
+            "status": "ok"
+          },
+          "response_sha256": "83a1e51186f2fa661bf136d734b9adf1821d2c0f84b0f6825caf0d0a2f013817",
+          "input_hashes": [
+            "92836e83c227ec1a537dbfbf9a1ffed160ae5993e2ef7464b6419597c55a1b2b",
+            "7e053da364bc195cb7d8f0550dc113810b70892027b2cf4e199c128171fda717"
+          ],
+          "output_hashes": [
+            "0fa2df7696348e9850f8d2cdb31bc91e5b6fb5f4b7511f86a028dd199595fe32"
+          ],
+          "report_blob_sha256": "0fa2df7696348e9850f8d2cdb31bc91e5b6fb5f4b7511f86a028dd199595fe32",
+          "report_sha256": "00bc3ca29ab176b4768ab182648dffc927180771645206c1a873f2d7694a09e0",
+          "status": "pass"
+        }
+      ],
+      "validation": {
+        "status": "pass",
+        "checks": {
+          "transform_executed": {
+            "pass": true
+          },
+          "behaviour_assertions": {
+            "pass": true,
+            "count": 5
+          },
+          "validator:mesh.validate.features": {
+            "pass": true,
+            "report_sha256": "00bc3ca29ab176b4768ab182648dffc927180771645206c1a873f2d7694a09e0"
+          }
+        }
+      }
+    },
+    {
+      "case_id": "features-bent-30",
+      "operation_id": "mesh.features.detect",
+      "revision": 1,
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "test_id": "family-7.3-replay-cases",
+      "request": {
+        "inputs": [
+          {
+            "artifact_id": "input-0",
+            "blob_sha256": "301cd43811e30698b235dbfae581f808c3f1ea9be881f2c98db7b7055b727865",
+            "format": "off",
+            "sha256": "301cd43811e30698b235dbfae581f808c3f1ea9be881f2c98db7b7055b727865",
+            "type": "TriangleSurfaceMesh",
+            "unit": "mm"
+          }
+        ],
+        "kernel": "package_recommended",
+        "limits": {
+          "memory_mb": 2048,
+          "wall_time_ms": 120000
+        },
+        "operation": "mesh.features.detect",
+        "parameters": {
+          "angle_degrees": 30
+        },
+        "protocol": 1,
+        "request_id": "features-bent-30"
+      },
+      "request_sha256": "156bd7437a8ca65e4c5f49d9859824cb766c78e446b21db3ddf5e4d1103f1e33",
+      "response": {
+        "metrics": {
+          "algorithm": "CGAL::Polygon_mesh_processing::sharp_edges_segmentation",
+          "face_count": 4,
+          "patch_count": 2,
+          "sharp_edge_count": 7
+        },
+        "outputs": [
+          {
+            "blob_sha256": "74eff52848f67034f429cbedd8417224ed4bdbfb541d01a5571d6510ed28f683",
+            "format": "json",
+            "slot": "analysis",
+            "type": "GeometryQueryReport",
+            "unit": "none"
+          }
+        ],
+        "protocol": 1,
+        "request_id": "features-bent-30",
+        "status": "ok"
+      },
+      "response_sha256": "16df7a318a6302ffc0d9d56af88287778d301dc413a4f6356fa761aec41b26b3",
+      "input_hashes": [
+        "301cd43811e30698b235dbfae581f808c3f1ea9be881f2c98db7b7055b727865"
+      ],
+      "output_hashes": [
+        "74eff52848f67034f429cbedd8417224ed4bdbfb541d01a5571d6510ed28f683"
+      ],
+      "validators": [
+        {
+          "operation_id": "mesh.validate.features",
+          "revision": 1,
+          "request": {
+            "inputs": [
+              {
+                "artifact_id": "features-bent-30-analysis-0",
+                "blob_sha256": "74eff52848f67034f429cbedd8417224ed4bdbfb541d01a5571d6510ed28f683",
+                "format": "json",
+                "sha256": "74eff52848f67034f429cbedd8417224ed4bdbfb541d01a5571d6510ed28f683",
+                "type": "GeometryQueryReport",
+                "unit": "none"
+              },
+              {
+                "artifact_id": "input-0",
+                "blob_sha256": "301cd43811e30698b235dbfae581f808c3f1ea9be881f2c98db7b7055b727865",
+                "format": "off",
+                "sha256": "301cd43811e30698b235dbfae581f808c3f1ea9be881f2c98db7b7055b727865",
+                "type": "TriangleSurfaceMesh",
+                "unit": "mm"
+              }
+            ],
+            "kernel": "package_recommended",
+            "limits": {
+              "memory_mb": 2048,
+              "wall_time_ms": 120000
+            },
+            "operation": "mesh.validate.features",
+            "parameters": {
+              "angle_degrees": 30
+            },
+            "protocol": 1,
+            "request_id": "features-bent-30--mesh.validate.features"
+          },
+          "request_sha256": "f5e4ba07487e6fff2533cb4df32f44f8df1dbdeeb329ab2a48ddf734efb7ae1f",
+          "response": {
+            "metrics": {
+              "angle_degrees": 30.0,
+              "checks": {
+                "mesh_is_oriented_edge_manifold": true,
+                "parameters_match": true,
+                "patch_partition_exact": true,
+                "sharp_edges_exact": true,
+                "source_matches": true,
+                "vertex_feature_degree_exact": true,
+                "vertex_incident_patches_exact": true
+              },
+              "cosine_of_bound": 0.8660254037844387,
+              "face_count": 4,
+              "independence": "exact rational face normals; only the irrational cosine of the bound is floating point and ambiguous edges are rejected",
+              "passed": true,
+              "patch_count": 2,
+              "relative_margin": 1e-09,
+              "report_type": "ValidationReport",
+              "schema_version": 1,
+              "sharp_edge_count": 7,
+              "status": "pass",
+              "validator": "mesh.validate.features"
+            },
+            "outputs": [
+              {
+                "blob_sha256": "62fdf321b0f9bdb88cba65a5feba3294547d46f957d0ed5a3ebb3fd1df32bc50",
+                "format": "json",
+                "slot": "validation",
+                "type": "ValidationReport",
+                "unit": "none"
+              }
+            ],
+            "protocol": 1,
+            "request_id": "features-bent-30--mesh.validate.features",
+            "status": "ok"
+          },
+          "response_sha256": "67dbbc1f09d1f696f0c278e9440f3d9c6d518ef0721d6fa4f9fb39b85904bf8d",
+          "input_hashes": [
+            "74eff52848f67034f429cbedd8417224ed4bdbfb541d01a5571d6510ed28f683",
+            "301cd43811e30698b235dbfae581f808c3f1ea9be881f2c98db7b7055b727865"
+          ],
+          "output_hashes": [
+            "62fdf321b0f9bdb88cba65a5feba3294547d46f957d0ed5a3ebb3fd1df32bc50"
+          ],
+          "report_blob_sha256": "62fdf321b0f9bdb88cba65a5feba3294547d46f957d0ed5a3ebb3fd1df32bc50",
+          "report_sha256": "1a899f3db951ec9932fe36978e6d75f493a38645f6d941f5b2c84f8484661fef",
+          "status": "pass"
+        }
+      ],
+      "validation": {
+        "status": "pass",
+        "checks": {
+          "transform_executed": {
+            "pass": true
+          },
+          "behaviour_assertions": {
+            "pass": true,
+            "count": 4
+          },
+          "validator:mesh.validate.features": {
+            "pass": true,
+            "report_sha256": "1a899f3db951ec9932fe36978e6d75f493a38645f6d941f5b2c84f8484661fef"
+          }
+        }
+      }
+    },
+    {
+      "case_id": "features-bent-60",
+      "operation_id": "mesh.features.detect",
+      "revision": 1,
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "test_id": "family-7.3-replay-cases",
+      "request": {
+        "inputs": [
+          {
+            "artifact_id": "input-0",
+            "blob_sha256": "301cd43811e30698b235dbfae581f808c3f1ea9be881f2c98db7b7055b727865",
+            "format": "off",
+            "sha256": "301cd43811e30698b235dbfae581f808c3f1ea9be881f2c98db7b7055b727865",
+            "type": "TriangleSurfaceMesh",
+            "unit": "mm"
+          }
+        ],
+        "kernel": "package_recommended",
+        "limits": {
+          "memory_mb": 2048,
+          "wall_time_ms": 120000
+        },
+        "operation": "mesh.features.detect",
+        "parameters": {
+          "angle_degrees": 60
+        },
+        "protocol": 1,
+        "request_id": "features-bent-60"
+      },
+      "request_sha256": "6f80984e09b3fb10eb26a4e3bd6c821ad332768832ed19b169ce8bcbfa192126",
+      "response": {
+        "metrics": {
+          "algorithm": "CGAL::Polygon_mesh_processing::sharp_edges_segmentation",
+          "face_count": 4,
+          "patch_count": 1,
+          "sharp_edge_count": 6
+        },
+        "outputs": [
+          {
+            "blob_sha256": "9f0ab46547043c341593ef2635b62d9a4c82d3ac1e7561d9e506f718b2a59f2e",
+            "format": "json",
+            "slot": "analysis",
+            "type": "GeometryQueryReport",
+            "unit": "none"
+          }
+        ],
+        "protocol": 1,
+        "request_id": "features-bent-60",
+        "status": "ok"
+      },
+      "response_sha256": "5efb0c96d3f8e1c9b18485f7b5271d59c238744b6a23b410167aca4266e4e752",
+      "input_hashes": [
+        "301cd43811e30698b235dbfae581f808c3f1ea9be881f2c98db7b7055b727865"
+      ],
+      "output_hashes": [
+        "9f0ab46547043c341593ef2635b62d9a4c82d3ac1e7561d9e506f718b2a59f2e"
+      ],
+      "validators": [
+        {
+          "operation_id": "mesh.validate.features",
+          "revision": 1,
+          "request": {
+            "inputs": [
+              {
+                "artifact_id": "features-bent-60-analysis-0",
+                "blob_sha256": "9f0ab46547043c341593ef2635b62d9a4c82d3ac1e7561d9e506f718b2a59f2e",
+                "format": "json",
+                "sha256": "9f0ab46547043c341593ef2635b62d9a4c82d3ac1e7561d9e506f718b2a59f2e",
+                "type": "GeometryQueryReport",
+                "unit": "none"
+              },
+              {
+                "artifact_id": "input-0",
+                "blob_sha256": "301cd43811e30698b235dbfae581f808c3f1ea9be881f2c98db7b7055b727865",
+                "format": "off",
+                "sha256": "301cd43811e30698b235dbfae581f808c3f1ea9be881f2c98db7b7055b727865",
+                "type": "TriangleSurfaceMesh",
+                "unit": "mm"
+              }
+            ],
+            "kernel": "package_recommended",
+            "limits": {
+              "memory_mb": 2048,
+              "wall_time_ms": 120000
+            },
+            "operation": "mesh.validate.features",
+            "parameters": {
+              "angle_degrees": 60
+            },
+            "protocol": 1,
+            "request_id": "features-bent-60--mesh.validate.features"
+          },
+          "request_sha256": "312eb9c95d42b6fcc931e3dcf32a29b4f33ddbf5d91a26ad176b9d6018d16b80",
+          "response": {
+            "metrics": {
+              "angle_degrees": 60.0,
+              "checks": {
+                "mesh_is_oriented_edge_manifold": true,
+                "parameters_match": true,
+                "patch_partition_exact": true,
+                "sharp_edges_exact": true,
+                "source_matches": true,
+                "vertex_feature_degree_exact": true,
+                "vertex_incident_patches_exact": true
+              },
+              "cosine_of_bound": 0.5000000000000001,
+              "face_count": 4,
+              "independence": "exact rational face normals; only the irrational cosine of the bound is floating point and ambiguous edges are rejected",
+              "passed": true,
+              "patch_count": 1,
+              "relative_margin": 1e-09,
+              "report_type": "ValidationReport",
+              "schema_version": 1,
+              "sharp_edge_count": 6,
+              "status": "pass",
+              "validator": "mesh.validate.features"
+            },
+            "outputs": [
+              {
+                "blob_sha256": "3cb3ad54e0c941b344d82a6fbedb8d783459fd725840c81eeb2c945bf991a29f",
+                "format": "json",
+                "slot": "validation",
+                "type": "ValidationReport",
+                "unit": "none"
+              }
+            ],
+            "protocol": 1,
+            "request_id": "features-bent-60--mesh.validate.features",
+            "status": "ok"
+          },
+          "response_sha256": "378204345f4e9cbb2000f3df10e7e81924e346e7f1b10593299bc6fdc494bba6",
+          "input_hashes": [
+            "9f0ab46547043c341593ef2635b62d9a4c82d3ac1e7561d9e506f718b2a59f2e",
+            "301cd43811e30698b235dbfae581f808c3f1ea9be881f2c98db7b7055b727865"
+          ],
+          "output_hashes": [
+            "3cb3ad54e0c941b344d82a6fbedb8d783459fd725840c81eeb2c945bf991a29f"
+          ],
+          "report_blob_sha256": "3cb3ad54e0c941b344d82a6fbedb8d783459fd725840c81eeb2c945bf991a29f",
+          "report_sha256": "8894853f0fe38eb8a87f213bb664cf9ab1c5d3207b88bf3916c30d7f1e8d9bd2",
+          "status": "pass"
+        }
+      ],
+      "validation": {
+        "status": "pass",
+        "checks": {
+          "transform_executed": {
+            "pass": true
+          },
+          "behaviour_assertions": {
+            "pass": true,
+            "count": 4
+          },
+          "validator:mesh.validate.features": {
+            "pass": true,
+            "report_sha256": "8894853f0fe38eb8a87f213bb664cf9ab1c5d3207b88bf3916c30d7f1e8d9bd2"
+          }
+        }
+      }
+    },
+    {
+      "case_id": "features-open-square",
+      "operation_id": "mesh.features.detect",
+      "revision": 1,
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "test_id": "family-7.3-replay-cases",
+      "request": {
+        "inputs": [
+          {
+            "artifact_id": "input-0",
+            "blob_sha256": "688a3e7048000ecbebcd7dee98e53f07f9a4013aa76d56ddc5fe7f8dd74d82bc",
+            "format": "off",
+            "sha256": "688a3e7048000ecbebcd7dee98e53f07f9a4013aa76d56ddc5fe7f8dd74d82bc",
+            "type": "TriangleSurfaceMesh",
+            "unit": "mm"
+          }
+        ],
+        "kernel": "package_recommended",
+        "limits": {
+          "memory_mb": 2048,
+          "wall_time_ms": 120000
+        },
+        "operation": "mesh.features.detect",
+        "parameters": {
+          "angle_degrees": 10
+        },
+        "protocol": 1,
+        "request_id": "features-open-square"
+      },
+      "request_sha256": "1331de5c7cad47318f6ec0e5d46bf105b447c45f2fdc684b2d3d5663b9582d44",
+      "response": {
+        "metrics": {
+          "algorithm": "CGAL::Polygon_mesh_processing::sharp_edges_segmentation",
+          "face_count": 2,
+          "patch_count": 1,
+          "sharp_edge_count": 4
+        },
+        "outputs": [
+          {
+            "blob_sha256": "34e32863b007f0189c8614a0c0788fe38fa642305d766a1db96d0aaa1bd3d129",
+            "format": "json",
+            "slot": "analysis",
+            "type": "GeometryQueryReport",
+            "unit": "none"
+          }
+        ],
+        "protocol": 1,
+        "request_id": "features-open-square",
+        "status": "ok"
+      },
+      "response_sha256": "869a7f2f3cf80450e585bfb6126ae816ff401b0574a95e90f87e65146b197587",
+      "input_hashes": [
+        "688a3e7048000ecbebcd7dee98e53f07f9a4013aa76d56ddc5fe7f8dd74d82bc"
+      ],
+      "output_hashes": [
+        "34e32863b007f0189c8614a0c0788fe38fa642305d766a1db96d0aaa1bd3d129"
+      ],
+      "validators": [
+        {
+          "operation_id": "mesh.validate.features",
+          "revision": 1,
+          "request": {
+            "inputs": [
+              {
+                "artifact_id": "features-open-square-analysis-0",
+                "blob_sha256": "34e32863b007f0189c8614a0c0788fe38fa642305d766a1db96d0aaa1bd3d129",
+                "format": "json",
+                "sha256": "34e32863b007f0189c8614a0c0788fe38fa642305d766a1db96d0aaa1bd3d129",
+                "type": "GeometryQueryReport",
+                "unit": "none"
+              },
+              {
+                "artifact_id": "input-0",
+                "blob_sha256": "688a3e7048000ecbebcd7dee98e53f07f9a4013aa76d56ddc5fe7f8dd74d82bc",
+                "format": "off",
+                "sha256": "688a3e7048000ecbebcd7dee98e53f07f9a4013aa76d56ddc5fe7f8dd74d82bc",
+                "type": "TriangleSurfaceMesh",
+                "unit": "mm"
+              }
+            ],
+            "kernel": "package_recommended",
+            "limits": {
+              "memory_mb": 2048,
+              "wall_time_ms": 120000
+            },
+            "operation": "mesh.validate.features",
+            "parameters": {
+              "angle_degrees": 10
+            },
+            "protocol": 1,
+            "request_id": "features-open-square--mesh.validate.features"
+          },
+          "request_sha256": "dbb9347ec5b34cc14b4fb68910c9d5bf728d1721a2eff461c4a290d054b7249e",
+          "response": {
+            "metrics": {
+              "angle_degrees": 10.0,
+              "checks": {
+                "mesh_is_oriented_edge_manifold": true,
+                "parameters_match": true,
+                "patch_partition_exact": true,
+                "sharp_edges_exact": true,
+                "source_matches": true,
+                "vertex_feature_degree_exact": true,
+                "vertex_incident_patches_exact": true
+              },
+              "cosine_of_bound": 0.984807753012208,
+              "face_count": 2,
+              "independence": "exact rational face normals; only the irrational cosine of the bound is floating point and ambiguous edges are rejected",
+              "passed": true,
+              "patch_count": 1,
+              "relative_margin": 1e-09,
+              "report_type": "ValidationReport",
+              "schema_version": 1,
+              "sharp_edge_count": 4,
+              "status": "pass",
+              "validator": "mesh.validate.features"
+            },
+            "outputs": [
+              {
+                "blob_sha256": "12ad26ccf48bef217157d6d5cb9ad84637bf4c2086a87825d63478e3882c4e3e",
+                "format": "json",
+                "slot": "validation",
+                "type": "ValidationReport",
+                "unit": "none"
+              }
+            ],
+            "protocol": 1,
+            "request_id": "features-open-square--mesh.validate.features",
+            "status": "ok"
+          },
+          "response_sha256": "46bcd5f6fc1fdc4327ee39cd61c0a30e79fdb49c5e6b98f982a16a29b8e8a8e9",
+          "input_hashes": [
+            "34e32863b007f0189c8614a0c0788fe38fa642305d766a1db96d0aaa1bd3d129",
+            "688a3e7048000ecbebcd7dee98e53f07f9a4013aa76d56ddc5fe7f8dd74d82bc"
+          ],
+          "output_hashes": [
+            "12ad26ccf48bef217157d6d5cb9ad84637bf4c2086a87825d63478e3882c4e3e"
+          ],
+          "report_blob_sha256": "12ad26ccf48bef217157d6d5cb9ad84637bf4c2086a87825d63478e3882c4e3e",
+          "report_sha256": "87dd7358973a3ce6638e1807be7210896ba2d6620ec4a53823f377df0c9abfad",
+          "status": "pass"
+        }
+      ],
+      "validation": {
+        "status": "pass",
+        "checks": {
+          "transform_executed": {
+            "pass": true
+          },
+          "behaviour_assertions": {
+            "pass": true,
+            "count": 2
+          },
+          "validator:mesh.validate.features": {
+            "pass": true,
+            "report_sha256": "87dd7358973a3ce6638e1807be7210896ba2d6620ec4a53823f377df0c9abfad"
+          }
+        }
+      }
+    },
+    {
+      "case_id": "selfint-tetra-clean",
+      "operation_id": "mesh.intersections.self",
+      "revision": 1,
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "test_id": "family-7.3-replay-cases",
+      "request": {
+        "inputs": [
+          {
+            "artifact_id": "input-0",
+            "blob_sha256": "1b76c83fce531d9d5b2a33cd741fe18905d6bb08c9fd109de5c39621e61eabb5",
+            "format": "off",
+            "sha256": "1b76c83fce531d9d5b2a33cd741fe18905d6bb08c9fd109de5c39621e61eabb5",
+            "type": "TriangleSurfaceMesh",
+            "unit": "mm"
+          }
+        ],
+        "kernel": "package_recommended",
+        "limits": {
+          "memory_mb": 2048,
+          "wall_time_ms": 120000
+        },
+        "operation": "mesh.intersections.self",
+        "parameters": {},
+        "protocol": 1,
+        "request_id": "selfint-tetra-clean"
+      },
+      "request_sha256": "ed774d01a738cd11046cd3bc7fff02e68d63e7b5307d61cf26af447fab8c6275",
+      "response": {
+        "metrics": {
+          "algorithm": "CGAL::Polygon_mesh_processing::self_intersections",
+          "does_self_intersect": false,
+          "face_count": 4,
+          "intersecting_pair_count": 0
+        },
+        "outputs": [
+          {
+            "blob_sha256": "1c77b1b088f25dcbb84a62881c51aff49a0a8c7ac74115ddc25a56e217534ced",
+            "format": "json",
+            "slot": "analysis",
+            "type": "GeometryQueryReport",
+            "unit": "none"
+          }
+        ],
+        "protocol": 1,
+        "request_id": "selfint-tetra-clean",
+        "status": "ok"
+      },
+      "response_sha256": "3a91feff4aadac68ac2fe64802424017eb46860dbeaeac96b10216dbaf84f35a",
+      "input_hashes": [
+        "1b76c83fce531d9d5b2a33cd741fe18905d6bb08c9fd109de5c39621e61eabb5"
+      ],
+      "output_hashes": [
+        "1c77b1b088f25dcbb84a62881c51aff49a0a8c7ac74115ddc25a56e217534ced"
+      ],
+      "validators": [
+        {
+          "operation_id": "mesh.validate.self_intersections",
+          "revision": 1,
+          "request": {
+            "inputs": [
+              {
+                "artifact_id": "selfint-tetra-clean-analysis-0",
+                "blob_sha256": "1c77b1b088f25dcbb84a62881c51aff49a0a8c7ac74115ddc25a56e217534ced",
+                "format": "json",
+                "sha256": "1c77b1b088f25dcbb84a62881c51aff49a0a8c7ac74115ddc25a56e217534ced",
+                "type": "GeometryQueryReport",
+                "unit": "none"
+              },
+              {
+                "artifact_id": "input-0",
+                "blob_sha256": "1b76c83fce531d9d5b2a33cd741fe18905d6bb08c9fd109de5c39621e61eabb5",
+                "format": "off",
+                "sha256": "1b76c83fce531d9d5b2a33cd741fe18905d6bb08c9fd109de5c39621e61eabb5",
+                "type": "TriangleSurfaceMesh",
+                "unit": "mm"
+              }
+            ],
+            "kernel": "package_recommended",
+            "limits": {
+              "memory_mb": 2048,
+              "wall_time_ms": 120000
+            },
+            "operation": "mesh.validate.self_intersections",
+            "parameters": {},
+            "protocol": 1,
+            "request_id": "selfint-tetra-clean--mesh.validate.self_intersections"
+          },
+          "request_sha256": "b22daee9a73ccf61b5ed6f5f95ee8f42858a7ce736171f6b23246da46200de56",
+          "response": {
+            "metrics": {
+              "checks": {
+                "flag_consistent_exact": true,
+                "intersecting_pairs_exact": true,
+                "parameters_match": true,
+                "source_matches": true
+              },
+              "face_count": 4,
+              "independence": "exact rational triangle/triangle intersection polygon vertices and shared-simplex test; no CGAL header",
+              "intersecting_pair_count": 0,
+              "passed": true,
+              "report_type": "ValidationReport",
+              "schema_version": 1,
+              "status": "pass",
+              "validator": "mesh.validate.self_intersections"
+            },
+            "outputs": [
+              {
+                "blob_sha256": "ca437ea030e1ffad044eefe6273a0ab23e93111073f72527e3ed18555f3afd64",
+                "format": "json",
+                "slot": "validation",
+                "type": "ValidationReport",
+                "unit": "none"
+              }
+            ],
+            "protocol": 1,
+            "request_id": "selfint-tetra-clean--mesh.validate.self_intersections",
+            "status": "ok"
+          },
+          "response_sha256": "860c09c3d6ad2923aacdae1eebf8e58e344b491deacb9175ff02bf9872e7c415",
+          "input_hashes": [
+            "1c77b1b088f25dcbb84a62881c51aff49a0a8c7ac74115ddc25a56e217534ced",
+            "1b76c83fce531d9d5b2a33cd741fe18905d6bb08c9fd109de5c39621e61eabb5"
+          ],
+          "output_hashes": [
+            "ca437ea030e1ffad044eefe6273a0ab23e93111073f72527e3ed18555f3afd64"
+          ],
+          "report_blob_sha256": "ca437ea030e1ffad044eefe6273a0ab23e93111073f72527e3ed18555f3afd64",
+          "report_sha256": "30769ad2e0a0039c69e7d95e15cef7529b634867df60081e9957dbcc4b9a50d0",
+          "status": "pass"
+        }
+      ],
+      "validation": {
+        "status": "pass",
+        "checks": {
+          "transform_executed": {
+            "pass": true
+          },
+          "behaviour_assertions": {
+            "pass": true,
+            "count": 6
+          },
+          "validator:mesh.validate.self_intersections": {
+            "pass": true,
+            "report_sha256": "30769ad2e0a0039c69e7d95e15cef7529b634867df60081e9957dbcc4b9a50d0"
+          }
+        }
+      }
+    },
+    {
+      "case_id": "selfint-cube-clean",
+      "operation_id": "mesh.intersections.self",
+      "revision": 1,
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "test_id": "family-7.3-replay-cases",
+      "request": {
+        "inputs": [
+          {
+            "artifact_id": "input-0",
+            "blob_sha256": "7e053da364bc195cb7d8f0550dc113810b70892027b2cf4e199c128171fda717",
+            "format": "off",
+            "sha256": "7e053da364bc195cb7d8f0550dc113810b70892027b2cf4e199c128171fda717",
+            "type": "TriangleSurfaceMesh",
+            "unit": "mm"
+          }
+        ],
+        "kernel": "package_recommended",
+        "limits": {
+          "memory_mb": 2048,
+          "wall_time_ms": 120000
+        },
+        "operation": "mesh.intersections.self",
+        "parameters": {},
+        "protocol": 1,
+        "request_id": "selfint-cube-clean"
+      },
+      "request_sha256": "42df42751ad85b8dcd8d35ba3b5313a6a956dd64377c0a7bf45f4a826a8fe328",
+      "response": {
+        "metrics": {
+          "algorithm": "CGAL::Polygon_mesh_processing::self_intersections",
+          "does_self_intersect": false,
+          "face_count": 12,
+          "intersecting_pair_count": 0
+        },
+        "outputs": [
+          {
+            "blob_sha256": "bae8baf4d4dbb23078a214c0648e9efcbc480b9be6b096235f41e294def9c476",
+            "format": "json",
+            "slot": "analysis",
+            "type": "GeometryQueryReport",
+            "unit": "none"
+          }
+        ],
+        "protocol": 1,
+        "request_id": "selfint-cube-clean",
+        "status": "ok"
+      },
+      "response_sha256": "d3da7f0ae714faf9859b525e353e96354a864926b600150328b0e22e0d5a1b8e",
+      "input_hashes": [
+        "7e053da364bc195cb7d8f0550dc113810b70892027b2cf4e199c128171fda717"
+      ],
+      "output_hashes": [
+        "bae8baf4d4dbb23078a214c0648e9efcbc480b9be6b096235f41e294def9c476"
+      ],
+      "validators": [
+        {
+          "operation_id": "mesh.validate.self_intersections",
+          "revision": 1,
+          "request": {
+            "inputs": [
+              {
+                "artifact_id": "selfint-cube-clean-analysis-0",
+                "blob_sha256": "bae8baf4d4dbb23078a214c0648e9efcbc480b9be6b096235f41e294def9c476",
+                "format": "json",
+                "sha256": "bae8baf4d4dbb23078a214c0648e9efcbc480b9be6b096235f41e294def9c476",
+                "type": "GeometryQueryReport",
+                "unit": "none"
+              },
+              {
+                "artifact_id": "input-0",
+                "blob_sha256": "7e053da364bc195cb7d8f0550dc113810b70892027b2cf4e199c128171fda717",
+                "format": "off",
+                "sha256": "7e053da364bc195cb7d8f0550dc113810b70892027b2cf4e199c128171fda717",
+                "type": "TriangleSurfaceMesh",
+                "unit": "mm"
+              }
+            ],
+            "kernel": "package_recommended",
+            "limits": {
+              "memory_mb": 2048,
+              "wall_time_ms": 120000
+            },
+            "operation": "mesh.validate.self_intersections",
+            "parameters": {},
+            "protocol": 1,
+            "request_id": "selfint-cube-clean--mesh.validate.self_intersections"
+          },
+          "request_sha256": "d33a852308b28bf23e8e62b9eb4b695d8e795cec7e836e714efb8bda95a6b436",
+          "response": {
+            "metrics": {
+              "checks": {
+                "flag_consistent_exact": true,
+                "intersecting_pairs_exact": true,
+                "parameters_match": true,
+                "source_matches": true
+              },
+              "face_count": 12,
+              "independence": "exact rational triangle/triangle intersection polygon vertices and shared-simplex test; no CGAL header",
+              "intersecting_pair_count": 0,
+              "passed": true,
+              "report_type": "ValidationReport",
+              "schema_version": 1,
+              "status": "pass",
+              "validator": "mesh.validate.self_intersections"
+            },
+            "outputs": [
+              {
+                "blob_sha256": "56eb379283d00fe3dd40ad165276a34245dd50e7aa2e0a1bd87f548ba64461fc",
+                "format": "json",
+                "slot": "validation",
+                "type": "ValidationReport",
+                "unit": "none"
+              }
+            ],
+            "protocol": 1,
+            "request_id": "selfint-cube-clean--mesh.validate.self_intersections",
+            "status": "ok"
+          },
+          "response_sha256": "f5e236b30e60ff11b85bbabba41eed6124514e0788a95cd859a83983306def4e",
+          "input_hashes": [
+            "bae8baf4d4dbb23078a214c0648e9efcbc480b9be6b096235f41e294def9c476",
+            "7e053da364bc195cb7d8f0550dc113810b70892027b2cf4e199c128171fda717"
+          ],
+          "output_hashes": [
+            "56eb379283d00fe3dd40ad165276a34245dd50e7aa2e0a1bd87f548ba64461fc"
+          ],
+          "report_blob_sha256": "56eb379283d00fe3dd40ad165276a34245dd50e7aa2e0a1bd87f548ba64461fc",
+          "report_sha256": "c07cf9898dd5a8b5188981c7360095bf5c461109ae1953b7678b2277b8108597",
+          "status": "pass"
+        }
+      ],
+      "validation": {
+        "status": "pass",
+        "checks": {
+          "transform_executed": {
+            "pass": true
+          },
+          "behaviour_assertions": {
+            "pass": true,
+            "count": 3
+          },
+          "validator:mesh.validate.self_intersections": {
+            "pass": true,
+            "report_sha256": "c07cf9898dd5a8b5188981c7360095bf5c461109ae1953b7678b2277b8108597"
+          }
+        }
+      }
+    },
+    {
+      "case_id": "selfint-tetrahedra",
+      "operation_id": "mesh.intersections.self",
+      "revision": 1,
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "test_id": "family-7.3-replay-cases",
+      "request": {
+        "inputs": [
+          {
+            "artifact_id": "input-0",
+            "blob_sha256": "088c0fb78e5c559dfa809c899cb0b4a51be6034fe1bfe3cd380e652963203287",
+            "format": "off",
+            "sha256": "088c0fb78e5c559dfa809c899cb0b4a51be6034fe1bfe3cd380e652963203287",
+            "type": "TriangleSurfaceMesh",
+            "unit": "mm"
+          }
+        ],
+        "kernel": "package_recommended",
+        "limits": {
+          "memory_mb": 2048,
+          "wall_time_ms": 120000
+        },
+        "operation": "mesh.intersections.self",
+        "parameters": {},
+        "protocol": 1,
+        "request_id": "selfint-tetrahedra"
+      },
+      "request_sha256": "780a16dcb0501db9f480b056000befb57542f759608d06f6854d86713266e238",
+      "response": {
+        "metrics": {
+          "algorithm": "CGAL::Polygon_mesh_processing::self_intersections",
+          "does_self_intersect": true,
+          "face_count": 8,
+          "intersecting_pair_count": 3
+        },
+        "outputs": [
+          {
+            "blob_sha256": "eb409d9a84c641acdf766e8731fb0dd9c49c8b42b601947068acb643ca5f9951",
+            "format": "json",
+            "slot": "analysis",
+            "type": "GeometryQueryReport",
+            "unit": "none"
+          }
+        ],
+        "protocol": 1,
+        "request_id": "selfint-tetrahedra",
+        "status": "ok"
+      },
+      "response_sha256": "c6b30c4460f2315f593322db8b9b9c00cf751987332fde3d167b685ea5f531d9",
+      "input_hashes": [
+        "088c0fb78e5c559dfa809c899cb0b4a51be6034fe1bfe3cd380e652963203287"
+      ],
+      "output_hashes": [
+        "eb409d9a84c641acdf766e8731fb0dd9c49c8b42b601947068acb643ca5f9951"
+      ],
+      "validators": [
+        {
+          "operation_id": "mesh.validate.self_intersections",
+          "revision": 1,
+          "request": {
+            "inputs": [
+              {
+                "artifact_id": "selfint-tetrahedra-analysis-0",
+                "blob_sha256": "eb409d9a84c641acdf766e8731fb0dd9c49c8b42b601947068acb643ca5f9951",
+                "format": "json",
+                "sha256": "eb409d9a84c641acdf766e8731fb0dd9c49c8b42b601947068acb643ca5f9951",
+                "type": "GeometryQueryReport",
+                "unit": "none"
+              },
+              {
+                "artifact_id": "input-0",
+                "blob_sha256": "088c0fb78e5c559dfa809c899cb0b4a51be6034fe1bfe3cd380e652963203287",
+                "format": "off",
+                "sha256": "088c0fb78e5c559dfa809c899cb0b4a51be6034fe1bfe3cd380e652963203287",
+                "type": "TriangleSurfaceMesh",
+                "unit": "mm"
+              }
+            ],
+            "kernel": "package_recommended",
+            "limits": {
+              "memory_mb": 2048,
+              "wall_time_ms": 120000
+            },
+            "operation": "mesh.validate.self_intersections",
+            "parameters": {},
+            "protocol": 1,
+            "request_id": "selfint-tetrahedra--mesh.validate.self_intersections"
+          },
+          "request_sha256": "89eb887419266150405a88a047a873a78b4634ef1c37137bfe3899dbc3b69125",
+          "response": {
+            "metrics": {
+              "checks": {
+                "flag_consistent_exact": true,
+                "intersecting_pairs_exact": true,
+                "parameters_match": true,
+                "source_matches": true
+              },
+              "face_count": 8,
+              "independence": "exact rational triangle/triangle intersection polygon vertices and shared-simplex test; no CGAL header",
+              "intersecting_pair_count": 3,
+              "passed": true,
+              "report_type": "ValidationReport",
+              "schema_version": 1,
+              "status": "pass",
+              "validator": "mesh.validate.self_intersections"
+            },
+            "outputs": [
+              {
+                "blob_sha256": "32324bd57c064249c313c1725188514f1035b69ec1e37df79ed8741a42eb9d59",
+                "format": "json",
+                "slot": "validation",
+                "type": "ValidationReport",
+                "unit": "none"
+              }
+            ],
+            "protocol": 1,
+            "request_id": "selfint-tetrahedra--mesh.validate.self_intersections",
+            "status": "ok"
+          },
+          "response_sha256": "d1c0495252142bfd15726f204bd87ee6f8d2ab982b2f805a00d9a7eabd1305e7",
+          "input_hashes": [
+            "eb409d9a84c641acdf766e8731fb0dd9c49c8b42b601947068acb643ca5f9951",
+            "088c0fb78e5c559dfa809c899cb0b4a51be6034fe1bfe3cd380e652963203287"
+          ],
+          "output_hashes": [
+            "32324bd57c064249c313c1725188514f1035b69ec1e37df79ed8741a42eb9d59"
+          ],
+          "report_blob_sha256": "32324bd57c064249c313c1725188514f1035b69ec1e37df79ed8741a42eb9d59",
+          "report_sha256": "5519b1fc54c631d5bfc25780af48ca004d48df921e1ae58934c78abee997d3b1",
+          "status": "pass"
+        }
+      ],
+      "validation": {
+        "status": "pass",
+        "checks": {
+          "transform_executed": {
+            "pass": true
+          },
+          "behaviour_assertions": {
+            "pass": true,
+            "count": 4
+          },
+          "validator:mesh.validate.self_intersections": {
+            "pass": true,
+            "report_sha256": "5519b1fc54c631d5bfc25780af48ca004d48df921e1ae58934c78abee997d3b1"
+          }
+        }
+      }
+    },
+    {
       "case_id": "inspect-closed-tetra",
       "operation_id": "mesh.inspect.pmp",
       "revision": 1,
-      "worker_manifest_sha256": "bd6f52527218dda8bc87410743af0d9ef34ad2e47913073a5754fd48ac8e0f11",
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -6790,7 +8969,7 @@
       "case_id": "inspect-open-tetra",
       "operation_id": "mesh.inspect.pmp",
       "revision": 1,
-      "worker_manifest_sha256": "bd6f52527218dda8bc87410743af0d9ef34ad2e47913073a5754fd48ac8e0f11",
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -6930,7 +9109,7 @@
       "case_id": "inspect-quad-cube",
       "operation_id": "mesh.inspect.pmp",
       "revision": 1,
-      "worker_manifest_sha256": "bd6f52527218dda8bc87410743af0d9ef34ad2e47913073a5754fd48ac8e0f11",
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -7070,7 +9249,7 @@
       "case_id": "self-intersection-free-tetra",
       "operation_id": "mesh.analysis.self_intersections",
       "revision": 1,
-      "worker_manifest_sha256": "bd6f52527218dda8bc87410743af0d9ef34ad2e47913073a5754fd48ac8e0f11",
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -7209,7 +9388,7 @@
       "case_id": "self-intersecting-tetrahedra",
       "operation_id": "mesh.analysis.self_intersections",
       "revision": 1,
-      "worker_manifest_sha256": "bd6f52527218dda8bc87410743af0d9ef34ad2e47913073a5754fd48ac8e0f11",
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -7348,7 +9527,7 @@
       "case_id": "normals-tetra",
       "operation_id": "mesh.analysis.normals",
       "revision": 1,
-      "worker_manifest_sha256": "bd6f52527218dda8bc87410743af0d9ef34ad2e47913073a5754fd48ac8e0f11",
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -7491,7 +9670,7 @@
       "case_id": "normals-cube",
       "operation_id": "mesh.analysis.normals",
       "revision": 1,
-      "worker_manifest_sha256": "bd6f52527218dda8bc87410743af0d9ef34ad2e47913073a5754fd48ac8e0f11",
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -7634,7 +9813,7 @@
       "case_id": "normals-inward-cube",
       "operation_id": "mesh.analysis.normals",
       "revision": 1,
-      "worker_manifest_sha256": "bd6f52527218dda8bc87410743af0d9ef34ad2e47913073a5754fd48ac8e0f11",
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -7777,7 +9956,7 @@
       "case_id": "measures-tetra",
       "operation_id": "mesh.analysis.measures",
       "revision": 1,
-      "worker_manifest_sha256": "bd6f52527218dda8bc87410743af0d9ef34ad2e47913073a5754fd48ac8e0f11",
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -7917,7 +10096,7 @@
       "case_id": "measures-cube",
       "operation_id": "mesh.analysis.measures",
       "revision": 1,
-      "worker_manifest_sha256": "bd6f52527218dda8bc87410743af0d9ef34ad2e47913073a5754fd48ac8e0f11",
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -8057,7 +10236,7 @@
       "case_id": "components-label-three",
       "operation_id": "mesh.components.label",
       "revision": 1,
-      "worker_manifest_sha256": "bd6f52527218dda8bc87410743af0d9ef34ad2e47913073a5754fd48ac8e0f11",
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -8206,7 +10385,7 @@
       "case_id": "components-extract-second-tetra",
       "operation_id": "mesh.components.component",
       "revision": 1,
-      "worker_manifest_sha256": "bd6f52527218dda8bc87410743af0d9ef34ad2e47913073a5754fd48ac8e0f11",
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -8361,7 +10540,7 @@
       "case_id": "components-extract-lone-triangle",
       "operation_id": "mesh.components.component",
       "revision": 1,
-      "worker_manifest_sha256": "bd6f52527218dda8bc87410743af0d9ef34ad2e47913073a5754fd48ac8e0f11",
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -8516,7 +10695,7 @@
       "case_id": "components-keep-two-largest",
       "operation_id": "mesh.components.keep_largest",
       "revision": 1,
-      "worker_manifest_sha256": "bd6f52527218dda8bc87410743af0d9ef34ad2e47913073a5754fd48ac8e0f11",
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -8673,7 +10852,7 @@
       "case_id": "location-brute-force",
       "operation_id": "mesh.location.locate",
       "revision": 1,
-      "worker_manifest_sha256": "bd6f52527218dda8bc87410743af0d9ef34ad2e47913073a5754fd48ac8e0f11",
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -8847,7 +11026,7 @@
       "case_id": "location-aabb-tree",
       "operation_id": "mesh.location.locate",
       "revision": 1,
-      "worker_manifest_sha256": "bd6f52527218dda8bc87410743af0d9ef34ad2e47913073a5754fd48ac8e0f11",
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -9019,11 +11198,183 @@
     }
   ],
   "negative_control_proofs": {
+    "features-angle-out-of-range-rejected": {
+      "case_id": "features-angle-out-of-range-rejected",
+      "operation_id": "mesh.features.detect",
+      "revision": 1,
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "test_id": "family-7.3-replay-cases",
+      "request": {
+        "inputs": [
+          {
+            "artifact_id": "input-0",
+            "blob_sha256": "7e053da364bc195cb7d8f0550dc113810b70892027b2cf4e199c128171fda717",
+            "format": "off",
+            "sha256": "7e053da364bc195cb7d8f0550dc113810b70892027b2cf4e199c128171fda717",
+            "type": "TriangleSurfaceMesh",
+            "unit": "mm"
+          }
+        ],
+        "kernel": "package_recommended",
+        "limits": {
+          "memory_mb": 2048,
+          "wall_time_ms": 120000
+        },
+        "operation": "mesh.features.detect",
+        "parameters": {
+          "angle_degrees": 200
+        },
+        "protocol": 1,
+        "request_id": "features-angle-out-of-range-rejected"
+      },
+      "request_sha256": "66fd82fab728cb8c349c21b0d19f123655523f96b4b0296d6a173e8c51ae2605",
+      "response": {
+        "error": {
+          "class": "INVALID_REQUEST",
+          "code": "INVALID_PARAMETER",
+          "message": "angle_degrees must be in [0,180]",
+          "recoverable": false,
+          "suggested_operations": []
+        },
+        "metrics": {},
+        "outputs": [],
+        "protocol": 1,
+        "request_id": "features-angle-out-of-range-rejected",
+        "status": "error"
+      },
+      "response_sha256": "b2e2b5a81182ad5735eeed5bcc18d4be13c80d213f25091d6009e1200d5e4c97",
+      "input_hashes": [
+        "7e053da364bc195cb7d8f0550dc113810b70892027b2cf4e199c128171fda717"
+      ],
+      "output_hashes": [],
+      "expected_error_class": "INVALID_REQUEST",
+      "status": "expected_rejection"
+    },
+    "features-tampered-missing-sharp-edge-rejected": {
+      "case_id": "features-tampered-missing-sharp-edge-rejected",
+      "operation_id": "mesh.validate.features",
+      "revision": 1,
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "test_id": "family-7.3-replay-cases",
+      "request": {
+        "inputs": [
+          {
+            "artifact_id": "input-0",
+            "blob_sha256": "fb1fb0121c2f3242a1e033a9eb901216051bd3e32273ca58829e418d37e2c92d",
+            "format": "json",
+            "sha256": "fb1fb0121c2f3242a1e033a9eb901216051bd3e32273ca58829e418d37e2c92d",
+            "type": "GeometryQueryReport",
+            "unit": "none"
+          },
+          {
+            "artifact_id": "input-1",
+            "blob_sha256": "301cd43811e30698b235dbfae581f808c3f1ea9be881f2c98db7b7055b727865",
+            "format": "off",
+            "sha256": "301cd43811e30698b235dbfae581f808c3f1ea9be881f2c98db7b7055b727865",
+            "type": "TriangleSurfaceMesh",
+            "unit": "mm"
+          }
+        ],
+        "kernel": "package_recommended",
+        "limits": {
+          "memory_mb": 2048,
+          "wall_time_ms": 120000
+        },
+        "operation": "mesh.validate.features",
+        "parameters": {
+          "angle_degrees": 30
+        },
+        "protocol": 1,
+        "request_id": "features-tampered-missing-sharp-edge-rejected"
+      },
+      "request_sha256": "c4ade47a1a3302263b9685030d8b238cd93860ca946f5d59038e28107f26008e",
+      "response": {
+        "error": {
+          "class": "VALIDATION_FAILED",
+          "code": "SHARP_EDGES_MISMATCH",
+          "message": "Reported sharp edges differ from the exact dihedral decision",
+          "recoverable": false,
+          "suggested_operations": []
+        },
+        "metrics": {},
+        "outputs": [],
+        "protocol": 1,
+        "request_id": "features-tampered-missing-sharp-edge-rejected",
+        "status": "error"
+      },
+      "response_sha256": "fed413d1990bef56d861f01f3fed56873445fa3a02e30bc0c377c3924c660985",
+      "input_hashes": [
+        "fb1fb0121c2f3242a1e033a9eb901216051bd3e32273ca58829e418d37e2c92d",
+        "301cd43811e30698b235dbfae581f808c3f1ea9be881f2c98db7b7055b727865"
+      ],
+      "output_hashes": [],
+      "expected_error_class": "VALIDATION_FAILED",
+      "status": "expected_rejection"
+    },
+    "selfint-tampered-missing-pair-rejected": {
+      "case_id": "selfint-tampered-missing-pair-rejected",
+      "operation_id": "mesh.validate.self_intersections",
+      "revision": 1,
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "test_id": "family-7.3-replay-cases",
+      "request": {
+        "inputs": [
+          {
+            "artifact_id": "input-0",
+            "blob_sha256": "56cc4236c2d436d2431b0f176dd1672ac5a895ac6e328f385e5e8faf6f758438",
+            "format": "json",
+            "sha256": "56cc4236c2d436d2431b0f176dd1672ac5a895ac6e328f385e5e8faf6f758438",
+            "type": "GeometryQueryReport",
+            "unit": "none"
+          },
+          {
+            "artifact_id": "input-1",
+            "blob_sha256": "088c0fb78e5c559dfa809c899cb0b4a51be6034fe1bfe3cd380e652963203287",
+            "format": "off",
+            "sha256": "088c0fb78e5c559dfa809c899cb0b4a51be6034fe1bfe3cd380e652963203287",
+            "type": "TriangleSurfaceMesh",
+            "unit": "mm"
+          }
+        ],
+        "kernel": "package_recommended",
+        "limits": {
+          "memory_mb": 2048,
+          "wall_time_ms": 120000
+        },
+        "operation": "mesh.validate.self_intersections",
+        "parameters": {},
+        "protocol": 1,
+        "request_id": "selfint-tampered-missing-pair-rejected"
+      },
+      "request_sha256": "bb546acdc87ed353b51b8f6baf4b1ea1b5da7007ee12a4ce4c952b64369bc727",
+      "response": {
+        "error": {
+          "class": "VALIDATION_FAILED",
+          "code": "INTERSECTING_PAIRS_MISMATCH",
+          "message": "Reported intersecting face pairs differ from the exact triangle/triangle decision",
+          "recoverable": false,
+          "suggested_operations": []
+        },
+        "metrics": {},
+        "outputs": [],
+        "protocol": 1,
+        "request_id": "selfint-tampered-missing-pair-rejected",
+        "status": "error"
+      },
+      "response_sha256": "926ce0c9eb4e6717a41c496576c0fbebd37c4cadcac1c10ab12c2fbf0fa3416e",
+      "input_hashes": [
+        "56cc4236c2d436d2431b0f176dd1672ac5a895ac6e328f385e5e8faf6f758438",
+        "088c0fb78e5c559dfa809c899cb0b4a51be6034fe1bfe3cd380e652963203287"
+      ],
+      "output_hashes": [],
+      "expected_error_class": "VALIDATION_FAILED",
+      "status": "expected_rejection"
+    },
     "components-keep-one-tie-rejected": {
       "case_id": "components-keep-one-tie-rejected",
       "operation_id": "mesh.components.keep_largest",
       "revision": 1,
-      "worker_manifest_sha256": "bd6f52527218dda8bc87410743af0d9ef34ad2e47913073a5754fd48ac8e0f11",
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -9075,7 +11426,7 @@
       "case_id": "components-seed-face-out-of-range-rejected",
       "operation_id": "mesh.components.component",
       "revision": 1,
-      "worker_manifest_sha256": "bd6f52527218dda8bc87410743af0d9ef34ad2e47913073a5754fd48ac8e0f11",
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -9127,7 +11478,7 @@
       "case_id": "components-tampered-partition-rejected",
       "operation_id": "mesh.validate.components_label",
       "revision": 1,
-      "worker_manifest_sha256": "bd6f52527218dda8bc87410743af0d9ef34ad2e47913073a5754fd48ac8e0f11",
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -9186,7 +11537,7 @@
       "case_id": "location-tampered-distance-rejected",
       "operation_id": "mesh.validate.location",
       "revision": 1,
-      "worker_manifest_sha256": "bd6f52527218dda8bc87410743af0d9ef34ad2e47913073a5754fd48ac8e0f11",
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -9253,5 +11604,5 @@
       "status": "expected_rejection"
     }
   },
-  "coverage_note": "Family 7.3: 5 requirement(s) bound by 16 replayed cases with registry-derived mandatory validators; 3 requirement(s) remain unbound with recorded gaps. The immutable 80-requirement denominator and full standalone acceptance remain incomplete."
+  "coverage_note": "Family 7.3: 7 requirement(s) bound by 24 replayed cases with registry-derived mandatory validators; 1 requirement(s) remain unbound with recorded gaps. The immutable 80-requirement denominator and full standalone acceptance remain incomplete."
 }

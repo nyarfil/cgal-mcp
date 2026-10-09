@@ -17,9 +17,29 @@
   ],
   "binding_rule": "A requirement is bound only when replayed cases exercise every enumerated variant in its original description and every subcapability symbol listed for it in catalog/major_capability_inventory.json, each through a VALIDATED operation whose registry-mandated validators pass.",
   "requirements": [
+    "major.7.12.04",
     "major.7.12.01"
   ],
   "requirement_coverage": {
+    "major.7.12.04": {
+      "case_ids": [
+        "polygon-difference-hole",
+        "polygon-difference-overlap",
+        "polygon-intersection-clockwise-hexagon",
+        "polygon-intersection-disjoint",
+        "polygon-intersection-overlap",
+        "polygon-join-disjoint",
+        "polygon-join-overlap"
+      ],
+      "operation_ids": [
+        "polygon.boolean"
+      ],
+      "symbols": [
+        "Polygon_set_2",
+        "join",
+        "difference"
+      ]
+    },
     "major.7.12.01": {
       "case_ids": [
         "containment-with-hole",
@@ -41,21 +61,20 @@
   "unbound_requirements": {
     "major.7.12.02": "No Arrangement_2 operation.",
     "major.7.12.03": "No overlay operation.",
-    "major.7.12.04": "No Polygon_set_2 Boolean operation.",
     "major.7.12.05": "No straight-skeleton operation.",
     "major.7.12.06": "No skeleton-offset operation.",
     "major.7.12.07": "No Minkowski sum operation."
   },
-  "family_contract_sha256": "8aff63b2e441b8e4aaae368b2d3cec81c4f12f996e31858af4142d6ed4dfeddd",
+  "family_contract_sha256": "bcb8d84492338ea3ad0cff01c3a900ac02eb1dfa1d7d9a398ef4ea73fc8e83c4",
   "family_contract_source_path": "scripts/master_replay_families.py",
-  "family_contract_source_sha256": "50326dee3652f42b70b9ca41065c8c766d0f792cef027f386c448229191db74e",
+  "family_contract_source_sha256": "8074a42ec540bf6de02610fdca1507f463a726f2239cebd648176fd1642db918",
   "family_contract_source_hash_encoding": "utf8-lf",
   "catalog_baseline_sha256": "143ec18a5b64d506aad60dc24b0a1ea30940c715d1223b3465fa140aeb9d02a7",
-  "operation_registry_sha256": "538274f52bb7eb4372e5eb6ab9491ab826f3f17a4d5505456e0c534ff56d2588",
+  "operation_registry_sha256": "724744997d2f9d833ce60c617e647d2e7d17b748bf39dc7c20adaa9825839858",
   "operation_registry_hash_encoding": "utf8-lf",
   "policy_catalog_sha256": "45f4be759288aaeb834a3ce97aa64ee7768048b15534618fc8c19512801f9a9f",
   "policy_catalog_hash_encoding": "utf8-lf",
-  "worker_sha256": "15620f16a171cc5392f986bb18b23c08ad33b52b29c4cb525aad30d131b9d73e",
+  "worker_sha256": "398362d1745fc6d8ef61fe96900b1845072793014c545ded0be5d66023b77500",
   "worker_binary_format": "pe",
   "worker_manifest": {
     "actual_cgal_version": "6.2.1",
@@ -6088,6 +6107,640 @@
         "supported_kernels": [
           "package_recommended"
         ]
+      },
+      {
+        "dependencies": [
+          "Point_set_processing_3"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "pointset.spacing.average",
+        "info": {
+          "input_slots": [
+            "points"
+          ],
+          "maximum_input_points": 400,
+          "source_header": "CGAL/compute_average_spacing.h",
+          "validator_parameter_bindings": {
+            "pointset.validate.average_spacing": {
+              "neighbors": "neighbors"
+            }
+          },
+          "validators": [
+            "pointset.validate.average_spacing"
+          ]
+        },
+        "input_types": [
+          "PointSet3"
+        ],
+        "output_type": "GeometryQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Point_set_processing_3"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "pointset.outliers.remove",
+        "info": {
+          "input_slots": [
+            "points"
+          ],
+          "maximum_input_points": 400,
+          "source_header": "CGAL/remove_outliers.h",
+          "validator_parameter_bindings": {
+            "pointset.validate.outliers_removed": {
+              "neighbors": "neighbors",
+              "threshold_distance": "threshold_distance",
+              "threshold_percent": "threshold_percent"
+            }
+          },
+          "validators": [
+            "pointset.validate.outliers_removed"
+          ]
+        },
+        "input_types": [
+          "PointSet3"
+        ],
+        "output_type": "PointSet3",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Bounding_volumes"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "shape.bounding.circle",
+        "info": {
+          "input_slots": [
+            "points"
+          ],
+          "maximum_input_points": 64,
+          "source_header": "CGAL/Min_circle_2.h",
+          "validators": [
+            "shape.validate.min_circle"
+          ]
+        },
+        "input_types": [
+          "PointSet2"
+        ],
+        "output_type": "GeometryQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Bounding_volumes"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "shape.bounding.sphere",
+        "info": {
+          "input_slots": [
+            "points"
+          ],
+          "maximum_input_points": 32,
+          "source_header": "CGAL/Min_sphere_of_spheres_d.h",
+          "validator_parameter_bindings": {
+            "shape.validate.min_sphere": {
+              "radius": "radius"
+            }
+          },
+          "validators": [
+            "shape.validate.min_sphere"
+          ]
+        },
+        "input_types": [
+          "PointSet3"
+        ],
+        "output_type": "GeometryQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "mesh.features.detect",
+        "info": {
+          "input_slots": [
+            "mesh"
+          ],
+          "maximum_input_faces": 600,
+          "source_header": "CGAL/Polygon_mesh_processing/detect_features.h",
+          "validator_parameter_bindings": {
+            "mesh.validate.features": {
+              "angle_degrees": "angle_degrees"
+            }
+          },
+          "validators": [
+            "mesh.validate.features"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "GeometryQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "mesh.intersections.self",
+        "info": {
+          "input_slots": [
+            "mesh"
+          ],
+          "maximum_input_faces": 600,
+          "source_header": "CGAL/Polygon_mesh_processing/self_intersections.h",
+          "validators": [
+            "mesh.validate.self_intersections"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "GeometryQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "PMP_Boolean_operations"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "mesh.clip.plane",
+        "info": {
+          "input_slots": [
+            "source"
+          ],
+          "maximum_input_faces": 600,
+          "maximum_output_faces": 4000,
+          "source_header": "CGAL/Polygon_mesh_processing/clip.h",
+          "validator_parameter_bindings": {
+            "mesh.validate.clip": {
+              "clip_volume": "clip_volume",
+              "normal": "normal",
+              "offset": "offset"
+            }
+          },
+          "validators": [
+            "mesh.validate.clip"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "TriangleSurfaceMesh",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "PMP_Boolean_operations"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "mesh.split.plane",
+        "info": {
+          "input_slots": [
+            "source"
+          ],
+          "maximum_input_faces": 600,
+          "maximum_output_faces": 4000,
+          "source_header": "CGAL/Polygon_mesh_processing/clip.h",
+          "validator_parameter_bindings": {
+            "mesh.validate.split": {
+              "normal": "normal",
+              "offset": "offset"
+            }
+          },
+          "validators": [
+            "mesh.validate.split"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "PolygonSoup3",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "PMP_Boolean_operations"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "mesh.corefine",
+        "info": {
+          "input_slots": [
+            "source",
+            "other"
+          ],
+          "maximum_input_faces": 600,
+          "maximum_output_faces": 4000,
+          "source_header": "CGAL/Polygon_mesh_processing/corefinement.h",
+          "validators": [
+            "mesh.validate.corefine"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "TriangleSurfaceMesh",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Boolean_set_operations_2"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "polygon.boolean",
+        "info": {
+          "input_slots": [
+            "first",
+            "second"
+          ],
+          "source_header": "CGAL/Boolean_set_operations_2.h",
+          "validator_parameter_bindings": {
+            "polygon.validate.boolean": {
+              "operation": "operation"
+            }
+          },
+          "validators": [
+            "polygon.validate.boolean"
+          ]
+        },
+        "input_types": [
+          "Polygon2",
+          "Polygon2"
+        ],
+        "output_type": "GeometryQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Point_set_processing_3"
+        ],
+        "effective_kernel": "float:long_double",
+        "id": "pointset.validate.average_spacing",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "average_spacing_matches_bruteforce"
+          ],
+          "independence": "brute-force k+1 nearest distances in long double (self included, as the CGAL neighbour query); no CGAL header",
+          "input_slots": [
+            "candidate",
+            "points"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "GeometryQueryReport",
+          "PointSet3"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Point_set_processing_3"
+        ],
+        "effective_kernel": "float:long_double",
+        "id": "pointset.validate.outliers_removed",
+        "info": {
+          "checks": [
+            "candidate_is_source_multiset_subset",
+            "kept_count_matches_thresholds",
+            "kept_points_have_lowest_measures"
+          ],
+          "independence": "brute-force average squared distance to the k+1 nearest points (self included) in long double; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "PointSet3",
+          "PointSet3"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Bounding_volumes"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "shape.validate.min_circle",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "center_matches_exact_minimum",
+            "radius_matches_exact_minimum",
+            "all_balls_enclosed"
+          ],
+          "independence": "exact rational enumeration of every support set of 1..d+1 points (center in the affine hull); no CGAL header",
+          "input_slots": [
+            "candidate",
+            "points"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "GeometryQueryReport",
+          "PointSet2"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Bounding_volumes"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "shape.validate.min_sphere",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "center_matches_exact_minimum",
+            "radius_matches_exact_minimum",
+            "all_balls_enclosed"
+          ],
+          "independence": "exact rational enumeration of every support set of 1..d+1 points (center in the affine hull); no CGAL header",
+          "input_slots": [
+            "candidate",
+            "points"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "GeometryQueryReport",
+          "PointSet3"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing"
+        ],
+        "effective_kernel": "float:long_double",
+        "id": "mesh.validate.features",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "mesh_is_oriented_edge_manifold",
+            "sharp_edges_exact",
+            "vertex_feature_degree_exact",
+            "patch_partition_exact",
+            "vertex_incident_patches_exact"
+          ],
+          "independence": "exact rational face normals; the irrational cosine of the bound is long double and ambiguous edges are rejected; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "mesh"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "GeometryQueryReport",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "mesh.validate.self_intersections",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "intersecting_pairs_exact",
+            "flag_consistent_exact"
+          ],
+          "independence": "exact rational triangle/triangle intersection polygon vertices and shared-simplex test; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "mesh"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "GeometryQueryReport",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "PMP_Boolean_operations"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "mesh.validate.clip",
+        "info": {
+          "checks": [
+            "source_triangles_nondegenerate",
+            "plane_avoids_source_faces",
+            "candidate_on_negative_side",
+            "triangles_inside_source_faces",
+            "orientation_preserved",
+            "no_overlap_within_source_face",
+            "clipped_region_covered_exactly",
+            "cap_consistent"
+          ],
+          "independence": "Sutherland-Hodgman polygon clipping and exact weighted-area tiling per source face; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "TriangleSurfaceMesh",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "PMP_Boolean_operations"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "mesh.validate.split",
+        "info": {
+          "checks": [
+            "source_triangles_nondegenerate",
+            "plane_avoids_source_faces",
+            "triangles_inside_source_faces",
+            "orientation_preserved",
+            "no_overlap_within_source_face",
+            "surface_covered_exactly",
+            "no_triangle_crosses_plane",
+            "sides_separated_into_components"
+          ],
+          "independence": "exact weighted-area tiling of each source face, per-triangle plane side and index-space connected components; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "PolygonSoup3",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "PMP_Boolean_operations"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "mesh.validate.corefine",
+        "info": {
+          "checks": [
+            "source_triangles_nondegenerate",
+            "triangles_inside_source_faces",
+            "orientation_preserved",
+            "no_overlap_within_source_face",
+            "surface_covered_exactly",
+            "intersection_is_in_candidate_edges"
+          ],
+          "independence": "exact weighted-area tiling and exact triangle/triangle intersection polygon vertices; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "source",
+            "other"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "TriangleSurfaceMesh",
+          "TriangleSurfaceMesh",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Boolean_set_operations_2"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "polygon.validate.boolean",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "operands_simple_nonzero_area",
+            "rings_oriented_outer_ccw_hole_cw",
+            "boundary_chain_equals_exact_set_operation"
+          ],
+          "independence": "exact rational edge splitting, point classification and unit-segment boundary chain comparison; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "first",
+            "second"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "GeometryQueryReport",
+          "Polygon2",
+          "Polygon2"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
       }
     ],
     "protocol": 1,
@@ -6099,28 +6752,58 @@
     ],
     "worker": "cgal-master-worker"
   },
-  "worker_manifest_sha256": "bd6f52527218dda8bc87410743af0d9ef34ad2e47913073a5754fd48ac8e0f11",
+  "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
   "tests": [
     {
       "id": "family-7.12-replay-cases",
       "source_path": "tests/master_family_replay_cases.py",
       "source_sha256": "69b3216bf60de8b908dcf6f82e4fee3ffc438ee2a29cf2d756c4b558c6ce3e65",
       "source_hash_encoding": "utf8-lf",
-      "stdout_sha256": "511e606c28dd5c48382915baa5b19f0c54b5712985ebced2c97bd0f1563d1c40",
+      "stdout_sha256": "847f11561a5c698ac09d82aa17229e948e3cdf529d25fe43cba04afc4c122798",
       "exit_code": 0,
       "status": "pass"
     }
   ],
   "blobs": {
+    "03addd0f80f33b33bdbb5fad454e248a21e16d46affe2016db8422096b3b9f2f": {
+      "encoding": "base64",
+      "byte_size": 521,
+      "content": "eyJsZW5ndGhfdW5pdCI6Im1tIiwib3BlcmF0aW9uIjoicG9seWdvbi5ib29sZWFuIiwicGFyYW1ldGVycyI6eyJvcGVyYXRpb24iOiJqb2luIn0sInJlcG9ydF9raW5kIjoicG9seWdvbl9ib29sZWFuIiwicmVwb3J0X3R5cGUiOiJHZW9tZXRyeVF1ZXJ5UmVwb3J0IiwicmVzdWx0cyI6eyJwb2x5Z29ucyI6W3siaG9sZXMiOltdLCJvdXRlciI6W1siMiIsIjYiXSxbIjIiLCI0Il0sWyIwIiwiNCJdLFsiMCIsIjAiXSxbIjQiLCIwIl0sWyI0IiwiMiJdLFsiNiIsIjIiXSxbIjYiLCI2Il1dfV19LCJzY2hlbWFfdmVyc2lvbiI6MSwic291cmNlIjp7ImZpcnN0X3NoYTI1NiI6ImQ4YmJiM2I5MjRmNGFlYWVjNjAwN2YxMGU0ZmU0ZjYwMWJmMDk4MGRjZjljMzNlYzdkYzhlYWJmNmI4ZDA5YzYiLCJzZWNvbmRfc2hhMjU2IjoiYTcxODM2NmUxMzc4OGQ0ODZhNzBkY2Y3ZTg3MWJmMzIzYTUyOWNjMmVlNWZkZTYzNTRkMzM4ZGVjYTdjNjE5MSJ9LCJzdW1tYXJ5Ijp7ImhvbGVfY291bnQiOjAsInBvbHlnb25fY291bnQiOjF9fQo="
+    },
+    "0571360d5eb8c8548c7d93fa216e78a832fcb78870e9a898e3887d560e67c4ed": {
+      "encoding": "base64",
+      "byte_size": 515,
+      "content": "eyJjaGVja3MiOnsiYm91bmRhcnlfY2hhaW5fZXF1YWxzX2V4YWN0X3NldF9vcGVyYXRpb24iOnRydWUsIm9wZXJhbmRzX3NpbXBsZV9ub256ZXJvX2FyZWEiOnRydWUsInBhcmFtZXRlcnNfbWF0Y2giOnRydWUsInJpbmdzX29yaWVudGVkX291dGVyX2Njd19ob2xlX2N3Ijp0cnVlLCJzb3VyY2VfbWF0Y2hlcyI6dHJ1ZX0sImV4cGVjdGVkX2JvdW5kYXJ5X3NlZ21lbnRfY291bnQiOjgsImluZGVwZW5kZW5jZSI6ImV4YWN0IHJhdGlvbmFsIGVkZ2Ugc3BsaXR0aW5nLCBwb2ludCBjbGFzc2lmaWNhdGlvbiBhbmQgdW5pdC1zZWdtZW50IGJvdW5kYXJ5IGNoYWluIGNvbXBhcmlzb247IG5vIENHQUwgaGVhZGVyIiwib3BlcmF0aW9uIjoiam9pbiIsInBhc3NlZCI6dHJ1ZSwicmVwb3J0X3R5cGUiOiJWYWxpZGF0aW9uUmVwb3J0IiwicmVwb3J0ZWRfcG9seWdvbl9jb3VudCI6Miwic2NoZW1hX3ZlcnNpb24iOjEsInN0YXR1cyI6InBhc3MiLCJ2YWxpZGF0b3IiOiJwb2x5Z29uLnZhbGlkYXRlLmJvb2xlYW4ifQo="
+    },
+    "0dd85a022da9fdcdd994ea8141691c0b06559f610b8ae2e1cef67e927a5598a7": {
+      "encoding": "base64",
+      "byte_size": 521,
+      "content": "eyJjaGVja3MiOnsiYm91bmRhcnlfY2hhaW5fZXF1YWxzX2V4YWN0X3NldF9vcGVyYXRpb24iOnRydWUsIm9wZXJhbmRzX3NpbXBsZV9ub256ZXJvX2FyZWEiOnRydWUsInBhcmFtZXRlcnNfbWF0Y2giOnRydWUsInJpbmdzX29yaWVudGVkX291dGVyX2Njd19ob2xlX2N3Ijp0cnVlLCJzb3VyY2VfbWF0Y2hlcyI6dHJ1ZX0sImV4cGVjdGVkX2JvdW5kYXJ5X3NlZ21lbnRfY291bnQiOjgsImluZGVwZW5kZW5jZSI6ImV4YWN0IHJhdGlvbmFsIGVkZ2Ugc3BsaXR0aW5nLCBwb2ludCBjbGFzc2lmaWNhdGlvbiBhbmQgdW5pdC1zZWdtZW50IGJvdW5kYXJ5IGNoYWluIGNvbXBhcmlzb247IG5vIENHQUwgaGVhZGVyIiwib3BlcmF0aW9uIjoiZGlmZmVyZW5jZSIsInBhc3NlZCI6dHJ1ZSwicmVwb3J0X3R5cGUiOiJWYWxpZGF0aW9uUmVwb3J0IiwicmVwb3J0ZWRfcG9seWdvbl9jb3VudCI6MSwic2NoZW1hX3ZlcnNpb24iOjEsInN0YXR1cyI6InBhc3MiLCJ2YWxpZGF0b3IiOiJwb2x5Z29uLnZhbGlkYXRlLmJvb2xlYW4ifQo="
+    },
     "0ff9c66dde50a3b73ed25ce98a77384dab94e2e8f7771b3fcc58378061f08f61": {
       "encoding": "base64",
       "byte_size": 866,
       "content": "eyJhbmFseXNpc19raW5kIjoicG9seWdvbl9wcm9wZXJ0aWVzIiwibGVuZ3RoX3VuaXQiOiJtbSIsIm9wZXJhdGlvbiI6InBvbHlnb24uYW5hbHlzaXMucHJvcGVydGllcyIsInJlcG9ydF90eXBlIjoiUG9seWdvbjJBbmFseXNpc1JlcG9ydCIsInJlc3VsdHMiOnsiYXJlYSI6eyJhcHByb3hpbWF0ZSI6Ny4wLCJhdmFpbGFibGUiOnRydWUsImV4YWN0IjoiNyIsInVuaXQiOiJtbV4yIn0sImJib3giOnsibWF4IjpbNC4wLDQuMF0sIm1pbiI6WzAuMCwwLjBdfSwiY2Fub25pY2FsX29yaWVudGF0aW9uIjp0cnVlLCJjZW50cm9pZCI6eyJhcHByb3hpbWF0ZSI6WzEuMzU3MTQyODU3MTQyODU3MiwxLjM1NzE0Mjg1NzE0Mjg1NzJdLCJhdmFpbGFibGUiOnRydWUsImV4YWN0IjpbIjE5LzE0IiwiMTkvMTQiXSwidW5pdCI6Im1tIn0sImNvbnRhaW5lcl9ob2xlX2NvdW50IjowLCJob2xlX2NvdW50IjowLCJyaW5ncyI6W3siY29udmV4IjpmYWxzZSwib3JpZW50YXRpb24iOiJjb3VudGVyY2xvY2t3aXNlIiwicGVyaW1ldGVyIjp7ImFwcHJveGltYXRlIjoxNi4wLCJ1bml0IjoibW0ifSwicmluZ19pbmRleCI6MCwicm9sZSI6Im91dGVyIiwic2lnbmVkX2FyZWEiOnsiYXBwcm94aW1hdGUiOjcuMCwiZXhhY3QiOiI3IiwidW5pdCI6Im1tXjIifSwic2ltcGxlIjp0cnVlLCJ2ZXJ0ZXhfY291bnQiOjZ9XSwidmFsaWRfcG9seWdvbl93aXRoX2hvbGVzIjp0cnVlLCJ2YWxpZGl0eV9yZWFzb25zIjpbXX0sInNjaGVtYV92ZXJzaW9uIjoxLCJzb3VyY2UiOnsic2hhMjU2IjoiZGVjNzE3OTVhOWZjODI1NTQ4NzMyZWE2NDcwMDM0MjBhZDBiNGZkMTQxOTQ0M2Y0NDQwMzA4YmRiZTdmNGI0ZCIsInR5cGUiOiJQb2x5Z29uV2l0aEhvbGVzMiJ9fQo="
     },
+    "11b53e5faf0757eb6657d94425ee0441ccb65d08af01414d831f925c76e889a6": {
+      "encoding": "base64",
+      "byte_size": 515,
+      "content": "eyJjaGVja3MiOnsiYm91bmRhcnlfY2hhaW5fZXF1YWxzX2V4YWN0X3NldF9vcGVyYXRpb24iOnRydWUsIm9wZXJhbmRzX3NpbXBsZV9ub256ZXJvX2FyZWEiOnRydWUsInBhcmFtZXRlcnNfbWF0Y2giOnRydWUsInJpbmdzX29yaWVudGVkX291dGVyX2Njd19ob2xlX2N3Ijp0cnVlLCJzb3VyY2VfbWF0Y2hlcyI6dHJ1ZX0sImV4cGVjdGVkX2JvdW5kYXJ5X3NlZ21lbnRfY291bnQiOjgsImluZGVwZW5kZW5jZSI6ImV4YWN0IHJhdGlvbmFsIGVkZ2Ugc3BsaXR0aW5nLCBwb2ludCBjbGFzc2lmaWNhdGlvbiBhbmQgdW5pdC1zZWdtZW50IGJvdW5kYXJ5IGNoYWluIGNvbXBhcmlzb247IG5vIENHQUwgaGVhZGVyIiwib3BlcmF0aW9uIjoiam9pbiIsInBhc3NlZCI6dHJ1ZSwicmVwb3J0X3R5cGUiOiJWYWxpZGF0aW9uUmVwb3J0IiwicmVwb3J0ZWRfcG9seWdvbl9jb3VudCI6MSwic2NoZW1hX3ZlcnNpb24iOjEsInN0YXR1cyI6InBhc3MiLCJ2YWxpZGF0b3IiOiJwb2x5Z29uLnZhbGlkYXRlLmJvb2xlYW4ifQo="
+    },
     "203bf3a2de4290e68e3380c92616cfbb8fc3c3d51b65261834eaafca13fc1a41": {
       "encoding": "base64",
       "byte_size": 725,
       "content": "eyJhbmFseXNpc19raW5kIjoicG9pbnRfY29udGFpbm1lbnQiLCJsZW5ndGhfdW5pdCI6Im1tIiwib3BlcmF0aW9uIjoicG9seWdvbi5xdWVyeS5jb250YWlubWVudCIsInJlcG9ydF90eXBlIjoiUG9seWdvbjJBbmFseXNpc1JlcG9ydCIsInJlc3VsdHMiOlt7ImxvY2F0aW9uIjoiaW5zaWRlIiwicXVlcnlfaW5kZXgiOjB9LHsibG9jYXRpb24iOiJvdXRzaWRlIiwicXVlcnlfaW5kZXgiOjF9LHsibG9jYXRpb24iOiJib3VuZGFyeSIsInF1ZXJ5X2luZGV4IjoyfSx7ImxvY2F0aW9uIjoiYm91bmRhcnkiLCJxdWVyeV9pbmRleCI6M30seyJsb2NhdGlvbiI6Im91dHNpZGUiLCJxdWVyeV9pbmRleCI6NH0seyJsb2NhdGlvbiI6ImJvdW5kYXJ5IiwicXVlcnlfaW5kZXgiOjV9LHsibG9jYXRpb24iOiJib3VuZGFyeSIsInF1ZXJ5X2luZGV4Ijo2fSx7ImxvY2F0aW9uIjoiaW5zaWRlIiwicXVlcnlfaW5kZXgiOjd9XSwic2NoZW1hX3ZlcnNpb24iOjEsInNvdXJjZSI6eyJxdWVyeV9zaGEyNTYiOiJkMDFmY2UyZjQ5MDkxYzE3MGI4YTZkYTViMTBjNDRhMzc0ZGM5Zjg5ZDRlNmFjOTY0N2U4OGMxNjdmY2VkNDhiIiwic2hhMjU2IjoiYjg4ZmQ4ZWVhY2RkYWEwMjE2OTcyMjdjZTVjYWEzYTJmZTIyYmQwMjY1OTJmOTY3NmE5N2JmMTc5NjNkNzk1OSIsInR5cGUiOiJQb2x5Z29uV2l0aEhvbGVzMiJ9LCJzdW1tYXJ5Ijp7ImJvdW5kYXJ5Ijo0LCJpbnNpZGUiOjIsIm91dHNpZGUiOjJ9fQo="
+    },
+    "265dd89bbf591dc3e2e4b2942d8c8f1ba7d2e47b0948024a52e9253e1a40493c": {
+      "encoding": "base64",
+      "byte_size": 507,
+      "content": "eyJsZW5ndGhfdW5pdCI6Im1tIiwib3BlcmF0aW9uIjoicG9seWdvbi5ib29sZWFuIiwicGFyYW1ldGVycyI6eyJvcGVyYXRpb24iOiJkaWZmZXJlbmNlIn0sInJlcG9ydF9raW5kIjoicG9seWdvbl9ib29sZWFuIiwicmVwb3J0X3R5cGUiOiJHZW9tZXRyeVF1ZXJ5UmVwb3J0IiwicmVzdWx0cyI6eyJwb2x5Z29ucyI6W3siaG9sZXMiOltdLCJvdXRlciI6W1siMCIsIjAiXSxbIjQiLCIwIl0sWyI0IiwiMiJdLFsiMiIsIjIiXSxbIjIiLCI0Il0sWyIwIiwiNCJdXX1dfSwic2NoZW1hX3ZlcnNpb24iOjEsInNvdXJjZSI6eyJmaXJzdF9zaGEyNTYiOiJkOGJiYjNiOTI0ZjRhZWFlYzYwMDdmMTBlNGZlNGY2MDFiZjA5ODBkY2Y5YzMzZWM3ZGM4ZWFiZjZiOGQwOWM2Iiwic2Vjb25kX3NoYTI1NiI6ImE3MTgzNjZlMTM3ODhkNDg2YTcwZGNmN2U4NzFiZjMyM2E1MjljYzJlZTVmZGU2MzU0ZDMzOGRlY2E3YzYxOTEifSwic3VtbWFyeSI6eyJob2xlX2NvdW50IjowLCJwb2x5Z29uX2NvdW50IjoxfX0K"
+    },
+    "3c9a892b1848647ae590f13edc9d38a8154b549ffe8aeba582cbf6e7b8f53aa6": {
+      "encoding": "base64",
+      "byte_size": 528,
+      "content": "eyJsZW5ndGhfdW5pdCI6Im1tIiwib3BlcmF0aW9uIjoicG9seWdvbi5ib29sZWFuIiwicGFyYW1ldGVycyI6eyJvcGVyYXRpb24iOiJkaWZmZXJlbmNlIn0sInJlcG9ydF9raW5kIjoicG9seWdvbl9ib29sZWFuIiwicmVwb3J0X3R5cGUiOiJHZW9tZXRyeVF1ZXJ5UmVwb3J0IiwicmVzdWx0cyI6eyJwb2x5Z29ucyI6W3siaG9sZXMiOltbWyIzIiwiMyJdLFsiMyIsIjEiXSxbIjEiLCIxIl0sWyIxIiwiMyJdXV0sIm91dGVyIjpbWyIwIiwiMCJdLFsiNCIsIjAiXSxbIjQiLCI0Il0sWyIwIiwiNCJdXX1dfSwic2NoZW1hX3ZlcnNpb24iOjEsInNvdXJjZSI6eyJmaXJzdF9zaGEyNTYiOiJkOGJiYjNiOTI0ZjRhZWFlYzYwMDdmMTBlNGZlNGY2MDFiZjA5ODBkY2Y5YzMzZWM3ZGM4ZWFiZjZiOGQwOWM2Iiwic2Vjb25kX3NoYTI1NiI6IjVlZjdhMDZjYTMxMzhlNzM0MDM3NDcwNGI1ZWJjMjY4YTdjZmJlNmJmZmU2NDIyYTMyMTBiZWY4MWM3MTkwYjgifSwic3VtbWFyeSI6eyJob2xlX2NvdW50IjoxLCJwb2x5Z29uX2NvdW50IjoxfX0K"
     },
     "3f89dad3c2a353ea74b10a948462e05fbfff187aa3d59a0ae027b9a9cc28952a": {
       "encoding": "base64",
@@ -6132,10 +6815,35 @@
       "byte_size": 47,
       "content": "eyJvdXRlciI6W1swLDBdLFsyLDJdLFsyLDBdLFswLDJdXSwiaG9sZXMiOltdfQo="
     },
+    "56d19bb3a00f04b5f2ea006f925f19065ea8a0cf828cc37871931952adf227a5": {
+      "encoding": "base64",
+      "byte_size": 37,
+      "content": "eyJwb2ludHMiOltbMCwwXSxbMiwyXSxbMiwwXSxbMCwyXV19Cg=="
+    },
+    "592be3a3d7bd365ac826bcb3275bcebf7661b69d88c004f8d8fce63d06ac520e": {
+      "encoding": "base64",
+      "byte_size": 62,
+      "content": "eyJwb2ludHMiOltbNCwwXSxbMiwtMy41XSxbLTIsLTMuNV0sWy00LDBdLFstMiwzLjVdLFsyLDMuNV1dfQo="
+    },
+    "5ce75de041769df35a7c15b2eabacc8a5a788f91448f50d01d46c1b90a8548f4": {
+      "encoding": "base64",
+      "byte_size": 493,
+      "content": "eyJsZW5ndGhfdW5pdCI6Im1tIiwib3BlcmF0aW9uIjoicG9seWdvbi5ib29sZWFuIiwicGFyYW1ldGVycyI6eyJvcGVyYXRpb24iOiJpbnRlcnNlY3Rpb24ifSwicmVwb3J0X2tpbmQiOiJwb2x5Z29uX2Jvb2xlYW4iLCJyZXBvcnRfdHlwZSI6Ikdlb21ldHJ5UXVlcnlSZXBvcnQiLCJyZXN1bHRzIjp7InBvbHlnb25zIjpbeyJob2xlcyI6W10sIm91dGVyIjpbWyIwIiwiMCJdLFsiNCIsIjAiXSxbIjIiLCI3LzIiXSxbIjAiLCI3LzIiXV19XX0sInNjaGVtYV92ZXJzaW9uIjoxLCJzb3VyY2UiOnsiZmlyc3Rfc2hhMjU2IjoiNTkyYmUzYTNkN2JkMzY1YWM4MjZiY2IzMjc1YmNlYmY3NjYxYjY5ZDg4YzAwNGY4ZDhmY2U2M2QwNmFjNTIwZSIsInNlY29uZF9zaGEyNTYiOiJkOGJiYjNiOTI0ZjRhZWFlYzYwMDdmMTBlNGZlNGY2MDFiZjA5ODBkY2Y5YzMzZWM3ZGM4ZWFiZjZiOGQwOWM2In0sInN1bW1hcnkiOnsiaG9sZV9jb3VudCI6MCwicG9seWdvbl9jb3VudCI6MX19Cg=="
+    },
     "5eae44e92b3dfdc471b496e0000b52228eada4425dbbf7c83fce305625144fd1": {
       "encoding": "base64",
       "byte_size": 413,
       "content": "eyJjaGVja3MiOnsiYXJlYV9tYXRjaGVzIjp0cnVlLCJiYm94X21hdGNoZXMiOnRydWUsImNlbnRyb2lkX21hdGNoZXMiOnRydWUsInJpbmdfcHJvcGVydGllc19tYXRjaCI6dHJ1ZSwidmFsaWRpdHlfbWF0Y2hlcyI6dHJ1ZX0sImV4YWN0X2FyZWEiOm51bGwsImV4YWN0X2NlbnRyb2lkIjpudWxsLCJpbmRlcGVuZGVuY2UiOiJleGFjdCByYXRpb25hbCBmYW4gZGVjb21wb3NpdGlvbiBhbmQgcGFpcndpc2UgZWRnZSB0ZXN0czsgQ0dBTCBQb2x5Z29uXzIgYWxnb3JpdGhtcyBhcmUgbm90IGNhbGxlZCIsInBhc3NlZCI6dHJ1ZSwicmluZ19jb3VudCI6MSwic3RhdHVzIjoicGFzcyIsInZhbGlkX3BvbHlnb25fd2l0aF9ob2xlcyI6ZmFsc2UsInZhbGlkYXRvciI6InBvbHlnb24udmFsaWRhdGUucHJvcGVydGllc19yZXBvcnQifQo="
+    },
+    "5ef7a06ca3138e7340374704b5ebc268a7cfbe6bffe6422a3210bef81c7190b8": {
+      "encoding": "base64",
+      "byte_size": 36,
+      "content": "eyJwb2ludHMiOltbMSwxXSxbMywxXSxbMywzXSxbMSwzXV19"
+    },
+    "602de0ce059660b45599f3c58bf7500ee0886fe3cbf59e370388cd18ce2c5ec9": {
+      "encoding": "base64",
+      "byte_size": 552,
+      "content": "eyJsZW5ndGhfdW5pdCI6Im1tIiwib3BlcmF0aW9uIjoicG9seWdvbi5ib29sZWFuIiwicGFyYW1ldGVycyI6eyJvcGVyYXRpb24iOiJqb2luIn0sInJlcG9ydF9raW5kIjoicG9seWdvbl9ib29sZWFuIiwicmVwb3J0X3R5cGUiOiJHZW9tZXRyeVF1ZXJ5UmVwb3J0IiwicmVzdWx0cyI6eyJwb2x5Z29ucyI6W3siaG9sZXMiOltdLCJvdXRlciI6W1siMCIsIjAiXSxbIjQiLCIwIl0sWyI0IiwiNCJdLFsiMCIsIjQiXV19LHsiaG9sZXMiOltdLCJvdXRlciI6W1siMTAiLCIxMCJdLFsiMTEiLCIxMCJdLFsiMTEiLCIxMSJdLFsiMTAiLCIxMSJdXX1dfSwic2NoZW1hX3ZlcnNpb24iOjEsInNvdXJjZSI6eyJmaXJzdF9zaGEyNTYiOiJkOGJiYjNiOTI0ZjRhZWFlYzYwMDdmMTBlNGZlNGY2MDFiZjA5ODBkY2Y5YzMzZWM3ZGM4ZWFiZjZiOGQwOWM2Iiwic2Vjb25kX3NoYTI1NiI6IjcxNmEyYjFiODJiMGU4OTg2OTc1ZTAyYjc1YTUyYzA1MjM4Y2NkODYxNDdlYzA3NGEwMjNhMWE2ZmFhNTAzODAifSwic3VtbWFyeSI6eyJob2xlX2NvdW50IjowLCJwb2x5Z29uX2NvdW50IjoyfX0K"
     },
     "666c4bc8ccebf1d7183baf69504e54f065664beda7b243d4bcdba8c8df197009": {
       "encoding": "base64",
@@ -6147,10 +6855,35 @@
       "byte_size": 424,
       "content": "eyJjaGVja3MiOnsiYXJlYV9tYXRjaGVzIjp0cnVlLCJiYm94X21hdGNoZXMiOnRydWUsImNlbnRyb2lkX21hdGNoZXMiOnRydWUsInJpbmdfcHJvcGVydGllc19tYXRjaCI6dHJ1ZSwidmFsaWRpdHlfbWF0Y2hlcyI6dHJ1ZX0sImV4YWN0X2FyZWEiOiI3IiwiZXhhY3RfY2VudHJvaWQiOlsiMTkvMTQiLCIxOS8xNCJdLCJpbmRlcGVuZGVuY2UiOiJleGFjdCByYXRpb25hbCBmYW4gZGVjb21wb3NpdGlvbiBhbmQgcGFpcndpc2UgZWRnZSB0ZXN0czsgQ0dBTCBQb2x5Z29uXzIgYWxnb3JpdGhtcyBhcmUgbm90IGNhbGxlZCIsInBhc3NlZCI6dHJ1ZSwicmluZ19jb3VudCI6MSwic3RhdHVzIjoicGFzcyIsInZhbGlkX3BvbHlnb25fd2l0aF9ob2xlcyI6dHJ1ZSwidmFsaWRhdG9yIjoicG9seWdvbi52YWxpZGF0ZS5wcm9wZXJ0aWVzX3JlcG9ydCJ9Cg=="
     },
+    "716a2b1b82b0e8986975e02b75a52c05238ccd86147ec074a023a1a6faa50380": {
+      "encoding": "base64",
+      "byte_size": 44,
+      "content": "eyJwb2ludHMiOltbMTAsMTBdLFsxMSwxMF0sWzExLDExXSxbMTAsMTFdXX0="
+    },
+    "7eb65987ade545dacab95dde4d691d0633ef496979d96a0ea99ddacfb9ce9880": {
+      "encoding": "base64",
+      "byte_size": 427,
+      "content": "eyJsZW5ndGhfdW5pdCI6Im1tIiwib3BlcmF0aW9uIjoicG9seWdvbi5ib29sZWFuIiwicGFyYW1ldGVycyI6eyJvcGVyYXRpb24iOiJpbnRlcnNlY3Rpb24ifSwicmVwb3J0X2tpbmQiOiJwb2x5Z29uX2Jvb2xlYW4iLCJyZXBvcnRfdHlwZSI6Ikdlb21ldHJ5UXVlcnlSZXBvcnQiLCJyZXN1bHRzIjp7InBvbHlnb25zIjpbXX0sInNjaGVtYV92ZXJzaW9uIjoxLCJzb3VyY2UiOnsiZmlyc3Rfc2hhMjU2IjoiZDhiYmIzYjkyNGY0YWVhZWM2MDA3ZjEwZTRmZTRmNjAxYmYwOTgwZGNmOWMzM2VjN2RjOGVhYmY2YjhkMDljNiIsInNlY29uZF9zaGEyNTYiOiI3MTZhMmIxYjgyYjBlODk4Njk3NWUwMmI3NWE1MmMwNTIzOGNjZDg2MTQ3ZWMwNzRhMDIzYTFhNmZhYTUwMzgwIn0sInN1bW1hcnkiOnsiaG9sZV9jb3VudCI6MCwicG9seWdvbl9jb3VudCI6MH19Cg=="
+    },
+    "a718366e13788d486a70dcf7e871bf323a529cc2ee5fde6354d338deca7c6191": {
+      "encoding": "base64",
+      "byte_size": 36,
+      "content": "eyJwb2ludHMiOltbMiwyXSxbNiwyXSxbNiw2XSxbMiw2XV19"
+    },
+    "b675ce9e8b6a0e2ac5b41b3b6c51bb4ef8cc08f0ad55cb1442c8ff4b86a988af": {
+      "encoding": "base64",
+      "byte_size": 523,
+      "content": "eyJjaGVja3MiOnsiYm91bmRhcnlfY2hhaW5fZXF1YWxzX2V4YWN0X3NldF9vcGVyYXRpb24iOnRydWUsIm9wZXJhbmRzX3NpbXBsZV9ub256ZXJvX2FyZWEiOnRydWUsInBhcmFtZXRlcnNfbWF0Y2giOnRydWUsInJpbmdzX29yaWVudGVkX291dGVyX2Njd19ob2xlX2N3Ijp0cnVlLCJzb3VyY2VfbWF0Y2hlcyI6dHJ1ZX0sImV4cGVjdGVkX2JvdW5kYXJ5X3NlZ21lbnRfY291bnQiOjAsImluZGVwZW5kZW5jZSI6ImV4YWN0IHJhdGlvbmFsIGVkZ2Ugc3BsaXR0aW5nLCBwb2ludCBjbGFzc2lmaWNhdGlvbiBhbmQgdW5pdC1zZWdtZW50IGJvdW5kYXJ5IGNoYWluIGNvbXBhcmlzb247IG5vIENHQUwgaGVhZGVyIiwib3BlcmF0aW9uIjoiaW50ZXJzZWN0aW9uIiwicGFzc2VkIjp0cnVlLCJyZXBvcnRfdHlwZSI6IlZhbGlkYXRpb25SZXBvcnQiLCJyZXBvcnRlZF9wb2x5Z29uX2NvdW50IjowLCJzY2hlbWFfdmVyc2lvbiI6MSwic3RhdHVzIjoicGFzcyIsInZhbGlkYXRvciI6InBvbHlnb24udmFsaWRhdGUuYm9vbGVhbiJ9Cg=="
+    },
     "b88fd8eeacddaa021697227ce5caa3a2fe22bd026592f9676a97bf17963d7959": {
       "encoding": "base64",
       "byte_size": 76,
       "content": "eyJvdXRlciI6W1swLDBdLFsxMCwwXSxbMTAsMTBdLFswLDEwXV0sImhvbGVzIjpbW1szLDNdLFszLDZdLFs2LDZdLFs2LDNdXV19Cg=="
+    },
+    "b926ad1ec03b69b47ef47e7494a3ba85a39ee39ac4bf8beb256b5d1ff1d5deb5": {
+      "encoding": "base64",
+      "byte_size": 521,
+      "content": "eyJjaGVja3MiOnsiYm91bmRhcnlfY2hhaW5fZXF1YWxzX2V4YWN0X3NldF9vcGVyYXRpb24iOnRydWUsIm9wZXJhbmRzX3NpbXBsZV9ub256ZXJvX2FyZWEiOnRydWUsInBhcmFtZXRlcnNfbWF0Y2giOnRydWUsInJpbmdzX29yaWVudGVkX291dGVyX2Njd19ob2xlX2N3Ijp0cnVlLCJzb3VyY2VfbWF0Y2hlcyI6dHJ1ZX0sImV4cGVjdGVkX2JvdW5kYXJ5X3NlZ21lbnRfY291bnQiOjYsImluZGVwZW5kZW5jZSI6ImV4YWN0IHJhdGlvbmFsIGVkZ2Ugc3BsaXR0aW5nLCBwb2ludCBjbGFzc2lmaWNhdGlvbiBhbmQgdW5pdC1zZWdtZW50IGJvdW5kYXJ5IGNoYWluIGNvbXBhcmlzb247IG5vIENHQUwgaGVhZGVyIiwib3BlcmF0aW9uIjoiZGlmZmVyZW5jZSIsInBhc3NlZCI6dHJ1ZSwicmVwb3J0X3R5cGUiOiJWYWxpZGF0aW9uUmVwb3J0IiwicmVwb3J0ZWRfcG9seWdvbl9jb3VudCI6MSwic2NoZW1hX3ZlcnNpb24iOjEsInN0YXR1cyI6InBhc3MiLCJ2YWxpZGF0b3IiOiJwb2x5Z29uLnZhbGlkYXRlLmJvb2xlYW4ifQo="
     },
     "c2ef22bb60bd41df1a9239e24e8bb66ef23e9301917bea7c68a2ef6c528f5dda": {
       "encoding": "base64",
@@ -6162,18 +6895,146 @@
       "byte_size": 69,
       "content": "eyJwb2ludHMiOltbMSwxXSxbNCw0XSxbMyw0XSxbMCw1XSxbMTEsMV0sWzEwLDEwXSxbNSwzXSxbNy41LDkuMjVdXX0K"
     },
+    "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6": {
+      "encoding": "base64",
+      "byte_size": 37,
+      "content": "eyJwb2ludHMiOltbMCwwXSxbNCwwXSxbNCw0XSxbMCw0XV19Cg=="
+    },
+    "dcff3440c54cac148d8b9521ef64392a9e05d455d1d605fb9fadba251be046f6": {
+      "encoding": "base64",
+      "byte_size": 523,
+      "content": "eyJjaGVja3MiOnsiYm91bmRhcnlfY2hhaW5fZXF1YWxzX2V4YWN0X3NldF9vcGVyYXRpb24iOnRydWUsIm9wZXJhbmRzX3NpbXBsZV9ub256ZXJvX2FyZWEiOnRydWUsInBhcmFtZXRlcnNfbWF0Y2giOnRydWUsInJpbmdzX29yaWVudGVkX291dGVyX2Njd19ob2xlX2N3Ijp0cnVlLCJzb3VyY2VfbWF0Y2hlcyI6dHJ1ZX0sImV4cGVjdGVkX2JvdW5kYXJ5X3NlZ21lbnRfY291bnQiOjQsImluZGVwZW5kZW5jZSI6ImV4YWN0IHJhdGlvbmFsIGVkZ2Ugc3BsaXR0aW5nLCBwb2ludCBjbGFzc2lmaWNhdGlvbiBhbmQgdW5pdC1zZWdtZW50IGJvdW5kYXJ5IGNoYWluIGNvbXBhcmlzb247IG5vIENHQUwgaGVhZGVyIiwib3BlcmF0aW9uIjoiaW50ZXJzZWN0aW9uIiwicGFzc2VkIjp0cnVlLCJyZXBvcnRfdHlwZSI6IlZhbGlkYXRpb25SZXBvcnQiLCJyZXBvcnRlZF9wb2x5Z29uX2NvdW50IjoxLCJzY2hlbWFfdmVyc2lvbiI6MSwic3RhdHVzIjoicGFzcyIsInZhbGlkYXRvciI6InBvbHlnb24udmFsaWRhdGUuYm9vbGVhbiJ9Cg=="
+    },
     "dec71795a9fc825548732ea647003420ad0b4fd1419443f4440308bdbe7f4b4d": {
       "encoding": "base64",
       "byte_size": 59,
       "content": "eyJvdXRlciI6W1swLDBdLFs0LDBdLFs0LDFdLFsxLDFdLFsxLDRdLFswLDRdXSwiaG9sZXMiOltdfQo="
     },
+    "df1ab315d40d581e81d226ec738b2845caea99e21baa300f78ec442c7efc7135": {
+      "encoding": "base64",
+      "byte_size": 551,
+      "content": "eyJsZW5ndGhfdW5pdCI6ICJtbSIsICJvcGVyYXRpb24iOiAicG9seWdvbi5ib29sZWFuIiwgInBhcmFtZXRlcnMiOiB7Im9wZXJhdGlvbiI6ICJqb2luIn0sICJyZXBvcnRfa2luZCI6ICJwb2x5Z29uX2Jvb2xlYW4iLCAicmVwb3J0X3R5cGUiOiAiR2VvbWV0cnlRdWVyeVJlcG9ydCIsICJyZXN1bHRzIjogeyJwb2x5Z29ucyI6IFt7ImhvbGVzIjogW10sICJvdXRlciI6IFtbIjIiLCAiNCJdLCBbIjAiLCAiNCJdLCBbIjAiLCAiMCJdLCBbIjQiLCAiMCJdLCBbIjQiLCAiMiJdLCBbIjYiLCAiMiJdLCBbIjYiLCAiNiJdXX1dfSwgInNjaGVtYV92ZXJzaW9uIjogMSwgInNvdXJjZSI6IHsiZmlyc3Rfc2hhMjU2IjogImQ4YmJiM2I5MjRmNGFlYWVjNjAwN2YxMGU0ZmU0ZjYwMWJmMDk4MGRjZjljMzNlYzdkYzhlYWJmNmI4ZDA5YzYiLCAic2Vjb25kX3NoYTI1NiI6ICJhNzE4MzY2ZTEzNzg4ZDQ4NmE3MGRjZjdlODcxYmYzMjNhNTI5Y2MyZWU1ZmRlNjM1NGQzMzhkZWNhN2M2MTkxIn0sICJzdW1tYXJ5IjogeyJob2xlX2NvdW50IjogMCwgInBvbHlnb25fY291bnQiOiAxfX0="
+    },
     "e775f26e574de4e95ff8f0b09c10d3bdb305e877fae1b9769f96daf677c63216": {
       "encoding": "base64",
       "byte_size": 429,
       "content": "eyJjaGVja3MiOnsiYXJlYV9tYXRjaGVzIjp0cnVlLCJiYm94X21hdGNoZXMiOnRydWUsImNlbnRyb2lkX21hdGNoZXMiOnRydWUsInJpbmdfcHJvcGVydGllc19tYXRjaCI6dHJ1ZSwidmFsaWRpdHlfbWF0Y2hlcyI6dHJ1ZX0sImV4YWN0X2FyZWEiOiI5MSIsImV4YWN0X2NlbnRyb2lkIjpbIjkxOS8xODIiLCI5MTkvMTgyIl0sImluZGVwZW5kZW5jZSI6ImV4YWN0IHJhdGlvbmFsIGZhbiBkZWNvbXBvc2l0aW9uIGFuZCBwYWlyd2lzZSBlZGdlIHRlc3RzOyBDR0FMIFBvbHlnb25fMiBhbGdvcml0aG1zIGFyZSBub3QgY2FsbGVkIiwicGFzc2VkIjp0cnVlLCJyaW5nX2NvdW50IjoyLCJzdGF0dXMiOiJwYXNzIiwidmFsaWRfcG9seWdvbl93aXRoX2hvbGVzIjp0cnVlLCJ2YWxpZGF0b3IiOiJwb2x5Z29uLnZhbGlkYXRlLnByb3BlcnRpZXNfcmVwb3J0In0K"
+    },
+    "f4c430c5f2a7b012aefe8911b353ab71b33f115408d465b115663af1ab46c4ee": {
+      "encoding": "base64",
+      "byte_size": 489,
+      "content": "eyJsZW5ndGhfdW5pdCI6Im1tIiwib3BlcmF0aW9uIjoicG9seWdvbi5ib29sZWFuIiwicGFyYW1ldGVycyI6eyJvcGVyYXRpb24iOiJpbnRlcnNlY3Rpb24ifSwicmVwb3J0X2tpbmQiOiJwb2x5Z29uX2Jvb2xlYW4iLCJyZXBvcnRfdHlwZSI6Ikdlb21ldHJ5UXVlcnlSZXBvcnQiLCJyZXN1bHRzIjp7InBvbHlnb25zIjpbeyJob2xlcyI6W10sIm91dGVyIjpbWyIyIiwiMiJdLFsiNCIsIjIiXSxbIjQiLCI0Il0sWyIyIiwiNCJdXX1dfSwic2NoZW1hX3ZlcnNpb24iOjEsInNvdXJjZSI6eyJmaXJzdF9zaGEyNTYiOiJkOGJiYjNiOTI0ZjRhZWFlYzYwMDdmMTBlNGZlNGY2MDFiZjA5ODBkY2Y5YzMzZWM3ZGM4ZWFiZjZiOGQwOWM2Iiwic2Vjb25kX3NoYTI1NiI6ImE3MTgzNjZlMTM3ODhkNDg2YTcwZGNmN2U4NzFiZjMyM2E1MjljYzJlZTVmZGU2MzU0ZDMzOGRlY2E3YzYxOTEifSwic3VtbWFyeSI6eyJob2xlX2NvdW50IjowLCJwb2x5Z29uX2NvdW50IjoxfX0K"
     }
   },
   "reports": {
+    "122b3dabd2976e4c2dbbf4ee110554cbc49dece5e6482aa34ccd17e3af58d9bd": {
+      "checks": {
+        "boundary_chain_equals_exact_set_operation": true,
+        "operands_simple_nonzero_area": true,
+        "parameters_match": true,
+        "rings_oriented_outer_ccw_hole_cw": true,
+        "source_matches": true
+      },
+      "expected_boundary_segment_count": 8,
+      "independence": "exact rational edge splitting, point classification and unit-segment boundary chain comparison; no CGAL header",
+      "operation": "join",
+      "passed": true,
+      "report_type": "ValidationReport",
+      "reported_polygon_count": 1,
+      "schema_version": 1,
+      "status": "pass",
+      "validator": "polygon.validate.boolean"
+    },
+    "cfbbe07e22da748e7bf1051c6e1db410080f9eebcd563856bbe3f28f6b098e36": {
+      "checks": {
+        "boundary_chain_equals_exact_set_operation": true,
+        "operands_simple_nonzero_area": true,
+        "parameters_match": true,
+        "rings_oriented_outer_ccw_hole_cw": true,
+        "source_matches": true
+      },
+      "expected_boundary_segment_count": 4,
+      "independence": "exact rational edge splitting, point classification and unit-segment boundary chain comparison; no CGAL header",
+      "operation": "intersection",
+      "passed": true,
+      "report_type": "ValidationReport",
+      "reported_polygon_count": 1,
+      "schema_version": 1,
+      "status": "pass",
+      "validator": "polygon.validate.boolean"
+    },
+    "7da72a4882a5c318fc6f14b82f1a1b5b86eb4d421dd6ce32148a46faa5f9e602": {
+      "checks": {
+        "boundary_chain_equals_exact_set_operation": true,
+        "operands_simple_nonzero_area": true,
+        "parameters_match": true,
+        "rings_oriented_outer_ccw_hole_cw": true,
+        "source_matches": true
+      },
+      "expected_boundary_segment_count": 6,
+      "independence": "exact rational edge splitting, point classification and unit-segment boundary chain comparison; no CGAL header",
+      "operation": "difference",
+      "passed": true,
+      "report_type": "ValidationReport",
+      "reported_polygon_count": 1,
+      "schema_version": 1,
+      "status": "pass",
+      "validator": "polygon.validate.boolean"
+    },
+    "2ac582dbc74ac27493e6da7cde8ea70d98d18a13f0dda40981a4ff1c987a71ba": {
+      "checks": {
+        "boundary_chain_equals_exact_set_operation": true,
+        "operands_simple_nonzero_area": true,
+        "parameters_match": true,
+        "rings_oriented_outer_ccw_hole_cw": true,
+        "source_matches": true
+      },
+      "expected_boundary_segment_count": 8,
+      "independence": "exact rational edge splitting, point classification and unit-segment boundary chain comparison; no CGAL header",
+      "operation": "difference",
+      "passed": true,
+      "report_type": "ValidationReport",
+      "reported_polygon_count": 1,
+      "schema_version": 1,
+      "status": "pass",
+      "validator": "polygon.validate.boolean"
+    },
+    "81b2369d1a6425f12b22d2c14eed4701a3dfa682c10f9450cdd1df294d07309e": {
+      "checks": {
+        "boundary_chain_equals_exact_set_operation": true,
+        "operands_simple_nonzero_area": true,
+        "parameters_match": true,
+        "rings_oriented_outer_ccw_hole_cw": true,
+        "source_matches": true
+      },
+      "expected_boundary_segment_count": 8,
+      "independence": "exact rational edge splitting, point classification and unit-segment boundary chain comparison; no CGAL header",
+      "operation": "join",
+      "passed": true,
+      "report_type": "ValidationReport",
+      "reported_polygon_count": 2,
+      "schema_version": 1,
+      "status": "pass",
+      "validator": "polygon.validate.boolean"
+    },
+    "9f6c53a2e55235887a92d29c89d047b5a2d95917da92ae297e62b9baa06b4a62": {
+      "checks": {
+        "boundary_chain_equals_exact_set_operation": true,
+        "operands_simple_nonzero_area": true,
+        "parameters_match": true,
+        "rings_oriented_outer_ccw_hole_cw": true,
+        "source_matches": true
+      },
+      "expected_boundary_segment_count": 0,
+      "independence": "exact rational edge splitting, point classification and unit-segment boundary chain comparison; no CGAL header",
+      "operation": "intersection",
+      "passed": true,
+      "report_type": "ValidationReport",
+      "reported_polygon_count": 0,
+      "schema_version": 1,
+      "status": "pass",
+      "validator": "polygon.validate.boolean"
+    },
     "00eb32b506806217b84c7549f3a8de35f278af6304371b59e5f05fe12fe40e65": {
       "checks": {
         "area_matches": true,
@@ -6248,10 +7109,1221 @@
   },
   "operation_results": [
     {
+      "case_id": "polygon-join-overlap",
+      "operation_id": "polygon.boolean",
+      "revision": 1,
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "test_id": "family-7.12-replay-cases",
+      "request": {
+        "inputs": [
+          {
+            "artifact_id": "input-0",
+            "blob_sha256": "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+            "format": "json",
+            "sha256": "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+            "type": "Polygon2",
+            "unit": "mm"
+          },
+          {
+            "artifact_id": "input-1",
+            "blob_sha256": "a718366e13788d486a70dcf7e871bf323a529cc2ee5fde6354d338deca7c6191",
+            "format": "json",
+            "sha256": "a718366e13788d486a70dcf7e871bf323a529cc2ee5fde6354d338deca7c6191",
+            "type": "Polygon2",
+            "unit": "mm"
+          }
+        ],
+        "kernel": "package_recommended",
+        "limits": {
+          "memory_mb": 2048,
+          "wall_time_ms": 120000
+        },
+        "operation": "polygon.boolean",
+        "parameters": {
+          "operation": "join"
+        },
+        "protocol": 1,
+        "request_id": "polygon-join-overlap"
+      },
+      "request_sha256": "b6c5df7ab4ddd918026896803d45395d24ecdf475619be216273eb13c4eea5c0",
+      "response": {
+        "metrics": {
+          "algorithm": "CGAL::Polygon_set_2",
+          "hole_count": 0,
+          "operation": "join",
+          "polygon_count": 1
+        },
+        "outputs": [
+          {
+            "blob_sha256": "03addd0f80f33b33bdbb5fad454e248a21e16d46affe2016db8422096b3b9f2f",
+            "format": "json",
+            "slot": "analysis",
+            "type": "GeometryQueryReport",
+            "unit": "none"
+          }
+        ],
+        "protocol": 1,
+        "request_id": "polygon-join-overlap",
+        "status": "ok"
+      },
+      "response_sha256": "d981eeee9b8fa01e97a548be21e38d5438e6157b6cceae0adcdeafa0a9d951df",
+      "input_hashes": [
+        "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+        "a718366e13788d486a70dcf7e871bf323a529cc2ee5fde6354d338deca7c6191"
+      ],
+      "output_hashes": [
+        "03addd0f80f33b33bdbb5fad454e248a21e16d46affe2016db8422096b3b9f2f"
+      ],
+      "validators": [
+        {
+          "operation_id": "polygon.validate.boolean",
+          "revision": 1,
+          "request": {
+            "inputs": [
+              {
+                "artifact_id": "polygon-join-overlap-analysis-0",
+                "blob_sha256": "03addd0f80f33b33bdbb5fad454e248a21e16d46affe2016db8422096b3b9f2f",
+                "format": "json",
+                "sha256": "03addd0f80f33b33bdbb5fad454e248a21e16d46affe2016db8422096b3b9f2f",
+                "type": "GeometryQueryReport",
+                "unit": "none"
+              },
+              {
+                "artifact_id": "input-0",
+                "blob_sha256": "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+                "format": "json",
+                "sha256": "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+                "type": "Polygon2",
+                "unit": "mm"
+              },
+              {
+                "artifact_id": "input-1",
+                "blob_sha256": "a718366e13788d486a70dcf7e871bf323a529cc2ee5fde6354d338deca7c6191",
+                "format": "json",
+                "sha256": "a718366e13788d486a70dcf7e871bf323a529cc2ee5fde6354d338deca7c6191",
+                "type": "Polygon2",
+                "unit": "mm"
+              }
+            ],
+            "kernel": "package_recommended",
+            "limits": {
+              "memory_mb": 2048,
+              "wall_time_ms": 120000
+            },
+            "operation": "polygon.validate.boolean",
+            "parameters": {
+              "operation": "join"
+            },
+            "protocol": 1,
+            "request_id": "polygon-join-overlap--polygon.validate.boolean"
+          },
+          "request_sha256": "b52783f9cbaed89ac0bda8298358e6600b57794d517b690a8418d29f1f1e71ea",
+          "response": {
+            "metrics": {
+              "checks": {
+                "boundary_chain_equals_exact_set_operation": true,
+                "operands_simple_nonzero_area": true,
+                "parameters_match": true,
+                "rings_oriented_outer_ccw_hole_cw": true,
+                "source_matches": true
+              },
+              "expected_boundary_segment_count": 8,
+              "independence": "exact rational edge splitting, point classification and unit-segment boundary chain comparison; no CGAL header",
+              "operation": "join",
+              "passed": true,
+              "report_type": "ValidationReport",
+              "reported_polygon_count": 1,
+              "schema_version": 1,
+              "status": "pass",
+              "validator": "polygon.validate.boolean"
+            },
+            "outputs": [
+              {
+                "blob_sha256": "11b53e5faf0757eb6657d94425ee0441ccb65d08af01414d831f925c76e889a6",
+                "format": "json",
+                "slot": "validation",
+                "type": "ValidationReport",
+                "unit": "none"
+              }
+            ],
+            "protocol": 1,
+            "request_id": "polygon-join-overlap--polygon.validate.boolean",
+            "status": "ok"
+          },
+          "response_sha256": "040b99593caa3fde76c63cd5332068aba18665282f13c849c17ed0a02d122eeb",
+          "input_hashes": [
+            "03addd0f80f33b33bdbb5fad454e248a21e16d46affe2016db8422096b3b9f2f",
+            "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+            "a718366e13788d486a70dcf7e871bf323a529cc2ee5fde6354d338deca7c6191"
+          ],
+          "output_hashes": [
+            "11b53e5faf0757eb6657d94425ee0441ccb65d08af01414d831f925c76e889a6"
+          ],
+          "report_blob_sha256": "11b53e5faf0757eb6657d94425ee0441ccb65d08af01414d831f925c76e889a6",
+          "report_sha256": "122b3dabd2976e4c2dbbf4ee110554cbc49dece5e6482aa34ccd17e3af58d9bd",
+          "status": "pass"
+        }
+      ],
+      "validation": {
+        "status": "pass",
+        "checks": {
+          "transform_executed": {
+            "pass": true
+          },
+          "behaviour_assertions": {
+            "pass": true,
+            "count": 5
+          },
+          "validator:polygon.validate.boolean": {
+            "pass": true,
+            "report_sha256": "122b3dabd2976e4c2dbbf4ee110554cbc49dece5e6482aa34ccd17e3af58d9bd"
+          }
+        }
+      }
+    },
+    {
+      "case_id": "polygon-intersection-overlap",
+      "operation_id": "polygon.boolean",
+      "revision": 1,
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "test_id": "family-7.12-replay-cases",
+      "request": {
+        "inputs": [
+          {
+            "artifact_id": "input-0",
+            "blob_sha256": "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+            "format": "json",
+            "sha256": "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+            "type": "Polygon2",
+            "unit": "mm"
+          },
+          {
+            "artifact_id": "input-1",
+            "blob_sha256": "a718366e13788d486a70dcf7e871bf323a529cc2ee5fde6354d338deca7c6191",
+            "format": "json",
+            "sha256": "a718366e13788d486a70dcf7e871bf323a529cc2ee5fde6354d338deca7c6191",
+            "type": "Polygon2",
+            "unit": "mm"
+          }
+        ],
+        "kernel": "package_recommended",
+        "limits": {
+          "memory_mb": 2048,
+          "wall_time_ms": 120000
+        },
+        "operation": "polygon.boolean",
+        "parameters": {
+          "operation": "intersection"
+        },
+        "protocol": 1,
+        "request_id": "polygon-intersection-overlap"
+      },
+      "request_sha256": "3f6ec2bd8a2373c59b488d674423c73a21720200024f4278b321a472b6653eb6",
+      "response": {
+        "metrics": {
+          "algorithm": "CGAL::Polygon_set_2",
+          "hole_count": 0,
+          "operation": "intersection",
+          "polygon_count": 1
+        },
+        "outputs": [
+          {
+            "blob_sha256": "f4c430c5f2a7b012aefe8911b353ab71b33f115408d465b115663af1ab46c4ee",
+            "format": "json",
+            "slot": "analysis",
+            "type": "GeometryQueryReport",
+            "unit": "none"
+          }
+        ],
+        "protocol": 1,
+        "request_id": "polygon-intersection-overlap",
+        "status": "ok"
+      },
+      "response_sha256": "41069ad8e4f69fb51cda081631c902fa633e818bdbd4b7841650082f1d781001",
+      "input_hashes": [
+        "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+        "a718366e13788d486a70dcf7e871bf323a529cc2ee5fde6354d338deca7c6191"
+      ],
+      "output_hashes": [
+        "f4c430c5f2a7b012aefe8911b353ab71b33f115408d465b115663af1ab46c4ee"
+      ],
+      "validators": [
+        {
+          "operation_id": "polygon.validate.boolean",
+          "revision": 1,
+          "request": {
+            "inputs": [
+              {
+                "artifact_id": "polygon-intersection-overlap-analysis-0",
+                "blob_sha256": "f4c430c5f2a7b012aefe8911b353ab71b33f115408d465b115663af1ab46c4ee",
+                "format": "json",
+                "sha256": "f4c430c5f2a7b012aefe8911b353ab71b33f115408d465b115663af1ab46c4ee",
+                "type": "GeometryQueryReport",
+                "unit": "none"
+              },
+              {
+                "artifact_id": "input-0",
+                "blob_sha256": "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+                "format": "json",
+                "sha256": "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+                "type": "Polygon2",
+                "unit": "mm"
+              },
+              {
+                "artifact_id": "input-1",
+                "blob_sha256": "a718366e13788d486a70dcf7e871bf323a529cc2ee5fde6354d338deca7c6191",
+                "format": "json",
+                "sha256": "a718366e13788d486a70dcf7e871bf323a529cc2ee5fde6354d338deca7c6191",
+                "type": "Polygon2",
+                "unit": "mm"
+              }
+            ],
+            "kernel": "package_recommended",
+            "limits": {
+              "memory_mb": 2048,
+              "wall_time_ms": 120000
+            },
+            "operation": "polygon.validate.boolean",
+            "parameters": {
+              "operation": "intersection"
+            },
+            "protocol": 1,
+            "request_id": "polygon-intersection-overlap--polygon.validate.boolean"
+          },
+          "request_sha256": "666e734d8fabb2b18d1e677d399a7ee0832ab33238294e3a564f1f96bd2c9a53",
+          "response": {
+            "metrics": {
+              "checks": {
+                "boundary_chain_equals_exact_set_operation": true,
+                "operands_simple_nonzero_area": true,
+                "parameters_match": true,
+                "rings_oriented_outer_ccw_hole_cw": true,
+                "source_matches": true
+              },
+              "expected_boundary_segment_count": 4,
+              "independence": "exact rational edge splitting, point classification and unit-segment boundary chain comparison; no CGAL header",
+              "operation": "intersection",
+              "passed": true,
+              "report_type": "ValidationReport",
+              "reported_polygon_count": 1,
+              "schema_version": 1,
+              "status": "pass",
+              "validator": "polygon.validate.boolean"
+            },
+            "outputs": [
+              {
+                "blob_sha256": "dcff3440c54cac148d8b9521ef64392a9e05d455d1d605fb9fadba251be046f6",
+                "format": "json",
+                "slot": "validation",
+                "type": "ValidationReport",
+                "unit": "none"
+              }
+            ],
+            "protocol": 1,
+            "request_id": "polygon-intersection-overlap--polygon.validate.boolean",
+            "status": "ok"
+          },
+          "response_sha256": "0144c87be9c89bcbdf97fdab1013c7fc4b1a6d717bc08784a531c5b3f22a7769",
+          "input_hashes": [
+            "f4c430c5f2a7b012aefe8911b353ab71b33f115408d465b115663af1ab46c4ee",
+            "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+            "a718366e13788d486a70dcf7e871bf323a529cc2ee5fde6354d338deca7c6191"
+          ],
+          "output_hashes": [
+            "dcff3440c54cac148d8b9521ef64392a9e05d455d1d605fb9fadba251be046f6"
+          ],
+          "report_blob_sha256": "dcff3440c54cac148d8b9521ef64392a9e05d455d1d605fb9fadba251be046f6",
+          "report_sha256": "cfbbe07e22da748e7bf1051c6e1db410080f9eebcd563856bbe3f28f6b098e36",
+          "status": "pass"
+        }
+      ],
+      "validation": {
+        "status": "pass",
+        "checks": {
+          "transform_executed": {
+            "pass": true
+          },
+          "behaviour_assertions": {
+            "pass": true,
+            "count": 2
+          },
+          "validator:polygon.validate.boolean": {
+            "pass": true,
+            "report_sha256": "cfbbe07e22da748e7bf1051c6e1db410080f9eebcd563856bbe3f28f6b098e36"
+          }
+        }
+      }
+    },
+    {
+      "case_id": "polygon-difference-overlap",
+      "operation_id": "polygon.boolean",
+      "revision": 1,
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "test_id": "family-7.12-replay-cases",
+      "request": {
+        "inputs": [
+          {
+            "artifact_id": "input-0",
+            "blob_sha256": "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+            "format": "json",
+            "sha256": "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+            "type": "Polygon2",
+            "unit": "mm"
+          },
+          {
+            "artifact_id": "input-1",
+            "blob_sha256": "a718366e13788d486a70dcf7e871bf323a529cc2ee5fde6354d338deca7c6191",
+            "format": "json",
+            "sha256": "a718366e13788d486a70dcf7e871bf323a529cc2ee5fde6354d338deca7c6191",
+            "type": "Polygon2",
+            "unit": "mm"
+          }
+        ],
+        "kernel": "package_recommended",
+        "limits": {
+          "memory_mb": 2048,
+          "wall_time_ms": 120000
+        },
+        "operation": "polygon.boolean",
+        "parameters": {
+          "operation": "difference"
+        },
+        "protocol": 1,
+        "request_id": "polygon-difference-overlap"
+      },
+      "request_sha256": "db5a69378ca7a7b763392f351419b3a6ea3a8c237478b78cca552a5a939765bf",
+      "response": {
+        "metrics": {
+          "algorithm": "CGAL::Polygon_set_2",
+          "hole_count": 0,
+          "operation": "difference",
+          "polygon_count": 1
+        },
+        "outputs": [
+          {
+            "blob_sha256": "265dd89bbf591dc3e2e4b2942d8c8f1ba7d2e47b0948024a52e9253e1a40493c",
+            "format": "json",
+            "slot": "analysis",
+            "type": "GeometryQueryReport",
+            "unit": "none"
+          }
+        ],
+        "protocol": 1,
+        "request_id": "polygon-difference-overlap",
+        "status": "ok"
+      },
+      "response_sha256": "533e6398fd6481609512f4ae62d746e7429e2cda6e20d070fcdd484fb3be7179",
+      "input_hashes": [
+        "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+        "a718366e13788d486a70dcf7e871bf323a529cc2ee5fde6354d338deca7c6191"
+      ],
+      "output_hashes": [
+        "265dd89bbf591dc3e2e4b2942d8c8f1ba7d2e47b0948024a52e9253e1a40493c"
+      ],
+      "validators": [
+        {
+          "operation_id": "polygon.validate.boolean",
+          "revision": 1,
+          "request": {
+            "inputs": [
+              {
+                "artifact_id": "polygon-difference-overlap-analysis-0",
+                "blob_sha256": "265dd89bbf591dc3e2e4b2942d8c8f1ba7d2e47b0948024a52e9253e1a40493c",
+                "format": "json",
+                "sha256": "265dd89bbf591dc3e2e4b2942d8c8f1ba7d2e47b0948024a52e9253e1a40493c",
+                "type": "GeometryQueryReport",
+                "unit": "none"
+              },
+              {
+                "artifact_id": "input-0",
+                "blob_sha256": "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+                "format": "json",
+                "sha256": "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+                "type": "Polygon2",
+                "unit": "mm"
+              },
+              {
+                "artifact_id": "input-1",
+                "blob_sha256": "a718366e13788d486a70dcf7e871bf323a529cc2ee5fde6354d338deca7c6191",
+                "format": "json",
+                "sha256": "a718366e13788d486a70dcf7e871bf323a529cc2ee5fde6354d338deca7c6191",
+                "type": "Polygon2",
+                "unit": "mm"
+              }
+            ],
+            "kernel": "package_recommended",
+            "limits": {
+              "memory_mb": 2048,
+              "wall_time_ms": 120000
+            },
+            "operation": "polygon.validate.boolean",
+            "parameters": {
+              "operation": "difference"
+            },
+            "protocol": 1,
+            "request_id": "polygon-difference-overlap--polygon.validate.boolean"
+          },
+          "request_sha256": "3e468d0190fc9c276265b9da8bd03a79a563358836a3ad0eaad2301ce44efbfa",
+          "response": {
+            "metrics": {
+              "checks": {
+                "boundary_chain_equals_exact_set_operation": true,
+                "operands_simple_nonzero_area": true,
+                "parameters_match": true,
+                "rings_oriented_outer_ccw_hole_cw": true,
+                "source_matches": true
+              },
+              "expected_boundary_segment_count": 6,
+              "independence": "exact rational edge splitting, point classification and unit-segment boundary chain comparison; no CGAL header",
+              "operation": "difference",
+              "passed": true,
+              "report_type": "ValidationReport",
+              "reported_polygon_count": 1,
+              "schema_version": 1,
+              "status": "pass",
+              "validator": "polygon.validate.boolean"
+            },
+            "outputs": [
+              {
+                "blob_sha256": "b926ad1ec03b69b47ef47e7494a3ba85a39ee39ac4bf8beb256b5d1ff1d5deb5",
+                "format": "json",
+                "slot": "validation",
+                "type": "ValidationReport",
+                "unit": "none"
+              }
+            ],
+            "protocol": 1,
+            "request_id": "polygon-difference-overlap--polygon.validate.boolean",
+            "status": "ok"
+          },
+          "response_sha256": "228a042794d84fcc1bac98f41ef2d59efcd30c9150db6f54be7c4731b176bab4",
+          "input_hashes": [
+            "265dd89bbf591dc3e2e4b2942d8c8f1ba7d2e47b0948024a52e9253e1a40493c",
+            "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+            "a718366e13788d486a70dcf7e871bf323a529cc2ee5fde6354d338deca7c6191"
+          ],
+          "output_hashes": [
+            "b926ad1ec03b69b47ef47e7494a3ba85a39ee39ac4bf8beb256b5d1ff1d5deb5"
+          ],
+          "report_blob_sha256": "b926ad1ec03b69b47ef47e7494a3ba85a39ee39ac4bf8beb256b5d1ff1d5deb5",
+          "report_sha256": "7da72a4882a5c318fc6f14b82f1a1b5b86eb4d421dd6ce32148a46faa5f9e602",
+          "status": "pass"
+        }
+      ],
+      "validation": {
+        "status": "pass",
+        "checks": {
+          "transform_executed": {
+            "pass": true
+          },
+          "behaviour_assertions": {
+            "pass": true,
+            "count": 3
+          },
+          "validator:polygon.validate.boolean": {
+            "pass": true,
+            "report_sha256": "7da72a4882a5c318fc6f14b82f1a1b5b86eb4d421dd6ce32148a46faa5f9e602"
+          }
+        }
+      }
+    },
+    {
+      "case_id": "polygon-difference-hole",
+      "operation_id": "polygon.boolean",
+      "revision": 1,
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "test_id": "family-7.12-replay-cases",
+      "request": {
+        "inputs": [
+          {
+            "artifact_id": "input-0",
+            "blob_sha256": "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+            "format": "json",
+            "sha256": "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+            "type": "Polygon2",
+            "unit": "mm"
+          },
+          {
+            "artifact_id": "input-1",
+            "blob_sha256": "5ef7a06ca3138e7340374704b5ebc268a7cfbe6bffe6422a3210bef81c7190b8",
+            "format": "json",
+            "sha256": "5ef7a06ca3138e7340374704b5ebc268a7cfbe6bffe6422a3210bef81c7190b8",
+            "type": "Polygon2",
+            "unit": "mm"
+          }
+        ],
+        "kernel": "package_recommended",
+        "limits": {
+          "memory_mb": 2048,
+          "wall_time_ms": 120000
+        },
+        "operation": "polygon.boolean",
+        "parameters": {
+          "operation": "difference"
+        },
+        "protocol": 1,
+        "request_id": "polygon-difference-hole"
+      },
+      "request_sha256": "e31b78214858df71710e43a19e6c4b9c497242d4d2b39a6c8b814ae9a92198f2",
+      "response": {
+        "metrics": {
+          "algorithm": "CGAL::Polygon_set_2",
+          "hole_count": 1,
+          "operation": "difference",
+          "polygon_count": 1
+        },
+        "outputs": [
+          {
+            "blob_sha256": "3c9a892b1848647ae590f13edc9d38a8154b549ffe8aeba582cbf6e7b8f53aa6",
+            "format": "json",
+            "slot": "analysis",
+            "type": "GeometryQueryReport",
+            "unit": "none"
+          }
+        ],
+        "protocol": 1,
+        "request_id": "polygon-difference-hole",
+        "status": "ok"
+      },
+      "response_sha256": "2efc9846458d95edb6f95bd30cac0b9cc5cee47fc866c7dd64532f7c4655839e",
+      "input_hashes": [
+        "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+        "5ef7a06ca3138e7340374704b5ebc268a7cfbe6bffe6422a3210bef81c7190b8"
+      ],
+      "output_hashes": [
+        "3c9a892b1848647ae590f13edc9d38a8154b549ffe8aeba582cbf6e7b8f53aa6"
+      ],
+      "validators": [
+        {
+          "operation_id": "polygon.validate.boolean",
+          "revision": 1,
+          "request": {
+            "inputs": [
+              {
+                "artifact_id": "polygon-difference-hole-analysis-0",
+                "blob_sha256": "3c9a892b1848647ae590f13edc9d38a8154b549ffe8aeba582cbf6e7b8f53aa6",
+                "format": "json",
+                "sha256": "3c9a892b1848647ae590f13edc9d38a8154b549ffe8aeba582cbf6e7b8f53aa6",
+                "type": "GeometryQueryReport",
+                "unit": "none"
+              },
+              {
+                "artifact_id": "input-0",
+                "blob_sha256": "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+                "format": "json",
+                "sha256": "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+                "type": "Polygon2",
+                "unit": "mm"
+              },
+              {
+                "artifact_id": "input-1",
+                "blob_sha256": "5ef7a06ca3138e7340374704b5ebc268a7cfbe6bffe6422a3210bef81c7190b8",
+                "format": "json",
+                "sha256": "5ef7a06ca3138e7340374704b5ebc268a7cfbe6bffe6422a3210bef81c7190b8",
+                "type": "Polygon2",
+                "unit": "mm"
+              }
+            ],
+            "kernel": "package_recommended",
+            "limits": {
+              "memory_mb": 2048,
+              "wall_time_ms": 120000
+            },
+            "operation": "polygon.validate.boolean",
+            "parameters": {
+              "operation": "difference"
+            },
+            "protocol": 1,
+            "request_id": "polygon-difference-hole--polygon.validate.boolean"
+          },
+          "request_sha256": "fc6f55b2328ad20b2dec86838495e55aa35d709795062e4f5bf7a9f5cfbb3889",
+          "response": {
+            "metrics": {
+              "checks": {
+                "boundary_chain_equals_exact_set_operation": true,
+                "operands_simple_nonzero_area": true,
+                "parameters_match": true,
+                "rings_oriented_outer_ccw_hole_cw": true,
+                "source_matches": true
+              },
+              "expected_boundary_segment_count": 8,
+              "independence": "exact rational edge splitting, point classification and unit-segment boundary chain comparison; no CGAL header",
+              "operation": "difference",
+              "passed": true,
+              "report_type": "ValidationReport",
+              "reported_polygon_count": 1,
+              "schema_version": 1,
+              "status": "pass",
+              "validator": "polygon.validate.boolean"
+            },
+            "outputs": [
+              {
+                "blob_sha256": "0dd85a022da9fdcdd994ea8141691c0b06559f610b8ae2e1cef67e927a5598a7",
+                "format": "json",
+                "slot": "validation",
+                "type": "ValidationReport",
+                "unit": "none"
+              }
+            ],
+            "protocol": 1,
+            "request_id": "polygon-difference-hole--polygon.validate.boolean",
+            "status": "ok"
+          },
+          "response_sha256": "a83015bb811e39525ae4b7aa840a2287321a93479598e3a85145afa04e93fc14",
+          "input_hashes": [
+            "3c9a892b1848647ae590f13edc9d38a8154b549ffe8aeba582cbf6e7b8f53aa6",
+            "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+            "5ef7a06ca3138e7340374704b5ebc268a7cfbe6bffe6422a3210bef81c7190b8"
+          ],
+          "output_hashes": [
+            "0dd85a022da9fdcdd994ea8141691c0b06559f610b8ae2e1cef67e927a5598a7"
+          ],
+          "report_blob_sha256": "0dd85a022da9fdcdd994ea8141691c0b06559f610b8ae2e1cef67e927a5598a7",
+          "report_sha256": "2ac582dbc74ac27493e6da7cde8ea70d98d18a13f0dda40981a4ff1c987a71ba",
+          "status": "pass"
+        }
+      ],
+      "validation": {
+        "status": "pass",
+        "checks": {
+          "transform_executed": {
+            "pass": true
+          },
+          "behaviour_assertions": {
+            "pass": true,
+            "count": 4
+          },
+          "validator:polygon.validate.boolean": {
+            "pass": true,
+            "report_sha256": "2ac582dbc74ac27493e6da7cde8ea70d98d18a13f0dda40981a4ff1c987a71ba"
+          }
+        }
+      }
+    },
+    {
+      "case_id": "polygon-join-disjoint",
+      "operation_id": "polygon.boolean",
+      "revision": 1,
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "test_id": "family-7.12-replay-cases",
+      "request": {
+        "inputs": [
+          {
+            "artifact_id": "input-0",
+            "blob_sha256": "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+            "format": "json",
+            "sha256": "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+            "type": "Polygon2",
+            "unit": "mm"
+          },
+          {
+            "artifact_id": "input-1",
+            "blob_sha256": "716a2b1b82b0e8986975e02b75a52c05238ccd86147ec074a023a1a6faa50380",
+            "format": "json",
+            "sha256": "716a2b1b82b0e8986975e02b75a52c05238ccd86147ec074a023a1a6faa50380",
+            "type": "Polygon2",
+            "unit": "mm"
+          }
+        ],
+        "kernel": "package_recommended",
+        "limits": {
+          "memory_mb": 2048,
+          "wall_time_ms": 120000
+        },
+        "operation": "polygon.boolean",
+        "parameters": {
+          "operation": "join"
+        },
+        "protocol": 1,
+        "request_id": "polygon-join-disjoint"
+      },
+      "request_sha256": "bbf90411fd9b3b7da4679b0fba3d816af9bdfc68cffc1cb7c03d2d30b749d672",
+      "response": {
+        "metrics": {
+          "algorithm": "CGAL::Polygon_set_2",
+          "hole_count": 0,
+          "operation": "join",
+          "polygon_count": 2
+        },
+        "outputs": [
+          {
+            "blob_sha256": "602de0ce059660b45599f3c58bf7500ee0886fe3cbf59e370388cd18ce2c5ec9",
+            "format": "json",
+            "slot": "analysis",
+            "type": "GeometryQueryReport",
+            "unit": "none"
+          }
+        ],
+        "protocol": 1,
+        "request_id": "polygon-join-disjoint",
+        "status": "ok"
+      },
+      "response_sha256": "f9763af85d395fa6f7a5a90ba83a48f8374551ce0bc549b92a8455cf44e03b52",
+      "input_hashes": [
+        "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+        "716a2b1b82b0e8986975e02b75a52c05238ccd86147ec074a023a1a6faa50380"
+      ],
+      "output_hashes": [
+        "602de0ce059660b45599f3c58bf7500ee0886fe3cbf59e370388cd18ce2c5ec9"
+      ],
+      "validators": [
+        {
+          "operation_id": "polygon.validate.boolean",
+          "revision": 1,
+          "request": {
+            "inputs": [
+              {
+                "artifact_id": "polygon-join-disjoint-analysis-0",
+                "blob_sha256": "602de0ce059660b45599f3c58bf7500ee0886fe3cbf59e370388cd18ce2c5ec9",
+                "format": "json",
+                "sha256": "602de0ce059660b45599f3c58bf7500ee0886fe3cbf59e370388cd18ce2c5ec9",
+                "type": "GeometryQueryReport",
+                "unit": "none"
+              },
+              {
+                "artifact_id": "input-0",
+                "blob_sha256": "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+                "format": "json",
+                "sha256": "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+                "type": "Polygon2",
+                "unit": "mm"
+              },
+              {
+                "artifact_id": "input-1",
+                "blob_sha256": "716a2b1b82b0e8986975e02b75a52c05238ccd86147ec074a023a1a6faa50380",
+                "format": "json",
+                "sha256": "716a2b1b82b0e8986975e02b75a52c05238ccd86147ec074a023a1a6faa50380",
+                "type": "Polygon2",
+                "unit": "mm"
+              }
+            ],
+            "kernel": "package_recommended",
+            "limits": {
+              "memory_mb": 2048,
+              "wall_time_ms": 120000
+            },
+            "operation": "polygon.validate.boolean",
+            "parameters": {
+              "operation": "join"
+            },
+            "protocol": 1,
+            "request_id": "polygon-join-disjoint--polygon.validate.boolean"
+          },
+          "request_sha256": "b3bba0283c3657691d7b1cb097a7638856697e6c9836954881b930c0a638ae3c",
+          "response": {
+            "metrics": {
+              "checks": {
+                "boundary_chain_equals_exact_set_operation": true,
+                "operands_simple_nonzero_area": true,
+                "parameters_match": true,
+                "rings_oriented_outer_ccw_hole_cw": true,
+                "source_matches": true
+              },
+              "expected_boundary_segment_count": 8,
+              "independence": "exact rational edge splitting, point classification and unit-segment boundary chain comparison; no CGAL header",
+              "operation": "join",
+              "passed": true,
+              "report_type": "ValidationReport",
+              "reported_polygon_count": 2,
+              "schema_version": 1,
+              "status": "pass",
+              "validator": "polygon.validate.boolean"
+            },
+            "outputs": [
+              {
+                "blob_sha256": "0571360d5eb8c8548c7d93fa216e78a832fcb78870e9a898e3887d560e67c4ed",
+                "format": "json",
+                "slot": "validation",
+                "type": "ValidationReport",
+                "unit": "none"
+              }
+            ],
+            "protocol": 1,
+            "request_id": "polygon-join-disjoint--polygon.validate.boolean",
+            "status": "ok"
+          },
+          "response_sha256": "07274af8a0930241000178663c7a971bb8553db23bc0e227360c4ecdf583f84a",
+          "input_hashes": [
+            "602de0ce059660b45599f3c58bf7500ee0886fe3cbf59e370388cd18ce2c5ec9",
+            "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+            "716a2b1b82b0e8986975e02b75a52c05238ccd86147ec074a023a1a6faa50380"
+          ],
+          "output_hashes": [
+            "0571360d5eb8c8548c7d93fa216e78a832fcb78870e9a898e3887d560e67c4ed"
+          ],
+          "report_blob_sha256": "0571360d5eb8c8548c7d93fa216e78a832fcb78870e9a898e3887d560e67c4ed",
+          "report_sha256": "81b2369d1a6425f12b22d2c14eed4701a3dfa682c10f9450cdd1df294d07309e",
+          "status": "pass"
+        }
+      ],
+      "validation": {
+        "status": "pass",
+        "checks": {
+          "transform_executed": {
+            "pass": true
+          },
+          "behaviour_assertions": {
+            "pass": true,
+            "count": 2
+          },
+          "validator:polygon.validate.boolean": {
+            "pass": true,
+            "report_sha256": "81b2369d1a6425f12b22d2c14eed4701a3dfa682c10f9450cdd1df294d07309e"
+          }
+        }
+      }
+    },
+    {
+      "case_id": "polygon-intersection-disjoint",
+      "operation_id": "polygon.boolean",
+      "revision": 1,
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "test_id": "family-7.12-replay-cases",
+      "request": {
+        "inputs": [
+          {
+            "artifact_id": "input-0",
+            "blob_sha256": "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+            "format": "json",
+            "sha256": "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+            "type": "Polygon2",
+            "unit": "mm"
+          },
+          {
+            "artifact_id": "input-1",
+            "blob_sha256": "716a2b1b82b0e8986975e02b75a52c05238ccd86147ec074a023a1a6faa50380",
+            "format": "json",
+            "sha256": "716a2b1b82b0e8986975e02b75a52c05238ccd86147ec074a023a1a6faa50380",
+            "type": "Polygon2",
+            "unit": "mm"
+          }
+        ],
+        "kernel": "package_recommended",
+        "limits": {
+          "memory_mb": 2048,
+          "wall_time_ms": 120000
+        },
+        "operation": "polygon.boolean",
+        "parameters": {
+          "operation": "intersection"
+        },
+        "protocol": 1,
+        "request_id": "polygon-intersection-disjoint"
+      },
+      "request_sha256": "e195399149d20a6a10a924d45bcb59e61541ba22940cdfa133de8db9d343fca0",
+      "response": {
+        "metrics": {
+          "algorithm": "CGAL::Polygon_set_2",
+          "hole_count": 0,
+          "operation": "intersection",
+          "polygon_count": 0
+        },
+        "outputs": [
+          {
+            "blob_sha256": "7eb65987ade545dacab95dde4d691d0633ef496979d96a0ea99ddacfb9ce9880",
+            "format": "json",
+            "slot": "analysis",
+            "type": "GeometryQueryReport",
+            "unit": "none"
+          }
+        ],
+        "protocol": 1,
+        "request_id": "polygon-intersection-disjoint",
+        "status": "ok"
+      },
+      "response_sha256": "d61f1d042de4672aaecc36918b8426ab1dc9f147f5cd40364f1ff1bff91cbd6d",
+      "input_hashes": [
+        "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+        "716a2b1b82b0e8986975e02b75a52c05238ccd86147ec074a023a1a6faa50380"
+      ],
+      "output_hashes": [
+        "7eb65987ade545dacab95dde4d691d0633ef496979d96a0ea99ddacfb9ce9880"
+      ],
+      "validators": [
+        {
+          "operation_id": "polygon.validate.boolean",
+          "revision": 1,
+          "request": {
+            "inputs": [
+              {
+                "artifact_id": "polygon-intersection-disjoint-analysis-0",
+                "blob_sha256": "7eb65987ade545dacab95dde4d691d0633ef496979d96a0ea99ddacfb9ce9880",
+                "format": "json",
+                "sha256": "7eb65987ade545dacab95dde4d691d0633ef496979d96a0ea99ddacfb9ce9880",
+                "type": "GeometryQueryReport",
+                "unit": "none"
+              },
+              {
+                "artifact_id": "input-0",
+                "blob_sha256": "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+                "format": "json",
+                "sha256": "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+                "type": "Polygon2",
+                "unit": "mm"
+              },
+              {
+                "artifact_id": "input-1",
+                "blob_sha256": "716a2b1b82b0e8986975e02b75a52c05238ccd86147ec074a023a1a6faa50380",
+                "format": "json",
+                "sha256": "716a2b1b82b0e8986975e02b75a52c05238ccd86147ec074a023a1a6faa50380",
+                "type": "Polygon2",
+                "unit": "mm"
+              }
+            ],
+            "kernel": "package_recommended",
+            "limits": {
+              "memory_mb": 2048,
+              "wall_time_ms": 120000
+            },
+            "operation": "polygon.validate.boolean",
+            "parameters": {
+              "operation": "intersection"
+            },
+            "protocol": 1,
+            "request_id": "polygon-intersection-disjoint--polygon.validate.boolean"
+          },
+          "request_sha256": "980f567e100c92ffae10491ffe9b38e0cc798352fe1dde94d95446d5f65ff884",
+          "response": {
+            "metrics": {
+              "checks": {
+                "boundary_chain_equals_exact_set_operation": true,
+                "operands_simple_nonzero_area": true,
+                "parameters_match": true,
+                "rings_oriented_outer_ccw_hole_cw": true,
+                "source_matches": true
+              },
+              "expected_boundary_segment_count": 0,
+              "independence": "exact rational edge splitting, point classification and unit-segment boundary chain comparison; no CGAL header",
+              "operation": "intersection",
+              "passed": true,
+              "report_type": "ValidationReport",
+              "reported_polygon_count": 0,
+              "schema_version": 1,
+              "status": "pass",
+              "validator": "polygon.validate.boolean"
+            },
+            "outputs": [
+              {
+                "blob_sha256": "b675ce9e8b6a0e2ac5b41b3b6c51bb4ef8cc08f0ad55cb1442c8ff4b86a988af",
+                "format": "json",
+                "slot": "validation",
+                "type": "ValidationReport",
+                "unit": "none"
+              }
+            ],
+            "protocol": 1,
+            "request_id": "polygon-intersection-disjoint--polygon.validate.boolean",
+            "status": "ok"
+          },
+          "response_sha256": "fc0a488b90b31e4db07ae0506153b9f053dd47733df3d7f8d8018ac1b6c25ec0",
+          "input_hashes": [
+            "7eb65987ade545dacab95dde4d691d0633ef496979d96a0ea99ddacfb9ce9880",
+            "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+            "716a2b1b82b0e8986975e02b75a52c05238ccd86147ec074a023a1a6faa50380"
+          ],
+          "output_hashes": [
+            "b675ce9e8b6a0e2ac5b41b3b6c51bb4ef8cc08f0ad55cb1442c8ff4b86a988af"
+          ],
+          "report_blob_sha256": "b675ce9e8b6a0e2ac5b41b3b6c51bb4ef8cc08f0ad55cb1442c8ff4b86a988af",
+          "report_sha256": "9f6c53a2e55235887a92d29c89d047b5a2d95917da92ae297e62b9baa06b4a62",
+          "status": "pass"
+        }
+      ],
+      "validation": {
+        "status": "pass",
+        "checks": {
+          "transform_executed": {
+            "pass": true
+          },
+          "behaviour_assertions": {
+            "pass": true,
+            "count": 2
+          },
+          "validator:polygon.validate.boolean": {
+            "pass": true,
+            "report_sha256": "9f6c53a2e55235887a92d29c89d047b5a2d95917da92ae297e62b9baa06b4a62"
+          }
+        }
+      }
+    },
+    {
+      "case_id": "polygon-intersection-clockwise-hexagon",
+      "operation_id": "polygon.boolean",
+      "revision": 1,
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "test_id": "family-7.12-replay-cases",
+      "request": {
+        "inputs": [
+          {
+            "artifact_id": "input-0",
+            "blob_sha256": "592be3a3d7bd365ac826bcb3275bcebf7661b69d88c004f8d8fce63d06ac520e",
+            "format": "json",
+            "sha256": "592be3a3d7bd365ac826bcb3275bcebf7661b69d88c004f8d8fce63d06ac520e",
+            "type": "Polygon2",
+            "unit": "mm"
+          },
+          {
+            "artifact_id": "input-1",
+            "blob_sha256": "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+            "format": "json",
+            "sha256": "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+            "type": "Polygon2",
+            "unit": "mm"
+          }
+        ],
+        "kernel": "package_recommended",
+        "limits": {
+          "memory_mb": 2048,
+          "wall_time_ms": 120000
+        },
+        "operation": "polygon.boolean",
+        "parameters": {
+          "operation": "intersection"
+        },
+        "protocol": 1,
+        "request_id": "polygon-intersection-clockwise-hexagon"
+      },
+      "request_sha256": "c42c2f9116d9326f4debeb39930fe0e82a6d2cd162f01ff4a11934a9f823a4ab",
+      "response": {
+        "metrics": {
+          "algorithm": "CGAL::Polygon_set_2",
+          "hole_count": 0,
+          "operation": "intersection",
+          "polygon_count": 1
+        },
+        "outputs": [
+          {
+            "blob_sha256": "5ce75de041769df35a7c15b2eabacc8a5a788f91448f50d01d46c1b90a8548f4",
+            "format": "json",
+            "slot": "analysis",
+            "type": "GeometryQueryReport",
+            "unit": "none"
+          }
+        ],
+        "protocol": 1,
+        "request_id": "polygon-intersection-clockwise-hexagon",
+        "status": "ok"
+      },
+      "response_sha256": "9ad62d91c4a8607e4aca8aff3679caf59dfa54e331e598cb446f59d3480ab1f7",
+      "input_hashes": [
+        "592be3a3d7bd365ac826bcb3275bcebf7661b69d88c004f8d8fce63d06ac520e",
+        "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6"
+      ],
+      "output_hashes": [
+        "5ce75de041769df35a7c15b2eabacc8a5a788f91448f50d01d46c1b90a8548f4"
+      ],
+      "validators": [
+        {
+          "operation_id": "polygon.validate.boolean",
+          "revision": 1,
+          "request": {
+            "inputs": [
+              {
+                "artifact_id": "polygon-intersection-clockwise-hexagon-analysis-0",
+                "blob_sha256": "5ce75de041769df35a7c15b2eabacc8a5a788f91448f50d01d46c1b90a8548f4",
+                "format": "json",
+                "sha256": "5ce75de041769df35a7c15b2eabacc8a5a788f91448f50d01d46c1b90a8548f4",
+                "type": "GeometryQueryReport",
+                "unit": "none"
+              },
+              {
+                "artifact_id": "input-0",
+                "blob_sha256": "592be3a3d7bd365ac826bcb3275bcebf7661b69d88c004f8d8fce63d06ac520e",
+                "format": "json",
+                "sha256": "592be3a3d7bd365ac826bcb3275bcebf7661b69d88c004f8d8fce63d06ac520e",
+                "type": "Polygon2",
+                "unit": "mm"
+              },
+              {
+                "artifact_id": "input-1",
+                "blob_sha256": "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+                "format": "json",
+                "sha256": "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+                "type": "Polygon2",
+                "unit": "mm"
+              }
+            ],
+            "kernel": "package_recommended",
+            "limits": {
+              "memory_mb": 2048,
+              "wall_time_ms": 120000
+            },
+            "operation": "polygon.validate.boolean",
+            "parameters": {
+              "operation": "intersection"
+            },
+            "protocol": 1,
+            "request_id": "polygon-intersection-clockwise-hexagon--polygon.validate.boolean"
+          },
+          "request_sha256": "98554b605bc492f9371465a3f100bfa039a11237b7cb5392bf73f347c1aae339",
+          "response": {
+            "metrics": {
+              "checks": {
+                "boundary_chain_equals_exact_set_operation": true,
+                "operands_simple_nonzero_area": true,
+                "parameters_match": true,
+                "rings_oriented_outer_ccw_hole_cw": true,
+                "source_matches": true
+              },
+              "expected_boundary_segment_count": 4,
+              "independence": "exact rational edge splitting, point classification and unit-segment boundary chain comparison; no CGAL header",
+              "operation": "intersection",
+              "passed": true,
+              "report_type": "ValidationReport",
+              "reported_polygon_count": 1,
+              "schema_version": 1,
+              "status": "pass",
+              "validator": "polygon.validate.boolean"
+            },
+            "outputs": [
+              {
+                "blob_sha256": "dcff3440c54cac148d8b9521ef64392a9e05d455d1d605fb9fadba251be046f6",
+                "format": "json",
+                "slot": "validation",
+                "type": "ValidationReport",
+                "unit": "none"
+              }
+            ],
+            "protocol": 1,
+            "request_id": "polygon-intersection-clockwise-hexagon--polygon.validate.boolean",
+            "status": "ok"
+          },
+          "response_sha256": "046044c01835b10f08c8ec2ac5a2ef4081d1d6bd11c5e3ed7f5fc473f462a583",
+          "input_hashes": [
+            "5ce75de041769df35a7c15b2eabacc8a5a788f91448f50d01d46c1b90a8548f4",
+            "592be3a3d7bd365ac826bcb3275bcebf7661b69d88c004f8d8fce63d06ac520e",
+            "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6"
+          ],
+          "output_hashes": [
+            "dcff3440c54cac148d8b9521ef64392a9e05d455d1d605fb9fadba251be046f6"
+          ],
+          "report_blob_sha256": "dcff3440c54cac148d8b9521ef64392a9e05d455d1d605fb9fadba251be046f6",
+          "report_sha256": "cfbbe07e22da748e7bf1051c6e1db410080f9eebcd563856bbe3f28f6b098e36",
+          "status": "pass"
+        }
+      ],
+      "validation": {
+        "status": "pass",
+        "checks": {
+          "transform_executed": {
+            "pass": true
+          },
+          "behaviour_assertions": {
+            "pass": true,
+            "count": 2
+          },
+          "validator:polygon.validate.boolean": {
+            "pass": true,
+            "report_sha256": "cfbbe07e22da748e7bf1051c6e1db410080f9eebcd563856bbe3f28f6b098e36"
+          }
+        }
+      }
+    },
+    {
       "case_id": "polygon-with-hole",
       "operation_id": "polygon.analysis.properties",
       "revision": 1,
-      "worker_manifest_sha256": "bd6f52527218dda8bc87410743af0d9ef34ad2e47913073a5754fd48ac8e0f11",
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -6404,7 +8476,7 @@
       "case_id": "polygon-l-shape",
       "operation_id": "polygon.analysis.properties",
       "revision": 1,
-      "worker_manifest_sha256": "bd6f52527218dda8bc87410743af0d9ef34ad2e47913073a5754fd48ac8e0f11",
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -6557,7 +8629,7 @@
       "case_id": "polygon-bowtie",
       "operation_id": "polygon.analysis.properties",
       "revision": 1,
-      "worker_manifest_sha256": "bd6f52527218dda8bc87410743af0d9ef34ad2e47913073a5754fd48ac8e0f11",
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -6707,7 +8779,7 @@
       "case_id": "containment-with-hole",
       "operation_id": "polygon.query.containment",
       "revision": 1,
-      "worker_manifest_sha256": "bd6f52527218dda8bc87410743af0d9ef34ad2e47913073a5754fd48ac8e0f11",
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -6871,11 +8943,142 @@
     }
   ],
   "negative_control_proofs": {
+    "polygon-bowtie-operand-rejected": {
+      "case_id": "polygon-bowtie-operand-rejected",
+      "operation_id": "polygon.boolean",
+      "revision": 1,
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "test_id": "family-7.12-replay-cases",
+      "request": {
+        "inputs": [
+          {
+            "artifact_id": "input-0",
+            "blob_sha256": "56d19bb3a00f04b5f2ea006f925f19065ea8a0cf828cc37871931952adf227a5",
+            "format": "json",
+            "sha256": "56d19bb3a00f04b5f2ea006f925f19065ea8a0cf828cc37871931952adf227a5",
+            "type": "Polygon2",
+            "unit": "mm"
+          },
+          {
+            "artifact_id": "input-1",
+            "blob_sha256": "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+            "format": "json",
+            "sha256": "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+            "type": "Polygon2",
+            "unit": "mm"
+          }
+        ],
+        "kernel": "package_recommended",
+        "limits": {
+          "memory_mb": 2048,
+          "wall_time_ms": 120000
+        },
+        "operation": "polygon.boolean",
+        "parameters": {
+          "operation": "join"
+        },
+        "protocol": 1,
+        "request_id": "polygon-bowtie-operand-rejected"
+      },
+      "request_sha256": "65463652e268b69b283e934d7c2789a7595091cab5d4fd978488ef98f48ee4c2",
+      "response": {
+        "error": {
+          "class": "PRECONDITION_FAILED",
+          "code": "POLYGON_NOT_SIMPLE",
+          "message": "Each operand must be a simple polygon",
+          "recoverable": false,
+          "suggested_operations": []
+        },
+        "metrics": {},
+        "outputs": [],
+        "protocol": 1,
+        "request_id": "polygon-bowtie-operand-rejected",
+        "status": "error"
+      },
+      "response_sha256": "17596503ecb64f57030928fb207cdd95cd163a18469c5ffc076bdae78eac2c5d",
+      "input_hashes": [
+        "56d19bb3a00f04b5f2ea006f925f19065ea8a0cf828cc37871931952adf227a5",
+        "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6"
+      ],
+      "output_hashes": [],
+      "expected_error_class": "PRECONDITION_FAILED",
+      "status": "expected_rejection"
+    },
+    "polygon-tampered-vertex-dropped-rejected": {
+      "case_id": "polygon-tampered-vertex-dropped-rejected",
+      "operation_id": "polygon.validate.boolean",
+      "revision": 1,
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
+      "test_id": "family-7.12-replay-cases",
+      "request": {
+        "inputs": [
+          {
+            "artifact_id": "input-0",
+            "blob_sha256": "df1ab315d40d581e81d226ec738b2845caea99e21baa300f78ec442c7efc7135",
+            "format": "json",
+            "sha256": "df1ab315d40d581e81d226ec738b2845caea99e21baa300f78ec442c7efc7135",
+            "type": "GeometryQueryReport",
+            "unit": "none"
+          },
+          {
+            "artifact_id": "input-1",
+            "blob_sha256": "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+            "format": "json",
+            "sha256": "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+            "type": "Polygon2",
+            "unit": "mm"
+          },
+          {
+            "artifact_id": "input-2",
+            "blob_sha256": "a718366e13788d486a70dcf7e871bf323a529cc2ee5fde6354d338deca7c6191",
+            "format": "json",
+            "sha256": "a718366e13788d486a70dcf7e871bf323a529cc2ee5fde6354d338deca7c6191",
+            "type": "Polygon2",
+            "unit": "mm"
+          }
+        ],
+        "kernel": "package_recommended",
+        "limits": {
+          "memory_mb": 2048,
+          "wall_time_ms": 120000
+        },
+        "operation": "polygon.validate.boolean",
+        "parameters": {
+          "operation": "join"
+        },
+        "protocol": 1,
+        "request_id": "polygon-tampered-vertex-dropped-rejected"
+      },
+      "request_sha256": "af1a8621f1c84b49edc2a76de4f244de8e9e8c964594b8d410796401bc66a10d",
+      "response": {
+        "error": {
+          "class": "VALIDATION_FAILED",
+          "code": "BOUNDARY_CHAIN_MISMATCH",
+          "message": "The reported polygons do not have the exact boundary of the set operation",
+          "recoverable": false,
+          "suggested_operations": []
+        },
+        "metrics": {},
+        "outputs": [],
+        "protocol": 1,
+        "request_id": "polygon-tampered-vertex-dropped-rejected",
+        "status": "error"
+      },
+      "response_sha256": "f94f3b3b011a0ddb3eccc11b780e3d4982e553cac14c415680034a8ef249be99",
+      "input_hashes": [
+        "df1ab315d40d581e81d226ec738b2845caea99e21baa300f78ec442c7efc7135",
+        "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+        "a718366e13788d486a70dcf7e871bf323a529cc2ee5fde6354d338deca7c6191"
+      ],
+      "output_hashes": [],
+      "expected_error_class": "VALIDATION_FAILED",
+      "status": "expected_rejection"
+    },
     "containment-bowtie-rejected": {
       "case_id": "containment-bowtie-rejected",
       "operation_id": "polygon.query.containment",
       "revision": 1,
-      "worker_manifest_sha256": "bd6f52527218dda8bc87410743af0d9ef34ad2e47913073a5754fd48ac8e0f11",
+      "worker_manifest_sha256": "8f3f06281063967a80d2e7f62f6902fa449b4669d37891f6896dc6c9db8a63ac",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -6931,5 +9134,5 @@
       "status": "expected_rejection"
     }
   },
-  "coverage_note": "Family 7.12: 1 requirement(s) bound by 4 replayed cases with registry-derived mandatory validators; 6 requirement(s) remain unbound with recorded gaps. The immutable 80-requirement denominator and full standalone acceptance remain incomplete."
+  "coverage_note": "Family 7.12: 2 requirement(s) bound by 11 replayed cases with registry-derived mandatory validators; 5 requirement(s) remain unbound with recorded gaps. The immutable 80-requirement denominator and full standalone acceptance remain incomplete."
 }
