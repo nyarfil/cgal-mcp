@@ -496,7 +496,7 @@ class GenericFamilyReplayTests(unittest.TestCase):
                     checked += 1
                     self.assertTrue(ledger[requirement_id])
                     self.assertEqual(sorted(ledger[requirement_id] - set(binding["symbols"])), [])
-        self.assertEqual(checked, 51)
+        self.assertEqual(checked, 57)
 
     def test_published_family_reports_fail_only_for_missing_replay(self):
         for requirement_id in GENERIC_BOUND:
