@@ -140,6 +140,21 @@ class ProductionOperationSearchTests(unittest.TestCase):
             self.assertFalse(analysis["automatic_route_supported"], (query, analysis))
             self.assertNotEqual(analysis["routing_confidence"], "high", (query, analysis))
 
+    def test_batch6_registration_and_reconstruction_operations_route(self):
+        two = ["PointSet3", "PointSet3"]
+        self.assert_route("compute the registration transformation between two point sets", two,
+                          "pointset.registration.compute_transformation")
+        self.assert_route("register point sets and return the transformed points", two,
+                          "pointset.registration.register")
+        self.assert_route("polygonal surface reconstruction from oriented points", ["PointSet3Normals"],
+                          "reconstruction.polygonal_surface")
+        self.assert_route("kinetic surface reconstruction of a building from points with normals",
+                          ["PointSet3Normals"], "reconstruction.kinetic_surface")
+        self.assert_route("poisson surface reconstruction from oriented points", ["PointSet3Normals"],
+                          "reconstruction.poisson")
+        self.assert_route("poisson surface reconstruction with open boundary", ["PointSet3Normals"],
+                          "reconstruction.poisson_delaunay")
+
     def test_non_manifold_split_goal_routes_to_validated_repair(self):
         result = self.search("split non-manifold neighborhoods into repairable shells",
                              ["TriangleSurfaceMesh"])

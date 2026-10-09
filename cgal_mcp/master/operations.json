@@ -39501,6 +39501,2070 @@
         "cgal_version": "6.2.1",
         "review_status": "self_verified_not_independently_reviewed"
       }
+    },
+    {
+      "id": "pointset.registration.compute_transformation",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "analysis",
+      "summary": "Rigid registration of a moving point set onto a reference point set with OpenGR Super4PCS (CGAL::OpenGR::compute_registration_transformation): the 3x4 transformation, the matching score and the exact residual figures; optional dependency OpenGR.",
+      "package": "Point_set_processing_3",
+      "major_requirements": [
+        "major.7.9.05"
+      ],
+      "aliases": [
+        "registration transformation",
+        "compute registration transformation",
+        "rigid transformation of a point set",
+        "Super4PCS registration",
+        "\u70b9\u7fa4\u4f4d\u7f6e\u5408\u308f\u305b\u5909\u63db"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Point_set_processing_3"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::OpenGR::compute_registration_transformation"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/OpenGR/compute_registration_transformation.h"
+        },
+        {
+          "kind": "manual",
+          "identifier": "Point_set_processing_3/index.html"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Point_set_processing_3",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/OpenGR/compute_registration_transformation.h",
+            "sha256": "cd9c14398d96eeff35465b63977d01c72eb1e6c951e1d2a6577464dbd66b4002"
+          },
+          {
+            "path": "include/CGAL/license/gpl_package_list.txt",
+            "sha256": "efb290ee3ef3d8b7675896bc037f1c9359f583543ca9e38bcb425fe34a8995db"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "reference",
+            "types": [
+              "PointSet3"
+            ],
+            "formats": [
+              "xyz"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          },
+          {
+            "slot": "moving",
+            "types": [
+              "PointSet3"
+            ],
+            "formats": [
+              "xyz"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "analysis",
+            "type": "GeometryQueryReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "number_of_samples",
+          "accuracy",
+          "overlap",
+          "maximum_running_time",
+          "max_rms",
+          "inlier_distance",
+          "min_inlier_fraction"
+        ],
+        "properties": {
+          "number_of_samples": {
+            "type": "integer",
+            "minimum": 8,
+            "maximum": 1000,
+            "description": "Number of samples of the Super4PCS RANSAC loop (OpenGR)."
+          },
+          "accuracy": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Delta, the matching accuracy of Super4PCS (OpenGR)."
+          },
+          "overlap": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 1,
+            "description": "Estimated overlap fraction of the two point sets (OpenGR)."
+          },
+          "maximum_running_time": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 120,
+            "description": "Wall-clock limit in seconds passed to Super4PCS; a run that reaches it is rejected as non-deterministic."
+          },
+          "max_rms": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Largest accepted root-mean-square nearest-neighbour residual after the transformation (validator-enforced, exact)."
+          },
+          "inlier_distance": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Nearest-neighbour distance below which a registered point counts as an inlier (validator-enforced, exact)."
+          },
+          "min_inlier_fraction": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 1,
+            "description": "Smallest accepted fraction of inliers (validator-enforced, exact)."
+          }
+        }
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 16777216
+        }
+      ],
+      "validation": {
+        "required": true,
+        "validators": [
+          "pointset.validate.registration_transformation"
+        ],
+        "bindings": {
+          "pointset.validate.registration_transformation": {
+            "artifacts": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "reference": {
+                "input": "reference"
+              },
+              "moving": {
+                "input": "moving"
+              }
+            },
+            "parameters": {
+              "inlier_distance": {
+                "parameter": "inlier_distance"
+              },
+              "max_rms": {
+                "parameter": "max_rms"
+              },
+              "min_inlier_fraction": {
+                "parameter": "min_inlier_fraction"
+              }
+            }
+          }
+        }
+      },
+      "output_contract": {
+        "geometry_mutation": false,
+        "source_sha256_preserved": true,
+        "candidate_published_only_after_validation": true,
+        "producer_diagnostics_are_non_authoritative": true
+      },
+      "dependencies": [
+        "Point_set_processing_3",
+        "OpenGR"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "input_slots": [
+            "reference",
+            "moving"
+          ],
+          "maximum_input_points": 400,
+          "optional_dependency": "OpenGR",
+          "source_header": "CGAL/OpenGR/compute_registration_transformation.h",
+          "validator_parameter_bindings": {
+            "pointset.validate.registration_transformation": {
+              "inlier_distance": "inlier_distance",
+              "max_rms": "max_rms",
+              "min_inlier_fraction": "min_inlier_fraction"
+            }
+          },
+          "validators": [
+            "pointset.validate.registration_transformation"
+          ]
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "CGAL filtered-exact predicates (EPICK); validators re-derive combinatorics from the raw files and use exact GMP rational arithmetic",
+        "exact_constructions": "unsupported_fail_closed",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_batch6_cases.py"
+        ],
+        "worker_manifest_operation": "pointset.registration.compute_transformation",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "pointset.registration.register",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "transform",
+      "summary": "Registers a moving point set onto a reference point set with OpenGR Super4PCS (CGAL::OpenGR::register_point_sets) and returns the transformed moving points; optional dependency OpenGR.",
+      "package": "Point_set_processing_3",
+      "major_requirements": [
+        "major.7.9.05"
+      ],
+      "aliases": [
+        "register point sets",
+        "register point clouds",
+        "align a point cloud",
+        "transformed points",
+        "registered point set",
+        "\u70b9\u7fa4\u4f4d\u7f6e\u5408\u308f\u305b"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Point_set_processing_3"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::OpenGR::register_point_sets"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/OpenGR/register_point_sets.h"
+        },
+        {
+          "kind": "manual",
+          "identifier": "Point_set_processing_3/index.html"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Point_set_processing_3",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/OpenGR/register_point_sets.h",
+            "sha256": "b23ea4eb7161aeae6a066c7e98aa3d8de637848b39623d111a81a2c9144cc57c"
+          },
+          {
+            "path": "include/CGAL/license/gpl_package_list.txt",
+            "sha256": "efb290ee3ef3d8b7675896bc037f1c9359f583543ca9e38bcb425fe34a8995db"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "reference",
+            "types": [
+              "PointSet3"
+            ],
+            "formats": [
+              "xyz"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          },
+          {
+            "slot": "moving",
+            "types": [
+              "PointSet3"
+            ],
+            "formats": [
+              "xyz"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "points",
+            "type": "PointSet3",
+            "format": "xyz",
+            "unit_from": "moving"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "number_of_samples",
+          "accuracy",
+          "overlap",
+          "maximum_running_time",
+          "max_rms",
+          "inlier_distance",
+          "min_inlier_fraction"
+        ],
+        "properties": {
+          "number_of_samples": {
+            "type": "integer",
+            "minimum": 8,
+            "maximum": 1000,
+            "description": "Number of samples of the Super4PCS RANSAC loop (OpenGR)."
+          },
+          "accuracy": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Delta, the matching accuracy of Super4PCS (OpenGR)."
+          },
+          "overlap": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 1,
+            "description": "Estimated overlap fraction of the two point sets (OpenGR)."
+          },
+          "maximum_running_time": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 120,
+            "description": "Wall-clock limit in seconds passed to Super4PCS; a run that reaches it is rejected as non-deterministic."
+          },
+          "max_rms": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Largest accepted root-mean-square nearest-neighbour residual after the transformation (validator-enforced, exact)."
+          },
+          "inlier_distance": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Nearest-neighbour distance below which a registered point counts as an inlier (validator-enforced, exact)."
+          },
+          "min_inlier_fraction": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 1,
+            "description": "Smallest accepted fraction of inliers (validator-enforced, exact)."
+          }
+        }
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 16777216
+        }
+      ],
+      "validation": {
+        "required": true,
+        "validators": [
+          "pointset.validate.registered_points"
+        ],
+        "bindings": {
+          "pointset.validate.registered_points": {
+            "artifacts": {
+              "candidate": {
+                "output": "points"
+              },
+              "reference": {
+                "input": "reference"
+              },
+              "moving": {
+                "input": "moving"
+              }
+            },
+            "parameters": {
+              "inlier_distance": {
+                "parameter": "inlier_distance"
+              },
+              "max_rms": {
+                "parameter": "max_rms"
+              },
+              "min_inlier_fraction": {
+                "parameter": "min_inlier_fraction"
+              }
+            }
+          }
+        }
+      },
+      "output_contract": {
+        "geometry_mutation": true,
+        "source_sha256_preserved": true,
+        "candidate_published_only_after_validation": true,
+        "producer_diagnostics_are_non_authoritative": true
+      },
+      "dependencies": [
+        "Point_set_processing_3",
+        "OpenGR"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "input_slots": [
+            "reference",
+            "moving"
+          ],
+          "maximum_input_points": 400,
+          "optional_dependency": "OpenGR",
+          "source_header": "CGAL/OpenGR/register_point_sets.h",
+          "validator_parameter_bindings": {
+            "pointset.validate.registered_points": {
+              "inlier_distance": "inlier_distance",
+              "max_rms": "max_rms",
+              "min_inlier_fraction": "min_inlier_fraction"
+            }
+          },
+          "validators": [
+            "pointset.validate.registered_points"
+          ]
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "CGAL filtered-exact predicates (EPICK); validators re-derive combinatorics from the raw files and use exact GMP rational arithmetic",
+        "exact_constructions": "unsupported_fail_closed",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_batch6_cases.py"
+        ],
+        "worker_manifest_operation": "pointset.registration.register",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "pointset.validate.registration_transformation",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "validator",
+      "summary": "Applies the reported 3x4 transformation to the moving points exactly (GMP rationals), requires a rigid motion (orthonormal rotation, determinant +1) and checks the exact nearest-neighbour RMS residual and inlier fraction against the pinned bounds.",
+      "package": "Point_set_processing_3",
+      "aliases": [],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Point_set_processing_3"
+        },
+        {
+          "kind": "operation_reference",
+          "identifier": "pointset.registration.compute_transformation"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Point_set_processing_3",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/OpenGR/compute_registration_transformation.h",
+            "sha256": "cd9c14398d96eeff35465b63977d01c72eb1e6c951e1d2a6577464dbd66b4002"
+          },
+          {
+            "path": "include/CGAL/license/gpl_package_list.txt",
+            "sha256": "efb290ee3ef3d8b7675896bc037f1c9359f583543ca9e38bcb425fe34a8995db"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "GeometryQueryReport"
+            ],
+            "formats": [
+              "json"
+            ],
+            "unit": "none"
+          },
+          {
+            "slot": "reference",
+            "types": [
+              "PointSet3"
+            ],
+            "formats": [
+              "xyz"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          },
+          {
+            "slot": "moving",
+            "types": [
+              "PointSet3"
+            ],
+            "formats": [
+              "xyz"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "max_rms",
+          "inlier_distance",
+          "min_inlier_fraction"
+        ],
+        "properties": {
+          "max_rms": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Largest accepted root-mean-square nearest-neighbour residual after the transformation (validator-enforced, exact)."
+          },
+          "inlier_distance": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Nearest-neighbour distance below which a registered point counts as an inlier (validator-enforced, exact)."
+          },
+          "min_inlier_fraction": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 1,
+            "description": "Smallest accepted fraction of inliers (validator-enforced, exact)."
+          }
+        }
+      },
+      "preconditions": [],
+      "validation": {
+        "required": false,
+        "validators": [],
+        "bindings": {},
+        "terminal_validator": true,
+        "validates": "pointset.registration.compute_transformation",
+        "validates_all": [
+          "pointset.registration.compute_transformation"
+        ],
+        "required_report_checks": {
+          "status": "pass",
+          "passed": true,
+          "validator": "pointset.validate.registration_transformation",
+          "checks.source_matches": true,
+          "checks.parameters_match": true,
+          "checks.transformation_is_rigid_motion": true,
+          "checks.residual_rms_within_bound_exact": true,
+          "checks.inlier_fraction_within_bound_exact": true
+        }
+      },
+      "output_contract": {
+        "schema": "ValidationReport/v1",
+        "required_true_checks": [
+          "source_matches",
+          "parameters_match",
+          "transformation_is_rigid_motion",
+          "residual_rms_within_bound_exact",
+          "inlier_fraction_within_bound_exact"
+        ],
+        "status": "pass",
+        "failure_or_indeterminate_publish": false,
+        "independence": "transformation applied to the raw binary64 moving points in exact GMP rationals; exact nearest-neighbour squared distances to the reference; no CGAL header"
+      },
+      "dependencies": [
+        "Point_set_processing_3"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "exact:GMP",
+        "info": {
+          "checks": [
+            "source_matches",
+            "parameters_match",
+            "transformation_is_rigid_motion",
+            "residual_rms_within_bound_exact",
+            "inlier_fraction_within_bound_exact"
+          ],
+          "independence": "transformation applied to the raw binary64 moving points in exact GMP rationals; exact nearest-neighbour squared distances to the reference; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "reference",
+            "moving"
+          ],
+          "output_slot": "validation"
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "exact:GMP",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "exact GMP rationals on the raw binary64 values; no CGAL header",
+        "exact_constructions": "none",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_batch6_cases.py"
+        ],
+        "worker_manifest_operation": "pointset.validate.registration_transformation",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "pointset.validate.registered_points",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "validator",
+      "summary": "Checks that the registered point set is a rigid copy of the moving set (exact pairwise distances and tetrahedron orientation) and that its exact nearest-neighbour RMS residual and inlier fraction against the reference meet the pinned bounds.",
+      "package": "Point_set_processing_3",
+      "aliases": [],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Point_set_processing_3"
+        },
+        {
+          "kind": "operation_reference",
+          "identifier": "pointset.registration.register"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Point_set_processing_3",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/OpenGR/register_point_sets.h",
+            "sha256": "b23ea4eb7161aeae6a066c7e98aa3d8de637848b39623d111a81a2c9144cc57c"
+          },
+          {
+            "path": "include/CGAL/license/gpl_package_list.txt",
+            "sha256": "efb290ee3ef3d8b7675896bc037f1c9359f583543ca9e38bcb425fe34a8995db"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "PointSet3"
+            ],
+            "formats": [
+              "xyz"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          },
+          {
+            "slot": "reference",
+            "types": [
+              "PointSet3"
+            ],
+            "formats": [
+              "xyz"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          },
+          {
+            "slot": "moving",
+            "types": [
+              "PointSet3"
+            ],
+            "formats": [
+              "xyz"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "max_rms",
+          "inlier_distance",
+          "min_inlier_fraction"
+        ],
+        "properties": {
+          "max_rms": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Largest accepted root-mean-square nearest-neighbour residual after the transformation (validator-enforced, exact)."
+          },
+          "inlier_distance": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Nearest-neighbour distance below which a registered point counts as an inlier (validator-enforced, exact)."
+          },
+          "min_inlier_fraction": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 1,
+            "description": "Smallest accepted fraction of inliers (validator-enforced, exact)."
+          }
+        }
+      },
+      "preconditions": [],
+      "validation": {
+        "required": false,
+        "validators": [],
+        "bindings": {},
+        "terminal_validator": true,
+        "validates": "pointset.registration.register",
+        "validates_all": [
+          "pointset.registration.register"
+        ],
+        "required_report_checks": {
+          "status": "pass",
+          "passed": true,
+          "validator": "pointset.validate.registered_points",
+          "checks.point_count_preserved": true,
+          "checks.pairwise_distances_preserved": true,
+          "checks.orientation_preserved_exact": true,
+          "checks.residual_rms_within_bound_exact": true,
+          "checks.inlier_fraction_within_bound_exact": true
+        }
+      },
+      "output_contract": {
+        "schema": "ValidationReport/v1",
+        "required_true_checks": [
+          "point_count_preserved",
+          "pairwise_distances_preserved",
+          "orientation_preserved_exact",
+          "residual_rms_within_bound_exact",
+          "inlier_fraction_within_bound_exact"
+        ],
+        "status": "pass",
+        "failure_or_indeterminate_publish": false,
+        "independence": "exact rational pairwise-distance and tetrahedron-orientation comparison with the moving set, then exact nearest-neighbour squared distances to the reference; no CGAL header"
+      },
+      "dependencies": [
+        "Point_set_processing_3"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "exact:GMP",
+        "info": {
+          "checks": [
+            "point_count_preserved",
+            "pairwise_distances_preserved",
+            "orientation_preserved_exact",
+            "residual_rms_within_bound_exact",
+            "inlier_fraction_within_bound_exact"
+          ],
+          "independence": "exact rational pairwise-distance and tetrahedron-orientation comparison with the moving set, then exact nearest-neighbour squared distances to the reference; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "reference",
+            "moving"
+          ],
+          "output_slot": "validation"
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "exact:GMP",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "exact GMP rationals on the raw binary64 values; no CGAL header",
+        "exact_constructions": "none",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_batch6_cases.py"
+        ],
+        "worker_manifest_operation": "pointset.validate.registered_points",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "reconstruction.polygonal_surface",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "transform",
+      "summary": "Polygonal surface reconstruction (PolyFit) from an oriented point set with normals: region-growing plane detection, candidate faces from the plane arrangement and a SCIP mixed-integer selection into a closed manifold polygon soup; optional dependency SCIP.",
+      "package": "Polygonal_surface_reconstruction",
+      "major_requirements": [
+        "major.7.10.02"
+      ],
+      "aliases": [
+        "PolyFit",
+        "polygonal surface reconstruction",
+        "planar polygon mesh from point cloud",
+        "polygonal model of planar faces",
+        "\u591a\u89d2\u5f62\u9762\u518d\u69cb\u6210"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Polygonal_surface_reconstruction"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Polygonal_surface_reconstruction"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Polygonal_surface_reconstruction.h"
+        },
+        {
+          "kind": "manual",
+          "identifier": "Polygonal_surface_reconstruction/index.html"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Polygonal_surface_reconstruction",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygonal_surface_reconstruction.h",
+            "sha256": "6e7ac0100275203d19f2aefbdf250f18421a18cef3b11784ca59c9733a680aa9"
+          },
+          {
+            "path": "include/CGAL/license/gpl_package_list.txt",
+            "sha256": "efb290ee3ef3d8b7675896bc037f1c9359f583543ca9e38bcb425fe34a8995db"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "points",
+            "types": [
+              "PointSet3Normals"
+            ],
+            "formats": [
+              "ply"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "geometry",
+            "type": "PolygonSoup3",
+            "format": "off",
+            "unit_from": "points"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "sphere_radius",
+          "maximum_distance",
+          "maximum_angle",
+          "minimum_region_size",
+          "fitting",
+          "coverage",
+          "complexity",
+          "max_deviation",
+          "planarity_tolerance"
+        ],
+        "properties": {
+          "sphere_radius": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Neighbourhood radius of the region-growing plane detection."
+          },
+          "maximum_distance": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Largest point-to-plane distance inside one detected plane."
+          },
+          "maximum_angle": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 90,
+            "description": "Largest angle in degrees between a point normal and its plane normal."
+          },
+          "minimum_region_size": {
+            "type": "integer",
+            "minimum": 3,
+            "maximum": 100000,
+            "description": "Smallest number of points of a detected plane."
+          },
+          "fitting": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "PolyFit data-fitting weight."
+          },
+          "coverage": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "PolyFit point-coverage weight."
+          },
+          "complexity": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "PolyFit model-complexity weight."
+          },
+          "max_deviation": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Largest distance of any source point from the reconstructed surface (validator-enforced, exact)."
+          },
+          "planarity_tolerance": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Largest distance of a face vertex from the plane of its face (validator-enforced, exact)."
+          }
+        }
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 16777216
+        }
+      ],
+      "validation": {
+        "required": true,
+        "validators": [
+          "reconstruction.validate.polygonal_surface"
+        ],
+        "bindings": {
+          "reconstruction.validate.polygonal_surface": {
+            "artifacts": {
+              "candidate": {
+                "output": "geometry"
+              },
+              "source": {
+                "input": "points"
+              }
+            },
+            "parameters": {
+              "max_deviation": {
+                "parameter": "max_deviation"
+              },
+              "planarity_tolerance": {
+                "parameter": "planarity_tolerance"
+              }
+            }
+          }
+        }
+      },
+      "output_contract": {
+        "geometry_mutation": false,
+        "source_sha256_preserved": true,
+        "candidate_published_only_after_validation": true,
+        "producer_diagnostics_are_non_authoritative": true
+      },
+      "dependencies": [
+        "Polygonal_surface_reconstruction",
+        "Shape_detection",
+        "SCIP"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "input_format": "ascii_ply_with_x_y_z_nx_ny_nz",
+          "maximum_input_points": 20000,
+          "optional_dependency": "SCIP",
+          "output_format": "off",
+          "required_parameters": [
+            "sphere_radius",
+            "maximum_distance",
+            "maximum_angle",
+            "minimum_region_size",
+            "fitting",
+            "coverage",
+            "complexity",
+            "max_deviation",
+            "planarity_tolerance"
+          ],
+          "source_header": "CGAL/Polygonal_surface_reconstruction.h",
+          "symbols": [
+            "Polygonal_surface_reconstruction"
+          ],
+          "validator_parameter_bindings": {
+            "reconstruction.validate.polygonal_surface": {
+              "max_deviation": "max_deviation",
+              "planarity_tolerance": "planarity_tolerance"
+            }
+          },
+          "validators": [
+            "reconstruction.validate.polygonal_surface"
+          ]
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "CGAL filtered-exact predicates (EPICK); validators re-derive combinatorics from the raw files and use exact GMP rational arithmetic",
+        "exact_constructions": "unsupported_fail_closed",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_batch6_cases.py",
+          "tests/master_reconstruction_cases.py"
+        ],
+        "worker_manifest_operation": "reconstruction.polygonal_surface",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "reconstruction.kinetic_surface",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "transform",
+      "summary": "Kinetic surface reconstruction of an oriented point set with normals: planar shape detection with regularization, kinetic space partition and a graph-cut labelling into a closed polygon soup (Kinetic_surface_reconstruction_3).",
+      "package": "Kinetic_surface_reconstruction",
+      "major_requirements": [
+        "major.7.10.02"
+      ],
+      "aliases": [
+        "kinetic surface reconstruction",
+        "kinetic shape reconstruction",
+        "kinetic space partition reconstruction",
+        "\u30ad\u30cd\u30c6\u30a3\u30c3\u30af\u9762\u518d\u69cb\u6210"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Kinetic_surface_reconstruction"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Kinetic_surface_reconstruction_3"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Kinetic_surface_reconstruction_3.h"
+        },
+        {
+          "kind": "manual",
+          "identifier": "Kinetic_surface_reconstruction/index.html"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Kinetic_surface_reconstruction",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Kinetic_surface_reconstruction_3.h",
+            "sha256": "8bc97afde45be9a3b9113fc939f65f61f7fc65233486d2c1bcf1e34ba22e3f90"
+          },
+          {
+            "path": "include/CGAL/license/gpl_package_list.txt",
+            "sha256": "efb290ee3ef3d8b7675896bc037f1c9359f583543ca9e38bcb425fe34a8995db"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "points",
+            "types": [
+              "PointSet3Normals"
+            ],
+            "formats": [
+              "ply"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "geometry",
+            "type": "PolygonSoup3",
+            "format": "off",
+            "unit_from": "points"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "k_neighbors",
+          "maximum_distance",
+          "maximum_angle",
+          "minimum_region_size",
+          "angle_tolerance",
+          "maximum_offset",
+          "regularize_parallelism",
+          "regularize_orthogonality",
+          "regularize_coplanarity",
+          "regularize_axis_symmetry",
+          "partition_depth",
+          "lambda",
+          "max_deviation",
+          "planarity_tolerance"
+        ],
+        "properties": {
+          "k_neighbors": {
+            "type": "integer",
+            "minimum": 3,
+            "maximum": 200,
+            "description": "Neighbours per point for the region-growing shape detection."
+          },
+          "maximum_distance": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Largest point-to-plane distance inside one detected plane."
+          },
+          "maximum_angle": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 90,
+            "description": "Largest angle in degrees between a point normal and its plane normal."
+          },
+          "minimum_region_size": {
+            "type": "integer",
+            "minimum": 3,
+            "maximum": 100000,
+            "description": "Smallest number of points of a detected plane."
+          },
+          "angle_tolerance": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 45,
+            "description": "Angle tolerance in degrees of the plane regularization."
+          },
+          "maximum_offset": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Largest offset of the coplanarity regularization."
+          },
+          "regularize_parallelism": {
+            "type": "boolean"
+          },
+          "regularize_orthogonality": {
+            "type": "boolean"
+          },
+          "regularize_coplanarity": {
+            "type": "boolean"
+          },
+          "regularize_axis_symmetry": {
+            "type": "boolean"
+          },
+          "partition_depth": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 3,
+            "description": "Number of kinetic partition intersection rounds k."
+          },
+          "lambda": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 0.999999,
+            "description": "Graph-cut regularization weight of the labelling."
+          },
+          "max_deviation": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Largest distance of any source point from the reconstructed surface (validator-enforced, exact)."
+          },
+          "planarity_tolerance": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Largest distance of a face vertex from the plane of its face (validator-enforced, exact)."
+          }
+        }
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 16777216
+        }
+      ],
+      "validation": {
+        "required": true,
+        "validators": [
+          "reconstruction.validate.polygonal_surface"
+        ],
+        "bindings": {
+          "reconstruction.validate.polygonal_surface": {
+            "artifacts": {
+              "candidate": {
+                "output": "geometry"
+              },
+              "source": {
+                "input": "points"
+              }
+            },
+            "parameters": {
+              "max_deviation": {
+                "parameter": "max_deviation"
+              },
+              "planarity_tolerance": {
+                "parameter": "planarity_tolerance"
+              }
+            }
+          }
+        }
+      },
+      "output_contract": {
+        "geometry_mutation": false,
+        "source_sha256_preserved": true,
+        "candidate_published_only_after_validation": true,
+        "producer_diagnostics_are_non_authoritative": true
+      },
+      "dependencies": [
+        "Kinetic_surface_reconstruction",
+        "Kinetic_space_partition",
+        "Shape_detection"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "input_format": "ascii_ply_with_x_y_z_nx_ny_nz",
+          "maximum_input_points": 20000,
+          "output_format": "off",
+          "required_parameters": [
+            "k_neighbors",
+            "maximum_distance",
+            "maximum_angle",
+            "minimum_region_size",
+            "angle_tolerance",
+            "maximum_offset",
+            "regularize_parallelism",
+            "regularize_orthogonality",
+            "regularize_coplanarity",
+            "regularize_axis_symmetry",
+            "partition_depth",
+            "lambda",
+            "max_deviation",
+            "planarity_tolerance"
+          ],
+          "source_header": "CGAL/Kinetic_surface_reconstruction_3.h",
+          "symbols": [
+            "Kinetic_surface_reconstruction_3"
+          ],
+          "validator_parameter_bindings": {
+            "reconstruction.validate.polygonal_surface": {
+              "max_deviation": "max_deviation",
+              "planarity_tolerance": "planarity_tolerance"
+            }
+          },
+          "validators": [
+            "reconstruction.validate.polygonal_surface"
+          ]
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "CGAL filtered-exact predicates (EPICK); validators re-derive combinatorics from the raw files and use exact GMP rational arithmetic",
+        "exact_constructions": "unsupported_fail_closed",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_batch6_cases.py",
+          "tests/master_reconstruction_cases.py"
+        ],
+        "worker_manifest_operation": "reconstruction.kinetic_surface",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "reconstruction.validate.polygonal_surface",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "validator",
+      "summary": "Independently checks a polygonal reconstruction: simple planar faces (exact deviation from the Newell plane within the pinned tolerance, exact ear clipping), a closed vertex- and edge-manifold consistently outward oriented polygon soup (exact signed volume), exact source-to-surface distances within the bound and source normals agreeing with the surface.",
+      "package": "Polygonal_surface_reconstruction",
+      "aliases": [],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Polygonal_surface_reconstruction"
+        },
+        {
+          "kind": "operation_reference",
+          "identifier": "reconstruction.polygonal_surface"
+        },
+        {
+          "kind": "operation_reference",
+          "identifier": "reconstruction.kinetic_surface"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Polygonal_surface_reconstruction",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygonal_surface_reconstruction.h",
+            "sha256": "6e7ac0100275203d19f2aefbdf250f18421a18cef3b11784ca59c9733a680aa9"
+          },
+          {
+            "path": "include/CGAL/Kinetic_surface_reconstruction_3.h",
+            "sha256": "8bc97afde45be9a3b9113fc939f65f61f7fc65233486d2c1bcf1e34ba22e3f90"
+          },
+          {
+            "path": "include/CGAL/license/gpl_package_list.txt",
+            "sha256": "efb290ee3ef3d8b7675896bc037f1c9359f583543ca9e38bcb425fe34a8995db"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "PolygonSoup3"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          },
+          {
+            "slot": "source",
+            "types": [
+              "PointSet3Normals"
+            ],
+            "formats": [
+              "ply"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "max_deviation",
+          "planarity_tolerance"
+        ],
+        "properties": {
+          "max_deviation": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Largest distance of any source point from the reconstructed surface (validator-enforced, exact)."
+          },
+          "planarity_tolerance": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Largest distance of a face vertex from the plane of its face (validator-enforced, exact)."
+          }
+        }
+      },
+      "preconditions": [],
+      "validation": {
+        "required": false,
+        "validators": [],
+        "bindings": {},
+        "terminal_validator": true,
+        "validates": "reconstruction.polygonal_surface",
+        "validates_all": [
+          "reconstruction.polygonal_surface",
+          "reconstruction.kinetic_surface"
+        ],
+        "required_report_checks": {
+          "status": "pass",
+          "passed": true,
+          "validator": "reconstruction.validate.polygonal_surface",
+          "checks.source_points_valid": true,
+          "checks.polygon_faces_well_formed": true,
+          "checks.faces_planar_within_tolerance_exact": true,
+          "checks.faces_simple_polygons": true,
+          "checks.closed_edge_manifold_consistently_oriented": true,
+          "checks.vertex_manifold": true,
+          "checks.outward_orientation_exact_volume": true,
+          "checks.source_to_surface_within_bound_exact": true,
+          "checks.source_normals_agree_with_orientation": true
+        }
+      },
+      "output_contract": {
+        "schema": "ValidationReport/v1",
+        "required_true_checks": [
+          "source_points_valid",
+          "polygon_faces_well_formed",
+          "faces_planar_within_tolerance_exact",
+          "faces_simple_polygons",
+          "closed_edge_manifold_consistently_oriented",
+          "vertex_manifold",
+          "outward_orientation_exact_volume",
+          "source_to_surface_within_bound_exact",
+          "source_normals_agree_with_orientation"
+        ],
+        "status": "pass",
+        "failure_or_indeterminate_publish": false,
+        "independence": "exact GMP rational Newell planes, ear clipping, directed-edge pairing, vertex-link cycles, signed volume and point-triangle distances on the raw OFF/PLY data; no CGAL header"
+      },
+      "dependencies": [
+        "Polygonal_surface_reconstruction",
+        "Kinetic_surface_reconstruction"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "exact:GMP",
+        "info": {
+          "bound_parameters": [
+            "max_deviation",
+            "planarity_tolerance"
+          ],
+          "checks": [
+            "source_points_valid",
+            "polygon_faces_well_formed",
+            "faces_planar_within_tolerance_exact",
+            "faces_simple_polygons",
+            "closed_edge_manifold_consistently_oriented",
+            "vertex_manifold",
+            "outward_orientation_exact_volume",
+            "source_to_surface_within_bound_exact",
+            "source_normals_agree_with_orientation"
+          ],
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "exact:GMP",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "exact GMP rationals on the raw binary64 values; no CGAL header",
+        "exact_constructions": "none",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_batch6_cases.py",
+          "tests/master_reconstruction_cases.py"
+        ],
+        "worker_manifest_operation": "reconstruction.validate.polygonal_surface",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "reconstruction.poisson_delaunay",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "transform",
+      "summary": "Poisson surface reconstruction through the one-call convenience function poisson_surface_reconstruction_delaunay: a triangle surface that is a manifold WITH boundary (CGAL 6.2.1 always requests the manifold_with_boundary option), so boundary edges are reported and a closed surface is never claimed.",
+      "package": "Poisson_surface_reconstruction_3",
+      "major_requirements": [
+        "major.7.10.01"
+      ],
+      "aliases": [
+        "poisson_surface_reconstruction_delaunay",
+        "Poisson surface with open boundary",
+        "manifold with boundary Poisson",
+        "\u5883\u754c\u4ed8\u304d\u30dd\u30a2\u30bd\u30f3\u66f2\u9762\u518d\u69cb\u6210"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Poisson_surface_reconstruction_3"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::poisson_surface_reconstruction_delaunay"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/poisson_surface_reconstruction.h"
+        },
+        {
+          "kind": "manual",
+          "identifier": "Poisson_surface_reconstruction_3/index.html"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Poisson_surface_reconstruction_3",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/poisson_surface_reconstruction.h",
+            "sha256": "6fbfd875076d8eaf22c6a82d0ebf22ac5cfc11f45e77d6c74a44442cd08ddf8c"
+          },
+          {
+            "path": "include/CGAL/license/gpl_package_list.txt",
+            "sha256": "efb290ee3ef3d8b7675896bc037f1c9359f583543ca9e38bcb425fe34a8995db"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "points",
+            "types": [
+              "PointSet3Normals"
+            ],
+            "formats": [
+              "ply"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "geometry",
+            "type": "TriangleSurfaceMesh",
+            "format": "off",
+            "unit_from": "points"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "sm_angle",
+          "sm_radius",
+          "sm_distance",
+          "max_deviation",
+          "max_circumradius",
+          "min_coverage"
+        ],
+        "properties": {
+          "sm_angle": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 30,
+            "description": "Mesh_3 facet angle bound in degrees (surface sampling quality)."
+          },
+          "sm_radius": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 100,
+            "description": "Mesh_3 facet size as a multiple of the average point spacing."
+          },
+          "sm_distance": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 10,
+            "description": "Mesh_3 facet distance as a multiple of the average point spacing."
+          },
+          "max_deviation": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Certified bound between covered source points and the surface and between every candidate triangle and the source (validator-enforced, exact)."
+          },
+          "max_circumradius": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Largest accepted circumradius of any candidate triangle (validator-enforced, exact)."
+          },
+          "min_coverage": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 1,
+            "description": "Smallest accepted fraction of source points within max_deviation of the surface (validator-enforced, exact); the holes of the manifold-with-boundary result make full coverage unattainable."
+          }
+        }
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 16777216
+        }
+      ],
+      "validation": {
+        "required": true,
+        "validators": [
+          "reconstruction.validate.poisson_boundary"
+        ],
+        "bindings": {
+          "reconstruction.validate.poisson_boundary": {
+            "artifacts": {
+              "candidate": {
+                "output": "geometry"
+              },
+              "source": {
+                "input": "points"
+              }
+            },
+            "parameters": {
+              "max_circumradius": {
+                "parameter": "max_circumradius"
+              },
+              "max_deviation": {
+                "parameter": "max_deviation"
+              },
+              "min_coverage": {
+                "parameter": "min_coverage"
+              }
+            }
+          }
+        }
+      },
+      "output_contract": {
+        "geometry_mutation": false,
+        "source_sha256_preserved": true,
+        "candidate_published_only_after_validation": true,
+        "producer_diagnostics_are_non_authoritative": true
+      },
+      "dependencies": [
+        "Poisson_surface_reconstruction_3",
+        "Mesh_3",
+        "Point_set_processing_3",
+        "Eigen3"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "input_format": "ascii_ply_with_x_y_z_nx_ny_nz",
+          "output_format": "off",
+          "required_parameters": [
+            "sm_angle",
+            "sm_radius",
+            "sm_distance",
+            "max_deviation",
+            "max_circumradius",
+            "min_coverage"
+          ],
+          "source_header": "CGAL/poisson_surface_reconstruction.h",
+          "symbols": [
+            "poisson_surface_reconstruction_delaunay",
+            "compute_average_spacing"
+          ],
+          "validator_parameter_bindings": {
+            "reconstruction.validate.poisson_boundary": {
+              "max_circumradius": "max_circumradius",
+              "max_deviation": "max_deviation",
+              "min_coverage": "min_coverage"
+            }
+          },
+          "validators": [
+            "reconstruction.validate.poisson_boundary"
+          ]
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "CGAL filtered-exact predicates (EPICK); validators re-derive combinatorics from the raw files and use exact GMP rational arithmetic",
+        "exact_constructions": "unsupported_fail_closed",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_batch6_cases.py",
+          "tests/master_reconstruction_cases.py"
+        ],
+        "worker_manifest_operation": "reconstruction.poisson_delaunay",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "reconstruction.validate.poisson_boundary",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "validator",
+      "summary": "Independently checks a Poisson reconstruction that may have boundary: edge- and vertex-manifold, consistently oriented, source normals agreeing with the covered surface, exact source coverage, certified surface-to-source bound and exact circumradius bound; boundary edge counts are reported and closedness is never claimed.",
+      "package": "Poisson_surface_reconstruction_3",
+      "aliases": [],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Poisson_surface_reconstruction_3"
+        },
+        {
+          "kind": "operation_reference",
+          "identifier": "reconstruction.poisson_delaunay"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Poisson_surface_reconstruction_3",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/poisson_surface_reconstruction.h",
+            "sha256": "6fbfd875076d8eaf22c6a82d0ebf22ac5cfc11f45e77d6c74a44442cd08ddf8c"
+          },
+          {
+            "path": "include/CGAL/license/gpl_package_list.txt",
+            "sha256": "efb290ee3ef3d8b7675896bc037f1c9359f583543ca9e38bcb425fe34a8995db"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          },
+          {
+            "slot": "source",
+            "types": [
+              "PointSet3Normals"
+            ],
+            "formats": [
+              "ply"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "max_deviation",
+          "max_circumradius",
+          "min_coverage"
+        ],
+        "properties": {
+          "max_deviation": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Certified bound between covered source points and the surface and between every candidate triangle and the source (validator-enforced, exact)."
+          },
+          "max_circumradius": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Largest accepted circumradius of any candidate triangle (validator-enforced, exact)."
+          },
+          "min_coverage": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 1,
+            "description": "Smallest accepted fraction of source points within max_deviation of the surface (validator-enforced, exact); the holes of the manifold-with-boundary result make full coverage unattainable."
+          }
+        }
+      },
+      "preconditions": [],
+      "validation": {
+        "required": false,
+        "validators": [],
+        "bindings": {},
+        "terminal_validator": true,
+        "validates": "reconstruction.poisson_delaunay",
+        "validates_all": [
+          "reconstruction.poisson_delaunay"
+        ],
+        "required_report_checks": {
+          "status": "pass",
+          "passed": true,
+          "validator": "reconstruction.validate.poisson_boundary",
+          "checks.source_points_valid": true,
+          "checks.triangle_mesh": true,
+          "checks.nondegenerate_triangles_exact": true,
+          "checks.no_unreferenced_vertices": true,
+          "checks.edge_manifold": true,
+          "checks.vertex_manifold": true,
+          "checks.consistent_orientation": true,
+          "checks.manifold_with_boundary_consistently_oriented": true,
+          "checks.source_normals_agree_with_orientation": true,
+          "checks.source_coverage_at_least_minimum_exact": true,
+          "checks.surface_to_source_within_bound_certified": true,
+          "checks.facet_circumradius_within_bound_exact": true
+        }
+      },
+      "output_contract": {
+        "schema": "ValidationReport/v1",
+        "required_true_checks": [
+          "source_points_valid",
+          "triangle_mesh",
+          "nondegenerate_triangles_exact",
+          "no_unreferenced_vertices",
+          "edge_manifold",
+          "vertex_manifold",
+          "consistent_orientation",
+          "manifold_with_boundary_consistently_oriented",
+          "source_normals_agree_with_orientation",
+          "source_coverage_at_least_minimum_exact",
+          "surface_to_source_within_bound_certified",
+          "facet_circumradius_within_bound_exact"
+        ],
+        "status": "pass",
+        "failure_or_indeterminate_publish": false,
+        "independence": "own OFF/PLY parsers and combinatorics; exact GMP rational point-triangle distances, circumradii and certified triangle cover bounds; manifold-with-boundary topology from raw index lists; CGAL Poisson_surface_reconstruction_3, Mesh_3 and Point_set_processing_3 are not used"
+      },
+      "dependencies": [
+        "Poisson_surface_reconstruction_3"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "bound_parameters": [
+            "max_deviation",
+            "max_circumradius",
+            "min_coverage"
+          ],
+          "checks": [
+            "source_points_valid",
+            "triangle_mesh",
+            "nondegenerate_triangles_exact",
+            "no_unreferenced_vertices",
+            "edge_manifold",
+            "vertex_manifold",
+            "consistent_orientation",
+            "manifold_with_boundary_consistently_oriented",
+            "source_normals_agree_with_orientation",
+            "source_coverage_at_least_minimum_exact",
+            "surface_to_source_within_bound_certified",
+            "facet_circumradius_within_bound_exact"
+          ],
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "CGAL filtered-exact predicates (EPICK); validators re-derive combinatorics from raw OFF/XYZ/PLY and use exact GMP rational arithmetic for orientation, distances, signed volume and enclosure parity",
+        "exact_constructions": "unsupported_fail_closed",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_batch6_cases.py",
+          "tests/master_reconstruction_cases.py"
+        ],
+        "worker_manifest_operation": "reconstruction.validate.poisson_boundary",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
     }
   ]
 }

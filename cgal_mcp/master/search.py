@@ -135,7 +135,7 @@ VOCABULARY: dict[str, tuple[str, ...]] = {
     "jet": ("jet", "ジェット"),
     "pca": ("pca", "principal component", "principal components", "主成分"),
     "mst": ("mst", "minimum spanning tree", "最小全域木"),
-    "registration": ("registration", "icp", "位置合わせ", "位置合せ", "位置合わ"),
+    "registration": ("registration", "register", "registering", "icp", "位置合わせ", "位置合せ", "位置合わ"),
     "reconstruction": ("reconstruct", "reconstruction", "surface from points", "再構成", "再構築", "復元"),
     "poisson": ("poisson", "ポアソン"),
     "advancing_front": ("advancing front", "advancing-front", "前進法"),
