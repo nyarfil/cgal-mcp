@@ -220,6 +220,11 @@ def skeleton_cases(operations) -> None:
         result = pair(scratch, "polygon.offset.interior", offset, [lshape], {"offset": MM(0.3)})["results"]
         assert len(result["rings"]) == 1 and len(result["rings"][0]["points"]) == 6
         assert pair(scratch, "polygon.offset.interior", offset, [lshape], {"offset": MM(0.6)})["results"]["rings"] == []
+        # The mitered offset of the elbow vanishes at the arm half width 1/2, before the true inradius 0.586.
+        assert pair(scratch, "polygon.offset.interior", offset, [lshape], {"offset": MM(0.55)})["results"]["rings"] == []
+        # Exterior offset of the L-shape is the exact square dilation: one ring with the six corners.
+        result = pair(scratch, "polygon.offset.exterior", offset, [lshape], {"offset": MM(0.3)})["results"]
+        assert len(result["rings"]) == 1 and len(result["rings"][0]["points"]) == 6, result
         result = pair(scratch, "polygon.offset.interior", offset, [holed], {"offset": MM(0.3)})["results"]
         assert len(result["rings"]) == 2, result
         # Tampered reports fail closed.
@@ -230,6 +235,14 @@ def skeleton_cases(operations) -> None:
                 ("tampered_offset_edge_shifted.json", offset, {"offset": MM(0.5)}, "OFFSET_EDGE_MISMATCH"),
                 ("tampered_offset_forged_empty.json", offset, {"offset": MM(0.5)}, "OFFSET_EXTENT_MISMATCH")):
             reject(scratch, validator, [report(B5 / name), rect], parameters, code)
+        reject(scratch, offset, [report(B5 / "tampered_offset_lshape_truncated.json"), lshape], {"offset": MM(0.3)},
+               "OFFSET_EXTENT_MISMATCH")
+        reject(scratch, offset, [report(B5 / "tampered_offset_holed_hole_dropped.json"), holed], {"offset": MM(0.3)},
+               "OFFSET_RING_COUNT_MISMATCH")
+        # A non-empty offset of a non-convex, non axis-parallel polygon is produced but not certified: fail closed.
+        dart = polygon("dart.json")
+        path = q.ok(q.invoke(scratch, "polygon.offset.interior", [dart], {"offset": MM(0.2)}))
+        reject(scratch, offset, [report(path), dart], {"offset": MM(0.2)}, "OFFSET_EXTENT_UNCERTIFIED")
         # Validator parameters must match the report; the exterior skeleton needs max_offset.
         path = q.ok(q.invoke(scratch, "polygon.straight_skeleton.exterior", [rect], {"max_offset": MM(1)}))
         reject(scratch, skeleton, [report(path), rect], {}, "PARAMETER_MISMATCH")

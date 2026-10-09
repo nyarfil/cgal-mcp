@@ -18,6 +18,7 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <functional>
 #include <map>
 #include <queue>
 #include <set>
@@ -471,6 +472,182 @@ bool inradius_below(const Source& source, LD d, LD tol, LD diagonal) {
   return true;
 }
 
+bool is_rectilinear(const Source& source) {
+  for (const auto& ring : source.rings) {
+    for (std::size_t i = 0; i < ring.size(); ++i) {
+      const auto& a = ring[i];
+      const auto& b = ring[(i + 1) % ring.size()];
+      if (a[0] != b[0] && a[1] != b[1]) return false;
+    }
+  }
+  return true;
+}
+
+// Axis-parallel sources: the mitered offset by d is the erosion (interior) or dilation (exterior) of the region
+// by the square [-d,d]^2. The expected region is built exactly on the grid of x_i, x_i +/- d and y_j, y_j +/- d;
+// the reported rings must follow exactly the boundary of that region (within the declared tolerance), form as
+// many rings as the boundary has components, and have the exact area. Pinch vertices (degree four) make the
+// ring count ambiguous and are rejected instead of guessed.
+std::string rectilinear_extent(const Source& source, bool exterior, double offset, const std::vector<std::vector<V2>>& rings,
+                               LD tol) {
+  const Q d = exact_of(offset);
+  std::set<Q> sx, sy;
+  for (const auto& ring : source.rings) {
+    for (const auto& v : ring) {
+      sx.insert(exact_of(v[0]));
+      sy.insert(exact_of(v[1]));
+    }
+  }
+  const std::vector<Q> xs(sx.begin(), sx.end()), ys(sy.begin(), sy.end());
+  const long nx = static_cast<long>(xs.size()), ny = static_cast<long>(ys.size());
+  std::vector<Ring> exact_source;
+  for (const auto& ring : source.rings) exact_source.push_back(exact_ring(ring));
+  // Source cells i in [-1, nx-1] (i = -1 and nx-1 are unbounded and outside).
+  auto inside_cell = [&](long i, long j) {
+    if (i < 0 || j < 0 || i >= nx - 1 || j >= ny - 1) return false;
+    const Pt c = {(xs[i] + xs[i + 1]) / 2, (ys[j] + ys[j + 1]) / 2};
+    bool inside = point_in_ring(c, exact_source[0]) == 1;
+    for (std::size_t h = 1; h < exact_source.size() && inside; ++h) inside = point_in_ring(c, exact_source[h]) == -1;
+    return inside;
+  };
+  std::vector<std::vector<char>> table(nx + 1, std::vector<char>(ny + 1, 0));
+  for (long i = -1; i < nx; ++i) {
+    for (long j = -1; j < ny; ++j) table[i + 1][j + 1] = inside_cell(i, j);
+  }
+  std::set<Q> gx, gy;
+  for (const Q& x : xs) {
+    gx.insert(x);
+    gx.insert(x - d);
+    gx.insert(x + d);
+  }
+  for (const Q& y : ys) {
+    gy.insert(y);
+    gy.insert(y - d);
+    gy.insert(y + d);
+  }
+  const std::vector<Q> GX(gx.begin(), gx.end()), GY(gy.begin(), gy.end());
+  const long cx = static_cast<long>(GX.size()) - 1, cy = static_cast<long>(GY.size()) - 1;
+  auto overlaps = [&](const std::vector<Q>& g, long i, const Q& lo, const Q& hi) {
+    const bool left_ok = i < 0 || g[i] < hi;
+    const bool right_ok = i >= static_cast<long>(g.size()) - 1 || g[i + 1] > lo;
+    return left_ok && right_ok;
+  };
+  std::vector<std::vector<char>> marked(cx, std::vector<char>(cy, 0));
+  Q expected_area = 0;
+  for (long a = 0; a < cx; ++a) {
+    const Q mx = (GX[a] + GX[a + 1]) / 2;
+    for (long b = 0; b < cy; ++b) {
+      const Q my = (GY[b] + GY[b + 1]) / 2;
+      bool all = true, any = false;
+      for (long i = -1; i < nx; ++i) {
+        if (!overlaps(xs, i, mx - d, mx + d)) continue;
+        for (long j = -1; j < ny; ++j) {
+          if (!overlaps(ys, j, my - d, my + d)) continue;
+          const bool in = table[i + 1][j + 1];
+          all = all && in;
+          any = any || in;
+        }
+      }
+      marked[a][b] = exterior ? any : all;
+      if (marked[a][b]) expected_area += (GX[a + 1] - GX[a]) * (GY[b + 1] - GY[b]);
+    }
+  }
+  // Expected boundary as primitive grid segments: vertical (a, b) = x = GX[a] over [GY[b], GY[b+1]],
+  // horizontal (a, b) = y = GY[b] over [GX[a], GX[a+1]].
+  auto at = [&](long a, long b) { return a >= 0 && b >= 0 && a < cx && b < cy && marked[a][b]; };
+  std::set<std::pair<long, long>> vertical, horizontal;
+  for (long a = 0; a <= cx; ++a) {
+    for (long b = 0; b < cy; ++b) {
+      if (at(a - 1, b) != at(a, b)) vertical.insert({a, b});
+    }
+  }
+  for (long a = 0; a < cx; ++a) {
+    for (long b = 0; b <= cy; ++b) {
+      if (at(a, b - 1) != at(a, b)) horizontal.insert({a, b});
+    }
+  }
+  std::map<std::pair<long, long>, int> degree;
+  for (const auto& [a, b] : vertical) {
+    ++degree[{a, b}];
+    ++degree[{a, b + 1}];
+  }
+  for (const auto& [a, b] : horizontal) {
+    ++degree[{a, b}];
+    ++degree[{a + 1, b}];
+  }
+  for (const auto& entry : degree) {
+    if (entry.second != 2) validation_failure("OFFSET_EXTENT_UNCERTIFIED", "The offset region has pinch vertices; its ring count is not certified");
+  }
+  // Components of the expected boundary.
+  std::map<std::pair<long, long>, std::pair<long, long>> parent;
+  std::function<std::pair<long, long>(std::pair<long, long>)> find = [&](std::pair<long, long> v) {
+    while (parent[v] != v) v = parent[v] = parent[parent[v]];
+    return v;
+  };
+  for (const auto& entry : degree) parent[entry.first] = entry.first;
+  auto unite = [&](std::pair<long, long> p, std::pair<long, long> q) { parent[find(p)] = find(q); };
+  for (const auto& [a, b] : vertical) unite({a, b}, {a, b + 1});
+  for (const auto& [a, b] : horizontal) unite({a, b}, {a + 1, b});
+  std::set<std::pair<long, long>> roots;
+  for (const auto& entry : degree) roots.insert(find(entry.first));
+  if (roots.size() != rings.size()) {
+    validation_failure("OFFSET_RING_COUNT_MISMATCH", "The number of offset rings differs from the boundary components of the exact offset region");
+  }
+  // Reported rings: snap to the grid and compare primitive segments.
+  auto snap = [&](const std::vector<Q>& g, double value) {
+    long found = -1;
+    for (std::size_t i = 0; i < g.size(); ++i) {
+      if (std::fabs(static_cast<LD>(g[i].get_d()) - static_cast<LD>(value)) <= tol) {
+        found = static_cast<long>(i);
+        break;
+      }
+    }
+    if (found < 0) validation_failure("OFFSET_EXTENT_MISMATCH", "An offset vertex is not a corner of the exact offset region");
+    return found;
+  };
+  std::set<std::pair<long, long>> got_vertical, got_horizontal;
+  std::vector<Ring> snapped;
+  for (const auto& ring : rings) {
+    std::vector<std::pair<long, long>> grid;
+    Ring exact;
+    for (const auto& v : ring) {
+      grid.push_back({snap(GX, v[0]), snap(GY, v[1])});
+      exact.points.push_back({GX[grid.back().first], GY[grid.back().second]});
+    }
+    snapped.push_back(exact);
+    for (std::size_t i = 0; i < grid.size(); ++i) {
+      const auto p = grid[i], q = grid[(i + 1) % grid.size()];
+      if (p.first == q.first) {
+        for (long b = std::min(p.second, q.second); b < std::max(p.second, q.second); ++b) {
+          if (!got_vertical.insert({p.first, b}).second) validation_failure("OFFSET_EXTENT_MISMATCH", "An offset boundary piece is covered twice");
+        }
+      } else if (p.second == q.second) {
+        for (long a = std::min(p.first, q.first); a < std::max(p.first, q.first); ++a) {
+          if (!got_horizontal.insert({a, p.second}).second) validation_failure("OFFSET_EXTENT_MISMATCH", "An offset boundary piece is covered twice");
+        }
+      } else {
+        validation_failure("OFFSET_EXTENT_MISMATCH", "An offset edge of an axis-parallel source is not axis-parallel");
+      }
+    }
+  }
+  if (got_vertical != vertical || got_horizontal != horizontal) {
+    validation_failure("OFFSET_EXTENT_MISMATCH", "The offset rings do not follow the boundary of the exact offset region");
+  }
+  // Exact area with nesting parity (even depth adds, odd depth subtracts).
+  Q area = 0;
+  for (std::size_t k = 0; k < snapped.size(); ++k) {
+    int depth = 0;
+    for (std::size_t m = 0; m < snapped.size(); ++m) {
+      if (m != k && point_in_ring(snapped[k].points[0], snapped[m]) == 1) ++depth;
+    }
+    Q magnitude = ring_signed_area(snapped[k]);
+    if (magnitude < 0) magnitude = -magnitude;
+    area += depth % 2 == 0 ? magnitude : -magnitude;
+  }
+  if (area != expected_area) validation_failure("OFFSET_AREA_MISMATCH", "The offset area differs from the exact offset region");
+  return "axis_parallel_exact_square_offset";
+}
+
 Json run_offset(const Request& request) {
   const std::string validator = "polygon.validate.offset";
   require_inputs(request, 2, validator);
@@ -634,20 +811,23 @@ Json run_offset(const Request& request) {
         certification = "axis_aligned_rectangle_exact_formula";
       }
     }
+  } else if (is_rectilinear(source)) {
+    certification = rectilinear_extent(source, exterior, offset, rings, tol);
   } else if (rings.empty()) {
     if (!inradius_below(source, d, tol, diagonal)) {
       validation_failure("OFFSET_EMPTY_NOT_JUSTIFIED", "The empty offset is not justified: the offset does not exceed the inradius bound");
     }
     certification = "empty_certified_by_inradius_bound";
   } else {
-    certification = "not_certified_nonconvex_completeness";
+    validation_failure("OFFSET_EXTENT_UNCERTIFIED",
+                       "The completeness of a non-empty offset of a non-convex, non axis-parallel polygon is not certified");
   }
   checks["offset_extent_verified_as_declared"] = true;
   return concluded(request, validator, checks,
                    {{"ring_count", rings.size()}, {"extent_certification", certification},
                     {"offset_area_sum", static_cast<double>(ring_area_sum)},
                     {"length_tolerance_relative_to_diagonal", static_cast<double>(kTolerance)},
-                    {"independence", "long double parallel-line and segment distances, exact rational point-in-ring, half-plane intersection for convex sources, exact rational rectangle formula; completeness of non-empty offsets of non-convex sources is not certified; no CGAL header"}});
+                    {"independence", "long double parallel-line and segment distances, exact rational point-in-ring, half-plane intersection for convex sources, exact rational rectangle formula; non-convex sources are certified only when axis-parallel (exact square erosion or dilation on the offset grid), otherwise a non-empty offset is rejected; no CGAL header"}});
 }
 
 }  // namespace
@@ -670,7 +850,7 @@ std::vector<OperationDefinition> skeleton_validators() {
       vinfo({"parameters_match", "source_matches", "report_schema_and_units_valid", "offset_edges_parallel_at_offset_distance",
              "offset_vertices_clear_of_source_boundary", "offset_vertices_on_correct_side", "offset_extent_verified_as_declared"},
             {"candidate", "polygon"},
-            "long double parallel-line and segment distances, exact rational point-in-ring, half-plane intersection for convex sources, exact rational rectangle formula; completeness of non-empty offsets of non-convex sources is not certified; no CGAL header")));
+            "long double parallel-line and segment distances, exact rational point-in-ring, half-plane intersection for convex sources, exact rational rectangle formula; non-convex sources are certified only when axis-parallel (exact square erosion or dilation on the offset grid), otherwise a non-empty offset is rejected; no CGAL header")));
   return result;
 }
 

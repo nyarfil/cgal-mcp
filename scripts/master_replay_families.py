@@ -4308,6 +4308,8 @@ B5_FIXTURES.update({
     "tampered_skel_face_dropped.json": "886c8b8df5f44c134b6ee9b19d2567f48e97623285cd068661ac671be73c1a96",
     "tampered_offset_edge_shifted.json": "537c36dc5b8a1ab84f7fd5d50893363cf79212bc13abb2acebcdb7cb214bdd12",
     "tampered_offset_forged_empty.json": "6b6c542d791c9d76a4e0c03170ff42a77c29ea199397d67c32a930eebbffa57f",
+    "tampered_offset_lshape_truncated.json": "5523978230fb24489de0d0eb605fadaed5a67867a0b4b9352a3368ccf328d5f3",
+    "tampered_offset_holed_hole_dropped.json": "037fa3844fca7b4e492fcfec3c50cef6d97de9f65a3a36adaf7fab494f9e4ce1",
 })
 
 
@@ -4344,16 +4346,20 @@ FAMILY_7_12["requirements"]["major.7.12.06"] = {
                     "[1/2,7/2]x[1/2,3/2] with area 3, outer [-1/2,9/2]x[-1/2,5/2] with area 15, exactly "
                     "(w -/+ 2d)(h -/+ 2d)) and beyond the inradius (offset 3/2, no ring). The 6-8-10 triangle at "
                     "offset 1 gives the similar triangle with corners (1,1) and (4,1) (incircle radius 2); the "
-                    "L-shape at 0.3 gives one hexagon and at 0.6 nothing; the holed square at 0.3 gives two rings. "
+                    "L-shape at 0.3 gives one hexagon and at 0.55 and 0.6 nothing (the arms of width 1 vanish at 1/2); the holed "
+                    "square at 0.3 gives two rings; full ring point lists are asserted. "
                     "The independent validator requires every output edge parallel to a source edge at the offset "
                     "distance on the correct side, every vertex clear of the source boundary and on the correct "
                     "side, convex sources against the half-plane intersection, rectangles against the exact "
                     "rational (w -/+ 2d)(h -/+ 2d), and an empty result only when the convex construction is empty "
-                    "or the inradius bound proves the true offset region empty. Completeness of non-empty offsets "
-                    "of non-convex sources is not certified; the exterior construction takes a simple polygon.",
+                    "or the inradius bound proves the true offset region empty. Axis-parallel non-convex sources (L-shape, holed "
+                    "square) are checked against the exact erosion or dilation by the square [-d,d]^2 on the offset grid "
+                    "(boundary pieces, ring count and exact area); a non-empty offset of a non-convex source that is not "
+                    "axis-parallel is rejected as uncertified. The claimed scope is therefore convex sources and "
+                    "axis-parallel sources. The exterior construction takes a simple polygon.",
     "case_ids": ["offset-rectangle-interior", "offset-rectangle-exterior", "offset-rectangle-consumed",
                  "offset-triangle-incircle", "offset-lshape-interior", "offset-lshape-consumed",
-                 "offset-holed-interior"],
+                 "offset-lshape-consumed-below-inradius", "offset-holed-interior"],
 }
 FAMILY_7_12["unbound"].pop("major.7.12.05", None)
 FAMILY_7_12["unbound"].pop("major.7.12.06", None)
@@ -4369,12 +4375,23 @@ FAMILY_7_12["cases"].extend([
     ]),
     _case("skeleton-lshape-interior", "polygon.straight_skeleton.interior", [B5_LSHAPE], {}, [
         [_SK + "summary.vertex_count", "==", 9], [_SK + "summary.face_count", "==", 6],
-        [_SK + "results.vertices.6.time", "==", 0.5], [_SK + "results.vertices.7.time", "==", 0.5],
+        [_SK + "results.vertices.6.x", "==", 2.5], [_SK + "results.vertices.6.y", "==", 0.5],
+        [_SK + "results.vertices.6.time", "==", 0.5],
+        [_SK + "results.vertices.7.x", "==", 0.5], [_SK + "results.vertices.7.y", "==", 2.5],
+        [_SK + "results.vertices.7.time", "==", 0.5],
+        [_SK + "results.vertices.8.x", "==", 0.5], [_SK + "results.vertices.8.y", "==", 0.5],
         [_SK + "results.vertices.8.time", "==", 0.5],
     ]),
     _case("skeleton-holed-interior", "polygon.straight_skeleton.interior", [B5_HOLED], {}, [
         [_SK + "summary.vertex_count", "==", 12], [_SK + "summary.face_count", "==", 8],
-        [_SK + "results.vertices.8.time", "==", 1.0], [_SK + "results.vertices.11.time", "==", 1.0],
+        [_SK + "results.vertices.8.x", "==", 1.0], [_SK + "results.vertices.8.y", "==", 1.0],
+        [_SK + "results.vertices.8.time", "==", 1.0],
+        [_SK + "results.vertices.9.x", "==", 5.0], [_SK + "results.vertices.9.y", "==", 1.0],
+        [_SK + "results.vertices.9.time", "==", 1.0],
+        [_SK + "results.vertices.10.x", "==", 1.0], [_SK + "results.vertices.10.y", "==", 5.0],
+        [_SK + "results.vertices.10.time", "==", 1.0],
+        [_SK + "results.vertices.11.x", "==", 5.0], [_SK + "results.vertices.11.y", "==", 5.0],
+        [_SK + "results.vertices.11.time", "==", 1.0],
     ]),
     _case("skeleton-rectangle-exterior", "polygon.straight_skeleton.exterior", [B5_RECT], {"max_offset": _MM(1)}, [
         [_SK + "results.includes_outer_frame", "==", True],
@@ -4403,13 +4420,22 @@ FAMILY_7_12["cases"].extend([
     ]),
     _case("offset-lshape-interior", "polygon.offset.interior", [B5_LSHAPE], {"offset": _MM(0.3)}, [
         [_SK + "summary.ring_count", "==", 1],
-        [_SK + "results.rings.0.points.0", "==", [0.3, 0.3]], [_SK + "results.rings.0.points.1", "==", [2.7, 0.3]],
+        [_SK + "results.rings", "==", [{"points": [[0.3, 0.3], [2.7, 0.3], [2.7, 0.7000000000000001],
+                                                     [0.7000000000000001, 0.7000000000000001],
+                                                     [0.7000000000000001, 2.7], [0.3, 2.7]]}]],
     ]),
     _case("offset-lshape-consumed", "polygon.offset.interior", [B5_LSHAPE], {"offset": _MM(0.6)}, [
         [_SK + "summary.ring_count", "==", 0],
     ]),
+    _case("offset-lshape-consumed-below-inradius", "polygon.offset.interior", [B5_LSHAPE], {"offset": _MM(0.55)}, [
+        [_SK + "summary.ring_count", "==", 0], [_SK + "results.rings", "==", []],
+    ]),
     _case("offset-holed-interior", "polygon.offset.interior", [B5_HOLED], {"offset": _MM(0.3)}, [
         [_SK + "summary.ring_count", "==", 2],
+        [_SK + "results.rings", "==", [
+            {"points": [[0.3, 0.3], [5.7, 0.3], [5.7, 5.7], [0.3, 5.7]]},
+            {"points": [[1.7000000000000002, 1.7000000000000002], [1.7000000000000002, 4.300000000000001],
+                        [4.300000000000001, 4.300000000000001], [4.300000000000001, 1.7000000000000002]]}]],
     ]),
 ])
 FAMILY_7_12["negative_controls"].extend([
@@ -4428,6 +4454,12 @@ FAMILY_7_12["negative_controls"].extend([
     {"id": "offset-forged-empty-rejected", "operation": "polygon.validate.offset",
      "inputs": [_b5report("tampered_offset_forged_empty.json"), B5_RECT], "parameters": {"offset": _MM(0.5)},
      "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "OFFSET_EXTENT_MISMATCH"},
+    {"id": "offset-tampered-lshape-ring-truncated-rejected", "operation": "polygon.validate.offset",
+     "inputs": [_b5report("tampered_offset_lshape_truncated.json"), B5_LSHAPE], "parameters": {"offset": _MM(0.3)},
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "OFFSET_EXTENT_MISMATCH"},
+    {"id": "offset-tampered-hole-ring-dropped-rejected", "operation": "polygon.validate.offset",
+     "inputs": [_b5report("tampered_offset_holed_hole_dropped.json"), B5_HOLED], "parameters": {"offset": _MM(0.3)},
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "OFFSET_RING_COUNT_MISMATCH"},
     {"id": "skeleton-self-intersecting-polygon-rejected", "operation": "polygon.straight_skeleton.interior",
      "inputs": [_b5poly("bowtie.json")], "parameters": {},
      "expect_error_class": "PRECONDITION_FAILED", "expect_error_code": "POLYGON_NOT_SIMPLE"},
