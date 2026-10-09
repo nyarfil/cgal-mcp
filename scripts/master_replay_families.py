@@ -4481,6 +4481,344 @@ FAMILY_7_12["negative_controls"].extend([
 ])
 # <<< b5-712
 
+# --- Batch 6 (7.9.05 OpenGR registration, 7.10.01 Poisson, 7.10.02 reconstruction family) -----------
+# OpenGR (registration) and SCIP (PolyFit) are optional dependencies of the worker: this replay needs
+# a worker built with both; a worker without them reports the operations unavailable and cannot be
+# replayed here.
+def _b6fx(name: str, sha: str) -> dict:
+    return {"fixture": f"batch6/{name}", "sha256": sha}
+
+
+B6_REF = _b6fx("reg_reference.xyz", "6b0bef75503f8a90df02c84cf8a6df6c93db5b4c3e4a9e9314e653e32ba6d0fb")
+B6_MOVING = _b6fx("reg_moving.xyz", "6bf7bb12ff06ab2e69ff9ef464514d9e9352120ff2039c8c02522e864235b4de")
+B6_NOISY = _b6fx("reg_moving_noisy.xyz", "61da22af1117cb0c47cac9ed953d3a96c7588984bbfa804e5ec4d3dd47b2d3a6")
+B6_FLAT = _b6fx("reg_flat.xyz", "d08fa255966fe6745f5772319d7736e093961a218002039291bd49e229e9bd8c")
+B6_BOX = _b6fx("box_normals.ply", "1d35a63719a395a79b5b326500939a25093a185d6fbe983895e5664df0950bd7")
+B6_LPRISM = _b6fx("lprism_normals.ply", "fb5abcba675b3a39d7ddff6f9e051ff427b1db6e05643c59802a6079f9f39442")
+B6_BOX_SOUP = _b6fx("box_soup.off", "a580aed5e8cffc38a8572f7cf8e54206070a4f53b8e718caf3e9d70771b6da0d")
+B6_TAMPERED = {
+    "nonplanar": _b6fx("tampered_box_nonplanar.off", "eaff93a463a825ec2b1b91a12830200e577b3a1ec4d91828b9dc8ebcf0467d93"),
+    "flipped": _b6fx("tampered_box_face_flipped.off", "4159938d1f83b1926f513cde34f3efd741e74a172ef7bda2b9595051d9faa7e6"),
+    "inward": _b6fx("tampered_box_inward.off", "23819ce5451171f1eb264241f3ef2663da8f36e51018f4e3f66caf3cdb30fa4b"),
+    "open": _b6fx("tampered_box_open.off", "e92aa81e7cd18ee60de444a65a7cf00b0cff48fba639b4933fe19c8c253b5c38"),
+    "shrunk": _b6fx("tampered_box_shrunk.off", "70cb75ce18299683651ef8d7227739dce295b113662f570969b7d9ca71d2c0b7"),
+    "translation": _b6fx("tampered_registration_translation.json",
+                         "b709b5526b142052f75cd67ac2be7f6a7c32531fce9d95d9cbc2a05ce3156594"),
+    "point_moved": _b6fx("tampered_registered_point_moved.xyz",
+                         "e6f05c68107a45c21538f16025e5282e6bb9489c95495dd3a1c4945a001baedf"),
+}
+B6_REG = {"number_of_samples": 200, "accuracy": _mm(0.1), "overlap": 0.7, "maximum_running_time": 30,
+          "max_rms": _mm(0.05), "inlier_distance": _mm(0.1), "min_inlier_fraction": 0.9}
+B6_REG_NOISY = dict(B6_REG, max_rms=_mm(0.1))
+B6_REG_BOUNDS = {key: B6_REG[key] for key in ("max_rms", "inlier_distance", "min_inlier_fraction")}
+B6_POLYFIT = {"sphere_radius": _mm(2.0), "maximum_distance": _mm(0.2), "maximum_angle": 10.0,
+              "minimum_region_size": 20, "fitting": 0.43, "coverage": 0.27, "complexity": 0.3,
+              "max_deviation": _mm(0.5), "planarity_tolerance": _mm(1e-6)}
+B6_KINETIC = {"k_neighbors": 12, "maximum_distance": _mm(0.2), "maximum_angle": 10.0, "minimum_region_size": 20,
+              "angle_tolerance": 5.0, "maximum_offset": _mm(0.5), "regularize_parallelism": True,
+              "regularize_orthogonality": True, "regularize_coplanarity": True,
+              "regularize_axis_symmetry": False, "partition_depth": 2, "lambda": 0.5,
+              "max_deviation": _mm(0.5), "planarity_tolerance": _mm(1e-6)}
+B6_SOUP_BOUNDS = {"max_deviation": _mm(0.5), "planarity_tolerance": _mm(1e-6)}
+B6_DELAUNAY = {"sm_angle": 20, "sm_radius": 2, "sm_distance": 0.375, "max_deviation": _mm(3.0),
+               "max_circumradius": _mm(6.0), "min_coverage": 0.5}
+B6_DELAUNAY_TORUS = dict(B6_DELAUNAY, max_deviation=_mm(4.0))
+B6_AFSR = {"radius_ratio_bound": 5, "beta": 0.52, "max_deviation": _mm(2.0)}
+B6_SCALE_SPACE = {"iterations": 2, "neighbors": 12, "maximum_facet_length": _mm(5.0), "radius_ratio_bound": 5,
+                  "beta": 0.52, "max_deviation": _mm(2.0)}
+# Exact ground truth of reg_moving.xyz -> reg_reference.xyz: R^T and -R^T t of the construction in
+# tests/fixtures (R = Rz(atan2(3,4)) Rx(atan2(4,3)), t = (3/2, -2, 3/4)).
+B6_TRUE_CLEAN = [0.8, 0.6, 0.0, 0.0, -0.36, 0.48, 0.8, 0.9, 0.48, -0.64, 0.6, -2.45]
+# Ground truth of reg_moving_noisy.xyz (a 240-point subset with +-0.01 mm noise moved by Rz(atan2(5,12))
+# and t2 = (-1, 5/2, 2)): R2^T and -R2^T t2.
+B6_TRUE_NOISY = [12 / 13, 5 / 13, 0.0, -1 / 26, -5 / 13, 12 / 13, 0.0, -35 / 13, 0.0, 0.0, 1.0, -2.0]
+_B6_TRANSFORM = "output:analysis:json:results.transformation_row_major_3x4"
+
+
+def _poisson_case(case_id: str, fixture: dict, parameters: dict, euler: int, points: int, extra: list[list]) -> dict:
+    return _case(case_id, "reconstruction.poisson", [_points(fixture, "PointSet3Normals", "ply")], parameters, [
+        ["metrics.algorithm", "==", R_POISSON_ALGORITHM],
+        ["metrics.mesh_domain", "==", "CGAL::Poisson_mesh_domain_3"],
+        ["metrics.mesh_3_options", "==", "surface_only().manifold()"],
+        ["metrics.point_count", "==", points],
+        ["input:points:measure:points.count", "==", points],
+        ["output:geometry:measure:off.min_angle_degrees", ">=", 19.9],
+    ] + _closed_mesh_checks(euler) + extra)
+
+
+def _b6_compute(case_id: str, moving: dict, parameters: dict, truth: list[float], count: int) -> dict:
+    return _case(case_id, "pointset.registration.compute_transformation",
+                 [_points(B6_REF), _points(moving)], parameters, [
+        ["metrics.algorithm", "==", "CGAL::OpenGR::compute_registration_transformation"],
+        ["metrics.random_seed", "!=", ""],
+        ["output:analysis:json:report_kind", "==", "registration_transformation"],
+        ["output:analysis:json:summary.reference_count", "==", 300],
+        ["output:analysis:json:summary.moving_count", "==", count],
+        ["output:analysis:json:results.score", ">=", 0.9],
+        [_B6_TRANSFORM, "approx", [truth, 0.05]],
+    ])
+
+
+def _b6_register(case_id: str, moving: dict, parameters: dict, count: int) -> dict:
+    return _case(case_id, "pointset.registration.register", [_points(B6_REF), _points(moving)], parameters, [
+        ["metrics.algorithm", "==", "CGAL::OpenGR::register_point_sets"],
+        ["metrics.point_count", "==", count],
+        ["metrics.score", ">=", 0.9],
+        ["output:points:measure:points.count", "==", count],
+        ["input:moving:measure:points.count", "==", count],
+    ])
+
+
+def _b6_soup_case(case_id: str, operation: str, parameters: dict, source: dict, faces: int | None, vertices: int | None,
+                  volume: float, euler: int = 2) -> dict:
+    checks = [
+        ["output:geometry:measure:off.boundary_edge_count", "==", 0],
+        ["output:geometry:measure:off.euler_characteristic", "==", euler],
+        ["output:geometry:measure:off.signed_volume", "approx", [volume, 1e-6]],
+        ["metrics.point_count", ">", 0],
+    ]
+    if faces is not None:
+        checks += [["output:geometry:measure:off.face_count", "==", faces],
+                   ["output:geometry:measure:off.vertex_count", "==", vertices],
+                   ["metrics.face_count", "==", faces], ["metrics.vertex_count", "==", vertices]]
+    return _case(case_id, operation, [_points(source, "PointSet3Normals", "ply")], parameters, checks)
+
+
+def _b6_delaunay_case(case_id: str, source: dict, parameters: dict, points: int, euler: int,
+                      extra: list[list]) -> dict:
+    return _case(case_id, "reconstruction.poisson_delaunay", [_points(source, "PointSet3Normals", "ply")],
+                 parameters, [
+        ["metrics.algorithm", "==", "CGAL::poisson_surface_reconstruction_delaunay"],
+        ["metrics.point_count", "==", points],
+        ["input:points:measure:points.count", "==", points],
+        ["metrics.boundary_edges_are_disclosed_not_hidden", "==", True],
+        # The one-call wrapper forces manifold_with_boundary(): holes are expected and disclosed,
+        # never reported as a closed surface.
+        ["metrics.boundary_edge_count", ">", 0],
+        ["output:geometry:measure:off.boundary_edge_count", "==", {"path": "metrics.boundary_edge_count"}],
+        ["output:geometry:measure:off.face_count", "==", {"path": "metrics.facet_count"}],
+        ["output:geometry:measure:off.vertex_count", "==", {"path": "metrics.vertex_count"}],
+        ["output:geometry:measure:off.max_face_degree", "==", 3],
+        ["output:geometry:measure:off.max_circumradius", "<=", 6.0],
+        ["metrics.euler_characteristic", "==", euler],
+    ] + extra)
+
+
+def _b6_interpolating_case(case_id: str, operation: str, fixture: dict, parameters: dict, euler: int,
+                           points: int, extra: list[list]) -> dict:
+    return _case(case_id, operation, [_points(fixture)], parameters, [
+        ["metrics.point_count", "==", points],
+        ["input:points:measure:points.count", "==", points],
+        ["metrics.unused_point_count", "==", 0],
+        ["output:geometry:measure:off.vertex_count", "==", points],
+    ] + _closed_mesh_checks(euler) + extra)
+
+
+# 7.9.05
+FAMILY_7_9["unbound"].pop("major.7.9.05")
+FAMILY_7_9["requirements"]["major.7.9.05"] = {
+    "operation_ids": ["pointset.registration.compute_transformation", "pointset.registration.register"],
+    "symbols": ["register_point_sets", "compute_registration_transformation"],
+    "symbol_notes": "CGAL::OpenGR::compute_registration_transformation and register_point_sets (OpenGR v2023.11 "
+                    "Super4PCS, optional dependency) align a 300-point reference with a moving copy of it under the "
+                    "exact rigid motion R = Rz(atan2(3,4)) Rx(atan2(4,3)), t = (3/2, -2, 3/4) (every matrix entry a "
+                    "rational with denominator 5 or 25; the registration must return R^T and -R^T t, hand-derived "
+                    "above) and with a noisy 240-point subset moved by Rz(atan2(5,12)) and a second translation "
+                    "(ground truth 12/13, 5/13 and translation (-1/26, -35/13, -2)). All parameters are pinned: sample "
+                    "count, accuracy, overlap and the wall-clock limit; the random seed is OpenGR's default "
+                    "std::mt19937 seed (the CGAL API does not expose it), so the runs are deterministic: an identical "
+                    "second run gives byte-identical output. The independent validators (own XYZ and JSON parsers) "
+                    "check an orthonormal right-handed 3x4 rotation (exact rational orthonormality), the exact "
+                    "rational image of every moving point, the RMS residual and the inlier fraction against typed "
+                    "bounds, and the registered cloud as a rigid image of the moving cloud. Runs that hit the "
+                    "wall-clock limit are rejected, and the normal filter is documented inactive (the input "
+                    "carries no normals).",
+    "case_ids": ["registration-compute-clean", "registration-compute-clean-repeat", "registration-compute-noisy",
+                 "registration-register-clean", "registration-register-noisy"],
+}
+FAMILY_7_9["cases"].extend([
+    _b6_compute("registration-compute-clean", B6_MOVING, B6_REG, B6_TRUE_CLEAN, 300),
+    _b6_compute("registration-compute-clean-repeat", B6_MOVING, B6_REG, B6_TRUE_CLEAN, 300),
+    _b6_compute("registration-compute-noisy", B6_NOISY, B6_REG_NOISY, B6_TRUE_NOISY, 240),
+    _b6_register("registration-register-clean", B6_MOVING, B6_REG, 300),
+    _b6_register("registration-register-noisy", B6_NOISY, B6_REG_NOISY, 240),
+])
+FAMILY_7_9["pairs"].extend([
+    {"kind": "equal_outputs", "cases": ["registration-compute-clean", "registration-compute-clean-repeat"]},
+    {"kind": "different_outputs", "cases": ["registration-compute-clean", "registration-compute-noisy"]},
+])
+FAMILY_7_9["negative_controls"].extend([
+    {"id": "registration-tampered-translation-rejected", "operation": "pointset.validate.registration_transformation",
+     "inputs": [_json_input(B6_TAMPERED["translation"], "GeometryQueryReport", "none"), _points(B6_REF),
+                _points(B6_MOVING)], "parameters": B6_REG_BOUNDS,
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "RESIDUAL_RMS_EXCEEDED"},
+    {"id": "registration-tampered-registered-point-rejected", "operation": "pointset.validate.registered_points",
+     "inputs": [_points(B6_TAMPERED["point_moved"]), _points(B6_REF), _points(B6_MOVING)],
+     "parameters": B6_REG_BOUNDS, "expect_error_class": "VALIDATION_FAILED",
+     "expect_error_code": "NOT_A_RIGID_IMAGE"},
+    {"id": "registration-flat-moving-rejected", "operation": "pointset.registration.compute_transformation",
+     "inputs": [_points(B6_REF), _points(B6_FLAT)], "parameters": B6_REG,
+     "expect_error_class": "PRECONDITION_FAILED", "expect_error_code": "DEGENERATE_POINT_SET"},
+    {"id": "registration-overlap-out-of-range-rejected", "operation": "pointset.registration.compute_transformation",
+     "inputs": [_points(B6_REF), _points(B6_MOVING)], "parameters": dict(B6_REG, overlap=1.5),
+     "expect_error_class": "INVALID_REQUEST", "expect_error_code": "INVALID_PARAMETER"},
+    {"id": "registration-missing-overlap-rejected", "operation": "pointset.registration.compute_transformation",
+     "inputs": [_points(B6_REF), _points(B6_MOVING)],
+     "parameters": {key: value for key, value in B6_REG.items() if key != "overlap"},
+     "expect_error_class": "INVALID_REQUEST", "expect_error_code": "MISSING_PARAMETER"},
+])
+
+# 7.10.01 and 7.10.02
+for _key in ("major.7.10.01", "major.7.10.02"):
+    FAMILY_7_10["unbound"].pop(_key)
+FAMILY_7_10["requirements"]["major.7.10.01"] = {
+    "operation_ids": ["reconstruction.poisson_delaunay", "reconstruction.poisson"],
+    "symbols": ["poisson_surface_reconstruction_delaunay", "Poisson_reconstruction_function"],
+    "symbol_notes": "Two operations cover the Poisson family. reconstruction.poisson (Poisson_reconstruction_function "
+                    "over a Poisson_mesh_domain_3 and a surface-only make_mesh_3 with the closed manifold option, "
+                    "mesh size tied to compute_average_spacing) reconstructs the radius-10 sphere (1500 oriented "
+                    "points) and the torus (R=10, r=4, 640 points) as closed outward-oriented manifolds with "
+                    "hand-derived Euler characteristics 2 and 0, the analytic radius, torus residual, volume and "
+                    "area within sampling error; a finer facet size gives a different, larger mesh. "
+                    "reconstruction.poisson_delaunay wraps CGAL::poisson_surface_reconstruction_delaunay, which in "
+                    "CGAL 6.2.1 always appends manifold_with_boundary(): its output is a manifold surface WITH "
+                    "boundary (33 and 86 boundary edges on these fixtures, several components) and is never "
+                    "claimed closed. Its independent validator (own PLY/OFF parsers, exact GMP rationals) checks "
+                    "edge and vertex manifoldness, consistent orientation (a closed component must be outward by "
+                    "exact signed volume), that at least min_coverage of the source points lie within "
+                    "max_deviation of the surface, that source normals agree with the orientation on those covered "
+                    "points, a certified surface-to-source bound over every triangle and the exact circumradius "
+                    "bound; boundary_edge_count is reported and closedness_claimed is false. Orientation is "
+                    "resolved per connected component by a vote of the source normals.",
+    "case_ids": ["poisson-sphere", "poisson-torus", "poisson-torus-fine", "poisson-delaunay-sphere",
+                 "poisson-delaunay-torus"],
+}
+FAMILY_7_10["requirements"]["major.7.10.02"] = {
+    "operation_ids": ["reconstruction.advancing_front", "reconstruction.scale_space",
+                      "reconstruction.polygonal_surface", "reconstruction.kinetic_surface"],
+    "symbols": ["advancing_front_surface_reconstruction", "Advancing_front_surface_reconstruction",
+                "Scale_space_reconstruction_3", "Polygonal_surface_reconstruction",
+                "Kinetic_surface_reconstruction"],
+    "symbol_notes": "Advancing front (the function entry point and the class interface share one operation) and "
+                    "scale-space reconstruction (Jet_smoother plus Advancing_front_mesher) interpolate the 320-point "
+                    "sphere and 640-point torus samples as closed manifolds (Euler 2 and 0, every input point a "
+                    "vertex), checked by the exact interpolating validator. Polygonal_surface_reconstruction "
+                    "(PolyFit, region-growing planes and a SCIP 10.0.3 mixed-integer program, optional dependency) "
+                    "and Kinetic_surface_reconstruction (shape detection, regularisation, kinetic partition and "
+                    "graph-cut labelling) reconstruct a 10x8x6 axis-aligned box (376 oriented points on six faces) "
+                    "and an L-prism (328 points): both give the box exactly (6 quads, 8 vertices, hand-derived "
+                    "volume 10*8*6 = 480, Euler 2) and the L-prism volume 336; PolyFit gives 14 faces and 16 "
+                    "vertices on the L-prism, the kinetic result 8 faces with extra collinear vertices (also 16 "
+                    "vertices, disclosed). The independent validator (own PLY/OFF parsers, exact rationals on the raw "
+                    "binary64 data) checks planar faces within the typed tolerance (Newell normal), simple polygons "
+                    "by exact ear clipping, a closed edge-manifold consistently oriented surface, vertex manifold "
+                    "links, outward orientation by exact signed volume, source points within max_deviation of the "
+                    "surface (exact point-to-polygon distance) and source normals agreeing with the orientation. "
+                    "Only the plain entry points are exposed: custom MIP traits and the incremental PolyFit "
+                    "interface are not.",
+    "case_ids": ["afsr-sphere", "afsr-torus", "scale-space-sphere", "polyfit-box", "polyfit-lprism",
+                 "kinetic-box", "kinetic-lprism"],
+}
+FAMILY_7_10["cases"].extend([
+    _poisson_case("poisson-sphere", R_SPHERE_DENSE, R_POISSON_SPHERE, 2, 1500, [
+        ["output:geometry:measure:off.min_vertex_radius", ">", 9.7],
+        ["output:geometry:measure:off.max_vertex_radius", "<", 10.4],
+        ["output:geometry:measure:off.signed_volume", "approx", [R_SPHERE_VOLUME, 150.0]],
+        ["output:geometry:measure:off.area", "approx", [R_SPHERE_AREA, 40.0]],
+    ]),
+    _poisson_case("poisson-torus", R_TORUS_NORMALS, R_POISSON_TORUS, 0, 640, [
+        ["output:geometry:measure:off.max_torus_residual(10,4)", "<", 0.6],
+        ["output:geometry:measure:off.signed_volume", "approx", [R_TORUS_VOLUME, 400.0]],
+        ["output:geometry:measure:off.area", "approx", [R_TORUS_AREA, 100.0]],
+        ["metrics.facet_count", "<", 400],
+    ]),
+    _poisson_case("poisson-torus-fine", R_TORUS_NORMALS, R_POISSON_TORUS_FINE, 0, 640, [
+        ["output:geometry:measure:off.max_torus_residual(10,4)", "<", 0.6],
+        ["output:geometry:measure:off.signed_volume", "approx", [R_TORUS_VOLUME, 400.0]],
+        ["metrics.facet_count", ">", 400],
+    ]),
+    _b6_delaunay_case("poisson-delaunay-sphere", R_SPHERE_DENSE, B6_DELAUNAY, 1500, 1, [
+        ["output:geometry:measure:off.max_vertex_radius", "<", 10.4],
+        ["output:geometry:measure:off.min_vertex_radius", ">", 9.5],
+    ]),
+    _b6_delaunay_case("poisson-delaunay-torus", R_TORUS_NORMALS, B6_DELAUNAY_TORUS, 640, 0, [
+        ["output:geometry:measure:off.max_torus_residual(10,4)", "<", 0.7],
+    ]),
+    _b6_interpolating_case("afsr-sphere", "reconstruction.advancing_front", R_SPHERE_XYZ, B6_AFSR, 2, 320, [
+        ["metrics.algorithm", "==", "CGAL::advancing_front_surface_reconstruction"],
+        ["output:geometry:measure:off.min_vertex_radius", ">", 9.99],
+        ["output:geometry:measure:off.max_vertex_radius", "<", 10.01],
+    ]),
+    _b6_interpolating_case("afsr-torus", "reconstruction.advancing_front", R_TORUS_XYZ, B6_AFSR, 0, 640, [
+        ["metrics.algorithm", "==", "CGAL::advancing_front_surface_reconstruction"],
+        ["output:geometry:measure:off.max_torus_residual(10,4)", "<", 0.01],
+    ]),
+    _b6_interpolating_case("scale-space-sphere", "reconstruction.scale_space", R_SPHERE_XYZ, B6_SCALE_SPACE, 2, 320, [
+        ["metrics.algorithm", "==", "CGAL::Scale_space_surface_reconstruction_3"],
+        ["metrics.output_positions", "==", "original_input_points"],
+        ["output:geometry:measure:off.min_vertex_radius", ">", 9.99],
+        ["output:geometry:measure:off.max_vertex_radius", "<", 10.01],
+    ]),
+    _b6_soup_case("polyfit-box", "reconstruction.polygonal_surface", B6_POLYFIT, B6_BOX, 6, 8, 480.0),
+    _b6_soup_case("polyfit-lprism", "reconstruction.polygonal_surface", B6_POLYFIT, B6_LPRISM, 14, 16, 336.0),
+    _b6_soup_case("kinetic-box", "reconstruction.kinetic_surface", B6_KINETIC, B6_BOX, 6, 8, 480.0),
+    _b6_soup_case("kinetic-lprism", "reconstruction.kinetic_surface", B6_KINETIC, B6_LPRISM, 8, 16, 336.0),
+])
+FAMILY_7_10["pairs"].append({"kind": "different_outputs", "cases": ["polyfit-lprism", "kinetic-lprism"]})
+FAMILY_7_10["negative_controls"].extend([
+    {"id": "polygonal-nonplanar-face-rejected", "operation": "reconstruction.validate.polygonal_surface",
+     "inputs": [_mesh(B6_TAMPERED["nonplanar"], "PolygonSoup3"), _points(B6_BOX, "PointSet3Normals", "ply")],
+     "parameters": B6_SOUP_BOUNDS, "expect_error_class": "VALIDATION_FAILED",
+     "expect_error_code": "FACE_NOT_PLANAR"},
+    {"id": "polygonal-flipped-face-rejected", "operation": "reconstruction.validate.polygonal_surface",
+     "inputs": [_mesh(B6_TAMPERED["flipped"], "PolygonSoup3"), _points(B6_BOX, "PointSet3Normals", "ply")],
+     "parameters": B6_SOUP_BOUNDS, "expect_error_class": "VALIDATION_FAILED",
+     "expect_error_code": "EDGE_NOT_MANIFOLD_OR_INCONSISTENT"},
+    {"id": "polygonal-inward-orientation-rejected", "operation": "reconstruction.validate.polygonal_surface",
+     "inputs": [_mesh(B6_TAMPERED["inward"], "PolygonSoup3"), _points(B6_BOX, "PointSet3Normals", "ply")],
+     "parameters": B6_SOUP_BOUNDS, "expect_error_class": "VALIDATION_FAILED",
+     "expect_error_code": "NOT_OUTWARD_ORIENTED"},
+    {"id": "polygonal-open-surface-rejected", "operation": "reconstruction.validate.polygonal_surface",
+     "inputs": [_mesh(B6_TAMPERED["open"], "PolygonSoup3"), _points(B6_BOX, "PointSet3Normals", "ply")],
+     "parameters": B6_SOUP_BOUNDS, "expect_error_class": "VALIDATION_FAILED",
+     "expect_error_code": "SURFACE_NOT_CLOSED"},
+    {"id": "polygonal-shrunk-surface-rejected", "operation": "reconstruction.validate.polygonal_surface",
+     "inputs": [_mesh(B6_TAMPERED["shrunk"], "PolygonSoup3"), _points(B6_BOX, "PointSet3Normals", "ply")],
+     "parameters": B6_SOUP_BOUNDS, "expect_error_class": "VALIDATION_FAILED",
+     "expect_error_code": "SOURCE_TO_SURFACE_BOUND_EXCEEDED"},
+    {"id": "kinetic-zero-normal-rejected", "operation": "reconstruction.kinetic_surface",
+     "inputs": [_points(R_SPHERE_ZERO, "PointSet3Normals", "ply")], "parameters": B6_KINETIC,
+     "expect_error_class": "PRECONDITION_FAILED", "expect_error_code": "ZERO_NORMAL"},
+    {"id": "kinetic-partition-depth-over-limit-rejected", "operation": "reconstruction.kinetic_surface",
+     "inputs": [_points(B6_BOX, "PointSet3Normals", "ply")], "parameters": dict(B6_KINETIC, partition_depth=7),
+     "expect_error_class": "INVALID_REQUEST", "expect_error_code": "INVALID_PARAMETER"},
+    {"id": "poisson-delaunay-flipped-orientation-rejected", "operation": "reconstruction.validate.poisson_boundary",
+     "inputs": [_mesh(R_TAMPERED["poisson_flipped"]), _points(R_SPHERE_DENSE, "PointSet3Normals", "ply")],
+     "parameters": {key: B6_DELAUNAY[key] for key in ("max_deviation", "max_circumradius", "min_coverage")},
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "ORIENTATION_NOT_OUTWARD"},
+    {"id": "poisson-delaunay-shrunk-surface-rejected", "operation": "reconstruction.validate.poisson_boundary",
+     "inputs": [_mesh(R_TAMPERED["poisson_shrunk"]), _points(R_SPHERE_DENSE, "PointSet3Normals", "ply")],
+     "parameters": {key: B6_DELAUNAY[key] for key in ("max_deviation", "max_circumradius", "min_coverage")},
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "SOURCE_COVERAGE_BELOW_MINIMUM"},
+    {"id": "poisson-delaunay-zero-normal-rejected", "operation": "reconstruction.poisson_delaunay",
+     "inputs": [_points(R_SPHERE_ZERO, "PointSet3Normals", "ply")], "parameters": B6_DELAUNAY,
+     "expect_error_class": "PRECONDITION_FAILED", "expect_error_code": "ZERO_NORMAL"},
+    {"id": "poisson-delaunay-missing-coverage-rejected", "operation": "reconstruction.poisson_delaunay",
+     "inputs": [_points(R_SPHERE_DENSE, "PointSet3Normals", "ply")],
+     "parameters": {key: value for key, value in B6_DELAUNAY.items() if key != "min_coverage"},
+     "expect_error_class": "INVALID_REQUEST", "expect_error_code": "MISSING_PARAMETER"},
+    {"id": "poisson-zero-normal-rejected", "operation": "reconstruction.poisson",
+     "inputs": [_points(R_SPHERE_ZERO, "PointSet3Normals", "ply")], "parameters": R_POISSON_SPHERE,
+     "expect_error_class": "PRECONDITION_FAILED", "expect_error_code": "ZERO_NORMAL"},
+    {"id": "poisson-flipped-orientation-rejected", "operation": "reconstruction.validate.poisson",
+     "inputs": [_mesh(R_TAMPERED["poisson_flipped"]), _points(R_SPHERE_DENSE, "PointSet3Normals", "ply")],
+     "parameters": {"max_deviation": _mm(3.0)}, "expect_error_class": "VALIDATION_FAILED",
+     "expect_error_code": "ORIENTATION_NOT_OUTWARD"},
+    {"id": "afsr-normals-input-type-rejected", "operation": "reconstruction.advancing_front",
+     "inputs": [_points(R_SPHERE_ZERO, "PointSet3Normals", "ply")], "parameters": B6_AFSR,
+     "expect_error_class": "TYPE_ERROR", "expect_error_code": "INPUT_TYPE_MISMATCH"},
+])
+
 GENERIC_FAMILIES: dict[str, dict] = {
     family["family"]: family for family in (FAMILY_7_1, FAMILY_7_2, FAMILY_7_3, FAMILY_7_4, FAMILY_7_5, FAMILY_7_6,
                    FAMILY_7_9, FAMILY_7_11, FAMILY_7_12, FAMILY_7_13, FAMILY_7_14, FAMILY_7_15, FAMILY_7_10, FAMILY_7_8)
