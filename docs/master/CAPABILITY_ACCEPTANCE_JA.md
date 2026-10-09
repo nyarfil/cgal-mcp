@@ -1,7 +1,7 @@
 # 原本の主要能力を実計算で判定する
 
 原本7.1〜7.15の15分野・80要求を固定母数とし、実計算の再試験へ結び付けた要求は
-67/80です（7.1カーネル5、7.7軽量化6、7.6メッシュ再生成5、7.3解析6、7.4修復6、7.5 Boolean・clip・split・corefine・slicer 5、7.9点群4、7.2空間問合せ5、7.11三角形分割4、7.12多角形5、7.13凸包・alpha shape・alpha wrap・bounding volume・重心座標5、7.14 Mesh_2・Surface_mesher・Mesh_3・Mesh_3 criteria 4、7.15 LP/QP・補間・VSA近似・sorted matrix search 4、7.10 alpha wrap 1、7.8細分割・最短経路2）。
+70/80です（7.1カーネル5、7.7軽量化6、7.6メッシュ再生成5、7.3解析7、7.4修復6、7.5 Boolean・clip・split・corefine・slicer 5、7.9点群4、7.2空間問合せ5、7.11三角形分割4、7.12多角形7、7.13凸包・alpha shape・alpha wrap・bounding volume・重心座標5、7.14 Mesh_2・Surface_mesher・Mesh_3・Mesh_3 criteria 4、7.15 LP/QP・補間・VSA近似・sorted matrix search 4、7.10 alpha wrap 1、7.8細分割・最短経路2）。
 点群処理の個別Operationや凸包の基盤受入を、未完了の要求全体の達成へ加算しません。
 結合済みの要求は、各要求の説明に列挙された全variantと台帳の全subcapability symbolを、
 検証済みOperationと必須validatorを通る再試験ケースで網羅した場合だけ結び付けています。
