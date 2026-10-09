@@ -4034,8 +4034,8 @@ B4_SP_POINTS = {"sources": [{"face": 0, "barycentric": [0.5, 0.25, 0.25]}, {"ver
 B4_SP_CORNER_TARGETS = {"sources": [{"vertex": 0}], "targets": [{"vertex": 6}, {"vertex": 2}]}
 FAMILY_7_8["requirements"]["major.7.8.04"] = {
     "operation_ids": ["mesh.path.shortest"],
-    "symbols": ["Surface_mesh_shortest_path"],
-    "symbol_notes": "Surface_mesh_shortest_path computes exact geodesic distances on triangle meshes of at most "
+    "symbols": ["Surface_mesh_shortest_path", "shortest_path_sequence_to_source_points"],
+    "symbol_notes": "Surface_mesh_shortest_path with shortest_path_sequence_to_source_points (the unfolded path of every target, collected through the visitor) computes exact geodesic distances on triangle meshes of at most "
                     "64 faces from up to 8 source points (vertex or face barycentric) to up to 32 targets, with "
                     "the unfolded path. Hand-derived on the side-2 cube: the opposite corner is 2*sqrt(5) away "
                     "(unfold two faces), a face diagonal 2*sqrt(2) and an edge 2. On the flat L-shaped region "

@@ -103,14 +103,14 @@
   "unbound_requirements": {},
   "family_contract_sha256": "5930af268d34a2a9b903a048e8f47e133d591788d0044832b22048f66caa1999",
   "family_contract_source_path": "scripts/master_replay_families.py",
-  "family_contract_source_sha256": "b1eeff25479a0607bca5006f434e87cf9fdfebba75697dd43a69f9de572067cb",
+  "family_contract_source_sha256": "9129c39df6b9ea2b9ab72a5b02877ac71ff44ff6fddf438b047378d3653ac9c1",
   "family_contract_source_hash_encoding": "utf8-lf",
   "catalog_baseline_sha256": "143ec18a5b64d506aad60dc24b0a1ea30940c715d1223b3465fa140aeb9d02a7",
-  "operation_registry_sha256": "d1eafde5feb1e3340cc7046fc4ea181455f57b79c876cbd61197e5913400c590",
+  "operation_registry_sha256": "5e7abd6bbba1fefd4d90f0fca3920039e0b781a2544b2f440de941dc3c849ad6",
   "operation_registry_hash_encoding": "utf8-lf",
   "policy_catalog_sha256": "45f4be759288aaeb834a3ce97aa64ee7768048b15534618fc8c19512801f9a9f",
   "policy_catalog_hash_encoding": "utf8-lf",
-  "worker_sha256": "358d3c7d32cc3ba52bb0fa65ca2357f8355996b46eac96dafb7ed9d15bc3a79e",
+  "worker_sha256": "01acb49013498c22b3ad741dfc2395aeb454521c27fd2002050c8ecdee28ef61",
   "worker_binary_format": "pe",
   "worker_manifest": {
     "actual_cgal_version": "6.2.1",
@@ -2448,6 +2448,112 @@
           "Surface_mesh"
         ],
         "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "mesh.repair.fill_holes_refine_fair",
+        "info": {
+          "bounded_profile": "triangle ASCII OFF; one explicit CGAL repair family per operation",
+          "input_format": "off",
+          "input_units": [
+            "mm",
+            "cm",
+            "m"
+          ],
+          "license_evidence": {
+            "license_path": "LICENSE.GPL",
+            "license_sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116",
+            "path": "include/CGAL/license/gpl_package_list.txt",
+            "sha256": "efb290ee3ef3d8b7675896bc037f1c9359f583543ca9e38bcb425fe34a8995db"
+          },
+          "license_expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+          "numeric_scale_contract": {
+            "maximum_absolute_coordinate": 1e+100,
+            "maximum_translation_to_span_ratio": 1000000.0,
+            "minimum_span": 1e-100
+          },
+          "output_format": "off",
+          "output_slot": "geometry",
+          "output_unit_from": "source",
+          "package_ids": [
+            "PMP_Mesh_repair"
+          ],
+          "parameter_schema": {
+            "additionalProperties": false,
+            "properties": {
+              "density_control_factor": {
+                "maximum": 4.0,
+                "minimum": 1.0,
+                "type": "number"
+              },
+              "fairing_continuity": {
+                "maximum": 2,
+                "minimum": 0,
+                "type": "integer"
+              },
+              "max_hole_edges": {
+                "maximum": 2000,
+                "minimum": 3,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "max_hole_edges",
+              "density_control_factor",
+              "fairing_continuity"
+            ],
+            "type": "object"
+          },
+          "precision_contract": {
+            "coordinate_storage": "IEEE-754 binary64",
+            "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+            "exact_constructions": "unsupported_fail_closed",
+            "supported_request_kernel": "package_recommended"
+          },
+          "source": {
+            "header": "CGAL/Polygon_mesh_processing/triangulate_hole.h",
+            "identifiers": [
+              "triangulate_refine_and_fair_hole"
+            ],
+            "sha256": "b1a20a8eac2144e612df15b78a4ef045d6d7540b3ab13bb12044f40d94cb8118"
+          },
+          "source_kind": "official_release",
+          "source_mutation": false,
+          "source_version": "6.2.1",
+          "validator_artifact_bindings": {
+            "mesh.validate.repair_fill_holes_refine_fair": {
+              "candidate": {
+                "output": "geometry"
+              },
+              "source": {
+                "input": "source"
+              }
+            }
+          },
+          "validator_parameter_bindings": {
+            "mesh.validate.repair_fill_holes_refine_fair": {
+              "density_control_factor": "density_control_factor",
+              "fairing_continuity": "fairing_continuity",
+              "max_hole_edges": "max_hole_edges"
+            }
+          },
+          "validators": [
+            "mesh.validate.repair_fill_holes_refine_fair"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "TriangleSurfaceMesh",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing",
+          "Surface_mesh"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
         "id": "mesh.repair.polygon_soup",
         "info": {
           "bounded_profile": "triangle ASCII OFF; one explicit CGAL repair family per operation",
@@ -2947,6 +3053,108 @@
           "source_version": "6.2.1",
           "terminal_validator": true,
           "validates": "mesh.repair.fill_holes",
+          "validators": []
+        },
+        "input_types": [
+          "TriangleSurfaceMesh",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing",
+          "Surface_mesh"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "mesh.validate.repair_fill_holes_refine_fair",
+        "info": {
+          "input_format": "off",
+          "input_units": [
+            "mm",
+            "cm",
+            "m"
+          ],
+          "license_evidence": {
+            "license_path": "LICENSE.GPL",
+            "license_sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116",
+            "path": "include/CGAL/license/gpl_package_list.txt",
+            "sha256": "efb290ee3ef3d8b7675896bc037f1c9359f583543ca9e38bcb425fe34a8995db"
+          },
+          "license_expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+          "numeric_scale_contract": {
+            "maximum_absolute_coordinate": 1e+100,
+            "maximum_translation_to_span_ratio": 1000000.0,
+            "minimum_span": 1e-100
+          },
+          "output_format": "json",
+          "output_slot": "validation",
+          "output_unit": "none",
+          "package_ids": [
+            "PMP_Mesh_repair"
+          ],
+          "parameter_schema": {
+            "additionalProperties": false,
+            "properties": {
+              "density_control_factor": {
+                "maximum": 4.0,
+                "minimum": 1.0,
+                "type": "number"
+              },
+              "fairing_continuity": {
+                "maximum": 2,
+                "minimum": 0,
+                "type": "integer"
+              },
+              "max_hole_edges": {
+                "maximum": 2000,
+                "minimum": 3,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "max_hole_edges",
+              "density_control_factor",
+              "fairing_continuity"
+            ],
+            "type": "object"
+          },
+          "precision_contract": {
+            "coordinate_storage": "IEEE-754 binary64",
+            "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+            "exact_constructions": "unsupported_fail_closed",
+            "supported_request_kernel": "package_recommended"
+          },
+          "required_report_checks": {
+            "checks.candidate_matches_official_cgal_replay": true,
+            "checks.candidate_unit_matches_source": true,
+            "checks.numeric_profile_valid": true,
+            "checks.repair_invariant_valid": true,
+            "checks.source_geometry_preserved_as_required": true,
+            "checks.source_identity_matches": true,
+            "passed": true,
+            "schema_version": 1,
+            "status": "pass",
+            "validates": "mesh.repair.fill_holes_refine_fair",
+            "validator_id": "mesh.validate.repair_fill_holes_refine_fair"
+          },
+          "source": {
+            "header": "CGAL/Polygon_mesh_processing/triangulate_hole.h",
+            "identifiers": [
+              "triangulate_refine_and_fair_hole"
+            ],
+            "sha256": "b1a20a8eac2144e612df15b78a4ef045d6d7540b3ab13bb12044f40d94cb8118"
+          },
+          "source_kind": "official_release",
+          "source_mutation": false,
+          "source_version": "6.2.1",
+          "terminal_validator": true,
+          "validates": "mesh.repair.fill_holes_refine_fair",
           "validators": []
         },
         "input_types": [
@@ -7219,6 +7427,230 @@
         "supported_kernels": [
           "package_recommended"
         ]
+      },
+      {
+        "dependencies": [
+          "Surface_mesh_shortest_path"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "mesh.path.shortest",
+        "info": {
+          "input_slots": [
+            "mesh"
+          ],
+          "maximum_input_faces": 64,
+          "source_header": "CGAL/Surface_mesh_shortest_path.h",
+          "validator_parameter_bindings": {
+            "mesh.validate.shortest_path": {
+              "sources": "sources",
+              "targets": "targets"
+            }
+          },
+          "validators": [
+            "mesh.validate.shortest_path"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "GeometryQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Alpha_shapes_2"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "shape.alpha_shape_2",
+        "info": {
+          "input_slots": [
+            "points"
+          ],
+          "maximum_input_points": 60,
+          "source_header": "CGAL/Alpha_shape_2.h",
+          "validator_parameter_bindings": {
+            "shape.validate.alpha_shape_2": {
+              "alpha": "alpha"
+            }
+          },
+          "validators": [
+            "shape.validate.alpha_shape_2"
+          ]
+        },
+        "input_types": [
+          "PointSet2"
+        ],
+        "output_type": "GeometryQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Alpha_shapes_3"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "shape.alpha_shape_3",
+        "info": {
+          "input_slots": [
+            "points"
+          ],
+          "maximum_input_points": 24,
+          "source_header": "CGAL/Alpha_shape_3.h",
+          "validator_parameter_bindings": {
+            "shape.validate.alpha_shape_3": {
+              "alpha": "alpha"
+            }
+          },
+          "validators": [
+            "shape.validate.alpha_shape_3"
+          ]
+        },
+        "input_types": [
+          "PointSet3"
+        ],
+        "output_type": "GeometryQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Alpha_shapes_3"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "shape.fixed_alpha_shape_3",
+        "info": {
+          "input_slots": [
+            "points"
+          ],
+          "maximum_input_points": 24,
+          "source_header": "CGAL/Fixed_alpha_shape_3.h",
+          "validator_parameter_bindings": {
+            "shape.validate.alpha_shape_3": {
+              "alpha": "alpha"
+            }
+          },
+          "validators": [
+            "shape.validate.alpha_shape_3"
+          ]
+        },
+        "input_types": [
+          "PointSet3"
+        ],
+        "output_type": "GeometryQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Surface_mesh_shortest_path"
+        ],
+        "effective_kernel": "long double (no CGAL header)",
+        "id": "mesh.validate.shortest_path",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "distance_unit_matches_mesh",
+            "path_points_lie_on_surface_in_shared_faces",
+            "path_endpoints_match_source_and_target",
+            "path_length_equals_reported_distance",
+            "distance_equals_recomputed_geodesic",
+            "source_is_nearest"
+          ],
+          "independence": "face-sequence unfolding with visibility windows and Dijkstra over mesh vertices in long double; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "mesh"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "GeometryQueryReport",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Alpha_shapes_2"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "shape.validate.alpha_shape_2",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "alpha_unit_is_squared_artifact_unit",
+            "interior_triangles_equal_exact_delaunay_triangles_within_alpha",
+            "regular_edges_equal_exact_boundary_of_interior_triangles"
+          ],
+          "independence": "exact rational empty-circle search and circumradius; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "points"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "GeometryQueryReport",
+          "PointSet2"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Alpha_shapes_3"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "shape.validate.alpha_shape_3",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "alpha_unit_is_squared_artifact_unit",
+            "interior_cells_equal_exact_delaunay_cells_within_alpha",
+            "regular_facets_equal_exact_boundary_of_interior_cells"
+          ],
+          "independence": "exact rational empty-sphere search and circumradius; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "points"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "GeometryQueryReport",
+          "PointSet3"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
       }
     ],
     "protocol": 1,
@@ -7230,7 +7662,7 @@
     ],
     "worker": "cgal-master-worker"
   },
-  "worker_manifest_sha256": "36357bf97a2810124205d29a9e650deff56a2678aaa4d81c02dfaf10e88d53aa",
+  "worker_manifest_sha256": "de4b65a68b677dddb1f53660368886e85b15a7cd99ae698ce7c7424b05a11678",
   "tests": [
     {
       "id": "family-7.2-replay-cases",
@@ -7550,7 +7982,7 @@
       "case_id": "aabb-closest-cube",
       "operation_id": "spatial.aabb.closest_points",
       "revision": 1,
-      "worker_manifest_sha256": "36357bf97a2810124205d29a9e650deff56a2678aaa4d81c02dfaf10e88d53aa",
+      "worker_manifest_sha256": "de4b65a68b677dddb1f53660368886e85b15a7cd99ae698ce7c7424b05a11678",
       "test_id": "family-7.2-replay-cases",
       "request": {
         "inputs": [
@@ -7717,7 +8149,7 @@
       "case_id": "aabb-rays-cube",
       "operation_id": "spatial.aabb.ray_first_hits",
       "revision": 1,
-      "worker_manifest_sha256": "36357bf97a2810124205d29a9e650deff56a2678aaa4d81c02dfaf10e88d53aa",
+      "worker_manifest_sha256": "de4b65a68b677dddb1f53660368886e85b15a7cd99ae698ce7c7424b05a11678",
       "test_id": "family-7.2-replay-cases",
       "request": {
         "inputs": [
@@ -7886,7 +8318,7 @@
       "case_id": "knn-orthogonal",
       "operation_id": "spatial.knn_3",
       "revision": 1,
-      "worker_manifest_sha256": "36357bf97a2810124205d29a9e650deff56a2678aaa4d81c02dfaf10e88d53aa",
+      "worker_manifest_sha256": "de4b65a68b677dddb1f53660368886e85b15a7cd99ae698ce7c7424b05a11678",
       "test_id": "family-7.2-replay-cases",
       "request": {
         "inputs": [
@@ -8065,7 +8497,7 @@
       "case_id": "knn-general",
       "operation_id": "spatial.knn_3",
       "revision": 1,
-      "worker_manifest_sha256": "36357bf97a2810124205d29a9e650deff56a2678aaa4d81c02dfaf10e88d53aa",
+      "worker_manifest_sha256": "de4b65a68b677dddb1f53660368886e85b15a7cd99ae698ce7c7424b05a11678",
       "test_id": "family-7.2-replay-cases",
       "request": {
         "inputs": [
@@ -8241,7 +8673,7 @@
       "case_id": "knn-nearest-single",
       "operation_id": "spatial.knn_3",
       "revision": 1,
-      "worker_manifest_sha256": "36357bf97a2810124205d29a9e650deff56a2678aaa4d81c02dfaf10e88d53aa",
+      "worker_manifest_sha256": "de4b65a68b677dddb1f53660368886e85b15a7cd99ae698ce7c7424b05a11678",
       "test_id": "family-7.2-replay-cases",
       "request": {
         "inputs": [
@@ -8420,7 +8852,7 @@
       "case_id": "range-zero-radius",
       "operation_id": "spatial.range_search_3",
       "revision": 1,
-      "worker_manifest_sha256": "36357bf97a2810124205d29a9e650deff56a2678aaa4d81c02dfaf10e88d53aa",
+      "worker_manifest_sha256": "de4b65a68b677dddb1f53660368886e85b15a7cd99ae698ce7c7424b05a11678",
       "test_id": "family-7.2-replay-cases",
       "request": {
         "inputs": [
@@ -8599,7 +9031,7 @@
       "case_id": "range-half-radius",
       "operation_id": "spatial.range_search_3",
       "revision": 1,
-      "worker_manifest_sha256": "36357bf97a2810124205d29a9e650deff56a2678aaa4d81c02dfaf10e88d53aa",
+      "worker_manifest_sha256": "de4b65a68b677dddb1f53660368886e85b15a7cd99ae698ce7c7424b05a11678",
       "test_id": "family-7.2-replay-cases",
       "request": {
         "inputs": [
@@ -8778,7 +9210,7 @@
       "case_id": "bbox-planar",
       "operation_id": "spatial.bbox_2",
       "revision": 1,
-      "worker_manifest_sha256": "36357bf97a2810124205d29a9e650deff56a2678aaa4d81c02dfaf10e88d53aa",
+      "worker_manifest_sha256": "de4b65a68b677dddb1f53660368886e85b15a7cd99ae698ce7c7424b05a11678",
       "test_id": "family-7.2-replay-cases",
       "request": {
         "inputs": [
@@ -8922,7 +9354,7 @@
       "case_id": "bbox-cube-mesh",
       "operation_id": "spatial.bbox_3",
       "revision": 1,
-      "worker_manifest_sha256": "36357bf97a2810124205d29a9e650deff56a2678aaa4d81c02dfaf10e88d53aa",
+      "worker_manifest_sha256": "de4b65a68b677dddb1f53660368886e85b15a7cd99ae698ce7c7424b05a11678",
       "test_id": "family-7.2-replay-cases",
       "request": {
         "inputs": [
@@ -9066,7 +9498,7 @@
       "case_id": "bbox-point-set",
       "operation_id": "spatial.bbox_3",
       "revision": 1,
-      "worker_manifest_sha256": "36357bf97a2810124205d29a9e650deff56a2678aaa4d81c02dfaf10e88d53aa",
+      "worker_manifest_sha256": "de4b65a68b677dddb1f53660368886e85b15a7cd99ae698ce7c7424b05a11678",
       "test_id": "family-7.2-replay-cases",
       "request": {
         "inputs": [
@@ -9210,7 +9642,7 @@
       "case_id": "aabb-intersections-cube",
       "operation_id": "spatial.aabb.intersections",
       "revision": 1,
-      "worker_manifest_sha256": "36357bf97a2810124205d29a9e650deff56a2678aaa4d81c02dfaf10e88d53aa",
+      "worker_manifest_sha256": "de4b65a68b677dddb1f53660368886e85b15a7cd99ae698ce7c7424b05a11678",
       "test_id": "family-7.2-replay-cases",
       "request": {
         "inputs": [
@@ -9383,7 +9815,7 @@
       "case_id": "knn-zero-k-rejected",
       "operation_id": "spatial.knn_3",
       "revision": 1,
-      "worker_manifest_sha256": "36357bf97a2810124205d29a9e650deff56a2678aaa4d81c02dfaf10e88d53aa",
+      "worker_manifest_sha256": "de4b65a68b677dddb1f53660368886e85b15a7cd99ae698ce7c7424b05a11678",
       "test_id": "family-7.2-replay-cases",
       "request": {
         "inputs": [
@@ -9445,7 +9877,7 @@
       "case_id": "range-unit-mismatch-rejected",
       "operation_id": "spatial.range_search_3",
       "revision": 1,
-      "worker_manifest_sha256": "36357bf97a2810124205d29a9e650deff56a2678aaa4d81c02dfaf10e88d53aa",
+      "worker_manifest_sha256": "de4b65a68b677dddb1f53660368886e85b15a7cd99ae698ce7c7424b05a11678",
       "test_id": "family-7.2-replay-cases",
       "request": {
         "inputs": [
@@ -9509,7 +9941,7 @@
       "case_id": "rays-unit-mismatch-rejected",
       "operation_id": "spatial.aabb.ray_first_hits",
       "revision": 1,
-      "worker_manifest_sha256": "36357bf97a2810124205d29a9e650deff56a2678aaa4d81c02dfaf10e88d53aa",
+      "worker_manifest_sha256": "de4b65a68b677dddb1f53660368886e85b15a7cd99ae698ce7c7424b05a11678",
       "test_id": "family-7.2-replay-cases",
       "request": {
         "inputs": [
@@ -9568,7 +10000,7 @@
       "case_id": "bbox2-rejects-3d-points",
       "operation_id": "spatial.bbox_2",
       "revision": 1,
-      "worker_manifest_sha256": "36357bf97a2810124205d29a9e650deff56a2678aaa4d81c02dfaf10e88d53aa",
+      "worker_manifest_sha256": "de4b65a68b677dddb1f53660368886e85b15a7cd99ae698ce7c7424b05a11678",
       "test_id": "family-7.2-replay-cases",
       "request": {
         "inputs": [
@@ -9618,7 +10050,7 @@
       "case_id": "aabb-intersections-tampered-flag-rejected",
       "operation_id": "spatial.validate.aabb_intersections",
       "revision": 1,
-      "worker_manifest_sha256": "36357bf97a2810124205d29a9e650deff56a2678aaa4d81c02dfaf10e88d53aa",
+      "worker_manifest_sha256": "de4b65a68b677dddb1f53660368886e85b15a7cd99ae698ce7c7424b05a11678",
       "test_id": "family-7.2-replay-cases",
       "request": {
         "inputs": [

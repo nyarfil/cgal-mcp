@@ -42,15 +42,15 @@ CIは台帳を公式配布物から再生成してバイト一致を検査しま
 | 7.1 カーネル | 5/5 | 7.1.01 Simple_cartesian・Cartesian・EPICK・EPECK（同一の準退化入力で浮動小数点kernelは誤判定、厳密述語kernelは正答）、.02 20種のprimitive、.03 述語・構成、.04 intersection・do_intersect、.05 squared_distance・距離比較。validatorはCGALを使わないGMP有理数の独立再計算 |
 | 7.2 空間問合せ | 5/5 | 7.2.01 AABB、.02 Kd木、.03 k近傍、.04 do_intersect・any/all_intersected_primitives（AABB_tree、ray対三角形メッシュ、独立厳密validator）、.05 bbox |
 | 7.3 解析 | 6/8 | 7.3.01 検査・自己交差、.02 connected_components・connected_component・keep_largest_connected_components、.03 法線、.04 計測、.05 `detect_sharp_edges`・`sharp_edges_segmentation`（厳密な有理数の面法線で再計算）、.08 locate・locate_with_AABB_tree |
-| 7.4 修復 | 5/6 | 7.4.01 向き、.02 境界縫合、.03 退化除去、.05 polygon soup、.06 非多様体前処理 |
+| 7.4 修復 | 6/6 | 7.4.01 向き、.02 境界縫合、.03 退化除去、.04 `triangulate_hole`・`triangulate_refine_and_fair_hole`（球ドームの12辺の穴を平面三角形分割と密度1.41・C1／2.5・C2のフェアリングで埋め、位相・原面保存・新面の厳密な非退化をvalidatorが検証。フェアリングの浮動小数点解そのものは独立再導出せずCGALの再実行）、.05 polygon soup、.06 非多様体前処理 |
 | 7.5 Boolean | 5/5 | 7.5.01 `corefine`・`autorefine`（単独操作、厳密な面分割と自己交差の残存なしを検証）、7.5.02 union/intersection/difference、.03 `clip`（体積・曲面、厳密な重み付き面積の分割で検証）、.04 `split`・`corefine`（同、2面側の分離も検証）、.05 Polygon_mesh_slicer |
 | 7.6 再メッシュ | 5/5 | 7.6.01 面の三角形分割、.02 refine、.03 等方remesh・長辺分割、.04 平滑化・最適化、.05 適応remesh |
 | 7.7 軽量化 | 6/6 | 7.7.01〜06 |
-| 7.8 再構成 | 1/6 | 7.8.06 CatmullClark_subdivision・Loop_subdivision（独立マスク再計算validator） |
+| 7.8 再構成 | 2/6 | 7.8.04 `Surface_mesh_shortest_path`（三角形64面以内、頂点または面の重心座標の始点8・終点32まで。面列の展開と可視窓、頂点上のDijkstraをlong doubleで独立再計算し、許容は対角線の1e-9倍と明記）、7.8.06 CatmullClark_subdivision・Loop_subdivision（独立マスク再計算validator） |
 | 7.9 点群 | 4/6 | 7.9.01 法線推定・MST向き付け、.02 `remove_outliers`（既存の`pointset.remove_outliers`に独立validatorを追加）、.04 grid/random/hierarchy簡略化、.06 再構成前処理（`compute_average_spacing`・`remove_outliers`）。validatorは全点対の総当たり（long double、相対1e-9の許容、境界近傍は曖昧として拒否） |
 | 7.11 三角形分割 | 4/5 | 7.11.01 Delaunay 2D/3D、.02 制約付き、.03 `Regular_triangulation_2/3`（重み付き点の持ち上げをGMP有理数で検証、重みは長さの二乗）、.05 `Voronoi_diagram_2`（外心・双対辺をGMP有理数で再計算） |
 | 7.12 多角形 | 5/7 | 7.12.01 Polygon_2/with_holesの性質・内外判定、.02 `Arrangement_2`・`insert`・`zone`、.03 `overlay`（面ラベル加算）、.07 `minkowski_sum_2`・`minkowski_sum_by_reduced_convolution_2`（畳み込み片の厳密判定）、.04 `Polygon_set_2`のjoin・intersection・difference（EPECK、境界鎖をGMP有理数で独立再計算） |
-| 7.13 凸包等 | 3/5 | 7.13.01 2D/3D凸包、.04 `Min_circle_2`・`Min_sphere_of_spheres_d`（最小球をGMP有理数の支持集合列挙で検証、半径は平方根のため許容付き）、.05 mean_value・wachspress・discrete_harmonic coordinates（2D、境界点は拒否） |
+| 7.13 凸包等 | 5/5 | 7.13.01 2D/3D凸包、.02 `Alpha_shape_2`・`Alpha_shape_3`・`Fixed_alpha_shape_3`（regularized。Delaunay単体の空球探索と外接半径をGMP有理数で再計算しalpha以下の内部単体と正則な境界辺／面を厳密比較。空の円・球に追加点が乗る入力は拒否）、.03 `alpha_wrap_3`（既存の`reconstruction.alpha_wrap`を7.13の再試験ケースで再結合）、.04 `Min_circle_2`・`Min_sphere_of_spheres_d`（最小球をGMP有理数の支持集合列挙で検証、半径は平方根のため許容付き）、.05 mean_value・wachspress・discrete_harmonic coordinates（2D、境界点は拒否） |
 | 7.14 メッシュ生成 | 4/4 | 7.14.01 Mesh_2（`refine_Delaunay_mesh_2`）、7.14.02 Surface_mesher（`make_surface_mesh`、球・楕円体・トーラス）、7.14.03 Mesh_3（`make_mesh_3`、同3種のimplicit domainと、閉じた三角形メッシュの多面体domain）、7.14.04 `Mesh_criteria_3`の型付きcriteria（列挙boxのsizing field、facet_topology、多面体の1D特徴辺edge_size）。画像domainと複数パッチtopologyは未実装 |
 | 7.10 曲面再構成 | 1/3 | 7.10.03 `alpha_wrap_3`（点群oracle、alpha/offsetの型付き長さ、入力の厳密な内包・offset帯・alpha+offset上限を独立検証）。validatorはCGALを使わない独立再計算（GMP有理数の点-三角形距離・符号付き体積・軸線交差の偶奇）。7.10.01 Poisson（`Poisson_reconstruction_function`＋`Poisson_mesh_domain_3`＋表面のみの`make_mesh_3`）は実装・独立検証済みだが未結合。7.10.02はAdvancing_frontとScale_spaceをOperation化・検証済みだが、台帳のPolygonal_surface_reconstruction（SCIP/GLPKなどのMIP solverが未導入）とKinetic_surface_reconstruction（Operationなし）が未実装のため未結合 |
 | 7.15 最適化・数値幾何 | 4/4 | 7.15.01 QP_solver（`Quadratic_program<Gmpq>`、`solve_linear_program`・`solve_quadratic_program`、最適・実行不能・非有界と証明書）、.02 Interpolation（`natural_neighbor_coordinates_2`＋`linear_interpolation`はEPECKで線形場を厳密再現、`sibson_c1_interpolation`は勾配付きで球面二次関数を再現）、.03 Surface_mesh_approximation（`approximate_triangle_mesh`、L21のVSA、二乗誤差はmm2）、.04 Matrix_search（`sorted_matrix_search`による1次元区間p-center）。validatorはCGALを使わない独立再計算（GMP有理数の証明書補題・Voronoi面積・全候補走査、VSAはlong double） |
@@ -60,14 +60,12 @@ CIは台帳を公式配布物から再生成してバイト一致を検査しま
 - 7.10.01: 台帳のシンボル`poisson_surface_reconstruction_delaunay`を再試験していない。CGAL 6.2.1の`poisson_surface_reconstruction.h`は呼び出し側のtagの後に`manifold_with_boundary()`を付けるため、閉曲面の球・トーラスで24〜214本の境界辺が残り、閉曲面validatorを通せない。このシンボルを再試験するまで未結合（`reconstruction.poisson`自体は実装・検証済み）。
 - 7.10.02: Polygonal_surface_reconstruction（MIP solver未導入）とKinetic_surface_reconstructionがない。Advancing_frontとScale_spaceは実装・検証済みだが、台帳の全familyを再試験するまで未結合。
 - 7.3.06: 距離はvalidator内部の上界付き対称Hausdorffのみで、他の距離関数がない。
-- 7.4.04: `triangulate_refine_and_fair_hole`相当の穴埋めがない。
 - 7.3.07: `self_intersections`・`does_self_intersect`は`mesh.analysis.self_intersections`で再試験済み（7.3.01）だが、2メッシュ間の交差判定（`do_intersect`・`surface_intersection`）を公開していないため未結合。
 - 7.9.03: bilateral等のsmoothingがない。
-- 7.9.05: registration がない。
-- 7.8.01〜05: 区分化・凸分解・骨格・最短経路・パラメータ化のOperationがない。
+- 7.9.05: registration がない。`register_point_sets`・`compute_registration_transformation`はOpenGRが必要だが、この環境には導入されていない（要Opus判断）。
+- 7.8.01〜03、05: 区分化(SDF)・凸分解・骨格・パラメータ化のOperationがない。
 - 7.11.04: periodic・on-sphere がない。
 - 7.12.05〜06: skeleton、offset がない。
-- 7.13.02〜03: alpha shape、wrap がない。
 
 注記 (7.3): 7.3.03 法線は、軸整列立方体(外向き/内向き巻きの2ケース)の各面法線・各頂点法線を
 手計算の定数と照合して束縛している。必須validatorは同一workerコードを再実行する整合性チェックであり、
