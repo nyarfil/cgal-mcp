@@ -3906,9 +3906,9 @@ B4_FIXTURES = {
     "tampered_fair_vertex_moved.off": "a27098c20061cb8402ea25b404489769b183914cfc3ecffd5e16712316e90950",
     "cube_geodesic.off": "8582ba758a2a781e75be1c3c1a36a84704ef1c712e01dbe87117e7c1d37d40bb",
     "lshape.off": "9f4f86dc1d7c71dbe94c6354ce73cce3ef3b7edc9d35bd962d881483f8aad9ab",
-    "tampered_sp_distance_short.json": "a0c2fed2a7534ceb34a9d5d6d7fead69170746396916a3b23ba28cbe1609febb",
-    "tampered_sp_path_off_surface.json": "2c44ca38184bcc7dd1741ce5a35c5d4901cc775553377347456ece633ec3ee5f",
-    "tampered_sp_wrong_source.json": "9ca1a1dd7c725f9c2c50aad0113a351303848cdceb8272a720094689457a7faf",
+    "tampered_sp_distance_short.json": "4cafe4d788068d08907037ed7e3de712f9a5be85af0bae028b0d64cc336cf796",
+    "tampered_sp_path_off_surface.json": "7672a0a6c13681906827e3f0c75c3da3c5a3c6081d15afc5f2266d41bcd1e194",
+    "tampered_sp_wrong_source.json": "b797b9ea8eb9892fb85a49e3b6fd1a990628c946038ddd7fc8a676bb2c84be98",
 }
 
 
