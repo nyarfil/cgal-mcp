@@ -49,7 +49,6 @@ std::vector<OperationDefinition> producer_operations() {
   std::vector<OperationDefinition> result;
   append(result, triangulation_producers());
   append(result, planar_producers());
-  append(result, mesh_producers());
   return result;
 }
 
@@ -57,7 +56,6 @@ std::vector<OperationDefinition> validator_operations() {
   std::vector<OperationDefinition> result;
   append(result, triangulation_validators());
   append(result, planar_validators());
-  append(result, mesh_validators());
   return result;
 }
 

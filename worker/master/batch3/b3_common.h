@@ -16,8 +16,6 @@ std::vector<OperationDefinition> triangulation_producers();
 std::vector<OperationDefinition> triangulation_validators();
 std::vector<OperationDefinition> planar_producers();
 std::vector<OperationDefinition> planar_validators();
-std::vector<OperationDefinition> mesh_producers();
-std::vector<OperationDefinition> mesh_validators();
 std::vector<OperationDefinition> producer_operations();
 std::vector<OperationDefinition> validator_operations();
 

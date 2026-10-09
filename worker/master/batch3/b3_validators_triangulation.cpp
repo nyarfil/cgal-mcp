@@ -99,6 +99,10 @@ Json run_regular_2_validator(const Request& request) {
   Json checks;
   const auto results = batch2::check_report_frame(report, "triangulation.regular_2", Json{{"weights", request.parameters.at("weights")}},
                                                   {{"points_sha256", &request.inputs[1]}}, checks);
+  if (require_member(results, "weight_unit", "results") != request.inputs[1].unit + "^2") {
+    validation_failure("WEIGHT_UNIT_MISMATCH", "Weights must be reported in the squared artifact length unit");
+  }
+  checks["weight_unit_is_squared_artifact_unit"] = true;
   const auto vertices = index_list(require_member(results, "vertices", "results"), n, "vertices");
   const auto hidden = index_list(require_member(results, "hidden", "results"), n, "hidden");
   std::set<std::size_t> visible(vertices.begin(), vertices.end());
@@ -238,6 +242,10 @@ Json run_regular_3_validator(const Request& request) {
   Json checks;
   const auto results = batch2::check_report_frame(report, "triangulation.regular_3", Json{{"weights", request.parameters.at("weights")}},
                                                   {{"points_sha256", &request.inputs[1]}}, checks);
+  if (require_member(results, "weight_unit", "results") != request.inputs[1].unit + "^2") {
+    validation_failure("WEIGHT_UNIT_MISMATCH", "Weights must be reported in the squared artifact length unit");
+  }
+  checks["weight_unit_is_squared_artifact_unit"] = true;
   const auto vertices = index_list(require_member(results, "vertices", "results"), n, "vertices");
   const auto hidden = index_list(require_member(results, "hidden", "results"), n, "hidden");
   std::set<std::size_t> visible(vertices.begin(), vertices.end());
@@ -486,14 +494,14 @@ std::vector<OperationDefinition> triangulation_validators() {
   result.push_back(query_definition(
       "triangulation.validate.regular_2", {"GeometryQueryReport", "PointSet2"}, "ValidationReport", "validator",
       run_regular_2_validator, {"Triangulation_2"}, gmp,
-      vinfo({"parameters_match", "source_matches", "vertices_and_hidden_partition_input",
+      vinfo({"parameters_match", "source_matches", "weight_unit_is_squared_artifact_unit", "vertices_and_hidden_partition_input",
              "triangles_counter_clockwise_distinct", "every_triangle_is_regular",
              "triangles_tile_convex_hull_of_vertices", "hidden_points_are_dominated"},
             {"candidate", "points"}, note2)));
   result.push_back(query_definition(
       "triangulation.validate.regular_3", {"GeometryQueryReport", "PointSet3"}, "ValidationReport", "validator",
       run_regular_3_validator, {"Triangulation_3"}, gmp,
-      vinfo({"parameters_match", "source_matches", "vertices_and_hidden_partition_input",
+      vinfo({"parameters_match", "source_matches", "weight_unit_is_squared_artifact_unit", "vertices_and_hidden_partition_input",
              "tetrahedra_positive_distinct", "every_tetrahedron_is_regular",
              "tetrahedra_tile_convex_hull_of_vertices", "hidden_points_are_dominated"},
             {"candidate", "points"}, note3)));

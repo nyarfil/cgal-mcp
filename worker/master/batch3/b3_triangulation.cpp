@@ -89,7 +89,7 @@ Json regular_2(const Request& request) {
                                {{"points_sha256", request.inputs[0].sha256}},
                                {{"vertex_count", visible.size()}, {"hidden_count", hidden.size()},
                                 {"triangle_count", triangles.size()}},
-                               {{"vertices", vertices}, {"hidden", hidden}, {"triangles", faces}});
+                               {{"vertices", vertices}, {"hidden", hidden}, {"triangles", faces}, {"weight_unit", request.inputs[0].unit + "^2"}});
   auto output = write_report(request, "GeometryQueryReport", report);
   Json metrics{{"input_point_count", points.size()}, {"vertex_count", visible.size()},
                {"hidden_count", hidden.size()}, {"triangle_count", triangles.size()},
@@ -156,7 +156,7 @@ Json regular_3(const Request& request) {
                                {{"points_sha256", request.inputs[0].sha256}},
                                {{"vertex_count", visible.size()}, {"hidden_count", hidden.size()},
                                 {"tetrahedron_count", cells.size()}},
-                               {{"vertices", vertices}, {"hidden", hidden}, {"tetrahedra", tetrahedra}});
+                               {{"vertices", vertices}, {"hidden", hidden}, {"tetrahedra", tetrahedra}, {"weight_unit", request.inputs[0].unit + "^2"}});
   auto output = write_report(request, "GeometryQueryReport", report);
   Json metrics{{"input_point_count", points.size()}, {"vertex_count", visible.size()},
                {"hidden_count", hidden.size()}, {"tetrahedron_count", cells.size()},
