@@ -460,7 +460,7 @@ class AcceptanceContractTests(unittest.TestCase):
         bound = {requirement_id for family in REPLAY_FAMILIES
                  for requirement_id in family_bindings(family)}
         replay_rows = [row for row in evaluated["requirements"] if row["id"] in bound]
-        self.assertEqual(len(replay_rows), 51)
+        self.assertEqual(len(replay_rows), 50)
         self.assertTrue(all(row["status"] == "INCOMPLETE" for row in replay_rows))
 
 
@@ -484,6 +484,20 @@ GENERIC_BOUND = sorted(requirement_id for family in replay_families.GENERIC_FAMI
 
 
 class GenericFamilyReplayTests(unittest.TestCase):
+    def test_every_bound_requirement_exercises_every_ledger_symbol(self):
+        inventory = json.loads(
+            (REPO / "catalog/major_capability_inventory.json").read_text(encoding="utf-8"))
+        ledger = {item["id"]: {sub["symbol"] for sub in item["subcapabilities"]}
+                  for item in inventory["items"]}
+        checked = 0
+        for family in replay_families.GENERIC_FAMILIES.values():
+            for requirement_id, binding in family["requirements"].items():
+                with self.subTest(requirement_id):
+                    checked += 1
+                    self.assertTrue(ledger[requirement_id])
+                    self.assertEqual(sorted(ledger[requirement_id] - set(binding["symbols"])), [])
+        self.assertEqual(checked, 44)
+
     def test_published_family_reports_fail_only_for_missing_replay(self):
         for requirement_id in GENERIC_BOUND:
             with self.subTest(requirement_id):

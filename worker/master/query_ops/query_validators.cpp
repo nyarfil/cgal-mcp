@@ -1117,12 +1117,12 @@ std::vector<OperationDefinition> validator_operations() {
             {"candidate", "mesh"}, "exact triangle/plane sections and interval coverage; no CGAL header")));
   result.push_back(query_definition(
       "mesh.validate.catmull_clark", {"PolygonSoup3", "TriangleSurfaceMesh", "PolygonSoup3"}, "ValidationReport", "validator",
-      run_catmull_clark_validator, {"Subdivision_method_3"}, "exact:GMP",
+      run_catmull_clark_validator, {"Subdivision_method_3"}, "float:long_double",
       vinfo({"parameters_match", "counts_match", "faces_match_independent_subdivision", "orientation_preserved"},
             {"candidate", "source"}, "Catmull-Clark masks re-implemented from raw OFF data; no CGAL header")));
   result.push_back(query_definition(
       "mesh.validate.loop", {"TriangleSurfaceMesh", "TriangleSurfaceMesh"}, "ValidationReport", "validator",
-      run_loop_validator, {"Subdivision_method_3"}, "exact:GMP",
+      run_loop_validator, {"Subdivision_method_3"}, "float:long_double",
       vinfo({"parameters_match", "counts_match", "faces_match_independent_subdivision", "orientation_preserved"},
             {"candidate", "source"}, "Loop masks re-implemented from raw OFF data; no CGAL header")));
   return result;

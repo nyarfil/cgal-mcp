@@ -52,11 +52,12 @@ CIは台帳を公式配布物から再生成してバイト一致を検査しま
 | 7.12 多角形 | 1/7 | 7.12.01 Polygon_2/with_holesの性質・内外判定 |
 | 7.13 凸包等 | 2/5 | 7.13.01 2D/3D凸包、.05 mean_value・wachspress・discrete_harmonic coordinates（2D、境界点は拒否） |
 | 7.14 メッシュ生成 | 4/4 | 7.14.01 Mesh_2（`refine_Delaunay_mesh_2`）、7.14.02 Surface_mesher（`make_surface_mesh`、球・楕円体・トーラス）、7.14.03 Mesh_3（`make_mesh_3`、同3種のimplicit domainと、閉じた三角形メッシュの多面体domain）、7.14.04 `Mesh_criteria_3`の型付きcriteria（列挙boxのsizing field、facet_topology、多面体の1D特徴辺edge_size）。画像domainと複数パッチtopologyは未実装 |
-| 7.10 曲面再構成 | 2/3 | 7.10.01 Poisson（`Poisson_reconstruction_function`＋`Poisson_mesh_domain_3`＋表面のみの`make_mesh_3`、球・トーラスの有向点群。一括関数`poisson_surface_reconstruction_delaunay`は6.2.1が呼び出し側のtagの後に`manifold_with_boundary()`を付けて閉曲面を作れない（24〜214本の境界辺を実測）ため未公開）、7.10.03 `alpha_wrap_3`（点群oracle、alpha/offsetの型付き長さ、入力の厳密な内包・offset帯・alpha+offset上限を独立検証）。validatorはCGALを使わない独立再計算（GMP有理数の点-三角形距離・符号付き体積・軸線交差の偶奇）。7.10.02はAdvancing_frontとScale_spaceをOperation化・検証済みだが、台帳のPolygonal_surface_reconstruction（SCIP/GLPKなどのMIP solverが未導入）とKinetic_surface_reconstruction（Operationなし）が未実装のため未結合 |
+| 7.10 曲面再構成 | 1/3 | 7.10.03 `alpha_wrap_3`（点群oracle、alpha/offsetの型付き長さ、入力の厳密な内包・offset帯・alpha+offset上限を独立検証）。validatorはCGALを使わない独立再計算（GMP有理数の点-三角形距離・符号付き体積・軸線交差の偶奇）。7.10.01 Poisson（`Poisson_reconstruction_function`＋`Poisson_mesh_domain_3`＋表面のみの`make_mesh_3`）は実装・独立検証済みだが未結合。7.10.02はAdvancing_frontとScale_spaceをOperation化・検証済みだが、台帳のPolygonal_surface_reconstruction（SCIP/GLPKなどのMIP solverが未導入）とKinetic_surface_reconstruction（Operationなし）が未実装のため未結合 |
 | 7.15 最適化・数値幾何 | 4/4 | 7.15.01 QP_solver（`Quadratic_program<Gmpq>`、`solve_linear_program`・`solve_quadratic_program`、最適・実行不能・非有界と証明書）、.02 Interpolation（`natural_neighbor_coordinates_2`＋`linear_interpolation`はEPECKで線形場を厳密再現、`sibson_c1_interpolation`は勾配付きで球面二次関数を再現）、.03 Surface_mesh_approximation（`approximate_triangle_mesh`、L21のVSA、二乗誤差はmm2）、.04 Matrix_search（`sorted_matrix_search`による1次元区間p-center）。validatorはCGALを使わない独立再計算（GMP有理数の証明書補題・Voronoi面積・全候補走査、VSAはlong double） |
 
 未結合要求の不足（7.1・7.6は5/5、7.15は4/4結合済みで不足なし）:
 
+- 7.10.01: 台帳のシンボル`poisson_surface_reconstruction_delaunay`を再試験していない。CGAL 6.2.1の`poisson_surface_reconstruction.h`は呼び出し側のtagの後に`manifold_with_boundary()`を付けるため、閉曲面の球・トーラスで24〜214本の境界辺が残り、閉曲面validatorを通せない。このシンボルを再試験するまで未結合（`reconstruction.poisson`自体は実装・検証済み）。
 - 7.10.02: Polygonal_surface_reconstruction（MIP solver未導入）とKinetic_surface_reconstructionがない。Advancing_frontとScale_spaceは実装・検証済みだが、台帳の全familyを再試験するまで未結合。
 - 7.3.05: sharp edge / segmentation がない。
 - 7.3.06: 距離はvalidator内部の上界付き対称Hausdorffのみで、他の距離関数がない。
