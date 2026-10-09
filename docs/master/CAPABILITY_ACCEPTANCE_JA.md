@@ -1,7 +1,7 @@
 # 原本の主要能力を実計算で判定する
 
 原本7.1〜7.15の15分野・80要求を固定母数とし、実計算の再試験へ結び付けた要求は
-70/80です（7.1カーネル5、7.7軽量化6、7.6メッシュ再生成5、7.3解析7、7.4修復6、7.5 Boolean・clip・split・corefine・slicer 5、7.9点群4、7.2空間問合せ5、7.11三角形分割4、7.12多角形7、7.13凸包・alpha shape・alpha wrap・bounding volume・重心座標5、7.14 Mesh_2・Surface_mesher・Mesh_3・Mesh_3 criteria 4、7.15 LP/QP・補間・VSA近似・sorted matrix search 4、7.10 alpha wrap 1、7.8細分割・最短経路2）。
+73/80です（7.1カーネル5、7.7軽量化6、7.6メッシュ再生成5、7.3解析7、7.4修復6、7.5 Boolean・clip・split・corefine・slicer 5、7.9点群5、7.2空間問合せ5、7.11三角形分割4、7.12多角形7、7.13凸包・alpha shape・alpha wrap・bounding volume・重心座標5、7.14 Mesh_2・Surface_mesher・Mesh_3・Mesh_3 criteria 4、7.15 LP/QP・補間・VSA近似・sorted matrix search 4、7.10曲面再構成3（Poisson・advancing front等・alpha wrap）、7.8細分割・最短経路2）。
 点群処理の個別Operationや凸包の基盤受入を、未完了の要求全体の達成へ加算しません。
 結合済みの要求は、各要求の説明に列挙された全variantと台帳の全subcapability symbolを、
 検証済みOperationと必須validatorを通る再試験ケースで網羅した場合だけ結び付けています。
@@ -36,6 +36,8 @@ Operation・parameter、behaviour assertion（閉じた比較演算子と選択�
 満たさないためfamilyを作っていません。
 
 Linuxではworkerを`build-master/cgal-master-worker`へ置き換えます。
+
+7.9.05（OpenGR登録）と7.10.02（PolyFitのSCIP）は任意依存です。これらを含むworkerでのみ再試験でき、含まないworkerでは当該Operationが`OPTIONAL_DEPENDENCY_NOT_BUILT`を返すため、73/80は両依存を含むbuildでの値です。版・license・取得元・sha256は[第三者依存](THIRD_PARTY_DEPENDENCIES_JA.md)に記録しています。
 checked-in reportを読むだけの`scripts/master_acceptance.py`は、再計算による確認が
 ないため未完了を返します。JSON内の`pass`、hash、自己申告の完成表示だけを承認しません。
 公開snapshotは当該buildの履歴資料です。CIはその環境で再試験し、別reportを保存します。

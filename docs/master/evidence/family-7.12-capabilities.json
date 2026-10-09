@@ -153,14 +153,14 @@
   "unbound_requirements": {},
   "family_contract_sha256": "039b985d48bc7b1168dd8bd5e9032b674bc6a3db89de2b4edf58a443e18d5db0",
   "family_contract_source_path": "scripts/master_replay_families.py",
-  "family_contract_source_sha256": "2ece85e0230ddfc45ec3d00bfd664192aa98233da598a7ccfbd1d7dd5fb35d16",
+  "family_contract_source_sha256": "3c8d911876cc9b039f5dac244c15f0dbdb9e66a8b237dc98b1f2d58e1656e0c4",
   "family_contract_source_hash_encoding": "utf8-lf",
   "catalog_baseline_sha256": "143ec18a5b64d506aad60dc24b0a1ea30940c715d1223b3465fa140aeb9d02a7",
-  "operation_registry_sha256": "4872d39945559dfb8dc50986c85d430cb9ce23c8fcac4e627d6713d02025da3b",
+  "operation_registry_sha256": "e850c738442633f48e77eeed4cdc40aa1a0d454cd5ee23ef05a3923b918d2af5",
   "operation_registry_hash_encoding": "utf8-lf",
   "policy_catalog_sha256": "45f4be759288aaeb834a3ce97aa64ee7768048b15534618fc8c19512801f9a9f",
   "policy_catalog_hash_encoding": "utf8-lf",
-  "worker_sha256": "3ef20b5c6b430a1e6a7e2b219ab52fc3757c59c306ec50bda7dcbb61604b59f3",
+  "worker_sha256": "3d2a394425b00f51fae6f7e581a86831fcf4355be60df97cad01309c8fab1379",
   "worker_binary_format": "pe",
   "worker_manifest": {
     "actual_cgal_version": "6.2.1",
@@ -173,6 +173,7 @@
         "full_version": 195035725,
         "version": 1950
       },
+      "optional_dependencies": "OpenGR,SCIP",
       "source_attestation": "configured_pinned_official_archive",
       "source_kind": "official_release",
       "source_sha256": "b6be77c60765a8456335de991eeaf6ffec55256984e4a9ecc6a97c37bbfe85bf"
@@ -6166,6 +6167,52 @@
       },
       {
         "dependencies": [
+          "Poisson_surface_reconstruction_3",
+          "Mesh_3",
+          "Point_set_processing_3",
+          "Eigen3"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "reconstruction.poisson_delaunay",
+        "info": {
+          "input_format": "ascii_ply_with_x_y_z_nx_ny_nz",
+          "output_format": "off",
+          "required_parameters": [
+            "sm_angle",
+            "sm_radius",
+            "sm_distance",
+            "max_deviation",
+            "max_circumradius",
+            "min_coverage"
+          ],
+          "source_header": "CGAL/poisson_surface_reconstruction.h",
+          "symbols": [
+            "poisson_surface_reconstruction_delaunay",
+            "compute_average_spacing"
+          ],
+          "validator_parameter_bindings": {
+            "reconstruction.validate.poisson_boundary": {
+              "max_circumradius": "max_circumradius",
+              "max_deviation": "max_deviation",
+              "min_coverage": "min_coverage"
+            }
+          },
+          "validators": [
+            "reconstruction.validate.poisson_boundary"
+          ]
+        },
+        "input_types": [
+          "PointSet3Normals"
+        ],
+        "output_type": "TriangleSurfaceMesh",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
           "Advancing_front_surface_reconstruction",
           "Triangulation_3"
         ],
@@ -6308,6 +6355,49 @@
             "source_normals_agree_with_orientation",
             "source_to_surface_within_bound_exact",
             "surface_to_source_within_bound_certified"
+          ],
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "TriangleSurfaceMesh",
+          "PointSet3Normals"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Poisson_surface_reconstruction_3"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "reconstruction.validate.poisson_boundary",
+        "info": {
+          "bound_parameters": [
+            "max_deviation",
+            "max_circumradius",
+            "min_coverage"
+          ],
+          "checks": [
+            "source_points_valid",
+            "triangle_mesh",
+            "nondegenerate_triangles_exact",
+            "no_unreferenced_vertices",
+            "edge_manifold",
+            "vertex_manifold",
+            "consistent_orientation",
+            "manifold_with_boundary_consistently_oriented",
+            "source_normals_agree_with_orientation",
+            "source_coverage_at_least_minimum_exact",
+            "surface_to_source_within_bound_certified",
+            "facet_circumradius_within_bound_exact"
           ],
           "input_slots": [
             "candidate",
@@ -8349,6 +8439,291 @@
         "supported_kernels": [
           "package_recommended"
         ]
+      },
+      {
+        "dependencies": [
+          "Point_set_processing_3",
+          "OpenGR"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "pointset.registration.compute_transformation",
+        "info": {
+          "input_slots": [
+            "reference",
+            "moving"
+          ],
+          "maximum_input_points": 400,
+          "optional_dependency": "OpenGR",
+          "optional_dependency_built": true,
+          "source_header": "CGAL/OpenGR/compute_registration_transformation.h",
+          "validator_parameter_bindings": {
+            "pointset.validate.registration_transformation": {
+              "inlier_distance": "inlier_distance",
+              "max_rms": "max_rms",
+              "min_inlier_fraction": "min_inlier_fraction"
+            }
+          },
+          "validators": [
+            "pointset.validate.registration_transformation"
+          ]
+        },
+        "input_types": [
+          "PointSet3",
+          "PointSet3"
+        ],
+        "output_type": "GeometryQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Point_set_processing_3",
+          "OpenGR"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "pointset.registration.register",
+        "info": {
+          "input_slots": [
+            "reference",
+            "moving"
+          ],
+          "maximum_input_points": 400,
+          "optional_dependency": "OpenGR",
+          "optional_dependency_built": true,
+          "source_header": "CGAL/OpenGR/register_point_sets.h",
+          "validator_parameter_bindings": {
+            "pointset.validate.registered_points": {
+              "inlier_distance": "inlier_distance",
+              "max_rms": "max_rms",
+              "min_inlier_fraction": "min_inlier_fraction"
+            }
+          },
+          "validators": [
+            "pointset.validate.registered_points"
+          ]
+        },
+        "input_types": [
+          "PointSet3",
+          "PointSet3"
+        ],
+        "output_type": "PointSet3",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygonal_surface_reconstruction",
+          "Shape_detection",
+          "SCIP"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "reconstruction.polygonal_surface",
+        "info": {
+          "input_format": "ascii_ply_with_x_y_z_nx_ny_nz",
+          "maximum_input_points": 20000,
+          "optional_dependency": "SCIP",
+          "optional_dependency_built": true,
+          "output_format": "off",
+          "required_parameters": [
+            "sphere_radius",
+            "maximum_distance",
+            "maximum_angle",
+            "minimum_region_size",
+            "fitting",
+            "coverage",
+            "complexity",
+            "max_deviation",
+            "planarity_tolerance"
+          ],
+          "source_header": "CGAL/Polygonal_surface_reconstruction.h",
+          "symbols": [
+            "Polygonal_surface_reconstruction"
+          ],
+          "validator_parameter_bindings": {
+            "reconstruction.validate.polygonal_surface": {
+              "max_deviation": "max_deviation",
+              "planarity_tolerance": "planarity_tolerance"
+            }
+          },
+          "validators": [
+            "reconstruction.validate.polygonal_surface"
+          ]
+        },
+        "input_types": [
+          "PointSet3Normals"
+        ],
+        "output_type": "PolygonSoup3",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Kinetic_surface_reconstruction",
+          "Kinetic_space_partition",
+          "Shape_detection"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "reconstruction.kinetic_surface",
+        "info": {
+          "input_format": "ascii_ply_with_x_y_z_nx_ny_nz",
+          "maximum_input_points": 20000,
+          "output_format": "off",
+          "required_parameters": [
+            "k_neighbors",
+            "maximum_distance",
+            "maximum_angle",
+            "minimum_region_size",
+            "angle_tolerance",
+            "maximum_offset",
+            "regularize_parallelism",
+            "regularize_orthogonality",
+            "regularize_coplanarity",
+            "regularize_axis_symmetry",
+            "partition_depth",
+            "lambda",
+            "max_deviation",
+            "planarity_tolerance"
+          ],
+          "source_header": "CGAL/Kinetic_surface_reconstruction_3.h",
+          "symbols": [
+            "Kinetic_surface_reconstruction_3"
+          ],
+          "validator_parameter_bindings": {
+            "reconstruction.validate.polygonal_surface": {
+              "max_deviation": "max_deviation",
+              "planarity_tolerance": "planarity_tolerance"
+            }
+          },
+          "validators": [
+            "reconstruction.validate.polygonal_surface"
+          ]
+        },
+        "input_types": [
+          "PointSet3Normals"
+        ],
+        "output_type": "PolygonSoup3",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Point_set_processing_3"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "pointset.validate.registration_transformation",
+        "info": {
+          "checks": [
+            "source_matches",
+            "parameters_match",
+            "transformation_is_rigid_motion",
+            "residual_rms_within_bound_exact",
+            "inlier_fraction_within_bound_exact"
+          ],
+          "independence": "transformation applied to the raw binary64 moving points in exact GMP rationals; exact nearest-neighbour squared distances to the reference; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "reference",
+            "moving"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "GeometryQueryReport",
+          "PointSet3",
+          "PointSet3"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Point_set_processing_3"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "pointset.validate.registered_points",
+        "info": {
+          "checks": [
+            "point_count_preserved",
+            "pairwise_distances_preserved",
+            "orientation_preserved_exact",
+            "residual_rms_within_bound_exact",
+            "inlier_fraction_within_bound_exact"
+          ],
+          "independence": "exact rational pairwise-distance and tetrahedron-orientation comparison with the moving set, then exact nearest-neighbour squared distances to the reference; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "reference",
+            "moving"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "PointSet3",
+          "PointSet3",
+          "PointSet3"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygonal_surface_reconstruction",
+          "Kinetic_surface_reconstruction"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "reconstruction.validate.polygonal_surface",
+        "info": {
+          "bound_parameters": [
+            "max_deviation",
+            "planarity_tolerance"
+          ],
+          "checks": [
+            "source_points_valid",
+            "polygon_faces_well_formed",
+            "faces_planar_within_tolerance_exact",
+            "faces_simple_polygons",
+            "closed_edge_manifold_consistently_oriented",
+            "vertex_manifold",
+            "outward_orientation_exact_volume",
+            "source_to_surface_within_bound_exact",
+            "source_normals_agree_with_orientation"
+          ],
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "PolygonSoup3",
+          "PointSet3Normals"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
       }
     ],
     "protocol": 1,
@@ -8360,7 +8735,7 @@
     ],
     "worker": "cgal-master-worker"
   },
-  "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
+  "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
   "tests": [
     {
       "id": "family-7.12-replay-cases",
@@ -9561,7 +9936,7 @@
       "case_id": "polygon-join-overlap",
       "operation_id": "polygon.boolean",
       "revision": 1,
-      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
+      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -9734,7 +10109,7 @@
       "case_id": "polygon-intersection-overlap",
       "operation_id": "polygon.boolean",
       "revision": 1,
-      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
+      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -9907,7 +10282,7 @@
       "case_id": "polygon-difference-overlap",
       "operation_id": "polygon.boolean",
       "revision": 1,
-      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
+      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -10080,7 +10455,7 @@
       "case_id": "polygon-difference-hole",
       "operation_id": "polygon.boolean",
       "revision": 1,
-      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
+      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -10253,7 +10628,7 @@
       "case_id": "polygon-join-disjoint",
       "operation_id": "polygon.boolean",
       "revision": 1,
-      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
+      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -10426,7 +10801,7 @@
       "case_id": "polygon-intersection-disjoint",
       "operation_id": "polygon.boolean",
       "revision": 1,
-      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
+      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -10599,7 +10974,7 @@
       "case_id": "polygon-intersection-clockwise-hexagon",
       "operation_id": "polygon.boolean",
       "revision": 1,
-      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
+      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -10772,7 +11147,7 @@
       "case_id": "minkowski-square-triangle",
       "operation_id": "polygon.minkowski_sum",
       "revision": 1,
-      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
+      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -10939,7 +11314,7 @@
       "case_id": "minkowski-closed-gap-hole",
       "operation_id": "polygon.minkowski_sum",
       "revision": 1,
-      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
+      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -11106,7 +11481,7 @@
       "case_id": "minkowski-nonconvex-no-hole",
       "operation_id": "polygon.minkowski_sum",
       "revision": 1,
-      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
+      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -11273,7 +11648,7 @@
       "case_id": "minkowski-reduced-square-triangle",
       "operation_id": "polygon.minkowski_sum_reduced_convolution",
       "revision": 1,
-      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
+      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -11440,7 +11815,7 @@
       "case_id": "minkowski-reduced-closed-gap-hole",
       "operation_id": "polygon.minkowski_sum_reduced_convolution",
       "revision": 1,
-      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
+      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -11607,7 +11982,7 @@
       "case_id": "minkowski-reduced-nonconvex-no-hole",
       "operation_id": "polygon.minkowski_sum_reduced_convolution",
       "revision": 1,
-      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
+      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -11774,7 +12149,7 @@
       "case_id": "arrangement-concurrent-segments",
       "operation_id": "arrangement.build",
       "revision": 1,
-      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
+      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -11926,7 +12301,7 @@
       "case_id": "arrangement-nested-components",
       "operation_id": "arrangement.build",
       "revision": 1,
-      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
+      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -12078,7 +12453,7 @@
       "case_id": "zone-through-vertices",
       "operation_id": "arrangement.zone",
       "revision": 1,
-      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
+      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -12248,7 +12623,7 @@
       "case_id": "zone-crossing-edges",
       "operation_id": "arrangement.zone",
       "revision": 1,
-      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
+      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -12418,7 +12793,7 @@
       "case_id": "zone-diagonal-vertices-faces",
       "operation_id": "arrangement.zone",
       "revision": 1,
-      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
+      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -12588,7 +12963,7 @@
       "case_id": "zone-outside",
       "operation_id": "arrangement.zone",
       "revision": 1,
-      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
+      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -12758,7 +13133,7 @@
       "case_id": "overlay-square-corner",
       "operation_id": "arrangement.overlay",
       "revision": 1,
-      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
+      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -12928,7 +13303,7 @@
       "case_id": "overlay-inscribed-triangle",
       "operation_id": "arrangement.overlay",
       "revision": 1,
-      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
+      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -13098,7 +13473,7 @@
       "case_id": "overlay-nonconvex",
       "operation_id": "arrangement.overlay",
       "revision": 1,
-      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
+      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -13268,7 +13643,7 @@
       "case_id": "polygon-with-hole",
       "operation_id": "polygon.analysis.properties",
       "revision": 1,
-      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
+      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -13421,7 +13796,7 @@
       "case_id": "polygon-l-shape",
       "operation_id": "polygon.analysis.properties",
       "revision": 1,
-      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
+      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -13574,7 +13949,7 @@
       "case_id": "polygon-bowtie",
       "operation_id": "polygon.analysis.properties",
       "revision": 1,
-      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
+      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -13724,7 +14099,7 @@
       "case_id": "containment-with-hole",
       "operation_id": "polygon.query.containment",
       "revision": 1,
-      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
+      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -13890,7 +14265,7 @@
       "case_id": "skeleton-rectangle-interior",
       "operation_id": "polygon.straight_skeleton.interior",
       "revision": 1,
-      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
+      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -14048,7 +14423,7 @@
       "case_id": "skeleton-lshape-interior",
       "operation_id": "polygon.straight_skeleton.interior",
       "revision": 1,
-      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
+      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -14206,7 +14581,7 @@
       "case_id": "skeleton-holed-interior",
       "operation_id": "polygon.straight_skeleton.interior",
       "revision": 1,
-      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
+      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -14364,7 +14739,7 @@
       "case_id": "skeleton-rectangle-exterior",
       "operation_id": "polygon.straight_skeleton.exterior",
       "revision": 1,
-      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
+      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -14532,7 +14907,7 @@
       "case_id": "offset-rectangle-interior",
       "operation_id": "polygon.offset.interior",
       "revision": 1,
-      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
+      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -14695,7 +15070,7 @@
       "case_id": "offset-rectangle-exterior",
       "operation_id": "polygon.offset.exterior",
       "revision": 1,
-      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
+      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -14857,7 +15232,7 @@
       "case_id": "offset-rectangle-consumed",
       "operation_id": "polygon.offset.interior",
       "revision": 1,
-      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
+      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -15020,7 +15395,7 @@
       "case_id": "offset-triangle-incircle",
       "operation_id": "polygon.offset.interior",
       "revision": 1,
-      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
+      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -15183,7 +15558,7 @@
       "case_id": "offset-lshape-interior",
       "operation_id": "polygon.offset.interior",
       "revision": 1,
-      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
+      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -15346,7 +15721,7 @@
       "case_id": "offset-lshape-consumed",
       "operation_id": "polygon.offset.interior",
       "revision": 1,
-      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
+      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -15509,7 +15884,7 @@
       "case_id": "offset-lshape-consumed-below-inradius",
       "operation_id": "polygon.offset.interior",
       "revision": 1,
-      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
+      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -15672,7 +16047,7 @@
       "case_id": "offset-holed-interior",
       "operation_id": "polygon.offset.interior",
       "revision": 1,
-      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
+      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -15837,7 +16212,7 @@
       "case_id": "polygon-bowtie-operand-rejected",
       "operation_id": "polygon.boolean",
       "revision": 1,
-      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
+      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -15898,7 +16273,7 @@
       "case_id": "polygon-tampered-vertex-dropped-rejected",
       "operation_id": "polygon.validate.boolean",
       "revision": 1,
-      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
+      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -15968,7 +16343,7 @@
       "case_id": "containment-bowtie-rejected",
       "operation_id": "polygon.query.containment",
       "revision": 1,
-      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
+      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -16027,7 +16402,7 @@
       "case_id": "skeleton-tampered-node-moved-rejected",
       "operation_id": "polygon.validate.straight_skeleton",
       "revision": 1,
-      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
+      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -16086,7 +16461,7 @@
       "case_id": "skeleton-tampered-time-changed-rejected",
       "operation_id": "polygon.validate.straight_skeleton",
       "revision": 1,
-      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
+      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -16145,7 +16520,7 @@
       "case_id": "skeleton-tampered-face-dropped-rejected",
       "operation_id": "polygon.validate.straight_skeleton",
       "revision": 1,
-      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
+      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -16204,7 +16579,7 @@
       "case_id": "offset-tampered-edge-shifted-rejected",
       "operation_id": "polygon.validate.offset",
       "revision": 1,
-      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
+      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -16268,7 +16643,7 @@
       "case_id": "offset-forged-empty-rejected",
       "operation_id": "polygon.validate.offset",
       "revision": 1,
-      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
+      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -16332,7 +16707,7 @@
       "case_id": "offset-tampered-lshape-ring-truncated-rejected",
       "operation_id": "polygon.validate.offset",
       "revision": 1,
-      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
+      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -16396,7 +16771,7 @@
       "case_id": "offset-tampered-hole-ring-dropped-rejected",
       "operation_id": "polygon.validate.offset",
       "revision": 1,
-      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
+      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -16460,7 +16835,7 @@
       "case_id": "skeleton-self-intersecting-polygon-rejected",
       "operation_id": "polygon.straight_skeleton.interior",
       "revision": 1,
-      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
+      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -16510,7 +16885,7 @@
       "case_id": "skeleton-zero-area-polygon-rejected",
       "operation_id": "polygon.straight_skeleton.interior",
       "revision": 1,
-      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
+      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -16560,7 +16935,7 @@
       "case_id": "skeleton-exterior-holes-rejected",
       "operation_id": "polygon.straight_skeleton.exterior",
       "revision": 1,
-      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
+      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -16615,7 +16990,7 @@
       "case_id": "offset-self-intersecting-polygon-rejected",
       "operation_id": "polygon.offset.interior",
       "revision": 1,
-      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
+      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -16670,7 +17045,7 @@
       "case_id": "offset-zero-distance-rejected",
       "operation_id": "polygon.offset.interior",
       "revision": 1,
-      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
+      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [
@@ -16725,7 +17100,7 @@
       "case_id": "offset-missing-distance-rejected",
       "operation_id": "polygon.offset.exterior",
       "revision": 1,
-      "worker_manifest_sha256": "3acb8c41c416e266e4cbbb87ef7845d4a942747cd5cf8cfc73a6466d8af46339",
+      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
       "test_id": "family-7.12-replay-cases",
       "request": {
         "inputs": [

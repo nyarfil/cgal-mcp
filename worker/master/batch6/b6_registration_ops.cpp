@@ -187,7 +187,6 @@ Json run_compute_transformation(const Request& request) {
   auto metrics = settings_metrics(settings);
   metrics["algorithm"] = "CGAL::OpenGR::compute_registration_transformation";
   metrics["score"] = score;
-  metrics["elapsed_seconds"] = elapsed;
   return success_result(request, Json::array({std::move(output)}), std::move(metrics));
 #else
   (void)request;
@@ -223,7 +222,6 @@ Json run_register(const Request& request) {
   auto metrics = settings_metrics(settings);
   metrics["algorithm"] = "CGAL::OpenGR::register_point_sets";
   metrics["score"] = score;
-  metrics["elapsed_seconds"] = elapsed;
   metrics["point_count"] = registered.size();
   return success_result(request, Json::array({std::move(output)}), std::move(metrics));
 #else

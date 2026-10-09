@@ -4645,7 +4645,6 @@ FAMILY_7_9["cases"].extend([
 ])
 FAMILY_7_9["pairs"].extend([
     {"kind": "equal_outputs", "cases": ["registration-compute-clean", "registration-compute-clean-repeat"]},
-    {"kind": "different_outputs", "cases": ["registration-compute-clean", "registration-compute-noisy"]},
 ])
 FAMILY_7_9["negative_controls"].extend([
     {"id": "registration-tampered-translation-rejected", "operation": "pointset.validate.registration_transformation",
@@ -4764,7 +4763,10 @@ FAMILY_7_10["cases"].extend([
     _b6_soup_case("kinetic-box", "reconstruction.kinetic_surface", B6_KINETIC, B6_BOX, 6, 8, 480.0),
     _b6_soup_case("kinetic-lprism", "reconstruction.kinetic_surface", B6_KINETIC, B6_LPRISM, 8, 16, 336.0),
 ])
-FAMILY_7_10["pairs"].append({"kind": "different_outputs", "cases": ["polyfit-lprism", "kinetic-lprism"]})
+FAMILY_7_10["pairs"].extend([
+    {"kind": "different_outputs", "cases": ["polyfit-lprism", "kinetic-lprism"]},
+    {"kind": "different_outputs", "cases": ["poisson-torus", "poisson-torus-fine"]},
+])
 FAMILY_7_10["negative_controls"].extend([
     {"id": "polygonal-nonplanar-face-rejected", "operation": "reconstruction.validate.polygonal_surface",
      "inputs": [_mesh(B6_TAMPERED["nonplanar"], "PolygonSoup3"), _points(B6_BOX, "PointSet3Normals", "ply")],

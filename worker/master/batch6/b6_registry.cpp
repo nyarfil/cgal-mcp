@@ -29,7 +29,27 @@ Json publish_polygon_soup(const Request& request, const std::vector<V3>& vertice
   if (reversed) {
     for (auto& face : faces) std::reverse(face.begin(), face.end());
   }
-  return query_ops::write_off_output(request, vertices, faces, "PolygonSoup3", unit);
+  // Canonical form so that equal geometry gives byte-identical output (PolyFit's face and vertex order
+  // depends on hash-map iteration): vertices sorted by coordinates, each face rotated to start at its
+  // smallest vertex index (orientation kept), faces sorted lexicographically.
+  std::vector<std::size_t> order(vertices.size());
+  for (std::size_t i = 0; i < order.size(); ++i) order[i] = i;
+  std::stable_sort(order.begin(), order.end(), [&](std::size_t a, std::size_t b) { return vertices[a] < vertices[b]; });
+  std::vector<std::size_t> rank(vertices.size());
+  std::vector<V3> sorted_vertices(vertices.size());
+  for (std::size_t i = 0; i < order.size(); ++i) {
+    rank[order[i]] = i;
+    sorted_vertices[i] = vertices[order[i]];
+    for (auto& c : sorted_vertices[i]) {
+      if (c == 0.0) c = 0.0;  // -0 and +0 are the same coordinate: publish +0
+    }
+  }
+  for (auto& face : faces) {
+    for (auto& index : face) index = rank.at(index);
+    std::rotate(face.begin(), std::min_element(face.begin(), face.end()), face.end());
+  }
+  std::sort(faces.begin(), faces.end());
+  return query_ops::write_off_output(request, sorted_vertices, faces, "PolygonSoup3", unit);
 }
 
 std::vector<OperationDefinition> producer_operations() {
