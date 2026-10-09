@@ -102,6 +102,14 @@ add_executable(cgal-master-worker
   master/batch5/b5_distance_validators.cpp
   master/batch5/b5_skeleton_ops.cpp
   master/batch5/b5_skeleton_validators.cpp
+  master/batch6/b6_registry.cpp
+  master/batch6/b6_registration_ops.cpp
+  master/batch6/b6_registration_validators.cpp
+  master/batch6/b6_polyfit_ops.cpp
+  master/batch6/b6_polyfit_validators.cpp
+  master/batch6/b6_kinetic_ops.cpp
+  master/batch6/b6_poisson_delaunay.cpp
+  master/batch6/b6_poisson_delaunay_validators.cpp
 )
 # smooth_shape needs CGAL's Eigen sparse solver; enable it only where used.
 set_source_files_properties(master/wave_d/remesh_operations.cpp PROPERTIES
@@ -114,6 +122,41 @@ set_source_files_properties(master/reconstruction/reconstruction_operations.cpp 
   COMPILE_DEFINITIONS CGAL_EIGEN3_ENABLED)
 # Hole fairing (triangulate_refine_and_fair_hole) needs CGAL's Eigen sparse solver.
 set_source_files_properties(master/wave_a_repair/repair_common.cpp PROPERTIES
+  COMPILE_DEFINITIONS CGAL_EIGEN3_ENABLED)
+# Optional third-party dependencies (docs/master/THIRD_PARTY_DEPENDENCIES_JA.md). Without them the
+# worker still builds and declares the same operations, which then report UNSUPPORTED /
+# OPTIONAL_DEPENDENCY_NOT_BUILT. Configure with -DCMAKE_PREFIX_PATH=<soplex>;<scip>;<opengr>
+# (SoPlex is needed because SCIP's config overwrites SOPLEX_DIR) and, if needed, -DOpenGR_DIR / -DSCIP_DIR.
+# The CGAL support modules are applied per source file so the other translation units stay unchanged.
+set(CGAL_MASTER_OPTIONAL_DEPENDENCIES "")
+find_package(OpenGR CONFIG QUIET)
+if(OpenGR_FOUND)
+  include(CGAL_Eigen3_support)
+  include(CGAL_OpenGR_support)
+  set_source_files_properties(master/batch6/b6_registration_ops.cpp PROPERTIES
+    COMPILE_DEFINITIONS "CGAL_EIGEN3_ENABLED;CGAL_LINKED_WITH_OPENGR;CGAL_MASTER_HAVE_OPENGR"
+    INCLUDE_DIRECTORIES "${OpenGR_INCLUDE_DIR}")
+  target_link_libraries(cgal-master-worker PRIVATE ${OpenGR_LIBRARIES})
+  list(APPEND CGAL_MASTER_OPTIONAL_DEPENDENCIES "OpenGR")
+  message(STATUS "Optional dependency OpenGR found: ${OpenGR_INCLUDE_DIR}")
+else()
+  message(STATUS "Optional dependency OpenGR not found: registration operations report UNSUPPORTED")
+endif()
+find_package(SCIP CONFIG QUIET)
+if(SCIP_FOUND)
+  set_source_files_properties(master/batch6/b6_polyfit_ops.cpp PROPERTIES
+    COMPILE_DEFINITIONS "CGAL_EIGEN3_ENABLED;CGAL_USE_SCIP;CGAL_MASTER_HAVE_SCIP"
+    INCLUDE_DIRECTORIES "${SCIP_INCLUDE_DIRS}")
+  target_link_libraries(cgal-master-worker PRIVATE ${SCIP_LIBRARIES})
+  list(APPEND CGAL_MASTER_OPTIONAL_DEPENDENCIES "SCIP")
+  message(STATUS "Optional dependency SCIP found: ${SCIP_INCLUDE_DIRS}")
+else()
+  message(STATUS "Optional dependency SCIP not found: polygonal surface reconstruction reports UNSUPPORTED")
+endif()
+string(REPLACE ";" "," CGAL_MASTER_OPTIONAL_DEPENDENCIES_TEXT "${CGAL_MASTER_OPTIONAL_DEPENDENCIES}")
+set_property(SOURCE master/operation.cpp APPEND PROPERTY COMPILE_DEFINITIONS
+  "CGAL_MASTER_OPTIONAL_DEPENDENCIES=\"${CGAL_MASTER_OPTIONAL_DEPENDENCIES_TEXT}\"")
+set_source_files_properties(master/batch6/b6_poisson_delaunay.cpp PROPERTIES
   COMPILE_DEFINITIONS CGAL_EIGEN3_ENABLED)
 # Loop/Catmull-Clark subdivision and Polygon_mesh_slicer need no Eigen; query_operations is plain CGAL.
 target_compile_features(cgal-master-worker PRIVATE cxx_std_17)

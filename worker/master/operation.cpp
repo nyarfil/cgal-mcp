@@ -14,10 +14,14 @@
 #include "batch3/b3_common.h"
 #include "batch4/b4_common.h"
 #include "batch5/b5_common.h"
+#include "batch6/b6_common.h"
 #include "reconstruction/reconstruction_common.h"
 
 #include <CGAL/version.h>
 
+#ifndef CGAL_MASTER_OPTIONAL_DEPENDENCIES
+#define CGAL_MASTER_OPTIONAL_DEPENDENCIES ""
+#endif
 #ifndef CGAL_MASTER_SOURCE_KIND
 #define CGAL_MASTER_SOURCE_KIND "unspecified"
 #endif
@@ -149,6 +153,12 @@ const std::vector<OperationDefinition>& operation_registry() {
   for (auto& operation : batch5::validator_operations()) {
     operations.push_back(std::move(operation));
   }
+  for (auto& operation : batch6::producer_operations()) {
+    operations.push_back(std::move(operation));
+  }
+  for (auto& operation : batch6::validator_operations()) {
+    operations.push_back(std::move(operation));
+  }
   return operations;
   }();
   return registry;
@@ -184,6 +194,7 @@ Json manifest() {
                 {"compiler", compiler_manifest()},
                 {"source_kind", source_kind},
                 {"source_sha256", CGAL_MASTER_SOURCE_SHA256},
+                {"optional_dependencies", std::string(CGAL_MASTER_OPTIONAL_DEPENDENCIES)},
                 {"source_attestation",
                  source_kind == "official_release"
                      ? "configured_pinned_official_archive"
