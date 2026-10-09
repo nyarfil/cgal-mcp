@@ -15,8 +15,14 @@ using query_ops::V3;
 
 std::vector<OperationDefinition> mesh_producers();
 std::vector<OperationDefinition> mesh_validators();
+std::vector<OperationDefinition> alpha_producers();
+std::vector<OperationDefinition> alpha_validators();
 std::vector<OperationDefinition> producer_operations();
 std::vector<OperationDefinition> validator_operations();
+
+// ---- 7.13.02 alpha shapes: brute-force validators bound the input size.
+inline constexpr std::size_t kMaximumAlpha2Points = 60;
+inline constexpr std::size_t kMaximumAlpha3Points = 24;
 
 // ---- 7.8.04 locations on a triangle mesh -----------------------------------------------------------
 inline constexpr std::size_t kMaximumShortestPathFaces = 64;

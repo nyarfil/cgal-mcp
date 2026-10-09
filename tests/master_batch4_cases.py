@@ -59,6 +59,31 @@ def shortest_path_cases(operations) -> None:
                "INVALID_PARAMETER", "INVALID_REQUEST")
 
 
+def alpha_cases(operations) -> None:
+    for producer, validator in (("shape.alpha_shape_2", "shape.validate.alpha_shape_2"),
+                                ("shape.alpha_shape_3", "shape.validate.alpha_shape_3"),
+                                ("shape.fixed_alpha_shape_3", "shape.validate.alpha_shape_3")):
+        assert validator in operations[producer]["info"]["validators"]
+    quad = art(B4 / "alpha2_quad.json", "PointSet2")
+    bipyramid = art(B4 / "alpha3_bipyramid.xyz", "PointSet3")
+    with tempfile.TemporaryDirectory() as raw:
+        scratch = pathlib.Path(raw)
+        for producer, validator, source, alpha, key, expected in (
+                ("shape.alpha_shape_2", "shape.validate.alpha_shape_2", quad, 3, "interior_triangles", 2),
+                ("shape.alpha_shape_3", "shape.validate.alpha_shape_3", bipyramid, 6, "interior_cells", 2),
+                ("shape.fixed_alpha_shape_3", "shape.validate.alpha_shape_3", bipyramid, 3.5, "interior_cells", 1)):
+            path = q.ok(q.invoke(scratch, producer, [source], {"alpha": alpha}))
+            assert len(json.loads(path.read_text("utf-8"))["results"][key]) == expected
+            verdict = json.loads(q.ok(q.invoke(scratch, validator, [art(path, "GeometryQueryReport", "none"), source],
+                                               {"alpha": alpha})).read_text("utf-8"))
+            assert verdict["passed"] is True and all(verdict["checks"].values()), verdict
+        reject(scratch, "shape.validate.alpha_shape_2", [art(B4 / "tampered_alpha2_triangle_dropped.json",
+                                                             "GeometryQueryReport", "none"), quad], {"alpha": 3},
+               "INTERIOR_MISMATCH")
+        reject(scratch, "shape.alpha_shape_2", [art(B4 / "alpha2_square.json", "PointSet2")], {"alpha": 5},
+               "DEGENERATE_COCIRCULAR", "PRECONDITION_FAILED")
+
+
 def main() -> None:
     manifest = json.loads(subprocess.run([q.WORKER, "--manifest"], text=True, encoding="utf-8",
                                          capture_output=True, timeout=30, check=True).stdout)
@@ -84,6 +109,7 @@ def main() -> None:
         reject(scratch, FAIR[0], [dome], {**parameters, "fairing_continuity": 3},
                "INVALID_FAIRING_CONTINUITY", "INVALID_INPUT")
     shortest_path_cases(operations)
+    alpha_cases(operations)
     print("batch-4 worker cases: PASS")
 
 

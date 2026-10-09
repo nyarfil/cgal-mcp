@@ -1486,7 +1486,6 @@ FAMILY_7_13 = {
         },
     },
     "unbound": {
-        "major.7.13.02": "No alpha shape operation (Alpha_shape_2, Alpha_shape_3).",
     },
     "cases": [
         *B2_CASES_7_13,
@@ -3904,6 +3903,14 @@ FAMILY_7_13["negative_controls"].extend([
 B4_FIXTURES = {
     "dome_hole12.off": "340016d7e2a9e98a9ccbffd27cef66b94613ae74af9bbcbc99e0bbb0200d3cee",
     "tampered_fair_vertex_moved.off": "a27098c20061cb8402ea25b404489769b183914cfc3ecffd5e16712316e90950",
+    "alpha2_quad.json": "b6d78c54aecb64bb70c2dfe70e2efb561bb131c877432d2b7480d76edd98e7ed",
+    "alpha2_scatter.json": "ef14a575c17a0f6718e8c6a8a5cb8434452a3708787cb1c771c0376e11492d78",
+    "alpha2_square.json": "a76bfd2d5639776fec805c36d8b28feea212e34794768ae84cc03bcaeedfc1a7",
+    "alpha3_bipyramid.xyz": "bcd1d20f93c11e81221e3ed30bab45d156bc4b1c56dc5213a30188c856035d97",
+    "alpha3_cube.xyz": "2aa4efa6a12a6181ec7b1ff432c306d9a8e63a180dd5f08ef1ce2de8958f431f",
+    "alpha3_tetra.xyz": "0a541e9113c809c45ef382f5634b1d5cf34525af88323f68f3d2408254de7454",
+    "tampered_alpha2_triangle_dropped.json": "028c836bb79b2f2a63d54ae43e6b187e67de34bad58d78e4ec6b3d16ed24ab83",
+    "tampered_alpha3_facet_added.json": "cde9bdf4068a120726e6d71424c4d7b76d1c29f77993454f210fe8f9e6a211d2",
     "cube_geodesic.off": "8582ba758a2a781e75be1c3c1a36a84704ef1c712e01dbe87117e7c1d37d40bb",
     "lshape.off": "9f4f86dc1d7c71dbe94c6354ce73cce3ef3b7edc9d35bd962d881483f8aad9ab",
     "tampered_sp_distance_short.json": "4cafe4d788068d08907037ed7e3de712f9a5be85af0bae028b0d64cc336cf796",
@@ -4078,6 +4085,103 @@ FAMILY_7_8["negative_controls"].extend([
     {"id": "shortest-barycentric-sum-rejected", "operation": "mesh.path.shortest", "inputs": [B4_CUBE],
      "parameters": {"sources": [{"vertex": 0}], "targets": [{"face": 0, "barycentric": [0.5, 0.5, 0.5]}]},
      "expect_error_class": "INVALID_REQUEST", "expect_error_code": "INVALID_PARAMETER"},
+])
+
+# 7.13.02 Alpha_shape_2 / Alpha_shape_3 / Fixed_alpha_shape_3 (alpha = squared radius, artifact unit squared).
+B4_A2_QUAD = _b4json("alpha2_quad.json", "PointSet2")
+B4_A2_SCATTER = _b4json("alpha2_scatter.json", "PointSet2")
+B4_A3_TETRA = {**_b4fx("alpha3_tetra.xyz"), "type": "PointSet3", "format": "xyz", "unit": "mm"}
+B4_A3_BIPYRAMID = {**_b4fx("alpha3_bipyramid.xyz"), "type": "PointSet3", "format": "xyz", "unit": "mm"}
+
+
+def _a2(case_id, source, alpha, triangles, edges):
+    return _case(case_id, "shape.alpha_shape_2", [source], {"alpha": alpha}, [
+        ["metrics.algorithm", "==", "CGAL::Alpha_shape_2"],
+        ["output:analysis:json:report_kind", "==", "alpha_shape_2"],
+        ["output:analysis:json:results.alpha_unit", "==", "mm^2"],
+        ["output:analysis:json:results.interior_triangles", "==", triangles],
+        ["output:analysis:json:results.regular_edges", "==", edges]])
+
+
+def _a3(case_id, operation, source, alpha, cells, facets):
+    algorithm = "CGAL::Alpha_shape_3" if operation == "shape.alpha_shape_3" else "CGAL::Fixed_alpha_shape_3"
+    return _case(case_id, operation, [source], {"alpha": alpha}, [
+        ["metrics.algorithm", "==", algorithm],
+        ["output:analysis:json:report_kind", "==", "alpha_shape_3"],
+        ["output:analysis:json:results.alpha_unit", "==", "mm^2"],
+        ["output:analysis:json:results.interior_cells", "==", cells],
+        ["output:analysis:json:results.regular_facets", "==", facets]])
+
+
+_B4_TETRA_FACETS = [[0, 1, 2], [0, 1, 3], [0, 2, 3], [1, 2, 3]]
+_B4_BIPYRAMID_FACETS = [[0, 1, 2], [0, 1, 3], [0, 2, 3], [1, 2, 4], [1, 3, 4], [2, 3, 4]]
+FAMILY_7_13["requirements"]["major.7.13.02"] = {
+    "operation_ids": ["shape.alpha_shape_2", "shape.alpha_shape_3", "shape.fixed_alpha_shape_3"],
+    "symbols": ["Alpha_shape_2", "Alpha_shape_3", "Fixed_alpha_shape_3"],
+    "symbol_notes": "Alpha_shape_2, Alpha_shape_3 and Fixed_alpha_shape_3 (regularized mode, EPECK) report the "
+                    "interior full-dimensional Delaunay simplices (squared circumradius at most alpha, a tie "
+                    "counts as interior) and the regular edges (2D) or facets (3D): faces with exactly one "
+                    "interior neighbour. Hand-derived: the quad (0,0),(2,0),(0,2),(2,3) has Delaunay triangles "
+                    "{0,1,2} with circumradius^2 2 and {1,2,3} with 2.5, so alpha 1 gives nothing, alpha 2 "
+                    "(tie) and 2.25 give {0,1,2} with regular edges 01, 02, 12, and alpha 3 both triangles "
+                    "with the four hull edges (the shared edge 12 is interior). The tetrahedron (0,0,0),"
+                    "(2,0,0),(0,2,0),(0,0,2) has circumradius^2 3: nothing at 2.9, the cell with its four "
+                    "facets at 3 (tie) and 3.5; adding (2,2,3) creates a second cell {1,2,3,4} with "
+                    "circumcentre (1.3,1.3,1.3) and circumradius^2 3.87 so alpha 3.5 keeps only the first "
+                    "cell and alpha 6 both (six hull facets). An 8-point scatter at large alpha has 2n-2-h = 9 "
+                    "triangles and the h = 5 hull edges. The independent validators enumerate every Delaunay "
+                    "simplex by exact rational empty-ball search and compare the reported sets exactly; "
+                    "inputs with an empty circle or sphere carrying an extra point (non-unique Delaunay "
+                    "triangulation) are rejected by producer and validator. alpha is a number in the squared "
+                    "artifact unit. Only the regularized classification of the full simplices and their "
+                    "regular boundary is exposed: singular and general-mode simplices, vertices and the "
+                    "alpha spectrum are not. Fixed_alpha_shape_3 is checked with the same validator as "
+                    "Alpha_shape_3.",
+    "case_ids": ["alpha2-quad-below", "alpha2-quad-tie", "alpha2-quad-one-triangle", "alpha2-quad-both",
+                 "alpha2-scatter-large", "alpha3-tetra-below", "alpha3-tetra-tie", "alpha3-bipyramid-one-cell",
+                 "alpha3-bipyramid-both", "fixed3-tetra-below", "fixed3-tetra-tie", "fixed3-bipyramid-one-cell",
+                 "fixed3-bipyramid-both"],
+}
+FAMILY_7_13["cases"].extend([
+    _a2("alpha2-quad-below", B4_A2_QUAD, 1, [], []),
+    _a2("alpha2-quad-tie", B4_A2_QUAD, 2, [[0, 1, 2]], [[0, 1], [0, 2], [1, 2]]),
+    _a2("alpha2-quad-one-triangle", B4_A2_QUAD, 2.25, [[0, 1, 2]], [[0, 1], [0, 2], [1, 2]]),
+    _a2("alpha2-quad-both", B4_A2_QUAD, 3, [[0, 1, 2], [1, 2, 3]], [[0, 1], [0, 2], [1, 3], [2, 3]]),
+    _case("alpha2-scatter-large", "shape.alpha_shape_2", [B4_A2_SCATTER], {"alpha": 1000}, [
+        ["metrics.interior_triangle_count", "==", 9], ["metrics.regular_edge_count", "==", 5],
+        ["output:analysis:json:results.regular_edges", "==", [[0, 1], [0, 4], [1, 3], [3, 5], [4, 5]]]]),
+    _a3("alpha3-tetra-below", "shape.alpha_shape_3", B4_A3_TETRA, 2.9, [], []),
+    _a3("alpha3-tetra-tie", "shape.alpha_shape_3", B4_A3_TETRA, 3, [[0, 1, 2, 3]], _B4_TETRA_FACETS),
+    _a3("alpha3-bipyramid-one-cell", "shape.alpha_shape_3", B4_A3_BIPYRAMID, 3.5, [[0, 1, 2, 3]], _B4_TETRA_FACETS),
+    _a3("alpha3-bipyramid-both", "shape.alpha_shape_3", B4_A3_BIPYRAMID, 6, [[0, 1, 2, 3], [1, 2, 3, 4]],
+        _B4_BIPYRAMID_FACETS),
+    _a3("fixed3-tetra-below", "shape.fixed_alpha_shape_3", B4_A3_TETRA, 2.9, [], []),
+    _a3("fixed3-tetra-tie", "shape.fixed_alpha_shape_3", B4_A3_TETRA, 3, [[0, 1, 2, 3]], _B4_TETRA_FACETS),
+    _a3("fixed3-bipyramid-one-cell", "shape.fixed_alpha_shape_3", B4_A3_BIPYRAMID, 3.5, [[0, 1, 2, 3]],
+        _B4_TETRA_FACETS),
+    _a3("fixed3-bipyramid-both", "shape.fixed_alpha_shape_3", B4_A3_BIPYRAMID, 6, [[0, 1, 2, 3], [1, 2, 3, 4]],
+        _B4_BIPYRAMID_FACETS),
+])
+FAMILY_7_13["pairs"].extend([
+    {"kind": "different_outputs", "cases": ["alpha2-quad-one-triangle", "alpha2-quad-both"]},
+    {"kind": "different_outputs", "cases": ["alpha3-bipyramid-one-cell", "alpha3-bipyramid-both"]},
+])
+FAMILY_7_13["negative_controls"].extend([
+    {"id": "alpha2-cocircular-rejected", "operation": "shape.alpha_shape_2",
+     "inputs": [_b4json("alpha2_square.json", "PointSet2")], "parameters": {"alpha": 5},
+     "expect_error_class": "PRECONDITION_FAILED", "expect_error_code": "DEGENERATE_COCIRCULAR"},
+    {"id": "alpha3-cospherical-rejected", "operation": "shape.alpha_shape_3",
+     "inputs": [{**_b4fx("alpha3_cube.xyz"), "type": "PointSet3", "format": "xyz", "unit": "mm"}],
+     "parameters": {"alpha": 5}, "expect_error_class": "PRECONDITION_FAILED",
+     "expect_error_code": "DEGENERATE_COSPHERICAL"},
+    {"id": "alpha2-negative-alpha-rejected", "operation": "shape.alpha_shape_2", "inputs": [B4_A2_QUAD],
+     "parameters": {"alpha": -1}, "expect_error_class": "INVALID_REQUEST", "expect_error_code": "INVALID_PARAMETER"},
+    {"id": "alpha2-tampered-triangle-dropped-rejected", "operation": "shape.validate.alpha_shape_2",
+     "inputs": [_b4report("tampered_alpha2_triangle_dropped.json"), B4_A2_QUAD], "parameters": {"alpha": 3},
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "INTERIOR_MISMATCH"},
+    {"id": "alpha3-tampered-facet-added-rejected", "operation": "shape.validate.alpha_shape_3",
+     "inputs": [_b4report("tampered_alpha3_facet_added.json"), B4_A3_BIPYRAMID], "parameters": {"alpha": 6},
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "REGULAR_FACET_MISMATCH"},
 ])
 
 GENERIC_FAMILIES: dict[str, dict] = {

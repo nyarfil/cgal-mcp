@@ -34895,6 +34895,854 @@
         "cgal_version": "6.2.1",
         "review_status": "self_verified_not_independently_reviewed"
       }
+    },
+    {
+      "id": "shape.alpha_shape_2",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "analysis",
+      "summary": "Alpha shape of a 2D point set (Alpha_shape_2, regularized): interior Delaunay triangles with squared circumradius at most alpha and the regular boundary edges.",
+      "package": "Alpha_shapes_2",
+      "major_requirements": [
+        "major.7.13.02"
+      ],
+      "aliases": [
+        "alpha shape 2d",
+        "alpha shape of 2d points",
+        "alpha complex 2d",
+        "concave hull 2d",
+        "\u30a2\u30eb\u30d5\u30a1\u30b7\u30a7\u30a4\u30d7 2D"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Alpha_shapes_2"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Alpha_shape_2"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Alpha_shape_2.h"
+        },
+        {
+          "kind": "manual",
+          "identifier": "Alpha_shapes_2/index.html"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Alpha_shapes_2",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Alpha_shape_2.h",
+            "sha256": "cb3e3c6e155a45877341d7c997d88ad405c113d77a3ae8e6c43bd9142ed8d1a1"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "points",
+            "types": [
+              "PointSet2"
+            ],
+            "formats": [
+              "json"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "analysis",
+            "type": "GeometryQueryReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "alpha"
+        ],
+        "properties": {
+          "alpha": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Squared radius bound in the squared artifact unit (mm^2 for mm points); a simplex whose squared circumradius equals alpha is interior."
+          }
+        }
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 268435456
+        }
+      ],
+      "validation": {
+        "required": true,
+        "validators": [
+          "shape.validate.alpha_shape_2"
+        ],
+        "bindings": {
+          "shape.validate.alpha_shape_2": {
+            "artifacts": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "points": {
+                "input": "points"
+              }
+            },
+            "parameters": {
+              "alpha": {
+                "parameter": "alpha"
+              }
+            }
+          }
+        }
+      },
+      "output_contract": {
+        "report_schema_version": 1,
+        "geometry_mutation": false,
+        "source_sha256_preserved": true,
+        "producer_diagnostics_are_non_authoritative": true
+      },
+      "dependencies": [
+        "Alpha_shapes_2"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "info": {
+          "input_slots": [
+            "points"
+          ],
+          "maximum_input_points": 60,
+          "source_header": "CGAL/Alpha_shape_2.h",
+          "validator_parameter_bindings": {
+            "shape.validate.alpha_shape_2": {
+              "alpha": "alpha"
+            }
+          },
+          "validators": [
+            "shape.validate.alpha_shape_2"
+          ]
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64 converted to exact binary-rational coordinates",
+        "predicate_policy": "CGAL exact predicates and exact constructions (EPECK); reported points are canonical exact rational strings",
+        "exact_constructions": "EPECK",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_batch4_cases.py"
+        ],
+        "worker_manifest_operation": "shape.alpha_shape_2",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "shape.alpha_shape_3",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "analysis",
+      "summary": "Alpha shape of a 3D point set (Alpha_shape_3, regularized): interior Delaunay cells with squared circumradius at most alpha and the regular boundary facets.",
+      "package": "Alpha_shapes_3",
+      "major_requirements": [
+        "major.7.13.02"
+      ],
+      "aliases": [
+        "alpha shape 3d",
+        "alpha shape of 3d points",
+        "alpha complex 3d",
+        "concave hull 3d",
+        "\u30a2\u30eb\u30d5\u30a1\u30b7\u30a7\u30a4\u30d7 3D"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Alpha_shapes_3"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Alpha_shape_3"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Alpha_shape_3.h"
+        },
+        {
+          "kind": "manual",
+          "identifier": "Alpha_shapes_3/index.html"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Alpha_shapes_3",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Alpha_shape_3.h",
+            "sha256": "6016faffced3187bcbaed0a59b15c3fb8d2718cd792776cea450ea73ae147d17"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "points",
+            "types": [
+              "PointSet3"
+            ],
+            "formats": [
+              "xyz"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "analysis",
+            "type": "GeometryQueryReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "alpha"
+        ],
+        "properties": {
+          "alpha": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Squared radius bound in the squared artifact unit (mm^2 for mm points); a simplex whose squared circumradius equals alpha is interior."
+          }
+        }
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 268435456
+        }
+      ],
+      "validation": {
+        "required": true,
+        "validators": [
+          "shape.validate.alpha_shape_3"
+        ],
+        "bindings": {
+          "shape.validate.alpha_shape_3": {
+            "artifacts": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "points": {
+                "input": "points"
+              }
+            },
+            "parameters": {
+              "alpha": {
+                "parameter": "alpha"
+              }
+            }
+          }
+        }
+      },
+      "output_contract": {
+        "report_schema_version": 1,
+        "geometry_mutation": false,
+        "source_sha256_preserved": true,
+        "producer_diagnostics_are_non_authoritative": true
+      },
+      "dependencies": [
+        "Alpha_shapes_3"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "info": {
+          "input_slots": [
+            "points"
+          ],
+          "maximum_input_points": 24,
+          "source_header": "CGAL/Alpha_shape_3.h",
+          "validator_parameter_bindings": {
+            "shape.validate.alpha_shape_3": {
+              "alpha": "alpha"
+            }
+          },
+          "validators": [
+            "shape.validate.alpha_shape_3"
+          ]
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64 converted to exact binary-rational coordinates",
+        "predicate_policy": "CGAL exact predicates and exact constructions (EPECK); reported points are canonical exact rational strings",
+        "exact_constructions": "EPECK",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_batch4_cases.py"
+        ],
+        "worker_manifest_operation": "shape.alpha_shape_3",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "shape.fixed_alpha_shape_3",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "analysis",
+      "summary": "Fixed-alpha alpha shape of a 3D point set (Fixed_alpha_shape_3, regularized): interior Delaunay cells within the fixed alpha and the regular boundary facets.",
+      "package": "Alpha_shapes_3",
+      "major_requirements": [
+        "major.7.13.02"
+      ],
+      "aliases": [
+        "fixed alpha shape 3d",
+        "fixed alpha shape",
+        "alpha shape with fixed alpha",
+        "\u56fa\u5b9a\u30a2\u30eb\u30d5\u30a1\u30b7\u30a7\u30a4\u30d7"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Alpha_shapes_3"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Fixed_alpha_shape_3"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Fixed_alpha_shape_3.h"
+        },
+        {
+          "kind": "manual",
+          "identifier": "Alpha_shapes_3/index.html"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Alpha_shapes_3",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Fixed_alpha_shape_3.h",
+            "sha256": "e82ef20b2e80d7c0db938ab7cf7f892e9b69ae12cb8cc12f004a318db2da7f14"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "points",
+            "types": [
+              "PointSet3"
+            ],
+            "formats": [
+              "xyz"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "analysis",
+            "type": "GeometryQueryReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "alpha"
+        ],
+        "properties": {
+          "alpha": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Squared radius bound in the squared artifact unit (mm^2 for mm points); a simplex whose squared circumradius equals alpha is interior."
+          }
+        }
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 268435456
+        }
+      ],
+      "validation": {
+        "required": true,
+        "validators": [
+          "shape.validate.alpha_shape_3"
+        ],
+        "bindings": {
+          "shape.validate.alpha_shape_3": {
+            "artifacts": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "points": {
+                "input": "points"
+              }
+            },
+            "parameters": {
+              "alpha": {
+                "parameter": "alpha"
+              }
+            }
+          }
+        }
+      },
+      "output_contract": {
+        "report_schema_version": 1,
+        "geometry_mutation": false,
+        "source_sha256_preserved": true,
+        "producer_diagnostics_are_non_authoritative": true
+      },
+      "dependencies": [
+        "Alpha_shapes_3"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "info": {
+          "input_slots": [
+            "points"
+          ],
+          "maximum_input_points": 24,
+          "source_header": "CGAL/Fixed_alpha_shape_3.h",
+          "validator_parameter_bindings": {
+            "shape.validate.alpha_shape_3": {
+              "alpha": "alpha"
+            }
+          },
+          "validators": [
+            "shape.validate.alpha_shape_3"
+          ]
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64 converted to exact binary-rational coordinates",
+        "predicate_policy": "CGAL exact predicates and exact constructions (EPECK); reported points are canonical exact rational strings",
+        "exact_constructions": "EPECK",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_batch4_cases.py"
+        ],
+        "worker_manifest_operation": "shape.fixed_alpha_shape_3",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "shape.validate.alpha_shape_2",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "validator",
+      "summary": "Recompute every Delaunay simplex by exact rational empty-ball search, compare the squared circumradius with alpha and require the reported interior simplices and regular boundary faces to match exactly.",
+      "package": "Alpha_shapes_2",
+      "aliases": [],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Alpha_shapes_2"
+        },
+        {
+          "kind": "operation_reference",
+          "identifier": "shape.alpha_shape_2"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Alpha_shapes_2",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Alpha_shape_2.h",
+            "sha256": "cb3e3c6e155a45877341d7c997d88ad405c113d77a3ae8e6c43bd9142ed8d1a1"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "GeometryQueryReport"
+            ],
+            "formats": [
+              "json"
+            ],
+            "unit": "none"
+          },
+          {
+            "slot": "points",
+            "types": [
+              "PointSet2"
+            ],
+            "formats": [
+              "json"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "alpha"
+        ],
+        "properties": {
+          "alpha": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Squared radius bound in the squared artifact unit (mm^2 for mm points); a simplex whose squared circumradius equals alpha is interior."
+          }
+        }
+      },
+      "preconditions": [],
+      "validation": {
+        "required": false,
+        "validators": [],
+        "bindings": {},
+        "terminal_validator": true,
+        "validates": "shape.alpha_shape_2",
+        "validates_all": [
+          "shape.alpha_shape_2"
+        ],
+        "required_report_checks": {
+          "status": "pass",
+          "passed": true,
+          "validator": "shape.validate.alpha_shape_2",
+          "checks.parameters_match": true,
+          "checks.source_matches": true,
+          "checks.alpha_unit_is_squared_artifact_unit": true,
+          "checks.interior_triangles_equal_exact_delaunay_triangles_within_alpha": true,
+          "checks.regular_edges_equal_exact_boundary_of_interior_triangles": true
+        }
+      },
+      "output_contract": {
+        "schema": "ValidationReport/v1",
+        "required_true_checks": [
+          "parameters_match",
+          "source_matches",
+          "alpha_unit_is_squared_artifact_unit",
+          "interior_triangles_equal_exact_delaunay_triangles_within_alpha",
+          "regular_edges_equal_exact_boundary_of_interior_triangles"
+        ],
+        "status": "pass",
+        "failure_or_indeterminate_publish": false,
+        "independence": "exact rational empty-circle search and circumradius; no CGAL header"
+      },
+      "dependencies": [
+        "Alpha_shapes_2"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "exact:GMP",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "alpha_unit_is_squared_artifact_unit",
+            "interior_triangles_equal_exact_delaunay_triangles_within_alpha",
+            "regular_edges_equal_exact_boundary_of_interior_triangles"
+          ],
+          "independence": "exact rational empty-circle search and circumradius; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "points"
+          ],
+          "output_slot": "validation"
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "exact arithmetic: GMP rationals (no CGAL header)",
+        "coordinate_storage": "IEEE-754 binary64 converted to exact rationals",
+        "predicate_policy": "exact rational predicates and constructions; no tolerance is used",
+        "exact_constructions": "all compared quantities are exact rationals",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_batch4_cases.py"
+        ],
+        "worker_manifest_operation": "shape.validate.alpha_shape_2",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "shape.validate.alpha_shape_3",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "validator",
+      "summary": "Recompute every Delaunay simplex by exact rational empty-ball search, compare the squared circumradius with alpha and require the reported interior simplices and regular boundary faces to match exactly.",
+      "package": "Alpha_shapes_3",
+      "aliases": [],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Alpha_shapes_3"
+        },
+        {
+          "kind": "operation_reference",
+          "identifier": "shape.alpha_shape_3"
+        },
+        {
+          "kind": "operation_reference",
+          "identifier": "shape.fixed_alpha_shape_3"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Alpha_shapes_3",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Alpha_shape_3.h",
+            "sha256": "6016faffced3187bcbaed0a59b15c3fb8d2718cd792776cea450ea73ae147d17"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "GeometryQueryReport"
+            ],
+            "formats": [
+              "json"
+            ],
+            "unit": "none"
+          },
+          {
+            "slot": "points",
+            "types": [
+              "PointSet3"
+            ],
+            "formats": [
+              "xyz"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "alpha"
+        ],
+        "properties": {
+          "alpha": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Squared radius bound in the squared artifact unit (mm^2 for mm points); a simplex whose squared circumradius equals alpha is interior."
+          }
+        }
+      },
+      "preconditions": [],
+      "validation": {
+        "required": false,
+        "validators": [],
+        "bindings": {},
+        "terminal_validator": true,
+        "validates": "shape.alpha_shape_3",
+        "validates_all": [
+          "shape.alpha_shape_3",
+          "shape.fixed_alpha_shape_3"
+        ],
+        "required_report_checks": {
+          "status": "pass",
+          "passed": true,
+          "validator": "shape.validate.alpha_shape_3",
+          "checks.parameters_match": true,
+          "checks.source_matches": true,
+          "checks.alpha_unit_is_squared_artifact_unit": true,
+          "checks.interior_cells_equal_exact_delaunay_cells_within_alpha": true,
+          "checks.regular_facets_equal_exact_boundary_of_interior_cells": true
+        }
+      },
+      "output_contract": {
+        "schema": "ValidationReport/v1",
+        "required_true_checks": [
+          "parameters_match",
+          "source_matches",
+          "alpha_unit_is_squared_artifact_unit",
+          "interior_cells_equal_exact_delaunay_cells_within_alpha",
+          "regular_facets_equal_exact_boundary_of_interior_cells"
+        ],
+        "status": "pass",
+        "failure_or_indeterminate_publish": false,
+        "independence": "exact rational empty-sphere search and circumradius; no CGAL header"
+      },
+      "dependencies": [
+        "Alpha_shapes_3"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "exact:GMP",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "alpha_unit_is_squared_artifact_unit",
+            "interior_cells_equal_exact_delaunay_cells_within_alpha",
+            "regular_facets_equal_exact_boundary_of_interior_cells"
+          ],
+          "independence": "exact rational empty-sphere search and circumradius; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "points"
+          ],
+          "output_slot": "validation"
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "exact arithmetic: GMP rationals (no CGAL header)",
+        "coordinate_storage": "IEEE-754 binary64 converted to exact rationals",
+        "predicate_policy": "exact rational predicates and constructions; no tolerance is used",
+        "exact_constructions": "all compared quantities are exact rationals",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_batch4_cases.py"
+        ],
+        "worker_manifest_operation": "shape.validate.alpha_shape_3",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
     }
   ]
 }

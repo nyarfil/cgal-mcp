@@ -80,12 +80,14 @@ void append(std::vector<OperationDefinition>& target, std::vector<OperationDefin
 std::vector<OperationDefinition> producer_operations() {
   std::vector<OperationDefinition> result;
   append(result, mesh_producers());
+  append(result, alpha_producers());
   return result;
 }
 
 std::vector<OperationDefinition> validator_operations() {
   std::vector<OperationDefinition> result;
   append(result, mesh_validators());
+  append(result, alpha_validators());
   return result;
 }
 
