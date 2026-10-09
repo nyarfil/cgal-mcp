@@ -48,14 +48,14 @@
   },
   "family_contract_sha256": "0aff437e259e47ed2ba01fc58f62a08543df8e4c32a4e131efee0924de9d6888",
   "family_contract_source_path": "scripts/master_replay_families.py",
-  "family_contract_source_sha256": "3188cb5580e18f7a6e3309070d04980fcaaeb1def3524578ad81e5d7f3acd715",
+  "family_contract_source_sha256": "b1eeff25479a0607bca5006f434e87cf9fdfebba75697dd43a69f9de572067cb",
   "family_contract_source_hash_encoding": "utf8-lf",
   "catalog_baseline_sha256": "143ec18a5b64d506aad60dc24b0a1ea30940c715d1223b3465fa140aeb9d02a7",
-  "operation_registry_sha256": "25e936723e6cfbe3de1a68847a0d575b3275eb4dc473823862be40004bd26b66",
+  "operation_registry_sha256": "d1eafde5feb1e3340cc7046fc4ea181455f57b79c876cbd61197e5913400c590",
   "operation_registry_hash_encoding": "utf8-lf",
   "policy_catalog_sha256": "45f4be759288aaeb834a3ce97aa64ee7768048b15534618fc8c19512801f9a9f",
   "policy_catalog_hash_encoding": "utf8-lf",
-  "worker_sha256": "2f56a91a31af1c972ec059b5fa0bf2d15fdd79f618b62b7bbf6cc7fd640c0926",
+  "worker_sha256": "358d3c7d32cc3ba52bb0fa65ca2357f8355996b46eac96dafb7ed9d15bc3a79e",
   "worker_binary_format": "pe",
   "worker_manifest": {
     "actual_cgal_version": "6.2.1",
@@ -6312,6 +6312,33 @@
       },
       {
         "dependencies": [
+          "PMP_Boolean_operations"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "mesh.autorefine",
+        "info": {
+          "input_slots": [
+            "source"
+          ],
+          "maximum_input_faces": 600,
+          "maximum_output_faces": 4000,
+          "source_header": "CGAL/Polygon_mesh_processing/autorefinement.h",
+          "validators": [
+            "mesh.validate.autorefine"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "TriangleSurfaceMesh",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
           "Boolean_set_operations_2"
         ],
         "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
@@ -6607,6 +6634,39 @@
       },
       {
         "dependencies": [
+          "PMP_Boolean_operations"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "mesh.validate.autorefine",
+        "info": {
+          "checks": [
+            "source_triangles_nondegenerate",
+            "triangles_inside_source_faces",
+            "orientation_preserved",
+            "no_overlap_within_source_face",
+            "surface_covered_exactly",
+            "no_remaining_self_intersection"
+          ],
+          "independence": "exact weighted-area tiling and exact pairwise triangle/triangle intersection polygon vertices; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "TriangleSurfaceMesh",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
           "Boolean_set_operations_2"
         ],
         "effective_kernel": "exact:GMP",
@@ -6638,6 +6698,472 @@
         "supported_kernels": [
           "package_recommended"
         ]
+      },
+      {
+        "dependencies": [
+          "Triangulation_2"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "triangulation.regular_2",
+        "info": {
+          "input_slots": [
+            "points"
+          ],
+          "maximum_input_points": 400,
+          "source_header": "CGAL/Regular_triangulation_2.h",
+          "validator_parameter_bindings": {
+            "triangulation.validate.regular_2": {
+              "weights": "weights"
+            }
+          },
+          "validators": [
+            "triangulation.validate.regular_2"
+          ]
+        },
+        "input_types": [
+          "PointSet2"
+        ],
+        "output_type": "GeometryQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Triangulation_3"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "triangulation.regular_3",
+        "info": {
+          "input_slots": [
+            "points"
+          ],
+          "maximum_input_points": 400,
+          "source_header": "CGAL/Regular_triangulation_3.h",
+          "validator_parameter_bindings": {
+            "triangulation.validate.regular_3": {
+              "weights": "weights"
+            }
+          },
+          "validators": [
+            "triangulation.validate.regular_3"
+          ]
+        },
+        "input_types": [
+          "PointSet3"
+        ],
+        "output_type": "GeometryQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Voronoi_diagram_2",
+          "Triangulation_2"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "triangulation.voronoi_dual",
+        "info": {
+          "input_slots": [
+            "sites"
+          ],
+          "maximum_input_points": 400,
+          "source_header": "CGAL/Voronoi_diagram_2.h",
+          "validators": [
+            "triangulation.validate.voronoi_dual"
+          ]
+        },
+        "input_types": [
+          "PointSet2"
+        ],
+        "output_type": "GeometryQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Minkowski_sum_2"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "polygon.minkowski_sum",
+        "info": {
+          "input_slots": [
+            "first",
+            "second"
+          ],
+          "maximum_polygon_vertices": 16,
+          "source_header": "CGAL/minkowski_sum_2.h",
+          "validators": [
+            "polygon.validate.minkowski_sum"
+          ]
+        },
+        "input_types": [
+          "Polygon2",
+          "Polygon2"
+        ],
+        "output_type": "GeometryQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Minkowski_sum_2"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "polygon.minkowski_sum_reduced_convolution",
+        "info": {
+          "input_slots": [
+            "first",
+            "second"
+          ],
+          "maximum_polygon_vertices": 16,
+          "source_header": "CGAL/minkowski_sum_2.h",
+          "validators": [
+            "polygon.validate.minkowski_sum"
+          ]
+        },
+        "input_types": [
+          "Polygon2",
+          "Polygon2"
+        ],
+        "output_type": "GeometryQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Arrangement_on_surface_2"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "arrangement.build",
+        "info": {
+          "input_slots": [
+            "segments"
+          ],
+          "maximum_segments": 60,
+          "source_header": "CGAL/Arrangement_2.h",
+          "validators": [
+            "arrangement.validate.build"
+          ]
+        },
+        "input_types": [
+          "SegmentGraph2"
+        ],
+        "output_type": "GeometryQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Arrangement_on_surface_2"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "arrangement.zone",
+        "info": {
+          "input_slots": [
+            "segments",
+            "curve"
+          ],
+          "maximum_segments": 60,
+          "source_header": "CGAL/Arrangement_2/Arrangement_on_surface_2_global.h",
+          "validators": [
+            "arrangement.validate.zone"
+          ]
+        },
+        "input_types": [
+          "SegmentGraph2",
+          "SegmentGraph2"
+        ],
+        "output_type": "GeometryQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Arrangement_on_surface_2"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "arrangement.overlay",
+        "info": {
+          "input_slots": [
+            "first",
+            "second"
+          ],
+          "maximum_polygon_vertices": 16,
+          "source_header": "CGAL/Arr_overlay_2.h",
+          "validators": [
+            "arrangement.validate.overlay"
+          ]
+        },
+        "input_types": [
+          "Polygon2",
+          "Polygon2"
+        ],
+        "output_type": "GeometryQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Triangulation_2"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "triangulation.validate.regular_2",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "weight_unit_is_squared_artifact_unit",
+            "vertices_and_hidden_partition_input",
+            "triangles_counter_clockwise_distinct",
+            "every_triangle_is_regular",
+            "triangles_tile_convex_hull_of_vertices",
+            "hidden_points_are_dominated"
+          ],
+          "independence": "exact rational lifting, orientation and hull-area tiling; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "points"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "GeometryQueryReport",
+          "PointSet2"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Triangulation_3"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "triangulation.validate.regular_3",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "weight_unit_is_squared_artifact_unit",
+            "vertices_and_hidden_partition_input",
+            "tetrahedra_positive_distinct",
+            "every_tetrahedron_is_regular",
+            "tetrahedra_tile_convex_hull_of_vertices",
+            "hidden_points_are_dominated"
+          ],
+          "independence": "exact rational lifting, orientation, boundary-surface volume tiling; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "points"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "GeometryQueryReport",
+          "PointSet3"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Voronoi_diagram_2",
+          "Triangulation_2"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "triangulation.validate.voronoi_dual",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "voronoi_vertices_equal_exact_bisector_endpoints",
+            "voronoi_edges_equal_exact_bisector_intervals",
+            "cell_counts_match_exact_edges"
+          ],
+          "independence": "exact bisector intervals against all other sites in GMP rationals; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "sites"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "GeometryQueryReport",
+          "PointSet2"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Arrangement_on_surface_2"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "arrangement.validate.build",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "vertices_equal_exact_arrangement",
+            "edges_equal_exact_arrangement",
+            "faces_equal_exact_traced_faces"
+          ],
+          "independence": "exact segment splitting, angular half-edge face tracing and cycle nesting in GMP rationals; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "segments"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "GeometryQueryReport",
+          "SegmentGraph2"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Arrangement_on_surface_2"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "arrangement.validate.zone",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "arrangement_vertices_equal_exact",
+            "zone_vertices_equal_exact",
+            "zone_edges_equal_exact",
+            "zone_faces_equal_exact"
+          ],
+          "independence": "exact splitting of the query at arrangement vertices and edges and exact face location; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "segments",
+            "curve"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "GeometryQueryReport",
+          "SegmentGraph2",
+          "SegmentGraph2"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Arrangement_on_surface_2"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "arrangement.validate.overlay",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "operands_simple_nonzero_area",
+            "vertices_equal_exact_arrangement",
+            "edges_equal_exact_arrangement",
+            "faces_equal_exact_traced_faces"
+          ],
+          "independence": "arrangement of both boundaries traced in GMP rationals; face labels from exact point-in-polygon witnesses; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "first",
+            "second"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "GeometryQueryReport",
+          "Polygon2",
+          "Polygon2"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Minkowski_sum_2"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "polygon.validate.minkowski_sum",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "operands_simple_nonzero_area",
+            "rings_oriented_outer_ccw_hole_cw",
+            "boundary_chain_equals_exact_minkowski_sum"
+          ],
+          "independence": "convolution-segment splitting with exact set-membership on both sides of every piece; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "first",
+            "second"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "GeometryQueryReport",
+          "Polygon2",
+          "Polygon2"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
       }
     ],
     "protocol": 1,
@@ -6649,7 +7175,7 @@
     ],
     "worker": "cgal-master-worker"
   },
-  "worker_manifest_sha256": "e9dfe99e7b2a858f3d9f0cbf8c8dbb424f3c7c32776a0885e45b9e51bf6a1c9b",
+  "worker_manifest_sha256": "36357bf97a2810124205d29a9e650deff56a2678aaa4d81c02dfaf10e88d53aa",
   "tests": [
     {
       "id": "family-7.8-replay-cases",
@@ -6875,7 +7401,7 @@
       "case_id": "subdivide-loop-tetra-1",
       "operation_id": "mesh.subdivide.loop",
       "revision": 1,
-      "worker_manifest_sha256": "e9dfe99e7b2a858f3d9f0cbf8c8dbb424f3c7c32776a0885e45b9e51bf6a1c9b",
+      "worker_manifest_sha256": "36357bf97a2810124205d29a9e650deff56a2678aaa4d81c02dfaf10e88d53aa",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -7036,7 +7562,7 @@
       "case_id": "subdivide-loop-tetra-2",
       "operation_id": "mesh.subdivide.loop",
       "revision": 1,
-      "worker_manifest_sha256": "e9dfe99e7b2a858f3d9f0cbf8c8dbb424f3c7c32776a0885e45b9e51bf6a1c9b",
+      "worker_manifest_sha256": "36357bf97a2810124205d29a9e650deff56a2678aaa4d81c02dfaf10e88d53aa",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -7197,7 +7723,7 @@
       "case_id": "subdivide-loop-open-square",
       "operation_id": "mesh.subdivide.loop",
       "revision": 1,
-      "worker_manifest_sha256": "e9dfe99e7b2a858f3d9f0cbf8c8dbb424f3c7c32776a0885e45b9e51bf6a1c9b",
+      "worker_manifest_sha256": "36357bf97a2810124205d29a9e650deff56a2678aaa4d81c02dfaf10e88d53aa",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -7355,7 +7881,7 @@
       "case_id": "subdivide-catmull-quad-cube-1",
       "operation_id": "mesh.subdivide.catmull_clark",
       "revision": 1,
-      "worker_manifest_sha256": "e9dfe99e7b2a858f3d9f0cbf8c8dbb424f3c7c32776a0885e45b9e51bf6a1c9b",
+      "worker_manifest_sha256": "36357bf97a2810124205d29a9e650deff56a2678aaa4d81c02dfaf10e88d53aa",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -7516,7 +8042,7 @@
       "case_id": "subdivide-catmull-quad-cube-2",
       "operation_id": "mesh.subdivide.catmull_clark",
       "revision": 1,
-      "worker_manifest_sha256": "e9dfe99e7b2a858f3d9f0cbf8c8dbb424f3c7c32776a0885e45b9e51bf6a1c9b",
+      "worker_manifest_sha256": "36357bf97a2810124205d29a9e650deff56a2678aaa4d81c02dfaf10e88d53aa",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -7677,7 +8203,7 @@
       "case_id": "subdivide-catmull-tetra",
       "operation_id": "mesh.subdivide.catmull_clark",
       "revision": 1,
-      "worker_manifest_sha256": "e9dfe99e7b2a858f3d9f0cbf8c8dbb424f3c7c32776a0885e45b9e51bf6a1c9b",
+      "worker_manifest_sha256": "36357bf97a2810124205d29a9e650deff56a2678aaa4d81c02dfaf10e88d53aa",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -7837,7 +8363,7 @@
       "case_id": "subdivide-loop-quad-input-rejected",
       "operation_id": "mesh.subdivide.loop",
       "revision": 1,
-      "worker_manifest_sha256": "e9dfe99e7b2a858f3d9f0cbf8c8dbb424f3c7c32776a0885e45b9e51bf6a1c9b",
+      "worker_manifest_sha256": "36357bf97a2810124205d29a9e650deff56a2678aaa4d81c02dfaf10e88d53aa",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -7889,7 +8415,7 @@
       "case_id": "subdivide-steps-over-limit-rejected",
       "operation_id": "mesh.subdivide.loop",
       "revision": 1,
-      "worker_manifest_sha256": "e9dfe99e7b2a858f3d9f0cbf8c8dbb424f3c7c32776a0885e45b9e51bf6a1c9b",
+      "worker_manifest_sha256": "36357bf97a2810124205d29a9e650deff56a2678aaa4d81c02dfaf10e88d53aa",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -7941,7 +8467,7 @@
       "case_id": "subdivide-loop-moved-vertex-rejected",
       "operation_id": "mesh.validate.loop",
       "revision": 1,
-      "worker_manifest_sha256": "e9dfe99e7b2a858f3d9f0cbf8c8dbb424f3c7c32776a0885e45b9e51bf6a1c9b",
+      "worker_manifest_sha256": "36357bf97a2810124205d29a9e650deff56a2678aaa4d81c02dfaf10e88d53aa",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -8002,7 +8528,7 @@
       "case_id": "subdivide-catmull-moved-vertex-rejected",
       "operation_id": "mesh.validate.catmull_clark",
       "revision": 1,
-      "worker_manifest_sha256": "e9dfe99e7b2a858f3d9f0cbf8c8dbb424f3c7c32776a0885e45b9e51bf6a1c9b",
+      "worker_manifest_sha256": "36357bf97a2810124205d29a9e650deff56a2678aaa4d81c02dfaf10e88d53aa",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
