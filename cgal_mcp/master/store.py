@@ -17,7 +17,7 @@ from typing import Any
 from .errors import InvalidInput, WorkerFailure
 from .formats import Inspection, format_from_path
 from .supervisor import _assign_windows_job, _close_windows_job, _posix_limit
-from .util import (ANALYSIS_REPORT_TYPES, REPORT_TYPES, canonical_json, copy_hash_bounded,
+from .util import (ANALYSIS_REPORT_TYPES, REPORT_TYPES, UNITLESS_INPUT_TYPES, canonical_json, copy_hash_bounded,
                    digest_file, valid_artifact_unit, within)
 
 
@@ -231,7 +231,8 @@ class ArtifactStore:
         if not source.is_file():
             raise InvalidInput("import_source", "Import source must be a regular file")
         if not valid_artifact_unit(artifact_type, unit):
-            expected = "none" if artifact_type in REPORT_TYPES else "mm, cm or m"
+            expected = ("none" if artifact_type in REPORT_TYPES or artifact_type in UNITLESS_INPUT_TYPES
+                        else "mm, cm or m")
             raise InvalidInput("artifact_unit", f"Artifact unit must be {expected}")
         maximum_bytes = (MAX_ANALYSIS_REPORT_BYTES if artifact_type in ANALYSIS_REPORT_TYPES
                          else MAX_IMPORT_BYTES)

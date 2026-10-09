@@ -43,14 +43,14 @@
   },
   "family_contract_sha256": "5c98d8a6e4257c94210dda33c3408ee26b5c567e26c1d30fa6bf3a280d0253c3",
   "family_contract_source_path": "scripts/master_replay_families.py",
-  "family_contract_source_sha256": "454b3d0e1b07333738ea8c56cb1ab550ae3982ecdd4b38e1304aa01c77616fdb",
+  "family_contract_source_sha256": "f07fe8c99ae5f1393ef31652f3af6a9eb42b9599895e3731dadc6a6139fc2fef",
   "family_contract_source_hash_encoding": "utf8-lf",
   "catalog_baseline_sha256": "143ec18a5b64d506aad60dc24b0a1ea30940c715d1223b3465fa140aeb9d02a7",
-  "operation_registry_sha256": "b150ff419526914729d5eba0ec25d3e84a169fed9a1d0356ef85e50e8351630a",
+  "operation_registry_sha256": "17bd1b7c53ed7bf5813c679c3f5957e0eacc51ab6ef78fac7f6295e893ea7958",
   "operation_registry_hash_encoding": "utf8-lf",
   "policy_catalog_sha256": "45f4be759288aaeb834a3ce97aa64ee7768048b15534618fc8c19512801f9a9f",
   "policy_catalog_hash_encoding": "utf8-lf",
-  "worker_sha256": "b351f376717f4fd40286cadb08b2ad2efa7f47fe2a9b42581f4078b222e0d1a2",
+  "worker_sha256": "08f8eaa3c9ae204ae873b13938280a45504a7512ddf5dee18ff234f0e1f6aa19",
   "worker_binary_format": "pe",
   "worker_manifest": {
     "actual_cgal_version": "6.2.1",
@@ -4952,6 +4952,271 @@
         "supported_kernels": [
           "package_recommended"
         ]
+      },
+      {
+        "dependencies": [
+          "QP_solver"
+        ],
+        "effective_kernel": "exact:CGAL::Gmpq",
+        "id": "optimization.quadratic_program",
+        "info": {
+          "input_format": "json",
+          "maximum_constraints": 64,
+          "maximum_variables": 12,
+          "output_format": "json",
+          "validator_parameter_bindings": {
+            "optimization.validate.quadratic_program": {
+              "solver": "solver"
+            }
+          },
+          "validators": [
+            "optimization.validate.quadratic_program"
+          ]
+        },
+        "input_types": [
+          "QuadraticProgram"
+        ],
+        "output_type": "OptimizationReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Interpolation",
+          "Triangulation_2"
+        ],
+        "effective_kernel": "selected_by_parameter:method",
+        "id": "optimization.interpolate",
+        "info": {
+          "input_format": "json",
+          "kernels": {
+            "linear": "CGAL::Exact_predicates_exact_constructions_kernel",
+            "sibson_c1": "CGAL::Exact_predicates_inexact_constructions_kernel"
+          },
+          "maximum_queries": 32,
+          "maximum_sites": 128,
+          "output_format": "json",
+          "validator_parameter_bindings": {
+            "optimization.validate.interpolation": {
+              "method": "method"
+            }
+          },
+          "validators": [
+            "optimization.validate.interpolation"
+          ]
+        },
+        "input_types": [
+          "InterpolationData2"
+        ],
+        "output_type": "OptimizationReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Surface_mesh_approximation",
+          "AABB_tree"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "optimization.approximate_mesh",
+        "info": {
+          "input_format": "off",
+          "maximum_faces": 20000,
+          "maximum_proxies": 200,
+          "output_format": "json",
+          "validator_parameter_bindings": {
+            "optimization.validate.mesh_approximation": {
+              "max_number_of_proxies": "max_number_of_proxies",
+              "number_of_iterations": "number_of_iterations",
+              "seeding": "seeding"
+            }
+          },
+          "validators": [
+            "optimization.validate.mesh_approximation"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "OptimizationReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Matrix_search"
+        ],
+        "effective_kernel": "exact:CGAL::Gmpq",
+        "id": "optimization.matrix_search",
+        "info": {
+          "input_format": "json",
+          "maximum_points": 2000,
+          "output_format": "json",
+          "validator_parameter_bindings": {
+            "optimization.validate.matrix_search": {
+              "centers": "centers"
+            }
+          },
+          "validators": [
+            "optimization.validate.matrix_search"
+          ]
+        },
+        "input_types": [
+          "PointSet1"
+        ],
+        "output_type": "OptimizationReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "QP_solver"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "optimization.validate.quadratic_program",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "objective_convex",
+            "primal_feasible",
+            "certificate_valid",
+            "objective_matches",
+            "result_set_complete"
+          ],
+          "independence": "GMP rationals; certificate lemmas; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "OptimizationReport",
+          "QuadraticProgram"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Interpolation",
+          "Triangulation_2"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "optimization.validate.interpolation",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "kernel_matches",
+            "coordinates_match",
+            "interpolated_values_match",
+            "result_set_complete"
+          ],
+          "independence": "exact Voronoi-area clipping in GMP rationals; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "OptimizationReport",
+          "InterpolationData2"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Surface_mesh_approximation"
+        ],
+        "effective_kernel": "long_double_recomputation",
+        "id": "optimization.validate.mesh_approximation",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "partition_complete",
+            "patches_connected",
+            "proxies_fit_patches",
+            "l21_error_matches",
+            "output_mesh_valid",
+            "deviation_matches",
+            "result_set_complete"
+          ],
+          "independence": "long double recomputation and brute-force distances; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "OptimizationReport",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Matrix_search"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "optimization.validate.matrix_search",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "diameter_is_candidate",
+            "diameter_feasible",
+            "smaller_candidate_infeasible",
+            "centers_cover_points",
+            "result_set_complete"
+          ],
+          "independence": "GMP rationals; exhaustive candidate scan; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "OptimizationReport",
+          "PointSet1"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
       }
     ],
     "protocol": 1,
@@ -4963,7 +5228,7 @@
     ],
     "worker": "cgal-master-worker"
   },
-  "worker_manifest_sha256": "54296ed6f184d6e94bce1bbfe8f95a9ac8756d2fb272fc4fec66e84fdaeb49de",
+  "worker_manifest_sha256": "d962387cfcb3db540028e99a5f8c5100785f398a97eb3551de4b312f66821be1",
   "tests": [
     {
       "id": "family-7.13-replay-cases",
@@ -5069,7 +5334,7 @@
       "case_id": "hull2-grid",
       "operation_id": "hull.convex_2",
       "revision": 1,
-      "worker_manifest_sha256": "54296ed6f184d6e94bce1bbfe8f95a9ac8756d2fb272fc4fec66e84fdaeb49de",
+      "worker_manifest_sha256": "d962387cfcb3db540028e99a5f8c5100785f398a97eb3551de4b312f66821be1",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -5230,7 +5495,7 @@
       "case_id": "hull3-cube",
       "operation_id": "hull.convex_3",
       "revision": 1,
-      "worker_manifest_sha256": "54296ed6f184d6e94bce1bbfe8f95a9ac8756d2fb272fc4fec66e84fdaeb49de",
+      "worker_manifest_sha256": "d962387cfcb3db540028e99a5f8c5100785f398a97eb3551de4b312f66821be1",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -5388,7 +5653,7 @@
       "case_id": "hull2-collinear-rejected",
       "operation_id": "hull.convex_2",
       "revision": 1,
-      "worker_manifest_sha256": "54296ed6f184d6e94bce1bbfe8f95a9ac8756d2fb272fc4fec66e84fdaeb49de",
+      "worker_manifest_sha256": "d962387cfcb3db540028e99a5f8c5100785f398a97eb3551de4b312f66821be1",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -5438,7 +5703,7 @@
       "case_id": "hull3-oversized-shell-rejected",
       "operation_id": "hull.validate.convex_enclosure",
       "revision": 1,
-      "worker_manifest_sha256": "54296ed6f184d6e94bce1bbfe8f95a9ac8756d2fb272fc4fec66e84fdaeb49de",
+      "worker_manifest_sha256": "d962387cfcb3db540028e99a5f8c5100785f398a97eb3551de4b312f66821be1",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [

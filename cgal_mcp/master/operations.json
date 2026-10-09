@@ -21535,6 +21535,1538 @@
         "cgal_version": "6.2.1",
         "review_status": "self_verified_not_independently_reviewed"
       }
+    },
+    {
+      "id": "optimization.quadratic_program",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "analysis",
+      "summary": "Solve a linear or convex quadratic program (Ax rel b, l <= x <= u, minimize x^T D x + c^T x + c0) exactly with CGAL::solve_linear_program / solve_quadratic_program over CGAL::Gmpq and report the status, exact optimum and the solver's optimality, infeasibility or unboundedness certificate.",
+      "package": "QP_solver",
+      "major_requirements": [
+        "major.7.15.01"
+      ],
+      "aliases": [
+        "linear program",
+        "quadratic program",
+        "LP solver",
+        "QP solver",
+        "linear programming",
+        "\u7dda\u5f62\u8a08\u753b\u6cd5",
+        "\u4e8c\u6b21\u8a08\u753b\u6cd5"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "QP_solver"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Quadratic_program"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::solve_linear_program"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::solve_quadratic_program"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Quadratic_program_solution"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/QP_models.h"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/QP_functions.h"
+        },
+        {
+          "kind": "manual",
+          "identifier": "QP_solver/index.html"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "QP_solver",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/QP_models.h",
+            "sha256": "33b5ce26d168b56fbac587fd357473b14a65b0b029328f3cbb78f617dfb0e9aa"
+          },
+          {
+            "path": "include/CGAL/QP_functions.h",
+            "sha256": "fbaaf7175d547cf7c3f9e2b94c5c73bbf23197cb12f7edcff797d0de88e92c03"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "program",
+            "types": [
+              "QuadraticProgram"
+            ],
+            "formats": [
+              "json"
+            ],
+            "unit": "none"
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "analysis",
+            "type": "OptimizationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "solver"
+        ],
+        "properties": {
+          "solver": {
+            "type": "string",
+            "enum": [
+              "linear",
+              "quadratic"
+            ],
+            "description": "linear requires D = 0 (solve_linear_program); quadratic requires a positive semidefinite D (solve_quadratic_program)"
+          }
+        }
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 67108864
+        }
+      ],
+      "validation": {
+        "required": true,
+        "validators": [
+          "optimization.validate.quadratic_program"
+        ],
+        "bindings": {
+          "optimization.validate.quadratic_program": {
+            "artifacts": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "source": {
+                "input": "program"
+              }
+            },
+            "parameters": {
+              "solver": {
+                "parameter": "solver"
+              }
+            }
+          }
+        }
+      },
+      "output_contract": {
+        "report_schema_version": 1,
+        "geometry_mutation": false,
+        "source_sha256_preserved": true,
+        "exact_rational_strings": true,
+        "producer_diagnostics_are_non_authoritative": true
+      },
+      "dependencies": [
+        "QP_solver"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "exact:CGAL::Gmpq",
+        "info": {
+          "input_format": "json",
+          "output_format": "json",
+          "maximum_variables": 12,
+          "maximum_constraints": 64,
+          "validators": [
+            "optimization.validate.quadratic_program"
+          ],
+          "validator_parameter_bindings": {
+            "optimization.validate.quadratic_program": {
+              "solver": "solver"
+            }
+          }
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "exact arithmetic: CGAL::Gmpq input/exact type",
+        "coordinate_storage": "exact decimal/rational input strings (|numerator|, denominator < 2^53)",
+        "predicate_policy": "exact rational pivoting in the QP_solver",
+        "exact_constructions": "all reported values are canonical exact rational strings",
+        "requested_policy": "package_recommended (exact CGAL::Gmpq)"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_optimization_cases.py"
+        ],
+        "worker_manifest_operation": "optimization.quadratic_program",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "optimization.validate.quadratic_program",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "validator",
+      "summary": "Check the reported LP/QP status, optimum and certificate against the manual's certificate lemmas in exact GMP rationals, independently of the solver.",
+      "package": "QP_solver",
+      "aliases": [
+        "validate linear program",
+        "\u4e8c\u6b21\u8a08\u753b\u6cd5\u691c\u8a3c"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "QP_solver"
+        },
+        {
+          "kind": "operation_reference",
+          "identifier": "optimization.quadratic_program"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "QP_solver",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/QP_models.h",
+            "sha256": "33b5ce26d168b56fbac587fd357473b14a65b0b029328f3cbb78f617dfb0e9aa"
+          },
+          {
+            "path": "include/CGAL/QP_functions.h",
+            "sha256": "fbaaf7175d547cf7c3f9e2b94c5c73bbf23197cb12f7edcff797d0de88e92c03"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "OptimizationReport"
+            ],
+            "formats": [
+              "json"
+            ],
+            "unit": "none"
+          },
+          {
+            "slot": "source",
+            "types": [
+              "QuadraticProgram"
+            ],
+            "formats": [
+              "json"
+            ],
+            "unit": "none"
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "solver"
+        ],
+        "properties": {
+          "solver": {
+            "type": "string",
+            "enum": [
+              "linear",
+              "quadratic"
+            ],
+            "description": "linear requires D = 0 (solve_linear_program); quadratic requires a positive semidefinite D (solve_quadratic_program)"
+          }
+        }
+      },
+      "preconditions": [],
+      "validation": {
+        "required": false,
+        "validators": [],
+        "bindings": {},
+        "terminal_validator": true,
+        "validates": "optimization.quadratic_program",
+        "validates_all": [
+          "optimization.quadratic_program"
+        ],
+        "required_report_checks": {
+          "status": "pass",
+          "passed": true,
+          "validator": "optimization.validate.quadratic_program",
+          "checks.parameters_match": true,
+          "checks.source_matches": true,
+          "checks.objective_convex": true,
+          "checks.primal_feasible": true,
+          "checks.certificate_valid": true,
+          "checks.objective_matches": true,
+          "checks.result_set_complete": true
+        }
+      },
+      "output_contract": {
+        "schema": "ValidationReport/v1",
+        "required_true_checks": [
+          "parameters_match",
+          "source_matches",
+          "objective_convex",
+          "primal_feasible",
+          "certificate_valid",
+          "objective_matches",
+          "result_set_complete"
+        ],
+        "status": "pass",
+        "failure_or_indeterminate_publish": false,
+        "independence": "GMP rational recomputation: exact LDL^T convexity test, primal feasibility, the QP_solver manual's optimality/Farkas/unboundedness certificate lemmas and the exact objective; the validator translation unit includes no CGAL header"
+      },
+      "dependencies": [
+        "QP_solver"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "exact:GMP",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "objective_convex",
+            "primal_feasible",
+            "certificate_valid",
+            "objective_matches",
+            "result_set_complete"
+          ],
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation",
+          "independence": "GMP rationals; certificate lemmas; no CGAL header"
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "exact arithmetic: CGAL::Gmpq input/exact type",
+        "coordinate_storage": "exact decimal/rational input strings (|numerator|, denominator < 2^53)",
+        "predicate_policy": "exact rational pivoting in the QP_solver",
+        "exact_constructions": "all reported values are canonical exact rational strings",
+        "requested_policy": "package_recommended (exact CGAL::Gmpq)"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_optimization_cases.py"
+        ],
+        "worker_manifest_operation": "optimization.validate.quadratic_program",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "optimization.interpolate",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "analysis",
+      "summary": "Interpolate scattered 2D function data at query points with natural-neighbour (Sibson) coordinates: exact linear_interpolation on EPECK or Farin/Sibson C1 sibson_c1_interpolation with supplied gradients on EPICK, reporting coordinates, normalizer and value per query.",
+      "package": "Interpolation",
+      "major_requirements": [
+        "major.7.15.02"
+      ],
+      "aliases": [
+        "natural neighbor interpolation",
+        "scattered data interpolation",
+        "sibson interpolation",
+        "linear interpolation",
+        "\u81ea\u7136\u8fd1\u508d\u88dc\u9593",
+        "\u6563\u5e03\u30c7\u30fc\u30bf\u88dc\u9593"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Interpolation"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::natural_neighbor_coordinates_2"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::linear_interpolation"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::sibson_c1_interpolation"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Interpolation_gradient_fitting_traits_2"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Delaunay_triangulation_2"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/natural_neighbor_coordinates_2.h"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/interpolation_functions.h"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Interpolation_gradient_fitting_traits_2.h"
+        },
+        {
+          "kind": "manual",
+          "identifier": "Interpolation/index.html"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Interpolation",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/natural_neighbor_coordinates_2.h",
+            "sha256": "ca1c2eab593fd15dec22e38e1a4307cae3a33b43cc7c0254f09218c31f8fdffa"
+          },
+          {
+            "path": "include/CGAL/interpolation_functions.h",
+            "sha256": "5380818ea151a4f37ab4069743c2722bdb31f935bcbf3dcfa0146d8c547ed9b4"
+          },
+          {
+            "path": "include/CGAL/Interpolation_gradient_fitting_traits_2.h",
+            "sha256": "c50365b4a568fb8e1e4230d6a40a59d00a1ee797e96f8f5f8b15d419c37644c5"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "data",
+            "types": [
+              "InterpolationData2"
+            ],
+            "formats": [
+              "json"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "analysis",
+            "type": "OptimizationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "method"
+        ],
+        "properties": {
+          "method": {
+            "type": "string",
+            "enum": [
+              "linear",
+              "sibson_c1"
+            ],
+            "description": "linear: exact linear_interpolation (EPECK); sibson_c1: sibson_c1_interpolation with site gradients (EPICK)"
+          }
+        }
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 67108864
+        }
+      ],
+      "validation": {
+        "required": true,
+        "validators": [
+          "optimization.validate.interpolation"
+        ],
+        "bindings": {
+          "optimization.validate.interpolation": {
+            "artifacts": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "source": {
+                "input": "data"
+              }
+            },
+            "parameters": {
+              "method": {
+                "parameter": "method"
+              }
+            }
+          }
+        }
+      },
+      "output_contract": {
+        "report_schema_version": 1,
+        "geometry_mutation": false,
+        "source_sha256_preserved": true,
+        "exact_rational_strings": true,
+        "producer_diagnostics_are_non_authoritative": true
+      },
+      "dependencies": [
+        "Interpolation",
+        "Triangulation_2"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "selected_by_parameter:method",
+        "info": {
+          "input_format": "json",
+          "output_format": "json",
+          "kernels": {
+            "linear": "CGAL::Exact_predicates_exact_constructions_kernel",
+            "sibson_c1": "CGAL::Exact_predicates_inexact_constructions_kernel"
+          },
+          "maximum_sites": 128,
+          "maximum_queries": 32,
+          "validators": [
+            "optimization.validate.interpolation"
+          ],
+          "validator_parameter_bindings": {
+            "optimization.validate.interpolation": {
+              "method": "method"
+            }
+          }
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "selected by the method parameter: EPECK for linear, EPICK for sibson_c1",
+        "coordinate_storage": "exact rational input strings; binary64 round-to-nearest for EPICK",
+        "predicate_policy": "exact predicates (EPICK/EPECK)",
+        "exact_constructions": "EPECK (linear) only; sibson_c1 needs sqrt and runs on EPICK with a bounded validator tolerance",
+        "requested_policy": "package_recommended (the concrete kernel follows the method parameter)"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_optimization_cases.py"
+        ],
+        "worker_manifest_operation": "optimization.interpolate",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "optimization.validate.interpolation",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "validator",
+      "summary": "Recompute natural-neighbour (Sibson) coordinates by exact Voronoi-area clipping and re-evaluate the linear or Sibson C1 interpolant for every query.",
+      "package": "Interpolation",
+      "aliases": [
+        "validate natural neighbor interpolation",
+        "\u6563\u5e03\u30c7\u30fc\u30bf\u88dc\u9593\u691c\u8a3c"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Interpolation"
+        },
+        {
+          "kind": "operation_reference",
+          "identifier": "optimization.interpolate"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Interpolation",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/natural_neighbor_coordinates_2.h",
+            "sha256": "ca1c2eab593fd15dec22e38e1a4307cae3a33b43cc7c0254f09218c31f8fdffa"
+          },
+          {
+            "path": "include/CGAL/interpolation_functions.h",
+            "sha256": "5380818ea151a4f37ab4069743c2722bdb31f935bcbf3dcfa0146d8c547ed9b4"
+          },
+          {
+            "path": "include/CGAL/Interpolation_gradient_fitting_traits_2.h",
+            "sha256": "c50365b4a568fb8e1e4230d6a40a59d00a1ee797e96f8f5f8b15d419c37644c5"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "OptimizationReport"
+            ],
+            "formats": [
+              "json"
+            ],
+            "unit": "none"
+          },
+          {
+            "slot": "source",
+            "types": [
+              "InterpolationData2"
+            ],
+            "formats": [
+              "json"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "method"
+        ],
+        "properties": {
+          "method": {
+            "type": "string",
+            "enum": [
+              "linear",
+              "sibson_c1"
+            ],
+            "description": "linear: exact linear_interpolation (EPECK); sibson_c1: sibson_c1_interpolation with site gradients (EPICK)"
+          }
+        }
+      },
+      "preconditions": [],
+      "validation": {
+        "required": false,
+        "validators": [],
+        "bindings": {},
+        "terminal_validator": true,
+        "validates": "optimization.interpolate",
+        "validates_all": [
+          "optimization.interpolate"
+        ],
+        "required_report_checks": {
+          "status": "pass",
+          "passed": true,
+          "validator": "optimization.validate.interpolation",
+          "checks.parameters_match": true,
+          "checks.source_matches": true,
+          "checks.kernel_matches": true,
+          "checks.coordinates_match": true,
+          "checks.interpolated_values_match": true,
+          "checks.result_set_complete": true
+        }
+      },
+      "output_contract": {
+        "schema": "ValidationReport/v1",
+        "required_true_checks": [
+          "parameters_match",
+          "source_matches",
+          "kernel_matches",
+          "coordinates_match",
+          "interpolated_values_match",
+          "result_set_complete"
+        ],
+        "status": "pass",
+        "failure_or_indeterminate_publish": false,
+        "independence": "Natural-neighbour coordinates recomputed as exact Voronoi-cell area stolen by the inserted query (rational half-plane clipping), strict hull-interior test and the Farin/Sibson C1 formula re-evaluated independently; no CGAL header"
+      },
+      "dependencies": [
+        "Interpolation",
+        "Triangulation_2"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "exact:GMP",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "kernel_matches",
+            "coordinates_match",
+            "interpolated_values_match",
+            "result_set_complete"
+          ],
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation",
+          "independence": "exact Voronoi-area clipping in GMP rationals; no CGAL header"
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "selected by the method parameter: EPECK for linear, EPICK for sibson_c1",
+        "coordinate_storage": "exact rational input strings; binary64 round-to-nearest for EPICK",
+        "predicate_policy": "exact predicates (EPICK/EPECK)",
+        "exact_constructions": "EPECK (linear) only; sibson_c1 needs sqrt and runs on EPICK with a bounded validator tolerance",
+        "requested_policy": "package_recommended (the concrete kernel follows the method parameter)"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_optimization_cases.py"
+        ],
+        "worker_manifest_operation": "optimization.validate.interpolation",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "optimization.approximate_mesh",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "analysis",
+      "summary": "Approximate a closed triangle surface mesh with Variational Shape Approximation (approximate_triangle_mesh, L21 metric) into planar proxies and an anchor-based output triangle mesh, reporting the face partition, proxies, squared L21 error and anchor deviation.",
+      "package": "Surface_mesh_approximation",
+      "major_requirements": [
+        "major.7.15.03"
+      ],
+      "aliases": [
+        "variational shape approximation",
+        "VSA",
+        "mesh approximation",
+        "planar proxy fitting",
+        "\u5e73\u9762\u8fd1\u4f3c",
+        "\u30e1\u30c3\u30b7\u30e5\u8fd1\u4f3c"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Surface_mesh_approximation"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Surface_mesh_approximation::approximate_triangle_mesh"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Variational_shape_approximation"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Surface_mesh"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Surface_mesh_approximation/approximate_triangle_mesh.h"
+        },
+        {
+          "kind": "manual",
+          "identifier": "Surface_mesh_approximation/index.html"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Surface_mesh_approximation",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Surface_mesh_approximation/approximate_triangle_mesh.h",
+            "sha256": "037d17cb68e48cbb4cf49f64aed292b7a80ca4f0ca456b73d3f4d0b56c2b2464"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "mesh",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "analysis",
+            "type": "OptimizationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "max_number_of_proxies",
+          "number_of_iterations",
+          "seeding"
+        ],
+        "properties": {
+          "max_number_of_proxies": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 200,
+            "description": "Number of planar proxies requested from seeding"
+          },
+          "number_of_iterations": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "description": "Lloyd relaxation iterations"
+          },
+          "seeding": {
+            "type": "string",
+            "enum": [
+              "hierarchical",
+              "incremental"
+            ],
+            "description": "Deterministic VSA seeding method"
+          }
+        }
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 67108864
+        }
+      ],
+      "validation": {
+        "required": true,
+        "validators": [
+          "optimization.validate.mesh_approximation"
+        ],
+        "bindings": {
+          "optimization.validate.mesh_approximation": {
+            "artifacts": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "source": {
+                "input": "mesh"
+              }
+            },
+            "parameters": {
+              "max_number_of_proxies": {
+                "parameter": "max_number_of_proxies"
+              },
+              "number_of_iterations": {
+                "parameter": "number_of_iterations"
+              },
+              "seeding": {
+                "parameter": "seeding"
+              }
+            }
+          }
+        }
+      },
+      "output_contract": {
+        "report_schema_version": 1,
+        "geometry_mutation": false,
+        "source_sha256_preserved": true,
+        "exact_rational_strings": true,
+        "producer_diagnostics_are_non_authoritative": true
+      },
+      "dependencies": [
+        "Surface_mesh_approximation",
+        "AABB_tree"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "input_format": "off",
+          "output_format": "json",
+          "maximum_faces": 20000,
+          "maximum_proxies": 200,
+          "validators": [
+            "optimization.validate.mesh_approximation"
+          ],
+          "validator_parameter_bindings": {
+            "optimization.validate.mesh_approximation": {
+              "max_number_of_proxies": "max_number_of_proxies",
+              "number_of_iterations": "number_of_iterations",
+              "seeding": "seeding"
+            }
+          }
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "coordinate_storage": "binary64 OFF coordinates",
+        "predicate_policy": "exact predicates; inexact constructions (proxy fitting, anchors)",
+        "exact_constructions": "none; the validator uses bounded relative tolerances",
+        "requested_policy": "package_recommended (EPICK)"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_optimization_cases.py"
+        ],
+        "worker_manifest_operation": "optimization.approximate_mesh",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "optimization.validate.mesh_approximation",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "validator",
+      "summary": "Recompute the VSA partition properties, L21 proxies, squared error, output mesh validity and anchor deviation from the source mesh independently.",
+      "package": "Surface_mesh_approximation",
+      "aliases": [
+        "validate variational shape approximation",
+        "\u30e1\u30c3\u30b7\u30e5\u8fd1\u4f3c\u691c\u8a3c"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Surface_mesh_approximation"
+        },
+        {
+          "kind": "operation_reference",
+          "identifier": "optimization.approximate_mesh"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Surface_mesh_approximation",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Surface_mesh_approximation/approximate_triangle_mesh.h",
+            "sha256": "037d17cb68e48cbb4cf49f64aed292b7a80ca4f0ca456b73d3f4d0b56c2b2464"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "OptimizationReport"
+            ],
+            "formats": [
+              "json"
+            ],
+            "unit": "none"
+          },
+          {
+            "slot": "source",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "max_number_of_proxies",
+          "number_of_iterations",
+          "seeding"
+        ],
+        "properties": {
+          "max_number_of_proxies": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 200,
+            "description": "Number of planar proxies requested from seeding"
+          },
+          "number_of_iterations": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "description": "Lloyd relaxation iterations"
+          },
+          "seeding": {
+            "type": "string",
+            "enum": [
+              "hierarchical",
+              "incremental"
+            ],
+            "description": "Deterministic VSA seeding method"
+          }
+        }
+      },
+      "preconditions": [],
+      "validation": {
+        "required": false,
+        "validators": [],
+        "bindings": {},
+        "terminal_validator": true,
+        "validates": "optimization.approximate_mesh",
+        "validates_all": [
+          "optimization.approximate_mesh"
+        ],
+        "required_report_checks": {
+          "status": "pass",
+          "passed": true,
+          "validator": "optimization.validate.mesh_approximation",
+          "checks.parameters_match": true,
+          "checks.source_matches": true,
+          "checks.partition_complete": true,
+          "checks.patches_connected": true,
+          "checks.proxies_fit_patches": true,
+          "checks.l21_error_matches": true,
+          "checks.output_mesh_valid": true,
+          "checks.deviation_matches": true,
+          "checks.result_set_complete": true
+        }
+      },
+      "output_contract": {
+        "schema": "ValidationReport/v1",
+        "required_true_checks": [
+          "parameters_match",
+          "source_matches",
+          "partition_complete",
+          "patches_connected",
+          "proxies_fit_patches",
+          "l21_error_matches",
+          "output_mesh_valid",
+          "deviation_matches",
+          "result_set_complete"
+        ],
+        "status": "pass",
+        "failure_or_indeterminate_publish": false,
+        "independence": "Face partition, patch connectivity, area-weighted L21 proxy normals, the squared L21 error (unit^2), output-mesh validity and brute-force anchor-to-source distances recomputed in long double; no CGAL header"
+      },
+      "dependencies": [
+        "Surface_mesh_approximation"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "long_double_recomputation",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "partition_complete",
+            "patches_connected",
+            "proxies_fit_patches",
+            "l21_error_matches",
+            "output_mesh_valid",
+            "deviation_matches",
+            "result_set_complete"
+          ],
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation",
+          "independence": "long double recomputation and brute-force distances; no CGAL header"
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "coordinate_storage": "binary64 OFF coordinates",
+        "predicate_policy": "exact predicates; inexact constructions (proxy fitting, anchors)",
+        "exact_constructions": "none; the validator uses bounded relative tolerances",
+        "requested_policy": "package_recommended (EPICK)"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_optimization_cases.py"
+        ],
+        "worker_manifest_operation": "optimization.validate.mesh_approximation",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "optimization.matrix_search",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "analysis",
+      "summary": "Solve the 1D interval p-center problem exactly with CGAL::sorted_matrix_search over the sorted Cartesian_matrix of pairwise gaps and a greedy cover feasibility test, reporting the optimal diameter, radius, centers and point assignment.",
+      "package": "Matrix_search",
+      "major_requirements": [
+        "major.7.15.04"
+      ],
+      "aliases": [
+        "sorted matrix search",
+        "p-center",
+        "interval covering",
+        "minimax location",
+        "\u30bd\u30fc\u30c8\u6e08\u307f\u884c\u5217\u63a2\u7d22",
+        "p\u30bb\u30f3\u30bf\u30fc"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Matrix_search"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::sorted_matrix_search"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Cartesian_matrix"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Sorted_matrix_search_traits_adaptor"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/sorted_matrix_search.h"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Cartesian_matrix.h"
+        },
+        {
+          "kind": "manual",
+          "identifier": "Matrix_search/index.html"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Matrix_search",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/sorted_matrix_search.h",
+            "sha256": "5ab69f871f924a8c5814c458b8c9fd7382602c84bc66830384797c9193e6d06a"
+          },
+          {
+            "path": "include/CGAL/Cartesian_matrix.h",
+            "sha256": "29ae2de17c1c52d724abb74878c297a00dc9ba5bcecd984ef9a5f70a6777de56"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "points",
+            "types": [
+              "PointSet1"
+            ],
+            "formats": [
+              "json"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "analysis",
+            "type": "OptimizationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "centers"
+        ],
+        "properties": {
+          "centers": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1999,
+            "description": "Number of interval centers p (must be below the point count)"
+          }
+        }
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 67108864
+        }
+      ],
+      "validation": {
+        "required": true,
+        "validators": [
+          "optimization.validate.matrix_search"
+        ],
+        "bindings": {
+          "optimization.validate.matrix_search": {
+            "artifacts": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "source": {
+                "input": "points"
+              }
+            },
+            "parameters": {
+              "centers": {
+                "parameter": "centers"
+              }
+            }
+          }
+        }
+      },
+      "output_contract": {
+        "report_schema_version": 1,
+        "geometry_mutation": false,
+        "source_sha256_preserved": true,
+        "exact_rational_strings": true,
+        "producer_diagnostics_are_non_authoritative": true
+      },
+      "dependencies": [
+        "Matrix_search"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "exact:CGAL::Gmpq",
+        "info": {
+          "input_format": "json",
+          "output_format": "json",
+          "maximum_points": 2000,
+          "validators": [
+            "optimization.validate.matrix_search"
+          ],
+          "validator_parameter_bindings": {
+            "optimization.validate.matrix_search": {
+              "centers": "centers"
+            }
+          }
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "exact arithmetic: CGAL::Gmpq matrix entries",
+        "coordinate_storage": "exact decimal/rational input strings (|numerator|, denominator < 2^53)",
+        "predicate_policy": "exact rational comparisons",
+        "exact_constructions": "all reported values are canonical exact rational strings",
+        "requested_policy": "package_recommended (exact CGAL::Gmpq)"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_optimization_cases.py"
+        ],
+        "worker_manifest_operation": "optimization.matrix_search",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "optimization.validate.matrix_search",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "validator",
+      "summary": "Verify the p-center optimum exhaustively in exact rationals: candidate, feasible, minimal, and covered by the reported centers.",
+      "package": "Matrix_search",
+      "aliases": [
+        "validate sorted matrix search",
+        "p\u30bb\u30f3\u30bf\u30fc\u691c\u8a3c"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Matrix_search"
+        },
+        {
+          "kind": "operation_reference",
+          "identifier": "optimization.matrix_search"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Matrix_search",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/sorted_matrix_search.h",
+            "sha256": "5ab69f871f924a8c5814c458b8c9fd7382602c84bc66830384797c9193e6d06a"
+          },
+          {
+            "path": "include/CGAL/Cartesian_matrix.h",
+            "sha256": "29ae2de17c1c52d724abb74878c297a00dc9ba5bcecd984ef9a5f70a6777de56"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "OptimizationReport"
+            ],
+            "formats": [
+              "json"
+            ],
+            "unit": "none"
+          },
+          {
+            "slot": "source",
+            "types": [
+              "PointSet1"
+            ],
+            "formats": [
+              "json"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "centers"
+        ],
+        "properties": {
+          "centers": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1999,
+            "description": "Number of interval centers p (must be below the point count)"
+          }
+        }
+      },
+      "preconditions": [],
+      "validation": {
+        "required": false,
+        "validators": [],
+        "bindings": {},
+        "terminal_validator": true,
+        "validates": "optimization.matrix_search",
+        "validates_all": [
+          "optimization.matrix_search"
+        ],
+        "required_report_checks": {
+          "status": "pass",
+          "passed": true,
+          "validator": "optimization.validate.matrix_search",
+          "checks.parameters_match": true,
+          "checks.source_matches": true,
+          "checks.diameter_is_candidate": true,
+          "checks.diameter_feasible": true,
+          "checks.smaller_candidate_infeasible": true,
+          "checks.centers_cover_points": true,
+          "checks.result_set_complete": true
+        }
+      },
+      "output_contract": {
+        "schema": "ValidationReport/v1",
+        "required_true_checks": [
+          "parameters_match",
+          "source_matches",
+          "diameter_is_candidate",
+          "diameter_feasible",
+          "smaller_candidate_infeasible",
+          "centers_cover_points",
+          "result_set_complete"
+        ],
+        "status": "pass",
+        "failure_or_indeterminate_publish": false,
+        "independence": "Exhaustive scan of all pairwise-gap candidates in GMP rationals: the reported diameter is a candidate, feasible, minimal, and the centers cover every point; no CGAL header"
+      },
+      "dependencies": [
+        "Matrix_search"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "exact:GMP",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "diameter_is_candidate",
+            "diameter_feasible",
+            "smaller_candidate_infeasible",
+            "centers_cover_points",
+            "result_set_complete"
+          ],
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation",
+          "independence": "GMP rationals; exhaustive candidate scan; no CGAL header"
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "exact arithmetic: CGAL::Gmpq matrix entries",
+        "coordinate_storage": "exact decimal/rational input strings (|numerator|, denominator < 2^53)",
+        "predicate_policy": "exact rational comparisons",
+        "exact_constructions": "all reported values are canonical exact rational strings",
+        "requested_policy": "package_recommended (exact CGAL::Gmpq)"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_optimization_cases.py"
+        ],
+        "worker_manifest_operation": "optimization.validate.matrix_search",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
     }
   ]
 }

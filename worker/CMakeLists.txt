@@ -67,9 +67,15 @@ add_executable(cgal-master-worker
   master/kernel/kernel_query_set.cpp
   master/kernel/kernel_operations.cpp
   master/kernel/kernel_validators.cpp
+  master/optimization/optimization_common.cpp
+  master/optimization/optimization_operations.cpp
+  master/optimization/optimization_validators.cpp
 )
 # smooth_shape needs CGAL's Eigen sparse solver; enable it only where used.
 set_source_files_properties(master/wave_d/remesh_operations.cpp PROPERTIES
+  COMPILE_DEFINITIONS CGAL_EIGEN3_ENABLED)
+# Surface_mesh_approximation (VSA) needs CGAL's Eigen linear algebra.
+set_source_files_properties(master/optimization/optimization_operations.cpp PROPERTIES
   COMPILE_DEFINITIONS CGAL_EIGEN3_ENABLED)
 target_compile_features(cgal-master-worker PRIVATE cxx_std_17)
 target_compile_definitions(cgal-master-worker PRIVATE

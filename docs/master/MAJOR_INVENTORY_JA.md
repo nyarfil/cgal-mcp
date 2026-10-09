@@ -52,8 +52,9 @@ CIは台帳を公式配布物から再生成してバイト一致を検査しま
 | 7.12 多角形 | 1/7 | 7.12.01 Polygon_2/with_holesの性質・内外判定 |
 | 7.13 凸包等 | 1/5 | 7.13.01 2D/3D凸包 |
 | 7.14 メッシュ生成 | 4/4 | 7.14.01 Mesh_2（`refine_Delaunay_mesh_2`）、7.14.02 Surface_mesher（`make_surface_mesh`、球・楕円体・トーラス）、7.14.03 Mesh_3（`make_mesh_3`、同3種のimplicit domainと、閉じた三角形メッシュの多面体domain）、7.14.04 `Mesh_criteria_3`の型付きcriteria（列挙boxのsizing field、facet_topology、多面体の1D特徴辺edge_size）。画像domainと複数パッチtopologyは未実装 |
+| 7.15 最適化・数値幾何 | 4/4 | 7.15.01 QP_solver（`Quadratic_program<Gmpq>`、`solve_linear_program`・`solve_quadratic_program`、最適・実行不能・非有界と証明書）、.02 Interpolation（`natural_neighbor_coordinates_2`＋`linear_interpolation`はEPECKで線形場を厳密再現、`sibson_c1_interpolation`は勾配付きで球面二次関数を再現）、.03 Surface_mesh_approximation（`approximate_triangle_mesh`、L21のVSA、二乗誤差はmm2）、.04 Matrix_search（`sorted_matrix_search`による1次元区間p-center）。validatorはCGALを使わない独立再計算（GMP有理数の証明書補題・Voronoi面積・全候補走査、VSAはlong double） |
 
-未結合要求の不足（7.1・7.6は5/5結合済みで不足なし）:
+未結合要求の不足（7.1・7.6は5/5、7.15は4/4結合済みで不足なし）:
 
 - 7.3.02: connected component / keep largest を公開Operationにしていない。
 - 7.3.05: sharp edge / segmentation がない。

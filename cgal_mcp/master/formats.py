@@ -528,6 +528,7 @@ REPORT_JSON_TYPES = {
     "Polygon2AnalysisReport": "analysis_kind",
     "SpatialQueryReport": "query_kind",
     "KernelReport": "report_kind",
+    "OptimizationReport": "report_kind",
 }
 KERNEL_PRIMITIVE_DIMENSIONS = {
     "Point_2": 2, "Vector_2": 2, "Segment_2": 2, "Line_2": 2, "Ray_2": 2, "Triangle_2": 2,
@@ -581,6 +582,89 @@ def _kernel_query_set(value: Any) -> Inspection:
     return Inspection("KernelQuerySet", "json", {"finite": True},
                       {"primitive_count": len(primitives), "query_count": len(queries),
                        "point_count": len(points), "bounds": _bounds(points) if points else None})
+
+
+MAX_QP_VARIABLES = 12
+MAX_QP_CONSTRAINTS = 64
+MAX_INTERPOLATION_SITES = 128
+MAX_INTERPOLATION_QUERIES = 32
+MAX_POINTSET1_POINTS = 2000
+
+
+def _exact_rational(item: Any, type_name: str, where: str) -> Fraction:
+    if not isinstance(item, str) or not KERNEL_RATIONAL_RE.match(item) or len(item) > 64:
+        raise InvalidInput("schema_mismatch", f"{type_name} {where} must be an exact rational string")
+    value = Fraction(item)
+    if abs(value.numerator) >= 2 ** 53 or value.denominator >= 2 ** 53:
+        raise InvalidInput("inexact_integer", f"{type_name} {where} exceeds the exact 2^53 range")
+    return value
+
+
+def _rational_row(items: Any, length: int, type_name: str, where: str) -> list[Fraction]:
+    if not isinstance(items, list) or len(items) != length:
+        raise InvalidInput("schema_mismatch", f"{type_name} {where} must have {length} entries")
+    return [_exact_rational(x, type_name, where) for x in items]
+
+
+def _quadratic_program(value: Any) -> Inspection:
+    """Structural screen of a dimensionless LP/QP; the worker re-parses it strictly."""
+    data = _object(value, "QuadraticProgram", {"variables", "constraints", "bounds", "objective"})
+    n = data["variables"]
+    if not isinstance(n, int) or isinstance(n, bool) or not 1 <= n <= MAX_QP_VARIABLES:
+        raise InvalidInput("schema_mismatch", "QuadraticProgram variables must be an integer in [1, 12]")
+    constraints = data["constraints"]
+    if not isinstance(constraints, list) or len(constraints) > MAX_QP_CONSTRAINTS:
+        raise InvalidInput("schema_mismatch", "QuadraticProgram constraints must be a bounded array")
+    for row in constraints:
+        row = _object(row, "QuadraticProgram constraint", {"coefficients", "relation", "rhs"})
+        _rational_row(row["coefficients"], n, "QuadraticProgram", "coefficients")
+        if row["relation"] not in ("<=", "=", ">="):
+            raise InvalidInput("schema_mismatch", "QuadraticProgram relation must be <=, = or >=")
+        _exact_rational(row["rhs"], "QuadraticProgram", "rhs")
+    bounds = data["bounds"]
+    if not isinstance(bounds, list) or len(bounds) != n:
+        raise InvalidInput("schema_mismatch", "QuadraticProgram needs one bound per variable")
+    for bound in bounds:
+        bound = _object(bound, "QuadraticProgram bound", {"lower", "upper"})
+        limits = [None if bound[k] is None else _exact_rational(bound[k], "QuadraticProgram", k)
+                  for k in ("lower", "upper")]
+        if limits[0] is not None and limits[1] is not None and limits[0] > limits[1]:
+            raise InvalidInput("schema_mismatch", "QuadraticProgram lower bound exceeds upper bound")
+    objective = _object(data["objective"], "QuadraticProgram objective", {"c", "c0", "d"})
+    _rational_row(objective["c"], n, "QuadraticProgram", "c")
+    _exact_rational(objective["c0"], "QuadraticProgram", "c0")
+    if not isinstance(objective["d"], list) or len(objective["d"]) != n:
+        raise InvalidInput("schema_mismatch", "QuadraticProgram d must be an n x n matrix")
+    d = [_rational_row(row, n, "QuadraticProgram", "d") for row in objective["d"]]
+    if any(d[i][j] != d[j][i] for i in range(n) for j in range(n)):
+        raise InvalidInput("schema_mismatch", "QuadraticProgram d must be symmetric")
+    return Inspection("QuadraticProgram", "json", {"finite": True},
+                      {"variable_count": n, "constraint_count": len(constraints),
+                       "quadratic": any(x != 0 for row in d for x in row)})
+
+
+def _interpolation_data(value: Any) -> Inspection:
+    """Structural screen of scattered 2D function data; the worker re-parses it strictly."""
+    data = _object(value, "InterpolationData2", {"sites", "queries"})
+    sites, queries = data["sites"], data["queries"]
+    if (not isinstance(sites, list) or not 3 <= len(sites) <= MAX_INTERPOLATION_SITES
+            or not isinstance(queries, list) or not 1 <= len(queries) <= MAX_INTERPOLATION_QUERIES):
+        raise InvalidInput("schema_mismatch", "InterpolationData2 needs 3..128 sites and 1..32 queries")
+    points: list[tuple[float, ...]] = []
+    seen: set[tuple[Fraction, ...]] = set()
+    for site in sites:
+        site = _object(site, "InterpolationData2 site", {"point", "value", "gradient"})
+        point = tuple(_rational_row(site["point"], 2, "InterpolationData2", "point"))
+        if point in seen:
+            raise InvalidInput("duplicate_site", "InterpolationData2 sites must be distinct")
+        seen.add(point)
+        _exact_rational(site["value"], "InterpolationData2", "value")
+        _rational_row(site["gradient"], 2, "InterpolationData2", "gradient")
+        points.append(tuple(float(x) for x in point))
+    for query in queries:
+        points.append(tuple(float(x) for x in _rational_row(query, 2, "InterpolationData2", "query")))
+    return _geometry("InterpolationData2", points, {},
+                     {"site_count": len(sites), "query_count": len(queries)})
 
 
 def _object(value: Any, type_name: str, keys: set[str]) -> dict[str, Any]:
@@ -680,6 +764,16 @@ def _parse_typed_json(value: Any, requested_type: str | None) -> Inspection:
                            "source": value["source"]})
     if requested_type == "KernelQuerySet":
         return _kernel_query_set(value)
+    if requested_type == "QuadraticProgram":
+        return _quadratic_program(value)
+    if requested_type == "InterpolationData2":
+        return _interpolation_data(value)
+    if requested_type == "PointSet1":
+        points = _object(value, "PointSet1", {"points"})["points"]
+        if not isinstance(points, list) or not 2 <= len(points) <= MAX_POINTSET1_POINTS:
+            raise InvalidInput("schema_mismatch", "PointSet1 needs 2..2000 exact coordinates")
+        coordinates = [(float(_exact_rational(x, "PointSet1", "point")),) for x in points]
+        return _geometry("PointSet1", coordinates, {}, {})
     if requested_type == "PointSet2":
         points = _points(_object(value, "PointSet2", {"points"})["points"], 2, "PointSet2", 1)
         return _geometry("PointSet2", points, {}, {})

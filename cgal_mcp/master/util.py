@@ -17,12 +17,16 @@ UNIT_SCALE_MM = {"mm": 1.0, "cm": 10.0, "m": 1000.0}
 
 REPORT_TYPES = frozenset({"ValidationReport", "GeometryAnalysisReport",
                           "Polygon2AnalysisReport", "SpatialQueryReport",
-                          "KernelReport"})
+                          "KernelReport", "OptimizationReport"})
 ANALYSIS_REPORT_TYPES = REPORT_TYPES - {"ValidationReport"}
+# Dimensionless typed inputs (no length unit is meaningful), e.g. LP/QP coefficient data.
+UNITLESS_INPUT_TYPES = frozenset({"QuadraticProgram"})
 
 
 def valid_artifact_unit(artifact_type: str | None, unit: str) -> bool:
-    return unit == "none" if artifact_type in REPORT_TYPES else unit in UNITS
+    if artifact_type in REPORT_TYPES or artifact_type in UNITLESS_INPUT_TYPES:
+        return unit == "none"
+    return unit in UNITS
 
 
 def canonical_json(value: Any) -> bytes:

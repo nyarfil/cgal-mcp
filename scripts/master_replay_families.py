@@ -2370,9 +2370,241 @@ FAMILY_7_1 = {
     ],
 }
 
+def _ofx(name: str, sha: str) -> dict:
+    return {"fixture": f"optimization/{name}", "sha256": sha}
+
+
+O_LP_OPTIMAL = _ofx("lp_optimal.json", "39f216d1cb4b671dcfc907fdc2f75238522b2e7f13ff0e6fb49937ddd8f56f3f")
+O_LP_INFEASIBLE = _ofx("lp_infeasible.json", "06ea282e24c6a0ddacb787b0f25b705ccadca9fd3bd3fd5993687c73e548c3ff")
+O_LP_UNBOUNDED = _ofx("lp_unbounded.json", "e0c7aedf77ab751f2a89dbf663bba48d2e15a569afb1bdc2b8c6fd7531524bd9")
+O_QP_OPTIMAL = _ofx("qp_optimal.json", "44c0aa115176621890a8ac784ae1bdc7970f46f6d9dc2ba52d413a7fcf520cae")
+O_QP_UNBOUNDED = _ofx("qp_unbounded.json", "44f43f1a37b14952dde7ab5ed2f5f84b5b3a450178fc6a4a9c5d959102d487ac")
+O_QP_NONCONVEX = _ofx("qp_nonconvex.json", "fd67140fb8d6d5981ac39427d97203b8df1a83621505099ba3c5c3f883758a17")
+O_LINEAR_FIELD = _ofx("interp_linear_field.json", "fcd79ed29c102c4170174b4adbc5247d3ee50be7a9bacad4b121fcff3e2f7054")
+O_SPHERICAL_FIELD = _ofx("interp_spherical_field.json",
+                         "db1c08c7ccbdb4576df5505edfffbdee8c58a9ddc60bc8995a704292d5f610bc")
+O_QUERY_OUTSIDE = _ofx("interp_query_outside.json", "251976708b5c66e9d346b78d4038e40e2344728d67f906c7b15b950983b34e35")
+O_COLLINEAR_SITES = _ofx("interp_collinear_sites.json",
+                         "2a68c7406297ee269f1ab51d12676b8cd71af1af12d56a5b4b2eafd936cd3f13")
+O_LINE_POINTS = _ofx("line_points.json", "d8acf54ec688ae6f8a01532eb79526c1ee0cf503501f6cc8583823c7525e2005")
+O_CUBE = _ofx("cube_subdivided.off", "57afc11a0b7d545762e74d8c5fc417dc4d34489829b1b2835a16281879900c79")
+O_TAMPERED = {
+    "lp": _ofx("tampered_lp_report.json", "863221837d76cb39bedb9f769480719c03512e92a90df11fa7e1c21dd23ea830"),
+    "interpolation": _ofx("tampered_interpolation_report.json",
+                          "d48fa2eccd939e10aa4783ddbc46aefd5a3474680cb66f0753cca5cb27df0665"),
+    "approximation": _ofx("tampered_approximation_report.json",
+                          "e53254224cc276d883f7a90ffc819008b4979c3f95686e909a9e40fd7b8e1a76"),
+    "matrix_search": _ofx("tampered_matrix_search_report.json",
+                          "9013236ae6abf263451c793c47a9a0cfea4f365cacad7230c702c407d9b238fd"),
+}
+QP_SOLVER_GMPQ = "CGAL::solve_{}_program on CGAL::Quadratic_program<CGAL::Gmpq>"
+VSA_FINE = {"max_number_of_proxies": 12, "number_of_iterations": 20, "seeding": "hierarchical"}
+VSA_COARSE = {"max_number_of_proxies": 3, "number_of_iterations": 20, "seeding": "incremental"}
+
+
+def _qp(fixture: dict) -> dict:
+    return _json_input(fixture, "QuadraticProgram", "none")
+
+
+def _program_case(case_id: str, fixture: dict, solver: str, status: str, extra: list[list]) -> dict:
+    return _case(case_id, "optimization.quadratic_program", [_qp(fixture)], {"solver": solver}, [
+        ["metrics.solver", "==", solver],
+        ["metrics.algorithm", "==", QP_SOLVER_GMPQ.format(solver)],
+        ["metrics.exact_number_type", "==", "CGAL::Gmpq"],
+        ["metrics.status", "==", status],
+        ["output:analysis:json:report_kind", "==", "quadratic_program"],
+        ["output:analysis:json:results.status", "==", status],
+        ["output:analysis:json:results.certificate.kind", "==",
+         {"optimal": "optimality", "infeasible": "infeasibility", "unbounded": "unboundedness"}[status]],
+    ] + extra)
+
+
+def _interpolation_case(case_id: str, fixture: dict, method: str, values: list[str]) -> dict:
+    kernel = ("CGAL::Exact_predicates_exact_constructions_kernel" if method == "linear"
+              else "CGAL::Exact_predicates_inexact_constructions_kernel")
+    function = "linear_interpolation" if method == "linear" else "sibson_c1_interpolation"
+    return _case(case_id, "optimization.interpolate", [_json_input(fixture, "InterpolationData2")],
+                 {"method": method}, [
+                     ["metrics.method", "==", method],
+                     ["metrics.kernel", "==", kernel],
+                     ["metrics.algorithm", "==", f"CGAL::natural_neighbor_coordinates_2 + CGAL::{function}"],
+                     ["metrics.site_count", "==", 13],
+                     ["metrics.query_count", "==", 5],
+                     ["output:analysis:json:results.input_representation", "==",
+                      "exact_rational" if method == "linear" else "binary64_round_to_nearest"],
+                     ["output:analysis:json:results.queries[*].value", "==", values],
+                     ["output:analysis:json:results.queries.4.neighbors", "==", [{"coordinate": "1", "site": 10}]],
+                 ])
+
+
+FAMILY_7_15 = {
+    "family": "7.15",
+    "scope": "family_7_15_optimization_numerical_geometry",
+    "evidence_path": "docs/master/evidence/family-7.15-capabilities.json",
+    "test_id": "family-7.15-replay-cases",
+    "requirements": {
+        "major.7.15.01": {
+            "operation_ids": ["optimization.quadratic_program"],
+            "symbols": ["Quadratic_program", "solve_linear_program", "solve_quadratic_program"],
+            "symbol_notes": "Programs are built as CGAL::Quadratic_program<CGAL::Gmpq> (A, b, relations, finite "
+                            "and infinite bounds, c, c0, 2D) and solved exactly. solve_linear_program yields an "
+                            "optimal LP (x = (8/5, 6/5, 8/5), objective -14/5, an equality row and a free "
+                            "variable), an infeasible LP and an unbounded LP; solve_quadratic_program yields the "
+                            "manual's first_qp optimum (2, 3) with objective 8 and an unbounded convex QP. The "
+                            "independent GMP validator checks primal feasibility, convexity (exact LDL^T) and the "
+                            "solver's optimality/Farkas/unboundedness certificate against the QP_solver manual's "
+                            "lemmas; a non-PSD D and a quadratic program sent to the LP solver are rejected.",
+            "case_ids": ["optimization-lp-optimal", "optimization-lp-infeasible", "optimization-lp-unbounded",
+                         "optimization-qp-optimal", "optimization-qp-unbounded"],
+        },
+        "major.7.15.02": {
+            "operation_ids": ["optimization.interpolate"],
+            "symbols": ["natural_neighbor_coordinates_2", "linear_interpolation", "sibson_c1_interpolation"],
+            "symbol_notes": "13 scattered sites with values and gradients; natural_neighbor_coordinates_2 on a "
+                            "Delaunay_triangulation_2 feeds linear_interpolation (EPECK, exact rationals: it "
+                            "reproduces the linear field 2 + 3x - y exactly) and sibson_c1_interpolation (EPICK, "
+                            "with gradients: it reproduces the spherical quadratic 1/4 + 1.3x - 0.7y + 0.2(x^2+y^2) "
+                            "to rounding, which linear interpolation does not). The validator recomputes every "
+                            "natural-neighbour coordinate as an exact Voronoi-area ratio and re-evaluates both "
+                            "interpolants; queries outside the hull and collinear sites are rejected.",
+            "case_ids": ["optimization-interpolation-linear-exact", "optimization-interpolation-sibson-c1",
+                         "optimization-interpolation-linear-on-quadratic"],
+        },
+        "major.7.15.03": {
+            "operation_ids": ["optimization.approximate_mesh"],
+            "symbols": ["approximate_triangle_mesh"],
+            "symbol_notes": "Surface_mesh_approximation::approximate_triangle_mesh (Variational Shape "
+                            "Approximation, L21 metric) on a subdivided 48-face cube: 12 hierarchical proxies fit "
+                            "the six planes with zero L21 error and an anchor mesh lying on the source, while 3 "
+                            "incremental proxies leave a positive squared L21 error (unit mm2). The validator "
+                            "recomputes the partition, patch connectivity, area-weighted proxy normals, the "
+                            "squared error, output-mesh validity and anchor deviation; too many proxies and a "
+                            "tampered proxy are rejected.",
+            "case_ids": ["optimization-vsa-fine", "optimization-vsa-coarse"],
+        },
+        "major.7.15.04": {
+            "operation_ids": ["optimization.matrix_search"],
+            "symbols": ["sorted_matrix_search"],
+            "symbol_notes": "The 1D interval p-center problem is solved by sorted_matrix_search over a "
+                            "Cartesian_matrix of exact pairwise gaps (row- and column-sorted) with a greedy cover "
+                            "feasibility predicate: 12 points need diameter 9 for p = 3 and 7 for p = 4. The "
+                            "validator scans every candidate gap exactly to confirm feasibility and minimality "
+                            "and checks the reported centers cover every point; p >= n and a tampered optimum "
+                            "are rejected.",
+            "case_ids": ["optimization-p-center-3", "optimization-p-center-4"],
+        },
+    },
+    "unbound": {},
+    "cases": [
+        _program_case("optimization-lp-optimal", O_LP_OPTIMAL, "linear", "optimal", [
+            ["metrics.objective_value", "==", "-14/5"],
+            ["output:analysis:json:results.variable_values", "==", ["8/5", "6/5", "8/5"]],
+            ["output:analysis:json:results.objective_value", "==", "-14/5"],
+        ]),
+        _program_case("optimization-lp-infeasible", O_LP_INFEASIBLE, "linear", "infeasible", [
+            ["output:analysis:json:results.variable_values", "==", None],
+            ["output:analysis:json:results.objective_value", "==", None],
+        ]),
+        _program_case("optimization-lp-unbounded", O_LP_UNBOUNDED, "linear", "unbounded", [
+            ["output:analysis:json:results.objective_value", "==", None],
+        ]),
+        _program_case("optimization-qp-optimal", O_QP_OPTIMAL, "quadratic", "optimal", [
+            ["output:analysis:json:results.variable_values", "==", ["2", "3"]],
+            ["output:analysis:json:results.objective_value", "==", "8"],
+        ]),
+        _program_case("optimization-qp-unbounded", O_QP_UNBOUNDED, "quadratic", "unbounded", [
+            ["output:analysis:json:results.objective_value", "==", None],
+        ]),
+        _interpolation_case("optimization-interpolation-linear-exact", O_LINEAR_FIELD, "linear",
+                            ["51/10", "1", "32/5", "10", "25/4"]),
+        _interpolation_case("optimization-interpolation-sibson-c1", O_SPHERICAL_FIELD, "sibson_c1",
+                            ["4643211215818981/2251799813685248", "950759921333771/9007199254740992",
+                             "2534400690302747/562949953421312", "6136154492292299/1125899906842624",
+                             "6839841934068941/2251799813685248"]),
+        _interpolation_case("optimization-interpolation-linear-on-quadratic", O_SPHERICAL_FIELD, "linear",
+                            ["10777359153449/4860199956600", "4545973641103/17660716152000",
+                             "189707811510337/41238365474800", "135747/24280", "243/80"]),
+        _case("optimization-vsa-fine", "optimization.approximate_mesh", [_mesh(O_CUBE)], VSA_FINE, [
+            ["metrics.proxy_count", "==", 12],
+            ["metrics.is_manifold", "==", True],
+            ["metrics.l21_error", "approx", [0.0, 1e-12]],
+            ["output:analysis:json:results.face_count", "==", 48],
+            ["output:analysis:json:results.l21_error.unit", "==", "mm2"],
+            ["output:analysis:json:results.l21_error.squared_length", "==", True],
+            ["output:analysis:json:results.anchor_max_distance_to_source.value", "approx", [0.0, 1e-12]],
+        ]),
+        _case("optimization-vsa-coarse", "optimization.approximate_mesh", [_mesh(O_CUBE)], VSA_COARSE, [
+            ["metrics.proxy_count", "==", 3],
+            ["metrics.l21_error", ">", 1.0],
+            ["output:analysis:json:results.face_count", "==", 48],
+            ["output:analysis:json:results.l21_error.unit", "==", "mm2"],
+        ]),
+        _case("optimization-p-center-3", "optimization.matrix_search", [_json_input(O_LINE_POINTS, "PointSet1")],
+              {"centers": 3}, [
+                  ["metrics.point_count", "==", 12],
+                  ["metrics.matrix_dimension", "==", 12],
+                  ["output:analysis:json:results.optimal_diameter", "==", "9"],
+                  ["output:analysis:json:results.optimal_radius", "==", "9/2"],
+                  ["output:analysis:json:results.centers", "==", ["9/2", "17", "53/2"]],
+              ]),
+        _case("optimization-p-center-4", "optimization.matrix_search", [_json_input(O_LINE_POINTS, "PointSet1")],
+              {"centers": 4}, [
+                  ["metrics.point_count", "==", 12],
+                  ["output:analysis:json:results.optimal_diameter", "==", "7"],
+                  ["output:analysis:json:results.optimal_radius", "==", "7/2"],
+                  ["output:analysis:json:results.centers", "==", ["7/2", "23/2", "39/2", "67/2"]],
+              ]),
+    ],
+    "pairs": [
+        {"kind": "different_outputs", "cases": ["optimization-interpolation-sibson-c1",
+                                                "optimization-interpolation-linear-on-quadratic"]},
+        {"kind": "different_outputs", "cases": ["optimization-vsa-fine", "optimization-vsa-coarse"]},
+        {"kind": "different_outputs", "cases": ["optimization-p-center-3", "optimization-p-center-4"]},
+    ],
+    "negative_controls": [
+        {"id": "optimization-qp-nonconvex-rejected", "operation": "optimization.quadratic_program",
+         "inputs": [_qp(O_QP_NONCONVEX)], "parameters": {"solver": "quadratic"},
+         "expect_error_class": "PRECONDITION_FAILED", "expect_error_code": "NOT_POSITIVE_SEMIDEFINITE"},
+        {"id": "optimization-lp-quadratic-term-rejected", "operation": "optimization.quadratic_program",
+         "inputs": [_qp(O_QP_OPTIMAL)], "parameters": {"solver": "linear"},
+         "expect_error_class": "PRECONDITION_FAILED", "expect_error_code": "NONZERO_QUADRATIC_TERM"},
+        {"id": "optimization-lp-tampered-objective-rejected", "operation": "optimization.validate.quadratic_program",
+         "inputs": [_json_input(O_TAMPERED["lp"], "OptimizationReport", "none"), _qp(O_LP_OPTIMAL)],
+         "parameters": {"solver": "linear"}, "expect_error_class": "VALIDATION_FAILED",
+         "expect_error_code": "OBJECTIVE_MISMATCH"},
+        {"id": "optimization-interpolation-outside-hull-rejected", "operation": "optimization.interpolate",
+         "inputs": [_json_input(O_QUERY_OUTSIDE, "InterpolationData2")], "parameters": {"method": "linear"},
+         "expect_error_class": "PRECONDITION_FAILED", "expect_error_code": "QUERY_OUTSIDE_HULL"},
+        {"id": "optimization-interpolation-collinear-rejected", "operation": "optimization.interpolate",
+         "inputs": [_json_input(O_COLLINEAR_SITES, "InterpolationData2")], "parameters": {"method": "linear"},
+         "expect_error_class": "PRECONDITION_FAILED", "expect_error_code": "DEGENERATE_SITES"},
+        {"id": "optimization-interpolation-tampered-value-rejected",
+         "operation": "optimization.validate.interpolation",
+         "inputs": [_json_input(O_TAMPERED["interpolation"], "OptimizationReport", "none"),
+                    _json_input(O_LINEAR_FIELD, "InterpolationData2")],
+         "parameters": {"method": "linear"}, "expect_error_class": "VALIDATION_FAILED",
+         "expect_error_code": "INTERPOLATION_MISMATCH"},
+        {"id": "optimization-vsa-too-many-proxies-rejected", "operation": "optimization.approximate_mesh",
+         "inputs": [_mesh(O_CUBE)], "parameters": {"max_number_of_proxies": 49, "number_of_iterations": 5,
+                                                    "seeding": "hierarchical"},
+         "expect_error_class": "PRECONDITION_FAILED", "expect_error_code": "TOO_MANY_PROXIES"},
+        {"id": "optimization-vsa-tampered-proxy-rejected", "operation": "optimization.validate.mesh_approximation",
+         "inputs": [_json_input(O_TAMPERED["approximation"], "OptimizationReport", "none"), _mesh(O_CUBE)],
+         "parameters": VSA_FINE, "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "PROXY_MISMATCH"},
+        {"id": "optimization-p-center-trivial-rejected", "operation": "optimization.matrix_search",
+         "inputs": [_json_input(O_LINE_POINTS, "PointSet1")], "parameters": {"centers": 12},
+         "expect_error_class": "PRECONDITION_FAILED", "expect_error_code": "TRIVIAL_CENTER_COUNT"},
+        {"id": "optimization-p-center-tampered-optimum-rejected", "operation": "optimization.validate.matrix_search",
+         "inputs": [_json_input(O_TAMPERED["matrix_search"], "OptimizationReport", "none"),
+                    _json_input(O_LINE_POINTS, "PointSet1")],
+         "parameters": {"centers": 3}, "expect_error_class": "VALIDATION_FAILED",
+         "expect_error_code": "OPTIMUM_MISMATCH"},
+    ],
+}
+
 GENERIC_FAMILIES: dict[str, dict] = {
     family["family"]: family for family in (FAMILY_7_1, FAMILY_7_2, FAMILY_7_3, FAMILY_7_4, FAMILY_7_5, FAMILY_7_6,
-                   FAMILY_7_9, FAMILY_7_11, FAMILY_7_12, FAMILY_7_13, FAMILY_7_14)
+                   FAMILY_7_9, FAMILY_7_11, FAMILY_7_12, FAMILY_7_13, FAMILY_7_14, FAMILY_7_15)
 }
 
 
