@@ -49,6 +49,9 @@ FAMILY_HARNESS = REPO / families.FAMILY_HARNESS_PATH
 FAMILY_CONTRACT_SOURCE = REPO / families.FAMILY_CONTRACT_PATH
 WAVE_A_FAMILY = "7.7"
 REPLAY_FAMILIES = (WAVE_A_FAMILY, *families.GENERIC_FAMILIES)
+# Families whose bound requirements need an optional third-party library compiled into the worker
+# (see docs/master/THIRD_PARTY_DEPENDENCIES_JA.md): 7.9.05 needs OpenGR, 7.10.02 needs SCIP.
+FAMILY_OPTIONAL_DEPENDENCIES = {"7.9": ("OpenGR",), "7.10": ("SCIP",)}
 TRANSFORM = "mesh.simplify.edge_collapse"
 INTEGRITY = "mesh.validate.simplification_integrity"
 HAUSDORFF = "mesh.distance.symmetric_hausdorff"
@@ -1085,6 +1088,24 @@ def _replay_generic_family(worker: Path, family_id: str) -> dict:
     return report
 
 
+def worker_optional_dependencies(worker: Path) -> set[str]:
+    """Optional libraries the worker was built with, from its manifest (build.optional_dependencies)."""
+    try:
+        completed = subprocess.run([str(worker), "--manifest"], capture_output=True, text=True,
+                                   encoding="utf-8", timeout=60, check=True)
+        build = json.loads(completed.stdout).get("build", {})
+    except (OSError, subprocess.SubprocessError, ValueError) as error:
+        raise SystemExit(f"Cannot read the worker manifest to check optional dependencies: {error}") from error
+    value = build.get("optional_dependencies", "")
+    return {item for item in str(value).split(",") if item}
+
+
+def unavailable_families(selected: list[str], built: set[str]) -> dict[str, list[str]]:
+    """Selected families that need an optional library the worker was built without."""
+    return {family: sorted(set(FAMILY_OPTIONAL_DEPENDENCIES.get(family, ())) - built)
+            for family in selected if set(FAMILY_OPTIONAL_DEPENDENCIES.get(family, ())) - built}
+
+
 def replay(worker: Path, family: str = WAVE_A_FAMILY) -> dict:
     """Execute and verify one family's fixed harness, returning its portable report."""
     if family == WAVE_A_FAMILY:
@@ -1184,8 +1205,25 @@ def main() -> None:
                         help="report path for a single --family (published snapshot or work/*.json)")
     parser.add_argument("--work-dir", type=Path,
                         help="directory under work/ receiving family-<id>.json for each family")
+    parser.add_argument("--skip-unavailable-optional", action="store_true",
+                        help="skip families that need an optional library (OpenGR, SCIP) the worker lacks, "
+                             "instead of failing; the reported count is then reduced")
     args = parser.parse_args()
     selected = list(REPLAY_FAMILIES) if args.family == "all" else [args.family]
+    skipped = unavailable_families(selected, worker_optional_dependencies(args.worker))
+    if skipped:
+        needs = ", ".join(sorted({library for libraries in skipped.values() for library in libraries}))
+        detail = "; ".join(f"family {family} requires {', '.join(libraries)}"
+                           for family, libraries in sorted(skipped.items()))
+        if not args.skip_unavailable_optional:
+            raise SystemExit(
+                f"This worker was built without {needs} ({detail}). Rebuild it with the optional libraries "
+                "(docs/master/THIRD_PARTY_DEPENDENCIES_JA.md), or pass --skip-unavailable-optional to replay "
+                "only the other families; the validated count is then reduced and 80 is not reachable.")
+        selected = [family for family in selected if family not in skipped]
+        if not selected:
+            raise SystemExit(f"Every selected family is unavailable: requires {needs}")
+        print(f"WARNING: skipping families that require {needs}: {detail}", file=sys.stderr)
     if args.output is not None and (len(selected) != 1 or args.work_dir is not None):
         raise SystemExit("--output requires one --family and excludes --work-dir")
     try:
@@ -1265,6 +1303,7 @@ def main() -> None:
         "requirements_validated": len(family_rows),
         "major_requirements_validated": evaluated["validated"],
         "major_requirements_required": evaluated["required"],
+        "skipped_families_missing_optional_dependencies": skipped,
         "standalone_accepted": False,
     }, ensure_ascii=False, indent=2))
 

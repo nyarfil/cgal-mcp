@@ -97,7 +97,8 @@ jobs:
           python scripts/verify_master_wave_a_mesh.py --worker build-master/cgal-master-worker --output work/master-wave-a-mesh-ci.json
           python scripts/verify_master_wave_a_boolean.py --worker build-master/cgal-master-worker --output work/master-wave-a-boolean-ci.json
           python scripts/verify_master_wave_a_repair.py --worker build-master/cgal-master-worker --output work/master-wave-a-repair-ci.json
-          python scripts/replay_master_capabilities.py --worker build-master/cgal-master-worker --work-dir work/master-capability-ci
+          # CI builds without OpenGR/SCIP: families 7.9 and 7.10 are skipped explicitly; the reported count is reduced (73/80 needs both libraries)
+          python scripts/replay_master_capabilities.py --worker build-master/cgal-master-worker --work-dir work/master-capability-ci --skip-unavailable-optional
           python -m tests.master_mcp_e2e auto
           python -m tests.master_mcp_e2e legacy
           python -m tests.master_http_e2e auto
@@ -124,7 +125,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python scripts/verify_master_wave_a_repair.py --worker build-master/Release/cgal-master-worker.exe --output work/master-wave-a-repair-ci.json
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          python scripts/replay_master_capabilities.py --worker build-master/Release/cgal-master-worker.exe --work-dir work/master-capability-ci
+          # CI builds without OpenGR/SCIP: families 7.9 and 7.10 are skipped explicitly; the reported count is reduced (73/80 needs both libraries)
+          python scripts/replay_master_capabilities.py --worker build-master/Release/cgal-master-worker.exe --work-dir work/master-capability-ci --skip-unavailable-optional
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python -m tests.master_mcp_e2e auto
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

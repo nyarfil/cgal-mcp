@@ -4520,9 +4520,19 @@ B6_KINETIC = {"k_neighbors": 12, "maximum_distance": _mm(0.2), "maximum_angle": 
               "regularize_axis_symmetry": False, "partition_depth": 2, "lambda": 0.5,
               "max_deviation": _mm(0.5), "planarity_tolerance": _mm(1e-6)}
 B6_SOUP_BOUNDS = {"max_deviation": _mm(0.5), "planarity_tolerance": _mm(1e-6)}
-B6_DELAUNAY = {"sm_angle": 20, "sm_radius": 2, "sm_distance": 0.375, "max_deviation": _mm(3.0),
-               "max_circumradius": _mm(6.0), "min_coverage": 0.5}
-B6_DELAUNAY_TORUS = dict(B6_DELAUNAY, max_deviation=_mm(4.0))
+B6_DELAUNAY_SPHERE = _b6fx("delaunay_sphere_small.ply", "421a5e0e7717979b591be1a3ab76af6eb2d9f90e60531ba13463c5a951cdf844")
+B6_DELAUNAY_R10 = _b6fx("delaunay_sphere_r10_partial.off", "b26496e26cb0d8e54b297b72c218747156f468d03c156af17dfb907ab4b07fe5")
+B6_DELAUNAY_FLIPPED = _b6fx("tampered_delaunay_small_flipped.off",
+                            "bbcd13d51992de1a2ecc9f51ba421a59f1c192b40be7b4dd67a52bcf0143fc4e")
+B6_DELAUNAY_SHRUNK = _b6fx("tampered_delaunay_small_shrunk.off",
+                           "f62a0fce3a231f2c98f6920cc3ce07206f12b4078bc6475ef36c62a70f939bea")
+# R = 2 mm sphere (1500 oriented points). Bounds: every source point within 0.5 mm (25 percent of R, a certified
+# cover bound, not the measured error), facets with circumradius <= 0.6 mm, and at least 95 percent coverage.
+B6_DELAUNAY_BOUNDS = {"max_deviation": _mm(0.5), "max_circumradius": _mm(0.6), "min_coverage": 0.95}
+B6_DELAUNAY = {"sm_angle": 20, "sm_radius": 2, "sm_distance": 0.375, **B6_DELAUNAY_BOUNDS}
+B6_DELAUNAY_FINE = dict(B6_DELAUNAY, sm_radius=1.2)
+# Unmodified CGAL result on the R = 10 sphere (about 41 percent of the sphere missing): validator input only.
+B6_DELAUNAY_R10_BOUNDS = {"max_deviation": _mm(3.0), "max_circumradius": _mm(6.0), "min_coverage": 0.95}
 B6_AFSR = {"radius_ratio_bound": 5, "beta": 0.52, "max_deviation": _mm(2.0)}
 B6_SCALE_SPACE = {"iterations": 2, "neighbors": 12, "maximum_facet_length": _mm(5.0), "radius_ratio_bound": 5,
                   "beta": 0.52, "max_deviation": _mm(2.0)}
@@ -4584,23 +4594,28 @@ def _b6_soup_case(case_id: str, operation: str, parameters: dict, source: dict, 
     return _case(case_id, operation, [_points(source, "PointSet3Normals", "ply")], parameters, checks)
 
 
-def _b6_delaunay_case(case_id: str, source: dict, parameters: dict, points: int, euler: int,
-                      extra: list[list]) -> dict:
-    return _case(case_id, "reconstruction.poisson_delaunay", [_points(source, "PointSet3Normals", "ply")],
-                 parameters, [
+def _b6_delaunay_case(case_id: str, parameters: dict, facets: int, extra: list[list]) -> dict:
+    return _case(case_id, "reconstruction.poisson_delaunay",
+                 [_points(B6_DELAUNAY_SPHERE, "PointSet3Normals", "ply")], parameters, [
         ["metrics.algorithm", "==", "CGAL::poisson_surface_reconstruction_delaunay"],
-        ["metrics.point_count", "==", points],
-        ["input:points:measure:points.count", "==", points],
+        ["metrics.point_count", "==", 1500],
+        ["input:points:measure:points.count", "==", 1500],
         ["metrics.boundary_edges_are_disclosed_not_hidden", "==", True],
-        # The one-call wrapper forces manifold_with_boundary(): holes are expected and disclosed,
-        # never reported as a closed surface.
-        ["metrics.boundary_edge_count", ">", 0],
+        # The op never claims a closed surface (the wrapper forces manifold_with_boundary()); on this
+        # R = 2 mm sample CGAL's result is measured closed: no boundary edge, Euler characteristic 2.
         ["output:geometry:measure:off.boundary_edge_count", "==", {"path": "metrics.boundary_edge_count"}],
-        ["output:geometry:measure:off.face_count", "==", {"path": "metrics.facet_count"}],
+        ["output:geometry:measure:off.boundary_edge_count", "==", 0],
+        ["output:geometry:measure:off.euler_characteristic", "==", 2],
+        ["metrics.facet_count", "==", facets],
+        ["output:geometry:measure:off.face_count", "==", facets],
         ["output:geometry:measure:off.vertex_count", "==", {"path": "metrics.vertex_count"}],
         ["output:geometry:measure:off.max_face_degree", "==", 3],
-        ["output:geometry:measure:off.max_circumradius", "<=", 6.0],
-        ["metrics.euler_characteristic", "==", euler],
+        ["output:geometry:measure:off.max_circumradius", "<=", 0.6],
+        # Hand-derived sphere of radius 2 mm: volume 4/3 pi 8 = 33.51, area 4 pi 4 = 50.27, vertex radius 2.
+        ["output:geometry:measure:off.min_vertex_radius", ">", 1.95],
+        ["output:geometry:measure:off.max_vertex_radius", "<", 2.05],
+        ["output:geometry:measure:off.signed_volume", "approx", [4.0 / 3.0 * math.pi * 8.0, 1.0]],
+        ["output:geometry:measure:off.area", "approx", [4.0 * math.pi * 4.0, 1.0]],
     ] + extra)
 
 
@@ -4628,11 +4643,16 @@ FAMILY_7_9["requirements"]["major.7.9.05"] = {
                     "count, accuracy, overlap and the wall-clock limit; the random seed is OpenGR's default "
                     "std::mt19937 seed (the CGAL API does not expose it), so the runs are deterministic: an identical "
                     "second run gives byte-identical output. The independent validators (own XYZ and JSON parsers) "
-                    "check an orthonormal right-handed 3x4 rotation (exact rational orthonormality), the exact "
-                    "rational image of every moving point, the RMS residual and the inlier fraction against typed "
+                    "check an orthonormal right-handed 3x4 rotation (orthonormality and determinant within a "
+                    "1e-9 tolerance, not exact), the image of every moving point (exact rational arithmetic on the "
+                    "binary64 coordinates), the RMS residual and the inlier fraction against typed "
                     "bounds, and the registered cloud as a rigid image of the moving cloud. Runs that hit the "
                     "wall-clock limit are rejected, and the normal filter is documented inactive (the input "
-                    "carries no normals).",
+                    "carries no normals). Scope exclusion: the libpointmatcher variants "
+                    "CGAL::pointmatcher::register_point_sets and compute_registration_transformation are NOT "
+                    "installed and NOT covered; the catalog ledger lists the OpenGR headers "
+                    "(include/CGAL/OpenGR/register_point_sets.h and compute_registration_transformation.h) as the "
+                    "declarations of the two required symbols, so the OpenGR operations bind the requirement.",
     "case_ids": ["registration-compute-clean", "registration-compute-clean-repeat", "registration-compute-noisy",
                  "registration-register-clean", "registration-register-noisy"],
 }
@@ -4680,17 +4700,32 @@ FAMILY_7_10["requirements"]["major.7.10.01"] = {
                     "hand-derived Euler characteristics 2 and 0, the analytic radius, torus residual, volume and "
                     "area within sampling error; a finer facet size gives a different, larger mesh. "
                     "reconstruction.poisson_delaunay wraps CGAL::poisson_surface_reconstruction_delaunay, which in "
-                    "CGAL 6.2.1 always appends manifold_with_boundary(): its output is a manifold surface WITH "
-                    "boundary (33 and 86 boundary edges on these fixtures, several components) and is never "
-                    "claimed closed. Its independent validator (own PLY/OFF parsers, exact GMP rationals) checks "
-                    "edge and vertex manifoldness, consistent orientation (a closed component must be outward by "
-                    "exact signed volume), that at least min_coverage of the source points lie within "
-                    "max_deviation of the surface, that source normals agree with the orientation on those covered "
-                    "points, a certified surface-to-source bound over every triangle and the exact circumradius "
-                    "bound; boundary_edge_count is reported and closedness_claimed is false. Orientation is "
-                    "resolved per connected component by a vote of the source normals.",
-    "case_ids": ["poisson-sphere", "poisson-torus", "poisson-torus-fine", "poisson-delaunay-sphere",
-                 "poisson-delaunay-torus"],
+                    "CGAL 6.2.1 always appends manifold_with_boundary(); the op is a manifold surface WITH boundary "
+                    "and never claims closedness (boundary_edge_count is reported, closedness_claimed is false). "
+                    "Measured limitation of CGAL itself, not of our parameters: the function builds its meshing ball "
+                    "with Sphere_3(inner_point, 5 * R), and Sphere_3 takes the squared radius, so the ball has "
+                    "radius sqrt(5 R) and cuts the surface when the bounding radius R exceeds about 5 length units. "
+                    "On the R = 10 sphere (1500 points) the unmodified CGAL result is one disk with 33 boundary "
+                    "edges that covers only 59 percent of the source points (615 of 1500 uncovered, about 41 "
+                    "percent of the sphere missing) for every tested sm_radius/sm_distance/sm_angle (including the "
+                    "documentation default sm_radius 30); scaling the same samples to R = 3 or smaller gives a "
+                    "closed sphere. The replay therefore uses an R = 2 mm sphere (the R = 10 sample scaled by "
+                    "0.2, 1500 points) with a strict validator bound: at least 95 percent of the source points within "
+                    "0.5 mm of the surface (a certified cover bound, 25 percent of R), every facet circumradius "
+                    "<= 0.6 mm, and replay assertions on the output itself: closed (0 boundary edges, Euler "
+                    "characteristic 2), vertex radius within 1.95 to 2.05 mm, volume within 1.0 of 4/3 pi 8 = 33.51 "
+                    "and area within 1.0 of 16 pi / 4 = 50.27 for two facet sizes (560 and 1518 facets). The "
+                    "torus is deliberately not replayed with this function: on dense R = 2, r = 0.8 torus samples "
+                    "CGAL leaves 22 to 107 boundary edges for every tested parameter set. The R = 10 partial "
+                    "result is kept as a negative control: the validator rejects it with "
+                    "SOURCE_COVERAGE_BELOW_MINIMUM at 95 percent. The independent validator (own PLY/OFF parsers, "
+                    "exact GMP rationals) checks edge and vertex manifoldness, consistent orientation (a closed "
+                    "component must be outward by exact signed volume), the coverage fraction, source normals "
+                    "agreeing with the orientation on covered points, a certified surface-to-source bound over "
+                    "every triangle and the exact circumradius bound. Orientation is resolved per connected "
+                    "component by a vote of the source normals.",
+            "case_ids": ["poisson-sphere", "poisson-torus", "poisson-torus-fine", "poisson-delaunay-sphere",
+                 "poisson-delaunay-sphere-fine"],
 }
 FAMILY_7_10["requirements"]["major.7.10.02"] = {
     "operation_ids": ["reconstruction.advancing_front", "reconstruction.scale_space",
@@ -4736,13 +4771,8 @@ FAMILY_7_10["cases"].extend([
         ["output:geometry:measure:off.signed_volume", "approx", [R_TORUS_VOLUME, 400.0]],
         ["metrics.facet_count", ">", 400],
     ]),
-    _b6_delaunay_case("poisson-delaunay-sphere", R_SPHERE_DENSE, B6_DELAUNAY, 1500, 1, [
-        ["output:geometry:measure:off.max_vertex_radius", "<", 10.4],
-        ["output:geometry:measure:off.min_vertex_radius", ">", 9.5],
-    ]),
-    _b6_delaunay_case("poisson-delaunay-torus", R_TORUS_NORMALS, B6_DELAUNAY_TORUS, 640, 0, [
-        ["output:geometry:measure:off.max_torus_residual(10,4)", "<", 0.7],
-    ]),
+    _b6_delaunay_case("poisson-delaunay-sphere", B6_DELAUNAY, 560, []),
+    _b6_delaunay_case("poisson-delaunay-sphere-fine", B6_DELAUNAY_FINE, 1518, []),
     _b6_interpolating_case("afsr-sphere", "reconstruction.advancing_front", R_SPHERE_XYZ, B6_AFSR, 2, 320, [
         ["metrics.algorithm", "==", "CGAL::advancing_front_surface_reconstruction"],
         ["output:geometry:measure:off.min_vertex_radius", ">", 9.99],
@@ -4766,6 +4796,7 @@ FAMILY_7_10["cases"].extend([
 FAMILY_7_10["pairs"].extend([
     {"kind": "different_outputs", "cases": ["polyfit-lprism", "kinetic-lprism"]},
     {"kind": "different_outputs", "cases": ["poisson-torus", "poisson-torus-fine"]},
+    {"kind": "different_outputs", "cases": ["poisson-delaunay-sphere", "poisson-delaunay-sphere-fine"]},
 ])
 FAMILY_7_10["negative_controls"].extend([
     {"id": "polygonal-nonplanar-face-rejected", "operation": "reconstruction.validate.polygonal_surface",
@@ -4795,13 +4826,17 @@ FAMILY_7_10["negative_controls"].extend([
      "inputs": [_points(B6_BOX, "PointSet3Normals", "ply")], "parameters": dict(B6_KINETIC, partition_depth=7),
      "expect_error_class": "INVALID_REQUEST", "expect_error_code": "INVALID_PARAMETER"},
     {"id": "poisson-delaunay-flipped-orientation-rejected", "operation": "reconstruction.validate.poisson_boundary",
-     "inputs": [_mesh(R_TAMPERED["poisson_flipped"]), _points(R_SPHERE_DENSE, "PointSet3Normals", "ply")],
-     "parameters": {key: B6_DELAUNAY[key] for key in ("max_deviation", "max_circumradius", "min_coverage")},
-     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "ORIENTATION_NOT_OUTWARD"},
+     "inputs": [_mesh(B6_DELAUNAY_FLIPPED), _points(B6_DELAUNAY_SPHERE, "PointSet3Normals", "ply")],
+     "parameters": B6_DELAUNAY_BOUNDS, "expect_error_class": "VALIDATION_FAILED",
+     "expect_error_code": "ORIENTATION_NOT_OUTWARD"},
     {"id": "poisson-delaunay-shrunk-surface-rejected", "operation": "reconstruction.validate.poisson_boundary",
-     "inputs": [_mesh(R_TAMPERED["poisson_shrunk"]), _points(R_SPHERE_DENSE, "PointSet3Normals", "ply")],
-     "parameters": {key: B6_DELAUNAY[key] for key in ("max_deviation", "max_circumradius", "min_coverage")},
-     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "SOURCE_COVERAGE_BELOW_MINIMUM"},
+     "inputs": [_mesh(B6_DELAUNAY_SHRUNK), _points(B6_DELAUNAY_SPHERE, "PointSet3Normals", "ply")],
+     "parameters": B6_DELAUNAY_BOUNDS, "expect_error_class": "VALIDATION_FAILED",
+     "expect_error_code": "SOURCE_COVERAGE_BELOW_MINIMUM"},
+    {"id": "poisson-delaunay-r10-partial-surface-rejected", "operation": "reconstruction.validate.poisson_boundary",
+     "inputs": [_mesh(B6_DELAUNAY_R10), _points(R_SPHERE_DENSE, "PointSet3Normals", "ply")],
+     "parameters": B6_DELAUNAY_R10_BOUNDS, "expect_error_class": "VALIDATION_FAILED",
+     "expect_error_code": "SOURCE_COVERAGE_BELOW_MINIMUM"},
     {"id": "poisson-delaunay-zero-normal-rejected", "operation": "reconstruction.poisson_delaunay",
      "inputs": [_points(R_SPHERE_ZERO, "PointSet3Normals", "ply")], "parameters": B6_DELAUNAY,
      "expect_error_class": "PRECONDITION_FAILED", "expect_error_code": "ZERO_NORMAL"},

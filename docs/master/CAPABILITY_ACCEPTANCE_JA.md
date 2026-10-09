@@ -38,6 +38,10 @@ Operation・parameter、behaviour assertion（閉じた比較演算子と選択�
 Linuxではworkerを`build-master/cgal-master-worker`へ置き換えます。
 
 7.9.05（OpenGR登録）と7.10.02（PolyFitのSCIP）は任意依存です。これらを含むworkerでのみ再試験でき、含まないworkerでは当該Operationが`OPTIONAL_DEPENDENCY_NOT_BUILT`を返すため、73/80は両依存を含むbuildでの値です。版・license・取得元・sha256は[第三者依存](THIRD_PARTY_DEPENDENCIES_JA.md)に記録しています。
+CIの再試験はOpenGR・SCIPを含まないworkerで走るため`--skip-unavailable-optional`で7.9・7.10を明示的に除外し、減った件数を報告します（CIは73/80を主張しません）。
+7.9.05は`CGAL::OpenGR::register_point_sets`・`compute_registration_transformation`（OpenGR版）のみを対象とします。libpointmatcher版（`CGAL::pointmatcher::*`）は未導入で対象外です（台帳の必須symbolはOpenGRのヘッダを指し、pointmatcherは例題の言及のみ）。
+7.10.01 `poisson_delaunay`はCGAL 6.2.1の制約（半径の2乗の取り違え）でR=10の球の約41%が未被覆になるため、R=2 mmの球で被覆95%以上を固定し、R=10の部分結果とトーラスは対象外（負例）です。
+7.9.05の回転検査は直交性・行列式を1e-9の許容で確認します（厳密な有理数ではありません）。点の像は2進浮動小数の座標に対する厳密有理数演算で検査します。
 checked-in reportを読むだけの`scripts/master_acceptance.py`は、再計算による確認が
 ないため未完了を返します。JSON内の`pass`、hash、自己申告の完成表示だけを承認しません。
 公開snapshotは当該buildの履歴資料です。CIはその環境で再試験し、別reportを保存します。

@@ -3,8 +3,8 @@
 
 Usage: python tests/master_batch6_cases.py <cgal-master-worker>
 Every producer result is checked by its independent validator against hand-derived values; tampered candidates
-and invalid parameters must fail closed. Registration and PolyFit need the optional OpenGR / SCIP libraries and
-are skipped (with a message) when the worker was built without them.
+and invalid parameters must fail closed. Registration and PolyFit need the optional OpenGR / SCIP libraries; a worker built
+without them must report OPTIONAL_DEPENDENCY_NOT_BUILT (asserted, never silently skipped).
 """
 
 from __future__ import annotations
@@ -33,7 +33,7 @@ KINETIC = {"k_neighbors": 12, "maximum_distance": MM(0.2), "maximum_angle": 10.0
            "partition_depth": 2, "lambda": 0.5, "max_deviation": MM(0.5), "planarity_tolerance": MM(1e-6)}
 SOUP_BOUNDS = {"max_deviation": MM(0.5), "planarity_tolerance": MM(1e-6)}
 POISSON_DELAUNAY = {"sm_angle": 20, "sm_radius": 2, "sm_distance": 0.375, "max_deviation": MM(3.0),
-                    "max_circumradius": MM(6.0), "min_coverage": 0.5}
+                    "max_circumradius": MM(6.0), "min_coverage": 0.5}  # R = 10 sample: see poisson_cases
 
 
 def points(path):
@@ -58,10 +58,14 @@ def validated(scratch, validator, inputs, parameters):
 
 
 def registration_cases(operations) -> None:
-    if not operations["pointset.registration.register"]["info"].get("optional_dependency_built"):
-        print("OpenGR not built: registration cases skipped")
-        return
     reference, moving = points(B6 / "reg_reference.xyz"), points(B6 / "reg_moving.xyz")
+    if not operations["pointset.registration.register"]["info"].get("optional_dependency_built"):
+        with tempfile.TemporaryDirectory() as raw:
+            for operation in ("pointset.registration.compute_transformation", "pointset.registration.register"):
+                reject(pathlib.Path(raw), operation, [reference, moving], REG, "OPTIONAL_DEPENDENCY_NOT_BUILT",
+                       "UNSUPPORTED")
+        print("OpenGR not built: registration reports OPTIONAL_DEPENDENCY_NOT_BUILT (cases not executable)")
+        return
     with tempfile.TemporaryDirectory() as raw:
         scratch = pathlib.Path(raw)
         first = q.ok(q.invoke(scratch, "pointset.registration.compute_transformation", [reference, moving], REG))
@@ -103,7 +107,9 @@ def soup_cases(operations) -> None:
             runs += [("reconstruction.polygonal_surface", POLYFIT, box, 6, 8, 480.0),
                      ("reconstruction.polygonal_surface", POLYFIT, lprism, 14, 16, 336.0)]
         else:
-            print("SCIP not built: polygonal surface cases skipped")
+            reject(scratch, "reconstruction.polygonal_surface", [box], POLYFIT, "OPTIONAL_DEPENDENCY_NOT_BUILT",
+                   "UNSUPPORTED")
+            print("SCIP not built: polygonal surface reports OPTIONAL_DEPENDENCY_NOT_BUILT")
         for operation, parameters, source, faces, vertices, volume in runs:
             result = q.invoke(scratch, operation, [source], parameters)
             path = q.ok(result)
@@ -129,36 +135,45 @@ def soup_cases(operations) -> None:
                "INVALID_PARAMETER", "INVALID_REQUEST")
 
 
+DELAUNAY_BOUNDS = {"max_deviation": MM(0.5), "max_circumradius": MM(0.6), "min_coverage": 0.95}
+
+
 def poisson_cases() -> None:
+    """CGAL 6.2.1 poisson_surface_reconstruction_delaunay builds its meshing ball with Sphere_3(center, 5 * R):
+    Sphere_3 takes the SQUARED radius, so the ball has radius sqrt(5 R) and cuts the surface when the
+    bounding radius R exceeds about 5 length units. The strong cases therefore use R = 2 samples; the
+    R = 10 sample (an unmodified CGAL result with about 41 percent of the sphere missing) is only used to
+    show that the validator reports the truth."""
     with tempfile.TemporaryDirectory() as raw:
         scratch = pathlib.Path(raw)
-        for name, deviation in (("sphere_dense_normals.ply", 3.0), ("torus_normals.ply", 4.0)):
-            source = normals(RC / name)
-            parameters = {**POISSON_DELAUNAY, "max_deviation": MM(deviation)}
+        source = normals(B6 / "delaunay_sphere_small.ply")
+        for radius in (2.0, 1.2):
+            parameters = {**POISSON_DELAUNAY, "sm_radius": radius, **DELAUNAY_BOUNDS}
             result = q.invoke(scratch, "reconstruction.poisson_delaunay", [source], parameters)
             path = q.ok(result)
             assert result["metrics"]["algorithm"] == "CGAL::poisson_surface_reconstruction_delaunay", result["metrics"]
-            assert result["metrics"]["boundary_edge_count"] > 0, "expected the disclosed manifold-with-boundary holes"
-            candidate = art(path, "TriangleSurfaceMesh")
-            verdict = validated(scratch, "reconstruction.validate.poisson_boundary", [candidate, source],
-                                {key: parameters[key] for key in ("max_deviation", "max_circumradius", "min_coverage")})
-            assert verdict["closed"] is False and verdict["closedness_claimed"] is False, verdict
-            assert verdict["boundary_edge_count"] == result["metrics"]["boundary_edge_count"], verdict
-        sphere = normals(RC / "sphere_dense_normals.ply")
-        bounds = {key: POISSON_DELAUNAY[key] for key in ("max_deviation", "max_circumradius", "min_coverage")}
-        reject(scratch, "reconstruction.validate.poisson_boundary",
-               [art(RC / "tampered_poisson_flipped.off", "TriangleSurfaceMesh"), sphere], bounds, "ORIENTATION_NOT_OUTWARD")
-        reject(scratch, "reconstruction.validate.poisson_boundary",
-               [art(RC / "tampered_poisson_shrunk.off", "TriangleSurfaceMesh"), sphere], bounds,
+            assert result["metrics"]["euler_characteristic"] == 2 and result["metrics"]["boundary_edge_count"] == 0, result["metrics"]
+            verdict = validated(scratch, "reconstruction.validate.poisson_boundary", [art(path, "TriangleSurfaceMesh"), source],
+                                DELAUNAY_BOUNDS)
+            assert verdict["closedness_claimed"] is False and verdict["source_coverage_fraction"] == 1.0, verdict
+        big = normals(RC / "sphere_dense_normals.ply")
+        partial = art(B6 / "delaunay_sphere_r10_partial.off", "TriangleSurfaceMesh")
+        loose = {"max_deviation": MM(3.0), "max_circumradius": MM(6.0), "min_coverage": 0.5}
+        verdict = validated(scratch, "reconstruction.validate.poisson_boundary", [partial, big], loose)
+        assert verdict["source_coverage_fraction"] < 0.7 and verdict["boundary_edge_count"] > 0, verdict
+        reject(scratch, "reconstruction.validate.poisson_boundary", [partial, big], {**loose, "min_coverage": 0.95},
                "SOURCE_COVERAGE_BELOW_MINIMUM")
+        for name, code in (("tampered_delaunay_small_flipped.off", "ORIENTATION_NOT_OUTWARD"),
+                           ("tampered_delaunay_small_shrunk.off", "SOURCE_COVERAGE_BELOW_MINIMUM")):
+            reject(scratch, "reconstruction.validate.poisson_boundary",
+                   [art(B6 / name, "TriangleSurfaceMesh"), source], DELAUNAY_BOUNDS, code)
         reject(scratch, "reconstruction.poisson_delaunay", [normals(RC / "sphere_zero_normal.ply")], POISSON_DELAUNAY,
                "ZERO_NORMAL", "PRECONDITION_FAILED")
-        reject(scratch, "reconstruction.poisson_delaunay", [sphere],
+        reject(scratch, "reconstruction.poisson_delaunay", [source],
                {key: POISSON_DELAUNAY[key] for key in POISSON_DELAUNAY if key != "min_coverage"},
                "MISSING_PARAMETER", "INVALID_REQUEST")
-        reject(scratch, "reconstruction.validate.poisson_boundary",
-               [art(RC / "tampered_poisson_flipped.off", "TriangleSurfaceMesh"), sphere],
-               {**bounds, "max_circumradius": MM(0.0)}, "INVALID_PARAMETER", "INVALID_REQUEST")
+        reject(scratch, "reconstruction.validate.poisson_boundary", [partial, big],
+               {**loose, "max_circumradius": MM(0.0)}, "INVALID_PARAMETER", "INVALID_REQUEST")
 
 
 def main() -> None:
