@@ -508,6 +508,56 @@ Json run_corefine_validator(const Request& request) {
                     {"independence", "exact weighted-area tiling and exact triangle/triangle intersection polygon vertices; no CGAL header"}});
 }
 
+// ---- 7.5.01 autorefine -------------------------------------------------------------------------
+
+bool all_on_one_edge(const std::vector<Vec>& points, const Tri& t) {
+  for (int e = 0; e < 3; ++e) {
+    bool all_on = true;
+    for (const auto& p : points) all_on = all_on && point_on_segment(p, t.v[e], t.v[(e + 1) % 3]);
+    if (all_on) return true;
+  }
+  return false;
+}
+
+Json run_autorefine_validator(const Request& request) {
+  const std::string validator = "mesh.validate.autorefine";
+  require_inputs(request, 2, validator);
+  require_parameter_names(request, {});
+  require_same_unit(request.inputs[0], request.inputs[1]);
+  const auto candidate = load_mesh(request.inputs[0], {"TriangleSurfaceMesh"}, "candidate", kMaximumOutputFaces);
+  const auto source = load_mesh(request.inputs[1], {"TriangleSurfaceMesh"}, "source", kMaximumFaces);
+  Json checks = json_checks({"source_triangles_nondegenerate"});
+  std::vector<std::size_t> all(candidate.tris.size());
+  std::iota(all.begin(), all.end(), 0);
+  check_tiling(source, candidate, all, [&](std::size_t p) { return tri_weight(source.tris[p], tri_normal(source.tris[p])); });
+  checks["triangles_inside_source_faces"] = true;
+  checks["orientation_preserved"] = true;
+  checks["no_overlap_within_source_face"] = true;
+  checks["surface_covered_exactly"] = true;
+
+  // Autorefinement removes every proper intersection: two distinct candidate triangles may touch only
+  // along a part of one edge of each (a shared edge or vertex).
+  std::size_t touching_pairs = 0;
+  for (std::size_t i = 0; i < candidate.tris.size(); ++i) {
+    for (std::size_t j = i + 1; j < candidate.tris.size(); ++j) {
+      const Tri &t = candidate.tris[i], &u = candidate.tris[j];
+      if (!boxes_overlap(t, u)) continue;
+      const auto points = intersection_points(t, u);
+      if (points.empty()) continue;
+      ++touching_pairs;
+      if (!all_on_one_edge(points, t) || !all_on_one_edge(points, u)) {
+        validation_failure("SELF_INTERSECTION_REMAINS",
+                           "Two candidate triangles meet in more than an edge or vertex of both");
+      }
+    }
+  }
+  checks["no_remaining_self_intersection"] = true;
+  return concluded(request, validator, checks,
+                   {{"source_face_count", source.tris.size()}, {"candidate_face_count", candidate.tris.size()},
+                    {"touching_pair_count", touching_pairs},
+                    {"independence", "exact weighted-area tiling and exact pairwise triangle/triangle intersection polygon vertices; no CGAL header"}});
+}
+
 }  // namespace
 
 std::vector<OperationDefinition> mesh_validator_operations() {
@@ -541,6 +591,12 @@ std::vector<OperationDefinition> mesh_validator_operations() {
       vinfo({"source_triangles_nondegenerate", "triangles_inside_source_faces", "orientation_preserved",
              "no_overlap_within_source_face", "surface_covered_exactly", "intersection_is_in_candidate_edges"},
             {"candidate", "source", "other"}, "exact weighted-area tiling and exact triangle/triangle intersection polygon vertices; no CGAL header")));
+  result.push_back(query_definition(
+      "mesh.validate.autorefine", {"TriangleSurfaceMesh", "TriangleSurfaceMesh"}, "ValidationReport", "validator",
+      run_autorefine_validator, {"PMP_Boolean_operations"}, gmp,
+      vinfo({"source_triangles_nondegenerate", "triangles_inside_source_faces", "orientation_preserved",
+             "no_overlap_within_source_face", "surface_covered_exactly", "no_remaining_self_intersection"},
+            {"candidate", "source"}, "exact weighted-area tiling and exact pairwise triangle/triangle intersection polygon vertices; no CGAL header")));
   return result;
 }
 

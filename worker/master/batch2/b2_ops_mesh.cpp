@@ -11,6 +11,7 @@
 #include <CGAL/Exact_predicates_exact_constructions_kernel.h>
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Polygon_mesh_processing/clip.h>
+#include <CGAL/Polygon_mesh_processing/autorefinement.h>
 #include <CGAL/Polygon_mesh_processing/corefinement.h>
 #include <CGAL/Polygon_mesh_processing/detect_features.h>
 #include <CGAL/Polygon_mesh_processing/intersection.h>
@@ -263,6 +264,19 @@ Json corefine_meshes(const Request& request) {
   return success_result(request, Json::array({std::move(output)}), std::move(metrics));
 }
 
+Json autorefine_mesh(const Request& request) {
+  require_inputs(request, 1, "mesh.autorefine");
+  require_parameter_names(request, {});
+  const auto raw = load_input(request.inputs[0]);
+  auto mesh = build_mesh<EpeckMesh, Epeck::Point_3>(raw);
+  PMP::autorefine(mesh);
+  mesh.collect_garbage();
+  auto output = write_epeck_mesh(request, mesh, "TriangleSurfaceMesh", request.inputs[0].unit);
+  Json metrics{{"input_face_count", raw.faces.size()}, {"output_face_count", mesh.number_of_faces()},
+               {"algorithm", "CGAL::Polygon_mesh_processing::autorefine"}};
+  return success_result(request, Json::array({std::move(output)}), std::move(metrics));
+}
+
 }  // namespace
 
 std::vector<OperationDefinition> mesh_producer_operations() {
@@ -290,6 +304,12 @@ std::vector<OperationDefinition> mesh_producer_operations() {
       corefine_meshes, {"PMP_Boolean_operations"}, kEpeckName,
       pinfo("mesh.validate.corefine", {}, {"source", "other"},
             {{"source_header", "CGAL/Polygon_mesh_processing/corefinement.h"}, {"maximum_input_faces", kMaximumFaces},
+             {"maximum_output_faces", kMaximumOutputFaces}})));
+  result.push_back(query_definition(
+      "mesh.autorefine", {"TriangleSurfaceMesh"}, "TriangleSurfaceMesh", "transform", autorefine_mesh,
+      {"PMP_Boolean_operations"}, kEpeckName,
+      pinfo("mesh.validate.autorefine", {}, {"source"},
+            {{"source_header", "CGAL/Polygon_mesh_processing/autorefinement.h"}, {"maximum_input_faces", kMaximumFaces},
              {"maximum_output_faces", kMaximumOutputFaces}})));
   return result;
 }
