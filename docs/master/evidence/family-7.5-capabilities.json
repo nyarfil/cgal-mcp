@@ -17,7 +17,8 @@
   ],
   "binding_rule": "A requirement is bound only when replayed cases exercise every enumerated variant in its original description and every subcapability symbol listed for it in catalog/major_capability_inventory.json, each through a VALIDATED operation whose registry-mandated validators pass.",
   "requirements": [
-    "major.7.5.02"
+    "major.7.5.02",
+    "major.7.5.05"
   ],
   "requirement_coverage": {
     "major.7.5.02": {
@@ -39,24 +40,36 @@
         "corefine_and_compute_intersection",
         "corefine_and_compute_difference"
       ]
+    },
+    "major.7.5.05": {
+      "case_ids": [
+        "slice-cube-diagonal",
+        "slice-cube-mid",
+        "slice-open-square"
+      ],
+      "operation_ids": [
+        "mesh.slice.compute"
+      ],
+      "symbols": [
+        "Polygon_mesh_slicer"
+      ]
     }
   },
   "unbound_requirements": {
     "major.7.5.01": "corefine and autorefine are used only inside the three Boolean operations; standalone corefinement output is not an operation.",
     "major.7.5.03": "No validated clip operation.",
-    "major.7.5.04": "No validated split operation.",
-    "major.7.5.05": "No validated Polygon_mesh_slicer operation."
+    "major.7.5.04": "No validated split operation."
   },
-  "family_contract_sha256": "1ffe41cb50743ac04cf406c9e73a5c1751a989a203bd54dd674da0e3950c0d29",
+  "family_contract_sha256": "50b427c8204c0e3957522fb0e603f2cdaf7458906564452a294a5ae08745bf11",
   "family_contract_source_path": "scripts/master_replay_families.py",
-  "family_contract_source_sha256": "e9516b100dc97eeb2f66dcb70a4a7d90853ca31a631110f1f516eae02f2f9df7",
+  "family_contract_source_sha256": "866f91eb45732e83841a829665d2c713bcc22b4975698075d683910e018db1db",
   "family_contract_source_hash_encoding": "utf8-lf",
   "catalog_baseline_sha256": "143ec18a5b64d506aad60dc24b0a1ea30940c715d1223b3465fa140aeb9d02a7",
-  "operation_registry_sha256": "1f4c112dc9fb9884f55e2db23fa6e810d2e5adf74fbd613a116376fd481e05cd",
+  "operation_registry_sha256": "877d0926800d13108969bffaec7f0d1633562c0a5063da2615c91e29ff2dd896",
   "operation_registry_hash_encoding": "utf8-lf",
   "policy_catalog_sha256": "45f4be759288aaeb834a3ce97aa64ee7768048b15534618fc8c19512801f9a9f",
   "policy_catalog_hash_encoding": "utf8-lf",
-  "worker_sha256": "8498a97a54d8a218745e369f17d1356df1d7f2e059c040911ac04a1bc6b93bad",
+  "worker_sha256": "08a76c9f762c97609a2d01968282ab3dd736d4fd54af4714899a45e772023aa0",
   "worker_binary_format": "pe",
   "worker_manifest": {
     "actual_cgal_version": "6.2.1",
@@ -5226,6 +5239,584 @@
       },
       {
         "dependencies": [
+          "Barycentric_coordinates_2"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "shape.barycentric",
+        "info": {
+          "input_slots": [
+            "polygon",
+            "queries"
+          ],
+          "maximum_polygon_vertices": 200,
+          "source_header": "CGAL/Barycentric_coordinates_2/Wachspress_coordinates_2.h",
+          "validator_parameter_bindings": {
+            "shape.validate.barycentric": {
+              "method": "method"
+            }
+          },
+          "validators": [
+            "shape.validate.barycentric"
+          ]
+        },
+        "input_types": [
+          "Polygon2",
+          "PointSet2"
+        ],
+        "output_type": "GeometryQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "AABB_tree"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "spatial.aabb.intersections",
+        "info": {
+          "input_slots": [
+            "mesh",
+            "rays"
+          ],
+          "maximum_queries": 2000,
+          "source_header": "CGAL/AABB_tree.h",
+          "validators": [
+            "spatial.validate.aabb_intersections"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh",
+          "RayBatch3"
+        ],
+        "output_type": "SpatialQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "mesh.components.label",
+        "info": {
+          "input_slots": [
+            "mesh"
+          ],
+          "maximum_input_faces": 20000,
+          "source_header": "CGAL/Polygon_mesh_processing/connected_components.h",
+          "validators": [
+            "mesh.validate.components_label"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "GeometryQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "mesh.components.component",
+        "info": {
+          "input_slots": [
+            "source"
+          ],
+          "maximum_input_faces": 20000,
+          "source_header": "CGAL/Polygon_mesh_processing/connected_components.h",
+          "validator_parameter_bindings": {
+            "mesh.validate.components_component": {
+              "face": "face"
+            }
+          },
+          "validators": [
+            "mesh.validate.components_component"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "TriangleSurfaceMesh",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "mesh.components.keep_largest",
+        "info": {
+          "input_slots": [
+            "source"
+          ],
+          "maximum_input_faces": 20000,
+          "source_header": "CGAL/Polygon_mesh_processing/connected_components.h",
+          "validator_parameter_bindings": {
+            "mesh.validate.components_keep_largest": {
+              "count": "count"
+            }
+          },
+          "validators": [
+            "mesh.validate.components_keep_largest"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "TriangleSurfaceMesh",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "mesh.location.locate",
+        "info": {
+          "input_slots": [
+            "mesh",
+            "queries"
+          ],
+          "maximum_input_faces": 20000,
+          "maximum_queries": 2000,
+          "source_header": "CGAL/Polygon_mesh_processing/locate.h",
+          "validator_parameter_bindings": {
+            "mesh.validate.location": {
+              "strategy": "strategy"
+            }
+          },
+          "validators": [
+            "mesh.validate.location"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh",
+          "PointSet3"
+        ],
+        "output_type": "GeometryQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "PMP_Boolean_operations"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "mesh.slice.compute",
+        "info": {
+          "input_slots": [
+            "mesh"
+          ],
+          "maximum_input_faces": 20000,
+          "source_header": "CGAL/Polygon_mesh_slicer.h",
+          "validator_parameter_bindings": {
+            "mesh.validate.slice": {
+              "normal": "normal",
+              "offset": "offset"
+            }
+          },
+          "validators": [
+            "mesh.validate.slice"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "GeometryQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Subdivision_method_3"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "mesh.subdivide.catmull_clark",
+        "info": {
+          "input_slots": [
+            "source"
+          ],
+          "maximum_input_faces": 2000,
+          "maximum_output_faces": 60000,
+          "source_header": "CGAL/Subdivision_method_3/subdivision_methods_3.h",
+          "validator_parameter_bindings": {
+            "mesh.validate.catmull_clark": {
+              "steps": "steps"
+            }
+          },
+          "validators": [
+            "mesh.validate.catmull_clark"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh",
+          "PolygonSoup3"
+        ],
+        "output_type": "PolygonSoup3",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Subdivision_method_3"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "mesh.subdivide.loop",
+        "info": {
+          "input_slots": [
+            "source"
+          ],
+          "maximum_input_faces": 2000,
+          "maximum_output_faces": 60000,
+          "source_header": "CGAL/Subdivision_method_3/subdivision_methods_3.h",
+          "validator_parameter_bindings": {
+            "mesh.validate.loop": {
+              "steps": "steps"
+            }
+          },
+          "validators": [
+            "mesh.validate.loop"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "TriangleSurfaceMesh",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Barycentric_coordinates_2"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "shape.validate.barycentric",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "polygon_simple_counterclockwise",
+            "query_strictly_inside",
+            "coordinates_match_formula",
+            "partition_of_unity",
+            "linear_precision"
+          ],
+          "independence": "exact rational weights and tolerance-checked mean value formula; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "polygon",
+            "queries"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "GeometryQueryReport",
+          "Polygon2",
+          "PointSet2"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "AABB_tree"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "spatial.validate.aabb_intersections",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "every_ray_answered",
+            "do_intersect_exact",
+            "all_intersected_primitives_exact",
+            "any_intersected_primitive_member"
+          ],
+          "independence": "exact rational ray/triangle predicates; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "mesh",
+            "rays"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "SpatialQueryReport",
+          "TriangleSurfaceMesh",
+          "RayBatch3"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "mesh.validate.components_label",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "component_count_exact",
+            "labels_partition_equal",
+            "sizes_match"
+          ],
+          "independence": "union-find over shared edges; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "mesh"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "GeometryQueryReport",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "mesh.validate.components_component",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_is_manifold",
+            "candidate_has_no_unreferenced_vertices",
+            "faces_equal_selected_source_faces"
+          ],
+          "independence": "union-find over shared edges; exact coordinate comparison; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "TriangleSurfaceMesh",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "mesh.validate.components_keep_largest",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_is_manifold",
+            "kept_set_unambiguous",
+            "candidate_has_no_unreferenced_vertices",
+            "faces_equal_selected_source_faces"
+          ],
+          "independence": "union-find component sizes; exact coordinate comparison; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "TriangleSurfaceMesh",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "mesh.validate.location",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "every_query_answered",
+            "barycentric_valid",
+            "point_is_face_combination",
+            "distance_matches_location",
+            "location_is_closest_exact"
+          ],
+          "independence": "exact rational closest point on every triangle; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "mesh",
+            "queries"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "GeometryQueryReport",
+          "TriangleSurfaceMesh",
+          "PointSet3"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "PMP_Boolean_operations"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "mesh.validate.slice",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "points_on_plane",
+            "segments_on_mesh_section",
+            "sections_fully_covered",
+            "closed_mesh_gives_closed_polylines"
+          ],
+          "independence": "exact triangle/plane sections and interval coverage; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "mesh"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "GeometryQueryReport",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Subdivision_method_3"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "mesh.validate.catmull_clark",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "counts_match",
+            "faces_match_independent_subdivision",
+            "orientation_preserved"
+          ],
+          "independence": "Catmull-Clark masks re-implemented from raw OFF data; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "PolygonSoup3",
+          "TriangleSurfaceMesh",
+          "PolygonSoup3"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Subdivision_method_3"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "mesh.validate.loop",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "counts_match",
+            "faces_match_independent_subdivision",
+            "orientation_preserved"
+          ],
+          "independence": "Loop masks re-implemented from raw OFF data; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "TriangleSurfaceMesh",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
           "Poisson_surface_reconstruction_3",
           "Mesh_3",
           "Point_set_processing_3",
@@ -5522,19 +6113,29 @@
     ],
     "worker": "cgal-master-worker"
   },
-  "worker_manifest_sha256": "4a32a5f5bf2b74326a407889ebd4591b45bf63a3efb1af801ccef5a2d19d8d3e",
+  "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
   "tests": [
     {
       "id": "family-7.5-replay-cases",
       "source_path": "tests/master_family_replay_cases.py",
       "source_sha256": "69b3216bf60de8b908dcf6f82e4fee3ffc438ee2a29cf2d756c4b558c6ce3e65",
       "source_hash_encoding": "utf8-lf",
-      "stdout_sha256": "be57df3934163d2415933f257f1b1e57bdcf4789237bd49f054679444bf84e5d",
+      "stdout_sha256": "e3de75a9f24cb9e267a324f9397e33be641c5ca7d1e144ce4cd3fa808d0dbcb7",
       "exit_code": 0,
       "status": "pass"
     }
   ],
   "blobs": {
+    "07ee458e5da62fe2400fa4175aad65ee71ab89af92e70fe9db7d0b58dc5da58c": {
+      "encoding": "base64",
+      "byte_size": 553,
+      "content": "eyJsZW5ndGhfdW5pdCI6Im1tIiwib3BlcmF0aW9uIjoibWVzaC5zbGljZS5jb21wdXRlIiwicGFyYW1ldGVycyI6eyJub3JtYWwiOlswLjAsMC4wLDEuMF0sIm9mZnNldCI6eyJ1bml0IjoibW0iLCJ2YWx1ZSI6MS4wfX0sInJlcG9ydF9raW5kIjoibWVzaF9zbGljZSIsInJlcG9ydF90eXBlIjoiR2VvbWV0cnlRdWVyeVJlcG9ydCIsInJlc3VsdHMiOnsicG9seWxpbmVzIjpbeyJjbG9zZWQiOnRydWUsInBvaW50cyI6W1siMCIsIjAiLCIxIl0sWyIxIiwiMCIsIjEiXSxbIjIiLCIwIiwiMSJdLFsiMiIsIjEiLCIxIl0sWyIyIiwiMiIsIjEiXSxbIjEiLCIyIiwiMSJdLFsiMCIsIjIiLCIxIl0sWyIwIiwiMSIsIjEiXSxbIjAiLCIwIiwiMSJdXX1dfSwic2NoZW1hX3ZlcnNpb24iOjEsInNvdXJjZSI6eyJtZXNoX3NoYTI1NiI6IjdlMDUzZGEzNjRiYzE5NWNiN2Q4ZjA1NTBkYzExMzgxMGI3MDg5MjAyN2IyY2Y0ZTE5OWMxMjgxNzFmZGE3MTcifSwic3VtbWFyeSI6eyJjbG9zZWRfcG9seWxpbmVfY291bnQiOjEsImZhY2VfY291bnQiOjEyLCJwb2x5bGluZV9jb3VudCI6MX19Cg=="
+    },
+    "0a1de646b78a7adf20be1b8d7e8eb5f7a390b03e27b49199a5ddcdc0f2671ffe": {
+      "encoding": "base64",
+      "byte_size": 469,
+      "content": "eyJsZW5ndGhfdW5pdCI6Im1tIiwib3BlcmF0aW9uIjoibWVzaC5zbGljZS5jb21wdXRlIiwicGFyYW1ldGVycyI6eyJub3JtYWwiOlsxLjAsMC4wLDAuMF0sIm9mZnNldCI6eyJ1bml0IjoibW0iLCJ2YWx1ZSI6MS4wfX0sInJlcG9ydF9raW5kIjoibWVzaF9zbGljZSIsInJlcG9ydF90eXBlIjoiR2VvbWV0cnlRdWVyeVJlcG9ydCIsInJlc3VsdHMiOnsicG9seWxpbmVzIjpbeyJjbG9zZWQiOmZhbHNlLCJwb2ludHMiOltbIjEiLCIyIiwiMCJdLFsiMSIsIjEiLCIwIl0sWyIxIiwiMCIsIjAiXV19XX0sInNjaGVtYV92ZXJzaW9uIjoxLCJzb3VyY2UiOnsibWVzaF9zaGEyNTYiOiI2ODhhM2U3MDQ4MDAwZWNiZWJjZDdkZWU5OGU1M2YwN2Y5YTQwMTNhYTc2ZDU2ZGRjNWZlN2Y4ZGQ3NGQ4MmJjIn0sInN1bW1hcnkiOnsiY2xvc2VkX3BvbHlsaW5lX2NvdW50IjowLCJmYWNlX2NvdW50IjoyLCJwb2x5bGluZV9jb3VudCI6MX19Cg=="
+    },
     "0b823c20cc4f837d99f3b6d066b8433a39688017d61e0825f9dcb5cb6214fbf2": {
       "encoding": "base64",
       "byte_size": 918,
@@ -5555,6 +6156,11 @@
       "byte_size": 327,
       "content": "T0ZGCjE2IDI0IDAKMCAwIDAKMiAwIDIKMCAyIDIKMiAyIDIKMiAwIDAKMiAyIDAKMCAyIDAKMCAwIDIKNCAwIDAKNiAwIDIKNCAyIDIKNiAyIDIKNiAwIDAKNiAyIDAKNCAyIDAKNCAwIDIKMyAwIDYgNQozIDAgNSA0CjMgNyAxIDMKMyA3IDMgMgozIDAgNCAxCjMgMCAxIDcKMyA0IDUgMwozIDQgMyAxCjMgNSA2IDIKMyA1IDIgMwozIDYgMCA3CjMgNiA3IDIKMyA4IDE0IDEzCjMgOCAxMyAxMgozIDE1IDkgMTEKMyAxNSAxMSAxMAozIDggMTIgOQozIDggOSAxNQozIDEyIDEzIDExCjMgMTIgMTEgOQozIDEzIDE0IDEwCjMgMTMgMTAgMTEKMyAxNCA4IDE1CjMgMTQgMTUgMTAK"
     },
+    "3c3c33827366286118d474eb37a8f76a563fedef4ce97733d0578368e989e4ce": {
+      "encoding": "base64",
+      "byte_size": 495,
+      "content": "eyJjaGVja3MiOnsiY2xvc2VkX21lc2hfZ2l2ZXNfY2xvc2VkX3BvbHlsaW5lcyI6dHJ1ZSwicGFyYW1ldGVyc19tYXRjaCI6dHJ1ZSwicG9pbnRzX29uX3BsYW5lIjp0cnVlLCJzZWN0aW9uc19mdWxseV9jb3ZlcmVkIjp0cnVlLCJzZWdtZW50c19vbl9tZXNoX3NlY3Rpb24iOnRydWUsInNvdXJjZV9tYXRjaGVzIjp0cnVlfSwiY2xvc2VkX3BvbHlsaW5lX2NvdW50IjoxLCJmYWNlX2NvdW50IjoxMiwiaW5kZXBlbmRlbmNlIjoiZXhhY3QgcmF0aW9uYWwgdHJpYW5nbGUvcGxhbmUgc2VjdGlvbnMgYW5kIGludGVydmFsIGNvdmVyYWdlOyBubyBDR0FMIGhlYWRlciIsIm1lc2hfY2xvc2VkIjp0cnVlLCJwYXNzZWQiOnRydWUsInBvbHlsaW5lX2NvdW50IjoxLCJyZXBvcnRfdHlwZSI6IlZhbGlkYXRpb25SZXBvcnQiLCJzY2hlbWFfdmVyc2lvbiI6MSwic2VjdGlvbl9jb3VudCI6MTIsInN0YXR1cyI6InBhc3MiLCJ2YWxpZGF0b3IiOiJtZXNoLnZhbGlkYXRlLnNsaWNlIn0K"
+    },
     "482b576b9d8ea479ec86794aed6eb3540920afe3c8f75156b1d898f502a6e620": {
       "encoding": "base64",
       "byte_size": 936,
@@ -5570,6 +6176,11 @@
       "byte_size": 155,
       "content": "T0ZGCjggMTIgMAo0IDAgMAo2IDAgMAo2IDIgMAo0IDIgMAo0IDAgMgo2IDAgMgo2IDIgMgo0IDIgMgozIDAgMyAyCjMgMCAyIDEKMyA0IDUgNgozIDQgNiA3CjMgMCAxIDUKMyAwIDUgNAozIDEgMiA2CjMgMSA2IDUKMyAyIDMgNwozIDIgNyA2CjMgMyAwIDQKMyAzIDQgNwo="
     },
+    "688a3e7048000ecbebcd7dee98e53f07f9a4013aa76d56ddc5fe7f8dd74d82bc": {
+      "encoding": "base64",
+      "byte_size": 50,
+      "content": "T0ZGCjQgMiAwCjAgMCAwCjIgMCAwCjIgMiAwCjAgMiAwCjMgMCAxIDIKMyAwIDIgMwo="
+    },
     "727bedd5d13712e7506e15aeb1ea35b5da660bf2143bf28e8f257b0aa7eb2164": {
       "encoding": "base64",
       "byte_size": 155,
@@ -5579,6 +6190,11 @@
       "encoding": "base64",
       "byte_size": 155,
       "content": "T0ZGCjggMTIgMAoxIDAgMAozIDAgMAozIDIgMAoxIDIgMAoxIDAgMgozIDAgMgozIDIgMgoxIDIgMgozIDAgMyAyCjMgMCAyIDEKMyA0IDUgNgozIDQgNiA3CjMgMCAxIDUKMyAwIDUgNAozIDEgMiA2CjMgMSA2IDUKMyAyIDMgNwozIDIgNyA2CjMgMyAwIDQKMyAzIDQgNwo="
+    },
+    "7e053da364bc195cb7d8f0550dc113810b70892027b2cf4e199c128171fda717": {
+      "encoding": "base64",
+      "byte_size": 155,
+      "content": "T0ZGCjggMTIgMAowIDAgMAoyIDAgMAowIDIgMAoyIDIgMAowIDAgMgoyIDAgMgowIDIgMgoyIDIgMgozIDAgMiAzCjMgMCAzIDEKMyA0IDUgNwozIDQgNyA2CjMgMCAxIDUKMyAwIDUgNAozIDIgNiA3CjMgMiA3IDMKMyAwIDQgNgozIDAgNiAyCjMgMSAzIDcKMyAxIDcgNQo="
     },
     "857398dc1af0ff7c938c08c2ebdb7e00352f73a571d6f6fbaa3ad4913c01a5fa": {
       "encoding": "base64",
@@ -5600,10 +6216,30 @@
       "byte_size": 944,
       "content": "eyJiaW5kaW5ncyI6eyJjYW5kaWRhdGVfc2hhMjU2IjoiYzM5ZWIyZmFjNWYwMTM5MzlmNDY0NDEzMjE0NDgzN2YwY2FkY2JlNWQ1YzM2ZjA0ZjZhMTAwMDU0Yzk2ZDI2OCIsIm9wZXJhdGlvbl9wYXJhbWV0ZXIiOiJpbnRlcnNlY3Rpb24iLCJzb3VyY2VfYV9zaGEyNTYiOiI3MjdiZWRkNWQxMzcxMmU3NTA2ZTE1YWViMWVhMzViNWRhNjYwYmYyMTQzYmYyOGU4ZjI1N2IwYWE3ZWIyMTY0Iiwic291cmNlX2Jfc2hhMjU2IjoiNzY3NzMwMTNiMTY1ZTQ0YmE0Zjc2NjgxNDRhNzRlYTMxY2I0M2ZjNjFiZDEwMmQzZDM2OGYxNmNhNGFkYzdjOSIsInVuaXQiOiJtbSJ9LCJjaGVja3MiOnsiY2FuZGlkYXRlX2V4YWN0X3ZvbHVtZSI6IjQiLCJjbG9zZWRfb3JfY2Fub25pY2FsX2VtcHR5Ijp0cnVlLCJlbXB0eV9yZWFzb24iOiIiLCJleGFjdF92b2x1bWVfbWF0Y2hlc19yZWZlcmVuY2UiOnRydWUsIm11dHVhbF9leGFjdF9kaWZmZXJlbmNlX2VtcHR5Ijp0cnVlLCJvcGVyYXRpb25fY2xhc3NpZmljYXRpb25fbWF0Y2hlcyI6dHJ1ZSwib3BlcmF0aW9uX3BhcmFtZXRlcl9ib3VuZCI6dHJ1ZSwicmVmZXJlbmNlX2V4YWN0X3ZvbHVtZSI6IjQiLCJyZXN1bHRfc3RhdHVzIjoidm9sdW1lIiwicmVzdWx0X3N0YXR1c19tYXRjaGVzX3JlZmVyZW5jZSI6dHJ1ZSwic2VsZl9pbnRlcnNlY3Rpb25fZnJlZSI6dHJ1ZSwidG9wb2xvZ3lfdmFsaWQiOnRydWUsInZvbHVtZV9ib3VuZGFyeV9vcmllbnRhdGlvbl92YWxpZCI6dHJ1ZX0sIm9wZXJhdGlvbiI6ImludGVyc2VjdGlvbiIsInBhc3NlZCI6dHJ1ZSwic2NoZW1hIjoiVmFsaWRhdGlvblJlcG9ydC92MSIsInNjaGVtYV92ZXJzaW9uIjoxLCJzdGF0dXMiOiJwYXNzIiwidmFsaWRhdGVzIjoibWVzaC5ib29sZWFuLmludGVyc2VjdGlvbiIsInZhbGlkYXRvcl9pZCI6Im1lc2gudmFsaWRhdGUuYm9vbGVhbl9pbnRlcnNlY3Rpb24ifQo="
     },
+    "b8f9f0e34bfb8a42c6e78ebbb54669baa806d820e0fe634d759eb12320776e54": {
+      "encoding": "base64",
+      "byte_size": 433,
+      "content": "eyJsZW5ndGhfdW5pdCI6ICJtbSIsICJvcGVyYXRpb24iOiAibWVzaC5zbGljZS5jb21wdXRlIiwgInBhcmFtZXRlcnMiOiB7Im5vcm1hbCI6IFswLjAsIDAuMCwgMS4wXSwgIm9mZnNldCI6IHsidW5pdCI6ICJtbSIsICJ2YWx1ZSI6IDEuMH19LCAicmVwb3J0X2tpbmQiOiAibWVzaF9zbGljZSIsICJyZXBvcnRfdHlwZSI6ICJHZW9tZXRyeVF1ZXJ5UmVwb3J0IiwgInJlc3VsdHMiOiB7InBvbHlsaW5lcyI6IFtdfSwgInNjaGVtYV92ZXJzaW9uIjogMSwgInNvdXJjZSI6IHsibWVzaF9zaGEyNTYiOiAiN2UwNTNkYTM2NGJjMTk1Y2I3ZDhmMDU1MGRjMTEzODEwYjcwODkyMDI3YjJjZjRlMTk5YzEyODE3MWZkYTcxNyJ9LCAic3VtbWFyeSI6IHsiY2xvc2VkX3BvbHlsaW5lX2NvdW50IjogMSwgImZhY2VfY291bnQiOiAxMiwgInBvbHlsaW5lX2NvdW50IjogMX19Cg=="
+    },
+    "bc48ac2fef09df7f84507b9f0403aba19345791dc50107d073a819c3d989e298": {
+      "encoding": "base64",
+      "byte_size": 633,
+      "content": "eyJsZW5ndGhfdW5pdCI6Im1tIiwib3BlcmF0aW9uIjoibWVzaC5zbGljZS5jb21wdXRlIiwicGFyYW1ldGVycyI6eyJub3JtYWwiOlsxLjAsMS4wLDEuMF0sIm9mZnNldCI6eyJ1bml0IjoibW0iLCJ2YWx1ZSI6My4wfX0sInJlcG9ydF9raW5kIjoibWVzaF9zbGljZSIsInJlcG9ydF90eXBlIjoiR2VvbWV0cnlRdWVyeVJlcG9ydCIsInJlc3VsdHMiOnsicG9seWxpbmVzIjpbeyJjbG9zZWQiOnRydWUsInBvaW50cyI6W1siMCIsIjEiLCIyIl0sWyIxLzIiLCIxLzIiLCIyIl0sWyIxIiwiMCIsIjIiXSxbIjMvMiIsIjAiLCIzLzIiXSxbIjIiLCIwIiwiMSJdLFsiMiIsIjEvMiIsIjEvMiJdLFsiMiIsIjEiLCIwIl0sWyIzLzIiLCIzLzIiLCIwIl0sWyIxIiwiMiIsIjAiXSxbIjEvMiIsIjIiLCIxLzIiXSxbIjAiLCIyIiwiMSJdLFsiMCIsIjMvMiIsIjMvMiJdLFsiMCIsIjEiLCIyIl1dfV19LCJzY2hlbWFfdmVyc2lvbiI6MSwic291cmNlIjp7Im1lc2hfc2hhMjU2IjoiN2UwNTNkYTM2NGJjMTk1Y2I3ZDhmMDU1MGRjMTEzODEwYjcwODkyMDI3YjJjZjRlMTk5YzEyODE3MWZkYTcxNyJ9LCJzdW1tYXJ5Ijp7ImNsb3NlZF9wb2x5bGluZV9jb3VudCI6MSwiZmFjZV9jb3VudCI6MTIsInBvbHlsaW5lX2NvdW50IjoxfX0K"
+    },
     "bcfb3ed11d38f40c7899a40829f9a42f9b648b836a3614b2cb85267c38fdfeac": {
       "encoding": "base64",
       "byte_size": 255,
       "content": "T0ZGCjEyIDIwIDAKMSAxIDAKMSAyIDAKMSAwIDAKMSAyIDEKMSAwIDEKMSAwIDIKMSAxIDIKMSAyIDIKMCAwIDAKMCAyIDAKMCAwIDIKMCAyIDIKMyAwIDkgMQozIDYgMTEgMTAKMyA4IDIgNAozIDUgMTAgNAozIDEgOSAzCjMgMTEgNyAzCjMgOSA4IDEwCjMgOSAxMCAxMQozIDExIDMgOQozIDkgMCA4CjMgOCAwIDIKMyA2IDEwIDUKMyA4IDQgMTAKMyA3IDExIDYKMyAxIDQgMAozIDUgMyA2CjMgNyA2IDMKMyA1IDEgMwozIDIgMCA0CjMgMSA1IDQK"
+    },
+    "be6db75d06d45ac065f28087b6d7addca7f07dd0bbc1fc2be6d55444b0cd3702": {
+      "encoding": "base64",
+      "byte_size": 494,
+      "content": "eyJjaGVja3MiOnsiY2xvc2VkX21lc2hfZ2l2ZXNfY2xvc2VkX3BvbHlsaW5lcyI6dHJ1ZSwicGFyYW1ldGVyc19tYXRjaCI6dHJ1ZSwicG9pbnRzX29uX3BsYW5lIjp0cnVlLCJzZWN0aW9uc19mdWxseV9jb3ZlcmVkIjp0cnVlLCJzZWdtZW50c19vbl9tZXNoX3NlY3Rpb24iOnRydWUsInNvdXJjZV9tYXRjaGVzIjp0cnVlfSwiY2xvc2VkX3BvbHlsaW5lX2NvdW50IjoxLCJmYWNlX2NvdW50IjoxMiwiaW5kZXBlbmRlbmNlIjoiZXhhY3QgcmF0aW9uYWwgdHJpYW5nbGUvcGxhbmUgc2VjdGlvbnMgYW5kIGludGVydmFsIGNvdmVyYWdlOyBubyBDR0FMIGhlYWRlciIsIm1lc2hfY2xvc2VkIjp0cnVlLCJwYXNzZWQiOnRydWUsInBvbHlsaW5lX2NvdW50IjoxLCJyZXBvcnRfdHlwZSI6IlZhbGlkYXRpb25SZXBvcnQiLCJzY2hlbWFfdmVyc2lvbiI6MSwic2VjdGlvbl9jb3VudCI6OCwic3RhdHVzIjoicGFzcyIsInZhbGlkYXRvciI6Im1lc2gudmFsaWRhdGUuc2xpY2UifQo="
+    },
+    "bea0cbba9890517d5acfd41daafb95641e504eecbd61ed726265fa8b46408be3": {
+      "encoding": "base64",
+      "byte_size": 494,
+      "content": "eyJjaGVja3MiOnsiY2xvc2VkX21lc2hfZ2l2ZXNfY2xvc2VkX3BvbHlsaW5lcyI6dHJ1ZSwicGFyYW1ldGVyc19tYXRjaCI6dHJ1ZSwicG9pbnRzX29uX3BsYW5lIjp0cnVlLCJzZWN0aW9uc19mdWxseV9jb3ZlcmVkIjp0cnVlLCJzZWdtZW50c19vbl9tZXNoX3NlY3Rpb24iOnRydWUsInNvdXJjZV9tYXRjaGVzIjp0cnVlfSwiY2xvc2VkX3BvbHlsaW5lX2NvdW50IjowLCJmYWNlX2NvdW50IjoyLCJpbmRlcGVuZGVuY2UiOiJleGFjdCByYXRpb25hbCB0cmlhbmdsZS9wbGFuZSBzZWN0aW9ucyBhbmQgaW50ZXJ2YWwgY292ZXJhZ2U7IG5vIENHQUwgaGVhZGVyIiwibWVzaF9jbG9zZWQiOmZhbHNlLCJwYXNzZWQiOnRydWUsInBvbHlsaW5lX2NvdW50IjoxLCJyZXBvcnRfdHlwZSI6IlZhbGlkYXRpb25SZXBvcnQiLCJzY2hlbWFfdmVyc2lvbiI6MSwic2VjdGlvbl9jb3VudCI6Miwic3RhdHVzIjoicGFzcyIsInZhbGlkYXRvciI6Im1lc2gudmFsaWRhdGUuc2xpY2UifQo="
     },
     "c39eb2fac5f013939f4644132144837f0cadcbe5d5c36f04f6a100054c96d268": {
       "encoding": "base64",
@@ -5807,6 +6443,69 @@
       "status": "pass",
       "validates": "mesh.boolean.difference",
       "validator_id": "mesh.validate.boolean_difference"
+    },
+    "5e04525cc6242d34298b69cf3ff742fc31344edcfb7c5c86e94029701e800b22": {
+      "checks": {
+        "closed_mesh_gives_closed_polylines": true,
+        "parameters_match": true,
+        "points_on_plane": true,
+        "sections_fully_covered": true,
+        "segments_on_mesh_section": true,
+        "source_matches": true
+      },
+      "closed_polyline_count": 1,
+      "face_count": 12,
+      "independence": "exact rational triangle/plane sections and interval coverage; no CGAL header",
+      "mesh_closed": true,
+      "passed": true,
+      "polyline_count": 1,
+      "report_type": "ValidationReport",
+      "schema_version": 1,
+      "section_count": 8,
+      "status": "pass",
+      "validator": "mesh.validate.slice"
+    },
+    "a46d3e0f173d3b44a4acc1cc81b5495ed6dbd2e81e1cc123268bb4b4be84bb95": {
+      "checks": {
+        "closed_mesh_gives_closed_polylines": true,
+        "parameters_match": true,
+        "points_on_plane": true,
+        "sections_fully_covered": true,
+        "segments_on_mesh_section": true,
+        "source_matches": true
+      },
+      "closed_polyline_count": 1,
+      "face_count": 12,
+      "independence": "exact rational triangle/plane sections and interval coverage; no CGAL header",
+      "mesh_closed": true,
+      "passed": true,
+      "polyline_count": 1,
+      "report_type": "ValidationReport",
+      "schema_version": 1,
+      "section_count": 12,
+      "status": "pass",
+      "validator": "mesh.validate.slice"
+    },
+    "73c6ef6ae68c2f4df99a1ff0ecb1ea18db9cef75bc23d5773baef2d910ed0d59": {
+      "checks": {
+        "closed_mesh_gives_closed_polylines": true,
+        "parameters_match": true,
+        "points_on_plane": true,
+        "sections_fully_covered": true,
+        "segments_on_mesh_section": true,
+        "source_matches": true
+      },
+      "closed_polyline_count": 0,
+      "face_count": 2,
+      "independence": "exact rational triangle/plane sections and interval coverage; no CGAL header",
+      "mesh_closed": false,
+      "passed": true,
+      "polyline_count": 1,
+      "report_type": "ValidationReport",
+      "schema_version": 1,
+      "section_count": 2,
+      "status": "pass",
+      "validator": "mesh.validate.slice"
     }
   },
   "operation_results": [
@@ -5814,7 +6513,7 @@
       "case_id": "union-overlap",
       "operation_id": "mesh.boolean.union",
       "revision": 1,
-      "worker_manifest_sha256": "4a32a5f5bf2b74326a407889ebd4591b45bf63a3efb1af801ccef5a2d19d8d3e",
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
       "test_id": "family-7.5-replay-cases",
       "request": {
         "inputs": [
@@ -5983,7 +6682,7 @@
       "case_id": "intersection-overlap",
       "operation_id": "mesh.boolean.intersection",
       "revision": 1,
-      "worker_manifest_sha256": "4a32a5f5bf2b74326a407889ebd4591b45bf63a3efb1af801ccef5a2d19d8d3e",
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
       "test_id": "family-7.5-replay-cases",
       "request": {
         "inputs": [
@@ -6152,7 +6851,7 @@
       "case_id": "difference-overlap",
       "operation_id": "mesh.boolean.difference",
       "revision": 1,
-      "worker_manifest_sha256": "4a32a5f5bf2b74326a407889ebd4591b45bf63a3efb1af801ccef5a2d19d8d3e",
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
       "test_id": "family-7.5-replay-cases",
       "request": {
         "inputs": [
@@ -6321,7 +7020,7 @@
       "case_id": "union-disjoint",
       "operation_id": "mesh.boolean.union",
       "revision": 1,
-      "worker_manifest_sha256": "4a32a5f5bf2b74326a407889ebd4591b45bf63a3efb1af801ccef5a2d19d8d3e",
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
       "test_id": "family-7.5-replay-cases",
       "request": {
         "inputs": [
@@ -6490,7 +7189,7 @@
       "case_id": "intersection-contained",
       "operation_id": "mesh.boolean.intersection",
       "revision": 1,
-      "worker_manifest_sha256": "4a32a5f5bf2b74326a407889ebd4591b45bf63a3efb1af801ccef5a2d19d8d3e",
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
       "test_id": "family-7.5-replay-cases",
       "request": {
         "inputs": [
@@ -6659,7 +7358,7 @@
       "case_id": "difference-contained",
       "operation_id": "mesh.boolean.difference",
       "revision": 1,
-      "worker_manifest_sha256": "4a32a5f5bf2b74326a407889ebd4591b45bf63a3efb1af801ccef5a2d19d8d3e",
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
       "test_id": "family-7.5-replay-cases",
       "request": {
         "inputs": [
@@ -6823,6 +7522,528 @@
           }
         }
       }
+    },
+    {
+      "case_id": "slice-cube-mid",
+      "operation_id": "mesh.slice.compute",
+      "revision": 1,
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
+      "test_id": "family-7.5-replay-cases",
+      "request": {
+        "inputs": [
+          {
+            "artifact_id": "input-0",
+            "blob_sha256": "7e053da364bc195cb7d8f0550dc113810b70892027b2cf4e199c128171fda717",
+            "format": "off",
+            "sha256": "7e053da364bc195cb7d8f0550dc113810b70892027b2cf4e199c128171fda717",
+            "type": "TriangleSurfaceMesh",
+            "unit": "mm"
+          }
+        ],
+        "kernel": "package_recommended",
+        "limits": {
+          "memory_mb": 2048,
+          "wall_time_ms": 120000
+        },
+        "operation": "mesh.slice.compute",
+        "parameters": {
+          "normal": [
+            0,
+            0,
+            1
+          ],
+          "offset": {
+            "unit": "mm",
+            "value": 1
+          }
+        },
+        "protocol": 1,
+        "request_id": "slice-cube-mid"
+      },
+      "request_sha256": "4c939d77f666af73dba753dbda023e4520b94696cd21ff406d40387e9e324d8c",
+      "response": {
+        "metrics": {
+          "algorithm": "CGAL::Polygon_mesh_slicer",
+          "closed_polyline_count": 1,
+          "face_count": 12,
+          "polyline_count": 1
+        },
+        "outputs": [
+          {
+            "blob_sha256": "07ee458e5da62fe2400fa4175aad65ee71ab89af92e70fe9db7d0b58dc5da58c",
+            "format": "json",
+            "slot": "analysis",
+            "type": "GeometryQueryReport",
+            "unit": "none"
+          }
+        ],
+        "protocol": 1,
+        "request_id": "slice-cube-mid",
+        "status": "ok"
+      },
+      "response_sha256": "6b889c5b47741205bcf7e09f1e5c4e18a1d77e87b505116262fdb6696f90d2a5",
+      "input_hashes": [
+        "7e053da364bc195cb7d8f0550dc113810b70892027b2cf4e199c128171fda717"
+      ],
+      "output_hashes": [
+        "07ee458e5da62fe2400fa4175aad65ee71ab89af92e70fe9db7d0b58dc5da58c"
+      ],
+      "validators": [
+        {
+          "operation_id": "mesh.validate.slice",
+          "revision": 1,
+          "request": {
+            "inputs": [
+              {
+                "artifact_id": "slice-cube-mid-analysis-0",
+                "blob_sha256": "07ee458e5da62fe2400fa4175aad65ee71ab89af92e70fe9db7d0b58dc5da58c",
+                "format": "json",
+                "sha256": "07ee458e5da62fe2400fa4175aad65ee71ab89af92e70fe9db7d0b58dc5da58c",
+                "type": "GeometryQueryReport",
+                "unit": "none"
+              },
+              {
+                "artifact_id": "input-0",
+                "blob_sha256": "7e053da364bc195cb7d8f0550dc113810b70892027b2cf4e199c128171fda717",
+                "format": "off",
+                "sha256": "7e053da364bc195cb7d8f0550dc113810b70892027b2cf4e199c128171fda717",
+                "type": "TriangleSurfaceMesh",
+                "unit": "mm"
+              }
+            ],
+            "kernel": "package_recommended",
+            "limits": {
+              "memory_mb": 2048,
+              "wall_time_ms": 120000
+            },
+            "operation": "mesh.validate.slice",
+            "parameters": {
+              "normal": [
+                0,
+                0,
+                1
+              ],
+              "offset": {
+                "unit": "mm",
+                "value": 1
+              }
+            },
+            "protocol": 1,
+            "request_id": "slice-cube-mid--mesh.validate.slice"
+          },
+          "request_sha256": "2b439e07cfff2241673071f1d4da0c641c98fdbf0605ee1e9e37f32347a86e89",
+          "response": {
+            "metrics": {
+              "checks": {
+                "closed_mesh_gives_closed_polylines": true,
+                "parameters_match": true,
+                "points_on_plane": true,
+                "sections_fully_covered": true,
+                "segments_on_mesh_section": true,
+                "source_matches": true
+              },
+              "closed_polyline_count": 1,
+              "face_count": 12,
+              "independence": "exact rational triangle/plane sections and interval coverage; no CGAL header",
+              "mesh_closed": true,
+              "passed": true,
+              "polyline_count": 1,
+              "report_type": "ValidationReport",
+              "schema_version": 1,
+              "section_count": 8,
+              "status": "pass",
+              "validator": "mesh.validate.slice"
+            },
+            "outputs": [
+              {
+                "blob_sha256": "be6db75d06d45ac065f28087b6d7addca7f07dd0bbc1fc2be6d55444b0cd3702",
+                "format": "json",
+                "slot": "validation",
+                "type": "ValidationReport",
+                "unit": "none"
+              }
+            ],
+            "protocol": 1,
+            "request_id": "slice-cube-mid--mesh.validate.slice",
+            "status": "ok"
+          },
+          "response_sha256": "75f5682fef6bb831561ac06fc97383c10bc4321d7ef5a10ed9ee15d0d85b3dc7",
+          "input_hashes": [
+            "07ee458e5da62fe2400fa4175aad65ee71ab89af92e70fe9db7d0b58dc5da58c",
+            "7e053da364bc195cb7d8f0550dc113810b70892027b2cf4e199c128171fda717"
+          ],
+          "output_hashes": [
+            "be6db75d06d45ac065f28087b6d7addca7f07dd0bbc1fc2be6d55444b0cd3702"
+          ],
+          "report_blob_sha256": "be6db75d06d45ac065f28087b6d7addca7f07dd0bbc1fc2be6d55444b0cd3702",
+          "report_sha256": "5e04525cc6242d34298b69cf3ff742fc31344edcfb7c5c86e94029701e800b22",
+          "status": "pass"
+        }
+      ],
+      "validation": {
+        "status": "pass",
+        "checks": {
+          "transform_executed": {
+            "pass": true
+          },
+          "behaviour_assertions": {
+            "pass": true,
+            "count": 6
+          },
+          "validator:mesh.validate.slice": {
+            "pass": true,
+            "report_sha256": "5e04525cc6242d34298b69cf3ff742fc31344edcfb7c5c86e94029701e800b22"
+          }
+        }
+      }
+    },
+    {
+      "case_id": "slice-cube-diagonal",
+      "operation_id": "mesh.slice.compute",
+      "revision": 1,
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
+      "test_id": "family-7.5-replay-cases",
+      "request": {
+        "inputs": [
+          {
+            "artifact_id": "input-0",
+            "blob_sha256": "7e053da364bc195cb7d8f0550dc113810b70892027b2cf4e199c128171fda717",
+            "format": "off",
+            "sha256": "7e053da364bc195cb7d8f0550dc113810b70892027b2cf4e199c128171fda717",
+            "type": "TriangleSurfaceMesh",
+            "unit": "mm"
+          }
+        ],
+        "kernel": "package_recommended",
+        "limits": {
+          "memory_mb": 2048,
+          "wall_time_ms": 120000
+        },
+        "operation": "mesh.slice.compute",
+        "parameters": {
+          "normal": [
+            1,
+            1,
+            1
+          ],
+          "offset": {
+            "unit": "mm",
+            "value": 3
+          }
+        },
+        "protocol": 1,
+        "request_id": "slice-cube-diagonal"
+      },
+      "request_sha256": "3b2d91d8e9dfa436a4c3bd51a7c0e634230d890a57be5a4d6a06f1ddcb051146",
+      "response": {
+        "metrics": {
+          "algorithm": "CGAL::Polygon_mesh_slicer",
+          "closed_polyline_count": 1,
+          "face_count": 12,
+          "polyline_count": 1
+        },
+        "outputs": [
+          {
+            "blob_sha256": "bc48ac2fef09df7f84507b9f0403aba19345791dc50107d073a819c3d989e298",
+            "format": "json",
+            "slot": "analysis",
+            "type": "GeometryQueryReport",
+            "unit": "none"
+          }
+        ],
+        "protocol": 1,
+        "request_id": "slice-cube-diagonal",
+        "status": "ok"
+      },
+      "response_sha256": "f6c697526edc6c972cb11ab9325c14114126ff29d671b45b0b9d066c63550f2a",
+      "input_hashes": [
+        "7e053da364bc195cb7d8f0550dc113810b70892027b2cf4e199c128171fda717"
+      ],
+      "output_hashes": [
+        "bc48ac2fef09df7f84507b9f0403aba19345791dc50107d073a819c3d989e298"
+      ],
+      "validators": [
+        {
+          "operation_id": "mesh.validate.slice",
+          "revision": 1,
+          "request": {
+            "inputs": [
+              {
+                "artifact_id": "slice-cube-diagonal-analysis-0",
+                "blob_sha256": "bc48ac2fef09df7f84507b9f0403aba19345791dc50107d073a819c3d989e298",
+                "format": "json",
+                "sha256": "bc48ac2fef09df7f84507b9f0403aba19345791dc50107d073a819c3d989e298",
+                "type": "GeometryQueryReport",
+                "unit": "none"
+              },
+              {
+                "artifact_id": "input-0",
+                "blob_sha256": "7e053da364bc195cb7d8f0550dc113810b70892027b2cf4e199c128171fda717",
+                "format": "off",
+                "sha256": "7e053da364bc195cb7d8f0550dc113810b70892027b2cf4e199c128171fda717",
+                "type": "TriangleSurfaceMesh",
+                "unit": "mm"
+              }
+            ],
+            "kernel": "package_recommended",
+            "limits": {
+              "memory_mb": 2048,
+              "wall_time_ms": 120000
+            },
+            "operation": "mesh.validate.slice",
+            "parameters": {
+              "normal": [
+                1,
+                1,
+                1
+              ],
+              "offset": {
+                "unit": "mm",
+                "value": 3
+              }
+            },
+            "protocol": 1,
+            "request_id": "slice-cube-diagonal--mesh.validate.slice"
+          },
+          "request_sha256": "59f285cede0c66b6b55e381323032f612510ef4e39be63513b1a0999f9917481",
+          "response": {
+            "metrics": {
+              "checks": {
+                "closed_mesh_gives_closed_polylines": true,
+                "parameters_match": true,
+                "points_on_plane": true,
+                "sections_fully_covered": true,
+                "segments_on_mesh_section": true,
+                "source_matches": true
+              },
+              "closed_polyline_count": 1,
+              "face_count": 12,
+              "independence": "exact rational triangle/plane sections and interval coverage; no CGAL header",
+              "mesh_closed": true,
+              "passed": true,
+              "polyline_count": 1,
+              "report_type": "ValidationReport",
+              "schema_version": 1,
+              "section_count": 12,
+              "status": "pass",
+              "validator": "mesh.validate.slice"
+            },
+            "outputs": [
+              {
+                "blob_sha256": "3c3c33827366286118d474eb37a8f76a563fedef4ce97733d0578368e989e4ce",
+                "format": "json",
+                "slot": "validation",
+                "type": "ValidationReport",
+                "unit": "none"
+              }
+            ],
+            "protocol": 1,
+            "request_id": "slice-cube-diagonal--mesh.validate.slice",
+            "status": "ok"
+          },
+          "response_sha256": "89f8cd3611937bee5442ee0a869b0416ff050ccdd27b65f988ddd16c47cf12e8",
+          "input_hashes": [
+            "bc48ac2fef09df7f84507b9f0403aba19345791dc50107d073a819c3d989e298",
+            "7e053da364bc195cb7d8f0550dc113810b70892027b2cf4e199c128171fda717"
+          ],
+          "output_hashes": [
+            "3c3c33827366286118d474eb37a8f76a563fedef4ce97733d0578368e989e4ce"
+          ],
+          "report_blob_sha256": "3c3c33827366286118d474eb37a8f76a563fedef4ce97733d0578368e989e4ce",
+          "report_sha256": "a46d3e0f173d3b44a4acc1cc81b5495ed6dbd2e81e1cc123268bb4b4be84bb95",
+          "status": "pass"
+        }
+      ],
+      "validation": {
+        "status": "pass",
+        "checks": {
+          "transform_executed": {
+            "pass": true
+          },
+          "behaviour_assertions": {
+            "pass": true,
+            "count": 4
+          },
+          "validator:mesh.validate.slice": {
+            "pass": true,
+            "report_sha256": "a46d3e0f173d3b44a4acc1cc81b5495ed6dbd2e81e1cc123268bb4b4be84bb95"
+          }
+        }
+      }
+    },
+    {
+      "case_id": "slice-open-square",
+      "operation_id": "mesh.slice.compute",
+      "revision": 1,
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
+      "test_id": "family-7.5-replay-cases",
+      "request": {
+        "inputs": [
+          {
+            "artifact_id": "input-0",
+            "blob_sha256": "688a3e7048000ecbebcd7dee98e53f07f9a4013aa76d56ddc5fe7f8dd74d82bc",
+            "format": "off",
+            "sha256": "688a3e7048000ecbebcd7dee98e53f07f9a4013aa76d56ddc5fe7f8dd74d82bc",
+            "type": "TriangleSurfaceMesh",
+            "unit": "mm"
+          }
+        ],
+        "kernel": "package_recommended",
+        "limits": {
+          "memory_mb": 2048,
+          "wall_time_ms": 120000
+        },
+        "operation": "mesh.slice.compute",
+        "parameters": {
+          "normal": [
+            1,
+            0,
+            0
+          ],
+          "offset": {
+            "unit": "mm",
+            "value": 1
+          }
+        },
+        "protocol": 1,
+        "request_id": "slice-open-square"
+      },
+      "request_sha256": "320344084d61b5f995336a49285b24631dc88b2803919a522d8ca3ded156b66d",
+      "response": {
+        "metrics": {
+          "algorithm": "CGAL::Polygon_mesh_slicer",
+          "closed_polyline_count": 0,
+          "face_count": 2,
+          "polyline_count": 1
+        },
+        "outputs": [
+          {
+            "blob_sha256": "0a1de646b78a7adf20be1b8d7e8eb5f7a390b03e27b49199a5ddcdc0f2671ffe",
+            "format": "json",
+            "slot": "analysis",
+            "type": "GeometryQueryReport",
+            "unit": "none"
+          }
+        ],
+        "protocol": 1,
+        "request_id": "slice-open-square",
+        "status": "ok"
+      },
+      "response_sha256": "a32b73e3d6e069a06555363a378aff57d8415867aa8e53415927a138c09e7e61",
+      "input_hashes": [
+        "688a3e7048000ecbebcd7dee98e53f07f9a4013aa76d56ddc5fe7f8dd74d82bc"
+      ],
+      "output_hashes": [
+        "0a1de646b78a7adf20be1b8d7e8eb5f7a390b03e27b49199a5ddcdc0f2671ffe"
+      ],
+      "validators": [
+        {
+          "operation_id": "mesh.validate.slice",
+          "revision": 1,
+          "request": {
+            "inputs": [
+              {
+                "artifact_id": "slice-open-square-analysis-0",
+                "blob_sha256": "0a1de646b78a7adf20be1b8d7e8eb5f7a390b03e27b49199a5ddcdc0f2671ffe",
+                "format": "json",
+                "sha256": "0a1de646b78a7adf20be1b8d7e8eb5f7a390b03e27b49199a5ddcdc0f2671ffe",
+                "type": "GeometryQueryReport",
+                "unit": "none"
+              },
+              {
+                "artifact_id": "input-0",
+                "blob_sha256": "688a3e7048000ecbebcd7dee98e53f07f9a4013aa76d56ddc5fe7f8dd74d82bc",
+                "format": "off",
+                "sha256": "688a3e7048000ecbebcd7dee98e53f07f9a4013aa76d56ddc5fe7f8dd74d82bc",
+                "type": "TriangleSurfaceMesh",
+                "unit": "mm"
+              }
+            ],
+            "kernel": "package_recommended",
+            "limits": {
+              "memory_mb": 2048,
+              "wall_time_ms": 120000
+            },
+            "operation": "mesh.validate.slice",
+            "parameters": {
+              "normal": [
+                1,
+                0,
+                0
+              ],
+              "offset": {
+                "unit": "mm",
+                "value": 1
+              }
+            },
+            "protocol": 1,
+            "request_id": "slice-open-square--mesh.validate.slice"
+          },
+          "request_sha256": "bede0a37c1b182846a1d0b65e117853a033b75b6d2aad6a43ca767b48cec5b41",
+          "response": {
+            "metrics": {
+              "checks": {
+                "closed_mesh_gives_closed_polylines": true,
+                "parameters_match": true,
+                "points_on_plane": true,
+                "sections_fully_covered": true,
+                "segments_on_mesh_section": true,
+                "source_matches": true
+              },
+              "closed_polyline_count": 0,
+              "face_count": 2,
+              "independence": "exact rational triangle/plane sections and interval coverage; no CGAL header",
+              "mesh_closed": false,
+              "passed": true,
+              "polyline_count": 1,
+              "report_type": "ValidationReport",
+              "schema_version": 1,
+              "section_count": 2,
+              "status": "pass",
+              "validator": "mesh.validate.slice"
+            },
+            "outputs": [
+              {
+                "blob_sha256": "bea0cbba9890517d5acfd41daafb95641e504eecbd61ed726265fa8b46408be3",
+                "format": "json",
+                "slot": "validation",
+                "type": "ValidationReport",
+                "unit": "none"
+              }
+            ],
+            "protocol": 1,
+            "request_id": "slice-open-square--mesh.validate.slice",
+            "status": "ok"
+          },
+          "response_sha256": "59398e8141ec9d92574bf7dfdeb6a3d6520e28c782299866887f90c506b9acb8",
+          "input_hashes": [
+            "0a1de646b78a7adf20be1b8d7e8eb5f7a390b03e27b49199a5ddcdc0f2671ffe",
+            "688a3e7048000ecbebcd7dee98e53f07f9a4013aa76d56ddc5fe7f8dd74d82bc"
+          ],
+          "output_hashes": [
+            "bea0cbba9890517d5acfd41daafb95641e504eecbd61ed726265fa8b46408be3"
+          ],
+          "report_blob_sha256": "bea0cbba9890517d5acfd41daafb95641e504eecbd61ed726265fa8b46408be3",
+          "report_sha256": "73c6ef6ae68c2f4df99a1ff0ecb1ea18db9cef75bc23d5773baef2d910ed0d59",
+          "status": "pass"
+        }
+      ],
+      "validation": {
+        "status": "pass",
+        "checks": {
+          "transform_executed": {
+            "pass": true
+          },
+          "behaviour_assertions": {
+            "pass": true,
+            "count": 3
+          },
+          "validator:mesh.validate.slice": {
+            "pass": true,
+            "report_sha256": "73c6ef6ae68c2f4df99a1ff0ecb1ea18db9cef75bc23d5773baef2d910ed0d59"
+          }
+        }
+      }
     }
   ],
   "negative_control_proofs": {
@@ -6830,7 +8051,7 @@
       "case_id": "union-open-input-rejected",
       "operation_id": "mesh.boolean.union",
       "revision": 1,
-      "worker_manifest_sha256": "4a32a5f5bf2b74326a407889ebd4591b45bf63a3efb1af801ccef5a2d19d8d3e",
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
       "test_id": "family-7.5-replay-cases",
       "request": {
         "inputs": [
@@ -6886,7 +8107,196 @@
       "output_hashes": [],
       "expected_error_class": "PRECONDITION_FAILED",
       "status": "expected_rejection"
+    },
+    "slice-coplanar-face-rejected": {
+      "case_id": "slice-coplanar-face-rejected",
+      "operation_id": "mesh.slice.compute",
+      "revision": 1,
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
+      "test_id": "family-7.5-replay-cases",
+      "request": {
+        "inputs": [
+          {
+            "artifact_id": "input-0",
+            "blob_sha256": "7e053da364bc195cb7d8f0550dc113810b70892027b2cf4e199c128171fda717",
+            "format": "off",
+            "sha256": "7e053da364bc195cb7d8f0550dc113810b70892027b2cf4e199c128171fda717",
+            "type": "TriangleSurfaceMesh",
+            "unit": "mm"
+          }
+        ],
+        "kernel": "package_recommended",
+        "limits": {
+          "memory_mb": 2048,
+          "wall_time_ms": 120000
+        },
+        "operation": "mesh.slice.compute",
+        "parameters": {
+          "normal": [
+            0,
+            0,
+            1
+          ],
+          "offset": {
+            "unit": "mm",
+            "value": 0
+          }
+        },
+        "protocol": 1,
+        "request_id": "slice-coplanar-face-rejected"
+      },
+      "request_sha256": "1e80d71506cbb0ff42eb92e5fa3a9cb40176f81741ad30a76e3efd415f3490f2",
+      "response": {
+        "error": {
+          "class": "PRECONDITION_FAILED",
+          "code": "COPLANAR_FACE",
+          "message": "The slicing plane contains a mesh face; the slice is not a curve",
+          "recoverable": false,
+          "suggested_operations": []
+        },
+        "metrics": {},
+        "outputs": [],
+        "protocol": 1,
+        "request_id": "slice-coplanar-face-rejected",
+        "status": "error"
+      },
+      "response_sha256": "3641ee5fbe3b6222cca245f0fde5041a953206c4568210ede793d856f479f1f8",
+      "input_hashes": [
+        "7e053da364bc195cb7d8f0550dc113810b70892027b2cf4e199c128171fda717"
+      ],
+      "output_hashes": [],
+      "expected_error_class": "PRECONDITION_FAILED",
+      "status": "expected_rejection"
+    },
+    "slice-zero-normal-rejected": {
+      "case_id": "slice-zero-normal-rejected",
+      "operation_id": "mesh.slice.compute",
+      "revision": 1,
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
+      "test_id": "family-7.5-replay-cases",
+      "request": {
+        "inputs": [
+          {
+            "artifact_id": "input-0",
+            "blob_sha256": "7e053da364bc195cb7d8f0550dc113810b70892027b2cf4e199c128171fda717",
+            "format": "off",
+            "sha256": "7e053da364bc195cb7d8f0550dc113810b70892027b2cf4e199c128171fda717",
+            "type": "TriangleSurfaceMesh",
+            "unit": "mm"
+          }
+        ],
+        "kernel": "package_recommended",
+        "limits": {
+          "memory_mb": 2048,
+          "wall_time_ms": 120000
+        },
+        "operation": "mesh.slice.compute",
+        "parameters": {
+          "normal": [
+            0,
+            0,
+            0
+          ],
+          "offset": {
+            "unit": "mm",
+            "value": 1
+          }
+        },
+        "protocol": 1,
+        "request_id": "slice-zero-normal-rejected"
+      },
+      "request_sha256": "dd519004d76ce2020640dd5c644ec24cf362b1bcc949df35801fc09b1f71eea3",
+      "response": {
+        "error": {
+          "class": "PRECONDITION_FAILED",
+          "code": "ZERO_NORMAL",
+          "message": "The slicing plane normal must be nonzero",
+          "recoverable": false,
+          "suggested_operations": []
+        },
+        "metrics": {},
+        "outputs": [],
+        "protocol": 1,
+        "request_id": "slice-zero-normal-rejected",
+        "status": "error"
+      },
+      "response_sha256": "3c11e3c349545310049689e62b2b3f02424aba0b14b21484db447bbf799c9ad6",
+      "input_hashes": [
+        "7e053da364bc195cb7d8f0550dc113810b70892027b2cf4e199c128171fda717"
+      ],
+      "output_hashes": [],
+      "expected_error_class": "PRECONDITION_FAILED",
+      "status": "expected_rejection"
+    },
+    "slice-tampered-missing-polyline-rejected": {
+      "case_id": "slice-tampered-missing-polyline-rejected",
+      "operation_id": "mesh.validate.slice",
+      "revision": 1,
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
+      "test_id": "family-7.5-replay-cases",
+      "request": {
+        "inputs": [
+          {
+            "artifact_id": "input-0",
+            "blob_sha256": "b8f9f0e34bfb8a42c6e78ebbb54669baa806d820e0fe634d759eb12320776e54",
+            "format": "json",
+            "sha256": "b8f9f0e34bfb8a42c6e78ebbb54669baa806d820e0fe634d759eb12320776e54",
+            "type": "GeometryQueryReport",
+            "unit": "none"
+          },
+          {
+            "artifact_id": "input-1",
+            "blob_sha256": "7e053da364bc195cb7d8f0550dc113810b70892027b2cf4e199c128171fda717",
+            "format": "off",
+            "sha256": "7e053da364bc195cb7d8f0550dc113810b70892027b2cf4e199c128171fda717",
+            "type": "TriangleSurfaceMesh",
+            "unit": "mm"
+          }
+        ],
+        "kernel": "package_recommended",
+        "limits": {
+          "memory_mb": 2048,
+          "wall_time_ms": 120000
+        },
+        "operation": "mesh.validate.slice",
+        "parameters": {
+          "normal": [
+            0,
+            0,
+            1
+          ],
+          "offset": {
+            "unit": "mm",
+            "value": 1
+          }
+        },
+        "protocol": 1,
+        "request_id": "slice-tampered-missing-polyline-rejected"
+      },
+      "request_sha256": "afe3531c48315b7e6b83d2e159076e2654100fe0689facebfc0e4b4908418991",
+      "response": {
+        "error": {
+          "class": "VALIDATION_FAILED",
+          "code": "SECTION_NOT_COVERED",
+          "message": "A triangle/plane section is not covered by the reported polylines",
+          "recoverable": false,
+          "suggested_operations": []
+        },
+        "metrics": {},
+        "outputs": [],
+        "protocol": 1,
+        "request_id": "slice-tampered-missing-polyline-rejected",
+        "status": "error"
+      },
+      "response_sha256": "9a3d701e91a9301b197cadeb3714a8b59228517d59a81b403f92fc79040ce95d",
+      "input_hashes": [
+        "b8f9f0e34bfb8a42c6e78ebbb54669baa806d820e0fe634d759eb12320776e54",
+        "7e053da364bc195cb7d8f0550dc113810b70892027b2cf4e199c128171fda717"
+      ],
+      "output_hashes": [],
+      "expected_error_class": "VALIDATION_FAILED",
+      "status": "expected_rejection"
     }
   },
-  "coverage_note": "Family 7.5: 1 requirement(s) bound by 6 replayed cases with registry-derived mandatory validators; 4 requirement(s) remain unbound with recorded gaps. The immutable 80-requirement denominator and full standalone acceptance remain incomplete."
+  "coverage_note": "Family 7.5: 2 requirement(s) bound by 9 replayed cases with registry-derived mandatory validators; 3 requirement(s) remain unbound with recorded gaps. The immutable 80-requirement denominator and full standalone acceptance remain incomplete."
 }

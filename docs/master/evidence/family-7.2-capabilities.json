@@ -20,7 +20,8 @@
     "major.7.2.01",
     "major.7.2.02",
     "major.7.2.03",
-    "major.7.2.05"
+    "major.7.2.05",
+    "major.7.2.04"
   ],
   "requirement_coverage": {
     "major.7.2.01": {
@@ -84,21 +85,32 @@
         "bbox_2",
         "bbox_3"
       ]
+    },
+    "major.7.2.04": {
+      "case_ids": [
+        "aabb-intersections-cube"
+      ],
+      "operation_ids": [
+        "spatial.aabb.intersections"
+      ],
+      "symbols": [
+        "do_intersect",
+        "any_intersected_primitive",
+        "all_intersected_primitives"
+      ]
     }
   },
-  "unbound_requirements": {
-    "major.7.2.04": "No intersection-candidate operation (do_intersect, any_intersected_primitive, all_intersected_primitives); only AABB first-hit ray queries are exposed."
-  },
-  "family_contract_sha256": "b836de6e106c34988eeb19658724acf18edd24a0a8a9e206498aca90f90d2ba0",
+  "unbound_requirements": {},
+  "family_contract_sha256": "5930af268d34a2a9b903a048e8f47e133d591788d0044832b22048f66caa1999",
   "family_contract_source_path": "scripts/master_replay_families.py",
-  "family_contract_source_sha256": "e9516b100dc97eeb2f66dcb70a4a7d90853ca31a631110f1f516eae02f2f9df7",
+  "family_contract_source_sha256": "866f91eb45732e83841a829665d2c713bcc22b4975698075d683910e018db1db",
   "family_contract_source_hash_encoding": "utf8-lf",
   "catalog_baseline_sha256": "143ec18a5b64d506aad60dc24b0a1ea30940c715d1223b3465fa140aeb9d02a7",
-  "operation_registry_sha256": "1f4c112dc9fb9884f55e2db23fa6e810d2e5adf74fbd613a116376fd481e05cd",
+  "operation_registry_sha256": "877d0926800d13108969bffaec7f0d1633562c0a5063da2615c91e29ff2dd896",
   "operation_registry_hash_encoding": "utf8-lf",
   "policy_catalog_sha256": "45f4be759288aaeb834a3ce97aa64ee7768048b15534618fc8c19512801f9a9f",
   "policy_catalog_hash_encoding": "utf8-lf",
-  "worker_sha256": "8498a97a54d8a218745e369f17d1356df1d7f2e059c040911ac04a1bc6b93bad",
+  "worker_sha256": "08a76c9f762c97609a2d01968282ab3dd736d4fd54af4714899a45e772023aa0",
   "worker_binary_format": "pe",
   "worker_manifest": {
     "actual_cgal_version": "6.2.1",
@@ -5268,6 +5280,584 @@
       },
       {
         "dependencies": [
+          "Barycentric_coordinates_2"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "shape.barycentric",
+        "info": {
+          "input_slots": [
+            "polygon",
+            "queries"
+          ],
+          "maximum_polygon_vertices": 200,
+          "source_header": "CGAL/Barycentric_coordinates_2/Wachspress_coordinates_2.h",
+          "validator_parameter_bindings": {
+            "shape.validate.barycentric": {
+              "method": "method"
+            }
+          },
+          "validators": [
+            "shape.validate.barycentric"
+          ]
+        },
+        "input_types": [
+          "Polygon2",
+          "PointSet2"
+        ],
+        "output_type": "GeometryQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "AABB_tree"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "spatial.aabb.intersections",
+        "info": {
+          "input_slots": [
+            "mesh",
+            "rays"
+          ],
+          "maximum_queries": 2000,
+          "source_header": "CGAL/AABB_tree.h",
+          "validators": [
+            "spatial.validate.aabb_intersections"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh",
+          "RayBatch3"
+        ],
+        "output_type": "SpatialQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "mesh.components.label",
+        "info": {
+          "input_slots": [
+            "mesh"
+          ],
+          "maximum_input_faces": 20000,
+          "source_header": "CGAL/Polygon_mesh_processing/connected_components.h",
+          "validators": [
+            "mesh.validate.components_label"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "GeometryQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "mesh.components.component",
+        "info": {
+          "input_slots": [
+            "source"
+          ],
+          "maximum_input_faces": 20000,
+          "source_header": "CGAL/Polygon_mesh_processing/connected_components.h",
+          "validator_parameter_bindings": {
+            "mesh.validate.components_component": {
+              "face": "face"
+            }
+          },
+          "validators": [
+            "mesh.validate.components_component"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "TriangleSurfaceMesh",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "mesh.components.keep_largest",
+        "info": {
+          "input_slots": [
+            "source"
+          ],
+          "maximum_input_faces": 20000,
+          "source_header": "CGAL/Polygon_mesh_processing/connected_components.h",
+          "validator_parameter_bindings": {
+            "mesh.validate.components_keep_largest": {
+              "count": "count"
+            }
+          },
+          "validators": [
+            "mesh.validate.components_keep_largest"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "TriangleSurfaceMesh",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "mesh.location.locate",
+        "info": {
+          "input_slots": [
+            "mesh",
+            "queries"
+          ],
+          "maximum_input_faces": 20000,
+          "maximum_queries": 2000,
+          "source_header": "CGAL/Polygon_mesh_processing/locate.h",
+          "validator_parameter_bindings": {
+            "mesh.validate.location": {
+              "strategy": "strategy"
+            }
+          },
+          "validators": [
+            "mesh.validate.location"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh",
+          "PointSet3"
+        ],
+        "output_type": "GeometryQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "PMP_Boolean_operations"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "mesh.slice.compute",
+        "info": {
+          "input_slots": [
+            "mesh"
+          ],
+          "maximum_input_faces": 20000,
+          "source_header": "CGAL/Polygon_mesh_slicer.h",
+          "validator_parameter_bindings": {
+            "mesh.validate.slice": {
+              "normal": "normal",
+              "offset": "offset"
+            }
+          },
+          "validators": [
+            "mesh.validate.slice"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "GeometryQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Subdivision_method_3"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "mesh.subdivide.catmull_clark",
+        "info": {
+          "input_slots": [
+            "source"
+          ],
+          "maximum_input_faces": 2000,
+          "maximum_output_faces": 60000,
+          "source_header": "CGAL/Subdivision_method_3/subdivision_methods_3.h",
+          "validator_parameter_bindings": {
+            "mesh.validate.catmull_clark": {
+              "steps": "steps"
+            }
+          },
+          "validators": [
+            "mesh.validate.catmull_clark"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh",
+          "PolygonSoup3"
+        ],
+        "output_type": "PolygonSoup3",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Subdivision_method_3"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "mesh.subdivide.loop",
+        "info": {
+          "input_slots": [
+            "source"
+          ],
+          "maximum_input_faces": 2000,
+          "maximum_output_faces": 60000,
+          "source_header": "CGAL/Subdivision_method_3/subdivision_methods_3.h",
+          "validator_parameter_bindings": {
+            "mesh.validate.loop": {
+              "steps": "steps"
+            }
+          },
+          "validators": [
+            "mesh.validate.loop"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "TriangleSurfaceMesh",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Barycentric_coordinates_2"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "shape.validate.barycentric",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "polygon_simple_counterclockwise",
+            "query_strictly_inside",
+            "coordinates_match_formula",
+            "partition_of_unity",
+            "linear_precision"
+          ],
+          "independence": "exact rational weights and tolerance-checked mean value formula; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "polygon",
+            "queries"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "GeometryQueryReport",
+          "Polygon2",
+          "PointSet2"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "AABB_tree"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "spatial.validate.aabb_intersections",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "every_ray_answered",
+            "do_intersect_exact",
+            "all_intersected_primitives_exact",
+            "any_intersected_primitive_member"
+          ],
+          "independence": "exact rational ray/triangle predicates; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "mesh",
+            "rays"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "SpatialQueryReport",
+          "TriangleSurfaceMesh",
+          "RayBatch3"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "mesh.validate.components_label",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "component_count_exact",
+            "labels_partition_equal",
+            "sizes_match"
+          ],
+          "independence": "union-find over shared edges; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "mesh"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "GeometryQueryReport",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "mesh.validate.components_component",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_is_manifold",
+            "candidate_has_no_unreferenced_vertices",
+            "faces_equal_selected_source_faces"
+          ],
+          "independence": "union-find over shared edges; exact coordinate comparison; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "TriangleSurfaceMesh",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "mesh.validate.components_keep_largest",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_is_manifold",
+            "kept_set_unambiguous",
+            "candidate_has_no_unreferenced_vertices",
+            "faces_equal_selected_source_faces"
+          ],
+          "independence": "union-find component sizes; exact coordinate comparison; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "TriangleSurfaceMesh",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "mesh.validate.location",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "every_query_answered",
+            "barycentric_valid",
+            "point_is_face_combination",
+            "distance_matches_location",
+            "location_is_closest_exact"
+          ],
+          "independence": "exact rational closest point on every triangle; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "mesh",
+            "queries"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "GeometryQueryReport",
+          "TriangleSurfaceMesh",
+          "PointSet3"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "PMP_Boolean_operations"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "mesh.validate.slice",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "points_on_plane",
+            "segments_on_mesh_section",
+            "sections_fully_covered",
+            "closed_mesh_gives_closed_polylines"
+          ],
+          "independence": "exact triangle/plane sections and interval coverage; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "mesh"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "GeometryQueryReport",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Subdivision_method_3"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "mesh.validate.catmull_clark",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "counts_match",
+            "faces_match_independent_subdivision",
+            "orientation_preserved"
+          ],
+          "independence": "Catmull-Clark masks re-implemented from raw OFF data; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "PolygonSoup3",
+          "TriangleSurfaceMesh",
+          "PolygonSoup3"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Subdivision_method_3"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "mesh.validate.loop",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "counts_match",
+            "faces_match_independent_subdivision",
+            "orientation_preserved"
+          ],
+          "independence": "Loop masks re-implemented from raw OFF data; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "TriangleSurfaceMesh",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
           "Poisson_surface_reconstruction_3",
           "Mesh_3",
           "Point_set_processing_3",
@@ -5564,14 +6154,14 @@
     ],
     "worker": "cgal-master-worker"
   },
-  "worker_manifest_sha256": "4a32a5f5bf2b74326a407889ebd4591b45bf63a3efb1af801ccef5a2d19d8d3e",
+  "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
   "tests": [
     {
       "id": "family-7.2-replay-cases",
       "source_path": "tests/master_family_replay_cases.py",
       "source_sha256": "69b3216bf60de8b908dcf6f82e4fee3ffc438ee2a29cf2d756c4b558c6ce3e65",
       "source_hash_encoding": "utf8-lf",
-      "stdout_sha256": "c27028169aced8d643862434b7276000ab37c2490d50de257ca51164845c0719",
+      "stdout_sha256": "0e88391ce45f6ae1e67cb265fea71ec9673ca1d9d25f80b81f0153a81e143deb",
       "exit_code": 0,
       "status": "pass"
     }
@@ -5627,6 +6217,11 @@
       "byte_size": 1906,
       "content": "eyJsZW5ndGhfdW5pdCI6Im1tIiwib3BlcmF0aW9uIjoic3BhdGlhbC5rbm5fMyIsInBhcmFtZXRlcnMiOnsiayI6NSwic2VhcmNoIjoib3J0aG9nb25hbCJ9LCJxdWVyeV9raW5kIjoia19uZWFyZXN0X25laWdoYm9ycyIsInJlcG9ydF90eXBlIjoiU3BhdGlhbFF1ZXJ5UmVwb3J0IiwicmVzdWx0cyI6W3sibmVpZ2hib3JzIjpbeyJkaXN0YW5jZSI6MC4yNzczMDQ3OTYyNDQ0MDQyLCJpbmRleCI6MTUxfSx7ImRpc3RhbmNlIjowLjI5MzYyODUzMDU5NDI4NjA2LCJpbmRleCI6MTE4fSx7ImRpc3RhbmNlIjowLjMxODQyNTE5NTI5MzI2NDEzLCJpbmRleCI6NzB9LHsiZGlzdGFuY2UiOjAuNDA4NTQ1NTc1Nzc4Nzg4MywiaW5kZXgiOjU2fSx7ImRpc3RhbmNlIjowLjQ1MjUzNTMxOTA0MTk0ODE2LCJpbmRleCI6OX1dLCJxdWVyeV9pbmRleCI6MH0seyJuZWlnaGJvcnMiOlt7ImRpc3RhbmNlIjowLjAsImluZGV4IjoxNjd9LHsiZGlzdGFuY2UiOjAuMzQwOTM5MTM3MTcyNzE3MjMsImluZGV4Ijo0OH0seyJkaXN0YW5jZSI6MC41NDU1MDU4NDAxOTQwNTI1LCJpbmRleCI6ODN9LHsiZGlzdGFuY2UiOjAuODQ5NDYzMDcwMDUxNzkyNywiaW5kZXgiOjEwNn0seyJkaXN0YW5jZSI6MC45MTQ0MTc4OTU1Nzg4NDY2LCJpbmRleCI6NTJ9XSwicXVlcnlfaW5kZXgiOjF9LHsibmVpZ2hib3JzIjpbeyJkaXN0YW5jZSI6MS42MDIzMTczNTc2MDk4MTA0LCJpbmRleCI6MTMzfSx7ImRpc3RhbmNlIjoxLjYwOTU3MzY3Njc1ODY3NSwiaW5kZXgiOjd9LHsiZGlzdGFuY2UiOjEuNzQ0OTczNjYwODMzNzgyMiwiaW5kZXgiOjE1OX0seyJkaXN0YW5jZSI6MS43NSwiaW5kZXgiOjE2NX0seyJkaXN0YW5jZSI6MS43NTUwMDEyOTYzNjQwOTg0LCJpbmRleCI6NDJ9XSwicXVlcnlfaW5kZXgiOjJ9LHsibmVpZ2hib3JzIjpbeyJkaXN0YW5jZSI6MC4xNzYxMTYwMzM4MDUyNTQxMiwiaW5kZXgiOjE4fSx7ImRpc3RhbmNlIjowLjM2MjY4NjcxMzUxODM1MzEzLCJpbmRleCI6MTU2fSx7ImRpc3RhbmNlIjowLjQ5MDcyMDU5MjM2MDM1OTIsImluZGV4IjoyM30seyJkaXN0YW5jZSI6MC40OTI1MzA5MDU1MTQ0MzE0NiwiaW5kZXgiOjJ9LHsiZGlzdGFuY2UiOjAuNTAyNjMzNjQzNDMxMjg2LCJpbmRleCI6M31dLCJxdWVyeV9pbmRleCI6M30seyJuZWlnaGJvcnMiOlt7ImRpc3RhbmNlIjowLjE0OTExMjcyMDI5Mjg5ODQzLCJpbmRleCI6NDR9LHsiZGlzdGFuY2UiOjAuMjA4NDAxNTY2MTY3NjY4MTQsImluZGV4IjoxMDd9LHsiZGlzdGFuY2UiOjAuMjE1OTA3MzA5NTU2MzA3MzMsImluZGV4Ijo0M30seyJkaXN0YW5jZSI6MC4yNzYxMTA5MjkxMjc4NDM2LCJpbmRleCI6NjB9LHsiZGlzdGFuY2UiOjAuMzYzOTI5MDM2OTkyODY0NSwiaW5kZXgiOjM4fV0sInF1ZXJ5X2luZGV4Ijo0fSx7Im5laWdoYm9ycyI6W3siZGlzdGFuY2UiOjMuNDY0MTAxNjE1MTM3NzU0NCwiaW5kZXgiOjE2N30seyJkaXN0YW5jZSI6My43NTAyNDk3Njk2MjM2NDc2LCJpbmRleCI6NDh9LHsiZGlzdGFuY2UiOjMuOTIwNjM2Mjc2MzE2NTA1LCJpbmRleCI6ODN9LHsiZGlzdGFuY2UiOjQuMTY4NzY0NDE3Nzg4NjE2LCJpbmRleCI6NTJ9LHsiZGlzdGFuY2UiOjQuMjY5NDYzNTU5NzkyNDM5LCJpbmRleCI6MTA2fV0sInF1ZXJ5X2luZGV4Ijo1fV0sInNjaGVtYV92ZXJzaW9uIjoxLCJzb3VyY2UiOnsicG9pbnRzX3NoYTI1NiI6IjZlZWZiYzkyM2M3MWU1MzEyMDMxMmNkYmRkMzBlMjgzYWUwNzg1MGU1ZmI2NTBlY2I5NThmMTZiN2MxZTBkYWUiLCJxdWVyaWVzX3NoYTI1NiI6IjQ5ZDBiN2M2N2Q3MTZmMTExZjMyNGE0OTkxOGQ5NTYxZDQ2ZTViMmQzYmYwM2VjMWM5MzRjMDcxZjVlZTEwNzAifSwic3VtbWFyeSI6eyJuZWlnaGJvcnNfcGVyX3F1ZXJ5Ijo1LCJwb2ludF9jb3VudCI6MTY4LCJxdWVyeV9jb3VudCI6Nn19Cg=="
     },
+    "466ae5d45e60a5384893aa681b540b4972dde1da139dd797733092698106e794": {
+      "encoding": "base64",
+      "byte_size": 1020,
+      "content": "eyJsZW5ndGhfdW5pdCI6ICJtbSIsICJvcGVyYXRpb24iOiAic3BhdGlhbC5hYWJiLmludGVyc2VjdGlvbnMiLCAicGFyYW1ldGVycyI6IHt9LCAicXVlcnlfa2luZCI6ICJhYWJiX3JheV9pbnRlcnNlY3Rpb25zIiwgInJlcG9ydF90eXBlIjogIlNwYXRpYWxRdWVyeVJlcG9ydCIsICJyZXN1bHRzIjogW3siYW55X2ZhY2UiOiAwLCAiZG9faW50ZXJzZWN0IjogdHJ1ZSwgImZhY2VzIjogWzAsIDEsIDIsIDNdLCAicmF5X2luZGV4IjogMH0sIHsiYW55X2ZhY2UiOiBudWxsLCAiZG9faW50ZXJzZWN0IjogdHJ1ZSwgImZhY2VzIjogW10sICJyYXlfaW5kZXgiOiAxfSwgeyJhbnlfZmFjZSI6IDEwLCAiZG9faW50ZXJzZWN0IjogdHJ1ZSwgImZhY2VzIjogWzEwXSwgInJheV9pbmRleCI6IDJ9LCB7ImFueV9mYWNlIjogOCwgImRvX2ludGVyc2VjdCI6IHRydWUsICJmYWNlcyI6IFs4LCA5LCAxMCwgMTFdLCAicmF5X2luZGV4IjogM30sIHsiYW55X2ZhY2UiOiAwLCAiZG9faW50ZXJzZWN0IjogdHJ1ZSwgImZhY2VzIjogWzAsIDEsIDIsIDMsIDQsIDUsIDYsIDcsIDgsIDksIDEwLCAxMV0sICJyYXlfaW5kZXgiOiA0fSwgeyJhbnlfZmFjZSI6IDAsICJkb19pbnRlcnNlY3QiOiB0cnVlLCAiZmFjZXMiOiBbMCwgMSwgMiwgM10sICJyYXlfaW5kZXgiOiA1fSwgeyJhbnlfZmFjZSI6IDAsICJkb19pbnRlcnNlY3QiOiB0cnVlLCAiZmFjZXMiOiBbMCwgMSwgMiwgMywgNCwgNSwgOCwgOV0sICJyYXlfaW5kZXgiOiA2fV0sICJzY2hlbWFfdmVyc2lvbiI6IDEsICJzb3VyY2UiOiB7Im1lc2hfc2hhMjU2IjogIjdlMDUzZGEzNjRiYzE5NWNiN2Q4ZjA1NTBkYzExMzgxMGI3MDg5MjAyN2IyY2Y0ZTE5OWMxMjgxNzFmZGE3MTciLCAicmF5c19zaGEyNTYiOiAiYzM0Nzg5MGQxYmRlNWQyMDZjNTdjMzBiNGJmYzU4ZGE3MTM5YTU1YzUyNGMwNDJhNDZlOTJlNzcwNDFkNzcxOCJ9LCAic3VtbWFyeSI6IHsiZmFjZV9jb3VudCI6IDEyLCAiaW50ZXJzZWN0aW5nX3JheV9jb3VudCI6IDYsICJyYXlfY291bnQiOiA3fX0K"
+    },
     "485c0f02823a87491c373bf88203742ae7ac2461f2eafca6397b4f88e7d23481": {
       "encoding": "base64",
       "byte_size": 882,
@@ -5672,6 +6267,11 @@
       "byte_size": 9906,
       "content": "LTAuNDE1NjIzNjA0NTc1NDYzMSAtMC4xMjI4MjY1Mjc5NTE2MDk0MiAwLjk0MDI5MjAwMzA1NDc1NjgKLTAuNDQwMzg3MTAwMjIyNzg0NiAtMC44MjY1NTAxNzEyOTI4NjU3OSAwLjQyOTkxMzM0NTE5OTk5OTY5Ci0wLjM3OTI5MjIwODIyMDQ3NTI3IDAuMzQ5ODMzMDUyMDAwMTI3MTUgLTAuNTYyODMxNTc0NTM0NTY0NDUKLTAuNzU2NDU0MjY1NjEzMTgxNjMgMC40OTQyOTE0MDE5MTA3Mjg1MSAtMC45NDQ0MzAzNDUzMTM2MTI0NwotMC4yNzA4MDc0NTY2MDQyOTY2MSAtMC41MjU0MTI3MTkxNTA4NjE1MiAwLjk5NjIyMjk2NDY4MDgwNjk1Ci0wLjg4MDIwNTUwOTE3NTkyMzExIC0wLjgxMjcyNjg3Njg0MTAyNzYyIDAuNjQxODAyNjk2MzI2NTA2ODgKLTAuNDE5NjMwMDA2Mzk0MTc3MzYgMC4zMTU5NjY1MjI3NzgwMTI0IC0wLjAxMjI3NjE4MDYyODMzNjkwOAowLjk3NTk5MzY1NTA2NjE4MjA4IC0wLjg4MzY3ODI1NzM0MTg3MDg5IDAuNTk3NzM5OTU1MDc5OTU1MTQKLTAuODQ0MDcwNTI3NjA5MzEzNDUgLTAuMDE5Mjk0NDk5NDAzNjA4MTY3IC0wLjM0MTg2MzM4MTgyNDAwMjY3CjAuMTU2OTU1MzM5NDMzNTIwMTQgMC4yMTY2MTM3NTU2MzIyMzgwNiAtMC4zNjUwMDkyMDE2MzAwNDU2OQotMC4zMDAzMDc2NjM4MDE0ODM2NiAtMC44OTU1Mjc5NzI1NDkzNTYxMiAwLjQ3MjIxMjIyNjk4MTk4OTA2CjAuMzMwMTI1MzU4NjgzMzM3MDMgLTAuNDEyNjM0MjY1NDE2ODY2MjEgMC44MDI4MzE0NzQ3MjAzMzY4OQowLjU4MjcwNzk4MTY5NzYxMzk1IC0wLjY1OTg3Nzc2MDkzNjY1NDE4IC0wLjQ1NDgzMTQ4Mzg3NDUwNTM0Ci0wLjk4OTEzNzgxMDU3NjQ4MDA5IDAuNTU2NDQ4ODc4NDUyMDQzODMgLTAuOTY1MTYyMjA5NzM0MjcwMDMKLTAuMTQzNjU2Njg4OTczMDAxMSAtMC45NDU1MTY5MTMwNzgzOTc4IDAuMDQyMDcwMTAzNDcxMzQ1OTg4CjAuNTMyNDU4NDQ5OTQyMjczNTQgLTAuODMzOTc2Nzk4NzkzNjE3MyAwLjYxODEyNjg3MDY3ODU4NDUyCi0wLjkxNTEyMjI1NzExNDM1MzEzIC0wLjEzNjE2Njg2ODQ4MDYwMDExIDAuNDk4MzMwMjM4MTg5MzIwNDMKMC4zOTE0MzY0MTc3MTU4NjI2OCAtMC4xMjY2MDkxNjY0MzUyNDkzMyAwLjUzMDQyNzgyOTUyODI3ODI3Ci0wLjQwMjIyNzQ1NzAwNDUxMzIzIDAuNzU3MTk2NDAxOTM5NjE5MzUgLTAuNzY4NDg5NjM1Mzc4NjMxNDYKMC41MzUzMTU5MTQxNTUxNzU5OSAtMC4yNzQyMDk2MzI4Njk4NDIwMSAtMC41MTg3MDE3OTU1ODg3OTkxNAowLjU0OTQyOTc4NTg5MzM1NDEyIDAuMjc3NjI5ODEwNDExNTY2MiAtMC4wNjkxNjU3MzIwMDY3Mzg3Ci0wLjQ2NDY0OTgwMDQ3MTc1NzE5IC0wLjcyOTYwMDM0MTE1NzQwMTY5IDAuOTA2ODQ5MjM1NTM4MjY3MTMKLTAuNTA5MTk4MjgyOTYxODA5OCAwLjExMjQzOTcwODQwNDM2ODAxIC0wLjQ2Nzc5Mzg4MTgzMDkxOTc0Ci0wLjA2NjIxNzY0MjA5MTcwMjY2NiAwLjQ3MDY4OTM0OTA1NjQ3NjA4IC0wLjUzNDUyODg4NzI0MTE0NDY3CjAuNjg3NjIwMjQyNDMyMjI3OTcgMC44MTY5NjM0OTU2MjcwOTM0NyAwLjA2NDEyNDkwMTQwNzg3Mzc0NwotMC4zODcyNDQ5MzA4OTE3NjA5MyAtMC45MTg5NDgwMTM3MjQ5ODk2OSAtMC40MzM5ODA2MTMwMjYwNTM1MQowLjAzMTIzMDE1MjYwMTM3Njk1OSAtMC45MjIyOTcyMDQyNjM3NzQwNCAtMC44MDA2NjE2ODI4OTQzMTYyNwotMC4xMDk1MzczNDcxOTUwODg0NSAtMC4xNjU5ODI3MTYwOTcyNjE3OCAtMC41NjU4NDUyOTkzNTcxMTUyNQotMC4yNTk4NDc1MTEzNTI5Njk0NiAtMC43MDg3MjU1MjMxNzI2NDIzNyAwLjk2MDE1ODY3MzI4NjM0MDA4Ci0wLjU3OTczNTgxMzMyOTI1MjA2IDAuODg1NTE0MjU2MzM4NjU1OTkgMC45ODA3MjIxNTYyMTU1Nzg1NwotMC4xNzMzNDY4OTQyNzQwNzU5IC0wLjE3ODc0NDY0MTU5OTc4NzA5IDAuOTQxNDIxNTcxNTA5MzcyNzgKLTAuMzg1OTk3MzAwMTExODQ3MDcgMC40NzgyNjY3Mzg0Nzk5NDQxNiAwLjQ4MjAxMTU1NzM5OTQxOTkyCjAuNzgzMjI5Mzc2Mzg0MjYzMjcgLTAuNzIxMTc4ODA0Njc3OTM0ODMgLTAuNjA2NzE4MzE2ODkzNzc2NDIKMC42Njg0NTMwNjIwNDU3NzM1OSAwLjQ5NzI4MjQxNzY3MTYzMDg0IDAuMjc2NjM1MDQyNzA2ODcwMjMKLTAuMjgwOTk0MzIyMjg4MzgxNSAtMC4zOTMxNzI3MDEzMzgzNzc2NyAwLjMyNzE4OTI5ODQxMTEyMTU0Ci0wLjkwNzM5NTc4MTEzMDUzNTc2IC0wLjQ1MDY5Mjk1MzIyMjg0NjMgMC4yODE0ODQ1MDM4OTUyOTI4OQotMC42NDU4NzgzODg2NTk0OTQ1NCAtMC44NjQ4NTAzNDkxNTk3NjE4OSAtMC4wOTY3ODc5Mjk3MTg2NjY0NTQKLTAuOTkxNTg4NTAzNDgyNjY1MjUgMC44MjkyMzQ3MTgxOTQzODUzMiAwLjY5MTYxNzI2ODg2Nzk1MjcyCjAuMjM4MzAwODQxODMwNzMyNjMgMC4xNDMwNjczODU5NzAxOTU0MiAwLjgyODg5NjE1MjcwNDM5Njc2CjAuNDAyMTE1MzQyNTM1OTk0NDYgLTAuNDY1MDA2MDc2MzA5OTQ5NzIgLTAuMDY2MDY0NjI0OTgzMDY4MDg4Ci0wLjYyMDc5NTQyNTA5NjAyMzcgLTAuNjY3NDcyNDAzNTk4NjgyOTggLTAuMDc0MjM1MDU3NzA2NTQyOTI4Ci0wLjM0NDM5MDgyOTYyMTQ4MjYgMC45NDg4Mzg3OTEwNjAxOTE2NCAwLjQ4Mzc1NTMwOTQxMjM3Njc3CjAuODI0Mzc3NDYyNjE0NzA3MTIgLTAuMDQ5NzU1NjM2NzQzNjIxNjAxIDAuNTEzODE1NjA5NDczNzMyOTUKLTAuMDcxNDMwMzk5Mzc3MzMwMiAwLjE5MzQ1OTU5MTU1MzY5NjUyIDAuNDMwNDcxMjUyNDcwNDI4ODMKMC4xNzU1NDQ1NzA2NzU0MzQ2MSAwLjM0NjQ0NDAwNjY5NjI0NTA5IDAuMzk4MTI1NTUxMjg2MTExMDUKMC4yMTYyODIyOTYwMzQyNjQzIDAuODU0NDY0MjQwMjAwMjg5MzMgMC41NDQwNDAyMjQ4OTAwMDA5MgowLjI1MDI2NjA2MzM2MTIzNDM2IC0wLjMyOTQyNzg0MTM2MjA0OTUgLTAuNDkxMTc1NTIyNTM1MDgxMTIKMC40MjQ0NDAzNjY3NDEzNDcyMiAtMC43MTI5NjQ5NDIyOTE0NDk5MSAwLjIwNzc5MDU0MjI2NDY1NjQzCjAuNjk1MTM3MTYwMDIzMjU5MiAwLjk2NjgxNTc5ODM5NDIxNjI3IDAuODUxMDEzNTgxNzU1OTg3ODUKLTAuNjc5ODk3MTUzNDE0NjY0NSAtMC4zMjcxMzgxODg1NTY1MDU4OSAtMC4zODY4NTY2NzMxMTg5NTQKMC43NjU1NTM2NjUzMTU1NzUyMyAtMC44MzE5NDE2MjE5MTU5MDM0OCAtMC40MzE2OTc2MzAwMjIzMDM0NAowLjg3MDEzMDI1NzExMzc2MjU3IDAuNjA2NTM1MDM1NjQyMDcyMDEgLTAuNDcwNDg5MjYwNzI2NzQ3NDYKMC4xMDM2MDQzNTk5OTk4Njc1IDAuODM1NTQxMzI0NDgzMTE5NTcgMC45MjUyNDUxNDQ3MDA2MTEzNwotMC42NTE4NTk5NTg4MDMzNDg5IC0wLjEyMDExMTQ5NTY3ODM4NTk3IC0wLjExMjY2OTA5MTI0NDg3Nzc4Ci0wLjQ0MDk2NTk2MjE4ODEyMjEyIC0wLjE3NjU5NTg0OTE3NzkwNTgzIC0wLjQ3NTE0ODAzOTU2MTcxODQ3Ci0wLjIzNTgyMTcwODg2ODE3NjIyIC0wLjc3MDY2NjcwMTEzNzUwNTI0IC0wLjIwMDIwMjEzMTAxNzIxNTUxCi0wLjEwMTE5MDY2MjQ4MzkzMjk0IDAuMzg2NTE3NDQ1NjAwNzczODMgLTAuMDg1Mjg4OTI5ODgzODc5MjYxCjAuNzkxNjAwNDE4ODY1MDYyMDUgMC4zNzM3MzE2MTg0MzkyNjYwNiAtMC44NDg1MDg4NjgzODM3Mzk0Ci0wLjQ3MzUwODMyMzc3NDcwNDQyIC0wLjE5MDIzMzYwNjE0ODMyMjA4IDAuMjc5NTQ0NTk2NjYzOTQyMDUKMC4xOTk1NTk3NzMyODc5MTU5NiAwLjA2MjUzNjA2ODc2Nzk5ODk5OCAtMC40NjMxMzEzNjkwMzU5NzE1MgowLjM5Njk1OTI4MzMxNjY4MzA2IDAuMjgyOTkxNTg2Njg4NDYzOCAwLjQ2NTU0Nzg3OTQ2MzAxNzkKLTAuMzU5ODcwNjQ5ODc2MDI2MjQgMC40NjIyMzMxMDU1Njk4Mzg1NCAwLjI1MTI1OTc5NzMzMzE1OTE3Ci0wLjE2MDg2MDg1MzI0NTkxMTQ4IC0wLjIxMzI5MTQxOTY3ODU2MjI0IC0wLjM3NDM4MTQwMTc5NTAwOTM0Ci0wLjE1MzYzNjA5MzExNTk5MTY5IC0wLjEzMTUzMzIxMjc1MTIyMzQzIC0wLjkxMTQzMzI1NjQ2MjExMzA0CjAuODk1NTMxMDU5MDAyMjU4MDUgLTAuNTg0NjEwMTk4MDUzMzEyOTMgLTAuNDU4MDMzNDUyMjIwMzA1MzQKLTAuMzk5NjYxODY0NjY1OTM0NDUgMC4yNzY4NDQ3MjgxODY1NjU1OCAwLjQ1MDY3MjYxOTMzOTExNzUxCjAuMjM4MDcwMTc1MjM5MDM3NTEgLTAuNjE0NjI5NDQ1MDk4Mjk3ODcgMC41NzQzMDc5MDAxNDc1MDMzMwotMC4xOTA5NzAzMTQxMTI2ODcwNiAtMC45NjI0Njk5NzI3NzcwMTI3NCAwLjc3NDY3MDg0MTU1ODEwNTYyCi0wLjU4OTY2MjcyNzkzOTMxMDI5IC0wLjc3MjI5NjQ5NzU4MjAxODc5IDAuMTkxNTM0OTczMTIyMTYyOTQKMC40NTAwNDg0OTYyMTYxODE5MyAtMC43ODQzODc3NzAzODUzNzIxMSAtMC45MTIwNTg1MDA5ODk3ODkwMgowLjIyNTg1MjUyODI5NDk5MzY5IC0wLjIyMTM2MTQ4MTkzMzkwNTE1IC0wLjAzNzIwNjY0OTYyNTI3MzIwMwotMC44NjU3MDgyNzE4MjIxOTQ5IC0wLjk4NzkzNTgyMzU1OTgwMTI1IDAuNjQyOTc1MTAzNzMzNTI1NAotMC42OTYwNjI4NjE5MjI1NTk3MyAtMC40ODk0NDAwOTE5MzY3OTgyNyAwLjg5MzUxNTQ3NDI3MDA5NjM3Ci0wLjkxMDA2MjQyNjI4NzkzMjIxIDAuMjI3MTIwMjIyOTU3ODI4ODUgLTAuODgwMTk2NzI0NDM2ODg4MDEKMC44NTU4MzgzOTM4MDI5MDU3MiAwLjgxNTQ3ODA0ODMxNjYyMzk2IC0wLjYzMDk3Nzc3NTM4NDMzMTc1CjAuNTcwODIyOTU5NTA4MjAwNjEgLTAuODU0NjM1NjA2Nzg5ODE1MzIgLTAuODk1MDMwMDU1NTY2NDcyNTMKMC4wMTQwMDMzNjcwMTQzNDExMjggMC41NDIyMDg1NTUyNzU5NjIxMiAwLjAyMTIzNTcyNjg0ODA0MDUzNwowLjE1ODM4MTg1NTUzNjMzNTg4IDAuODkxMjI4NjcyNzU5NTM5OTkgMC4wODMwMTk3MjgwNTE4MjEyMjkKMC43MDI1Nzc2NDE5NTgyOTMyIC0wLjkwNTQ2MTMxMTc1ODM1NTY1IDAuNjczNzMwOTAzNDc1MTg1MDUKMC4yMDUyMTY5NTEwNDEzODk0OCAwLjE0OTY3NTM3ODkxOTczMzE1IC0wLjQ4NDg4NDMwNTMwNDQ0NDQ5Ci0wLjU0MDYyMTEyMjIyOTU4OTggLTAuMjE4MDI2MDg1MzU0MjczOTIgLTAuMDMwMjY4NjI5NDAyODIzNTk5Ci0wLjg3OTA1ODQxMDgyODE4ODQ3IDAuNjQ2OTk1NzM0MjMyNzA5NTEgLTAuNDg0MDAyMDc0OTI1OTkxOQotMC41NTU2MTcxNzAwNDQ3Njc0MSAtMC41NjYxMDY1NzIxNjA5NDk5NSAwLjc0MDI5NDE1ODc2MjE3MTY0CjAuOTI3NzQxNTM5NjM3ODk1MTkgMC40OTM3NzAwMzI2MDc4Mzc4MSAwLjgxMDAzNTM4MDM4MzQ4Mzg4CjAuNTI5NzYxOTQ1MTk4NTA4NSAwLjUwNzY0NTMxOTUxMzUyNjg3IC0wLjA2MzA1MDk0MjY1MjIyODc3CjAuMjEyNjAxNTEzODQ2NjY2MzcgLTAuNjc0NjgyNTY3NjQ5NTMyNzIgLTAuMjk5NDU4MTY2MTkzODk4NDIKLTAuMjk4ODc5Mjg2OTEzNzA5MzUgMC42NjQ3NzE3MDM2MDk0MjA5NSAtMC4wNTgxODgwNDI3Njk4Mjk4MDYKLTAuNTM5MDU4NjE3NTQ0ODMxOTggMC4yNDM3NTM1OTM1NzE1NTk1NyAtMC43NzkzODYyMDc2NzQzNDE2NAowLjA0NTcxMDg1NjcyMTIxNjEwOSAwLjQzMjc1NTA3ODMxMDg1ODkxIDAuMTUzNTMxNjQzMTA2MTgwMTcKMC4zMTk2ODg2MTQzMTIwMDU0NiAtMC42ODg1NzQzNjY2Nzk4MTkxOSAwLjY4MzU2NDg5OTMzNDYxNDg0Ci0wLjYxNTg5OTg4ODE0MjEwNDUgLTAuODA0NDE1NTgxMjgyNTE5MTEgMC43OTUxNTU5NDc5MTkxMTk3Ci0wLjQ1OTI1NTg1NDc0MzkzMjkzIC0wLjc4OTMzNDM2NzEwOTQ3MTI1IDAuODk0NDk3NzQ2NzY5NzQ2MzYKMC4wNzM2MjgxNTI2MzAxOTkxNzMgLTAuOTc0NTIyOTI2NTgzODI3NTUgLTAuMjQ2MDgwMzQyNzc2MTA2MDIKLTAuMTY5MTgxMDYyMDI0ODIyODYgLTAuMTAwODkyMTM5ODU3MjIxNzkgLTAuNzQ4MjU0MzkwMTYwODA1NDIKLTAuNjE1ODQwODYyMTAxNDMxNTIgLTAuMDU2NDEzNzA1NDE5ODkzNjU2IC0wLjkzMzIwNTc1MjA2OTA3ODYzCi0wLjgyODQ4NzYyMzk4MzMyMTIxIC0wLjM1NzMwOTY2NDE1NTc5NDkgLTAuNTY4ODk2ODQ5Mjk5MjcwOTgKMC4yODM4NTI2Njg1MzUyMTMxOCAtMC4xNzcxNzE2OTE1MzEyODY2NSAwLjgwNzEwMzU0ODcxMzEwODQxCjAuMTE3MDQ1Nzk1NDIxMTA0NiAtMC44MDMyNDc0OTY4MzQ5NTQxMSAtMC41MzM4ODUyNTUwOTgxMTkyNAowLjcwNTA5Njc1MDI1OTY5Njc2IC0wLjU1NDk3MjQwMDE3NDM1ODU2IC0wLjc4NTI1MTY2MjE2MTM4MzIKMC41Mjk2NjIwODUwMjMxMzk3MiAwLjEzMjExMDM1MDMxNTM0MDkxIC0wLjI0NjM2NDkzMzkxNzY0MzAzCjAuMzY2OTI2MTU4MDQ1NzcyMTEgMC45MDgyMjAyMDExNDU2NjEyNyAtMC4yMzEzNTA2MzYxMTA4Mzc3MwowLjQzMDU0NzU0MzU0NTUzMjE1IDAuNjY1ODc3OTY1MjUyNTkzNjggLTAuOTg2MTY4NTMzNTAzMDQzNDUKLTAuNTg3NTYyMzU5MDA2Mjg0NjIgMC43OTgyMTE1NjQ2NTIzMjg5IDAuMjMzNjUwMzUxMTQwOTAyNzEKLTAuMDcyMTUzODk0MTA3NTQ3NDY3IDAuNjE3MjM0MzA4MjgwMzg4MzkgMC4xNjgzMzQ3MzcwOTM2NTk0MwotMC44MjI1NDE4MDUyODIyMzkzIC0wLjEyOTY4MzE5OTAzNzk5MTQxIC0wLjM0MzY2Mjk2OTY0MDc1MTgzCjAuNDQ1NjE3MzU3OTkwNjgyMTQgLTAuODA2NTUyOTIzOTAyNTUxOTUgMC44Mzk1MzY3NjkyNjA1MjA2OAowLjMzOTk1NjY3MjI5OTc1NDQ2IDAuNzYyMzk1MTI0MjY4NzY2NTQgMC41MjA5NjUzMDgxNzgwNTI1MwotMC4wNDUwMDA4OTA1ODczMTYyNjcgMC4xMzE3MTUyNzI3MzExMzY1OSAwLjUyMzIzMDAwODA4NDA4OTkzCjAuNDEwNTY4MTgzMzIwODAyMzYgMC4yMTgwMjExOTIxMDY3Njg1MSAwLjI1Nzc1Mjg5OTI5MzUxNjk3Ci0wLjQ3NTgyMjc0NzAyNzg0MDY2IC0wLjg1NDAyODE4MDIwNTM5MTA2IC0wLjcwOTc3Mjg2MTc2MDA5ODI0CjAuOTI2NDcyODY3MTU3OTg3NiAtMC41NjI3MDAwMjc3MDk2NDk0NCAtMC43NDMzMjY0NDIzMzE0MTcyCjAuNTk1MjY1NzE2MjAyNzQ5NDggLTAuNzAzMDM4MDMzNzg4MTkwNzQgMC4wMjA1NjUxNDAwMzMzODQ2MQotMC4wMjMxNjU5NTc0NjI4NzI2NDQgLTAuNjk0ODYwMTg2OTMyNjYyNzIgLTAuNTk0MTYwNDE5NjE3NDQzOTIKMC41MjQ5OTA0MzgwNDIwOTA4OSAtMC4xMjk1MTQ2NTI3OTA5NDI3NiAwLjQ3MTM0NTcwNjkzMTA4MjY5Ci0wLjg1MTkzMTU5MzU3NjgxNTY5IDAuNjkwODUxMzI4MDY4Nzc4OTEgLTAuNzQwNjIxMTk0NzEwOTYwNDQKMC41MTc1NzU3ODkxMDU3MDg4OSAwLjU0MDc3MDIzNTg3MTQ1ODU2IC0wLjA1MjU5ODA2MjE0ODUyOTgwMQowLjQ5OTA5MDc3NjcxNjU1OTMzIC0wLjUwNDg3ODU4Njk5MzYwNjU1IC0wLjUyMTkxODc1OTUyNjMxNzcyCi0wLjA3OTQyNTMwMTIyMTAxNjY1MyAtMC4wOTQxNDgzMjgzMjM4ODc1MzEgLTAuNjk5MTk4OTQ0MzA5NzMzMDYKLTAuMjI4MTkxOTY0NjU3Mjk3ODUgMC4xNzYzOTYzNDM3NjE0Mzc3NiAtMC4wNTUwNDk3MTUyNzk5MDY3NjMKLTAuODU3NDE1Nzc0ODkwODEyMjIgMC4xMjYyNzgyMTA3MzkwMjA3OSAwLjIxMzg5NTc4OTE2NzMwMTY4CjAuNDI2Njk5OTk1Nzk3MjU3OTIgMC43ODg0MzU3OTkwODU1MDMxIC0wLjQ5ODA3NDIyNzc0MzM3OTYyCi0wLjg2MTQzODI1ODAwMzQ3Mjk2IDAuMzE5MTMzNTUxOTkzODQ5NDEgMC4xMDQwMjU3NDU4NDAwNjQ0MQotMC4xNzY2MDc4MDk2NTQ1NTI0NyAwLjc4NDYyMTQ3MDc0NDk3ODEyIC0wLjI5MTkyODE4MDE3OTg2MTY2CjAuNjI1MzgwMTMwNDk5OTY2ODggLTAuNTA5Mzg3ODIyNDU3OTI0MjQgMC4zNTMyMzU0MTk4NzA4NTkzOAowLjU2MDE0OTczOTc3NTU4MTAyIDAuMzE4MTQ0MDg2NDM3MTU0OTcgLTAuOTYwNTY0Njc2MDY0NzM3MjgKLTAuMjc4ODU3NjYwNjcwNzA0MDYgMC43MjQ2NzA5MzAyNjU2NjUwOSAwLjAzODU5MDA0OTI2OTE3OTUyNwotMC41Nzc5MDY4MjcyMDkwOTk2OSAwLjk3NjcwMzgzODYzOTkyMDUgLTAuMzE3NjUwMTY3MjQxOTYwNDkKLTAuOTg4NjU4NjI3MDkzNzIxNjUgLTAuNzAyMjYyODMwMTU5MzY2OTcgMC4yMDA4MDU5NzEwNDk0NjcxOAowLjUwMDMwNzc3NDAwNTczMTU2IC0wLjYzODcxNTE5MzE0NjI0MzE0IDAuMzQ4OTQwMTk0NjE0NDQ1MjUKMC44NDkwNTM3NzkwMjI0NTUwNSAwLjM1OTMwMTAxNDkyODA3MDY1IC0wLjc3MzQ5MzgwNjU1MzU3MTAzCjAuNjUwMDgwNTA0MDcwMDkzODggLTAuNTMxOTk1Mjg2NzkyMDk3ODQgMC43MTU4OTY0NzU2Mjc4NzA3MwowLjQ2OTUxODA1ODI0MTcwNzM0IDAuMzc1MzYwNDc1MjA5NTYyMjggLTAuNzIxNDc4MDc2ODA4MTkxODcKLTAuMjUxNzAzODMwMzEwNzMzMjkgLTAuNTMxMjkyMDM1NDIxNjk1OSAwLjQzMTc0MzkzNDEzNzg1OTA1CjAuOTMzMTIwNDg4NzkzNjEyMiAtMC40OTg1Mjg1NDcwMTMwNzYyNSAtMC4wODUxMjI4ODI5NjI5ODYyMDIKLTAuNzQ4Nzc4NDA4NTY4NjUxMDggLTAuOTg0NzE4ODQwMjAwNTgxMzEgMC4yODM4OTkxNjY3MjgyMTg2OQowLjYyNTc2MjkwNTIyNzM5MTg2IC0wLjgyMjQwMTE1MTE3MTQ2NTI4IDAuMTEzMzcwMjEzMjgyNTE3MTcKLTAuMDA3NzE4NTY4NDM2NzM1Nzk1NCAwLjk2MjUxNTk0MzE3NTQ5NzcxIC0wLjQ3MzQ2NDg5MDM5NDQ5NDI0Ci0wLjc4MTM5NjIwMjE3NjI3NDE1IC0wLjk4ODQ2NDI1ODM1MjMwMDAxIC0wLjg4MDc0NzAyOTUxMTYxNzk4CjAuNjAwMTA0Nzc4MTE3MjgxMjUgMC4yNTM2ODk5NzY5NzIyMjE2MiAtMC44MzMzNjM1MDU3ODkwOTY0NgowLjg1NTcxMDAyNjQ3NjY1OTI4IC0wLjQ3OTA2NzExMDY5NjYwNTEzIC0wLjgxMTM0MDQxOTU0MzI4Mzg0Ci0wLjE1NzY5MTA1MjQxNzcxNzMgMC42NDg3MDg0OTQwOTc1MzkxNyAtMC4xNTQzNDg0NjgwMjYzODI5MQowLjA2NTg5NDg2MjA0MDM5ODczOCAtMC4wOTI5NDQ1Nzg0MzM0NjUwNDIgMC43NTg1MTgzMDI1MzQwMDgzMgotMC4zNzk0MDA3MTM4NDE2MjA2NiAwLjg2ODY4NzU1OTQ3Mjc3MzQzIDAuNjg4NzMwMjQ5NDc3MjIyMjgKLTAuOTM3MzA5MjY4MzE5NzUwMTQgMC43ODMyMjYzMjAyOTcwNjI4NSAwLjE0NTE0Nzg2NjY3MzIxMDY3CjAuMTcxMDE3NjU3OTk5Mzg5ODQgLTAuNDA3ODc0NTU2MDAxMDk1NjggLTAuNDc0OTU0MzM1NjMxNTc4NDEKLTAuNTE5Njc2ODE3MDU3Njk2MTkgMC4xODgzNTUzMjE5NTIyNjEzNSAtMC44MzMwODEzMzMzMjU0MjMyMgotMC4xMjQ2NzAwMTczOTAyNDc5NyAwLjk0MDA1ODEyODMwMDQ4MTQxIDAuNzA5OTM4ODY4NDkzMzMwNzcKLTAuMDQ4MDQ1MTk1OTMyMzUyMDE0IC0wLjM4ODM4ODI0NzYyMDEzMTkxIDAuNjUwNTMzMDkxNzc5MzYwODEKLTAuMTU5ODkyNTI3OTE1NDAxNTQgLTAuNTk3NTc5ODY3MDg3NzE3OTMgMC4zNzQ5NDk3MDE4MTc0MDc1Ci0wLjAwNzgwMzU4NDAzODA2OTY4ODYgLTAuMzgzMDE0Njk3NDI1NTM0ODQgMC45MTM4MzU0Nzk2OTQxNzM2NwotMC43NDY0MTg4MzM4NzM3OTI3MSAtMC44NjUzMDg2NjAzMTcyNDQ0IC0wLjA0NzUyNTc4NjQ1OTU0NjE5MwowLjE4ODkwMzYyNjgyMTU5MjY3IDAuMTUwOTE0ODgyODUwODg1MDYgMC4xMzU3ODY4NDc0MDM5NDYzMQowLjU5MTQ2MTQ1MjgxNDA5OTc5IC0wLjMxMjQ1NjcyNzMwNDI0NjY3IDAuNzIwNDU5Njc4OTk5NzA0ODcKMC40MTg1MDUzMjkwNzAyNzU4MiAtMC4yNTY0NzQwNzAxNjExNzgyOSAtMC4zOTgxMjg1NjM0NzY4NzE2NAowLjU1MTI5MDY5ODE5ODE0MDAzIC0wLjkwMjk2OTIzODY1MDM3MDA0IDAuMDQ5NzY2ODM5NDMyMTg4NjI1CjAuNzQzMjU2MjUyMzI4MzkyOTkgLTAuMjE2MTA0MjQ1OTg3ODgxMjUgLTAuODIxNjQ2MzE4MTA4OTYzNzEKLTAuMzQ5Nzk3NTI4MzQzNjA5MjIgMC4zNTE0MjI0ODk4ODM5NTEzMSAtMC45ODY5MjI4MjY1NDY5MjgzMQowLjE5MTE2NTQyOTYwMzExNjQ0IDAuMDczNDY0OTgyODkxNTk4OTczIC0wLjg5NjkyMjEwOTc2NzkxNTQyCjAuMTQ4NjM5NjkzMDI1NDMwMzQgLTAuODY4NTc0NTgyMDUyODk5ODQgMC40MTI4MjI4MTk5NjI0NjYzOQowLjg1MDMxOTc3OTE3NDAzMDY4IC0wLjkyNDI1MzMzMjE2NDg1NjUgLTAuMTI4ODEwNDQ4ODYwOTY4NzEKLTEgLTEgLTEKLTEgLTEgMQotMSAxIC0xCi0xIDEgMQoxIC0xIC0xCjEgLTEgMQoxIDEgLTEKMSAxIDEK"
     },
+    "6f4e31124c0380c793b55f533322ed1bf611aa1b7d9319af27e0e8072dec2d0f": {
+      "encoding": "base64",
+      "byte_size": 914,
+      "content": "eyJsZW5ndGhfdW5pdCI6Im1tIiwib3BlcmF0aW9uIjoic3BhdGlhbC5hYWJiLmludGVyc2VjdGlvbnMiLCJwYXJhbWV0ZXJzIjp7fSwicXVlcnlfa2luZCI6ImFhYmJfcmF5X2ludGVyc2VjdGlvbnMiLCJyZXBvcnRfdHlwZSI6IlNwYXRpYWxRdWVyeVJlcG9ydCIsInJlc3VsdHMiOlt7ImFueV9mYWNlIjowLCJkb19pbnRlcnNlY3QiOnRydWUsImZhY2VzIjpbMCwxLDIsM10sInJheV9pbmRleCI6MH0seyJhbnlfZmFjZSI6bnVsbCwiZG9faW50ZXJzZWN0IjpmYWxzZSwiZmFjZXMiOltdLCJyYXlfaW5kZXgiOjF9LHsiYW55X2ZhY2UiOjEwLCJkb19pbnRlcnNlY3QiOnRydWUsImZhY2VzIjpbMTBdLCJyYXlfaW5kZXgiOjJ9LHsiYW55X2ZhY2UiOjgsImRvX2ludGVyc2VjdCI6dHJ1ZSwiZmFjZXMiOls4LDksMTAsMTFdLCJyYXlfaW5kZXgiOjN9LHsiYW55X2ZhY2UiOjAsImRvX2ludGVyc2VjdCI6dHJ1ZSwiZmFjZXMiOlswLDEsMiwzLDQsNSw2LDcsOCw5LDEwLDExXSwicmF5X2luZGV4Ijo0fSx7ImFueV9mYWNlIjowLCJkb19pbnRlcnNlY3QiOnRydWUsImZhY2VzIjpbMCwxLDIsM10sInJheV9pbmRleCI6NX0seyJhbnlfZmFjZSI6MCwiZG9faW50ZXJzZWN0Ijp0cnVlLCJmYWNlcyI6WzAsMSwyLDMsNCw1LDgsOV0sInJheV9pbmRleCI6Nn1dLCJzY2hlbWFfdmVyc2lvbiI6MSwic291cmNlIjp7Im1lc2hfc2hhMjU2IjoiN2UwNTNkYTM2NGJjMTk1Y2I3ZDhmMDU1MGRjMTEzODEwYjcwODkyMDI3YjJjZjRlMTk5YzEyODE3MWZkYTcxNyIsInJheXNfc2hhMjU2IjoiYzM0Nzg5MGQxYmRlNWQyMDZjNTdjMzBiNGJmYzU4ZGE3MTM5YTU1YzUyNGMwNDJhNDZlOTJlNzcwNDFkNzcxOCJ9LCJzdW1tYXJ5Ijp7ImZhY2VfY291bnQiOjEyLCJpbnRlcnNlY3RpbmdfcmF5X2NvdW50Ijo2LCJyYXlfY291bnQiOjd9fQo="
+    },
     "727bedd5d13712e7506e15aeb1ea35b5da660bf2143bf28e8f257b0aa7eb2164": {
       "encoding": "base64",
       "byte_size": 155,
@@ -5687,6 +6287,11 @@
       "byte_size": 419,
       "content": "eyJhYnNvbHV0ZV90b2xlcmFuY2UiOjMuMDAwMDAwMDAwMDAwMDAwNGUtMDksImNoZWNrcyI6eyJjbG9zZXN0X2ZhY2VfbWF0Y2hlc19icnV0ZV9mb3JjZSI6dHJ1ZSwiZGlzdGFuY2VzX21hdGNoIjp0cnVlLCJldmVyeV9xdWVyeV9hbnN3ZXJlZCI6dHJ1ZSwicG9pbnRfb25fcmVwb3J0ZWRfZmFjZSI6dHJ1ZX0sImZhY2VfY291bnQiOjEyLCJpbmRlcGVuZGVuY2UiOiJicnV0ZS1mb3JjZSBFcmljc29uIGNsb3Nlc3QtcG9pbnQgcm91dGluZSBvdmVyIGV2ZXJ5IGZhY2U7IG5vIEFBQkIgdHJlZSBpcyB1c2VkIiwibWF4aW11bV9vYnNlcnZlZF9lcnJvciI6MC4wLCJwYXNzZWQiOnRydWUsInF1ZXJ5X2NvdW50Ijo2LCJzdGF0dXMiOiJwYXNzIiwidmFsaWRhdG9yIjoic3BhdGlhbC52YWxpZGF0ZS5jbG9zZXN0X3BvaW50c19yZXBvcnQifQo="
     },
+    "7e053da364bc195cb7d8f0550dc113810b70892027b2cf4e199c128171fda717": {
+      "encoding": "base64",
+      "byte_size": 155,
+      "content": "T0ZGCjggMTIgMAowIDAgMAoyIDAgMAowIDIgMAoyIDIgMAowIDAgMgoyIDAgMgowIDIgMgoyIDIgMgozIDAgMiAzCjMgMCAzIDEKMyA0IDUgNwozIDQgNyA2CjMgMCAxIDUKMyAwIDUgNAozIDIgNiA3CjMgMiA3IDMKMyAwIDQgNgozIDAgNiAyCjMgMSAzIDcKMyAxIDcgNQo="
+    },
     "97dddf08705550fe65ff07d5aad6bd5d52519c6a05c094c007d4b1dbe0d39115": {
       "encoding": "base64",
       "byte_size": 382,
@@ -5696,6 +6301,16 @@
       "encoding": "base64",
       "byte_size": 434,
       "content": "eyJhYnNvbHV0ZV90b2xlcmFuY2UiOjVlLTA5LCJjaGVja3MiOnsiZXZlcnlfcmF5X2Fuc3dlcmVkIjp0cnVlLCJmaXJzdF9oaXRfbWF0Y2hlc19icnV0ZV9mb3JjZSI6dHJ1ZSwiaGl0X3N0YXR1c19leGFjdCI6dHJ1ZSwicG9pbnRfb25fcmVwb3J0ZWRfZmFjZSI6dHJ1ZX0sImZhY2VfY291bnQiOjEyLCJoaXRfY291bnQiOjUsImluZGVwZW5kZW5jZSI6ImV4YWN0IHJheS90cmlhbmdsZSBwcmVkaWNhdGVzIGFuZCBleGFjdCBpbnRlcnNlY3Rpb25zIG92ZXIgZXZlcnkgZmFjZTsgbm8gQUFCQiB0cmVlIGlzIHVzZWQiLCJtYXhpbXVtX29ic2VydmVkX2Vycm9yIjoyLjIyMDQ0NjA0OTI1MDMxM2UtMTYsInBhc3NlZCI6dHJ1ZSwicmF5X2NvdW50Ijo2LCJzdGF0dXMiOiJwYXNzIiwidmFsaWRhdG9yIjoic3BhdGlhbC52YWxpZGF0ZS5yYXlfaGl0c19yZXBvcnQifQo="
+    },
+    "a9b9eacf1a7dce502f08d731b6db666a067983114bb8e533b7013107e34f6bed": {
+      "encoding": "base64",
+      "byte_size": 494,
+      "content": "eyJjaGVja3MiOnsiYWxsX2ludGVyc2VjdGVkX3ByaW1pdGl2ZXNfZXhhY3QiOnRydWUsImFueV9pbnRlcnNlY3RlZF9wcmltaXRpdmVfbWVtYmVyIjp0cnVlLCJkb19pbnRlcnNlY3RfZXhhY3QiOnRydWUsImV2ZXJ5X3JheV9hbnN3ZXJlZCI6dHJ1ZSwicGFyYW1ldGVyc19tYXRjaCI6dHJ1ZSwic291cmNlX21hdGNoZXMiOnRydWV9LCJmYWNlX2NvdW50IjoxMiwiaW5kZXBlbmRlbmNlIjoiZXhhY3QgcmF0aW9uYWwgcmF5L3RyaWFuZ2xlIHByZWRpY2F0ZXMgb3ZlciBldmVyeSBmYWNlOyBubyBBQUJCIHRyZWUiLCJpbnRlcnNlY3RlZF9mYWNlX3RvdGFsIjozMywiaW50ZXJzZWN0aW5nX3JheV9jb3VudCI6NiwicGFzc2VkIjp0cnVlLCJyYXlfY291bnQiOjcsInJlcG9ydF90eXBlIjoiVmFsaWRhdGlvblJlcG9ydCIsInNjaGVtYV92ZXJzaW9uIjoxLCJzdGF0dXMiOiJwYXNzIiwidmFsaWRhdG9yIjoic3BhdGlhbC52YWxpZGF0ZS5hYWJiX2ludGVyc2VjdGlvbnMifQo="
+    },
+    "c347890d1bde5d206c57c30b4bfc58da7139a55c524c042a46e92e77041d7718": {
+      "encoding": "base64",
+      "byte_size": 295,
+      "content": "eyJyYXlzIjpbeyJvcmlnaW4iOlsxLDEsLTFdLCJkaXJlY3Rpb24iOlswLDAsMV19LHsib3JpZ2luIjpbNSw1LDVdLCJkaXJlY3Rpb24iOlsxLDAsMF19LHsib3JpZ2luIjpbMSwxLDFdLCJkaXJlY3Rpb24iOlsxLDAuMywwLjJdfSx7Im9yaWdpbiI6Wy0xLDEsMV0sImRpcmVjdGlvbiI6WzEsMCwwXX0seyJvcmlnaW4iOlstMSwtMSwtMV0sImRpcmVjdGlvbiI6WzEsMSwxXX0seyJvcmlnaW4iOlsxLDEsM10sImRpcmVjdGlvbiI6WzAsMCwtMV19LHsib3JpZ2luIjpbMCwwLC0xXSwiZGlyZWN0aW9uIjpbMCwwLDFdfV19Cg=="
     },
     "c818425802fa52cc62dc4e2402510e663d2566f947d267e78686dddcd5e3894e": {
       "encoding": "base64",
@@ -5832,6 +6447,26 @@
       "point_count": 6,
       "status": "pass",
       "validator": "spatial.validate.bbox_report"
+    },
+    "2378e524b0f154a082c4c39f227a1769ff275e2769a1d7a8490d44c9b1133fda": {
+      "checks": {
+        "all_intersected_primitives_exact": true,
+        "any_intersected_primitive_member": true,
+        "do_intersect_exact": true,
+        "every_ray_answered": true,
+        "parameters_match": true,
+        "source_matches": true
+      },
+      "face_count": 12,
+      "independence": "exact rational ray/triangle predicates over every face; no AABB tree",
+      "intersected_face_total": 33,
+      "intersecting_ray_count": 6,
+      "passed": true,
+      "ray_count": 7,
+      "report_type": "ValidationReport",
+      "schema_version": 1,
+      "status": "pass",
+      "validator": "spatial.validate.aabb_intersections"
     }
   },
   "operation_results": [
@@ -5839,7 +6474,7 @@
       "case_id": "aabb-closest-cube",
       "operation_id": "spatial.aabb.closest_points",
       "revision": 1,
-      "worker_manifest_sha256": "4a32a5f5bf2b74326a407889ebd4591b45bf63a3efb1af801ccef5a2d19d8d3e",
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
       "test_id": "family-7.2-replay-cases",
       "request": {
         "inputs": [
@@ -6006,7 +6641,7 @@
       "case_id": "aabb-rays-cube",
       "operation_id": "spatial.aabb.ray_first_hits",
       "revision": 1,
-      "worker_manifest_sha256": "4a32a5f5bf2b74326a407889ebd4591b45bf63a3efb1af801ccef5a2d19d8d3e",
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
       "test_id": "family-7.2-replay-cases",
       "request": {
         "inputs": [
@@ -6175,7 +6810,7 @@
       "case_id": "knn-orthogonal",
       "operation_id": "spatial.knn_3",
       "revision": 1,
-      "worker_manifest_sha256": "4a32a5f5bf2b74326a407889ebd4591b45bf63a3efb1af801ccef5a2d19d8d3e",
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
       "test_id": "family-7.2-replay-cases",
       "request": {
         "inputs": [
@@ -6354,7 +6989,7 @@
       "case_id": "knn-general",
       "operation_id": "spatial.knn_3",
       "revision": 1,
-      "worker_manifest_sha256": "4a32a5f5bf2b74326a407889ebd4591b45bf63a3efb1af801ccef5a2d19d8d3e",
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
       "test_id": "family-7.2-replay-cases",
       "request": {
         "inputs": [
@@ -6530,7 +7165,7 @@
       "case_id": "knn-nearest-single",
       "operation_id": "spatial.knn_3",
       "revision": 1,
-      "worker_manifest_sha256": "4a32a5f5bf2b74326a407889ebd4591b45bf63a3efb1af801ccef5a2d19d8d3e",
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
       "test_id": "family-7.2-replay-cases",
       "request": {
         "inputs": [
@@ -6709,7 +7344,7 @@
       "case_id": "range-zero-radius",
       "operation_id": "spatial.range_search_3",
       "revision": 1,
-      "worker_manifest_sha256": "4a32a5f5bf2b74326a407889ebd4591b45bf63a3efb1af801ccef5a2d19d8d3e",
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
       "test_id": "family-7.2-replay-cases",
       "request": {
         "inputs": [
@@ -6888,7 +7523,7 @@
       "case_id": "range-half-radius",
       "operation_id": "spatial.range_search_3",
       "revision": 1,
-      "worker_manifest_sha256": "4a32a5f5bf2b74326a407889ebd4591b45bf63a3efb1af801ccef5a2d19d8d3e",
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
       "test_id": "family-7.2-replay-cases",
       "request": {
         "inputs": [
@@ -7067,7 +7702,7 @@
       "case_id": "bbox-planar",
       "operation_id": "spatial.bbox_2",
       "revision": 1,
-      "worker_manifest_sha256": "4a32a5f5bf2b74326a407889ebd4591b45bf63a3efb1af801ccef5a2d19d8d3e",
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
       "test_id": "family-7.2-replay-cases",
       "request": {
         "inputs": [
@@ -7211,7 +7846,7 @@
       "case_id": "bbox-cube-mesh",
       "operation_id": "spatial.bbox_3",
       "revision": 1,
-      "worker_manifest_sha256": "4a32a5f5bf2b74326a407889ebd4591b45bf63a3efb1af801ccef5a2d19d8d3e",
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
       "test_id": "family-7.2-replay-cases",
       "request": {
         "inputs": [
@@ -7355,7 +7990,7 @@
       "case_id": "bbox-point-set",
       "operation_id": "spatial.bbox_3",
       "revision": 1,
-      "worker_manifest_sha256": "4a32a5f5bf2b74326a407889ebd4591b45bf63a3efb1af801ccef5a2d19d8d3e",
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
       "test_id": "family-7.2-replay-cases",
       "request": {
         "inputs": [
@@ -7494,6 +8129,177 @@
           }
         }
       }
+    },
+    {
+      "case_id": "aabb-intersections-cube",
+      "operation_id": "spatial.aabb.intersections",
+      "revision": 1,
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
+      "test_id": "family-7.2-replay-cases",
+      "request": {
+        "inputs": [
+          {
+            "artifact_id": "input-0",
+            "blob_sha256": "7e053da364bc195cb7d8f0550dc113810b70892027b2cf4e199c128171fda717",
+            "format": "off",
+            "sha256": "7e053da364bc195cb7d8f0550dc113810b70892027b2cf4e199c128171fda717",
+            "type": "TriangleSurfaceMesh",
+            "unit": "mm"
+          },
+          {
+            "artifact_id": "input-1",
+            "blob_sha256": "c347890d1bde5d206c57c30b4bfc58da7139a55c524c042a46e92e77041d7718",
+            "format": "json",
+            "sha256": "c347890d1bde5d206c57c30b4bfc58da7139a55c524c042a46e92e77041d7718",
+            "type": "RayBatch3",
+            "unit": "mm"
+          }
+        ],
+        "kernel": "package_recommended",
+        "limits": {
+          "memory_mb": 2048,
+          "wall_time_ms": 120000
+        },
+        "operation": "spatial.aabb.intersections",
+        "parameters": {},
+        "protocol": 1,
+        "request_id": "aabb-intersections-cube"
+      },
+      "request_sha256": "b54442567d842239c8ae73e4eec3ba753a9d5a421eea7507bca20a7d1e86b361",
+      "response": {
+        "metrics": {
+          "algorithm": "CGAL::AABB_tree::do_intersect / any_intersected_primitive / all_intersected_primitives",
+          "face_count": 12,
+          "intersecting_ray_count": 6,
+          "ray_count": 7
+        },
+        "outputs": [
+          {
+            "blob_sha256": "6f4e31124c0380c793b55f533322ed1bf611aa1b7d9319af27e0e8072dec2d0f",
+            "format": "json",
+            "slot": "analysis",
+            "type": "SpatialQueryReport",
+            "unit": "none"
+          }
+        ],
+        "protocol": 1,
+        "request_id": "aabb-intersections-cube",
+        "status": "ok"
+      },
+      "response_sha256": "d4dd5ebf8fd9c72d5cc8525dcbec3d6b728512587f889c18d910c2c93fb31ac4",
+      "input_hashes": [
+        "7e053da364bc195cb7d8f0550dc113810b70892027b2cf4e199c128171fda717",
+        "c347890d1bde5d206c57c30b4bfc58da7139a55c524c042a46e92e77041d7718"
+      ],
+      "output_hashes": [
+        "6f4e31124c0380c793b55f533322ed1bf611aa1b7d9319af27e0e8072dec2d0f"
+      ],
+      "validators": [
+        {
+          "operation_id": "spatial.validate.aabb_intersections",
+          "revision": 1,
+          "request": {
+            "inputs": [
+              {
+                "artifact_id": "aabb-intersections-cube-analysis-0",
+                "blob_sha256": "6f4e31124c0380c793b55f533322ed1bf611aa1b7d9319af27e0e8072dec2d0f",
+                "format": "json",
+                "sha256": "6f4e31124c0380c793b55f533322ed1bf611aa1b7d9319af27e0e8072dec2d0f",
+                "type": "SpatialQueryReport",
+                "unit": "none"
+              },
+              {
+                "artifact_id": "input-0",
+                "blob_sha256": "7e053da364bc195cb7d8f0550dc113810b70892027b2cf4e199c128171fda717",
+                "format": "off",
+                "sha256": "7e053da364bc195cb7d8f0550dc113810b70892027b2cf4e199c128171fda717",
+                "type": "TriangleSurfaceMesh",
+                "unit": "mm"
+              },
+              {
+                "artifact_id": "input-1",
+                "blob_sha256": "c347890d1bde5d206c57c30b4bfc58da7139a55c524c042a46e92e77041d7718",
+                "format": "json",
+                "sha256": "c347890d1bde5d206c57c30b4bfc58da7139a55c524c042a46e92e77041d7718",
+                "type": "RayBatch3",
+                "unit": "mm"
+              }
+            ],
+            "kernel": "package_recommended",
+            "limits": {
+              "memory_mb": 2048,
+              "wall_time_ms": 120000
+            },
+            "operation": "spatial.validate.aabb_intersections",
+            "parameters": {},
+            "protocol": 1,
+            "request_id": "aabb-intersections-cube--spatial.validate.aabb_intersections"
+          },
+          "request_sha256": "8468eb16efa5e9c995de6f41cb8bbba326566295eb4bfba0c343f89864418805",
+          "response": {
+            "metrics": {
+              "checks": {
+                "all_intersected_primitives_exact": true,
+                "any_intersected_primitive_member": true,
+                "do_intersect_exact": true,
+                "every_ray_answered": true,
+                "parameters_match": true,
+                "source_matches": true
+              },
+              "face_count": 12,
+              "independence": "exact rational ray/triangle predicates over every face; no AABB tree",
+              "intersected_face_total": 33,
+              "intersecting_ray_count": 6,
+              "passed": true,
+              "ray_count": 7,
+              "report_type": "ValidationReport",
+              "schema_version": 1,
+              "status": "pass",
+              "validator": "spatial.validate.aabb_intersections"
+            },
+            "outputs": [
+              {
+                "blob_sha256": "a9b9eacf1a7dce502f08d731b6db666a067983114bb8e533b7013107e34f6bed",
+                "format": "json",
+                "slot": "validation",
+                "type": "ValidationReport",
+                "unit": "none"
+              }
+            ],
+            "protocol": 1,
+            "request_id": "aabb-intersections-cube--spatial.validate.aabb_intersections",
+            "status": "ok"
+          },
+          "response_sha256": "fb8956cc67d9fa0f39c917a8d537a8ceaeacae4ba9fd2dd18e8175c4f32a99ff",
+          "input_hashes": [
+            "6f4e31124c0380c793b55f533322ed1bf611aa1b7d9319af27e0e8072dec2d0f",
+            "7e053da364bc195cb7d8f0550dc113810b70892027b2cf4e199c128171fda717",
+            "c347890d1bde5d206c57c30b4bfc58da7139a55c524c042a46e92e77041d7718"
+          ],
+          "output_hashes": [
+            "a9b9eacf1a7dce502f08d731b6db666a067983114bb8e533b7013107e34f6bed"
+          ],
+          "report_blob_sha256": "a9b9eacf1a7dce502f08d731b6db666a067983114bb8e533b7013107e34f6bed",
+          "report_sha256": "2378e524b0f154a082c4c39f227a1769ff275e2769a1d7a8490d44c9b1133fda",
+          "status": "pass"
+        }
+      ],
+      "validation": {
+        "status": "pass",
+        "checks": {
+          "transform_executed": {
+            "pass": true
+          },
+          "behaviour_assertions": {
+            "pass": true,
+            "count": 12
+          },
+          "validator:spatial.validate.aabb_intersections": {
+            "pass": true,
+            "report_sha256": "2378e524b0f154a082c4c39f227a1769ff275e2769a1d7a8490d44c9b1133fda"
+          }
+        }
+      }
     }
   ],
   "negative_control_proofs": {
@@ -7501,7 +8307,7 @@
       "case_id": "knn-zero-k-rejected",
       "operation_id": "spatial.knn_3",
       "revision": 1,
-      "worker_manifest_sha256": "4a32a5f5bf2b74326a407889ebd4591b45bf63a3efb1af801ccef5a2d19d8d3e",
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
       "test_id": "family-7.2-replay-cases",
       "request": {
         "inputs": [
@@ -7563,7 +8369,7 @@
       "case_id": "range-unit-mismatch-rejected",
       "operation_id": "spatial.range_search_3",
       "revision": 1,
-      "worker_manifest_sha256": "4a32a5f5bf2b74326a407889ebd4591b45bf63a3efb1af801ccef5a2d19d8d3e",
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
       "test_id": "family-7.2-replay-cases",
       "request": {
         "inputs": [
@@ -7627,7 +8433,7 @@
       "case_id": "rays-unit-mismatch-rejected",
       "operation_id": "spatial.aabb.ray_first_hits",
       "revision": 1,
-      "worker_manifest_sha256": "4a32a5f5bf2b74326a407889ebd4591b45bf63a3efb1af801ccef5a2d19d8d3e",
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
       "test_id": "family-7.2-replay-cases",
       "request": {
         "inputs": [
@@ -7686,7 +8492,7 @@
       "case_id": "bbox2-rejects-3d-points",
       "operation_id": "spatial.bbox_2",
       "revision": 1,
-      "worker_manifest_sha256": "4a32a5f5bf2b74326a407889ebd4591b45bf63a3efb1af801ccef5a2d19d8d3e",
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
       "test_id": "family-7.2-replay-cases",
       "request": {
         "inputs": [
@@ -7731,7 +8537,75 @@
       "output_hashes": [],
       "expected_error_class": "TYPE_ERROR",
       "status": "expected_rejection"
+    },
+    "aabb-intersections-tampered-flag-rejected": {
+      "case_id": "aabb-intersections-tampered-flag-rejected",
+      "operation_id": "spatial.validate.aabb_intersections",
+      "revision": 1,
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
+      "test_id": "family-7.2-replay-cases",
+      "request": {
+        "inputs": [
+          {
+            "artifact_id": "input-0",
+            "blob_sha256": "466ae5d45e60a5384893aa681b540b4972dde1da139dd797733092698106e794",
+            "format": "json",
+            "sha256": "466ae5d45e60a5384893aa681b540b4972dde1da139dd797733092698106e794",
+            "type": "SpatialQueryReport",
+            "unit": "none"
+          },
+          {
+            "artifact_id": "input-1",
+            "blob_sha256": "7e053da364bc195cb7d8f0550dc113810b70892027b2cf4e199c128171fda717",
+            "format": "off",
+            "sha256": "7e053da364bc195cb7d8f0550dc113810b70892027b2cf4e199c128171fda717",
+            "type": "TriangleSurfaceMesh",
+            "unit": "mm"
+          },
+          {
+            "artifact_id": "input-2",
+            "blob_sha256": "c347890d1bde5d206c57c30b4bfc58da7139a55c524c042a46e92e77041d7718",
+            "format": "json",
+            "sha256": "c347890d1bde5d206c57c30b4bfc58da7139a55c524c042a46e92e77041d7718",
+            "type": "RayBatch3",
+            "unit": "mm"
+          }
+        ],
+        "kernel": "package_recommended",
+        "limits": {
+          "memory_mb": 2048,
+          "wall_time_ms": 120000
+        },
+        "operation": "spatial.validate.aabb_intersections",
+        "parameters": {},
+        "protocol": 1,
+        "request_id": "aabb-intersections-tampered-flag-rejected"
+      },
+      "request_sha256": "5dcdd232f12f067d7158ddba00ecea6286bd77b61f842ae40d007448cf3dcb5b",
+      "response": {
+        "error": {
+          "class": "VALIDATION_FAILED",
+          "code": "DO_INTERSECT_MISMATCH",
+          "message": "do_intersect differs from the exact brute-force answer",
+          "recoverable": false,
+          "suggested_operations": []
+        },
+        "metrics": {},
+        "outputs": [],
+        "protocol": 1,
+        "request_id": "aabb-intersections-tampered-flag-rejected",
+        "status": "error"
+      },
+      "response_sha256": "cf301fb1f76e17880b27aa8605fc4181a2ec1db7225bec9d05d25d106f7f9b05",
+      "input_hashes": [
+        "466ae5d45e60a5384893aa681b540b4972dde1da139dd797733092698106e794",
+        "7e053da364bc195cb7d8f0550dc113810b70892027b2cf4e199c128171fda717",
+        "c347890d1bde5d206c57c30b4bfc58da7139a55c524c042a46e92e77041d7718"
+      ],
+      "output_hashes": [],
+      "expected_error_class": "VALIDATION_FAILED",
+      "status": "expected_rejection"
     }
   },
-  "coverage_note": "Family 7.2: 4 requirement(s) bound by 10 replayed cases with registry-derived mandatory validators; 1 requirement(s) remain unbound with recorded gaps. The immutable 80-requirement denominator and full standalone acceptance remain incomplete."
+  "coverage_note": "Family 7.2: 5 requirement(s) bound by 11 replayed cases with registry-derived mandatory validators; 0 requirement(s) remain unbound with recorded gaps. The immutable 80-requirement denominator and full standalone acceptance remain incomplete."
 }

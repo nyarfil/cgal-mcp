@@ -24534,6 +24534,3217 @@
         "cgal_version": "6.2.1",
         "review_status": "self_verified_not_independently_reviewed"
       }
+    },
+    {
+      "id": "shape.barycentric",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "analysis",
+      "summary": "Compute Wachspress, mean value or discrete harmonic generalized barycentric coordinates of strictly interior query points with respect to a simple counterclockwise polygon (CGAL Barycentric_coordinates_2).",
+      "package": "Barycentric_coordinates_2",
+      "major_requirements": [
+        "major.7.13.05"
+      ],
+      "aliases": [
+        "barycentric coordinates",
+        "wachspress coordinates",
+        "mean value coordinates",
+        "discrete harmonic coordinates",
+        "generalized barycentric coordinates",
+        "\u91cd\u5fc3\u5ea7\u6a19"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Barycentric_coordinates_2"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Barycentric_coordinates::wachspress_coordinates_2"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Barycentric_coordinates::mean_value_coordinates_2"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Barycentric_coordinates::discrete_harmonic_coordinates_2"
+        },
+        {
+          "kind": "header",
+          "identifier": "Barycentric_coordinates_2/Wachspress_coordinates_2.h"
+        },
+        {
+          "kind": "header",
+          "identifier": "Barycentric_coordinates_2/Mean_value_coordinates_2.h"
+        },
+        {
+          "kind": "header",
+          "identifier": "Barycentric_coordinates_2/Discrete_harmonic_coordinates_2.h"
+        },
+        {
+          "kind": "manual",
+          "identifier": "Barycentric_coordinates_2/index.html"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Barycentric_coordinates_2",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Barycentric_coordinates_2/Wachspress_coordinates_2.h",
+            "sha256": "fa15ef01da45686e83c1080cc28a6157b24f806e6e1ea3442d7f7a6b3c13d86f"
+          },
+          {
+            "path": "include/CGAL/Barycentric_coordinates_2/Mean_value_coordinates_2.h",
+            "sha256": "313ba74b21e9894805e688109371d606d99442a9af99ad9c2450696f874c012a"
+          },
+          {
+            "path": "include/CGAL/Barycentric_coordinates_2/Discrete_harmonic_coordinates_2.h",
+            "sha256": "0ea13a612cdc8ba8d1e553e8cd1e7383655934f43f64edcbd383760a5165efbf"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "polygon",
+            "types": [
+              "Polygon2"
+            ],
+            "formats": [
+              "json"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          },
+          {
+            "slot": "queries",
+            "types": [
+              "PointSet2"
+            ],
+            "formats": [
+              "json"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "analysis",
+            "type": "GeometryQueryReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "method"
+        ],
+        "properties": {
+          "method": {
+            "type": "string",
+            "enum": [
+              "wachspress",
+              "mean_value",
+              "discrete_harmonic"
+            ],
+            "description": "Generalized barycentric coordinate family (CGAL Barycentric_coordinates_2)."
+          }
+        }
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 67108864
+        }
+      ],
+      "validation": {
+        "required": true,
+        "validators": [
+          "shape.validate.barycentric"
+        ],
+        "bindings": {
+          "shape.validate.barycentric": {
+            "artifacts": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "polygon": {
+                "input": "polygon"
+              },
+              "queries": {
+                "input": "queries"
+              }
+            },
+            "parameters": {
+              "method": {
+                "parameter": "method"
+              }
+            }
+          }
+        }
+      },
+      "output_contract": {
+        "report_schema_version": 1,
+        "geometry_mutation": false,
+        "source_sha256_preserved": true,
+        "exact_rational_strings": true,
+        "producer_diagnostics_are_non_authoritative": true
+      },
+      "dependencies": [
+        "Barycentric_coordinates_2"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "input_slots": [
+            "polygon",
+            "queries"
+          ],
+          "maximum_polygon_vertices": 200,
+          "source_header": "CGAL/Barycentric_coordinates_2/Wachspress_coordinates_2.h",
+          "validator_parameter_bindings": {
+            "shape.validate.barycentric": {
+              "method": "method"
+            }
+          },
+          "validators": [
+            "shape.validate.barycentric"
+          ]
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "CGAL filtered-exact predicates (EPICK); independent validators use exact rational arithmetic or an explicit tolerance stated in the report",
+        "exact_constructions": "unsupported_fail_closed",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_query_cases.py"
+        ],
+        "worker_manifest_operation": "shape.barycentric",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "shape.validate.barycentric",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "validator",
+      "summary": "Recompute the coordinates with exact rational Wachspress and discrete harmonic formulas (and a tolerance-checked mean value formula) and check partition of unity and linear precision.",
+      "package": "Barycentric_coordinates_2",
+      "aliases": [
+        "validate barycentric coordinates",
+        "\u91cd\u5fc3\u5ea7\u6a19\u691c\u8a3c"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Barycentric_coordinates_2"
+        },
+        {
+          "kind": "operation_reference",
+          "identifier": "shape.barycentric"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Barycentric_coordinates_2",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Barycentric_coordinates_2/Wachspress_coordinates_2.h",
+            "sha256": "fa15ef01da45686e83c1080cc28a6157b24f806e6e1ea3442d7f7a6b3c13d86f"
+          },
+          {
+            "path": "include/CGAL/Barycentric_coordinates_2/Mean_value_coordinates_2.h",
+            "sha256": "313ba74b21e9894805e688109371d606d99442a9af99ad9c2450696f874c012a"
+          },
+          {
+            "path": "include/CGAL/Barycentric_coordinates_2/Discrete_harmonic_coordinates_2.h",
+            "sha256": "0ea13a612cdc8ba8d1e553e8cd1e7383655934f43f64edcbd383760a5165efbf"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "GeometryQueryReport"
+            ],
+            "formats": [
+              "json"
+            ],
+            "unit": "none"
+          },
+          {
+            "slot": "polygon",
+            "types": [
+              "Polygon2"
+            ],
+            "formats": [
+              "json"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          },
+          {
+            "slot": "queries",
+            "types": [
+              "PointSet2"
+            ],
+            "formats": [
+              "json"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "method"
+        ],
+        "properties": {
+          "method": {
+            "type": "string",
+            "enum": [
+              "wachspress",
+              "mean_value",
+              "discrete_harmonic"
+            ],
+            "description": "Generalized barycentric coordinate family (CGAL Barycentric_coordinates_2)."
+          }
+        }
+      },
+      "preconditions": [],
+      "validation": {
+        "required": false,
+        "validators": [],
+        "bindings": {},
+        "terminal_validator": true,
+        "validates": "shape.barycentric",
+        "validates_all": [
+          "shape.barycentric"
+        ],
+        "required_report_checks": {
+          "status": "pass",
+          "passed": true,
+          "validator": "shape.validate.barycentric",
+          "checks.parameters_match": true,
+          "checks.source_matches": true,
+          "checks.polygon_simple_counterclockwise": true,
+          "checks.query_strictly_inside": true,
+          "checks.coordinates_match_formula": true,
+          "checks.partition_of_unity": true,
+          "checks.linear_precision": true
+        }
+      },
+      "output_contract": {
+        "schema": "ValidationReport/v1",
+        "required_true_checks": [
+          "parameters_match",
+          "source_matches",
+          "polygon_simple_counterclockwise",
+          "query_strictly_inside",
+          "coordinates_match_formula",
+          "partition_of_unity",
+          "linear_precision"
+        ],
+        "status": "pass",
+        "failure_or_indeterminate_publish": false,
+        "independence": "exact rational weights and tolerance-checked mean value formula; no CGAL header"
+      },
+      "dependencies": [
+        "Barycentric_coordinates_2"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "exact:GMP",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "polygon_simple_counterclockwise",
+            "query_strictly_inside",
+            "coordinates_match_formula",
+            "partition_of_unity",
+            "linear_precision"
+          ],
+          "independence": "exact rational weights and tolerance-checked mean value formula; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "polygon",
+            "queries"
+          ],
+          "output_slot": "validation"
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "exact arithmetic: GMP rationals (no CGAL header)",
+        "coordinate_storage": "IEEE-754 binary64 converted to exact rationals",
+        "predicate_policy": "exact rational predicates and constructions; textbook-formula checks use an explicit tolerance stated in the report",
+        "exact_constructions": "all compared quantities are exact rationals except where the report states a tolerance",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_query_cases.py"
+        ],
+        "worker_manifest_operation": "shape.validate.barycentric",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "spatial.aabb.intersections",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "analysis",
+      "summary": "Ray versus triangle mesh intersection candidates through AABB_tree: do_intersect, any_intersected_primitive and the sorted set from all_intersected_primitives for every ray.",
+      "package": "AABB_tree",
+      "major_requirements": [
+        "major.7.2.04"
+      ],
+      "aliases": [
+        "aabb intersection candidates",
+        "ray mesh intersection",
+        "all intersected primitives",
+        "\u4ea4\u5dee\u5019\u88dc"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "AABB_tree"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::AABB_tree::do_intersect"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::AABB_tree::any_intersected_primitive"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::AABB_tree::all_intersected_primitives"
+        },
+        {
+          "kind": "header",
+          "identifier": "AABB_tree.h"
+        },
+        {
+          "kind": "manual",
+          "identifier": "AABB_tree/index.html"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "AABB_tree",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/AABB_tree.h",
+            "sha256": "55d57cfd3ab1ea62373150eb28410e05560a9614ea915598b7afabe6622a9904"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "mesh",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          },
+          {
+            "slot": "rays",
+            "types": [
+              "RayBatch3"
+            ],
+            "formats": [
+              "json"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "analysis",
+            "type": "SpatialQueryReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {}
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 268435456
+        }
+      ],
+      "validation": {
+        "required": true,
+        "validators": [
+          "spatial.validate.aabb_intersections"
+        ],
+        "bindings": {
+          "spatial.validate.aabb_intersections": {
+            "artifacts": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "mesh": {
+                "input": "mesh"
+              },
+              "rays": {
+                "input": "rays"
+              }
+            }
+          }
+        }
+      },
+      "output_contract": {
+        "report_schema_version": 1,
+        "geometry_mutation": false,
+        "source_sha256_preserved": true,
+        "exact_rational_strings": true,
+        "producer_diagnostics_are_non_authoritative": true
+      },
+      "dependencies": [
+        "AABB_tree"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "input_slots": [
+            "mesh",
+            "rays"
+          ],
+          "maximum_queries": 2000,
+          "source_header": "CGAL/AABB_tree.h",
+          "validators": [
+            "spatial.validate.aabb_intersections"
+          ]
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "CGAL filtered-exact predicates (EPICK); independent validators use exact rational arithmetic or an explicit tolerance stated in the report",
+        "exact_constructions": "unsupported_fail_closed",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_query_cases.py"
+        ],
+        "worker_manifest_operation": "spatial.aabb.intersections",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "spatial.validate.aabb_intersections",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "validator",
+      "summary": "Brute-force every ray against every triangle with exact rational predicates and compare do_intersect, the full face set and membership of the reported any-face.",
+      "package": "AABB_tree",
+      "aliases": [
+        "validate intersection candidates"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "AABB_tree"
+        },
+        {
+          "kind": "operation_reference",
+          "identifier": "spatial.aabb.intersections"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "AABB_tree",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/AABB_tree.h",
+            "sha256": "55d57cfd3ab1ea62373150eb28410e05560a9614ea915598b7afabe6622a9904"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "SpatialQueryReport"
+            ],
+            "formats": [
+              "json"
+            ],
+            "unit": "none"
+          },
+          {
+            "slot": "mesh",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          },
+          {
+            "slot": "rays",
+            "types": [
+              "RayBatch3"
+            ],
+            "formats": [
+              "json"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {}
+      },
+      "preconditions": [],
+      "validation": {
+        "required": false,
+        "validators": [],
+        "bindings": {},
+        "terminal_validator": true,
+        "validates": "spatial.aabb.intersections",
+        "validates_all": [
+          "spatial.aabb.intersections"
+        ],
+        "required_report_checks": {
+          "status": "pass",
+          "passed": true,
+          "validator": "spatial.validate.aabb_intersections",
+          "checks.parameters_match": true,
+          "checks.source_matches": true,
+          "checks.every_ray_answered": true,
+          "checks.do_intersect_exact": true,
+          "checks.all_intersected_primitives_exact": true,
+          "checks.any_intersected_primitive_member": true
+        }
+      },
+      "output_contract": {
+        "schema": "ValidationReport/v1",
+        "required_true_checks": [
+          "parameters_match",
+          "source_matches",
+          "every_ray_answered",
+          "do_intersect_exact",
+          "all_intersected_primitives_exact",
+          "any_intersected_primitive_member"
+        ],
+        "status": "pass",
+        "failure_or_indeterminate_publish": false,
+        "independence": "exact rational ray/triangle predicates; no CGAL header"
+      },
+      "dependencies": [
+        "AABB_tree"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "exact:GMP",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "every_ray_answered",
+            "do_intersect_exact",
+            "all_intersected_primitives_exact",
+            "any_intersected_primitive_member"
+          ],
+          "independence": "exact rational ray/triangle predicates; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "mesh",
+            "rays"
+          ],
+          "output_slot": "validation"
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "exact arithmetic: GMP rationals (no CGAL header)",
+        "coordinate_storage": "IEEE-754 binary64 converted to exact rationals",
+        "predicate_policy": "exact rational predicates and constructions; textbook-formula checks use an explicit tolerance stated in the report",
+        "exact_constructions": "all compared quantities are exact rationals except where the report states a tolerance",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_query_cases.py"
+        ],
+        "worker_manifest_operation": "spatial.validate.aabb_intersections",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "mesh.components.label",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "analysis",
+      "summary": "Label every face with its connected component (Polygon_mesh_processing::connected_components) and report the component count and sizes.",
+      "package": "Polygon_mesh_processing",
+      "major_requirements": [
+        "major.7.3.02"
+      ],
+      "aliases": [
+        "connected components",
+        "component labels",
+        "\u9023\u7d50\u6210\u5206\u30e9\u30d9\u30eb"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Polygon_mesh_processing"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Polygon_mesh_processing::connected_components"
+        },
+        {
+          "kind": "header",
+          "identifier": "Polygon_mesh_processing/connected_components.h"
+        },
+        {
+          "kind": "manual",
+          "identifier": "Polygon_mesh_processing/index.html"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Polygon_mesh_processing",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/connected_components.h",
+            "sha256": "3f980c0349166a44c80e990fdf83a91086bee637e4850c44c1ff295fda594e70"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "mesh",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "analysis",
+            "type": "GeometryQueryReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {}
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 268435456,
+          "maximum_faces": 20000
+        }
+      ],
+      "validation": {
+        "required": true,
+        "validators": [
+          "mesh.validate.components_label"
+        ],
+        "bindings": {
+          "mesh.validate.components_label": {
+            "artifacts": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "mesh": {
+                "input": "mesh"
+              }
+            }
+          }
+        }
+      },
+      "output_contract": {
+        "report_schema_version": 1,
+        "geometry_mutation": false,
+        "source_sha256_preserved": true,
+        "exact_rational_strings": true,
+        "producer_diagnostics_are_non_authoritative": true
+      },
+      "dependencies": [
+        "Polygon_mesh_processing"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "input_slots": [
+            "mesh"
+          ],
+          "maximum_input_faces": 20000,
+          "source_header": "CGAL/Polygon_mesh_processing/connected_components.h",
+          "validators": [
+            "mesh.validate.components_label"
+          ]
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "CGAL filtered-exact predicates (EPICK); independent validators use exact rational arithmetic or an explicit tolerance stated in the report",
+        "exact_constructions": "unsupported_fail_closed",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_query_cases.py"
+        ],
+        "worker_manifest_operation": "mesh.components.label",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "mesh.validate.components_label",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "validator",
+      "summary": "Union-find over faces that share an undirected edge; compare the component count, partition and sizes.",
+      "package": "Polygon_mesh_processing",
+      "aliases": [
+        "validate component labels"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Polygon_mesh_processing"
+        },
+        {
+          "kind": "operation_reference",
+          "identifier": "mesh.components.label"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Polygon_mesh_processing",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/connected_components.h",
+            "sha256": "3f980c0349166a44c80e990fdf83a91086bee637e4850c44c1ff295fda594e70"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "GeometryQueryReport"
+            ],
+            "formats": [
+              "json"
+            ],
+            "unit": "none"
+          },
+          {
+            "slot": "mesh",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {}
+      },
+      "preconditions": [],
+      "validation": {
+        "required": false,
+        "validators": [],
+        "bindings": {},
+        "terminal_validator": true,
+        "validates": "mesh.components.label",
+        "validates_all": [
+          "mesh.components.label"
+        ],
+        "required_report_checks": {
+          "status": "pass",
+          "passed": true,
+          "validator": "mesh.validate.components_label",
+          "checks.parameters_match": true,
+          "checks.source_matches": true,
+          "checks.component_count_exact": true,
+          "checks.labels_partition_equal": true,
+          "checks.sizes_match": true
+        }
+      },
+      "output_contract": {
+        "schema": "ValidationReport/v1",
+        "required_true_checks": [
+          "parameters_match",
+          "source_matches",
+          "component_count_exact",
+          "labels_partition_equal",
+          "sizes_match"
+        ],
+        "status": "pass",
+        "failure_or_indeterminate_publish": false,
+        "independence": "union-find over shared edges; no CGAL header"
+      },
+      "dependencies": [
+        "Polygon_mesh_processing"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "exact:GMP",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "component_count_exact",
+            "labels_partition_equal",
+            "sizes_match"
+          ],
+          "independence": "union-find over shared edges; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "mesh"
+          ],
+          "output_slot": "validation"
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "exact arithmetic: GMP rationals (no CGAL header)",
+        "coordinate_storage": "IEEE-754 binary64 converted to exact rationals",
+        "predicate_policy": "exact rational predicates and constructions; textbook-formula checks use an explicit tolerance stated in the report",
+        "exact_constructions": "all compared quantities are exact rationals except where the report states a tolerance",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_query_cases.py"
+        ],
+        "worker_manifest_operation": "mesh.validate.components_label",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "mesh.components.component",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "transform",
+      "summary": "Extract the connected component containing a seed face (Polygon_mesh_processing::connected_component) as a new triangle mesh.",
+      "package": "Polygon_mesh_processing",
+      "major_requirements": [
+        "major.7.3.02"
+      ],
+      "aliases": [
+        "extract connected component",
+        "\u9023\u7d50\u6210\u5206\u62bd\u51fa"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Polygon_mesh_processing"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Polygon_mesh_processing::connected_component"
+        },
+        {
+          "kind": "header",
+          "identifier": "Polygon_mesh_processing/connected_components.h"
+        },
+        {
+          "kind": "manual",
+          "identifier": "Polygon_mesh_processing/index.html"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Polygon_mesh_processing",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/connected_components.h",
+            "sha256": "3f980c0349166a44c80e990fdf83a91086bee637e4850c44c1ff295fda594e70"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "source",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "geometry",
+            "type": "TriangleSurfaceMesh",
+            "format": "off",
+            "unit_from": "source"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "face"
+        ],
+        "properties": {
+          "face": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Seed face index (file order) of the extracted component."
+          }
+        }
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 268435456,
+          "maximum_faces": 20000
+        }
+      ],
+      "validation": {
+        "required": true,
+        "validators": [
+          "mesh.validate.components_component"
+        ],
+        "bindings": {
+          "mesh.validate.components_component": {
+            "artifacts": {
+              "candidate": {
+                "output": "geometry"
+              },
+              "source": {
+                "input": "source"
+              }
+            },
+            "parameters": {
+              "face": {
+                "parameter": "face"
+              }
+            }
+          }
+        }
+      },
+      "output_contract": {
+        "geometry_mutation": true,
+        "source_sha256_preserved": true,
+        "candidate_published_only_after_validation": true,
+        "producer_diagnostics_are_non_authoritative": true
+      },
+      "dependencies": [
+        "Polygon_mesh_processing"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "input_slots": [
+            "source"
+          ],
+          "maximum_input_faces": 20000,
+          "source_header": "CGAL/Polygon_mesh_processing/connected_components.h",
+          "validator_parameter_bindings": {
+            "mesh.validate.components_component": {
+              "face": "face"
+            }
+          },
+          "validators": [
+            "mesh.validate.components_component"
+          ]
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "CGAL filtered-exact predicates (EPICK); independent validators use exact rational arithmetic or an explicit tolerance stated in the report",
+        "exact_constructions": "unsupported_fail_closed",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_query_cases.py"
+        ],
+        "worker_manifest_operation": "mesh.components.component",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "mesh.validate.components_component",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "validator",
+      "summary": "Select the seed face's component by union-find and compare the face set (exact vertex coordinates) with the candidate.",
+      "package": "Polygon_mesh_processing",
+      "aliases": [
+        "validate component extraction"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Polygon_mesh_processing"
+        },
+        {
+          "kind": "operation_reference",
+          "identifier": "mesh.components.component"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Polygon_mesh_processing",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/connected_components.h",
+            "sha256": "3f980c0349166a44c80e990fdf83a91086bee637e4850c44c1ff295fda594e70"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          },
+          {
+            "slot": "source",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "face"
+        ],
+        "properties": {
+          "face": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Seed face index (file order) of the extracted component."
+          }
+        }
+      },
+      "preconditions": [],
+      "validation": {
+        "required": false,
+        "validators": [],
+        "bindings": {},
+        "terminal_validator": true,
+        "validates": "mesh.components.component",
+        "validates_all": [
+          "mesh.components.component"
+        ],
+        "required_report_checks": {
+          "status": "pass",
+          "passed": true,
+          "validator": "mesh.validate.components_component",
+          "checks.parameters_match": true,
+          "checks.source_is_manifold": true,
+          "checks.candidate_has_no_unreferenced_vertices": true,
+          "checks.faces_equal_selected_source_faces": true
+        }
+      },
+      "output_contract": {
+        "schema": "ValidationReport/v1",
+        "required_true_checks": [
+          "parameters_match",
+          "source_is_manifold",
+          "candidate_has_no_unreferenced_vertices",
+          "faces_equal_selected_source_faces"
+        ],
+        "status": "pass",
+        "failure_or_indeterminate_publish": false,
+        "independence": "union-find over shared edges; exact coordinate comparison; no CGAL header"
+      },
+      "dependencies": [
+        "Polygon_mesh_processing"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "exact:GMP",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_is_manifold",
+            "candidate_has_no_unreferenced_vertices",
+            "faces_equal_selected_source_faces"
+          ],
+          "independence": "union-find over shared edges; exact coordinate comparison; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "exact arithmetic: GMP rationals (no CGAL header)",
+        "coordinate_storage": "IEEE-754 binary64 converted to exact rationals",
+        "predicate_policy": "exact rational predicates and constructions; textbook-formula checks use an explicit tolerance stated in the report",
+        "exact_constructions": "all compared quantities are exact rationals except where the report states a tolerance",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_query_cases.py"
+        ],
+        "worker_manifest_operation": "mesh.validate.components_component",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "mesh.components.keep_largest",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "transform",
+      "summary": "Keep the N largest connected components (Polygon_mesh_processing::keep_largest_connected_components), rejecting ties at the cut.",
+      "package": "Polygon_mesh_processing",
+      "major_requirements": [
+        "major.7.3.02"
+      ],
+      "aliases": [
+        "keep largest components",
+        "remove small components",
+        "\u5c0f\u6210\u5206\u524a\u9664"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Polygon_mesh_processing"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Polygon_mesh_processing::keep_largest_connected_components"
+        },
+        {
+          "kind": "header",
+          "identifier": "Polygon_mesh_processing/connected_components.h"
+        },
+        {
+          "kind": "manual",
+          "identifier": "Polygon_mesh_processing/index.html"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Polygon_mesh_processing",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/connected_components.h",
+            "sha256": "3f980c0349166a44c80e990fdf83a91086bee637e4850c44c1ff295fda594e70"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "source",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "geometry",
+            "type": "TriangleSurfaceMesh",
+            "format": "off",
+            "unit_from": "source"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "count"
+        ],
+        "properties": {
+          "count": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000,
+            "description": "Number of largest connected components to keep (ties at the cut are rejected)."
+          }
+        }
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 268435456,
+          "maximum_faces": 20000
+        }
+      ],
+      "validation": {
+        "required": true,
+        "validators": [
+          "mesh.validate.components_keep_largest"
+        ],
+        "bindings": {
+          "mesh.validate.components_keep_largest": {
+            "artifacts": {
+              "candidate": {
+                "output": "geometry"
+              },
+              "source": {
+                "input": "source"
+              }
+            },
+            "parameters": {
+              "count": {
+                "parameter": "count"
+              }
+            }
+          }
+        }
+      },
+      "output_contract": {
+        "geometry_mutation": true,
+        "source_sha256_preserved": true,
+        "candidate_published_only_after_validation": true,
+        "producer_diagnostics_are_non_authoritative": true
+      },
+      "dependencies": [
+        "Polygon_mesh_processing"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "input_slots": [
+            "source"
+          ],
+          "maximum_input_faces": 20000,
+          "source_header": "CGAL/Polygon_mesh_processing/connected_components.h",
+          "validator_parameter_bindings": {
+            "mesh.validate.components_keep_largest": {
+              "count": "count"
+            }
+          },
+          "validators": [
+            "mesh.validate.components_keep_largest"
+          ]
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "CGAL filtered-exact predicates (EPICK); independent validators use exact rational arithmetic or an explicit tolerance stated in the report",
+        "exact_constructions": "unsupported_fail_closed",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_query_cases.py"
+        ],
+        "worker_manifest_operation": "mesh.components.keep_largest",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "mesh.validate.components_keep_largest",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "validator",
+      "summary": "Rank components by union-find size, require an unambiguous cut and compare the kept face set with the candidate.",
+      "package": "Polygon_mesh_processing",
+      "aliases": [
+        "validate keep largest components"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Polygon_mesh_processing"
+        },
+        {
+          "kind": "operation_reference",
+          "identifier": "mesh.components.keep_largest"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Polygon_mesh_processing",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/connected_components.h",
+            "sha256": "3f980c0349166a44c80e990fdf83a91086bee637e4850c44c1ff295fda594e70"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          },
+          {
+            "slot": "source",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "count"
+        ],
+        "properties": {
+          "count": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000,
+            "description": "Number of largest connected components to keep (ties at the cut are rejected)."
+          }
+        }
+      },
+      "preconditions": [],
+      "validation": {
+        "required": false,
+        "validators": [],
+        "bindings": {},
+        "terminal_validator": true,
+        "validates": "mesh.components.keep_largest",
+        "validates_all": [
+          "mesh.components.keep_largest"
+        ],
+        "required_report_checks": {
+          "status": "pass",
+          "passed": true,
+          "validator": "mesh.validate.components_keep_largest",
+          "checks.parameters_match": true,
+          "checks.source_is_manifold": true,
+          "checks.kept_set_unambiguous": true,
+          "checks.candidate_has_no_unreferenced_vertices": true,
+          "checks.faces_equal_selected_source_faces": true
+        }
+      },
+      "output_contract": {
+        "schema": "ValidationReport/v1",
+        "required_true_checks": [
+          "parameters_match",
+          "source_is_manifold",
+          "kept_set_unambiguous",
+          "candidate_has_no_unreferenced_vertices",
+          "faces_equal_selected_source_faces"
+        ],
+        "status": "pass",
+        "failure_or_indeterminate_publish": false,
+        "independence": "union-find component sizes; exact coordinate comparison; no CGAL header"
+      },
+      "dependencies": [
+        "Polygon_mesh_processing"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "exact:GMP",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_is_manifold",
+            "kept_set_unambiguous",
+            "candidate_has_no_unreferenced_vertices",
+            "faces_equal_selected_source_faces"
+          ],
+          "independence": "union-find component sizes; exact coordinate comparison; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "exact arithmetic: GMP rationals (no CGAL header)",
+        "coordinate_storage": "IEEE-754 binary64 converted to exact rationals",
+        "predicate_policy": "exact rational predicates and constructions; textbook-formula checks use an explicit tolerance stated in the report",
+        "exact_constructions": "all compared quantities are exact rationals except where the report states a tolerance",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_query_cases.py"
+        ],
+        "worker_manifest_operation": "mesh.validate.components_keep_largest",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "mesh.location.locate",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "analysis",
+      "summary": "Locate query points on a triangle mesh (Polygon_mesh_processing::locate / locate_with_AABB_tree): face, exact barycentric coordinates in face vertex order, point and squared distance.",
+      "package": "Polygon_mesh_processing",
+      "major_requirements": [
+        "major.7.3.08"
+      ],
+      "aliases": [
+        "point location on mesh",
+        "closest face barycentric",
+        "locate point",
+        "\u30e1\u30c3\u30b7\u30e5\u4e0a\u306e\u4f4d\u7f6e\u7279\u5b9a"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Polygon_mesh_processing"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Polygon_mesh_processing::locate"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Polygon_mesh_processing::locate_with_AABB_tree"
+        },
+        {
+          "kind": "header",
+          "identifier": "Polygon_mesh_processing/locate.h"
+        },
+        {
+          "kind": "manual",
+          "identifier": "Polygon_mesh_processing/index.html"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Polygon_mesh_processing",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/locate.h",
+            "sha256": "209b62c7e3e66658f62433897912894ab923aa92f4de278375f71f11444f721b"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "mesh",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          },
+          {
+            "slot": "queries",
+            "types": [
+              "PointSet3"
+            ],
+            "formats": [
+              "xyz"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "analysis",
+            "type": "GeometryQueryReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "strategy"
+        ],
+        "properties": {
+          "strategy": {
+            "type": "string",
+            "enum": [
+              "locate",
+              "locate_with_AABB_tree"
+            ],
+            "description": "PMP::locate (brute force over faces) or PMP::locate_with_AABB_tree (prebuilt tree)."
+          }
+        }
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 268435456,
+          "maximum_faces": 20000
+        }
+      ],
+      "validation": {
+        "required": true,
+        "validators": [
+          "mesh.validate.location"
+        ],
+        "bindings": {
+          "mesh.validate.location": {
+            "artifacts": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "mesh": {
+                "input": "mesh"
+              },
+              "queries": {
+                "input": "queries"
+              }
+            },
+            "parameters": {
+              "strategy": {
+                "parameter": "strategy"
+              }
+            }
+          }
+        }
+      },
+      "output_contract": {
+        "report_schema_version": 1,
+        "geometry_mutation": false,
+        "source_sha256_preserved": true,
+        "exact_rational_strings": true,
+        "producer_diagnostics_are_non_authoritative": true
+      },
+      "dependencies": [
+        "Polygon_mesh_processing"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "info": {
+          "input_slots": [
+            "mesh",
+            "queries"
+          ],
+          "maximum_input_faces": 20000,
+          "maximum_queries": 2000,
+          "source_header": "CGAL/Polygon_mesh_processing/locate.h",
+          "validator_parameter_bindings": {
+            "mesh.validate.location": {
+              "strategy": "strategy"
+            }
+          },
+          "validators": [
+            "mesh.validate.location"
+          ]
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64 converted to exact binary-rational coordinates",
+        "predicate_policy": "CGAL exact predicates and exact constructions (EPECK); reported points and barycentric weights are canonical exact rational strings",
+        "exact_constructions": "EPECK",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_query_cases.py"
+        ],
+        "worker_manifest_operation": "mesh.location.locate",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "mesh.validate.location",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "validator",
+      "summary": "Check the barycentric combination reproduces the reported point and that it is an exact closest point of the whole mesh (exact brute force).",
+      "package": "Polygon_mesh_processing",
+      "aliases": [
+        "validate mesh location"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Polygon_mesh_processing"
+        },
+        {
+          "kind": "operation_reference",
+          "identifier": "mesh.location.locate"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Polygon_mesh_processing",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/locate.h",
+            "sha256": "209b62c7e3e66658f62433897912894ab923aa92f4de278375f71f11444f721b"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "GeometryQueryReport"
+            ],
+            "formats": [
+              "json"
+            ],
+            "unit": "none"
+          },
+          {
+            "slot": "mesh",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          },
+          {
+            "slot": "queries",
+            "types": [
+              "PointSet3"
+            ],
+            "formats": [
+              "xyz"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "strategy"
+        ],
+        "properties": {
+          "strategy": {
+            "type": "string",
+            "enum": [
+              "locate",
+              "locate_with_AABB_tree"
+            ],
+            "description": "PMP::locate (brute force over faces) or PMP::locate_with_AABB_tree (prebuilt tree)."
+          }
+        }
+      },
+      "preconditions": [],
+      "validation": {
+        "required": false,
+        "validators": [],
+        "bindings": {},
+        "terminal_validator": true,
+        "validates": "mesh.location.locate",
+        "validates_all": [
+          "mesh.location.locate"
+        ],
+        "required_report_checks": {
+          "status": "pass",
+          "passed": true,
+          "validator": "mesh.validate.location",
+          "checks.parameters_match": true,
+          "checks.source_matches": true,
+          "checks.every_query_answered": true,
+          "checks.barycentric_valid": true,
+          "checks.point_is_face_combination": true,
+          "checks.distance_matches_location": true,
+          "checks.location_is_closest_exact": true
+        }
+      },
+      "output_contract": {
+        "schema": "ValidationReport/v1",
+        "required_true_checks": [
+          "parameters_match",
+          "source_matches",
+          "every_query_answered",
+          "barycentric_valid",
+          "point_is_face_combination",
+          "distance_matches_location",
+          "location_is_closest_exact"
+        ],
+        "status": "pass",
+        "failure_or_indeterminate_publish": false,
+        "independence": "exact rational closest point on every triangle; no CGAL header"
+      },
+      "dependencies": [
+        "Polygon_mesh_processing"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "exact:GMP",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "every_query_answered",
+            "barycentric_valid",
+            "point_is_face_combination",
+            "distance_matches_location",
+            "location_is_closest_exact"
+          ],
+          "independence": "exact rational closest point on every triangle; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "mesh",
+            "queries"
+          ],
+          "output_slot": "validation"
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "exact arithmetic: GMP rationals (no CGAL header)",
+        "coordinate_storage": "IEEE-754 binary64 converted to exact rationals",
+        "predicate_policy": "exact rational predicates and constructions; textbook-formula checks use an explicit tolerance stated in the report",
+        "exact_constructions": "all compared quantities are exact rationals except where the report states a tolerance",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_query_cases.py"
+        ],
+        "worker_manifest_operation": "mesh.validate.location",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "mesh.slice.compute",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "analysis",
+      "summary": "Slice a triangle mesh with a plane (CGAL::Polygon_mesh_slicer) and report the cross-section polylines with exact rational vertices.",
+      "package": "PMP_Boolean_operations",
+      "major_requirements": [
+        "major.7.5.05"
+      ],
+      "aliases": [
+        "mesh slicer",
+        "plane section",
+        "cross section polylines",
+        "\u65ad\u9762"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "PMP_Boolean_operations"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Polygon_mesh_slicer"
+        },
+        {
+          "kind": "header",
+          "identifier": "Polygon_mesh_slicer.h"
+        },
+        {
+          "kind": "manual",
+          "identifier": "PMP_Boolean_operations/index.html"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "PMP_Boolean_operations",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygon_mesh_slicer.h",
+            "sha256": "c2906096b43a5d7044dad4277efbad2a8a8fa06125f6e0c5bf204291030884a1"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "mesh",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "analysis",
+            "type": "GeometryQueryReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "normal",
+          "offset"
+        ],
+        "properties": {
+          "normal": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            },
+            "description": "Plane normal (a, b, c), not all zero."
+          },
+          "offset": {
+            "type": "TypedLength",
+            "description": "Plane offset d of a*x+b*y+c*z = d, in artifact length units (signed)."
+          }
+        }
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 268435456,
+          "maximum_faces": 20000
+        }
+      ],
+      "validation": {
+        "required": true,
+        "validators": [
+          "mesh.validate.slice"
+        ],
+        "bindings": {
+          "mesh.validate.slice": {
+            "artifacts": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "mesh": {
+                "input": "mesh"
+              }
+            },
+            "parameters": {
+              "normal": {
+                "parameter": "normal"
+              },
+              "offset": {
+                "parameter": "offset"
+              }
+            }
+          }
+        }
+      },
+      "output_contract": {
+        "report_schema_version": 1,
+        "geometry_mutation": false,
+        "source_sha256_preserved": true,
+        "exact_rational_strings": true,
+        "producer_diagnostics_are_non_authoritative": true
+      },
+      "dependencies": [
+        "PMP_Boolean_operations"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "info": {
+          "input_slots": [
+            "mesh"
+          ],
+          "maximum_input_faces": 20000,
+          "source_header": "CGAL/Polygon_mesh_slicer.h",
+          "validator_parameter_bindings": {
+            "mesh.validate.slice": {
+              "normal": "normal",
+              "offset": "offset"
+            }
+          },
+          "validators": [
+            "mesh.validate.slice"
+          ]
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64 converted to exact binary-rational coordinates",
+        "predicate_policy": "CGAL exact predicates and exact constructions (EPECK); reported points and barycentric weights are canonical exact rational strings",
+        "exact_constructions": "EPECK",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_query_cases.py"
+        ],
+        "worker_manifest_operation": "mesh.slice.compute",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "mesh.validate.slice",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "validator",
+      "summary": "Recompute every triangle/plane section exactly and check that the reported polylines lie on the plane, inside the sections and cover them.",
+      "package": "PMP_Boolean_operations",
+      "aliases": [
+        "validate mesh slice"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "PMP_Boolean_operations"
+        },
+        {
+          "kind": "operation_reference",
+          "identifier": "mesh.slice.compute"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "PMP_Boolean_operations",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygon_mesh_slicer.h",
+            "sha256": "c2906096b43a5d7044dad4277efbad2a8a8fa06125f6e0c5bf204291030884a1"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "GeometryQueryReport"
+            ],
+            "formats": [
+              "json"
+            ],
+            "unit": "none"
+          },
+          {
+            "slot": "mesh",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "normal",
+          "offset"
+        ],
+        "properties": {
+          "normal": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            },
+            "description": "Plane normal (a, b, c), not all zero."
+          },
+          "offset": {
+            "type": "TypedLength",
+            "description": "Plane offset d of a*x+b*y+c*z = d, in artifact length units (signed)."
+          }
+        }
+      },
+      "preconditions": [],
+      "validation": {
+        "required": false,
+        "validators": [],
+        "bindings": {},
+        "terminal_validator": true,
+        "validates": "mesh.slice.compute",
+        "validates_all": [
+          "mesh.slice.compute"
+        ],
+        "required_report_checks": {
+          "status": "pass",
+          "passed": true,
+          "validator": "mesh.validate.slice",
+          "checks.parameters_match": true,
+          "checks.source_matches": true,
+          "checks.points_on_plane": true,
+          "checks.segments_on_mesh_section": true,
+          "checks.sections_fully_covered": true,
+          "checks.closed_mesh_gives_closed_polylines": true
+        }
+      },
+      "output_contract": {
+        "schema": "ValidationReport/v1",
+        "required_true_checks": [
+          "parameters_match",
+          "source_matches",
+          "points_on_plane",
+          "segments_on_mesh_section",
+          "sections_fully_covered",
+          "closed_mesh_gives_closed_polylines"
+        ],
+        "status": "pass",
+        "failure_or_indeterminate_publish": false,
+        "independence": "exact triangle/plane sections and interval coverage; no CGAL header"
+      },
+      "dependencies": [
+        "PMP_Boolean_operations"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "exact:GMP",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "points_on_plane",
+            "segments_on_mesh_section",
+            "sections_fully_covered",
+            "closed_mesh_gives_closed_polylines"
+          ],
+          "independence": "exact triangle/plane sections and interval coverage; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "mesh"
+          ],
+          "output_slot": "validation"
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "exact arithmetic: GMP rationals (no CGAL header)",
+        "coordinate_storage": "IEEE-754 binary64 converted to exact rationals",
+        "predicate_policy": "exact rational predicates and constructions; textbook-formula checks use an explicit tolerance stated in the report",
+        "exact_constructions": "all compared quantities are exact rationals except where the report states a tolerance",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_query_cases.py"
+        ],
+        "worker_manifest_operation": "mesh.validate.slice",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "mesh.subdivide.catmull_clark",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "transform",
+      "summary": "Catmull-Clark subdivision (Subdivision_method_3::CatmullClark_subdivision) of a triangle or polygon mesh into a quad polygon soup.",
+      "package": "Subdivision_method_3",
+      "major_requirements": [
+        "major.7.8.06"
+      ],
+      "aliases": [
+        "catmull clark",
+        "subdivision surface",
+        "\u7d30\u5206\u5272"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Subdivision_method_3"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Subdivision_method_3::CatmullClark_subdivision"
+        },
+        {
+          "kind": "header",
+          "identifier": "Subdivision_method_3/subdivision_methods_3.h"
+        },
+        {
+          "kind": "manual",
+          "identifier": "Subdivision_method_3/index.html"
+        }
+      ],
+      "license": {
+        "expression": "LGPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Subdivision_method_3",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Subdivision_method_3/subdivision_methods_3.h",
+            "sha256": "8fc23a1613c20514366b56c8c27be7ff98eeccc74cb96131514185856a1a2efe"
+          },
+          {
+            "path": "LICENSE.LGPL",
+            "sha256": "374a43f625a1b877f6f13719d1bab4ca8791ede604da3e009c3ceda1f6f85489"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "source",
+            "types": [
+              "TriangleSurfaceMesh",
+              "PolygonSoup3"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "geometry",
+            "type": "PolygonSoup3",
+            "format": "off",
+            "unit_from": "source"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "steps"
+        ],
+        "properties": {
+          "steps": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 3,
+            "description": "Number of subdivision iterations."
+          }
+        }
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 268435456,
+          "maximum_faces": 2000
+        }
+      ],
+      "validation": {
+        "required": true,
+        "validators": [
+          "mesh.validate.catmull_clark"
+        ],
+        "bindings": {
+          "mesh.validate.catmull_clark": {
+            "artifacts": {
+              "candidate": {
+                "output": "geometry"
+              },
+              "source": {
+                "input": "source"
+              }
+            },
+            "parameters": {
+              "steps": {
+                "parameter": "steps"
+              }
+            }
+          }
+        }
+      },
+      "output_contract": {
+        "geometry_mutation": true,
+        "source_sha256_preserved": true,
+        "candidate_published_only_after_validation": true,
+        "producer_diagnostics_are_non_authoritative": true
+      },
+      "dependencies": [
+        "Subdivision_method_3"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "input_slots": [
+            "source"
+          ],
+          "maximum_input_faces": 2000,
+          "maximum_output_faces": 60000,
+          "source_header": "CGAL/Subdivision_method_3/subdivision_methods_3.h",
+          "validator_parameter_bindings": {
+            "mesh.validate.catmull_clark": {
+              "steps": "steps"
+            }
+          },
+          "validators": [
+            "mesh.validate.catmull_clark"
+          ]
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "CGAL filtered-exact predicates (EPICK); independent validators use exact rational arithmetic or an explicit tolerance stated in the report",
+        "exact_constructions": "unsupported_fail_closed",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_query_cases.py"
+        ],
+        "worker_manifest_operation": "mesh.subdivide.catmull_clark",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "mesh.validate.catmull_clark",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "validator",
+      "summary": "Re-implement the Catmull-Clark masks from the raw OFF data and match every subdivided face (geometry, orientation) within a stated tolerance.",
+      "package": "Subdivision_method_3",
+      "aliases": [
+        "validate catmull clark"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Subdivision_method_3"
+        },
+        {
+          "kind": "operation_reference",
+          "identifier": "mesh.subdivide.catmull_clark"
+        }
+      ],
+      "license": {
+        "expression": "LGPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Subdivision_method_3",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Subdivision_method_3/subdivision_methods_3.h",
+            "sha256": "8fc23a1613c20514366b56c8c27be7ff98eeccc74cb96131514185856a1a2efe"
+          },
+          {
+            "path": "LICENSE.LGPL",
+            "sha256": "374a43f625a1b877f6f13719d1bab4ca8791ede604da3e009c3ceda1f6f85489"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "PolygonSoup3"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          },
+          {
+            "slot": "source",
+            "types": [
+              "TriangleSurfaceMesh",
+              "PolygonSoup3"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "steps"
+        ],
+        "properties": {
+          "steps": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 3,
+            "description": "Number of subdivision iterations."
+          }
+        }
+      },
+      "preconditions": [],
+      "validation": {
+        "required": false,
+        "validators": [],
+        "bindings": {},
+        "terminal_validator": true,
+        "validates": "mesh.subdivide.catmull_clark",
+        "validates_all": [
+          "mesh.subdivide.catmull_clark"
+        ],
+        "required_report_checks": {
+          "status": "pass",
+          "passed": true,
+          "validator": "mesh.validate.catmull_clark",
+          "checks.parameters_match": true,
+          "checks.counts_match": true,
+          "checks.faces_match_independent_subdivision": true,
+          "checks.orientation_preserved": true
+        }
+      },
+      "output_contract": {
+        "schema": "ValidationReport/v1",
+        "required_true_checks": [
+          "parameters_match",
+          "counts_match",
+          "faces_match_independent_subdivision",
+          "orientation_preserved"
+        ],
+        "status": "pass",
+        "failure_or_indeterminate_publish": false,
+        "independence": "Catmull-Clark masks re-implemented from raw OFF data; no CGAL header"
+      },
+      "dependencies": [
+        "Subdivision_method_3"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "exact:GMP",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "counts_match",
+            "faces_match_independent_subdivision",
+            "orientation_preserved"
+          ],
+          "independence": "Catmull-Clark masks re-implemented from raw OFF data; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "exact arithmetic: GMP rationals (no CGAL header)",
+        "coordinate_storage": "IEEE-754 binary64 converted to exact rationals",
+        "predicate_policy": "exact rational predicates and constructions; textbook-formula checks use an explicit tolerance stated in the report",
+        "exact_constructions": "all compared quantities are exact rationals except where the report states a tolerance",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_query_cases.py"
+        ],
+        "worker_manifest_operation": "mesh.validate.catmull_clark",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "mesh.subdivide.loop",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "transform",
+      "summary": "Loop subdivision (Subdivision_method_3::Loop_subdivision) of a triangle mesh.",
+      "package": "Subdivision_method_3",
+      "major_requirements": [
+        "major.7.8.06"
+      ],
+      "aliases": [
+        "loop subdivision",
+        "triangle subdivision",
+        "\u30eb\u30fc\u30d7\u7d30\u5206\u5272"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Subdivision_method_3"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Subdivision_method_3::Loop_subdivision"
+        },
+        {
+          "kind": "header",
+          "identifier": "Subdivision_method_3/subdivision_methods_3.h"
+        },
+        {
+          "kind": "manual",
+          "identifier": "Subdivision_method_3/index.html"
+        }
+      ],
+      "license": {
+        "expression": "LGPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Subdivision_method_3",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Subdivision_method_3/subdivision_methods_3.h",
+            "sha256": "8fc23a1613c20514366b56c8c27be7ff98eeccc74cb96131514185856a1a2efe"
+          },
+          {
+            "path": "LICENSE.LGPL",
+            "sha256": "374a43f625a1b877f6f13719d1bab4ca8791ede604da3e009c3ceda1f6f85489"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "source",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "geometry",
+            "type": "TriangleSurfaceMesh",
+            "format": "off",
+            "unit_from": "source"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "steps"
+        ],
+        "properties": {
+          "steps": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 3,
+            "description": "Number of subdivision iterations."
+          }
+        }
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 268435456,
+          "maximum_faces": 2000
+        }
+      ],
+      "validation": {
+        "required": true,
+        "validators": [
+          "mesh.validate.loop"
+        ],
+        "bindings": {
+          "mesh.validate.loop": {
+            "artifacts": {
+              "candidate": {
+                "output": "geometry"
+              },
+              "source": {
+                "input": "source"
+              }
+            },
+            "parameters": {
+              "steps": {
+                "parameter": "steps"
+              }
+            }
+          }
+        }
+      },
+      "output_contract": {
+        "geometry_mutation": true,
+        "source_sha256_preserved": true,
+        "candidate_published_only_after_validation": true,
+        "producer_diagnostics_are_non_authoritative": true
+      },
+      "dependencies": [
+        "Subdivision_method_3"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "input_slots": [
+            "source"
+          ],
+          "maximum_input_faces": 2000,
+          "maximum_output_faces": 60000,
+          "source_header": "CGAL/Subdivision_method_3/subdivision_methods_3.h",
+          "validator_parameter_bindings": {
+            "mesh.validate.loop": {
+              "steps": "steps"
+            }
+          },
+          "validators": [
+            "mesh.validate.loop"
+          ]
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "CGAL filtered-exact predicates (EPICK); independent validators use exact rational arithmetic or an explicit tolerance stated in the report",
+        "exact_constructions": "unsupported_fail_closed",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_query_cases.py"
+        ],
+        "worker_manifest_operation": "mesh.subdivide.loop",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "mesh.validate.loop",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "validator",
+      "summary": "Re-implement the Loop masks (interior and boundary) from the raw OFF data and match every subdivided triangle within a stated tolerance.",
+      "package": "Subdivision_method_3",
+      "aliases": [
+        "validate loop subdivision"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Subdivision_method_3"
+        },
+        {
+          "kind": "operation_reference",
+          "identifier": "mesh.subdivide.loop"
+        }
+      ],
+      "license": {
+        "expression": "LGPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Subdivision_method_3",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Subdivision_method_3/subdivision_methods_3.h",
+            "sha256": "8fc23a1613c20514366b56c8c27be7ff98eeccc74cb96131514185856a1a2efe"
+          },
+          {
+            "path": "LICENSE.LGPL",
+            "sha256": "374a43f625a1b877f6f13719d1bab4ca8791ede604da3e009c3ceda1f6f85489"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          },
+          {
+            "slot": "source",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "steps"
+        ],
+        "properties": {
+          "steps": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 3,
+            "description": "Number of subdivision iterations."
+          }
+        }
+      },
+      "preconditions": [],
+      "validation": {
+        "required": false,
+        "validators": [],
+        "bindings": {},
+        "terminal_validator": true,
+        "validates": "mesh.subdivide.loop",
+        "validates_all": [
+          "mesh.subdivide.loop"
+        ],
+        "required_report_checks": {
+          "status": "pass",
+          "passed": true,
+          "validator": "mesh.validate.loop",
+          "checks.parameters_match": true,
+          "checks.counts_match": true,
+          "checks.faces_match_independent_subdivision": true,
+          "checks.orientation_preserved": true
+        }
+      },
+      "output_contract": {
+        "schema": "ValidationReport/v1",
+        "required_true_checks": [
+          "parameters_match",
+          "counts_match",
+          "faces_match_independent_subdivision",
+          "orientation_preserved"
+        ],
+        "status": "pass",
+        "failure_or_indeterminate_publish": false,
+        "independence": "Loop masks re-implemented from raw OFF data; no CGAL header"
+      },
+      "dependencies": [
+        "Subdivision_method_3"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "exact:GMP",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "counts_match",
+            "faces_match_independent_subdivision",
+            "orientation_preserved"
+          ],
+          "independence": "Loop masks re-implemented from raw OFF data; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "exact arithmetic: GMP rationals (no CGAL header)",
+        "coordinate_storage": "IEEE-754 binary64 converted to exact rationals",
+        "predicate_policy": "exact rational predicates and constructions; textbook-formula checks use an explicit tolerance stated in the report",
+        "exact_constructions": "all compared quantities are exact rationals except where the report states a tolerance",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_query_cases.py"
+        ],
+        "worker_manifest_operation": "mesh.validate.loop",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
     }
   ]
 }

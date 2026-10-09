@@ -100,6 +100,121 @@ def _case(case_id: str, operation: str, inputs: list[dict], parameters: dict,
             "parameters": parameters, "assertions": assertions}
 
 
+
+# --- Query / mesh-processing additions (7.2.04, 7.3.02, 7.3.08, 7.5.05, 7.8.06, 7.13.05) -----
+QUERY_FIXTURES = {
+    "bary_queries.json": "52585029f6d0f347eca611d7837ef2e7cd31c06984937949621ac215048bd10d",
+    "bary_queries_l.json": "47f72e8372f235c2a83e171bbd81e596acd416e9ceb576bc533bce95ecd79201",
+    "bary_query_boundary.json": "5f986b90fee661ae27863225ea756e48214b68afa3fab6d04281fa7f0e43ae1e",
+    "bary_query_outside.json": "0588c391ca59db7b5eb1eaa15d8d4c520e719aefc62645a89d84a55d840989a6",
+    "cube12.off": "7e053da364bc195cb7d8f0550dc113810b70892027b2cf4e199c128171fda717",
+    "hexagon.json": "7e2fe8c42252f65f6a8ecbb7b6cabfd6f71d57d48f0b13c31bce027ec3d5ee60",
+    "locate_queries.xyz": "dc0a946d759f2911c71742bf35833a46e7c6522c6ac68fa65a034fcd5a019a14",
+    "polygon_bowtie.json": "56d19bb3a00f04b5f2ea006f925f19065ea8a0cf828cc37871931952adf227a5",
+    "polygon_clockwise.json": "592be3a3d7bd365ac826bcb3275bcebf7661b69d88c004f8d8fce63d06ac520e",
+    "polygon_l.json": "327f3b76bc632fb0beae639a53b903628afc85fa77131bdbe936201d3d038069",
+    "quad_box.off": "a3cc071e3e8b3b3a14a2b7ea1ae050ab59395203edab8fe17bb865fe6e97078c",
+    "rays.json": "c347890d1bde5d206c57c30b4bfc58da7139a55c524c042a46e92e77041d7718",
+    "square4.json": "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+    "square_open.off": "688a3e7048000ecbebcd7dee98e53f07f9a4013aa76d56ddc5fe7f8dd74d82bc",
+    "square_queries.json": "2e6aa8a14c723361fcc1f9910f59b3751727858a0f19e34e63ce2e8a155b63f1",
+    "tampered_barycentric_report.json": "4a8abfcc6c8bcd1782d252b3a7cd1af259f219a2bd74e8609abddf28d4f53005",
+    "tampered_catmull.off": "9f034dcc4ddff7fe5b93744f121839a4a665c82b6aec8b9da213578a92508ce6",
+    "tampered_components_report.json": "a1d1ecd3c4fec51dd84b8e0c7c008e6e8b6cdfeae7c64c0e03f3200dceb10327",
+    "tampered_intersections_report.json": "466ae5d45e60a5384893aa681b540b4972dde1da139dd797733092698106e794",
+    "tampered_location_report.json": "b9620781aed6ebdf8f5230cb60399e8697ddcf07f9feb6fcca6f7a933cd4d005",
+    "tampered_loop.off": "98341549b293aa36a17fb74aa8107909722f6aa2bb558c6702cd6130dd9c239c",
+    "tampered_slice_report.json": "b8f9f0e34bfb8a42c6e78ebbb54669baa806d820e0fe634d759eb12320776e54",
+    "tetra.off": "1b76c83fce531d9d5b2a33cd741fe18905d6bb08c9fd109de5c39621e61eabb5",
+    "three_components.off": "c98f03478077634b71edd11af710d32ddc155739caa59ee900e0ce9356691eb5",
+}
+
+
+def _qfx(name: str) -> dict:
+    return {"fixture": f"query/{name}", "sha256": QUERY_FIXTURES[name]}
+
+
+def _qmesh(name: str, type_: str = "TriangleSurfaceMesh") -> dict:
+    return {**_qfx(name), "type": type_, "format": "off", "unit": "mm"}
+
+
+def _qjson(name: str, type_: str, unit: str = "mm") -> dict:
+    return {**_qfx(name), "type": type_, "format": "json", "unit": unit}
+
+
+def _qpoints(name: str) -> dict:
+    return {**_qfx(name), "type": "PointSet3", "format": "xyz", "unit": "mm"}
+
+
+Q_CUBE = _qmesh("cube12.off")
+Q_TETRA = _qmesh("tetra.off")
+Q_THREE = _qmesh("three_components.off")
+Q_OPEN_SQUARE = _qmesh("square_open.off")
+Q_QUAD_BOX = _qmesh("quad_box.off", "PolygonSoup3")
+Q_HEXAGON = _qjson("hexagon.json", "Polygon2")
+Q_SQUARE = _qjson("square4.json", "Polygon2")
+Q_POLYGON_L = _qjson("polygon_l.json", "Polygon2")
+Q_BARY = _qjson("bary_queries.json", "PointSet2")
+Q_BARY_L = _qjson("bary_queries_l.json", "PointSet2")
+Q_SQUARE_QUERIES = _qjson("square_queries.json", "PointSet2")
+Q_RAYS = _qjson("rays.json", "RayBatch3")
+Q_LOCATE_POINTS = _qpoints("locate_queries.xyz")
+Q_PLANE_Z1 = {"normal": [0, 0, 1], "offset": {"value": 1, "unit": "mm"}}
+Q_PLANE_DIAGONAL = {"normal": [1, 1, 1], "offset": {"value": 3, "unit": "mm"}}
+Q_BARY_ALGORITHM = {
+    "wachspress": "CGAL::Barycentric_coordinates::wachspress_coordinates_2",
+    "mean_value": "CGAL::Barycentric_coordinates::mean_value_coordinates_2",
+    "discrete_harmonic": "CGAL::Barycentric_coordinates::discrete_harmonic_coordinates_2",
+}
+
+
+def _bary_case(case_id: str, method: str, extra: list[list]) -> dict:
+    return _case(case_id, "shape.barycentric", [Q_SQUARE, Q_SQUARE_QUERIES], {"method": method}, [
+        ["metrics.vertex_count", "==", 4],
+        ["metrics.query_count", "==", 2],
+        ["metrics.method", "==", method],
+        ["metrics.algorithm", "==", Q_BARY_ALGORITHM[method]],
+        ["output:analysis:json:report_kind", "==", "barycentric_coordinates"],
+        ["output:analysis:json:results[*].query_index", "==", [0, 1]],
+        # The square's centre has the four equal weights 1/4 for every coordinate family.
+        ["output:analysis:json:results.0.coordinates", "approx", [[0.25, 0.25, 0.25, 0.25], 1e-12]],
+    ] + extra)
+
+
+def _locate_case(case_id: str, strategy: str, algorithm: str) -> dict:
+    return _case(case_id, "mesh.location.locate", [Q_CUBE, Q_LOCATE_POINTS], {"strategy": strategy}, [
+        ["metrics.face_count", "==", 12],
+        ["metrics.query_count", "==", 7],
+        ["metrics.strategy", "==", strategy],
+        ["metrics.algorithm", "==", algorithm],
+        ["output:analysis:json:report_kind", "==", "mesh_location"],
+        # Hand-derived on the 0..2 cube: (1,1,5) is 3 above the top face, (0.5,0.25,-1) 1 below the
+        # bottom face, (1,1,1) is 1 from every face, (3,3,3) is sqrt(3) from the corner (2,2,2),
+        # (2,1,1) lies on the x=2 face and (-1,-1,-1) is sqrt(3) from the origin corner.
+        ["output:analysis:json:results[*].squared_distance", "==", ["9", "1", "1", "3", "0", "3", "0"]],
+        ["output:analysis:json:results.0.point", "==", ["1", "1", "2"]],
+        ["output:analysis:json:results.1.point", "==", ["1/2", "1/4", "0"]],
+        ["output:analysis:json:results.3.point", "==", ["2", "2", "2"]],
+        ["output:analysis:json:results.4.point", "==", ["2", "1", "1"]],
+        ["output:analysis:json:results.5.point", "==", ["0", "0", "0"]],
+        ["output:analysis:json:results.6.point", "==", ["0", "0", "0"]],
+    ])
+
+
+def _subdivision_case(case_id: str, operation: str, source: dict, steps: int, vertices: int, faces: int,
+                      extra: list[list]) -> dict:
+    algorithm = ("CGAL::Subdivision_method_3::CatmullClark_subdivision" if operation.endswith("catmull_clark")
+                 else "CGAL::Subdivision_method_3::Loop_subdivision")
+    return _case(case_id, operation, [source], {"steps": steps}, [
+        ["metrics.steps", "==", steps],
+        ["metrics.algorithm", "==", algorithm],
+        ["metrics.output_face_count", "==", faces],
+        ["metrics.output_vertex_count", "==", vertices],
+        ["output:geometry:measure:off.vertex_count", "==", vertices],
+        ["output:geometry:measure:off.face_count", "==", faces],
+    ] + extra)
+
+
 SQRT3_HALF = math.sqrt(3.0) / 2.0
 
 SQRT3_INV = 1.0 / math.sqrt(3.0)
@@ -144,6 +259,20 @@ FAMILY_7_3 = {
             "case_ids": ["inspect-closed-tetra", "inspect-open-tetra", "inspect-quad-cube",
                          "self-intersection-free-tetra", "self-intersecting-tetrahedra"],
         },
+        "major.7.3.02": {
+            "operation_ids": ["mesh.components.label", "mesh.components.component", "mesh.components.keep_largest"],
+            "symbols": ["connected_components", "connected_component", "keep_largest_connected_components"],
+            "symbol_notes": "three_components.off holds two outward tetrahedra (volume 4/3 each) and one lone "
+                            "triangle (9 faces). connected_components labels the faces 0..2 and reports "
+                            "component_count 3; connected_component from seed face 4 extracts the second tetrahedron "
+                            "(4 vertices, 4 faces, volume 4/3) and from seed face 8 the lone triangle; "
+                            "keep_largest_connected_components keeps the two tetrahedra (8 faces, volume 8/3), while "
+                            "keeping one is a tie and is rejected. Independent validators recompute the components by "
+                            "union-find over shared undirected edges and compare face sets by exact vertex "
+                            "coordinates.",
+            "case_ids": ["components-label-three", "components-extract-second-tetra", "components-extract-lone-triangle",
+                         "components-keep-two-largest"],
+        },
         "major.7.3.03": {
             "operation_ids": ["mesh.analysis.normals"],
             "symbols": ["compute_face_normals", "compute_vertex_normals", "compute_normals"],
@@ -161,11 +290,19 @@ FAMILY_7_3 = {
             "symbols": ["area", "volume", "centroid"],
             "case_ids": ["measures-tetra", "measures-cube"],
         },
+        "major.7.3.08": {
+            "operation_ids": ["mesh.location.locate"],
+            "symbols": ["locate", "locate_with_AABB_tree"],
+            "symbol_notes": "PMP::locate and PMP::locate_with_AABB_tree (prebuilt AABB tree) locate seven hand-placed "
+                            "queries on the 0..2 cube in EPECK; barycentric coordinates are reported in the face's "
+                            "input vertex order as exact rationals. The independent validator checks that the "
+                            "barycentric combination reproduces the reported point and that it is an exact closest "
+                            "point of the whole mesh (brute force over every triangle in GMP rationals). Queries "
+                            "equidistant from several faces are asserted by distance only.",
+            "case_ids": ["location-brute-force", "location-aabb-tree"],
+        },
     },
     "unbound": {
-        "major.7.3.02": "mesh.analysis.connected_components labels/counts components only; "
-                        "connected_component (single-component extraction) and "
-                        "keep_largest_connected_components are not exposed.",
         "major.7.3.05": "mesh.analysis.sharp_features exposes detect_sharp_edges only; "
                         "sharp_edges_segmentation is not exposed.",
         "major.7.3.06": "Only bounded_error_symmetric_Hausdorff_distance is executable, as the "
@@ -175,7 +312,6 @@ FAMILY_7_3 = {
         "major.7.3.07": "Self-intersection (self_intersections, does_self_intersect) is replayed, but "
                         "intersections between two meshes (do_intersect/surface_intersection) are not "
                         "an executable operation.",
-        "major.7.3.08": "No validated location operation (locate, locate_with_AABB_tree).",
     },
     "cases": [
         _case("inspect-closed-tetra", "mesh.inspect.pmp", [_mesh(TETRA)], {}, [
@@ -244,9 +380,54 @@ FAMILY_7_3 = {
             ["output:analysis:json:results.volume_centroid.value", "approx", [[1.0, 1.0, 1.0], 1e-12]],
             ["output:analysis:json:results.volume_centroid.unit", "==", "mm"],
         ]),
+        _case("components-label-three", "mesh.components.label", [Q_THREE], {}, [
+            ["metrics.face_count", "==", 9],
+            ["metrics.component_count", "==", 3],
+            ["metrics.algorithm", "==", "CGAL::Polygon_mesh_processing::connected_components"],
+            ["output:analysis:json:report_kind", "==", "connected_components"],
+            ["output:analysis:json:results.component_count", "==", 3],
+            ["output:analysis:json:results.face_labels", "==", [0, 0, 0, 0, 1, 1, 1, 1, 2]],
+            ["output:analysis:json:results.component_sizes", "==", [4, 4, 1]],
+        ]),
+        _case("components-extract-second-tetra", "mesh.components.component", [Q_THREE], {"face": 4}, [
+            ["output:geometry:measure:off.vertex_count", "==", 4],
+            ["output:geometry:measure:off.face_count", "==", 4],
+            ["output:geometry:measure:off.boundary_edge_count", "==", 0],
+            ["output:geometry:measure:off.signed_volume", "approx", [4.0 / 3.0, 1e-12]],
+            ["metrics.algorithm", "==", "CGAL::Polygon_mesh_processing::connected_component"],
+        ]),
+        _case("components-extract-lone-triangle", "mesh.components.component", [Q_THREE], {"face": 8}, [
+            ["output:geometry:measure:off.vertex_count", "==", 3],
+            ["output:geometry:measure:off.face_count", "==", 1],
+            ["output:geometry:measure:off.boundary_edge_count", "==", 3],
+        ]),
+        _case("components-keep-two-largest", "mesh.components.keep_largest", [Q_THREE], {"count": 2}, [
+            ["output:geometry:measure:off.vertex_count", "==", 8],
+            ["output:geometry:measure:off.face_count", "==", 8],
+            ["output:geometry:measure:off.boundary_edge_count", "==", 0],
+            ["output:geometry:measure:off.signed_volume", "approx", [8.0 / 3.0, 1e-12]],
+            ["metrics.algorithm", "==", "CGAL::Polygon_mesh_processing::keep_largest_connected_components"],
+        ]),
+        _locate_case("location-brute-force", "locate", "CGAL::Polygon_mesh_processing::locate"),
+        _locate_case("location-aabb-tree", "locate_with_AABB_tree",
+                     "CGAL::Polygon_mesh_processing::locate_with_AABB_tree"),
     ],
     "pairs": [],
-    "negative_controls": [],
+    "negative_controls": [
+        {"id": "components-keep-one-tie-rejected", "operation": "mesh.components.keep_largest",
+         "inputs": [Q_THREE], "parameters": {"count": 1},
+         "expect_error_class": "PRECONDITION_FAILED", "expect_error_code": "AMBIGUOUS_COMPONENT_TIE"},
+        {"id": "components-seed-face-out-of-range-rejected", "operation": "mesh.components.component",
+         "inputs": [Q_THREE], "parameters": {"face": 9},
+         "expect_error_class": "INVALID_REQUEST", "expect_error_code": "INVALID_PARAMETER"},
+        {"id": "components-tampered-partition-rejected", "operation": "mesh.validate.components_label",
+         "inputs": [_qjson("tampered_components_report.json", "GeometryQueryReport", "none"), Q_THREE],
+         "parameters": {}, "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "PARTITION_MISMATCH"},
+        {"id": "location-tampered-distance-rejected", "operation": "mesh.validate.location",
+         "inputs": [_qjson("tampered_location_report.json", "GeometryQueryReport", "none"), Q_CUBE, Q_LOCATE_POINTS],
+         "parameters": {"strategy": "locate"}, "expect_error_class": "VALIDATION_FAILED",
+         "expect_error_code": "DISTANCE_MISMATCH"},
+    ],
 }
 
 _REPAIR_UNCHANGED_UNIT = ["output:geometry:sha256", "!=", {"path": "input:source:sha256"}]
@@ -387,13 +568,26 @@ FAMILY_7_5 = {
             "case_ids": ["union-overlap", "intersection-overlap", "difference-overlap",
                          "union-disjoint", "intersection-contained", "difference-contained"],
         },
+        "major.7.5.05": {
+            "operation_ids": ["mesh.slice.compute"],
+            "symbols": ["Polygon_mesh_slicer"],
+            "symbol_notes": "CGAL::Polygon_mesh_slicer cuts the 0..2 triangulated cube with z=1 (one closed square "
+                            "of side 2: the four corners plus the four edge midpoints where the face diagonals "
+                            "cross, 8 distinct points) and with x+y+z=3 (the regular hexagon through the six edge "
+                            "midpoints plus the six points where face diagonals cross it, 12 distinct points), and "
+                            "the open two-triangle square at x=1 (an open polyline through the diagonal "
+                            "crossing). The independent validator recomputes every triangle/plane section in exact "
+                            "rationals and requires the polylines to lie on the plane, inside the sections and to "
+                            "cover them; a closed mesh must give closed polylines only. Planes containing a face "
+                            "or with a zero normal are rejected, not sliced.",
+            "case_ids": ["slice-cube-mid", "slice-cube-diagonal", "slice-open-square"],
+        },
     },
     "unbound": {
         "major.7.5.01": "corefine and autorefine are used only inside the three Boolean "
                         "operations; standalone corefinement output is not an operation.",
         "major.7.5.03": "No validated clip operation.",
         "major.7.5.04": "No validated split operation.",
-        "major.7.5.05": "No validated Polygon_mesh_slicer operation.",
     },
     "cases": [
         _case("union-overlap", "mesh.boolean.union",
@@ -427,12 +621,47 @@ FAMILY_7_5 = {
             ["metrics.exact_volume", "==", "7"],
             ["output:geometry:measure:off.signed_volume", "approx", [7.0, 1e-9]],
         ]),
+        _case("slice-cube-mid", "mesh.slice.compute", [Q_CUBE], Q_PLANE_Z1, [
+            ["metrics.polyline_count", "==", 1],
+            ["metrics.closed_polyline_count", "==", 1],
+            ["metrics.algorithm", "==", "CGAL::Polygon_mesh_slicer"],
+            ["output:analysis:json:report_kind", "==", "mesh_slice"],
+            ["output:analysis:json:results.polylines[*].closed", "==", [True]],
+            ["output:analysis:json:results.polylines.0.points", "==", [
+                ["0", "0", "1"], ["1", "0", "1"], ["2", "0", "1"], ["2", "1", "1"], ["2", "2", "1"],
+                ["1", "2", "1"], ["0", "2", "1"], ["0", "1", "1"], ["0", "0", "1"]]],
+        ]),
+        _case("slice-cube-diagonal", "mesh.slice.compute", [Q_CUBE], Q_PLANE_DIAGONAL, [
+            ["metrics.polyline_count", "==", 1],
+            ["metrics.closed_polyline_count", "==", 1],
+            ["output:analysis:json:results.polylines[*].closed", "==", [True]],
+            ["output:analysis:json:results.polylines.0.points", "==", [
+                ["0", "1", "2"], ["1/2", "1/2", "2"], ["1", "0", "2"], ["3/2", "0", "3/2"], ["2", "0", "1"],
+                ["2", "1/2", "1/2"], ["2", "1", "0"], ["3/2", "3/2", "0"], ["1", "2", "0"], ["1/2", "2", "1/2"],
+                ["0", "2", "1"], ["0", "3/2", "3/2"], ["0", "1", "2"]]],
+        ]),
+        _case("slice-open-square", "mesh.slice.compute", [Q_OPEN_SQUARE],
+              {"normal": [1, 0, 0], "offset": {"value": 1, "unit": "mm"}}, [
+            ["metrics.polyline_count", "==", 1],
+            ["metrics.closed_polyline_count", "==", 0],
+            ["output:analysis:json:results.polylines[*].closed", "==", [False]],
+        ]),
     ],
     "pairs": [],
     "negative_controls": [
         {"id": "union-open-input-rejected", "operation": "mesh.boolean.union",
          "inputs": [_mesh(OPEN_CUBE), _mesh(CUBE_OVERLAP)], "parameters": {"operation": "union"},
          "expect_error_class": "PRECONDITION_FAILED"},
+        {"id": "slice-coplanar-face-rejected", "operation": "mesh.slice.compute", "inputs": [Q_CUBE],
+         "parameters": {"normal": [0, 0, 1], "offset": {"value": 0, "unit": "mm"}},
+         "expect_error_class": "PRECONDITION_FAILED", "expect_error_code": "COPLANAR_FACE"},
+        {"id": "slice-zero-normal-rejected", "operation": "mesh.slice.compute", "inputs": [Q_CUBE],
+         "parameters": {"normal": [0, 0, 0], "offset": {"value": 1, "unit": "mm"}},
+         "expect_error_class": "PRECONDITION_FAILED", "expect_error_code": "ZERO_NORMAL"},
+        {"id": "slice-tampered-missing-polyline-rejected", "operation": "mesh.validate.slice",
+         "inputs": [_qjson("tampered_slice_report.json", "GeometryQueryReport", "none"), Q_CUBE],
+         "parameters": Q_PLANE_Z1, "expect_error_class": "VALIDATION_FAILED",
+         "expect_error_code": "SECTION_NOT_COVERED"},
     ],
 }
 
@@ -560,14 +789,28 @@ FAMILY_7_13 = {
                             "validator.",
             "case_ids": ["hull2-grid", "hull3-cube"],
         },
+        "major.7.13.05": {
+            "operation_ids": ["shape.barycentric"],
+            "symbols": ["mean_value_coordinates_2", "wachspress_coordinates_2", "discrete_harmonic_coordinates_2"],
+            "symbol_notes": "The three CGAL::Barycentric_coordinates families run on the square [0,4]^2 and "
+                            "its centre, whose weights are the four equal values 1/4 for every family; the query "
+                            "(1,2) additionally has the hand-derived bilinear Wachspress weights 3/8, 1/8, 1/8, 3/8. "
+                            "Mean value is also replayed on the non-convex L-shaped polygon. The independent "
+                            "validator recomputes the weights (exact rational Wachspress and discrete harmonic "
+                            "formulas; tolerance-checked mean value), partition of unity and linear precision, "
+                            "after re-checking that the polygon is simple and counterclockwise (strictly convex "
+                            "for the two convex-only families) and that every query is strictly inside. "
+                            "CGAL's default policy PRECISE_WITH_EDGE_CASES is not exposed: boundary queries are "
+                            "rejected.",
+            "case_ids": ["bary-square-wachspress", "bary-square-mean-value", "bary-square-discrete-harmonic",
+                         "bary-l-mean-value"],
+        },
     },
     "unbound": {
         "major.7.13.02": "No alpha shape operation (Alpha_shape_2, Alpha_shape_3).",
         "major.7.13.03": "No alpha wrapping operation (alpha_wrap_3).",
         "major.7.13.04": "No bounding-volume operation (Min_sphere_of_spheres_d, Min_circle_2); "
                          "spatial.bbox_2/3 are axis-aligned boxes only.",
-        "major.7.13.05": "No barycentric coordinate operation (mean_value_coordinates_2, "
-                         "wachspress_coordinates_2).",
     },
     "cases": [
         _case("hull2-grid", "hull.convex_2", [_json_input(PLANAR, "PointSet2")], {}, [
@@ -585,6 +828,16 @@ FAMILY_7_13 = {
             ["output:geometry:measure:off.boundary_edge_count", "==", 0],
             ["output:geometry:measure:off.signed_volume", "approx", [8.0, 1e-12]],
         ]),
+        _bary_case("bary-square-wachspress", "wachspress", [
+            ["output:analysis:json:results.1.coordinates", "approx", [[0.375, 0.125, 0.125, 0.375], 1e-12]],
+        ]),
+        _bary_case("bary-square-mean-value", "mean_value", []),
+        _bary_case("bary-square-discrete-harmonic", "discrete_harmonic", []),
+        _case("bary-l-mean-value", "shape.barycentric", [Q_POLYGON_L, Q_BARY_L], {"method": "mean_value"}, [
+            ["metrics.vertex_count", "==", 6],
+            ["metrics.query_count", "==", 4],
+            ["output:analysis:json:results[*].query_index", "==", [0, 1, 2, 3]],
+        ]),
     ],
     "pairs": [],
     "negative_controls": [
@@ -594,6 +847,25 @@ FAMILY_7_13 = {
         {"id": "hull3-oversized-shell-rejected", "operation": "hull.validate.convex_enclosure",
          "inputs": [_mesh(CUBE_A), _points(HULL_INNER)], "parameters": {},
          "expect_error_class": "VALIDATION_FAILED"},
+        {"id": "bary-clockwise-polygon-rejected", "operation": "shape.barycentric",
+         "inputs": [_qjson("polygon_clockwise.json", "Polygon2"), Q_BARY], "parameters": {"method": "wachspress"},
+         "expect_error_class": "PRECONDITION_FAILED", "expect_error_code": "POLYGON_NOT_COUNTERCLOCKWISE"},
+        {"id": "bary-bowtie-polygon-rejected", "operation": "shape.barycentric",
+         "inputs": [_qjson("polygon_bowtie.json", "Polygon2"), Q_BARY], "parameters": {"method": "mean_value"},
+         "expect_error_class": "PRECONDITION_FAILED", "expect_error_code": "POLYGON_NOT_SIMPLE"},
+        {"id": "bary-nonconvex-wachspress-rejected", "operation": "shape.barycentric",
+         "inputs": [Q_POLYGON_L, Q_BARY_L], "parameters": {"method": "wachspress"},
+         "expect_error_class": "PRECONDITION_FAILED", "expect_error_code": "POLYGON_NOT_STRICTLY_CONVEX"},
+        {"id": "bary-query-outside-rejected", "operation": "shape.barycentric",
+         "inputs": [Q_HEXAGON, _qjson("bary_query_outside.json", "PointSet2")], "parameters": {"method": "wachspress"},
+         "expect_error_class": "PRECONDITION_FAILED", "expect_error_code": "QUERY_NOT_STRICTLY_INSIDE"},
+        {"id": "bary-query-on-boundary-rejected", "operation": "shape.barycentric",
+         "inputs": [Q_HEXAGON, _qjson("bary_query_boundary.json", "PointSet2")], "parameters": {"method": "wachspress"},
+         "expect_error_class": "PRECONDITION_FAILED", "expect_error_code": "QUERY_NOT_STRICTLY_INSIDE"},
+        {"id": "bary-tampered-coordinates-rejected", "operation": "shape.validate.barycentric",
+         "inputs": [_qjson("tampered_barycentric_report.json", "GeometryQueryReport", "none"), Q_HEXAGON, Q_BARY],
+         "parameters": {"method": "wachspress"}, "expect_error_class": "VALIDATION_FAILED",
+         "expect_error_code": "COORDINATE_MISMATCH"},
     ],
 }
 
@@ -792,10 +1064,24 @@ FAMILY_7_2 = {
                             "asserted against hand-derived extrema.",
             "case_ids": ["bbox-planar", "bbox-cube-mesh", "bbox-point-set"],
         },
+        "major.7.2.04": {
+            "operation_ids": ["spatial.aabb.intersections"],
+            "symbols": ["do_intersect", "any_intersected_primitive", "all_intersected_primitives"],
+            "symbol_notes": "Seven rays against the 0..2 triangulated cube, every answer hand-derived: the ray "
+                            "from (1,1,-1) along +z crosses both bottom and both top triangles (it runs through "
+                            "the shared diagonals), (5,5,5) along +x misses, the interior ray from (1,1,1) exits "
+                            "through the single triangle 10, the ray from (-1,1,1) along +x crosses the "
+                            "diagonals of the x=0 and x=2 faces (triangles 8..11), (-1,-1,-1) along (1,1,1) runs "
+                            "through the corners (0,0,0) and (2,2,2) and so touches all 12 triangles, and the "
+                            "ray along the edge x=y=0 touches the triangles incident to its two corners. The "
+                            "reported set is the sorted unique all_intersected_primitives result and any_face "
+                            "must be a member of it. The independent validator intersects every ray with every "
+                            "triangle using exact rational predicates (including degenerate touching and "
+                            "coplanar cases).",
+            "case_ids": ["aabb-intersections-cube"],
+        },
     },
     "unbound": {
-        "major.7.2.04": "No intersection-candidate operation (do_intersect, any_intersected_primitive, "
-                        "all_intersected_primitives); only AABB first-hit ray queries are exposed.",
     },
     "cases": [
         _case("aabb-closest-cube", "spatial.aabb.closest_points",
@@ -875,6 +1161,20 @@ FAMILY_7_2 = {
             ["output:analysis:json:results.max", "approx", [[3.0, 3.0, 3.0], 1e-12]],
             ["output:analysis:json:summary.point_count", "==", 6],
         ]),
+        _case("aabb-intersections-cube", "spatial.aabb.intersections", [Q_CUBE, Q_RAYS], {}, [
+            ["metrics.ray_count", "==", 7],
+            ["metrics.intersecting_ray_count", "==", 6],
+            ["metrics.face_count", "==", 12],
+            ["output:analysis:json:query_kind", "==", "aabb_ray_intersections"],
+            ["output:analysis:json:results[*].do_intersect", "==", [True, False, True, True, True, True, True]],
+            ["output:analysis:json:results.0.faces", "==", [0, 1, 2, 3]],
+            ["output:analysis:json:results.1.faces", "==", []],
+            ["output:analysis:json:results.2.faces", "==", [10]],
+            ["output:analysis:json:results.3.faces", "==", [8, 9, 10, 11]],
+            ["output:analysis:json:results.4.faces", "==", [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]],
+            ["output:analysis:json:results.5.faces", "==", [0, 1, 2, 3]],
+            ["output:analysis:json:results.6.faces", "==", [0, 1, 2, 3, 4, 5, 8, 9]],
+        ]),
     ],
     "pairs": [
         {"kind": "different_outputs", "cases": ["range-zero-radius", "range-half-radius"]},
@@ -892,6 +1192,9 @@ FAMILY_7_2 = {
          "parameters": {}, "expect_error_class": "TYPE_ERROR"},
         {"id": "bbox2-rejects-3d-points", "operation": "spatial.bbox_2",
          "inputs": [_points(CLOUD)], "parameters": {}, "expect_error_class": "TYPE_ERROR"},
+        {"id": "aabb-intersections-tampered-flag-rejected", "operation": "spatial.validate.aabb_intersections",
+         "inputs": [_qjson("tampered_intersections_report.json", "SpatialQueryReport", "none"), Q_CUBE, Q_RAYS],
+         "parameters": {}, "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "DO_INTERSECT_MISMATCH"},
     ],
 }
 
@@ -2791,9 +3094,89 @@ FAMILY_7_10 = {
     ],
 }
 
+FAMILY_7_8 = {
+    "family": "7.8",
+    "scope": "family_7_8_mesh_analysis_decomposition_partial",
+    "evidence_path": "docs/master/evidence/family-7.8-capabilities.json",
+    "test_id": "family-7.8-replay-cases",
+    "requirements": {
+        "major.7.8.06": {
+            "operation_ids": ["mesh.subdivide.catmull_clark", "mesh.subdivide.loop"],
+            "symbols": ["CatmullClark_subdivision", "Loop_subdivision"],
+            "symbol_notes": "Loop subdivision of the 4-face tetrahedron gives 16 faces and 10 vertices after one "
+                            "step and 64 faces and 34 vertices after two (V+E per step, 4F), and of the two-triangle "
+                            "open square 32 faces, 25 vertices and a doubled boundary (16 boundary edges) after "
+                            "two steps. Catmull-Clark of the quad cube gives 24 quads and V+E+F = 26 vertices after "
+                            "one step (96 quads and 98 vertices after two) and of the tetrahedron 12 quads and 14 "
+                            "vertices. The independent validators re-implement the Loop (interior beta mask, "
+                            "boundary 3/4+1/8+1/8, edge 3/8+3/8+1/8+1/8) and Catmull-Clark (face/edge/vertex "
+                            "points, boundary rules) masks from the raw OFF data and match every output face, "
+                            "including orientation, within a stated tolerance of 1e-9 times the bounding diagonal. "
+                            "Only the plain subdivision entry points with the number-of-iterations parameter are "
+                            "exposed; Doo-Sabin, Sqrt3 and custom masks are not.",
+            "case_ids": ["subdivide-loop-tetra-1", "subdivide-loop-tetra-2", "subdivide-loop-open-square",
+                         "subdivide-catmull-quad-cube-1", "subdivide-catmull-quad-cube-2",
+                         "subdivide-catmull-tetra"],
+        },
+    },
+    "unbound": {
+        "major.7.8.01": "No SDF segmentation operation (Surface_mesh_segmentation).",
+        "major.7.8.02": "No approximate convex decomposition operation.",
+        "major.7.8.03": "No skeletonization operation (Surface_mesh_skeletonization / mean curvature flow).",
+        "major.7.8.04": "No shortest path operation (Surface_mesh_shortest_path).",
+        "major.7.8.05": "No parameterization operation (Surface_mesh_parameterization).",
+    },
+    "cases": [
+        _subdivision_case("subdivide-loop-tetra-1", "mesh.subdivide.loop", Q_TETRA, 1, 10, 16, [
+            ["output:geometry:measure:off.boundary_edge_count", "==", 0],
+            ["output:geometry:measure:off.euler_characteristic", "==", 2],
+            ["output:geometry:measure:off.signed_volume", ">", 0.0],
+            ["output:geometry:measure:off.signed_volume", "<", 4.0 / 3.0],
+        ]),
+        _subdivision_case("subdivide-loop-tetra-2", "mesh.subdivide.loop", Q_TETRA, 2, 34, 64, [
+            ["output:geometry:measure:off.boundary_edge_count", "==", 0],
+            ["output:geometry:measure:off.euler_characteristic", "==", 2],
+            ["output:geometry:measure:off.signed_volume", ">", 0.0],
+            ["output:geometry:measure:off.signed_volume", "<", 4.0 / 3.0],
+        ]),
+        _subdivision_case("subdivide-loop-open-square", "mesh.subdivide.loop", Q_OPEN_SQUARE, 2, 25, 32, [
+            ["output:geometry:measure:off.boundary_edge_count", "==", 16],
+        ]),
+        _subdivision_case("subdivide-catmull-quad-cube-1", "mesh.subdivide.catmull_clark", Q_QUAD_BOX, 1, 26, 24, [
+            ["output:geometry:measure:off.max_face_degree", "==", 4],
+            ["output:geometry:measure:off.euler_characteristic", "==", 2],
+        ]),
+        _subdivision_case("subdivide-catmull-quad-cube-2", "mesh.subdivide.catmull_clark", Q_QUAD_BOX, 2, 98, 96, [
+            ["output:geometry:measure:off.max_face_degree", "==", 4],
+            ["output:geometry:measure:off.euler_characteristic", "==", 2],
+        ]),
+        _subdivision_case("subdivide-catmull-tetra", "mesh.subdivide.catmull_clark", Q_TETRA, 1, 14, 12, [
+            ["output:geometry:measure:off.max_face_degree", "==", 4],
+            ["output:geometry:measure:off.euler_characteristic", "==", 2],
+        ]),
+    ],
+    "pairs": [
+        {"kind": "different_outputs", "cases": ["subdivide-loop-tetra-1", "subdivide-loop-tetra-2"]},
+        {"kind": "different_outputs", "cases": ["subdivide-catmull-quad-cube-1", "subdivide-catmull-quad-cube-2"]},
+    ],
+    "negative_controls": [
+        {"id": "subdivide-loop-quad-input-rejected", "operation": "mesh.subdivide.loop",
+         "inputs": [Q_QUAD_BOX], "parameters": {"steps": 1}, "expect_error_class": "TYPE_ERROR"},
+        {"id": "subdivide-steps-over-limit-rejected", "operation": "mesh.subdivide.loop",
+         "inputs": [Q_TETRA], "parameters": {"steps": 9},
+         "expect_error_class": "INVALID_REQUEST", "expect_error_code": "INVALID_PARAMETER"},
+        {"id": "subdivide-loop-moved-vertex-rejected", "operation": "mesh.validate.loop",
+         "inputs": [_qmesh("tampered_loop.off"), Q_TETRA], "parameters": {"steps": 2},
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "FACE_NOT_MATCHED"},
+        {"id": "subdivide-catmull-moved-vertex-rejected", "operation": "mesh.validate.catmull_clark",
+         "inputs": [_qmesh("tampered_catmull.off", "PolygonSoup3"), Q_QUAD_BOX], "parameters": {"steps": 1},
+         "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "FACE_NOT_MATCHED"},
+    ],
+}
+
 GENERIC_FAMILIES: dict[str, dict] = {
     family["family"]: family for family in (FAMILY_7_1, FAMILY_7_2, FAMILY_7_3, FAMILY_7_4, FAMILY_7_5, FAMILY_7_6,
-                   FAMILY_7_9, FAMILY_7_11, FAMILY_7_12, FAMILY_7_13, FAMILY_7_14, FAMILY_7_15, FAMILY_7_10)
+                   FAMILY_7_9, FAMILY_7_11, FAMILY_7_12, FAMILY_7_13, FAMILY_7_14, FAMILY_7_15, FAMILY_7_10, FAMILY_7_8)
 }
 
 

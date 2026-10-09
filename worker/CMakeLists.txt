@@ -73,6 +73,9 @@ add_executable(cgal-master-worker
   master/reconstruction/reconstruction_common.cpp
   master/reconstruction/reconstruction_operations.cpp
   master/reconstruction/reconstruction_validators.cpp
+  master/query_ops/query_common.cpp
+  master/query_ops/query_operations.cpp
+  master/query_ops/query_validators.cpp
 )
 # smooth_shape needs CGAL's Eigen sparse solver; enable it only where used.
 set_source_files_properties(master/wave_d/remesh_operations.cpp PROPERTIES
@@ -83,6 +86,7 @@ set_source_files_properties(master/optimization/optimization_operations.cpp PROP
 # Poisson (implicit function solver) and scale-space jet smoothing need CGAL's Eigen support.
 set_source_files_properties(master/reconstruction/reconstruction_operations.cpp PROPERTIES
   COMPILE_DEFINITIONS CGAL_EIGEN3_ENABLED)
+# Loop/Catmull-Clark subdivision and Polygon_mesh_slicer need no Eigen; query_operations is plain CGAL.
 target_compile_features(cgal-master-worker PRIVATE cxx_std_17)
 target_compile_definitions(cgal-master-worker PRIVATE
   CGAL_MASTER_SOURCE_KIND="${CGAL_MASTER_SOURCE_KIND}"

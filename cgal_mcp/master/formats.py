@@ -529,6 +529,7 @@ REPORT_JSON_TYPES = {
     "SpatialQueryReport": "query_kind",
     "KernelReport": "report_kind",
     "OptimizationReport": "report_kind",
+    "GeometryQueryReport": "report_kind",
 }
 KERNEL_PRIMITIVE_DIMENSIONS = {
     "Point_2": 2, "Vector_2": 2, "Segment_2": 2, "Line_2": 2, "Ray_2": 2, "Triangle_2": 2,

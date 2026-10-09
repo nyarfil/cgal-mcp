@@ -17,7 +17,7 @@ UNIT_SCALE_MM = {"mm": 1.0, "cm": 10.0, "m": 1000.0}
 
 REPORT_TYPES = frozenset({"ValidationReport", "GeometryAnalysisReport",
                           "Polygon2AnalysisReport", "SpatialQueryReport",
-                          "KernelReport", "OptimizationReport"})
+                          "KernelReport", "OptimizationReport", "GeometryQueryReport"})
 ANALYSIS_REPORT_TYPES = REPORT_TYPES - {"ValidationReport"}
 # Dimensionless typed inputs (no length unit is meaningful), e.g. LP/QP coefficient data.
 UNITLESS_INPUT_TYPES = frozenset({"QuadraticProgram"})

@@ -17,7 +17,8 @@
   ],
   "binding_rule": "A requirement is bound only when replayed cases exercise every enumerated variant in its original description and every subcapability symbol listed for it in catalog/major_capability_inventory.json, each through a VALIDATED operation whose registry-mandated validators pass.",
   "requirements": [
-    "major.7.13.01"
+    "major.7.13.01",
+    "major.7.13.05"
   ],
   "requirement_coverage": {
     "major.7.13.01": {
@@ -33,24 +34,39 @@
         "convex_hull_2",
         "convex_hull_3"
       ]
+    },
+    "major.7.13.05": {
+      "case_ids": [
+        "bary-l-mean-value",
+        "bary-square-discrete-harmonic",
+        "bary-square-mean-value",
+        "bary-square-wachspress"
+      ],
+      "operation_ids": [
+        "shape.barycentric"
+      ],
+      "symbols": [
+        "mean_value_coordinates_2",
+        "wachspress_coordinates_2",
+        "discrete_harmonic_coordinates_2"
+      ]
     }
   },
   "unbound_requirements": {
     "major.7.13.02": "No alpha shape operation (Alpha_shape_2, Alpha_shape_3).",
     "major.7.13.03": "No alpha wrapping operation (alpha_wrap_3).",
-    "major.7.13.04": "No bounding-volume operation (Min_sphere_of_spheres_d, Min_circle_2); spatial.bbox_2/3 are axis-aligned boxes only.",
-    "major.7.13.05": "No barycentric coordinate operation (mean_value_coordinates_2, wachspress_coordinates_2)."
+    "major.7.13.04": "No bounding-volume operation (Min_sphere_of_spheres_d, Min_circle_2); spatial.bbox_2/3 are axis-aligned boxes only."
   },
-  "family_contract_sha256": "5c98d8a6e4257c94210dda33c3408ee26b5c567e26c1d30fa6bf3a280d0253c3",
+  "family_contract_sha256": "22470c58a5dec334eb2f6e38a2402765ec0ef0522356856344d627fe74a6b3e7",
   "family_contract_source_path": "scripts/master_replay_families.py",
-  "family_contract_source_sha256": "e9516b100dc97eeb2f66dcb70a4a7d90853ca31a631110f1f516eae02f2f9df7",
+  "family_contract_source_sha256": "866f91eb45732e83841a829665d2c713bcc22b4975698075d683910e018db1db",
   "family_contract_source_hash_encoding": "utf8-lf",
   "catalog_baseline_sha256": "143ec18a5b64d506aad60dc24b0a1ea30940c715d1223b3465fa140aeb9d02a7",
-  "operation_registry_sha256": "1f4c112dc9fb9884f55e2db23fa6e810d2e5adf74fbd613a116376fd481e05cd",
+  "operation_registry_sha256": "877d0926800d13108969bffaec7f0d1633562c0a5063da2615c91e29ff2dd896",
   "operation_registry_hash_encoding": "utf8-lf",
   "policy_catalog_sha256": "45f4be759288aaeb834a3ce97aa64ee7768048b15534618fc8c19512801f9a9f",
   "policy_catalog_hash_encoding": "utf8-lf",
-  "worker_sha256": "8498a97a54d8a218745e369f17d1356df1d7f2e059c040911ac04a1bc6b93bad",
+  "worker_sha256": "08a76c9f762c97609a2d01968282ab3dd736d4fd54af4714899a45e772023aa0",
   "worker_binary_format": "pe",
   "worker_manifest": {
     "actual_cgal_version": "6.2.1",
@@ -5220,6 +5236,584 @@
       },
       {
         "dependencies": [
+          "Barycentric_coordinates_2"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "shape.barycentric",
+        "info": {
+          "input_slots": [
+            "polygon",
+            "queries"
+          ],
+          "maximum_polygon_vertices": 200,
+          "source_header": "CGAL/Barycentric_coordinates_2/Wachspress_coordinates_2.h",
+          "validator_parameter_bindings": {
+            "shape.validate.barycentric": {
+              "method": "method"
+            }
+          },
+          "validators": [
+            "shape.validate.barycentric"
+          ]
+        },
+        "input_types": [
+          "Polygon2",
+          "PointSet2"
+        ],
+        "output_type": "GeometryQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "AABB_tree"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "spatial.aabb.intersections",
+        "info": {
+          "input_slots": [
+            "mesh",
+            "rays"
+          ],
+          "maximum_queries": 2000,
+          "source_header": "CGAL/AABB_tree.h",
+          "validators": [
+            "spatial.validate.aabb_intersections"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh",
+          "RayBatch3"
+        ],
+        "output_type": "SpatialQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "mesh.components.label",
+        "info": {
+          "input_slots": [
+            "mesh"
+          ],
+          "maximum_input_faces": 20000,
+          "source_header": "CGAL/Polygon_mesh_processing/connected_components.h",
+          "validators": [
+            "mesh.validate.components_label"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "GeometryQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "mesh.components.component",
+        "info": {
+          "input_slots": [
+            "source"
+          ],
+          "maximum_input_faces": 20000,
+          "source_header": "CGAL/Polygon_mesh_processing/connected_components.h",
+          "validator_parameter_bindings": {
+            "mesh.validate.components_component": {
+              "face": "face"
+            }
+          },
+          "validators": [
+            "mesh.validate.components_component"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "TriangleSurfaceMesh",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "mesh.components.keep_largest",
+        "info": {
+          "input_slots": [
+            "source"
+          ],
+          "maximum_input_faces": 20000,
+          "source_header": "CGAL/Polygon_mesh_processing/connected_components.h",
+          "validator_parameter_bindings": {
+            "mesh.validate.components_keep_largest": {
+              "count": "count"
+            }
+          },
+          "validators": [
+            "mesh.validate.components_keep_largest"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "TriangleSurfaceMesh",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "mesh.location.locate",
+        "info": {
+          "input_slots": [
+            "mesh",
+            "queries"
+          ],
+          "maximum_input_faces": 20000,
+          "maximum_queries": 2000,
+          "source_header": "CGAL/Polygon_mesh_processing/locate.h",
+          "validator_parameter_bindings": {
+            "mesh.validate.location": {
+              "strategy": "strategy"
+            }
+          },
+          "validators": [
+            "mesh.validate.location"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh",
+          "PointSet3"
+        ],
+        "output_type": "GeometryQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "PMP_Boolean_operations"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "mesh.slice.compute",
+        "info": {
+          "input_slots": [
+            "mesh"
+          ],
+          "maximum_input_faces": 20000,
+          "source_header": "CGAL/Polygon_mesh_slicer.h",
+          "validator_parameter_bindings": {
+            "mesh.validate.slice": {
+              "normal": "normal",
+              "offset": "offset"
+            }
+          },
+          "validators": [
+            "mesh.validate.slice"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "GeometryQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Subdivision_method_3"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "mesh.subdivide.catmull_clark",
+        "info": {
+          "input_slots": [
+            "source"
+          ],
+          "maximum_input_faces": 2000,
+          "maximum_output_faces": 60000,
+          "source_header": "CGAL/Subdivision_method_3/subdivision_methods_3.h",
+          "validator_parameter_bindings": {
+            "mesh.validate.catmull_clark": {
+              "steps": "steps"
+            }
+          },
+          "validators": [
+            "mesh.validate.catmull_clark"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh",
+          "PolygonSoup3"
+        ],
+        "output_type": "PolygonSoup3",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Subdivision_method_3"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "mesh.subdivide.loop",
+        "info": {
+          "input_slots": [
+            "source"
+          ],
+          "maximum_input_faces": 2000,
+          "maximum_output_faces": 60000,
+          "source_header": "CGAL/Subdivision_method_3/subdivision_methods_3.h",
+          "validator_parameter_bindings": {
+            "mesh.validate.loop": {
+              "steps": "steps"
+            }
+          },
+          "validators": [
+            "mesh.validate.loop"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "TriangleSurfaceMesh",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Barycentric_coordinates_2"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "shape.validate.barycentric",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "polygon_simple_counterclockwise",
+            "query_strictly_inside",
+            "coordinates_match_formula",
+            "partition_of_unity",
+            "linear_precision"
+          ],
+          "independence": "exact rational weights and tolerance-checked mean value formula; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "polygon",
+            "queries"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "GeometryQueryReport",
+          "Polygon2",
+          "PointSet2"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "AABB_tree"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "spatial.validate.aabb_intersections",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "every_ray_answered",
+            "do_intersect_exact",
+            "all_intersected_primitives_exact",
+            "any_intersected_primitive_member"
+          ],
+          "independence": "exact rational ray/triangle predicates; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "mesh",
+            "rays"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "SpatialQueryReport",
+          "TriangleSurfaceMesh",
+          "RayBatch3"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "mesh.validate.components_label",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "component_count_exact",
+            "labels_partition_equal",
+            "sizes_match"
+          ],
+          "independence": "union-find over shared edges; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "mesh"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "GeometryQueryReport",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "mesh.validate.components_component",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_is_manifold",
+            "candidate_has_no_unreferenced_vertices",
+            "faces_equal_selected_source_faces"
+          ],
+          "independence": "union-find over shared edges; exact coordinate comparison; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "TriangleSurfaceMesh",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "mesh.validate.components_keep_largest",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_is_manifold",
+            "kept_set_unambiguous",
+            "candidate_has_no_unreferenced_vertices",
+            "faces_equal_selected_source_faces"
+          ],
+          "independence": "union-find component sizes; exact coordinate comparison; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "TriangleSurfaceMesh",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "mesh.validate.location",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "every_query_answered",
+            "barycentric_valid",
+            "point_is_face_combination",
+            "distance_matches_location",
+            "location_is_closest_exact"
+          ],
+          "independence": "exact rational closest point on every triangle; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "mesh",
+            "queries"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "GeometryQueryReport",
+          "TriangleSurfaceMesh",
+          "PointSet3"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "PMP_Boolean_operations"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "mesh.validate.slice",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "points_on_plane",
+            "segments_on_mesh_section",
+            "sections_fully_covered",
+            "closed_mesh_gives_closed_polylines"
+          ],
+          "independence": "exact triangle/plane sections and interval coverage; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "mesh"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "GeometryQueryReport",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Subdivision_method_3"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "mesh.validate.catmull_clark",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "counts_match",
+            "faces_match_independent_subdivision",
+            "orientation_preserved"
+          ],
+          "independence": "Catmull-Clark masks re-implemented from raw OFF data; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "PolygonSoup3",
+          "TriangleSurfaceMesh",
+          "PolygonSoup3"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Subdivision_method_3"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "mesh.validate.loop",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "counts_match",
+            "faces_match_independent_subdivision",
+            "orientation_preserved"
+          ],
+          "independence": "Loop masks re-implemented from raw OFF data; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "TriangleSurfaceMesh",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
           "Poisson_surface_reconstruction_3",
           "Mesh_3",
           "Point_set_processing_3",
@@ -5516,23 +6110,38 @@
     ],
     "worker": "cgal-master-worker"
   },
-  "worker_manifest_sha256": "4a32a5f5bf2b74326a407889ebd4591b45bf63a3efb1af801ccef5a2d19d8d3e",
+  "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
   "tests": [
     {
       "id": "family-7.13-replay-cases",
       "source_path": "tests/master_family_replay_cases.py",
       "source_sha256": "69b3216bf60de8b908dcf6f82e4fee3ffc438ee2a29cf2d756c4b558c6ce3e65",
       "source_hash_encoding": "utf8-lf",
-      "stdout_sha256": "5dcf43e05a2f21f8605f11bb7461498bdfa7fea555dc5f55988dd597168020bc",
+      "stdout_sha256": "79dc0bee422e04758aa2458bba221cc4b89f90c7206f131d9c44dc57e2fc4422",
       "exit_code": 0,
       "status": "pass"
     }
   ],
   "blobs": {
+    "02ccc6731364de251bf14fb0873732624e10265c3ba014a2df436d5543accf7d": {
+      "encoding": "base64",
+      "byte_size": 576,
+      "content": "eyJsZW5ndGhfdW5pdCI6Im1tIiwib3BlcmF0aW9uIjoic2hhcGUuYmFyeWNlbnRyaWMiLCJwYXJhbWV0ZXJzIjp7Im1ldGhvZCI6ImRpc2NyZXRlX2hhcm1vbmljIn0sInJlcG9ydF9raW5kIjoiYmFyeWNlbnRyaWNfY29vcmRpbmF0ZXMiLCJyZXBvcnRfdHlwZSI6Ikdlb21ldHJ5UXVlcnlSZXBvcnQiLCJyZXN1bHRzIjpbeyJjb29yZGluYXRlcyI6WzAuMjUsMC4yNSwwLjI1LDAuMjVdLCJwb2ludCI6WzIuMCwyLjBdLCJxdWVyeV9pbmRleCI6MH0seyJjb29yZGluYXRlcyI6WzAuMzc1LDAuMTI1LDAuMTI1LDAuMzc1XSwicG9pbnQiOlsxLjAsMi4wXSwicXVlcnlfaW5kZXgiOjF9XSwic2NoZW1hX3ZlcnNpb24iOjEsInNvdXJjZSI6eyJwb2x5Z29uX3NoYTI1NiI6ImQ4YmJiM2I5MjRmNGFlYWVjNjAwN2YxMGU0ZmU0ZjYwMWJmMDk4MGRjZjljMzNlYzdkYzhlYWJmNmI4ZDA5YzYiLCJxdWVyaWVzX3NoYTI1NiI6IjJlNmFhOGExNGM3MjMzNjFmY2MxZjk5MTBmNTliMzc1MTcyNzg1OGEwZjE5ZTM0ZTYzY2UyZThhMTU1YjYzZjEifSwic3VtbWFyeSI6eyJxdWVyeV9jb3VudCI6MiwidmVydGV4X2NvdW50Ijo0fX0K"
+    },
+    "0588c391ca59db7b5eb1eaa15d8d4c520e719aefc62645a89d84a55d840989a6": {
+      "encoding": "base64",
+      "byte_size": 25,
+      "content": "eyJwb2ludHMiOltbMCwwXSxbOSw5XV19Cg=="
+    },
     "087f7019a38d090185c7819a8218e88b0d5be18c4636bf558534818186ae14f5": {
       "encoding": "base64",
       "byte_size": 37,
       "content": "eyJwb2ludHMiOltbMCwwXSxbMSwxXSxbMiwyXSxbMywzXV19Cg=="
+    },
+    "269b4523e9fd8d820fd9bd587b77cc553557bf354521e8bec668c6e7fbbc68c7": {
+      "encoding": "base64",
+      "byte_size": 647,
+      "content": "eyJjaGVja3MiOnsiY29vcmRpbmF0ZXNfbWF0Y2hfZm9ybXVsYSI6dHJ1ZSwibGluZWFyX3ByZWNpc2lvbiI6dHJ1ZSwicGFyYW1ldGVyc19tYXRjaCI6dHJ1ZSwicGFydGl0aW9uX29mX3VuaXR5Ijp0cnVlLCJwb2x5Z29uX3NpbXBsZV9jb3VudGVyY2xvY2t3aXNlIjp0cnVlLCJxdWVyeV9zdHJpY3RseV9pbnNpZGUiOnRydWUsInNvdXJjZV9tYXRjaGVzIjp0cnVlfSwiaW5kZXBlbmRlbmNlIjoiZXhhY3QgcmF0aW9uYWwgd2VpZ2h0cyAoV2FjaHNwcmVzcywgZGlzY3JldGUgaGFybW9uaWMpIGFuZCBsb25nIGRvdWJsZSBtZWFuIHZhbHVlIGZvcm11bGE7IG5vIENHQUwgaGVhZGVyIiwibWF4aW11bV9mb3JtdWxhX2Vycm9yIjowLjAsIm1heGltdW1fbGluZWFyX3ByZWNpc2lvbl9lcnJvciI6MC4wLCJtYXhpbXVtX3N1bV9lcnJvciI6MC4wLCJtZXRob2QiOiJkaXNjcmV0ZV9oYXJtb25pYyIsInBhc3NlZCI6dHJ1ZSwicG9seWdvbl9jb252ZXgiOnRydWUsInF1ZXJ5X2NvdW50IjoyLCJyZXBvcnRfdHlwZSI6IlZhbGlkYXRpb25SZXBvcnQiLCJzY2hlbWFfdmVyc2lvbiI6MSwic3RhdHVzIjoicGFzcyIsInRvbGVyYW5jZSI6MWUtMTEsInZhbGlkYXRvciI6InNoYXBlLnZhbGlkYXRlLmJhcnljZW50cmljIiwidmVydGV4X2NvdW50Ijo0fQo="
     },
     "299fc3e1e6363388d7fa80fcc86a297dde4740fd59f7d2fc628bdb0d27ae7a39": {
       "encoding": "base64",
@@ -5544,15 +6153,70 @@
       "byte_size": 181,
       "content": "T0ZGCjggMTIgMAoKMSAtMSAxCi0xIDEgLTEKLTEgLTEgLTEKLTEgLTEgMQoxIDEgMQoxIDEgLTEKLTEgMSAxCjEgLTEgLTEKMyAgNyA1IDAKMyAgMiA2IDEKMyAgMyAwIDYKMyAgMyA2IDIKMyAgMCA1IDQKMyAgNiA1IDEKMyAgNiAwIDQKMyAgNCA1IDYKMyAgMiAwIDMKMyAgNyAwIDIKMyAgMiA1IDcKMyAgMSA1IDIKCg=="
     },
+    "2e6aa8a14c723361fcc1f9910f59b3751727858a0f19e34e63ce2e8a155b63f1": {
+      "encoding": "base64",
+      "byte_size": 25,
+      "content": "eyJwb2ludHMiOltbMiwyXSxbMSwyXV19Cg=="
+    },
     "2edb3017cdb0e39e041a75284cf208f42b847c91ad938fab0eaafcfca219fbae": {
       "encoding": "base64",
       "byte_size": 159,
       "content": "eyJwb2ludHMiOltbMCwwXSxbMSwwXSxbMiwwXSxbMywwXSxbMCwxXSxbMSwxXSxbMiwxXSxbMywxXSxbMCwyXSxbMSwyXSxbMiwyXSxbMywyXSxbMCwzXSxbMSwzXSxbMiwzXSxbMywzXSxbMC41LDAuNV0sWzIuMjUsMS43NV0sWzEuNSwwXSxbMywzXSxbMC4xMjUsMi44NzVdXX0K"
     },
+    "327f3b76bc632fb0beae639a53b903628afc85fa77131bdbe936201d3d038069": {
+      "encoding": "base64",
+      "byte_size": 49,
+      "content": "eyJwb2ludHMiOltbMCwwXSxbNCwwXSxbNCwxXSxbMSwxXSxbMSw0XSxbMCw0XV19Cg=="
+    },
+    "4113a13c691a099ca60654f9e92aef4fb9dc7909f1e7f3f4238ca249dfbfa25c": {
+      "encoding": "base64",
+      "byte_size": 1098,
+      "content": "eyJsZW5ndGhfdW5pdCI6Im1tIiwib3BlcmF0aW9uIjoic2hhcGUuYmFyeWNlbnRyaWMiLCJwYXJhbWV0ZXJzIjp7Im1ldGhvZCI6Im1lYW5fdmFsdWUifSwicmVwb3J0X2tpbmQiOiJiYXJ5Y2VudHJpY19jb29yZGluYXRlcyIsInJlcG9ydF90eXBlIjoiR2VvbWV0cnlRdWVyeVJlcG9ydCIsInJlc3VsdHMiOlt7ImNvb3JkaW5hdGVzIjpbMC43LDAuMDc1MDAwMDAwMDAwMDAwMDEsMC4wMTY2NjY2NjY2NjY2NjY2NzcsMC4xMTY2NjY2NjY2NjY2NjY3NCwwLjAxNjY2NjY2NjY2NjY2NjY3NywwLjA3NTAwMDAwMDAwMDAwMDAxXSwicG9pbnQiOlswLjUsMC41XSwicXVlcnlfaW5kZXgiOjB9LHsiY29vcmRpbmF0ZXMiOlswLjE0MjA0MDg5NzA3NTk0MzI4LDAuMDE2OTc0NDQ5NzUwNzQ1NjUyLC0wLjAwOTc2NzU3MzE4Mzk0MTI2OCwwLjEzMTA4MDQ0NDA4MTY4OTQyLDAuMzQwMDkyMDQ5NjUxMDkzMTMsMC4zNzk1Nzk3MzI2MjQ0Njk5XSwicG9pbnQiOlswLjUsMy4wXSwicXVlcnlfaW5kZXgiOjF9LHsiY29vcmRpbmF0ZXMiOlswLjE0MjA0MDg5NzA3NTk0MzIyLDAuMzc5NTc5NzMyNjI0NDY5OCwwLjM0MDA5MjA0OTY1MTA5MywwLjEzMTA4MDQ0NDA4MTY4OTQsLTAuMDA5NzY3NTczMTgzOTQxMjY3LDAuMDE2OTc0NDQ5NzUwNzQ1NjVdLCJwb2ludCI6WzMuMCwwLjVdLCJxdWVyeV9pbmRleCI6Mn0seyJjb29yZGluYXRlcyI6WzAuNzE2MDQ1MTc4MTM1MzY5NCwwLjAzMDc4NjkwOTk0MDYwNjU2MywwLjAwNjQ2MTgyNTc3MDI2ODcyLDAuMDgxMDk1MzkwMTI4NDI5OTksMC4wMTk5MDk2NjcwMjgwNjg5NTYsMC4xNDU3MDEwMjg5OTcyNTYzN10sInBvaW50IjpbMC4yNSwwLjc1XSwicXVlcnlfaW5kZXgiOjN9XSwic2NoZW1hX3ZlcnNpb24iOjEsInNvdXJjZSI6eyJwb2x5Z29uX3NoYTI1NiI6IjMyN2YzYjc2YmM2MzJmYjBiZWFlNjM5YTUzYjkwMzYyOGFmYzg1ZmE3NzEzMWJkYmU5MzYyMDFkM2QwMzgwNjkiLCJxdWVyaWVzX3NoYTI1NiI6IjQ3ZjcyZTgzNzJmMjM1YzJhODNlMTcxYmJkODFlNTk2YWNkNDE2ZTljZWI1NzZiYzUzM2JjZTk1ZWNkNzkyMDEifSwic3VtbWFyeSI6eyJxdWVyeV9jb3VudCI6NCwidmVydGV4X2NvdW50Ijo2fX0K"
+    },
+    "47f72e8372f235c2a83e171bbd81e596acd416e9ceb576bc533bce95ecd79201": {
+      "encoding": "base64",
+      "byte_size": 51,
+      "content": "eyJwb2ludHMiOltbMC41LDAuNV0sWzAuNSwzXSxbMywwLjVdLFswLjI1LDAuNzVdXX0K"
+    },
+    "4a8abfcc6c8bcd1782d252b3a7cd1af259f219a2bd74e8609abddf28d4f53005": {
+      "encoding": "base64",
+      "byte_size": 1364,
+      "content": "eyJsZW5ndGhfdW5pdCI6ICJtbSIsICJvcGVyYXRpb24iOiAic2hhcGUuYmFyeWNlbnRyaWMiLCAicGFyYW1ldGVycyI6IHsibWV0aG9kIjogIndhY2hzcHJlc3MifSwgInJlcG9ydF9raW5kIjogImJhcnljZW50cmljX2Nvb3JkaW5hdGVzIiwgInJlcG9ydF90eXBlIjogIkdlb21ldHJ5UXVlcnlSZXBvcnQiLCAicmVzdWx0cyI6IFt7ImNvb3JkaW5hdGVzIjogWzAuMTY2NjY2NjY2NjY2NjY2NjYsIDAuMTY2NjY2NjY2NjY2NjY2NjYsIDAuMTY2NjY2NjY2NjY2NjY2NjYsIDAuMTY2NjY2NjY2NjY2NjY2NjYsIDAuMTY2NjY2NjY2NjY2NjY2NjYsIDAuMTY2NjY2NjY2NjY2NjY2NjZdLCAicG9pbnQiOiBbMC4wLCAwLjBdLCAicXVlcnlfaW5kZXgiOiAwfSwgeyJjb29yZGluYXRlcyI6IFswLjI0NzE4NzYxMDI5OTEwODU1LCAwLjMwNzczNDUxMjg3Mzg4NTcsIDAuMTY4NzU3NjM2MDkyMTMwODcsIDAuMDg2NTQyMzc3NDgzMTQ0MDMsIDAuMDc0NTIyNjAyODMyNzA3MzcsIDAuMTE2MjU1MjYwNDE5MDIzNDhdLCAicG9pbnQiOiBbMS4wLCAxLjBdLCAicXVlcnlfaW5kZXgiOiAxfSwgeyJjb29yZGluYXRlcyI6IFswLjA2NjM5MzQ1OTUwMjg3Mjc5LCAwLjExMjAzODk2MjkxMTA5Nzg0LCAwLjI2MzgzMzY4Njg1NTE2NTksIDAuMzI0NzE4MzgzODIxNzQyNiwgMC4xNTcyODU0NjcxNjM2NTY1NywgMC4wNzU3MzAwMzk3NDU0NjQyN10sICJwb2ludCI6IFstMS41LCAwLjVdLCAicXVlcnlfaW5kZXgiOiAyfSwgeyJjb29yZGluYXRlcyI6IFswLjQ3MjE3MDIyMjExMjEyMSwgMC4wODUyNTI5NTY3NzAyNDQwOCwgMC4wMjQ5NzMwODgzNDY4MzkxNzMsIDAuMDIxNjYzNDAxOTM5NDI2NzU0LCAwLjA1MzYxNjkxOTgwMDA4MTIxNiwgMC4zNDIzMjM0MTEwMzEyODc3N10sICJwb2ludCI6IFsyLjUsIC0xLjBdLCAicXVlcnlfaW5kZXgiOiAzfSwgeyJjb29yZGluYXRlcyI6IFswLjA1NTQ1MTc0ODY1OTcwNjgyLCAwLjQ0OTM5MDIxMzA5NjM3NCwgMC40MTI1OTgwMzE5MDcxOTcyLCAwLjA0OTE0MzE4OTkwNDU3OTMyNSwgMC4wMTY0MTMwNTc1NjU3ODcyMzUsIDAuMDE3MDAzNzU4ODY2MzU1NDEyXSwgInBvaW50IjogWzAuMSwgMi45XSwgInF1ZXJ5X2luZGV4IjogNH1dLCAic2NoZW1hX3ZlcnNpb24iOiAxLCAic291cmNlIjogeyJwb2x5Z29uX3NoYTI1NiI6ICI3ZTJmZThjNDIyNTJmNjVmNmE4ZWNiYjdiNmNhYmZkNmY3MWQ1N2Q0OGYwYjEzYzMxYmNlMDI3ZWMzZDVlZTYwIiwgInF1ZXJpZXNfc2hhMjU2IjogIjUyNTg1MDI5ZjZkMGYzNDdlY2E2MTFkNzgzN2VmMmU3Y2QzMWMwNjk4NDkzNzk0OTYyMWFjMjE1MDQ4YmQxMGQifSwgInN1bW1hcnkiOiB7InF1ZXJ5X2NvdW50IjogNSwgInZlcnRleF9jb3VudCI6IDZ9fQo="
+    },
+    "52585029f6d0f347eca611d7837ef2e7cd31c06984937949621ac215048bd10d": {
+      "encoding": "base64",
+      "byte_size": 55,
+      "content": "eyJwb2ludHMiOltbMCwwXSxbMSwxXSxbLTEuNSwwLjVdLFsyLjUsLTFdLFswLjEsMi45XV19Cg=="
+    },
+    "56d19bb3a00f04b5f2ea006f925f19065ea8a0cf828cc37871931952adf227a5": {
+      "encoding": "base64",
+      "byte_size": 37,
+      "content": "eyJwb2ludHMiOltbMCwwXSxbMiwyXSxbMiwwXSxbMCwyXV19Cg=="
+    },
+    "592be3a3d7bd365ac826bcb3275bcebf7661b69d88c004f8d8fce63d06ac520e": {
+      "encoding": "base64",
+      "byte_size": 62,
+      "content": "eyJwb2ludHMiOltbNCwwXSxbMiwtMy41XSxbLTIsLTMuNV0sWy00LDBdLFstMiwzLjVdLFsyLDMuNV1dfQo="
+    },
+    "5f986b90fee661ae27863225ea756e48214b68afa3fab6d04281fa7f0e43ae1e": {
+      "encoding": "base64",
+      "byte_size": 25,
+      "content": "eyJwb2ludHMiOltbMCwwXSxbNCwwXV19Cg=="
+    },
+    "676a946cd1c8f7db8b4ec3928dcf79cee28c143ecf40f490e6e8c708c6f75026": {
+      "encoding": "base64",
+      "byte_size": 676,
+      "content": "eyJjaGVja3MiOnsiY29vcmRpbmF0ZXNfbWF0Y2hfZm9ybXVsYSI6dHJ1ZSwibGluZWFyX3ByZWNpc2lvbiI6dHJ1ZSwicGFyYW1ldGVyc19tYXRjaCI6dHJ1ZSwicGFydGl0aW9uX29mX3VuaXR5Ijp0cnVlLCJwb2x5Z29uX3NpbXBsZV9jb3VudGVyY2xvY2t3aXNlIjp0cnVlLCJxdWVyeV9zdHJpY3RseV9pbnNpZGUiOnRydWUsInNvdXJjZV9tYXRjaGVzIjp0cnVlfSwiaW5kZXBlbmRlbmNlIjoiZXhhY3QgcmF0aW9uYWwgd2VpZ2h0cyAoV2FjaHNwcmVzcywgZGlzY3JldGUgaGFybW9uaWMpIGFuZCBsb25nIGRvdWJsZSBtZWFuIHZhbHVlIGZvcm11bGE7IG5vIENHQUwgaGVhZGVyIiwibWF4aW11bV9mb3JtdWxhX2Vycm9yIjo1LjU1MTExNTEyMzEyNTc4M2UtMTcsIm1heGltdW1fbGluZWFyX3ByZWNpc2lvbl9lcnJvciI6Mi4yMjA0NDYwNDkyNTAzMTNlLTE2LCJtYXhpbXVtX3N1bV9lcnJvciI6MC4wLCJtZXRob2QiOiJtZWFuX3ZhbHVlIiwicGFzc2VkIjp0cnVlLCJwb2x5Z29uX2NvbnZleCI6dHJ1ZSwicXVlcnlfY291bnQiOjIsInJlcG9ydF90eXBlIjoiVmFsaWRhdGlvblJlcG9ydCIsInNjaGVtYV92ZXJzaW9uIjoxLCJzdGF0dXMiOiJwYXNzIiwidG9sZXJhbmNlIjoxZS0xMSwidmFsaWRhdG9yIjoic2hhcGUudmFsaWRhdGUuYmFyeWNlbnRyaWMiLCJ2ZXJ0ZXhfY291bnQiOjR9Cg=="
+    },
     "727bedd5d13712e7506e15aeb1ea35b5da660bf2143bf28e8f257b0aa7eb2164": {
       "encoding": "base64",
       "byte_size": 155,
       "content": "T0ZGCjggMTIgMAowIDAgMAoyIDAgMAoyIDIgMAowIDIgMAowIDAgMgoyIDAgMgoyIDIgMgowIDIgMgozIDAgMyAyCjMgMCAyIDEKMyA0IDUgNgozIDQgNiA3CjMgMCAxIDUKMyAwIDUgNAozIDEgMiA2CjMgMSA2IDUKMyAyIDMgNwozIDIgNyA2CjMgMyAwIDQKMyAzIDQgNwo="
+    },
+    "7e2fe8c42252f65f6a8ecbb7b6cabfd6f71d57d48f0b13c31bce027ec3d5ee60": {
+      "encoding": "base64",
+      "byte_size": 62,
+      "content": "eyJwb2ludHMiOltbNCwwXSxbMiwzLjVdLFstMiwzLjVdLFstNCwwXSxbLTIsLTMuNV0sWzIsLTMuNV1dfQo="
     },
     "7f594ce10b265c535f21e5a534542a32447060270fa83853e2b1362cc2b89792": {
       "encoding": "base64",
@@ -5564,6 +6228,16 @@
       "byte_size": 510,
       "content": "eyJhcmVhIjp7ImFwcHJveGltYXRlIjo5LjAsImV4YWN0IjoiOSIsInVuaXQiOiJtbV4yIn0sImJvdW5kYXJ5X3BvaW50X2NvdW50IjoxNCwiY2hlY2tzIjp7ImFsbF9zb3VyY2VfcG9pbnRzX2VuY2xvc2VkIjp0cnVlLCJtaW5pbWFsX2NvbnZleF9lbmNsb3N1cmUiOnRydWUsInNpbXBsZV9yaW5nIjp0cnVlLCJzdHJpY3RseV9jb252ZXhfY291bnRlcmNsb2Nrd2lzZSI6dHJ1ZSwidmVydGljZXNfYXJlX3NvdXJjZV9wb2ludHMiOnRydWV9LCJkaXN0aW5jdF9zb3VyY2VfcG9pbnRfY291bnQiOjIwLCJodWxsX3ZlcnRleF9jb3VudCI6NCwiaW5kZXBlbmRlbmNlIjoiZXhhY3Qgb3JpZW50YXRpb24gcHJlZGljYXRlcyBhbmQgb3JkZXItY2hhbmdlIHRlc3Q7IENHQUw6OmNvbnZleF9odWxsXzIgaXMgbm90IGNhbGxlZCIsInBhc3NlZCI6dHJ1ZSwic291cmNlX3BvaW50X2NvdW50IjoyMSwic3RhdHVzIjoicGFzcyIsInZhbGlkYXRvciI6Imh1bGwudmFsaWRhdGUuY29udmV4X2VuY2xvc3VyZV8yIn0K"
     },
+    "a4ecabfc95d772e2beb5d0d6dc58d8c8f0e024e7aaf30460fd80ff44c02c198c": {
+      "encoding": "base64",
+      "byte_size": 597,
+      "content": "eyJsZW5ndGhfdW5pdCI6Im1tIiwib3BlcmF0aW9uIjoic2hhcGUuYmFyeWNlbnRyaWMiLCJwYXJhbWV0ZXJzIjp7Im1ldGhvZCI6Im1lYW5fdmFsdWUifSwicmVwb3J0X2tpbmQiOiJiYXJ5Y2VudHJpY19jb29yZGluYXRlcyIsInJlcG9ydF90eXBlIjoiR2VvbWV0cnlRdWVyeVJlcG9ydCIsInJlc3VsdHMiOlt7ImNvb3JkaW5hdGVzIjpbMC4yNSwwLjI1LDAuMjUsMC4yNV0sInBvaW50IjpbMi4wLDIuMF0sInF1ZXJ5X2luZGV4IjowfSx7ImNvb3JkaW5hdGVzIjpbMC4zNzUsMC4xMjUwMDAwMDAwMDAwMDAwMywwLjEyNTAwMDAwMDAwMDAwMDAzLDAuMzc1XSwicG9pbnQiOlsxLjAsMi4wXSwicXVlcnlfaW5kZXgiOjF9XSwic2NoZW1hX3ZlcnNpb24iOjEsInNvdXJjZSI6eyJwb2x5Z29uX3NoYTI1NiI6ImQ4YmJiM2I5MjRmNGFlYWVjNjAwN2YxMGU0ZmU0ZjYwMWJmMDk4MGRjZjljMzNlYzdkYzhlYWJmNmI4ZDA5YzYiLCJxdWVyaWVzX3NoYTI1NiI6IjJlNmFhOGExNGM3MjMzNjFmY2MxZjk5MTBmNTliMzc1MTcyNzg1OGEwZjE5ZTM0ZTYzY2UyZThhMTU1YjYzZjEifSwic3VtbWFyeSI6eyJxdWVyeV9jb3VudCI6MiwidmVydGV4X2NvdW50Ijo0fX0K"
+    },
+    "a89124c7fa47719bdfa208ad7434392b3f27e9d1b8489f4c64efef7d048abfe8": {
+      "encoding": "base64",
+      "byte_size": 569,
+      "content": "eyJsZW5ndGhfdW5pdCI6Im1tIiwib3BlcmF0aW9uIjoic2hhcGUuYmFyeWNlbnRyaWMiLCJwYXJhbWV0ZXJzIjp7Im1ldGhvZCI6IndhY2hzcHJlc3MifSwicmVwb3J0X2tpbmQiOiJiYXJ5Y2VudHJpY19jb29yZGluYXRlcyIsInJlcG9ydF90eXBlIjoiR2VvbWV0cnlRdWVyeVJlcG9ydCIsInJlc3VsdHMiOlt7ImNvb3JkaW5hdGVzIjpbMC4yNSwwLjI1LDAuMjUsMC4yNV0sInBvaW50IjpbMi4wLDIuMF0sInF1ZXJ5X2luZGV4IjowfSx7ImNvb3JkaW5hdGVzIjpbMC4zNzUsMC4xMjUsMC4xMjUsMC4zNzVdLCJwb2ludCI6WzEuMCwyLjBdLCJxdWVyeV9pbmRleCI6MX1dLCJzY2hlbWFfdmVyc2lvbiI6MSwic291cmNlIjp7InBvbHlnb25fc2hhMjU2IjoiZDhiYmIzYjkyNGY0YWVhZWM2MDA3ZjEwZTRmZTRmNjAxYmYwOTgwZGNmOWMzM2VjN2RjOGVhYmY2YjhkMDljNiIsInF1ZXJpZXNfc2hhMjU2IjoiMmU2YWE4YTE0YzcyMzM2MWZjYzFmOTkxMGY1OWIzNzUxNzI3ODU4YTBmMTllMzRlNjNjZTJlOGExNTViNjNmMSJ9LCJzdW1tYXJ5Ijp7InF1ZXJ5X2NvdW50IjoyLCJ2ZXJ0ZXhfY291bnQiOjR9fQo="
+    },
     "beb076dd222cc589655d9150102dd79a211351e2ae23b87b89dee7d84730a236": {
       "encoding": "base64",
       "byte_size": 299,
@@ -5573,6 +6247,21 @@
       "encoding": "base64",
       "byte_size": 60,
       "content": "MC4yNSAwLjI1IDAuMjUKMC43NSAwLjc1IDAuMjUKMC4yNSAwLjc1IDAuNzUKMC43NSAwLjI1IDAuNzUK"
+    },
+    "ce122fcea34136afe3c0512bf919adee341a8bf111d5637b00c446aae8ac560e": {
+      "encoding": "base64",
+      "byte_size": 640,
+      "content": "eyJjaGVja3MiOnsiY29vcmRpbmF0ZXNfbWF0Y2hfZm9ybXVsYSI6dHJ1ZSwibGluZWFyX3ByZWNpc2lvbiI6dHJ1ZSwicGFyYW1ldGVyc19tYXRjaCI6dHJ1ZSwicGFydGl0aW9uX29mX3VuaXR5Ijp0cnVlLCJwb2x5Z29uX3NpbXBsZV9jb3VudGVyY2xvY2t3aXNlIjp0cnVlLCJxdWVyeV9zdHJpY3RseV9pbnNpZGUiOnRydWUsInNvdXJjZV9tYXRjaGVzIjp0cnVlfSwiaW5kZXBlbmRlbmNlIjoiZXhhY3QgcmF0aW9uYWwgd2VpZ2h0cyAoV2FjaHNwcmVzcywgZGlzY3JldGUgaGFybW9uaWMpIGFuZCBsb25nIGRvdWJsZSBtZWFuIHZhbHVlIGZvcm11bGE7IG5vIENHQUwgaGVhZGVyIiwibWF4aW11bV9mb3JtdWxhX2Vycm9yIjowLjAsIm1heGltdW1fbGluZWFyX3ByZWNpc2lvbl9lcnJvciI6MC4wLCJtYXhpbXVtX3N1bV9lcnJvciI6MC4wLCJtZXRob2QiOiJ3YWNoc3ByZXNzIiwicGFzc2VkIjp0cnVlLCJwb2x5Z29uX2NvbnZleCI6dHJ1ZSwicXVlcnlfY291bnQiOjIsInJlcG9ydF90eXBlIjoiVmFsaWRhdGlvblJlcG9ydCIsInNjaGVtYV92ZXJzaW9uIjoxLCJzdGF0dXMiOiJwYXNzIiwidG9sZXJhbmNlIjoxZS0xMSwidmFsaWRhdG9yIjoic2hhcGUudmFsaWRhdGUuYmFyeWNlbnRyaWMiLCJ2ZXJ0ZXhfY291bnQiOjR9Cg=="
+    },
+    "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6": {
+      "encoding": "base64",
+      "byte_size": 37,
+      "content": "eyJwb2ludHMiOltbMCwwXSxbNCwwXSxbNCw0XSxbMCw0XV19Cg=="
+    },
+    "ecb9014d4630db8e5c1a598a71b59db1f98ab29a802ba7ea3abbda7bdfb6eb62": {
+      "encoding": "base64",
+      "byte_size": 696,
+      "content": "eyJjaGVja3MiOnsiY29vcmRpbmF0ZXNfbWF0Y2hfZm9ybXVsYSI6dHJ1ZSwibGluZWFyX3ByZWNpc2lvbiI6dHJ1ZSwicGFyYW1ldGVyc19tYXRjaCI6dHJ1ZSwicGFydGl0aW9uX29mX3VuaXR5Ijp0cnVlLCJwb2x5Z29uX3NpbXBsZV9jb3VudGVyY2xvY2t3aXNlIjp0cnVlLCJxdWVyeV9zdHJpY3RseV9pbnNpZGUiOnRydWUsInNvdXJjZV9tYXRjaGVzIjp0cnVlfSwiaW5kZXBlbmRlbmNlIjoiZXhhY3QgcmF0aW9uYWwgd2VpZ2h0cyAoV2FjaHNwcmVzcywgZGlzY3JldGUgaGFybW9uaWMpIGFuZCBsb25nIGRvdWJsZSBtZWFuIHZhbHVlIGZvcm11bGE7IG5vIENHQUwgaGVhZGVyIiwibWF4aW11bV9mb3JtdWxhX2Vycm9yIjoxLjExMDIyMzAyNDYyNTE1NjVlLTE2LCJtYXhpbXVtX2xpbmVhcl9wcmVjaXNpb25fZXJyb3IiOjQuNDQwODkyMDk4NTAwNjI2ZS0xNiwibWF4aW11bV9zdW1fZXJyb3IiOjIuMjIwNDQ2MDQ5MjUwMzEzZS0xNiwibWV0aG9kIjoibWVhbl92YWx1ZSIsInBhc3NlZCI6dHJ1ZSwicG9seWdvbl9jb252ZXgiOmZhbHNlLCJxdWVyeV9jb3VudCI6NCwicmVwb3J0X3R5cGUiOiJWYWxpZGF0aW9uUmVwb3J0Iiwic2NoZW1hX3ZlcnNpb24iOjEsInN0YXR1cyI6InBhc3MiLCJ0b2xlcmFuY2UiOjFlLTExLCJ2YWxpZGF0b3IiOiJzaGFwZS52YWxpZGF0ZS5iYXJ5Y2VudHJpYyIsInZlcnRleF9jb3VudCI6Nn0K"
     }
   },
   "reports": {
@@ -5615,6 +6304,106 @@
         "exact": "8",
         "unit": "mm^3"
       }
+    },
+    "b10bea539547fd708ef8ccdd477314cca01d15683cf02fae0028a05f14f16a5d": {
+      "checks": {
+        "coordinates_match_formula": true,
+        "linear_precision": true,
+        "parameters_match": true,
+        "partition_of_unity": true,
+        "polygon_simple_counterclockwise": true,
+        "query_strictly_inside": true,
+        "source_matches": true
+      },
+      "independence": "exact rational weights (Wachspress, discrete harmonic) and long double mean value formula; no CGAL header",
+      "maximum_formula_error": 0.0,
+      "maximum_linear_precision_error": 0.0,
+      "maximum_sum_error": 0.0,
+      "method": "wachspress",
+      "passed": true,
+      "polygon_convex": true,
+      "query_count": 2,
+      "report_type": "ValidationReport",
+      "schema_version": 1,
+      "status": "pass",
+      "tolerance": 1e-11,
+      "validator": "shape.validate.barycentric",
+      "vertex_count": 4
+    },
+    "277f46f88b08ef50334e996c8600d96b005dcc34fd9824625f1095d129d92b03": {
+      "checks": {
+        "coordinates_match_formula": true,
+        "linear_precision": true,
+        "parameters_match": true,
+        "partition_of_unity": true,
+        "polygon_simple_counterclockwise": true,
+        "query_strictly_inside": true,
+        "source_matches": true
+      },
+      "independence": "exact rational weights (Wachspress, discrete harmonic) and long double mean value formula; no CGAL header",
+      "maximum_formula_error": 5.551115123125783e-17,
+      "maximum_linear_precision_error": 2.220446049250313e-16,
+      "maximum_sum_error": 0.0,
+      "method": "mean_value",
+      "passed": true,
+      "polygon_convex": true,
+      "query_count": 2,
+      "report_type": "ValidationReport",
+      "schema_version": 1,
+      "status": "pass",
+      "tolerance": 1e-11,
+      "validator": "shape.validate.barycentric",
+      "vertex_count": 4
+    },
+    "254b1ba5adc84b6ef4431675c6f5015222f1ac21ef895529c97621bd74338c3b": {
+      "checks": {
+        "coordinates_match_formula": true,
+        "linear_precision": true,
+        "parameters_match": true,
+        "partition_of_unity": true,
+        "polygon_simple_counterclockwise": true,
+        "query_strictly_inside": true,
+        "source_matches": true
+      },
+      "independence": "exact rational weights (Wachspress, discrete harmonic) and long double mean value formula; no CGAL header",
+      "maximum_formula_error": 0.0,
+      "maximum_linear_precision_error": 0.0,
+      "maximum_sum_error": 0.0,
+      "method": "discrete_harmonic",
+      "passed": true,
+      "polygon_convex": true,
+      "query_count": 2,
+      "report_type": "ValidationReport",
+      "schema_version": 1,
+      "status": "pass",
+      "tolerance": 1e-11,
+      "validator": "shape.validate.barycentric",
+      "vertex_count": 4
+    },
+    "8fd622ef7e532bab49df6a8f21febc8a779db8f22556278e54fb8fc43637d437": {
+      "checks": {
+        "coordinates_match_formula": true,
+        "linear_precision": true,
+        "parameters_match": true,
+        "partition_of_unity": true,
+        "polygon_simple_counterclockwise": true,
+        "query_strictly_inside": true,
+        "source_matches": true
+      },
+      "independence": "exact rational weights (Wachspress, discrete harmonic) and long double mean value formula; no CGAL header",
+      "maximum_formula_error": 1.1102230246251565e-16,
+      "maximum_linear_precision_error": 4.440892098500626e-16,
+      "maximum_sum_error": 2.220446049250313e-16,
+      "method": "mean_value",
+      "passed": true,
+      "polygon_convex": false,
+      "query_count": 4,
+      "report_type": "ValidationReport",
+      "schema_version": 1,
+      "status": "pass",
+      "tolerance": 1e-11,
+      "validator": "shape.validate.barycentric",
+      "vertex_count": 6
     }
   },
   "operation_results": [
@@ -5622,7 +6411,7 @@
       "case_id": "hull2-grid",
       "operation_id": "hull.convex_2",
       "revision": 1,
-      "worker_manifest_sha256": "4a32a5f5bf2b74326a407889ebd4591b45bf63a3efb1af801ccef5a2d19d8d3e",
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -5783,7 +6572,7 @@
       "case_id": "hull3-cube",
       "operation_id": "hull.convex_3",
       "revision": 1,
-      "worker_manifest_sha256": "4a32a5f5bf2b74326a407889ebd4591b45bf63a3efb1af801ccef5a2d19d8d3e",
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -5934,6 +6723,726 @@
           }
         }
       }
+    },
+    {
+      "case_id": "bary-square-wachspress",
+      "operation_id": "shape.barycentric",
+      "revision": 1,
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
+      "test_id": "family-7.13-replay-cases",
+      "request": {
+        "inputs": [
+          {
+            "artifact_id": "input-0",
+            "blob_sha256": "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+            "format": "json",
+            "sha256": "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+            "type": "Polygon2",
+            "unit": "mm"
+          },
+          {
+            "artifact_id": "input-1",
+            "blob_sha256": "2e6aa8a14c723361fcc1f9910f59b3751727858a0f19e34e63ce2e8a155b63f1",
+            "format": "json",
+            "sha256": "2e6aa8a14c723361fcc1f9910f59b3751727858a0f19e34e63ce2e8a155b63f1",
+            "type": "PointSet2",
+            "unit": "mm"
+          }
+        ],
+        "kernel": "package_recommended",
+        "limits": {
+          "memory_mb": 2048,
+          "wall_time_ms": 120000
+        },
+        "operation": "shape.barycentric",
+        "parameters": {
+          "method": "wachspress"
+        },
+        "protocol": 1,
+        "request_id": "bary-square-wachspress"
+      },
+      "request_sha256": "c1f5a80af23b37c8aa662b210b85a6d591f1a98527bb75187e4a6c54c8d247b8",
+      "response": {
+        "metrics": {
+          "algorithm": "CGAL::Barycentric_coordinates::wachspress_coordinates_2",
+          "method": "wachspress",
+          "query_count": 2,
+          "vertex_count": 4
+        },
+        "outputs": [
+          {
+            "blob_sha256": "a89124c7fa47719bdfa208ad7434392b3f27e9d1b8489f4c64efef7d048abfe8",
+            "format": "json",
+            "slot": "analysis",
+            "type": "GeometryQueryReport",
+            "unit": "none"
+          }
+        ],
+        "protocol": 1,
+        "request_id": "bary-square-wachspress",
+        "status": "ok"
+      },
+      "response_sha256": "b8bcc0a962ed3863cfe3db009610410e89449f41c2b56e9399d9e10e52be1d9f",
+      "input_hashes": [
+        "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+        "2e6aa8a14c723361fcc1f9910f59b3751727858a0f19e34e63ce2e8a155b63f1"
+      ],
+      "output_hashes": [
+        "a89124c7fa47719bdfa208ad7434392b3f27e9d1b8489f4c64efef7d048abfe8"
+      ],
+      "validators": [
+        {
+          "operation_id": "shape.validate.barycentric",
+          "revision": 1,
+          "request": {
+            "inputs": [
+              {
+                "artifact_id": "bary-square-wachspress-analysis-0",
+                "blob_sha256": "a89124c7fa47719bdfa208ad7434392b3f27e9d1b8489f4c64efef7d048abfe8",
+                "format": "json",
+                "sha256": "a89124c7fa47719bdfa208ad7434392b3f27e9d1b8489f4c64efef7d048abfe8",
+                "type": "GeometryQueryReport",
+                "unit": "none"
+              },
+              {
+                "artifact_id": "input-0",
+                "blob_sha256": "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+                "format": "json",
+                "sha256": "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+                "type": "Polygon2",
+                "unit": "mm"
+              },
+              {
+                "artifact_id": "input-1",
+                "blob_sha256": "2e6aa8a14c723361fcc1f9910f59b3751727858a0f19e34e63ce2e8a155b63f1",
+                "format": "json",
+                "sha256": "2e6aa8a14c723361fcc1f9910f59b3751727858a0f19e34e63ce2e8a155b63f1",
+                "type": "PointSet2",
+                "unit": "mm"
+              }
+            ],
+            "kernel": "package_recommended",
+            "limits": {
+              "memory_mb": 2048,
+              "wall_time_ms": 120000
+            },
+            "operation": "shape.validate.barycentric",
+            "parameters": {
+              "method": "wachspress"
+            },
+            "protocol": 1,
+            "request_id": "bary-square-wachspress--shape.validate.barycentric"
+          },
+          "request_sha256": "48cbda727028882442b5427d47c8e4d2ae6a0efa9188d6feb1d244fdb3933ace",
+          "response": {
+            "metrics": {
+              "checks": {
+                "coordinates_match_formula": true,
+                "linear_precision": true,
+                "parameters_match": true,
+                "partition_of_unity": true,
+                "polygon_simple_counterclockwise": true,
+                "query_strictly_inside": true,
+                "source_matches": true
+              },
+              "independence": "exact rational weights (Wachspress, discrete harmonic) and long double mean value formula; no CGAL header",
+              "maximum_formula_error": 0.0,
+              "maximum_linear_precision_error": 0.0,
+              "maximum_sum_error": 0.0,
+              "method": "wachspress",
+              "passed": true,
+              "polygon_convex": true,
+              "query_count": 2,
+              "report_type": "ValidationReport",
+              "schema_version": 1,
+              "status": "pass",
+              "tolerance": 1e-11,
+              "validator": "shape.validate.barycentric",
+              "vertex_count": 4
+            },
+            "outputs": [
+              {
+                "blob_sha256": "ce122fcea34136afe3c0512bf919adee341a8bf111d5637b00c446aae8ac560e",
+                "format": "json",
+                "slot": "validation",
+                "type": "ValidationReport",
+                "unit": "none"
+              }
+            ],
+            "protocol": 1,
+            "request_id": "bary-square-wachspress--shape.validate.barycentric",
+            "status": "ok"
+          },
+          "response_sha256": "fb007b261a949523d4dbe973048694c4d5a10fe5553c421bc145408d1038c5ba",
+          "input_hashes": [
+            "a89124c7fa47719bdfa208ad7434392b3f27e9d1b8489f4c64efef7d048abfe8",
+            "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+            "2e6aa8a14c723361fcc1f9910f59b3751727858a0f19e34e63ce2e8a155b63f1"
+          ],
+          "output_hashes": [
+            "ce122fcea34136afe3c0512bf919adee341a8bf111d5637b00c446aae8ac560e"
+          ],
+          "report_blob_sha256": "ce122fcea34136afe3c0512bf919adee341a8bf111d5637b00c446aae8ac560e",
+          "report_sha256": "b10bea539547fd708ef8ccdd477314cca01d15683cf02fae0028a05f14f16a5d",
+          "status": "pass"
+        }
+      ],
+      "validation": {
+        "status": "pass",
+        "checks": {
+          "transform_executed": {
+            "pass": true
+          },
+          "behaviour_assertions": {
+            "pass": true,
+            "count": 8
+          },
+          "validator:shape.validate.barycentric": {
+            "pass": true,
+            "report_sha256": "b10bea539547fd708ef8ccdd477314cca01d15683cf02fae0028a05f14f16a5d"
+          }
+        }
+      }
+    },
+    {
+      "case_id": "bary-square-mean-value",
+      "operation_id": "shape.barycentric",
+      "revision": 1,
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
+      "test_id": "family-7.13-replay-cases",
+      "request": {
+        "inputs": [
+          {
+            "artifact_id": "input-0",
+            "blob_sha256": "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+            "format": "json",
+            "sha256": "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+            "type": "Polygon2",
+            "unit": "mm"
+          },
+          {
+            "artifact_id": "input-1",
+            "blob_sha256": "2e6aa8a14c723361fcc1f9910f59b3751727858a0f19e34e63ce2e8a155b63f1",
+            "format": "json",
+            "sha256": "2e6aa8a14c723361fcc1f9910f59b3751727858a0f19e34e63ce2e8a155b63f1",
+            "type": "PointSet2",
+            "unit": "mm"
+          }
+        ],
+        "kernel": "package_recommended",
+        "limits": {
+          "memory_mb": 2048,
+          "wall_time_ms": 120000
+        },
+        "operation": "shape.barycentric",
+        "parameters": {
+          "method": "mean_value"
+        },
+        "protocol": 1,
+        "request_id": "bary-square-mean-value"
+      },
+      "request_sha256": "fd45086bd7b69fed1088a398a04a44f73f473648e9b24f49158d1cd62417d62b",
+      "response": {
+        "metrics": {
+          "algorithm": "CGAL::Barycentric_coordinates::mean_value_coordinates_2",
+          "method": "mean_value",
+          "query_count": 2,
+          "vertex_count": 4
+        },
+        "outputs": [
+          {
+            "blob_sha256": "a4ecabfc95d772e2beb5d0d6dc58d8c8f0e024e7aaf30460fd80ff44c02c198c",
+            "format": "json",
+            "slot": "analysis",
+            "type": "GeometryQueryReport",
+            "unit": "none"
+          }
+        ],
+        "protocol": 1,
+        "request_id": "bary-square-mean-value",
+        "status": "ok"
+      },
+      "response_sha256": "869e80e9a3ef86c8b383d01d1b81a7b921db0c9920936105fbe3aae017cbd59d",
+      "input_hashes": [
+        "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+        "2e6aa8a14c723361fcc1f9910f59b3751727858a0f19e34e63ce2e8a155b63f1"
+      ],
+      "output_hashes": [
+        "a4ecabfc95d772e2beb5d0d6dc58d8c8f0e024e7aaf30460fd80ff44c02c198c"
+      ],
+      "validators": [
+        {
+          "operation_id": "shape.validate.barycentric",
+          "revision": 1,
+          "request": {
+            "inputs": [
+              {
+                "artifact_id": "bary-square-mean-value-analysis-0",
+                "blob_sha256": "a4ecabfc95d772e2beb5d0d6dc58d8c8f0e024e7aaf30460fd80ff44c02c198c",
+                "format": "json",
+                "sha256": "a4ecabfc95d772e2beb5d0d6dc58d8c8f0e024e7aaf30460fd80ff44c02c198c",
+                "type": "GeometryQueryReport",
+                "unit": "none"
+              },
+              {
+                "artifact_id": "input-0",
+                "blob_sha256": "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+                "format": "json",
+                "sha256": "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+                "type": "Polygon2",
+                "unit": "mm"
+              },
+              {
+                "artifact_id": "input-1",
+                "blob_sha256": "2e6aa8a14c723361fcc1f9910f59b3751727858a0f19e34e63ce2e8a155b63f1",
+                "format": "json",
+                "sha256": "2e6aa8a14c723361fcc1f9910f59b3751727858a0f19e34e63ce2e8a155b63f1",
+                "type": "PointSet2",
+                "unit": "mm"
+              }
+            ],
+            "kernel": "package_recommended",
+            "limits": {
+              "memory_mb": 2048,
+              "wall_time_ms": 120000
+            },
+            "operation": "shape.validate.barycentric",
+            "parameters": {
+              "method": "mean_value"
+            },
+            "protocol": 1,
+            "request_id": "bary-square-mean-value--shape.validate.barycentric"
+          },
+          "request_sha256": "05e8e58c4fe8b8015b8cb09862d3505e1eff1fdf8b3addb2b997141b0fa09a62",
+          "response": {
+            "metrics": {
+              "checks": {
+                "coordinates_match_formula": true,
+                "linear_precision": true,
+                "parameters_match": true,
+                "partition_of_unity": true,
+                "polygon_simple_counterclockwise": true,
+                "query_strictly_inside": true,
+                "source_matches": true
+              },
+              "independence": "exact rational weights (Wachspress, discrete harmonic) and long double mean value formula; no CGAL header",
+              "maximum_formula_error": 5.551115123125783e-17,
+              "maximum_linear_precision_error": 2.220446049250313e-16,
+              "maximum_sum_error": 0.0,
+              "method": "mean_value",
+              "passed": true,
+              "polygon_convex": true,
+              "query_count": 2,
+              "report_type": "ValidationReport",
+              "schema_version": 1,
+              "status": "pass",
+              "tolerance": 1e-11,
+              "validator": "shape.validate.barycentric",
+              "vertex_count": 4
+            },
+            "outputs": [
+              {
+                "blob_sha256": "676a946cd1c8f7db8b4ec3928dcf79cee28c143ecf40f490e6e8c708c6f75026",
+                "format": "json",
+                "slot": "validation",
+                "type": "ValidationReport",
+                "unit": "none"
+              }
+            ],
+            "protocol": 1,
+            "request_id": "bary-square-mean-value--shape.validate.barycentric",
+            "status": "ok"
+          },
+          "response_sha256": "78e715599cb12623d08a543529c52dfc3b0dc41b518efa22b9e365a082b86b90",
+          "input_hashes": [
+            "a4ecabfc95d772e2beb5d0d6dc58d8c8f0e024e7aaf30460fd80ff44c02c198c",
+            "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+            "2e6aa8a14c723361fcc1f9910f59b3751727858a0f19e34e63ce2e8a155b63f1"
+          ],
+          "output_hashes": [
+            "676a946cd1c8f7db8b4ec3928dcf79cee28c143ecf40f490e6e8c708c6f75026"
+          ],
+          "report_blob_sha256": "676a946cd1c8f7db8b4ec3928dcf79cee28c143ecf40f490e6e8c708c6f75026",
+          "report_sha256": "277f46f88b08ef50334e996c8600d96b005dcc34fd9824625f1095d129d92b03",
+          "status": "pass"
+        }
+      ],
+      "validation": {
+        "status": "pass",
+        "checks": {
+          "transform_executed": {
+            "pass": true
+          },
+          "behaviour_assertions": {
+            "pass": true,
+            "count": 7
+          },
+          "validator:shape.validate.barycentric": {
+            "pass": true,
+            "report_sha256": "277f46f88b08ef50334e996c8600d96b005dcc34fd9824625f1095d129d92b03"
+          }
+        }
+      }
+    },
+    {
+      "case_id": "bary-square-discrete-harmonic",
+      "operation_id": "shape.barycentric",
+      "revision": 1,
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
+      "test_id": "family-7.13-replay-cases",
+      "request": {
+        "inputs": [
+          {
+            "artifact_id": "input-0",
+            "blob_sha256": "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+            "format": "json",
+            "sha256": "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+            "type": "Polygon2",
+            "unit": "mm"
+          },
+          {
+            "artifact_id": "input-1",
+            "blob_sha256": "2e6aa8a14c723361fcc1f9910f59b3751727858a0f19e34e63ce2e8a155b63f1",
+            "format": "json",
+            "sha256": "2e6aa8a14c723361fcc1f9910f59b3751727858a0f19e34e63ce2e8a155b63f1",
+            "type": "PointSet2",
+            "unit": "mm"
+          }
+        ],
+        "kernel": "package_recommended",
+        "limits": {
+          "memory_mb": 2048,
+          "wall_time_ms": 120000
+        },
+        "operation": "shape.barycentric",
+        "parameters": {
+          "method": "discrete_harmonic"
+        },
+        "protocol": 1,
+        "request_id": "bary-square-discrete-harmonic"
+      },
+      "request_sha256": "15bcb82c2c9a35e00c80078970314ef62f47e09305b5ee7a70a95cb750ce0b5e",
+      "response": {
+        "metrics": {
+          "algorithm": "CGAL::Barycentric_coordinates::discrete_harmonic_coordinates_2",
+          "method": "discrete_harmonic",
+          "query_count": 2,
+          "vertex_count": 4
+        },
+        "outputs": [
+          {
+            "blob_sha256": "02ccc6731364de251bf14fb0873732624e10265c3ba014a2df436d5543accf7d",
+            "format": "json",
+            "slot": "analysis",
+            "type": "GeometryQueryReport",
+            "unit": "none"
+          }
+        ],
+        "protocol": 1,
+        "request_id": "bary-square-discrete-harmonic",
+        "status": "ok"
+      },
+      "response_sha256": "38f6a9b13bc5d5b82dbf2034f597c2ab241206ef7fae2e81103087b7736f79f1",
+      "input_hashes": [
+        "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+        "2e6aa8a14c723361fcc1f9910f59b3751727858a0f19e34e63ce2e8a155b63f1"
+      ],
+      "output_hashes": [
+        "02ccc6731364de251bf14fb0873732624e10265c3ba014a2df436d5543accf7d"
+      ],
+      "validators": [
+        {
+          "operation_id": "shape.validate.barycentric",
+          "revision": 1,
+          "request": {
+            "inputs": [
+              {
+                "artifact_id": "bary-square-discrete-harmonic-analysis-0",
+                "blob_sha256": "02ccc6731364de251bf14fb0873732624e10265c3ba014a2df436d5543accf7d",
+                "format": "json",
+                "sha256": "02ccc6731364de251bf14fb0873732624e10265c3ba014a2df436d5543accf7d",
+                "type": "GeometryQueryReport",
+                "unit": "none"
+              },
+              {
+                "artifact_id": "input-0",
+                "blob_sha256": "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+                "format": "json",
+                "sha256": "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+                "type": "Polygon2",
+                "unit": "mm"
+              },
+              {
+                "artifact_id": "input-1",
+                "blob_sha256": "2e6aa8a14c723361fcc1f9910f59b3751727858a0f19e34e63ce2e8a155b63f1",
+                "format": "json",
+                "sha256": "2e6aa8a14c723361fcc1f9910f59b3751727858a0f19e34e63ce2e8a155b63f1",
+                "type": "PointSet2",
+                "unit": "mm"
+              }
+            ],
+            "kernel": "package_recommended",
+            "limits": {
+              "memory_mb": 2048,
+              "wall_time_ms": 120000
+            },
+            "operation": "shape.validate.barycentric",
+            "parameters": {
+              "method": "discrete_harmonic"
+            },
+            "protocol": 1,
+            "request_id": "bary-square-discrete-harmonic--shape.validate.barycentric"
+          },
+          "request_sha256": "f3beddc0ef4a7ecf58172db8103472709eb93639fabaf7f5c3c8876ad434b63e",
+          "response": {
+            "metrics": {
+              "checks": {
+                "coordinates_match_formula": true,
+                "linear_precision": true,
+                "parameters_match": true,
+                "partition_of_unity": true,
+                "polygon_simple_counterclockwise": true,
+                "query_strictly_inside": true,
+                "source_matches": true
+              },
+              "independence": "exact rational weights (Wachspress, discrete harmonic) and long double mean value formula; no CGAL header",
+              "maximum_formula_error": 0.0,
+              "maximum_linear_precision_error": 0.0,
+              "maximum_sum_error": 0.0,
+              "method": "discrete_harmonic",
+              "passed": true,
+              "polygon_convex": true,
+              "query_count": 2,
+              "report_type": "ValidationReport",
+              "schema_version": 1,
+              "status": "pass",
+              "tolerance": 1e-11,
+              "validator": "shape.validate.barycentric",
+              "vertex_count": 4
+            },
+            "outputs": [
+              {
+                "blob_sha256": "269b4523e9fd8d820fd9bd587b77cc553557bf354521e8bec668c6e7fbbc68c7",
+                "format": "json",
+                "slot": "validation",
+                "type": "ValidationReport",
+                "unit": "none"
+              }
+            ],
+            "protocol": 1,
+            "request_id": "bary-square-discrete-harmonic--shape.validate.barycentric",
+            "status": "ok"
+          },
+          "response_sha256": "ece241ce161a6063b37fcb1f858780c853aec1d2943aa61beff579e768ab701e",
+          "input_hashes": [
+            "02ccc6731364de251bf14fb0873732624e10265c3ba014a2df436d5543accf7d",
+            "d8bbb3b924f4aeaec6007f10e4fe4f601bf0980dcf9c33ec7dc8eabf6b8d09c6",
+            "2e6aa8a14c723361fcc1f9910f59b3751727858a0f19e34e63ce2e8a155b63f1"
+          ],
+          "output_hashes": [
+            "269b4523e9fd8d820fd9bd587b77cc553557bf354521e8bec668c6e7fbbc68c7"
+          ],
+          "report_blob_sha256": "269b4523e9fd8d820fd9bd587b77cc553557bf354521e8bec668c6e7fbbc68c7",
+          "report_sha256": "254b1ba5adc84b6ef4431675c6f5015222f1ac21ef895529c97621bd74338c3b",
+          "status": "pass"
+        }
+      ],
+      "validation": {
+        "status": "pass",
+        "checks": {
+          "transform_executed": {
+            "pass": true
+          },
+          "behaviour_assertions": {
+            "pass": true,
+            "count": 7
+          },
+          "validator:shape.validate.barycentric": {
+            "pass": true,
+            "report_sha256": "254b1ba5adc84b6ef4431675c6f5015222f1ac21ef895529c97621bd74338c3b"
+          }
+        }
+      }
+    },
+    {
+      "case_id": "bary-l-mean-value",
+      "operation_id": "shape.barycentric",
+      "revision": 1,
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
+      "test_id": "family-7.13-replay-cases",
+      "request": {
+        "inputs": [
+          {
+            "artifact_id": "input-0",
+            "blob_sha256": "327f3b76bc632fb0beae639a53b903628afc85fa77131bdbe936201d3d038069",
+            "format": "json",
+            "sha256": "327f3b76bc632fb0beae639a53b903628afc85fa77131bdbe936201d3d038069",
+            "type": "Polygon2",
+            "unit": "mm"
+          },
+          {
+            "artifact_id": "input-1",
+            "blob_sha256": "47f72e8372f235c2a83e171bbd81e596acd416e9ceb576bc533bce95ecd79201",
+            "format": "json",
+            "sha256": "47f72e8372f235c2a83e171bbd81e596acd416e9ceb576bc533bce95ecd79201",
+            "type": "PointSet2",
+            "unit": "mm"
+          }
+        ],
+        "kernel": "package_recommended",
+        "limits": {
+          "memory_mb": 2048,
+          "wall_time_ms": 120000
+        },
+        "operation": "shape.barycentric",
+        "parameters": {
+          "method": "mean_value"
+        },
+        "protocol": 1,
+        "request_id": "bary-l-mean-value"
+      },
+      "request_sha256": "5cd0995de440907d47f6f3cceb44fa5ef5157643ed20b7e4403e113183ce1628",
+      "response": {
+        "metrics": {
+          "algorithm": "CGAL::Barycentric_coordinates::mean_value_coordinates_2",
+          "method": "mean_value",
+          "query_count": 4,
+          "vertex_count": 6
+        },
+        "outputs": [
+          {
+            "blob_sha256": "4113a13c691a099ca60654f9e92aef4fb9dc7909f1e7f3f4238ca249dfbfa25c",
+            "format": "json",
+            "slot": "analysis",
+            "type": "GeometryQueryReport",
+            "unit": "none"
+          }
+        ],
+        "protocol": 1,
+        "request_id": "bary-l-mean-value",
+        "status": "ok"
+      },
+      "response_sha256": "cd1cc4f817528658ef480aa25f07713a3cd3ae4f83f10b295701a0293481dd46",
+      "input_hashes": [
+        "327f3b76bc632fb0beae639a53b903628afc85fa77131bdbe936201d3d038069",
+        "47f72e8372f235c2a83e171bbd81e596acd416e9ceb576bc533bce95ecd79201"
+      ],
+      "output_hashes": [
+        "4113a13c691a099ca60654f9e92aef4fb9dc7909f1e7f3f4238ca249dfbfa25c"
+      ],
+      "validators": [
+        {
+          "operation_id": "shape.validate.barycentric",
+          "revision": 1,
+          "request": {
+            "inputs": [
+              {
+                "artifact_id": "bary-l-mean-value-analysis-0",
+                "blob_sha256": "4113a13c691a099ca60654f9e92aef4fb9dc7909f1e7f3f4238ca249dfbfa25c",
+                "format": "json",
+                "sha256": "4113a13c691a099ca60654f9e92aef4fb9dc7909f1e7f3f4238ca249dfbfa25c",
+                "type": "GeometryQueryReport",
+                "unit": "none"
+              },
+              {
+                "artifact_id": "input-0",
+                "blob_sha256": "327f3b76bc632fb0beae639a53b903628afc85fa77131bdbe936201d3d038069",
+                "format": "json",
+                "sha256": "327f3b76bc632fb0beae639a53b903628afc85fa77131bdbe936201d3d038069",
+                "type": "Polygon2",
+                "unit": "mm"
+              },
+              {
+                "artifact_id": "input-1",
+                "blob_sha256": "47f72e8372f235c2a83e171bbd81e596acd416e9ceb576bc533bce95ecd79201",
+                "format": "json",
+                "sha256": "47f72e8372f235c2a83e171bbd81e596acd416e9ceb576bc533bce95ecd79201",
+                "type": "PointSet2",
+                "unit": "mm"
+              }
+            ],
+            "kernel": "package_recommended",
+            "limits": {
+              "memory_mb": 2048,
+              "wall_time_ms": 120000
+            },
+            "operation": "shape.validate.barycentric",
+            "parameters": {
+              "method": "mean_value"
+            },
+            "protocol": 1,
+            "request_id": "bary-l-mean-value--shape.validate.barycentric"
+          },
+          "request_sha256": "0ac9cf453cf1f0e7eab87a662f3f039a9d68bc62b0cd4bf4e21cb142f38dd4b0",
+          "response": {
+            "metrics": {
+              "checks": {
+                "coordinates_match_formula": true,
+                "linear_precision": true,
+                "parameters_match": true,
+                "partition_of_unity": true,
+                "polygon_simple_counterclockwise": true,
+                "query_strictly_inside": true,
+                "source_matches": true
+              },
+              "independence": "exact rational weights (Wachspress, discrete harmonic) and long double mean value formula; no CGAL header",
+              "maximum_formula_error": 1.1102230246251565e-16,
+              "maximum_linear_precision_error": 4.440892098500626e-16,
+              "maximum_sum_error": 2.220446049250313e-16,
+              "method": "mean_value",
+              "passed": true,
+              "polygon_convex": false,
+              "query_count": 4,
+              "report_type": "ValidationReport",
+              "schema_version": 1,
+              "status": "pass",
+              "tolerance": 1e-11,
+              "validator": "shape.validate.barycentric",
+              "vertex_count": 6
+            },
+            "outputs": [
+              {
+                "blob_sha256": "ecb9014d4630db8e5c1a598a71b59db1f98ab29a802ba7ea3abbda7bdfb6eb62",
+                "format": "json",
+                "slot": "validation",
+                "type": "ValidationReport",
+                "unit": "none"
+              }
+            ],
+            "protocol": 1,
+            "request_id": "bary-l-mean-value--shape.validate.barycentric",
+            "status": "ok"
+          },
+          "response_sha256": "a1d83fb724a5cad3bdff4c3936647ac2a8c0f309193676e5f54e26871b302ecc",
+          "input_hashes": [
+            "4113a13c691a099ca60654f9e92aef4fb9dc7909f1e7f3f4238ca249dfbfa25c",
+            "327f3b76bc632fb0beae639a53b903628afc85fa77131bdbe936201d3d038069",
+            "47f72e8372f235c2a83e171bbd81e596acd416e9ceb576bc533bce95ecd79201"
+          ],
+          "output_hashes": [
+            "ecb9014d4630db8e5c1a598a71b59db1f98ab29a802ba7ea3abbda7bdfb6eb62"
+          ],
+          "report_blob_sha256": "ecb9014d4630db8e5c1a598a71b59db1f98ab29a802ba7ea3abbda7bdfb6eb62",
+          "report_sha256": "8fd622ef7e532bab49df6a8f21febc8a779db8f22556278e54fb8fc43637d437",
+          "status": "pass"
+        }
+      ],
+      "validation": {
+        "status": "pass",
+        "checks": {
+          "transform_executed": {
+            "pass": true
+          },
+          "behaviour_assertions": {
+            "pass": true,
+            "count": 3
+          },
+          "validator:shape.validate.barycentric": {
+            "pass": true,
+            "report_sha256": "8fd622ef7e532bab49df6a8f21febc8a779db8f22556278e54fb8fc43637d437"
+          }
+        }
+      }
     }
   ],
   "negative_control_proofs": {
@@ -5941,7 +7450,7 @@
       "case_id": "hull2-collinear-rejected",
       "operation_id": "hull.convex_2",
       "revision": 1,
-      "worker_manifest_sha256": "4a32a5f5bf2b74326a407889ebd4591b45bf63a3efb1af801ccef5a2d19d8d3e",
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -5991,7 +7500,7 @@
       "case_id": "hull3-oversized-shell-rejected",
       "operation_id": "hull.validate.convex_enclosure",
       "revision": 1,
-      "worker_manifest_sha256": "4a32a5f5bf2b74326a407889ebd4591b45bf63a3efb1af801ccef5a2d19d8d3e",
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -6045,7 +7554,382 @@
       "output_hashes": [],
       "expected_error_class": "VALIDATION_FAILED",
       "status": "expected_rejection"
+    },
+    "bary-clockwise-polygon-rejected": {
+      "case_id": "bary-clockwise-polygon-rejected",
+      "operation_id": "shape.barycentric",
+      "revision": 1,
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
+      "test_id": "family-7.13-replay-cases",
+      "request": {
+        "inputs": [
+          {
+            "artifact_id": "input-0",
+            "blob_sha256": "592be3a3d7bd365ac826bcb3275bcebf7661b69d88c004f8d8fce63d06ac520e",
+            "format": "json",
+            "sha256": "592be3a3d7bd365ac826bcb3275bcebf7661b69d88c004f8d8fce63d06ac520e",
+            "type": "Polygon2",
+            "unit": "mm"
+          },
+          {
+            "artifact_id": "input-1",
+            "blob_sha256": "52585029f6d0f347eca611d7837ef2e7cd31c06984937949621ac215048bd10d",
+            "format": "json",
+            "sha256": "52585029f6d0f347eca611d7837ef2e7cd31c06984937949621ac215048bd10d",
+            "type": "PointSet2",
+            "unit": "mm"
+          }
+        ],
+        "kernel": "package_recommended",
+        "limits": {
+          "memory_mb": 2048,
+          "wall_time_ms": 120000
+        },
+        "operation": "shape.barycentric",
+        "parameters": {
+          "method": "wachspress"
+        },
+        "protocol": 1,
+        "request_id": "bary-clockwise-polygon-rejected"
+      },
+      "request_sha256": "7848b2ddbd4516490246a0a796aaf7e2341c3886dfc6c7ddca7dfc5f563a8635",
+      "response": {
+        "error": {
+          "class": "PRECONDITION_FAILED",
+          "code": "POLYGON_NOT_COUNTERCLOCKWISE",
+          "message": "The polygon must be counterclockwise oriented",
+          "recoverable": false,
+          "suggested_operations": []
+        },
+        "metrics": {},
+        "outputs": [],
+        "protocol": 1,
+        "request_id": "bary-clockwise-polygon-rejected",
+        "status": "error"
+      },
+      "response_sha256": "d2e77791408ab4052e5eae4461a8e4d0a9ab7e986dd1fb72d6b2b591417524b0",
+      "input_hashes": [
+        "592be3a3d7bd365ac826bcb3275bcebf7661b69d88c004f8d8fce63d06ac520e",
+        "52585029f6d0f347eca611d7837ef2e7cd31c06984937949621ac215048bd10d"
+      ],
+      "output_hashes": [],
+      "expected_error_class": "PRECONDITION_FAILED",
+      "status": "expected_rejection"
+    },
+    "bary-bowtie-polygon-rejected": {
+      "case_id": "bary-bowtie-polygon-rejected",
+      "operation_id": "shape.barycentric",
+      "revision": 1,
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
+      "test_id": "family-7.13-replay-cases",
+      "request": {
+        "inputs": [
+          {
+            "artifact_id": "input-0",
+            "blob_sha256": "56d19bb3a00f04b5f2ea006f925f19065ea8a0cf828cc37871931952adf227a5",
+            "format": "json",
+            "sha256": "56d19bb3a00f04b5f2ea006f925f19065ea8a0cf828cc37871931952adf227a5",
+            "type": "Polygon2",
+            "unit": "mm"
+          },
+          {
+            "artifact_id": "input-1",
+            "blob_sha256": "52585029f6d0f347eca611d7837ef2e7cd31c06984937949621ac215048bd10d",
+            "format": "json",
+            "sha256": "52585029f6d0f347eca611d7837ef2e7cd31c06984937949621ac215048bd10d",
+            "type": "PointSet2",
+            "unit": "mm"
+          }
+        ],
+        "kernel": "package_recommended",
+        "limits": {
+          "memory_mb": 2048,
+          "wall_time_ms": 120000
+        },
+        "operation": "shape.barycentric",
+        "parameters": {
+          "method": "mean_value"
+        },
+        "protocol": 1,
+        "request_id": "bary-bowtie-polygon-rejected"
+      },
+      "request_sha256": "0181c9ea9888b4bc4803861cefec2c33874d08594e1ee883aff2c31e8c9e2e98",
+      "response": {
+        "error": {
+          "class": "PRECONDITION_FAILED",
+          "code": "POLYGON_NOT_SIMPLE",
+          "message": "The polygon must be simple",
+          "recoverable": false,
+          "suggested_operations": []
+        },
+        "metrics": {},
+        "outputs": [],
+        "protocol": 1,
+        "request_id": "bary-bowtie-polygon-rejected",
+        "status": "error"
+      },
+      "response_sha256": "f663666c69a94515cebd1a7b23bb75b7790fe162ea2fb40002580abf3ab4812c",
+      "input_hashes": [
+        "56d19bb3a00f04b5f2ea006f925f19065ea8a0cf828cc37871931952adf227a5",
+        "52585029f6d0f347eca611d7837ef2e7cd31c06984937949621ac215048bd10d"
+      ],
+      "output_hashes": [],
+      "expected_error_class": "PRECONDITION_FAILED",
+      "status": "expected_rejection"
+    },
+    "bary-nonconvex-wachspress-rejected": {
+      "case_id": "bary-nonconvex-wachspress-rejected",
+      "operation_id": "shape.barycentric",
+      "revision": 1,
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
+      "test_id": "family-7.13-replay-cases",
+      "request": {
+        "inputs": [
+          {
+            "artifact_id": "input-0",
+            "blob_sha256": "327f3b76bc632fb0beae639a53b903628afc85fa77131bdbe936201d3d038069",
+            "format": "json",
+            "sha256": "327f3b76bc632fb0beae639a53b903628afc85fa77131bdbe936201d3d038069",
+            "type": "Polygon2",
+            "unit": "mm"
+          },
+          {
+            "artifact_id": "input-1",
+            "blob_sha256": "47f72e8372f235c2a83e171bbd81e596acd416e9ceb576bc533bce95ecd79201",
+            "format": "json",
+            "sha256": "47f72e8372f235c2a83e171bbd81e596acd416e9ceb576bc533bce95ecd79201",
+            "type": "PointSet2",
+            "unit": "mm"
+          }
+        ],
+        "kernel": "package_recommended",
+        "limits": {
+          "memory_mb": 2048,
+          "wall_time_ms": 120000
+        },
+        "operation": "shape.barycentric",
+        "parameters": {
+          "method": "wachspress"
+        },
+        "protocol": 1,
+        "request_id": "bary-nonconvex-wachspress-rejected"
+      },
+      "request_sha256": "810ae3139d2b68ac6ee476aa035d8e555bd9b1fff11e7943dc5784733ef0a8b6",
+      "response": {
+        "error": {
+          "class": "PRECONDITION_FAILED",
+          "code": "POLYGON_NOT_STRICTLY_CONVEX",
+          "message": "wachspress coordinates require a strictly convex polygon",
+          "recoverable": false,
+          "suggested_operations": []
+        },
+        "metrics": {},
+        "outputs": [],
+        "protocol": 1,
+        "request_id": "bary-nonconvex-wachspress-rejected",
+        "status": "error"
+      },
+      "response_sha256": "e48ce1629f10d3a5f6911c7e0a75d1a94fcac9bdb9691ac7140642b15bc5de08",
+      "input_hashes": [
+        "327f3b76bc632fb0beae639a53b903628afc85fa77131bdbe936201d3d038069",
+        "47f72e8372f235c2a83e171bbd81e596acd416e9ceb576bc533bce95ecd79201"
+      ],
+      "output_hashes": [],
+      "expected_error_class": "PRECONDITION_FAILED",
+      "status": "expected_rejection"
+    },
+    "bary-query-outside-rejected": {
+      "case_id": "bary-query-outside-rejected",
+      "operation_id": "shape.barycentric",
+      "revision": 1,
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
+      "test_id": "family-7.13-replay-cases",
+      "request": {
+        "inputs": [
+          {
+            "artifact_id": "input-0",
+            "blob_sha256": "7e2fe8c42252f65f6a8ecbb7b6cabfd6f71d57d48f0b13c31bce027ec3d5ee60",
+            "format": "json",
+            "sha256": "7e2fe8c42252f65f6a8ecbb7b6cabfd6f71d57d48f0b13c31bce027ec3d5ee60",
+            "type": "Polygon2",
+            "unit": "mm"
+          },
+          {
+            "artifact_id": "input-1",
+            "blob_sha256": "0588c391ca59db7b5eb1eaa15d8d4c520e719aefc62645a89d84a55d840989a6",
+            "format": "json",
+            "sha256": "0588c391ca59db7b5eb1eaa15d8d4c520e719aefc62645a89d84a55d840989a6",
+            "type": "PointSet2",
+            "unit": "mm"
+          }
+        ],
+        "kernel": "package_recommended",
+        "limits": {
+          "memory_mb": 2048,
+          "wall_time_ms": 120000
+        },
+        "operation": "shape.barycentric",
+        "parameters": {
+          "method": "wachspress"
+        },
+        "protocol": 1,
+        "request_id": "bary-query-outside-rejected"
+      },
+      "request_sha256": "17f47d8ac1a2e43b99a1d5e4a77570ff7eea8071ac254c8f82a09747c6eb8b1d",
+      "response": {
+        "error": {
+          "class": "PRECONDITION_FAILED",
+          "code": "QUERY_NOT_STRICTLY_INSIDE",
+          "message": "Every query point must lie strictly inside the polygon",
+          "recoverable": false,
+          "suggested_operations": []
+        },
+        "metrics": {},
+        "outputs": [],
+        "protocol": 1,
+        "request_id": "bary-query-outside-rejected",
+        "status": "error"
+      },
+      "response_sha256": "70ec2772f8b642fbcdf94d2c33aea6e36e207bee7568e7e918b026562fd6fe29",
+      "input_hashes": [
+        "7e2fe8c42252f65f6a8ecbb7b6cabfd6f71d57d48f0b13c31bce027ec3d5ee60",
+        "0588c391ca59db7b5eb1eaa15d8d4c520e719aefc62645a89d84a55d840989a6"
+      ],
+      "output_hashes": [],
+      "expected_error_class": "PRECONDITION_FAILED",
+      "status": "expected_rejection"
+    },
+    "bary-query-on-boundary-rejected": {
+      "case_id": "bary-query-on-boundary-rejected",
+      "operation_id": "shape.barycentric",
+      "revision": 1,
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
+      "test_id": "family-7.13-replay-cases",
+      "request": {
+        "inputs": [
+          {
+            "artifact_id": "input-0",
+            "blob_sha256": "7e2fe8c42252f65f6a8ecbb7b6cabfd6f71d57d48f0b13c31bce027ec3d5ee60",
+            "format": "json",
+            "sha256": "7e2fe8c42252f65f6a8ecbb7b6cabfd6f71d57d48f0b13c31bce027ec3d5ee60",
+            "type": "Polygon2",
+            "unit": "mm"
+          },
+          {
+            "artifact_id": "input-1",
+            "blob_sha256": "5f986b90fee661ae27863225ea756e48214b68afa3fab6d04281fa7f0e43ae1e",
+            "format": "json",
+            "sha256": "5f986b90fee661ae27863225ea756e48214b68afa3fab6d04281fa7f0e43ae1e",
+            "type": "PointSet2",
+            "unit": "mm"
+          }
+        ],
+        "kernel": "package_recommended",
+        "limits": {
+          "memory_mb": 2048,
+          "wall_time_ms": 120000
+        },
+        "operation": "shape.barycentric",
+        "parameters": {
+          "method": "wachspress"
+        },
+        "protocol": 1,
+        "request_id": "bary-query-on-boundary-rejected"
+      },
+      "request_sha256": "12f5fc3df765ccc76c68401d4dc4f5e6afdaf974f40d073aaf268529c6c92c3f",
+      "response": {
+        "error": {
+          "class": "PRECONDITION_FAILED",
+          "code": "QUERY_NOT_STRICTLY_INSIDE",
+          "message": "Every query point must lie strictly inside the polygon",
+          "recoverable": false,
+          "suggested_operations": []
+        },
+        "metrics": {},
+        "outputs": [],
+        "protocol": 1,
+        "request_id": "bary-query-on-boundary-rejected",
+        "status": "error"
+      },
+      "response_sha256": "972efeb157ff241d013a31ff4a20d5c59a138b8ee2fee0e7d0e2f70d6b63ea7c",
+      "input_hashes": [
+        "7e2fe8c42252f65f6a8ecbb7b6cabfd6f71d57d48f0b13c31bce027ec3d5ee60",
+        "5f986b90fee661ae27863225ea756e48214b68afa3fab6d04281fa7f0e43ae1e"
+      ],
+      "output_hashes": [],
+      "expected_error_class": "PRECONDITION_FAILED",
+      "status": "expected_rejection"
+    },
+    "bary-tampered-coordinates-rejected": {
+      "case_id": "bary-tampered-coordinates-rejected",
+      "operation_id": "shape.validate.barycentric",
+      "revision": 1,
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
+      "test_id": "family-7.13-replay-cases",
+      "request": {
+        "inputs": [
+          {
+            "artifact_id": "input-0",
+            "blob_sha256": "4a8abfcc6c8bcd1782d252b3a7cd1af259f219a2bd74e8609abddf28d4f53005",
+            "format": "json",
+            "sha256": "4a8abfcc6c8bcd1782d252b3a7cd1af259f219a2bd74e8609abddf28d4f53005",
+            "type": "GeometryQueryReport",
+            "unit": "none"
+          },
+          {
+            "artifact_id": "input-1",
+            "blob_sha256": "7e2fe8c42252f65f6a8ecbb7b6cabfd6f71d57d48f0b13c31bce027ec3d5ee60",
+            "format": "json",
+            "sha256": "7e2fe8c42252f65f6a8ecbb7b6cabfd6f71d57d48f0b13c31bce027ec3d5ee60",
+            "type": "Polygon2",
+            "unit": "mm"
+          },
+          {
+            "artifact_id": "input-2",
+            "blob_sha256": "52585029f6d0f347eca611d7837ef2e7cd31c06984937949621ac215048bd10d",
+            "format": "json",
+            "sha256": "52585029f6d0f347eca611d7837ef2e7cd31c06984937949621ac215048bd10d",
+            "type": "PointSet2",
+            "unit": "mm"
+          }
+        ],
+        "kernel": "package_recommended",
+        "limits": {
+          "memory_mb": 2048,
+          "wall_time_ms": 120000
+        },
+        "operation": "shape.validate.barycentric",
+        "parameters": {
+          "method": "wachspress"
+        },
+        "protocol": 1,
+        "request_id": "bary-tampered-coordinates-rejected"
+      },
+      "request_sha256": "6aca5658f520f75c131160b440859e7fe0a2393e4b2b2cfe7555587b65ce0693",
+      "response": {
+        "error": {
+          "class": "VALIDATION_FAILED",
+          "code": "COORDINATE_MISMATCH",
+          "message": "Reported coordinates differ from the independent formula",
+          "recoverable": false,
+          "suggested_operations": []
+        },
+        "metrics": {},
+        "outputs": [],
+        "protocol": 1,
+        "request_id": "bary-tampered-coordinates-rejected",
+        "status": "error"
+      },
+      "response_sha256": "3bb1b8966b21058491a02bfba56354b25200eb237ec67dad80d7cfd0fbaa54e7",
+      "input_hashes": [
+        "4a8abfcc6c8bcd1782d252b3a7cd1af259f219a2bd74e8609abddf28d4f53005",
+        "7e2fe8c42252f65f6a8ecbb7b6cabfd6f71d57d48f0b13c31bce027ec3d5ee60",
+        "52585029f6d0f347eca611d7837ef2e7cd31c06984937949621ac215048bd10d"
+      ],
+      "output_hashes": [],
+      "expected_error_class": "VALIDATION_FAILED",
+      "status": "expected_rejection"
     }
   },
-  "coverage_note": "Family 7.13: 1 requirement(s) bound by 2 replayed cases with registry-derived mandatory validators; 4 requirement(s) remain unbound with recorded gaps. The immutable 80-requirement denominator and full standalone acceptance remain incomplete."
+  "coverage_note": "Family 7.13: 2 requirement(s) bound by 6 replayed cases with registry-derived mandatory validators; 3 requirement(s) remain unbound with recorded gaps. The immutable 80-requirement denominator and full standalone acceptance remain incomplete."
 }

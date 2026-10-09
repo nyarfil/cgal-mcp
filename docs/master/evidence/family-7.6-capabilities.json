@@ -98,14 +98,14 @@
   "unbound_requirements": {},
   "family_contract_sha256": "3443afbf3b401972ca3779450ed751c50a46a84c05cd45386c23172281aecb00",
   "family_contract_source_path": "scripts/master_replay_families.py",
-  "family_contract_source_sha256": "e9516b100dc97eeb2f66dcb70a4a7d90853ca31a631110f1f516eae02f2f9df7",
+  "family_contract_source_sha256": "866f91eb45732e83841a829665d2c713bcc22b4975698075d683910e018db1db",
   "family_contract_source_hash_encoding": "utf8-lf",
   "catalog_baseline_sha256": "143ec18a5b64d506aad60dc24b0a1ea30940c715d1223b3465fa140aeb9d02a7",
-  "operation_registry_sha256": "1f4c112dc9fb9884f55e2db23fa6e810d2e5adf74fbd613a116376fd481e05cd",
+  "operation_registry_sha256": "877d0926800d13108969bffaec7f0d1633562c0a5063da2615c91e29ff2dd896",
   "operation_registry_hash_encoding": "utf8-lf",
   "policy_catalog_sha256": "45f4be759288aaeb834a3ce97aa64ee7768048b15534618fc8c19512801f9a9f",
   "policy_catalog_hash_encoding": "utf8-lf",
-  "worker_sha256": "8498a97a54d8a218745e369f17d1356df1d7f2e059c040911ac04a1bc6b93bad",
+  "worker_sha256": "08a76c9f762c97609a2d01968282ab3dd736d4fd54af4714899a45e772023aa0",
   "worker_binary_format": "pe",
   "worker_manifest": {
     "actual_cgal_version": "6.2.1",
@@ -5275,6 +5275,584 @@
       },
       {
         "dependencies": [
+          "Barycentric_coordinates_2"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "shape.barycentric",
+        "info": {
+          "input_slots": [
+            "polygon",
+            "queries"
+          ],
+          "maximum_polygon_vertices": 200,
+          "source_header": "CGAL/Barycentric_coordinates_2/Wachspress_coordinates_2.h",
+          "validator_parameter_bindings": {
+            "shape.validate.barycentric": {
+              "method": "method"
+            }
+          },
+          "validators": [
+            "shape.validate.barycentric"
+          ]
+        },
+        "input_types": [
+          "Polygon2",
+          "PointSet2"
+        ],
+        "output_type": "GeometryQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "AABB_tree"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "spatial.aabb.intersections",
+        "info": {
+          "input_slots": [
+            "mesh",
+            "rays"
+          ],
+          "maximum_queries": 2000,
+          "source_header": "CGAL/AABB_tree.h",
+          "validators": [
+            "spatial.validate.aabb_intersections"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh",
+          "RayBatch3"
+        ],
+        "output_type": "SpatialQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "mesh.components.label",
+        "info": {
+          "input_slots": [
+            "mesh"
+          ],
+          "maximum_input_faces": 20000,
+          "source_header": "CGAL/Polygon_mesh_processing/connected_components.h",
+          "validators": [
+            "mesh.validate.components_label"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "GeometryQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "mesh.components.component",
+        "info": {
+          "input_slots": [
+            "source"
+          ],
+          "maximum_input_faces": 20000,
+          "source_header": "CGAL/Polygon_mesh_processing/connected_components.h",
+          "validator_parameter_bindings": {
+            "mesh.validate.components_component": {
+              "face": "face"
+            }
+          },
+          "validators": [
+            "mesh.validate.components_component"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "TriangleSurfaceMesh",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "mesh.components.keep_largest",
+        "info": {
+          "input_slots": [
+            "source"
+          ],
+          "maximum_input_faces": 20000,
+          "source_header": "CGAL/Polygon_mesh_processing/connected_components.h",
+          "validator_parameter_bindings": {
+            "mesh.validate.components_keep_largest": {
+              "count": "count"
+            }
+          },
+          "validators": [
+            "mesh.validate.components_keep_largest"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "TriangleSurfaceMesh",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "mesh.location.locate",
+        "info": {
+          "input_slots": [
+            "mesh",
+            "queries"
+          ],
+          "maximum_input_faces": 20000,
+          "maximum_queries": 2000,
+          "source_header": "CGAL/Polygon_mesh_processing/locate.h",
+          "validator_parameter_bindings": {
+            "mesh.validate.location": {
+              "strategy": "strategy"
+            }
+          },
+          "validators": [
+            "mesh.validate.location"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh",
+          "PointSet3"
+        ],
+        "output_type": "GeometryQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "PMP_Boolean_operations"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "mesh.slice.compute",
+        "info": {
+          "input_slots": [
+            "mesh"
+          ],
+          "maximum_input_faces": 20000,
+          "source_header": "CGAL/Polygon_mesh_slicer.h",
+          "validator_parameter_bindings": {
+            "mesh.validate.slice": {
+              "normal": "normal",
+              "offset": "offset"
+            }
+          },
+          "validators": [
+            "mesh.validate.slice"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "GeometryQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Subdivision_method_3"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "mesh.subdivide.catmull_clark",
+        "info": {
+          "input_slots": [
+            "source"
+          ],
+          "maximum_input_faces": 2000,
+          "maximum_output_faces": 60000,
+          "source_header": "CGAL/Subdivision_method_3/subdivision_methods_3.h",
+          "validator_parameter_bindings": {
+            "mesh.validate.catmull_clark": {
+              "steps": "steps"
+            }
+          },
+          "validators": [
+            "mesh.validate.catmull_clark"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh",
+          "PolygonSoup3"
+        ],
+        "output_type": "PolygonSoup3",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Subdivision_method_3"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "mesh.subdivide.loop",
+        "info": {
+          "input_slots": [
+            "source"
+          ],
+          "maximum_input_faces": 2000,
+          "maximum_output_faces": 60000,
+          "source_header": "CGAL/Subdivision_method_3/subdivision_methods_3.h",
+          "validator_parameter_bindings": {
+            "mesh.validate.loop": {
+              "steps": "steps"
+            }
+          },
+          "validators": [
+            "mesh.validate.loop"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "TriangleSurfaceMesh",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Barycentric_coordinates_2"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "shape.validate.barycentric",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "polygon_simple_counterclockwise",
+            "query_strictly_inside",
+            "coordinates_match_formula",
+            "partition_of_unity",
+            "linear_precision"
+          ],
+          "independence": "exact rational weights and tolerance-checked mean value formula; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "polygon",
+            "queries"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "GeometryQueryReport",
+          "Polygon2",
+          "PointSet2"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "AABB_tree"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "spatial.validate.aabb_intersections",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "every_ray_answered",
+            "do_intersect_exact",
+            "all_intersected_primitives_exact",
+            "any_intersected_primitive_member"
+          ],
+          "independence": "exact rational ray/triangle predicates; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "mesh",
+            "rays"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "SpatialQueryReport",
+          "TriangleSurfaceMesh",
+          "RayBatch3"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "mesh.validate.components_label",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "component_count_exact",
+            "labels_partition_equal",
+            "sizes_match"
+          ],
+          "independence": "union-find over shared edges; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "mesh"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "GeometryQueryReport",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "mesh.validate.components_component",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_is_manifold",
+            "candidate_has_no_unreferenced_vertices",
+            "faces_equal_selected_source_faces"
+          ],
+          "independence": "union-find over shared edges; exact coordinate comparison; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "TriangleSurfaceMesh",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "mesh.validate.components_keep_largest",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_is_manifold",
+            "kept_set_unambiguous",
+            "candidate_has_no_unreferenced_vertices",
+            "faces_equal_selected_source_faces"
+          ],
+          "independence": "union-find component sizes; exact coordinate comparison; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "TriangleSurfaceMesh",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "mesh.validate.location",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "every_query_answered",
+            "barycentric_valid",
+            "point_is_face_combination",
+            "distance_matches_location",
+            "location_is_closest_exact"
+          ],
+          "independence": "exact rational closest point on every triangle; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "mesh",
+            "queries"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "GeometryQueryReport",
+          "TriangleSurfaceMesh",
+          "PointSet3"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "PMP_Boolean_operations"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "mesh.validate.slice",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "points_on_plane",
+            "segments_on_mesh_section",
+            "sections_fully_covered",
+            "closed_mesh_gives_closed_polylines"
+          ],
+          "independence": "exact triangle/plane sections and interval coverage; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "mesh"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "GeometryQueryReport",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Subdivision_method_3"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "mesh.validate.catmull_clark",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "counts_match",
+            "faces_match_independent_subdivision",
+            "orientation_preserved"
+          ],
+          "independence": "Catmull-Clark masks re-implemented from raw OFF data; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "PolygonSoup3",
+          "TriangleSurfaceMesh",
+          "PolygonSoup3"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Subdivision_method_3"
+        ],
+        "effective_kernel": "exact:GMP",
+        "id": "mesh.validate.loop",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "counts_match",
+            "faces_match_independent_subdivision",
+            "orientation_preserved"
+          ],
+          "independence": "Loop masks re-implemented from raw OFF data; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "TriangleSurfaceMesh",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
           "Poisson_surface_reconstruction_3",
           "Mesh_3",
           "Point_set_processing_3",
@@ -5571,7 +6149,7 @@
     ],
     "worker": "cgal-master-worker"
   },
-  "worker_manifest_sha256": "4a32a5f5bf2b74326a407889ebd4591b45bf63a3efb1af801ccef5a2d19d8d3e",
+  "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
   "tests": [
     {
       "id": "family-7.6-replay-cases",
@@ -6687,7 +7265,7 @@
       "case_id": "tri-lprism-faces",
       "operation_id": "mesh.triangulate.faces",
       "revision": 1,
-      "worker_manifest_sha256": "4a32a5f5bf2b74326a407889ebd4591b45bf63a3efb1af801ccef5a2d19d8d3e",
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -6884,7 +7462,7 @@
       "case_id": "tri-lprism-face",
       "operation_id": "mesh.triangulate.faces",
       "revision": 1,
-      "worker_manifest_sha256": "4a32a5f5bf2b74326a407889ebd4591b45bf63a3efb1af801ccef5a2d19d8d3e",
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -7081,7 +7659,7 @@
       "case_id": "tri-quadcube",
       "operation_id": "mesh.triangulate.faces",
       "revision": 1,
-      "worker_manifest_sha256": "4a32a5f5bf2b74326a407889ebd4591b45bf63a3efb1af801ccef5a2d19d8d3e",
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -7278,7 +7856,7 @@
       "case_id": "refine-hexadecagon",
       "operation_id": "mesh.refine.local",
       "revision": 1,
-      "worker_manifest_sha256": "4a32a5f5bf2b74326a407889ebd4591b45bf63a3efb1af801ccef5a2d19d8d3e",
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -7499,7 +8077,7 @@
       "case_id": "refine-hexadecagon-dense",
       "operation_id": "mesh.refine.local",
       "revision": 1,
-      "worker_manifest_sha256": "4a32a5f5bf2b74326a407889ebd4591b45bf63a3efb1af801ccef5a2d19d8d3e",
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -7720,7 +8298,7 @@
       "case_id": "iso-square",
       "operation_id": "mesh.remesh.isotropic",
       "revision": 1,
-      "worker_manifest_sha256": "4a32a5f5bf2b74326a407889ebd4591b45bf63a3efb1af801ccef5a2d19d8d3e",
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -7959,7 +8537,7 @@
       "case_id": "iso-sphere",
       "operation_id": "mesh.remesh.isotropic",
       "revision": 1,
-      "worker_manifest_sha256": "4a32a5f5bf2b74326a407889ebd4591b45bf63a3efb1af801ccef5a2d19d8d3e",
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -8198,7 +8776,7 @@
       "case_id": "iso-oblate-uniform",
       "operation_id": "mesh.remesh.isotropic",
       "revision": 1,
-      "worker_manifest_sha256": "4a32a5f5bf2b74326a407889ebd4591b45bf63a3efb1af801ccef5a2d19d8d3e",
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -8440,7 +9018,7 @@
       "case_id": "split-square",
       "operation_id": "mesh.remesh.split_long_edges",
       "revision": 1,
-      "worker_manifest_sha256": "4a32a5f5bf2b74326a407889ebd4591b45bf63a3efb1af801ccef5a2d19d8d3e",
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -8648,7 +9226,7 @@
       "case_id": "relax-grid3",
       "operation_id": "mesh.smooth.tangential_relaxation",
       "revision": 1,
-      "worker_manifest_sha256": "4a32a5f5bf2b74326a407889ebd4591b45bf63a3efb1af801ccef5a2d19d8d3e",
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -8859,7 +9437,7 @@
       "case_id": "smooth-grid5",
       "operation_id": "mesh.smooth.shape",
       "revision": 1,
-      "worker_manifest_sha256": "4a32a5f5bf2b74326a407889ebd4591b45bf63a3efb1af801ccef5a2d19d8d3e",
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -9080,7 +9658,7 @@
       "case_id": "smooth-sphere-volume",
       "operation_id": "mesh.smooth.shape",
       "revision": 1,
-      "worker_manifest_sha256": "4a32a5f5bf2b74326a407889ebd4591b45bf63a3efb1af801ccef5a2d19d8d3e",
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -9302,7 +9880,7 @@
       "case_id": "adaptive-oblate-isotropic",
       "operation_id": "mesh.remesh.adaptive",
       "revision": 1,
-      "worker_manifest_sha256": "4a32a5f5bf2b74326a407889ebd4591b45bf63a3efb1af801ccef5a2d19d8d3e",
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -9589,7 +10167,7 @@
       "case_id": "adaptive-oblate-split",
       "operation_id": "mesh.remesh.adaptive",
       "revision": 1,
-      "worker_manifest_sha256": "4a32a5f5bf2b74326a407889ebd4591b45bf63a3efb1af801ccef5a2d19d8d3e",
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -9876,7 +10454,7 @@
       "case_id": "tri-wrong-vertices-rejected",
       "operation_id": "mesh.validate.triangulated_faces",
       "revision": 1,
-      "worker_manifest_sha256": "4a32a5f5bf2b74326a407889ebd4591b45bf63a3efb1af801ccef5a2d19d8d3e",
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -9935,7 +10513,7 @@
       "case_id": "refine-nonmanifold-rejected",
       "operation_id": "mesh.refine.local",
       "revision": 1,
-      "worker_manifest_sha256": "4a32a5f5bf2b74326a407889ebd4591b45bf63a3efb1af801ccef5a2d19d8d3e",
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -9991,7 +10569,7 @@
       "case_id": "iso-unremeshed-rejected",
       "operation_id": "mesh.validate.isotropic_remesh",
       "revision": 1,
-      "worker_manifest_sha256": "4a32a5f5bf2b74326a407889ebd4591b45bf63a3efb1af801ccef5a2d19d8d3e",
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -10059,7 +10637,7 @@
       "case_id": "iso-nonpositive-length-rejected",
       "operation_id": "mesh.remesh.isotropic",
       "revision": 1,
-      "worker_manifest_sha256": "4a32a5f5bf2b74326a407889ebd4591b45bf63a3efb1af801ccef5a2d19d8d3e",
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -10120,7 +10698,7 @@
       "case_id": "split-unsplit-rejected",
       "operation_id": "mesh.validate.split_long_edges",
       "revision": 1,
-      "worker_manifest_sha256": "4a32a5f5bf2b74326a407889ebd4591b45bf63a3efb1af801ccef5a2d19d8d3e",
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -10184,7 +10762,7 @@
       "case_id": "relax-changed-connectivity-rejected",
       "operation_id": "mesh.validate.tangential_relaxation",
       "revision": 1,
-      "worker_manifest_sha256": "4a32a5f5bf2b74326a407889ebd4591b45bf63a3efb1af801ccef5a2d19d8d3e",
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -10248,7 +10826,7 @@
       "case_id": "smooth-unsmoothed-rejected",
       "operation_id": "mesh.validate.shape_smoothing",
       "revision": 1,
-      "worker_manifest_sha256": "4a32a5f5bf2b74326a407889ebd4591b45bf63a3efb1af801ccef5a2d19d8d3e",
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -10313,7 +10891,7 @@
       "case_id": "smooth-open-volume-rejected",
       "operation_id": "mesh.smooth.shape",
       "revision": 1,
-      "worker_manifest_sha256": "4a32a5f5bf2b74326a407889ebd4591b45bf63a3efb1af801ccef5a2d19d8d3e",
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -10371,7 +10949,7 @@
       "case_id": "adaptive-uniform-remesh-rejected",
       "operation_id": "mesh.validate.adaptive_remesh",
       "revision": 1,
-      "worker_manifest_sha256": "4a32a5f5bf2b74326a407889ebd4591b45bf63a3efb1af801ccef5a2d19d8d3e",
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -10448,7 +11026,7 @@
       "case_id": "adaptive-inverted-range-rejected",
       "operation_id": "mesh.remesh.adaptive",
       "revision": 1,
-      "worker_manifest_sha256": "4a32a5f5bf2b74326a407889ebd4591b45bf63a3efb1af801ccef5a2d19d8d3e",
+      "worker_manifest_sha256": "3676fd120ccb960ce4bbda70cd2e5acdba31a4702bd0accadd5315d49d836a8b",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [

@@ -460,7 +460,7 @@ class AcceptanceContractTests(unittest.TestCase):
         bound = {requirement_id for family in REPLAY_FAMILIES
                  for requirement_id in family_bindings(family)}
         replay_rows = [row for row in evaluated["requirements"] if row["id"] in bound]
-        self.assertEqual(len(replay_rows), 45)
+        self.assertEqual(len(replay_rows), 51)
         self.assertTrue(all(row["status"] == "INCOMPLETE" for row in replay_rows))
 
 
@@ -524,9 +524,9 @@ class GenericFamilyReplayTests(unittest.TestCase):
     def test_family_without_contract_is_rejected(self):
         report, item, operations = family_context("major.7.3.01")
         item = copy.deepcopy(item)
-        item["id"] = "major.7.8.01"
+        item["id"] = "major.7.16.01"
         reasons = _evidence_reasons(report, item, operations, REPO)
-        self.assertIn("No replay family contract declares this requirement: major.7.8.01", reasons)
+        self.assertIn("No replay family contract declares this requirement: major.7.16.01", reasons)
 
     def test_missing_family_mandatory_validator_is_rejected(self):
         report, item, operations = family_context("major.7.9.01")

@@ -40,17 +40,17 @@ CIは台帳を公式配布物から再生成してバイト一致を検査しま
 | 分野 | 結合/全体 | 結合済み要求 |
 |---|---|---|
 | 7.1 カーネル | 5/5 | 7.1.01 Simple_cartesian・Cartesian・EPICK・EPECK（同一の準退化入力で浮動小数点kernelは誤判定、厳密述語kernelは正答）、.02 20種のprimitive、.03 述語・構成、.04 intersection・do_intersect、.05 squared_distance・距離比較。validatorはCGALを使わないGMP有理数の独立再計算 |
-| 7.2 空間問合せ | 4/5 | 7.2.01 AABB、.02 Kd木、.03 k近傍、.05 bbox |
-| 7.3 解析 | 3/8 | 7.3.01 検査・自己交差、7.3.03 法線、7.3.04 計測 |
+| 7.2 空間問合せ | 5/5 | 7.2.01 AABB、.02 Kd木、.03 k近傍、.04 do_intersect・any/all_intersected_primitives（AABB_tree、ray対三角形メッシュ、独立厳密validator）、.05 bbox |
+| 7.3 解析 | 5/8 | 7.3.01 検査・自己交差、.02 connected_components・connected_component・keep_largest_connected_components、.03 法線、.04 計測、.08 locate・locate_with_AABB_tree |
 | 7.4 修復 | 5/6 | 7.4.01 向き、.02 境界縫合、.03 退化除去、.05 polygon soup、.06 非多様体前処理 |
-| 7.5 Boolean | 1/5 | 7.5.02 union/intersection/difference |
+| 7.5 Boolean | 2/5 | 7.5.02 union/intersection/difference、.05 Polygon_mesh_slicer |
 | 7.6 再メッシュ | 5/5 | 7.6.01 面の三角形分割、.02 refine、.03 等方remesh・長辺分割、.04 平滑化・最適化、.05 適応remesh |
 | 7.7 軽量化 | 6/6 | 7.7.01〜06 |
-| 7.8 再構成 | 0/6 | なし（検証済みOperationなし） |
+| 7.8 再構成 | 1/6 | 7.8.06 CatmullClark_subdivision・Loop_subdivision（独立マスク再計算validator） |
 | 7.9 点群 | 2/6 | 7.9.01 法線推定・MST向き付け、7.9.04 grid/random/hierarchy簡略化 |
 | 7.11 三角形分割 | 2/5 | 7.11.01 Delaunay 2D/3D、.02 制約付き |
 | 7.12 多角形 | 1/7 | 7.12.01 Polygon_2/with_holesの性質・内外判定 |
-| 7.13 凸包等 | 1/5 | 7.13.01 2D/3D凸包 |
+| 7.13 凸包等 | 2/5 | 7.13.01 2D/3D凸包、.05 mean_value・wachspress・discrete_harmonic coordinates（2D、境界点は拒否） |
 | 7.14 メッシュ生成 | 4/4 | 7.14.01 Mesh_2（`refine_Delaunay_mesh_2`）、7.14.02 Surface_mesher（`make_surface_mesh`、球・楕円体・トーラス）、7.14.03 Mesh_3（`make_mesh_3`、同3種のimplicit domainと、閉じた三角形メッシュの多面体domain）、7.14.04 `Mesh_criteria_3`の型付きcriteria（列挙boxのsizing field、facet_topology、多面体の1D特徴辺edge_size）。画像domainと複数パッチtopologyは未実装 |
 | 7.10 曲面再構成 | 2/3 | 7.10.01 Poisson（`Poisson_reconstruction_function`＋`Poisson_mesh_domain_3`＋表面のみの`make_mesh_3`、球・トーラスの有向点群。一括関数`poisson_surface_reconstruction_delaunay`は6.2.1が呼び出し側のtagの後に`manifold_with_boundary()`を付けて閉曲面を作れない（24〜214本の境界辺を実測）ため未公開）、7.10.03 `alpha_wrap_3`（点群oracle、alpha/offsetの型付き長さ、入力の厳密な内包・offset帯・alpha+offset上限を独立検証）。validatorはCGALを使わない独立再計算（GMP有理数の点-三角形距離・符号付き体積・軸線交差の偶奇）。7.10.02はAdvancing_frontとScale_spaceをOperation化・検証済みだが、台帳のPolygonal_surface_reconstruction（SCIP/GLPKなどのMIP solverが未導入）とKinetic_surface_reconstruction（Operationなし）が未実装のため未結合 |
 | 7.15 最適化・数値幾何 | 4/4 | 7.15.01 QP_solver（`Quadratic_program<Gmpq>`、`solve_linear_program`・`solve_quadratic_program`、最適・実行不能・非有界と証明書）、.02 Interpolation（`natural_neighbor_coordinates_2`＋`linear_interpolation`はEPECKで線形場を厳密再現、`sibson_c1_interpolation`は勾配付きで球面二次関数を再現）、.03 Surface_mesh_approximation（`approximate_triangle_mesh`、L21のVSA、二乗誤差はmm2）、.04 Matrix_search（`sorted_matrix_search`による1次元区間p-center）。validatorはCGALを使わない独立再計算（GMP有理数の証明書補題・Voronoi面積・全候補走査、VSAはlong double） |
@@ -58,22 +58,19 @@ CIは台帳を公式配布物から再生成してバイト一致を検査しま
 未結合要求の不足（7.1・7.6は5/5、7.15は4/4結合済みで不足なし）:
 
 - 7.10.02: Polygonal_surface_reconstruction（MIP solver未導入）とKinetic_surface_reconstructionがない。Advancing_frontとScale_spaceは実装・検証済みだが、台帳の全familyを再試験するまで未結合。
-- 7.3.02: connected component / keep largest を公開Operationにしていない。
 - 7.3.05: sharp edge / segmentation がない。
 - 7.3.06: 距離はvalidator内部の上界付き対称Hausdorffのみで、他の距離関数がない。
 - 7.3.07: 2メッシュ間の交差判定を公開していない。
-- 7.3.08: locate（点位置・AABB問合せ）Operationがない。
 - 7.4.04: `triangulate_refine_and_fair_hole`相当の穴埋めがない。
 - 7.5.01: corefine / autorefine はBoolean内部のみで単独公開していない。
-- 7.5.03〜05: clip、split、slicer がない。
+- 7.5.03〜04: clip、split がない。
 - 7.9.02、7.9.06: `compute_average_spacing`等の解析を公開していない。
 - 7.9.03: bilateral等のsmoothingがない。
 - 7.9.05: registration がない。
-- 7.8.01〜06: 再構成Operationがない。
-- 7.2.04: do_intersect・any/all_intersected_primitiveを公開していない（ray最初の交点のみ）。
+- 7.8.01〜05: 区分化・凸分解・骨格・最短経路・パラメータ化のOperationがない。
 - 7.11.03〜05: regular、periodic・on-sphere、Voronoiがない。
 - 7.12.02〜07: Arrangement、overlay、Polygon_set Boolean、skeleton、offset、Minkowskiがない。
-- 7.13.02〜05: alpha shape、wrap、bounding volume、barycentric座標がない。
+- 7.13.02〜04: alpha shape、wrap、bounding volume がない。
 
 注記 (7.3): 7.3.03 法線は、軸整列立方体(外向き/内向き巻きの2ケース)の各面法線・各頂点法線を
 手計算の定数と照合して束縛している。必須validatorは同一workerコードを再実行する整合性チェックであり、
