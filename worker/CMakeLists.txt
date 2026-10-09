@@ -99,6 +99,9 @@ set_source_files_properties(master/optimization/optimization_operations.cpp PROP
 # Poisson (implicit function solver) and scale-space jet smoothing need CGAL's Eigen support.
 set_source_files_properties(master/reconstruction/reconstruction_operations.cpp PROPERTIES
   COMPILE_DEFINITIONS CGAL_EIGEN3_ENABLED)
+# Hole fairing (triangulate_refine_and_fair_hole) needs CGAL's Eigen sparse solver.
+set_source_files_properties(master/wave_a_repair/repair_common.cpp PROPERTIES
+  COMPILE_DEFINITIONS CGAL_EIGEN3_ENABLED)
 # Loop/Catmull-Clark subdivision and Polygon_mesh_slicer need no Eigen; query_operations is plain CGAL.
 target_compile_features(cgal-master-worker PRIVATE cxx_std_17)
 target_compile_definitions(cgal-master-worker PRIVATE

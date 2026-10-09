@@ -835,10 +835,7 @@ FAMILY_7_4 = {
             "case_ids": ["manifold-pinched-vertex"],
         },
     },
-    "unbound": {
-        "major.7.4.04": "mesh.repair.fill_holes calls triangulate_hole only; "
-                        "triangulate_refine_and_fair_hole (refinement/fairing) is not exposed.",
-    },
+    "unbound": {},
     "cases": [
         _case("orient-flipped-soup", "mesh.repair.orient", [_mesh(FLIPPED_SOUP, "PolygonSoup3")], {}, [
             ["metrics.orientation_changed", "==", True],
@@ -3903,6 +3900,117 @@ FAMILY_7_13["negative_controls"].extend([
     {"id": "alphawrap-tampered-shrunk-rejected", "operation": "reconstruction.validate.alpha_wrap",
      "inputs": [_mesh(R_TAMPERED["wrap_shrunk"]), _points(R_SPHERE_XYZ)], "parameters": R_WRAP_SPHERE,
      "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "SOURCE_NOT_ENCLOSED"},
+])
+
+B4_FIXTURES = {
+    "dome_hole12.off": "340016d7e2a9e98a9ccbffd27cef66b94613ae74af9bbcbc99e0bbb0200d3cee",
+    "tampered_fair_vertex_moved.off": "a27098c20061cb8402ea25b404489769b183914cfc3ecffd5e16712316e90950",
+}
+
+
+def _b4fx(name: str) -> dict:
+    return {"fixture": f"batch4/{name}", "sha256": B4_FIXTURES[name]}
+
+
+def _b4mesh(name: str, type_: str = "TriangleSurfaceMesh") -> dict:
+    return {**_b4fx(name), "type": type_, "format": "off", "unit": "mm"}
+
+
+def _b4json(name: str, type_: str) -> dict:
+    return {**_b4fx(name), "type": type_, "format": "json", "unit": "mm"}
+
+
+def _b4report(name: str) -> dict:
+    return {**_b4fx(name), "type": "GeometryQueryReport", "format": "json", "unit": "none"}
+
+
+# 7.4.04: a UV unit sphere (12 meridians, rings every 30 degrees, south pole fan) without its
+# 30-degree north cap leaves one 12-edge hole on a radius-0.5 ring. The flat 12-gon cap closes the
+# inscribed polyhedron of volume V_FLAT (summed over exact tetrahedra by an independent script).
+B4_DOME = _b4mesh("dome_hole12.off")
+B4_V_FLAT = 3.698557158511964
+B4_FAIR_C1 = {"max_hole_edges": 20, "density_control_factor": 1.41, "fairing_continuity": 1}
+B4_FAIR_C2 = {"max_hole_edges": 20, "density_control_factor": 2.5, "fairing_continuity": 2}
+B4_FAIR_PLAIN = {"max_hole_edges": 20, "density_control_factor": 1.0, "fairing_continuity": 0}
+B4_CLOSED_SPHERE = [
+    ["output:geometry:measure:off.boundary_edge_count", "==", 0],
+    ["output:geometry:measure:off.euler_characteristic", "==", 2],
+    ["metrics.candidate.mesh.closed", "==", True],
+    ["metrics.candidate.mesh.outward_oriented", "==", True],
+]
+FAMILY_7_4["requirements"]["major.7.4.04"] = {
+    "operation_ids": ["mesh.repair.fill_holes", "mesh.repair.fill_holes_refine_fair"],
+    "symbols": ["triangulate_hole", "triangulate_refine_and_fair_hole"],
+    "symbol_notes": "PMP::triangulate_hole closes the 3-edge hole of the open tetrahedron (1 face, volume 1/6) "
+                    "and the 12-edge hole of the UV-dome (10 = n-2 faces, no new vertex, closed sphere of "
+                    "Euler characteristic 2, volume equal to the inscribed polyhedron with a flat cap). "
+                    "PMP::triangulate_refine_and_fair_hole closes the same dome with density_control_factor "
+                    "1.41 / C1 fairing (1 new vertex), 2.5 / C2 (7 new vertices) and 1.0 / C0 (no new "
+                    "vertex): the faired patches bulge outward to the dome (volume above the flat cap "
+                    "polyhedron, every vertex within the unit sphere up to 0.5 percent), the closed result "
+                    "stays outward oriented and every source face is preserved. The validator replays the "
+                    "official CGAL call, so the floating-point fairing solve itself is not re-derived "
+                    "independently; the independent checks are topology, source-face preservation, exact "
+                    "non-degeneracy of every new face and a bounding-box sanity bound. Holes above "
+                    "max_hole_edges are skipped and an all-skipped request is rejected.",
+    "case_ids": ["fill-plain-open-tetra", "fill-plain-dome", "fair-dome-c1", "fair-dome-c2", "fair-dome-plain"],
+}
+FAMILY_7_4["cases"].extend([
+    _case("fill-plain-open-tetra", "mesh.repair.fill_holes", [_mesh(OPEN_TETRA)], {"max_hole_edges": 8}, [
+        ["metrics.filled_hole_count", "==", 1], ["metrics.added_face_count", "==", 1],
+        ["output:geometry:measure:off.face_count", "==", 4],
+        ["output:geometry:measure:off.boundary_edge_count", "==", 0],
+        ["output:geometry:measure:off.signed_volume", "approx", [1.0 / 6.0, 1e-12]],
+    ]),
+    _case("fill-plain-dome", "mesh.repair.fill_holes", [B4_DOME], {"max_hole_edges": 20}, [
+        ["metrics.filled_hole_count", "==", 1], ["metrics.added_face_count", "==", 10],
+        ["output:geometry:measure:off.vertex_count", "==", 61],
+        ["output:geometry:measure:off.face_count", "==", 118],
+        ["output:geometry:measure:off.signed_volume", "approx", [B4_V_FLAT, 1e-9]],
+        *B4_CLOSED_SPHERE,
+    ]),
+    _case("fair-dome-c1", "mesh.repair.fill_holes_refine_fair", [B4_DOME], B4_FAIR_C1, [
+        ["metrics.operation", "==", "mesh.repair.fill_holes_refine_fair"],
+        ["metrics.added_vertex_count", "==", 1], ["metrics.fairing_continuity", "==", 1],
+        ["output:geometry:measure:off.vertex_count", "==", 62],
+        ["output:geometry:measure:off.signed_volume", ">", B4_V_FLAT + 0.02],
+        ["output:geometry:measure:off.max_vertex_radius", "<=", 1.000001],
+        *B4_CLOSED_SPHERE,
+    ]),
+    _case("fair-dome-c2", "mesh.repair.fill_holes_refine_fair", [B4_DOME], B4_FAIR_C2, [
+        ["metrics.added_vertex_count", "==", 7], ["metrics.fairing_continuity", "==", 2],
+        ["output:geometry:measure:off.vertex_count", "==", 68],
+        ["output:geometry:measure:off.face_count", "==", 132],
+        ["output:geometry:measure:off.signed_volume", ">", B4_V_FLAT + 0.04],
+        ["output:geometry:measure:off.max_vertex_radius", "<", 1.005],
+        *B4_CLOSED_SPHERE,
+    ]),
+    _case("fair-dome-plain", "mesh.repair.fill_holes_refine_fair", [B4_DOME], B4_FAIR_PLAIN, [
+        ["metrics.added_vertex_count", "==", 0], ["metrics.added_face_count", "==", 10],
+        ["output:geometry:measure:off.signed_volume", "approx", [B4_V_FLAT, 1e-9]],
+        *B4_CLOSED_SPHERE,
+    ]),
+])
+FAMILY_7_4["pairs"].append({"kind": "different_outputs", "cases": ["fair-dome-c1", "fair-dome-c2"]})
+FAMILY_7_4["negative_controls"].extend([
+    {"id": "fill-plain-hole-too-large-rejected", "operation": "mesh.repair.fill_holes", "inputs": [B4_DOME],
+     "parameters": {"max_hole_edges": 8}, "expect_error_class": "PRECONDITION_FAILED",
+     "expect_error_code": "NO_ELIGIBLE_HOLES"},
+    {"id": "fair-hole-too-large-rejected", "operation": "mesh.repair.fill_holes_refine_fair", "inputs": [B4_DOME],
+     "parameters": {**B4_FAIR_C1, "max_hole_edges": 8}, "expect_error_class": "PRECONDITION_FAILED",
+     "expect_error_code": "NO_ELIGIBLE_HOLES"},
+    {"id": "fair-density-below-one-rejected", "operation": "mesh.repair.fill_holes_refine_fair",
+     "inputs": [B4_DOME], "parameters": {**B4_FAIR_C1, "density_control_factor": 0.5},
+     "expect_error_class": "INVALID_INPUT", "expect_error_code": "INVALID_DENSITY_CONTROL_FACTOR"},
+    {"id": "fair-continuity-three-rejected", "operation": "mesh.repair.fill_holes_refine_fair",
+     "inputs": [B4_DOME], "parameters": {**B4_FAIR_C1, "fairing_continuity": 3},
+     "expect_error_class": "INVALID_INPUT", "expect_error_code": "INVALID_FAIRING_CONTINUITY"},
+    {"id": "fair-tampered-vertex-moved-rejected", "operation": "mesh.validate.repair_fill_holes_refine_fair",
+     "inputs": [_b4mesh("tampered_fair_vertex_moved.off"), B4_DOME], "parameters": B4_FAIR_C1,
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "REPAIR_VALIDATION_FAILED"},
+    {"id": "fair-unfilled-candidate-rejected", "operation": "mesh.validate.repair_fill_holes_refine_fair",
+     "inputs": [B4_DOME, B4_DOME], "parameters": B4_FAIR_C1,
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "REPAIR_VALIDATION_FAILED"},
 ])
 
 GENERIC_FAMILIES: dict[str, dict] = {

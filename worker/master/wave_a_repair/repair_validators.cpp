@@ -2,8 +2,11 @@
 
 #include "../artifact_io.h"
 
+#include <CGAL/Kernel/global_functions.h>
+
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <iomanip>
 #include <map>
 #include <set>
@@ -12,9 +15,9 @@
 namespace cgal_master::wave_a_repair {
 namespace {
 
-const std::array<RepairKind, 6> kKinds = {
+const std::array<RepairKind, 7> kKinds = {
     RepairKind::kOrient, RepairKind::kStitchBorders,
-    RepairKind::kRemoveDegenerate, RepairKind::kFillHoles,
+    RepairKind::kRemoveDegenerate, RepairKind::kFillHoles, RepairKind::kFillHolesRefineFair,
     RepairKind::kPolygonSoup, RepairKind::kManifoldPreprocess};
 
 std::vector<std::string> source_types(RepairKind kind) {
@@ -78,7 +81,9 @@ bool geometry_preserved(RepairKind kind, const Soup& source, const Soup& candida
   // are not in the source; only vertex positions are guaranteed to be preserved.
   if (kind == RepairKind::kRemoveDegenerate) return points_are_subset(candidate, source);
   if (kind == RepairKind::kPolygonSoup) return is_subbag(candidate_bag, source_bag);
-  if (kind == RepairKind::kFillHoles) return is_subbag(source_bag, candidate_bag);
+  if (kind == RepairKind::kFillHoles || kind == RepairKind::kFillHolesRefineFair) {
+    return is_subbag(source_bag, candidate_bag);
+  }
   return source_bag == candidate_bag;
 }
 
@@ -110,6 +115,39 @@ std::size_t duplicate_polygons(const Soup& soup, bool same_orientation_only) {
   return count;
 }
 
+// Independent patch checks for refine-and-fair: every face that is not a source face is
+// non-degenerate (exact collinearity predicate) and every vertex lies in the source bounding box
+// inflated by its diagonal, so a diverged fairing solve cannot publish.
+bool refined_patch_is_sane(const Soup& source, const Soup& candidate) {
+  double low[3] = {1e300, 1e300, 1e300}, high[3] = {-1e300, -1e300, -1e300};
+  for (const auto& point : source.points) {
+    const double c[3] = {point.x(), point.y(), point.z()};
+    for (int k = 0; k < 3; ++k) { low[k] = std::min(low[k], c[k]); high[k] = std::max(high[k], c[k]); }
+  }
+  double diagonal = 0;
+  for (int k = 0; k < 3; ++k) diagonal += (high[k] - low[k]) * (high[k] - low[k]);
+  diagonal = std::sqrt(diagonal);
+  std::map<std::array<std::string, 3>, std::size_t> counts;
+  for (const auto& value : triangle_bag(source)) ++counts[value];
+  for (const auto& face : candidate.faces) {
+    if (face.size() != 3) return false;
+    std::array<std::string, 3> key = {point_key(candidate.points[face[0]]), point_key(candidate.points[face[1]]),
+                                      point_key(candidate.points[face[2]])};
+    std::sort(key.begin(), key.end());
+    auto found = counts.find(key);
+    if (found != counts.end() && found->second > 0) { --found->second; continue; }
+    if (CGAL::collinear(candidate.points[face[0]], candidate.points[face[1]], candidate.points[face[2]])) return false;
+    for (const auto index : face) {
+      const auto& p = candidate.points[index];
+      const double c[3] = {p.x(), p.y(), p.z()};
+      for (int k = 0; k < 3; ++k) {
+        if (!std::isfinite(c[k]) || c[k] < low[k] - diagonal || c[k] > high[k] + diagonal) return false;
+      }
+    }
+  }
+  return true;
+}
+
 bool invariant(RepairKind kind, const Json& source_stats, const Json& candidate_stats,
                const RepairResult& reference, const Json& parameters, const Soup& candidate) {
   if (kind == RepairKind::kOrient) {
@@ -131,6 +169,13 @@ bool invariant(RepairKind kind, const Json& source_stats, const Json& candidate_
     return integer(candidate_stats, "face_count") > integer(source_stats, "face_count") &&
            integer(candidate_stats.at("mesh"), "boundary_cycle_count") ==
                reference.metrics.at("skipped_hole_count").get<std::size_t>();
+  }
+  if (kind == RepairKind::kFillHolesRefineFair) {
+    const auto& mesh = candidate_stats.at("mesh");
+    return integer(candidate_stats, "face_count") > integer(source_stats, "face_count") &&
+           integer(mesh, "boundary_cycle_count") == reference.metrics.at("skipped_hole_count").get<std::size_t>() &&
+           candidate_stats.at("polygon_mesh_constructible").get<bool>() &&
+           (!mesh.at("closed").get<bool>() || mesh.at("outward_oriented").get<bool>());
   }
   if (kind == RepairKind::kPolygonSoup) {
     // repair_polygon_soup removes combinatorially degenerate polygons and
@@ -164,7 +209,8 @@ Json validate(const Request& request, RepairKind kind) {
   const auto candidate_stats = soup_statistics(candidate);
   const bool replay_match = soup_equal(candidate, reference.soup);
   const bool invariant_valid = replay_match && invariant(kind, source_stats, candidate_stats, reference,
-                                                  request.parameters, candidate);
+                                                  request.parameters, candidate) &&
+      (kind != RepairKind::kFillHolesRefineFair || refined_patch_is_sane(source, candidate));
   const bool preserved = geometry_preserved(kind, source, candidate);
   if (!replay_match || !invariant_valid || !preserved) {
     throw WorkerError("VALIDATION_FAILED", "REPAIR_VALIDATION_FAILED",

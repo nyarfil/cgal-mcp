@@ -33732,6 +33732,636 @@
         "cgal_version": "6.2.1",
         "review_status": "self_verified_not_independently_reviewed"
       }
+    },
+    {
+      "id": "mesh.repair.fill_holes_refine_fair",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "transform",
+      "summary": "Fill every hole within an explicit edge-count bound with a refined and faired patch (PMP::triangulate_refine_and_fair_hole): new interior vertices at the requested density, positions solved for the requested fairing continuity; boundary vertices and source faces are kept.",
+      "aliases": [
+        "fill holes with refinement and fairing",
+        "refine and fair hole",
+        "fair hole filling",
+        "smooth hole patch",
+        "triangulate refine and fair hole",
+        "\u7a74\u57cb\u3081 \u7d30\u5206\u5316 \u30d5\u30a7\u30a2\u30ea\u30f3\u30b0",
+        "\u6ed1\u3089\u304b\u306a\u7a74\u57cb\u3081"
+      ],
+      "package": "PMP_Mesh_repair",
+      "dependencies": [
+        "Polygon_mesh_processing",
+        "Surface_mesh"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "PMP_Mesh_repair"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Polygon_mesh_processing::triangulate_refine_and_fair_hole"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Polygon_mesh_processing/triangulate_hole.h"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Polygon_mesh_processing",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/triangulate_hole.h",
+            "sha256": "b1a20a8eac2144e612df15b78a4ef045d6d7540b3ab13bb12044f40d94cb8118"
+          },
+          {
+            "path": "include/CGAL/license/gpl_package_list.txt",
+            "sha256": "efb290ee3ef3d8b7675896bc037f1c9359f583543ca9e38bcb425fe34a8995db"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "source",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "geometry",
+            "type": "TriangleSurfaceMesh",
+            "format": "off",
+            "unit_from": "source"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "max_hole_edges",
+          "density_control_factor",
+          "fairing_continuity"
+        ],
+        "properties": {
+          "max_hole_edges": {
+            "type": "integer",
+            "minimum": 3,
+            "maximum": 2000
+          },
+          "density_control_factor": {
+            "type": "number",
+            "minimum": 1.0,
+            "maximum": 4.0,
+            "description": "CGAL density_control_factor: 1 keeps the plain hole triangulation; larger values stop refining earlier."
+          },
+          "fairing_continuity": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2,
+            "description": "C0 (0), C1 (1) or C2 (2) continuity of the faired patch with the surrounding surface."
+          }
+        }
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 67108864,
+          "maximum_vertices": 1000000,
+          "maximum_faces": 2000000
+        },
+        {
+          "id": "numeric_envelope",
+          "bounds": {
+            "minimum_span": 1e-100,
+            "maximum_absolute_coordinate": 1e+100,
+            "maximum_translation_to_span_ratio": 1000000
+          }
+        },
+        {
+          "id": "bounded_holes",
+          "parameter": "max_hole_edges",
+          "behavior": "refine and fair every cycle at or below the bound; report every remaining cycle",
+          "worker_check": {
+            "max_hole_edges": true
+          }
+        }
+      ],
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "coordinate_storage": "IEEE-754 binary64",
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "exact_constructions": "unsupported_fail_closed",
+        "supported_request_kernel": "package_recommended",
+        "requested_policy": "package_recommended only"
+      },
+      "output_contract": {
+        "source_mutation": false,
+        "atomic_publication_required": true,
+        "diagnostics": "filled/skipped hole, patch face and patch vertex diagnostics",
+        "empty_output": false
+      },
+      "validation": {
+        "required": true,
+        "validators": [
+          "mesh.validate.repair_fill_holes_refine_fair"
+        ],
+        "bindings": {
+          "mesh.validate.repair_fill_holes_refine_fair": {
+            "artifacts": {
+              "candidate": {
+                "output": "geometry"
+              },
+              "source": {
+                "input": "source"
+              }
+            },
+            "parameters": {
+              "max_hole_edges": {
+                "parameter": "max_hole_edges"
+              },
+              "density_control_factor": {
+                "parameter": "density_control_factor"
+              },
+              "fairing_continuity": {
+                "parameter": "fairing_continuity"
+              }
+            }
+          }
+        },
+        "required_report_fields": [
+          "schema_version",
+          "validator_id",
+          "validates",
+          "status",
+          "passed",
+          "candidate_sha256",
+          "source_sha256",
+          "parameters",
+          "checks"
+        ],
+        "required_report_checks": {
+          "schema_version": 1,
+          "validator_id": "mesh.validate.repair_fill_holes_refine_fair",
+          "validates": "mesh.repair.fill_holes_refine_fair",
+          "status": "pass",
+          "passed": true,
+          "checks.source_identity_matches": true,
+          "checks.candidate_matches_official_cgal_replay": true,
+          "checks.candidate_unit_matches_source": true,
+          "checks.repair_invariant_valid": true,
+          "checks.numeric_profile_valid": true,
+          "checks.source_geometry_preserved_as_required": true
+        }
+      },
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "bounded_profile": "triangle ASCII OFF; one explicit CGAL repair family per operation",
+          "input_format": "off",
+          "input_units": [
+            "mm",
+            "cm",
+            "m"
+          ],
+          "license_evidence": {
+            "license_path": "LICENSE.GPL",
+            "license_sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116",
+            "path": "include/CGAL/license/gpl_package_list.txt",
+            "sha256": "efb290ee3ef3d8b7675896bc037f1c9359f583543ca9e38bcb425fe34a8995db"
+          },
+          "license_expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+          "numeric_scale_contract": {
+            "maximum_absolute_coordinate": 1e+100,
+            "maximum_translation_to_span_ratio": 1000000.0,
+            "minimum_span": 1e-100
+          },
+          "output_format": "off",
+          "output_slot": "geometry",
+          "output_unit_from": "source",
+          "package_ids": [
+            "PMP_Mesh_repair"
+          ],
+          "parameter_schema": {
+            "additionalProperties": false,
+            "properties": {
+              "density_control_factor": {
+                "maximum": 4.0,
+                "minimum": 1.0,
+                "type": "number"
+              },
+              "fairing_continuity": {
+                "maximum": 2,
+                "minimum": 0,
+                "type": "integer"
+              },
+              "max_hole_edges": {
+                "maximum": 2000,
+                "minimum": 3,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "max_hole_edges",
+              "density_control_factor",
+              "fairing_continuity"
+            ],
+            "type": "object"
+          },
+          "precision_contract": {
+            "coordinate_storage": "IEEE-754 binary64",
+            "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+            "exact_constructions": "unsupported_fail_closed",
+            "supported_request_kernel": "package_recommended"
+          },
+          "source": {
+            "header": "CGAL/Polygon_mesh_processing/triangulate_hole.h",
+            "identifiers": [
+              "triangulate_refine_and_fair_hole"
+            ],
+            "sha256": "b1a20a8eac2144e612df15b78a4ef045d6d7540b3ab13bb12044f40d94cb8118"
+          },
+          "source_kind": "official_release",
+          "source_mutation": false,
+          "source_version": "6.2.1",
+          "validator_artifact_bindings": {
+            "mesh.validate.repair_fill_holes_refine_fair": {
+              "candidate": {
+                "output": "geometry"
+              },
+              "source": {
+                "input": "source"
+              }
+            }
+          },
+          "validator_parameter_bindings": {
+            "mesh.validate.repair_fill_holes_refine_fair": {
+              "density_control_factor": "density_control_factor",
+              "fairing_continuity": "fairing_continuity",
+              "max_hole_edges": "max_hole_edges"
+            }
+          },
+          "validators": [
+            "mesh.validate.repair_fill_holes_refine_fair"
+          ]
+        }
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_batch4_cases.py"
+        ],
+        "worker_manifest_operation": "mesh.repair.fill_holes_refine_fair",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      },
+      "major_requirements": [
+        "major.7.4.04"
+      ]
+    },
+    {
+      "id": "mesh.validate.repair_fill_holes_refine_fair",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "validator",
+      "summary": "Replay mesh.repair.fill_holes_refine_fair from the immutable source and validate: source faces preserved, no new boundary cycle, closed results outward oriented, and every new face non-degenerate (exact collinearity predicate) inside the source bounding box inflated by its diagonal.",
+      "aliases": [],
+      "package": "PMP_Mesh_repair",
+      "dependencies": [
+        "Polygon_mesh_processing",
+        "Surface_mesh"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "PMP_Mesh_repair"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Polygon_mesh_processing::triangulate_refine_and_fair_hole"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Polygon_mesh_processing/triangulate_hole.h"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Polygon_mesh_processing",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/triangulate_hole.h",
+            "sha256": "b1a20a8eac2144e612df15b78a4ef045d6d7540b3ab13bb12044f40d94cb8118"
+          },
+          {
+            "path": "include/CGAL/license/gpl_package_list.txt",
+            "sha256": "efb290ee3ef3d8b7675896bc037f1c9359f583543ca9e38bcb425fe34a8995db"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          },
+          {
+            "slot": "source",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "max_hole_edges",
+          "density_control_factor",
+          "fairing_continuity"
+        ],
+        "properties": {
+          "max_hole_edges": {
+            "type": "integer",
+            "minimum": 3,
+            "maximum": 2000
+          },
+          "density_control_factor": {
+            "type": "number",
+            "minimum": 1.0,
+            "maximum": 4.0,
+            "description": "CGAL density_control_factor: 1 keeps the plain hole triangulation; larger values stop refining earlier."
+          },
+          "fairing_continuity": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2,
+            "description": "C0 (0), C1 (1) or C2 (2) continuity of the faired patch with the surrounding surface."
+          }
+        }
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 67108864,
+          "maximum_vertices": 1000000,
+          "maximum_faces": 2000000
+        },
+        {
+          "id": "numeric_envelope",
+          "bounds": {
+            "minimum_span": 1e-100,
+            "maximum_absolute_coordinate": 1e+100,
+            "maximum_translation_to_span_ratio": 1000000
+          }
+        },
+        {
+          "id": "exact_bindings",
+          "worker_check": {
+            "candidate": true,
+            "source": true,
+            "parameters": true
+          }
+        },
+        {
+          "id": "bounded_holes",
+          "parameter": "max_hole_edges",
+          "behavior": "refine and fair every cycle at or below the bound; report every remaining cycle",
+          "worker_check": {
+            "max_hole_edges": true
+          }
+        }
+      ],
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "coordinate_storage": "IEEE-754 binary64",
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "exact_constructions": "unsupported_fail_closed",
+        "supported_request_kernel": "package_recommended",
+        "requested_policy": "package_recommended only",
+        "reference_comparison": "deterministic official CGAL replay (the fairing solve is floating point and is not re-derived independently) plus independent topology, preservation and exact non-degeneracy invariants"
+      },
+      "validation": {
+        "required": false,
+        "validators": [],
+        "bindings": {},
+        "terminal_validator": true,
+        "validates": "mesh.repair.fill_holes_refine_fair",
+        "required_report_fields": [
+          "schema_version",
+          "validator_id",
+          "validates",
+          "status",
+          "passed",
+          "candidate_sha256",
+          "source_sha256",
+          "parameters",
+          "checks"
+        ],
+        "required_report_checks": {
+          "schema_version": 1,
+          "validator_id": "mesh.validate.repair_fill_holes_refine_fair",
+          "validates": "mesh.repair.fill_holes_refine_fair",
+          "status": "pass",
+          "passed": true,
+          "checks.source_identity_matches": true,
+          "checks.candidate_matches_official_cgal_replay": true,
+          "checks.candidate_unit_matches_source": true,
+          "checks.repair_invariant_valid": true,
+          "checks.numeric_profile_valid": true,
+          "checks.source_geometry_preserved_as_required": true
+        }
+      },
+      "output_contract": {
+        "schema": "ValidationReport/v1",
+        "required_true_checks": [
+          "source_identity_matches",
+          "candidate_matches_official_cgal_replay",
+          "candidate_unit_matches_source",
+          "repair_invariant_valid",
+          "numeric_profile_valid",
+          "source_geometry_preserved_as_required"
+        ],
+        "failure_or_indeterminate_publish": false
+      },
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "input_format": "off",
+          "input_units": [
+            "mm",
+            "cm",
+            "m"
+          ],
+          "license_evidence": {
+            "license_path": "LICENSE.GPL",
+            "license_sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116",
+            "path": "include/CGAL/license/gpl_package_list.txt",
+            "sha256": "efb290ee3ef3d8b7675896bc037f1c9359f583543ca9e38bcb425fe34a8995db"
+          },
+          "license_expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+          "numeric_scale_contract": {
+            "maximum_absolute_coordinate": 1e+100,
+            "maximum_translation_to_span_ratio": 1000000.0,
+            "minimum_span": 1e-100
+          },
+          "output_format": "json",
+          "output_slot": "validation",
+          "output_unit": "none",
+          "package_ids": [
+            "PMP_Mesh_repair"
+          ],
+          "parameter_schema": {
+            "additionalProperties": false,
+            "properties": {
+              "density_control_factor": {
+                "maximum": 4.0,
+                "minimum": 1.0,
+                "type": "number"
+              },
+              "fairing_continuity": {
+                "maximum": 2,
+                "minimum": 0,
+                "type": "integer"
+              },
+              "max_hole_edges": {
+                "maximum": 2000,
+                "minimum": 3,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "max_hole_edges",
+              "density_control_factor",
+              "fairing_continuity"
+            ],
+            "type": "object"
+          },
+          "precision_contract": {
+            "coordinate_storage": "IEEE-754 binary64",
+            "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+            "exact_constructions": "unsupported_fail_closed",
+            "supported_request_kernel": "package_recommended"
+          },
+          "required_report_checks": {
+            "checks.candidate_matches_official_cgal_replay": true,
+            "checks.candidate_unit_matches_source": true,
+            "checks.numeric_profile_valid": true,
+            "checks.repair_invariant_valid": true,
+            "checks.source_geometry_preserved_as_required": true,
+            "checks.source_identity_matches": true,
+            "passed": true,
+            "schema_version": 1,
+            "status": "pass",
+            "validates": "mesh.repair.fill_holes_refine_fair",
+            "validator_id": "mesh.validate.repair_fill_holes_refine_fair"
+          },
+          "source": {
+            "header": "CGAL/Polygon_mesh_processing/triangulate_hole.h",
+            "identifiers": [
+              "triangulate_refine_and_fair_hole"
+            ],
+            "sha256": "b1a20a8eac2144e612df15b78a4ef045d6d7540b3ab13bb12044f40d94cb8118"
+          },
+          "source_kind": "official_release",
+          "source_mutation": false,
+          "source_version": "6.2.1",
+          "terminal_validator": true,
+          "validates": "mesh.repair.fill_holes_refine_fair",
+          "validators": []
+        }
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_batch4_cases.py"
+        ],
+        "worker_manifest_operation": "mesh.validate.repair_fill_holes_refine_fair",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      },
+      "runtime_report_contract": {
+        "schema": "ValidationReport/v1",
+        "required_report_checks": {
+          "schema_version": 1,
+          "validator_id": "mesh.validate.repair_fill_holes",
+          "validates": "mesh.repair.fill_holes",
+          "status": "pass",
+          "passed": true,
+          "checks.source_identity_matches": true,
+          "checks.candidate_matches_official_cgal_replay": true,
+          "checks.candidate_unit_matches_source": true,
+          "checks.repair_invariant_valid": true,
+          "checks.numeric_profile_valid": true,
+          "checks.source_geometry_preserved_as_required": true
+        }
+      }
     }
   ]
 }

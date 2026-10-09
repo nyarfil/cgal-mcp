@@ -8,9 +8,9 @@
 namespace cgal_master::wave_a_repair {
 namespace {
 
-const std::array<RepairKind, 6> kKinds = {
+const std::array<RepairKind, 7> kKinds = {
     RepairKind::kOrient, RepairKind::kStitchBorders,
-    RepairKind::kRemoveDegenerate, RepairKind::kFillHoles,
+    RepairKind::kRemoveDegenerate, RepairKind::kFillHoles, RepairKind::kFillHolesRefineFair,
     RepairKind::kPolygonSoup, RepairKind::kManifoldPreprocess};
 
 std::vector<std::string> source_types(RepairKind kind) {
@@ -43,6 +43,10 @@ Json source_record(RepairKind kind) {
       return {{"header", "CGAL/Polygon_mesh_processing/triangulate_hole.h"},
               {"sha256", "b1a20a8eac2144e612df15b78a4ef045d6d7540b3ab13bb12044f40d94cb8118"},
               {"identifiers", {"triangulate_hole"}}};
+    case RepairKind::kFillHolesRefineFair:
+      return {{"header", "CGAL/Polygon_mesh_processing/triangulate_hole.h"},
+              {"sha256", "b1a20a8eac2144e612df15b78a4ef045d6d7540b3ab13bb12044f40d94cb8118"},
+              {"identifiers", {"triangulate_refine_and_fair_hole"}}};
     case RepairKind::kPolygonSoup:
       return {{"header", "CGAL/Polygon_mesh_processing/repair_polygon_soup.h"},
               {"sha256", "068e1c62d7a0dce7cf861876be21cfbddf8c15989c730e2e4f507df0cc67f9ef"},
@@ -62,6 +66,14 @@ Json parameter_schema(RepairKind kind) {
             {"additionalProperties", false},
             {"properties", {{"max_hole_edges", {{"type", "integer"}, {"minimum", 3}, {"maximum", 2000}}}}}};
   }
+  if (kind == RepairKind::kFillHolesRefineFair) {
+    return {{"type", "object"},
+            {"required", {"max_hole_edges", "density_control_factor", "fairing_continuity"}},
+            {"additionalProperties", false},
+            {"properties", {{"max_hole_edges", {{"type", "integer"}, {"minimum", 3}, {"maximum", 2000}}},
+                            {"density_control_factor", {{"type", "number"}, {"minimum", 1.0}, {"maximum", 4.0}}},
+                            {"fairing_continuity", {{"type", "integer"}, {"minimum", 0}, {"maximum", 2}}}}}};
+  }
   if (kind == RepairKind::kPolygonSoup) {
     return {{"type", "object"},
             {"required", {"duplicate_polygon_policy", "require_same_orientation"}},
@@ -76,6 +88,10 @@ Json parameter_schema(RepairKind kind) {
 Json parameter_bindings(RepairKind kind) {
   if (kind == RepairKind::kFillHoles)
     return {{validator_id(kind), {{"max_hole_edges", "max_hole_edges"}}}};
+  if (kind == RepairKind::kFillHolesRefineFair)
+    return {{validator_id(kind),
+             {{"max_hole_edges", "max_hole_edges"}, {"density_control_factor", "density_control_factor"},
+              {"fairing_continuity", "fairing_continuity"}}}};
   if (kind == RepairKind::kPolygonSoup)
     return {{validator_id(kind),
              {{"duplicate_polygon_policy", "duplicate_polygon_policy"},

@@ -13,6 +13,7 @@ enum class RepairKind {
   kStitchBorders,
   kRemoveDegenerate,
   kFillHoles,
+  kFillHolesRefineFair,
   kPolygonSoup,
   kManifoldPreprocess,
 };

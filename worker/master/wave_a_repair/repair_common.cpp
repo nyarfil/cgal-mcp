@@ -13,6 +13,8 @@
 #include <CGAL/Polygon_mesh_processing/repair_polygon_soup.h>
 #include <CGAL/Polygon_mesh_processing/stitch_borders.h>
 #include <CGAL/Polygon_mesh_processing/triangulate_hole.h>
+#include <CGAL/Polygon_mesh_processing/refine.h>
+#include <CGAL/Polygon_mesh_processing/fair.h>
 #include <CGAL/boost/graph/helpers.h>
 #include <CGAL/boost/graph/iterator.h>
 
@@ -303,6 +305,33 @@ std::size_t required_hole_limit(const Json& parameters) {
   return static_cast<std::size_t>(value);
 }
 
+struct RefineFairParameters {
+  std::size_t limit;
+  double density_control_factor;
+  unsigned int fairing_continuity;
+};
+
+RefineFairParameters refine_fair_parameters(const Json& parameters) {
+  if (!parameters.is_object() || parameters.size() != 3 || !parameters.contains("max_hole_edges") ||
+      !parameters.contains("density_control_factor") || !parameters.contains("fairing_continuity")) {
+    throw WorkerError("INVALID_INPUT", "INVALID_REFINE_FAIR_PARAMETERS",
+                      "Exactly max_hole_edges, density_control_factor and fairing_continuity are required");
+  }
+  const auto& factor = parameters["density_control_factor"];
+  const auto& continuity = parameters["fairing_continuity"];
+  if (!factor.is_number() || !std::isfinite(factor.get<double>()) || factor.get<double>() < 1.0 ||
+      factor.get<double>() > 4.0) {
+    throw WorkerError("INVALID_INPUT", "INVALID_DENSITY_CONTROL_FACTOR",
+                      "density_control_factor must be a number in [1, 4]");
+  }
+  if (!continuity.is_number_unsigned() || continuity.get<std::uint64_t>() > 2) {
+    throw WorkerError("INVALID_INPUT", "INVALID_FAIRING_CONTINUITY",
+                      "fairing_continuity must be an integer in [0, 2]");
+  }
+  return {required_hole_limit(parameters), factor.get<double>(),
+          static_cast<unsigned int>(continuity.get<std::uint64_t>())};
+}
+
 void require_empty_parameters(const Json& parameters) {
   if (!parameters.is_object() || !parameters.empty()) {
     throw WorkerError("INVALID_INPUT", "UNEXPECTED_PARAMETERS",
@@ -318,6 +347,7 @@ std::string operation_id(RepairKind kind) {
     case RepairKind::kStitchBorders: return "mesh.repair.stitch_borders";
     case RepairKind::kRemoveDegenerate: return "mesh.repair.remove_degenerate";
     case RepairKind::kFillHoles: return "mesh.repair.fill_holes";
+    case RepairKind::kFillHolesRefineFair: return "mesh.repair.fill_holes_refine_fair";
     case RepairKind::kPolygonSoup: return "mesh.repair.polygon_soup";
     case RepairKind::kManifoldPreprocess: return "mesh.repair.manifold_preprocess";
   }
@@ -330,6 +360,7 @@ std::string validator_id(RepairKind kind) {
     case RepairKind::kStitchBorders: return "mesh.validate.repair_stitch_borders";
     case RepairKind::kRemoveDegenerate: return "mesh.validate.repair_remove_degenerate";
     case RepairKind::kFillHoles: return "mesh.validate.repair_fill_holes";
+    case RepairKind::kFillHolesRefineFair: return "mesh.validate.repair_fill_holes_refine_fair";
     case RepairKind::kPolygonSoup: return "mesh.validate.repair_polygon_soup";
     case RepairKind::kManifoldPreprocess: return "mesh.validate.repair_manifold_preprocess";
   }
@@ -349,6 +380,8 @@ void require_request(const Request& request, RepairKind kind, bool validator) {
   if (!validator) {
     if (kind == RepairKind::kFillHoles) {
       (void)required_hole_limit(request.parameters);
+    } else if (kind == RepairKind::kFillHolesRefineFair) {
+      (void)refine_fair_parameters(request.parameters);
     } else if (kind == RepairKind::kPolygonSoup) {
       if (!request.parameters.is_object() ||
           !request.parameters.contains("duplicate_polygon_policy") ||
@@ -364,6 +397,7 @@ void require_request(const Request& request, RepairKind kind, bool validator) {
     }
   } else {
     if (kind == RepairKind::kFillHoles) (void)required_hole_limit(request.parameters);
+    else if (kind == RepairKind::kFillHolesRefineFair) (void)refine_fair_parameters(request.parameters);
     else if (kind == RepairKind::kPolygonSoup) (void)duplicate_policy(request.parameters);
     else require_empty_parameters(request.parameters);
   }
@@ -493,6 +527,41 @@ RepairResult compute_repair(RepairKind kind, const Soup& source,
     result.metrics["skipped_hole_count"] = skipped;
     result.metrics["added_face_count"] = added_faces;
     result.metrics["max_hole_edges"] = limit;
+  } else if (kind == RepairKind::kFillHolesRefineFair) {
+    auto mesh = mesh_from_soup(source, "Refine-and-fair source");
+    const auto settings = refine_fair_parameters(parameters);
+    std::vector<RepairMesh::Halfedge_index> cycles;
+    CGAL::extract_boundary_cycles(mesh, std::back_inserter(cycles));
+    std::size_t filled = 0, skipped = 0, added_faces = 0, added_vertices = 0, fairing_failures = 0;
+    for (const auto halfedge : cycles) {
+      std::size_t length = 0;
+      auto cursor = halfedge;
+      do { ++length; cursor = next(cursor, mesh); } while (cursor != halfedge && length <= kMaximumFaces);
+      if (length > settings.limit) { ++skipped; continue; }
+      std::vector<RepairMesh::Face_index> patch_faces;
+      std::vector<RepairMesh::Vertex_index> patch_vertices;
+      const auto outcome = PMP::triangulate_refine_and_fair_hole(
+          mesh, halfedge, std::back_inserter(patch_faces), std::back_inserter(patch_vertices),
+          CGAL::parameters::density_control_factor(settings.density_control_factor)
+              .fairing_continuity(settings.fairing_continuity));
+      if (patch_faces.empty()) throw WorkerError("PRECONDITION_FAILED", "HOLE_TRIANGULATION_FAILED", "CGAL did not create a hole patch");
+      if (!std::get<0>(outcome)) ++fairing_failures;
+      ++filled;
+      added_faces += patch_faces.size();
+      added_vertices += patch_vertices.size();
+    }
+    if (filled == 0) throw WorkerError("PRECONDITION_FAILED", "NO_ELIGIBLE_HOLES", "No boundary cycle is eligible for bounded hole filling");
+    if (fairing_failures != 0) {
+      throw WorkerError("PRECONDITION_FAILED", "FAIRING_FAILED", "CGAL could not fair every hole patch; no candidate is published");
+    }
+    result.soup = soup_from_mesh(mesh);
+    result.metrics["filled_hole_count"] = filled;
+    result.metrics["skipped_hole_count"] = skipped;
+    result.metrics["added_face_count"] = added_faces;
+    result.metrics["added_vertex_count"] = added_vertices;
+    result.metrics["max_hole_edges"] = settings.limit;
+    result.metrics["density_control_factor"] = settings.density_control_factor;
+    result.metrics["fairing_continuity"] = settings.fairing_continuity;
   } else if (kind == RepairKind::kPolygonSoup) {
     result.soup = source;
     const auto policy = duplicate_policy(parameters);
