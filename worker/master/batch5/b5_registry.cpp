@@ -10,6 +10,7 @@ void append(std::vector<OperationDefinition>& target, std::vector<OperationDefin
 std::vector<OperationDefinition> producer_operations() {
   std::vector<OperationDefinition> result;
   append(result, distance_producers());
+  append(result, skeleton_producers());
   append(result, intersection_producers());
   return result;
 }
@@ -17,6 +18,7 @@ std::vector<OperationDefinition> producer_operations() {
 std::vector<OperationDefinition> validator_operations() {
   std::vector<OperationDefinition> result;
   append(result, distance_validators());
+  append(result, skeleton_validators());
   append(result, intersection_validators());
   return result;
 }

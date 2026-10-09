@@ -165,18 +165,99 @@ def intersection_cases(operations) -> None:
         reject(scratch, "mesh.intersections.do_intersect", [cube, shifted], {}, "MISSING_PARAMETER", "INVALID_REQUEST")
 
 
+def polygon(name):
+    return art(B5 / name, "PolygonWithHoles2")
+
+
+def ring_area(points):
+    return abs(sum(a[0] * b[1] - b[0] * a[1] for a, b in zip(points, points[1:] + points[:1]))) / 2
+
+
+def skeleton_cases(operations) -> None:
+    for producer, validator in (("polygon.straight_skeleton.interior", "polygon.validate.straight_skeleton"),
+                                ("polygon.straight_skeleton.exterior", "polygon.validate.straight_skeleton"),
+                                ("polygon.offset.interior", "polygon.validate.offset"),
+                                ("polygon.offset.exterior", "polygon.validate.offset")):
+        assert validator in operations[producer]["info"]["validators"], producer
+        assert operations[validator]["role"] == "validator"
+    rect, lshape, holed, triangle = (polygon(n) for n in ("rect4x2.json", "lshape.json", "square_hole.json",
+                                                          "triangle_6_8.json"))
+    skeleton, offset = "polygon.validate.straight_skeleton", "polygon.validate.offset"
+    with tempfile.TemporaryDirectory() as raw:
+        scratch = pathlib.Path(raw)
+        # Rectangle 4x2: nodes (1,1) and (3,1) at time 1, four faces, one bisector between the nodes.
+        result = pair(scratch, "polygon.straight_skeleton.interior", skeleton, [rect], {})["results"]
+        nodes = sorted((v["x"], v["y"], v["time"]) for v in result["vertices"] if not v["contour"])
+        assert nodes == [(1.0, 1.0, 1.0), (3.0, 1.0, 1.0)], nodes
+        assert len(result["faces"]) == 4 and [4, 5] in result["bisectors"], result
+        # L-shape (arms of width 1): three nodes at the centres of the corner square and the two arm ends.
+        result = pair(scratch, "polygon.straight_skeleton.interior", skeleton, [lshape], {})["results"]
+        nodes = sorted((v["x"], v["y"], v["time"]) for v in result["vertices"] if not v["contour"])
+        assert nodes == [(0.5, 0.5, 0.5), (0.5, 2.5, 0.5), (2.5, 0.5, 0.5)], nodes
+        assert len(result["faces"]) == 6
+        # Square 6x6 with a 2x2 hole: ring of width 2, four nodes at time 1 on the diagonals; one face per edge.
+        result = pair(scratch, "polygon.straight_skeleton.interior", skeleton, [holed], {})["results"]
+        nodes = sorted((v["x"], v["y"], v["time"]) for v in result["vertices"] if not v["contour"])
+        assert nodes == [(1.0, 1.0, 1.0), (1.0, 5.0, 1.0), (5.0, 1.0, 1.0), (5.0, 5.0, 1.0)], nodes
+        assert len(result["faces"]) == 8
+        # Exterior skeleton of the rectangle inside a frame 3 wider on every side: the corner nodes sit at 1.5.
+        result = pair(scratch, "polygon.straight_skeleton.exterior", skeleton, [rect], {"max_offset": MM(1)})["results"]
+        corners = sorted((v["x"], v["y"]) for v in result["vertices"] if v["contour"])
+        assert (-3.0, -3.0) in corners and (7.0, 5.0) in corners and len(corners) == 8, corners
+        assert sorted(v["time"] for v in result["vertices"] if not v["contour"]) == [1.5] * 4, result
+        assert len(result["faces"]) == 8
+        # Offsets: rectangle area (w -/+ 2d)(h -/+ 2d); empty beyond the inradius.
+        result = pair(scratch, "polygon.offset.interior", offset, [rect], {"offset": MM(0.5)})["results"]
+        assert len(result["rings"]) == 1 and ring_area(result["rings"][0]["points"]) == 3 * 1, result
+        result = pair(scratch, "polygon.offset.exterior", offset, [rect], {"offset": MM(0.5)})["results"]
+        assert len(result["rings"]) == 1 and ring_area(result["rings"][0]["points"]) == 5 * 3, result
+        result = pair(scratch, "polygon.offset.interior", offset, [rect], {"offset": MM(1.5)})["results"]
+        assert result["rings"] == [], result
+        # 6-8-10 triangle: incircle radius 2, the offset at 1 is the similar triangle with legs 3 and 4.
+        result = pair(scratch, "polygon.offset.interior", offset, [triangle], {"offset": MM(1)})["results"]
+        assert abs(ring_area(result["rings"][0]["points"]) - 6.0) < 1e-12, result
+        # L-shape: the elbow is consumed beyond the arm half width; polygon with hole offsets to two rings.
+        result = pair(scratch, "polygon.offset.interior", offset, [lshape], {"offset": MM(0.3)})["results"]
+        assert len(result["rings"]) == 1 and len(result["rings"][0]["points"]) == 6
+        assert pair(scratch, "polygon.offset.interior", offset, [lshape], {"offset": MM(0.6)})["results"]["rings"] == []
+        result = pair(scratch, "polygon.offset.interior", offset, [holed], {"offset": MM(0.3)})["results"]
+        assert len(result["rings"]) == 2, result
+        # Tampered reports fail closed.
+        for name, validator, parameters, code in (
+                ("tampered_skel_node_moved.json", skeleton, {}, "NODE_TIME_MISMATCH"),
+                ("tampered_skel_time_changed.json", skeleton, {}, "NODE_TIME_MISMATCH"),
+                ("tampered_skel_face_dropped.json", skeleton, {}, "FACE_EDGE_MISMATCH"),
+                ("tampered_offset_edge_shifted.json", offset, {"offset": MM(0.5)}, "OFFSET_EDGE_MISMATCH"),
+                ("tampered_offset_forged_empty.json", offset, {"offset": MM(0.5)}, "OFFSET_EXTENT_MISMATCH")):
+            reject(scratch, validator, [report(B5 / name), rect], parameters, code)
+        # Validator parameters must match the report; the exterior skeleton needs max_offset.
+        path = q.ok(q.invoke(scratch, "polygon.straight_skeleton.exterior", [rect], {"max_offset": MM(1)}))
+        reject(scratch, skeleton, [report(path), rect], {}, "PARAMETER_MISMATCH")
+        reject(scratch, skeleton, [report(path), rect], {"max_offset": MM(2)}, "PARAMETER_MISMATCH")
+        # Invalid input never crashes the worker.
+        for name, code in (("bowtie.json", "POLYGON_NOT_SIMPLE"), ("sliver.json", "POLYGON_ZERO_AREA")):
+            for producer, parameters in (("polygon.straight_skeleton.interior", {}),
+                                         ("polygon.straight_skeleton.exterior", {"max_offset": MM(1)}),
+                                         ("polygon.offset.interior", {"offset": MM(0.5)}),
+                                         ("polygon.offset.exterior", {"offset": MM(0.5)})):
+                reject(scratch, producer, [polygon(name)], parameters, code, "PRECONDITION_FAILED")
+        reject(scratch, "polygon.straight_skeleton.exterior", [holed], {"max_offset": MM(1)}, "HOLES_NOT_SUPPORTED",
+               "PRECONDITION_FAILED")
+        reject(scratch, "polygon.offset.exterior", [holed], {"offset": MM(1)}, "HOLES_NOT_SUPPORTED", "PRECONDITION_FAILED")
+        reject(scratch, "polygon.offset.interior", [rect], {}, "MISSING_PARAMETER", "INVALID_REQUEST")
+        reject(scratch, "polygon.offset.interior", [rect], {"offset": MM(0)}, "INVALID_PARAMETER", "INVALID_REQUEST")
+        reject(scratch, "polygon.offset.interior", [rect], {"offset": MM(-1)}, "INVALID_PARAMETER", "INVALID_REQUEST")
+        reject(scratch, "polygon.straight_skeleton.interior", [rect], {"max_offset": MM(1)}, "UNSUPPORTED_PARAMETER",
+               "INVALID_REQUEST")
+
+
 def main() -> None:
     manifest = json.loads(subprocess.run([q.WORKER, "--manifest"], text=True, encoding="utf-8",
                                          capture_output=True, timeout=30, check=True).stdout)
     operations = {operation["id"]: operation for operation in manifest["operations"]}
     distance_cases(operations)
     intersection_cases(operations)
-    try:
-        import master_batch5_skeleton as skeleton
-    except ImportError:
-        skeleton = None
-    if skeleton is not None:
-        skeleton.skeleton_cases(operations)
+    skeleton_cases(operations)
     print("batch-5 worker cases: PASS")
 
 
