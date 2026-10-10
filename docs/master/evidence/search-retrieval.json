@@ -3,12 +3,12 @@
   "generator": "master-search-retrieval-evidence",
   "protocol": "Each of the 300 corpus intents is submitted to the production capabilities_search (limit 3, no artifact filter). A hit requires an Operation ID bound to the intent's major requirement in catalog/major_requirements.json to be returned (top-1: first).",
   "bindings": {
-    "corpus_sha256": "e929e2497faeb58da3cf8d9c6a6c7be8d11c486790b5427e6f45e23c40984b68",
+    "corpus_sha256": "54646cb2eec0884aab1ec51b14a5c7fcaf3b458dda0f25720598de10daf8dd7b",
     "major_requirements_sha256": "77e99f25842687bbfeeb22e8e27f6bac8b4d94fae5a66b50cf8c383410b8de9e",
     "operations_sha256": "d5b97e95472a3a88308c4173c45cc3961a8907fec3d1c54737e37ee9ca913632",
-    "search_vocabulary_sha256": "d82693f22541bc342d87ea64c57f9a9d41c1a6031e1505e5cd424a1b6803cc45",
+    "search_vocabulary_sha256": "58b44af41ca1e0647816f2c91bd22a5362d62d282d81c323a12e6f1d0f0d77b5",
     "registry_ranker_sha256": "2ec91e2728bcfd5c4ad3a46ae6aebe854d01502fd9150a169215f0586c5ae5ea",
-    "generator_sha256": "cfc8b2691d15e74cb6798d6480d3bc1d28616acb205a6095e47787cfa343bdac"
+    "generator_sha256": "5f9b656284d68f109b63dd6f0119e0076eee41d7971f32b18a46d52b4cef1c7f"
   },
   "split": {
     "rule": "sha256(requirement_id) mod 3 == 0 is held_out",
@@ -51,47 +51,48 @@
     "The corpus is a checked-in authored development corpus; it was not frozen before routing work.",
     "Vocabulary changes after the baseline were derived from development-split misses only.",
     "The baseline miss list (ids and expected Operations) was visible for every split, so held_out is a weak, not a blind, estimate.",
+    "Blind generalization is reported separately in docs/master/evidence/search-blind.json (118 intents written from operation documentation, measured once after tuning was frozen).",
     "No per-query or Operation-ID string is hardcoded in search.py."
   ],
   "target_percent": 95.0,
   "summary": {
     "overall": {
       "denominator": 300,
-      "top1_hits": 239,
-      "top3_hits": 278,
-      "top1_percent": 79.67,
-      "top3_percent": 92.67
+      "top1_hits": 261,
+      "top3_hits": 289,
+      "top1_percent": 87.0,
+      "top3_percent": 96.33
     },
     "development": {
       "denominator": 175,
-      "top1_hits": 146,
-      "top3_hits": 169,
-      "top1_percent": 83.43,
-      "top3_percent": 96.57
+      "top1_hits": 159,
+      "top3_hits": 170,
+      "top1_percent": 90.86,
+      "top3_percent": 97.14
     },
     "held_out": {
       "denominator": 125,
-      "top1_hits": 93,
-      "top3_hits": 109,
-      "top1_percent": 74.4,
-      "top3_percent": 87.2
+      "top1_hits": 102,
+      "top3_hits": 119,
+      "top1_percent": 81.6,
+      "top3_percent": 95.2
     }
   },
-  "passes_retrieval_target": false,
+  "passes_retrieval_target": true,
   "full_search_acceptance": {
     "passes_search_acceptance": false,
     "typed_eligible_top3": {
-      "denominator": 109,
-      "top3_hits": 107,
+      "denominator": 300,
+      "top3_hits": 296,
       "expected_operation_unavailable": 0,
-      "top3_recall_percent": 98.17,
+      "top3_recall_percent": 98.67,
       "target_percent": 95.0,
       "passes_target": true
     },
     "documentation_discovery": {
-      "denominator": 191,
-      "hits": 191,
-      "recall_percent": 100.0,
+      "denominator": 300,
+      "hits": 298,
+      "recall_percent": 99.33,
       "target_percent": 95.0,
       "passes_target": true
     },
@@ -110,27 +111,27 @@
     },
     "goal_routing": {
       "eligible": {
-        "denominator": 109,
-        "expected_top1": 93,
-        "ambiguous_explicit": 12,
+        "denominator": 300,
+        "expected_top1": 236,
+        "ambiguous_explicit": 55,
         "clarification_required": 0,
-        "wrong_executable_route": 2,
+        "wrong_executable_route": 0,
         "wrong_route_with_post_error": 0,
-        "indeterminate_error": 2
+        "indeterminate_error": 9
       },
       "documentation_only": {
-        "denominator": 191,
-        "explicitly_rejected": 68,
-        "unexpected_executable_route": 52,
-        "wrong_route_with_post_error": 7,
-        "unmeasured_input_model": 64,
+        "denominator": 0,
+        "explicitly_rejected": 0,
+        "unexpected_executable_route": 0,
+        "wrong_route_with_post_error": 0,
+        "unmeasured_input_model": 0,
         "indeterminate_error": 0
       },
       "passes": false,
       "actual_planning_coverage": {
         "denominator": 300,
-        "planner_calls": 236,
-        "typed_probe_requests": 236,
+        "planner_calls": 300,
+        "typed_probe_requests": 300,
         "execute_calls": 0
       },
       "automatic_execution": {
@@ -138,7 +139,167 @@
         "reason": "The evaluator never calls execute"
       }
     },
-    "execute_calls": 0
+    "execute_calls": 0,
+    "execute_after_search_sample": {
+      "sample_size": 15,
+      "succeeded": 10,
+      "selection_rule": "first goal-routed top-1 intent of each family in corpus order",
+      "families": [
+        "7.1",
+        "7.10",
+        "7.11",
+        "7.12",
+        "7.13",
+        "7.14",
+        "7.15",
+        "7.2",
+        "7.3",
+        "7.4",
+        "7.5",
+        "7.6",
+        "7.7",
+        "7.8",
+        "7.9"
+      ],
+      "cases": [
+        {
+          "id": "intent-ja-001",
+          "family": "7.1",
+          "selected_operation": "kernel.predicates.evaluate",
+          "state": "succeeded",
+          "execution_status": "succeeded",
+          "validation_status": "passed",
+          "ok": true
+        },
+        {
+          "id": "intent-en-012",
+          "family": "7.2",
+          "selected_operation": "spatial.aabb.ray_first_hits",
+          "state": "succeeded",
+          "execution_status": "succeeded",
+          "validation_status": "passed",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-021",
+          "family": "7.3",
+          "selected_operation": "mesh.inspect.pmp",
+          "state": "succeeded",
+          "execution_status": "succeeded",
+          "validation_status": "passed",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-053",
+          "family": "7.4",
+          "selected_operation": "mesh.repair.orient",
+          "state": "failed",
+          "execution_status": "failed",
+          "validation_status": "not_run",
+          "ok": false
+        },
+        {
+          "id": "intent-ja-077",
+          "family": "7.5",
+          "selected_operation": "mesh.corefine",
+          "state": "rejected",
+          "execution_status": "succeeded",
+          "validation_status": "failed",
+          "ok": false
+        },
+        {
+          "id": "intent-ja-097",
+          "family": "7.6",
+          "selected_operation": "mesh.triangulate.faces",
+          "state": "succeeded",
+          "execution_status": "succeeded",
+          "validation_status": "passed",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-117",
+          "family": "7.7",
+          "selected_operation": "mesh.simplify.edge_collapse",
+          "state": "succeeded",
+          "execution_status": "succeeded",
+          "validation_status": "passed",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-141",
+          "family": "7.8",
+          "selected_operation": "mesh.segment.sdf_values",
+          "state": "rejected",
+          "execution_status": "succeeded",
+          "validation_status": "failed",
+          "ok": false
+        },
+        {
+          "id": "intent-ja-165",
+          "family": "7.9",
+          "selected_operation": "pointset.normals.estimate",
+          "state": "succeeded",
+          "execution_status": "succeeded",
+          "validation_status": "passed",
+          "ok": true
+        },
+        {
+          "id": "intent-en-191",
+          "family": "7.10",
+          "selected_operation": "reconstruction.poisson",
+          "state": "failed",
+          "execution_status": "failed",
+          "validation_status": "not_run",
+          "ok": false
+        },
+        {
+          "id": "intent-en-203",
+          "family": "7.11",
+          "selected_operation": "triangulation.delaunay_3",
+          "state": "succeeded",
+          "execution_status": "succeeded",
+          "validation_status": "passed",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-221",
+          "family": "7.12",
+          "selected_operation": "polygon.analysis.properties",
+          "state": "succeeded",
+          "execution_status": "succeeded",
+          "validation_status": "passed",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-249",
+          "family": "7.13",
+          "selected_operation": "hull.convex_3",
+          "state": "succeeded",
+          "execution_status": "succeeded",
+          "validation_status": "passed",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-269",
+          "family": "7.14",
+          "selected_operation": "mesh2.refine.delaunay",
+          "state": "succeeded",
+          "execution_status": "succeeded",
+          "validation_status": "passed",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-285",
+          "family": "7.15",
+          "selected_operation": "optimization.quadratic_program",
+          "state": "failed",
+          "execution_status": "failed",
+          "validation_status": "not_run",
+          "ok": false
+        }
+      ],
+      "scope": "sample only; the other intents remain unexecuted"
+    }
   },
   "cases": [
     {
@@ -180,8 +341,8 @@
       ],
       "returned": [
         "kernel.primitives.construct",
-        "arrangement.build",
-        "kernel.distance.squared"
+        "spatial.aabb.intersections",
+        "kernel.validate.primitives_report"
       ],
       "top1": true,
       "top3": true
@@ -195,8 +356,8 @@
       ],
       "returned": [
         "kernel.primitives.construct",
-        "mesh.simplify.edge_collapse",
-        "mesh.location.locate"
+        "spatial.aabb.intersections",
+        "kernel.validate.primitives_report"
       ],
       "top1": true,
       "top3": true
@@ -254,12 +415,12 @@
         "kernel.intersections.compute"
       ],
       "returned": [
+        "kernel.intersections.compute",
         "spatial.aabb.intersections",
-        "mesh.boolean.intersection",
-        "mesh.corefine"
+        "mesh.boolean.intersection"
       ],
-      "top1": false,
-      "top3": false
+      "top1": true,
+      "top3": true
     },
     {
       "id": "intent-ja-009",
@@ -334,7 +495,7 @@
       "returned": [
         "spatial.range_search_3",
         "spatial.knn_3",
-        "pointset.spacing.average"
+        "pointset.validate.registered_points"
       ],
       "top1": true,
       "top3": true
@@ -395,7 +556,7 @@
       "returned": [
         "spatial.aabb.intersections",
         "mesh.boolean.intersection",
-        "mesh.corefine"
+        "kernel.intersections.compute"
       ],
       "top1": true,
       "top3": true
@@ -409,8 +570,8 @@
       ],
       "returned": [
         "spatial.aabb.intersections",
-        "mesh.boolean.intersection",
-        "mesh.corefine"
+        "kernel.intersections.compute",
+        "mesh.boolean.intersection"
       ],
       "top1": true,
       "top3": true
@@ -489,8 +650,8 @@
       ],
       "returned": [
         "mesh.inspect.pmp",
-        "polygon.validate.containment_report",
-        "mesh.validate.volume_mesh"
+        "polygon.analysis.properties",
+        "mesh.analysis.self_intersections"
       ],
       "top1": true,
       "top3": true
@@ -505,8 +666,8 @@
       ],
       "returned": [
         "mesh.inspect.pmp",
-        "polygon.validate.containment_report",
-        "mesh.validate.volume_mesh"
+        "polygon.analysis.properties",
+        "mesh.analysis.self_intersections"
       ],
       "top1": true,
       "top3": true
@@ -556,8 +717,8 @@
       ],
       "returned": [
         "mesh.components.label",
-        "mesh.path.shortest",
-        "optimization.approximate_mesh"
+        "mesh.analysis.connected_components",
+        "mesh.components.component"
       ],
       "top1": true,
       "top3": true
@@ -572,11 +733,11 @@
         "mesh.components.label"
       ],
       "returned": [
+        "mesh.analysis.connected_components",
         "mesh.components.label",
-        "mesh.components.component",
-        "reconstruction.polygonal_surface"
+        "mesh.components.component"
       ],
-      "top1": true,
+      "top1": false,
       "top3": true
     },
     {
@@ -1376,11 +1537,11 @@
         "mesh.corefine"
       ],
       "returned": [
+        "mesh.corefine",
         "mesh.boolean.intersection",
-        "mesh.validate.intersection_polylines",
-        "mesh.corefine"
+        "mesh.boolean.union"
       ],
-      "top1": false,
+      "top1": true,
       "top3": true
     },
     {
@@ -1392,11 +1553,11 @@
         "mesh.corefine"
       ],
       "returned": [
+        "mesh.corefine",
         "mesh.boolean.intersection",
-        "mesh.validate.intersection_polylines",
-        "mesh.corefine"
+        "mesh.boolean.union"
       ],
-      "top1": false,
+      "top1": true,
       "top3": true
     },
     {
@@ -2047,8 +2208,8 @@
       ],
       "returned": [
         "kernel.primitives.construct",
-        "arrangement.build",
-        "kernel.distance.squared"
+        "spatial.aabb.intersections",
+        "kernel.validate.primitives_report"
       ],
       "top1": true,
       "top3": true
@@ -2077,8 +2238,8 @@
       ],
       "returned": [
         "kernel.primitives.construct",
-        "mesh.location.locate",
-        "kernel.distance.squared"
+        "spatial.aabb.intersections",
+        "kernel.validate.primitives_report"
       ],
       "top1": true,
       "top3": true
@@ -2106,12 +2267,12 @@
         "kernel.predicates.evaluate"
       ],
       "returned": [
-        "mesh.inspect.pmp",
-        "polygon.validate.containment_report",
-        "mesh.validate.pmp_inspection_report"
+        "kernel.predicates.evaluate",
+        "kernel.intersections.compute",
+        "mesh.inspect.pmp"
       ],
-      "top1": false,
-      "top3": false
+      "top1": true,
+      "top3": true
     },
     {
       "id": "intent-en-127",
@@ -2166,12 +2327,12 @@
         "kernel.intersections.compute"
       ],
       "returned": [
-        "mesh.inspect.pmp",
-        "polygon.analysis.properties",
-        "mesh.analysis.self_intersections"
+        "kernel.intersections.compute",
+        "spatial.aabb.intersections",
+        "mesh.boolean.intersection"
       ],
-      "top1": false,
-      "top3": false
+      "top1": true,
+      "top3": true
     },
     {
       "id": "intent-en-131",
@@ -2196,12 +2357,12 @@
         "kernel.intersections.compute"
       ],
       "returned": [
+        "kernel.intersections.compute",
         "spatial.aabb.intersections",
-        "mesh.boolean.intersection",
-        "mesh.corefine"
+        "mesh.boolean.intersection"
       ],
-      "top1": false,
-      "top3": false
+      "top1": true,
+      "top3": true
     },
     {
       "id": "intent-ja-133",
@@ -2427,11 +2588,11 @@
         "mesh.decompose.approx_convex"
       ],
       "returned": [
-        "optimization.approximate_mesh",
         "mesh.decompose.approx_convex",
-        "mesh.validate.approx_convex"
+        "mesh.validate.approx_convex",
+        "mesh.simplify.edge_collapse"
       ],
-      "top1": false,
+      "top1": true,
       "top3": true
     },
     {
@@ -2442,11 +2603,11 @@
         "mesh.decompose.approx_convex"
       ],
       "returned": [
-        "optimization.approximate_mesh",
         "mesh.decompose.approx_convex",
-        "mesh.validate.approx_convex"
+        "mesh.validate.approx_convex",
+        "mesh.volume.generate"
       ],
-      "top1": false,
+      "top1": true,
       "top3": true
     },
     {
@@ -2582,12 +2743,12 @@
         "mesh.parameterize.discrete_conformal_map"
       ],
       "returned": [
-        "mesh.validate.parameterization_harmonic",
-        "mesh.validate.parameterization_isometric",
-        "arrangement.build"
+        "mesh.parameterize",
+        "mesh.parameterize.discrete_conformal_map",
+        "mesh.validate.parameterization_harmonic"
       ],
-      "top1": false,
-      "top3": false
+      "top1": true,
+      "top3": true
     },
     {
       "id": "intent-ja-158",
@@ -2598,12 +2759,12 @@
         "mesh.parameterize.discrete_conformal_map"
       ],
       "returned": [
-        "mesh.validate.parameterization_harmonic",
-        "mesh.validate.parameterization_isometric",
-        "arrangement.build"
+        "mesh.parameterize",
+        "mesh.parameterize.discrete_conformal_map",
+        "mesh.validate.parameterization_harmonic"
       ],
-      "top1": false,
-      "top3": false
+      "top1": true,
+      "top3": true
     },
     {
       "id": "intent-en-159",
@@ -2614,12 +2775,12 @@
         "mesh.parameterize.discrete_conformal_map"
       ],
       "returned": [
-        "kernel.primitives.construct",
-        "triangulation.regular_2",
-        "triangulation.periodic_delaunay_2"
+        "mesh.parameterize",
+        "mesh.parameterize.discrete_conformal_map",
+        "mesh.validate.parameterization_isometric"
       ],
-      "top1": false,
-      "top3": false
+      "top1": true,
+      "top3": true
     },
     {
       "id": "intent-en-160",
@@ -2630,12 +2791,12 @@
         "mesh.parameterize.discrete_conformal_map"
       ],
       "returned": [
-        "kernel.distance.squared",
-        "shape.alpha_shape_2",
-        "kernel.primitives.construct"
+        "mesh.parameterize",
+        "mesh.parameterize.discrete_conformal_map",
+        "mesh.validate.parameterization_isometric"
       ],
-      "top1": false,
-      "top3": false
+      "top1": true,
+      "top3": true
     },
     {
       "id": "intent-ja-161",
@@ -2648,7 +2809,7 @@
       "returned": [
         "mesh.subdivide.catmull_clark",
         "mesh.subdivide.loop",
-        "arrangement.build"
+        "mesh.validate.max_distance_to_points"
       ],
       "top1": true,
       "top3": true
@@ -2664,7 +2825,7 @@
       "returned": [
         "mesh.subdivide.catmull_clark",
         "mesh.subdivide.loop",
-        "arrangement.build"
+        "mesh.validate.max_distance_to_points"
       ],
       "top1": true,
       "top3": true
@@ -2680,7 +2841,7 @@
       "returned": [
         "mesh.subdivide.catmull_clark",
         "mesh.subdivide.loop",
-        "arrangement.build"
+        "mesh.validate.max_distance_to_points"
       ],
       "top1": true,
       "top3": true
@@ -2696,7 +2857,7 @@
       "returned": [
         "mesh.subdivide.catmull_clark",
         "mesh.subdivide.loop",
-        "arrangement.build"
+        "mesh.validate.max_distance_to_points"
       ],
       "top1": true,
       "top3": true
@@ -2919,12 +3080,12 @@
         "spatial.range_search_3"
       ],
       "returned": [
-        "triangulation.periodic_delaunay_3",
-        "hull.convex_3",
-        "kernel.distance.squared"
+        "spatial.knn_3",
+        "spatial.range_search_3",
+        "triangulation.periodic_delaunay_3"
       ],
-      "top1": false,
-      "top3": false
+      "top1": true,
+      "top3": true
     },
     {
       "id": "intent-en-179",
@@ -3033,9 +3194,9 @@
         "pointset.spacing.average"
       ],
       "returned": [
-        "reconstruction.validate.alpha_wrap",
-        "reconstruction.validate.interpolating",
-        "reconstruction.validate.poisson_boundary"
+        "mesh.distance.max_to_points",
+        "pointset.registration.register",
+        "pointset.smooth.jet"
       ],
       "top1": false,
       "top3": false
@@ -3049,9 +3210,9 @@
         "pointset.spacing.average"
       ],
       "returned": [
-        "reconstruction.validate.alpha_wrap",
-        "reconstruction.validate.interpolating",
-        "reconstruction.validate.poisson_boundary"
+        "mesh.distance.max_to_points",
+        "pointset.registration.register",
+        "pointset.smooth.jet"
       ],
       "top1": false,
       "top3": false
@@ -3065,9 +3226,9 @@
         "pointset.spacing.average"
       ],
       "returned": [
-        "reconstruction.validate.alpha_wrap",
-        "reconstruction.validate.interpolating",
-        "reconstruction.validate.poisson_boundary"
+        "mesh.volume.generate",
+        "reconstruction.polygonal_surface",
+        "reconstruction.kinetic_surface"
       ],
       "top1": false,
       "top3": false
@@ -3081,9 +3242,9 @@
         "pointset.spacing.average"
       ],
       "returned": [
-        "reconstruction.validate.alpha_wrap",
-        "reconstruction.validate.poisson_boundary",
-        "reconstruction.validate.interpolating"
+        "triangulation.regular_3",
+        "triangulation.regular_2",
+        "mesh.volume.generate"
       ],
       "top1": false,
       "top3": false
@@ -3293,9 +3454,9 @@
         "triangulation.delaunay_3"
       ],
       "returned": [
-        "triangulation.periodic_delaunay_2",
-        "triangulation.delaunay_2",
-        "triangulation.validate.delaunay_2"
+        "triangulation.periodic_delaunay_3",
+        "triangulation.delaunay_3",
+        "triangulation.delaunay_on_sphere_2"
       ],
       "top1": false,
       "top3": true
@@ -3309,9 +3470,9 @@
         "triangulation.delaunay_3"
       ],
       "returned": [
-        "triangulation.periodic_delaunay_2",
-        "triangulation.delaunay_2",
-        "triangulation.validate.delaunay_2"
+        "triangulation.periodic_delaunay_3",
+        "triangulation.delaunay_3",
+        "triangulation.delaunay_on_sphere_2"
       ],
       "top1": false,
       "top3": true
@@ -3325,11 +3486,11 @@
         "triangulation.delaunay_3"
       ],
       "returned": [
-        "triangulation.validate.delaunay_2",
-        "triangulation.delaunay_2",
-        "triangulation.validate.periodic_delaunay_2"
+        "triangulation.delaunay_3",
+        "triangulation.periodic_delaunay_3",
+        "triangulation.regular_3"
       ],
-      "top1": false,
+      "top1": true,
       "top3": true
     },
     {
@@ -3341,11 +3502,11 @@
         "triangulation.delaunay_3"
       ],
       "returned": [
-        "triangulation.validate.delaunay_2",
-        "triangulation.delaunay_2",
-        "triangulation.validate.periodic_delaunay_2"
+        "triangulation.delaunay_3",
+        "triangulation.periodic_delaunay_3",
+        "triangulation.regular_3"
       ],
-      "top1": false,
+      "top1": true,
       "top3": true
     },
     {
@@ -3766,11 +3927,11 @@
         "arrangement.overlay"
       ],
       "returned": [
-        "arrangement.build",
         "arrangement.overlay",
-        "arrangement.validate.overlay"
+        "arrangement.validate.overlay",
+        "arrangement.build"
       ],
-      "top1": false,
+      "top1": true,
       "top3": true
     },
     {
@@ -3781,11 +3942,11 @@
         "arrangement.overlay"
       ],
       "returned": [
-        "arrangement.build",
         "arrangement.overlay",
-        "arrangement.validate.overlay"
+        "arrangement.validate.overlay",
+        "arrangement.build"
       ],
-      "top1": false,
+      "top1": true,
       "top3": true
     },
     {
@@ -3857,11 +4018,11 @@
         "polygon.straight_skeleton.interior"
       ],
       "returned": [
-        "polygon.validate.straight_skeleton",
         "polygon.straight_skeleton.exterior",
-        "polygon.straight_skeleton.interior"
+        "polygon.straight_skeleton.interior",
+        "polygon.offset.interior"
       ],
-      "top1": false,
+      "top1": true,
       "top3": true
     },
     {
@@ -3873,11 +4034,11 @@
         "polygon.straight_skeleton.interior"
       ],
       "returned": [
-        "polygon.validate.straight_skeleton",
         "polygon.straight_skeleton.exterior",
-        "polygon.straight_skeleton.interior"
+        "polygon.straight_skeleton.interior",
+        "polygon.offset.interior"
       ],
-      "top1": false,
+      "top1": true,
       "top3": true
     },
     {
@@ -4305,8 +4466,8 @@
       ],
       "returned": [
         "shape.barycentric",
-        "reconstruction.validate.polygonal_surface",
-        "reconstruction.polygonal_surface"
+        "mesh.location.locate",
+        "mesh.validate.location"
       ],
       "top1": true,
       "top3": true
@@ -4320,8 +4481,8 @@
       ],
       "returned": [
         "shape.barycentric",
-        "reconstruction.validate.polygonal_surface",
-        "reconstruction.polygonal_surface"
+        "mesh.location.locate",
+        "mesh.validate.location"
       ],
       "top1": true,
       "top3": true
@@ -4336,7 +4497,7 @@
       "returned": [
         "shape.barycentric",
         "mesh.location.locate",
-        "reconstruction.validate.polygonal_surface"
+        "mesh.validate.location"
       ],
       "top1": true,
       "top3": true
@@ -4351,7 +4512,7 @@
       "returned": [
         "shape.barycentric",
         "mesh.location.locate",
-        "reconstruction.validate.polygonal_surface"
+        "mesh.validate.location"
       ],
       "top1": true,
       "top3": true
@@ -4574,11 +4735,11 @@
         "mesh.volume.generate"
       ],
       "returned": [
-        "mesh2.refine.delaunay",
         "mesh.volume.generate",
-        "mesh.surface.generate"
+        "mesh.validate.volume_mesh",
+        "mesh.validate.tetrahedral_mesh"
       ],
-      "top1": false,
+      "top1": true,
       "top3": true
     },
     {
@@ -4589,11 +4750,11 @@
         "mesh.volume.generate"
       ],
       "returned": [
-        "mesh2.refine.delaunay",
         "mesh.volume.generate",
-        "mesh.surface.generate"
+        "mesh.validate.volume_mesh",
+        "mesh.validate.tetrahedral_mesh"
       ],
-      "top1": false,
+      "top1": true,
       "top3": true
     },
     {
@@ -4783,9 +4944,12 @@
       "expected": [
         "optimization.matrix_search"
       ],
-      "returned": [],
-      "top1": false,
-      "top3": false
+      "returned": [
+        "optimization.matrix_search",
+        "optimization.validate.matrix_search"
+      ],
+      "top1": true,
+      "top3": true
     },
     {
       "id": "intent-ja-298",
@@ -4794,9 +4958,12 @@
       "expected": [
         "optimization.matrix_search"
       ],
-      "returned": [],
-      "top1": false,
-      "top3": false
+      "returned": [
+        "optimization.matrix_search",
+        "optimization.validate.matrix_search"
+      ],
+      "top1": true,
+      "top3": true
     },
     {
       "id": "intent-en-299",

@@ -7,6 +7,7 @@ typed synthetic artifacts, while execution remains deliberately UNMEASURED.
 from __future__ import annotations
 
 import argparse
+import asyncio
 from difflib import SequenceMatcher
 import hashlib
 import copy
@@ -34,7 +35,17 @@ EXECUTION_EXPECTATIONS = frozenset({"eligible", "documentation_only"})
 KNOWN_INPUT_TYPES = frozenset({
     "PointSet2", "PointSet3", "PointSet3Normals", "Polygon2", "PolygonSoup3", "PolygonWithHoles2",
     "RayBatch3", "SegmentGraph2", "TriangleSurfaceMesh", "Triangulation2", "Triangulation3",
-    "ImplicitSurfaceDomain", "TetrahedralMesh"})
+    "ImplicitSurfaceDomain", "TetrahedralMesh", "KernelQuerySet", "QuadraticProgram",
+    "InterpolationData2", "PointSet1"})
+KERNEL_FIXTURES = Path(__file__).resolve().parents[1] / "tests" / "fixtures" / "master" / "kernel"
+OPTIMIZATION_FIXTURES = Path(__file__).resolve().parents[1] / "tests" / "fixtures" / "master" / "optimization"
+# type -> (fixture path, unit); units follow the replay harnesses.
+EXTRA_SYNTHETIC = {
+    "KernelQuerySet": (KERNEL_FIXTURES / "predicates.json", "mm"),
+    "QuadraticProgram": (OPTIMIZATION_FIXTURES / "qp_optimal.json", "none"),
+    "InterpolationData2": (OPTIMIZATION_FIXTURES / "interp_linear_field.json", "mm"),
+    "PointSet1": (OPTIMIZATION_FIXTURES / "line_points.json", "mm"),
+}
 WAVE_C_FIXTURES = Path(__file__).resolve().parents[1] / "tests" / "fixtures" / "master" / "wave_c"
 WAVE_E_FIXTURES = Path(__file__).resolve().parents[1] / "tests" / "fixtures" / "master" / "wave_e"
 WAVE_C_SYNTHETIC = {"PointSet2": "planar_points.json", "PolygonWithHoles2": "polygon_with_hole.json",
@@ -403,24 +414,25 @@ def evaluate(corpus: dict[str, Any], *, runtime: Any,
             if not case["search"]["hit"]:
                 failures.append(case)
                 for bucket in buckets: bucket["failures"].append(case)
+        # Reference-document discovery is measured for every intent: an
+        # executable capability must not hide its package documentation.
+        docs_total += 1
+        for bucket in buckets: bucket["documentation_only"] += 1
+        docs = runtime.docs_search(intent["query"], 10)
+        results = docs.get("results", [])
+        returned = {item.get("package") for item in results if isinstance(item, dict)}
+        reference_only = all(item.get("executable") is False and item.get("scope") == "reference"
+                             for item in results if isinstance(item, dict))
+        hit = bool(set(intent["expected_packages"]) & returned) and reference_only
+        case["docs"] = {"hit": hit, "expected_packages": intent["expected_packages"],
+                        "returned_packages": sorted(x for x in returned if x),
+                        "reference_only": reference_only}
+        if hit:
+            docs_hits += 1
+            for bucket in buckets: bucket["docs_hits"] += 1
         else:
-            docs_total += 1
-            for bucket in buckets: bucket["documentation_only"] += 1
-            docs = runtime.docs_search(intent["query"], 10)
-            results = docs.get("results", [])
-            returned = {item.get("package") for item in results if isinstance(item, dict)}
-            reference_only = all(item.get("executable") is False and item.get("scope") == "reference"
-                                 for item in results if isinstance(item, dict))
-            hit = bool(set(intent["expected_packages"]) & returned) and reference_only
-            case["docs"] = {"hit": hit, "expected_packages": intent["expected_packages"],
-                            "returned_packages": sorted(x for x in returned if x),
-                            "reference_only": reference_only}
-            if hit:
-                docs_hits += 1
-                for bucket in buckets: bucket["docs_hits"] += 1
-            else:
-                failures.append(case)
-                for bucket in buckets: bucket["failures"].append(case)
+            failures.append(case)
+            for bucket in buckets: bucket["failures"].append(case)
         case["automatic_execution"] = {"status": "UNMEASURED",
             "reason": "The acceptance runner stops after planning and never calls execute"}
         cases.append(case)
@@ -679,6 +691,48 @@ def evaluate_goal_routing(corpus: dict[str, Any], *, runtime: Any,
     }
 
 
+async def _execute_sample(corpus: dict[str, Any], routing: dict[str, Any], *, runtime: Any,
+                          operation_index: dict[str, dict[str, Any]],
+                          artifact_ids_by_type: dict[str, str]) -> dict[str, Any]:
+    """Execute the plan chosen by the goal router for the first top-1 intent of each family.
+
+    The sample is fixed by corpus order (no cherry-picking) and every attempted
+    case is reported, including failures.  It measures that search-selected
+    operations actually run to a validated result on a typed fixture; it is not
+    a full execution measurement of all 300 intents.
+    """
+    by_id = {intent["id"]: intent for intent in corpus["intents"]}
+    chosen: dict[str, str] = {}
+    for case in routing["cases"]:
+        if case["outcome"] != "expected_top1":
+            continue
+        family = by_id[case["id"]]["family"]
+        chosen.setdefault(family, case["id"])
+    results: list[dict[str, Any]] = []
+    for family, intent_id in sorted(chosen.items(), key=lambda item: [int(x) for x in item[0].split(".")]):
+        intent = by_id[intent_id]
+        row: dict[str, Any] = {"id": intent_id, "family": family}
+        try:
+            request, _ = _routing_probe(intent, runtime=runtime, operation_index=operation_index,
+                                        artifact_ids_by_type=artifact_ids_by_type)
+            plan = runtime.plan(request)
+            row["selected_operation"] = plan.get("route", {}).get("selected")
+            queued = await runtime.execute(plan["plan_id"])
+            await runtime.tasks[queued["job_id"]]
+            status = runtime.job_status(queued["job_id"])
+            row.update(state=status.get("state"), execution_status=status.get("execution_status"),
+                       validation_status=status.get("validation_status"))
+            row["ok"] = (status.get("state") == "succeeded"
+                         and status.get("validation_status") in {"passed", "not_required", None})
+        except Exception as error:
+            row.update(ok=False, error=_error_details(error))
+        results.append(row)
+    return {"sample_size": len(results), "succeeded": sum(1 for row in results if row["ok"]),
+            "selection_rule": "first goal-routed top-1 intent of each family in corpus order",
+            "families": sorted(chosen), "cases": results,
+            "scope": "sample only; the other intents remain unexecuted"}
+
+
 RETRIEVAL_EVIDENCE_PATH = REPO / "docs" / "master" / "evidence" / "search-retrieval.json"
 RETRIEVAL_TARGET_PERCENT = 95.0
 HELD_OUT_MODULUS = 3
@@ -753,6 +807,7 @@ def retrieval_evidence(cases: list[dict[str, Any]], *, full_report: dict[str, An
             "The corpus is a checked-in authored development corpus; it was not frozen before routing work.",
             "Vocabulary changes after the baseline were derived from development-split misses only.",
             "The baseline miss list (ids and expected Operations) was visible for every split, so held_out is a weak, not a blind, estimate.",
+            "Blind generalization is reported separately in docs/master/evidence/search-blind.json (118 intents written from operation documentation, measured once after tuning was frozen).",
             "No per-query or Operation-ID string is hardcoded in search.py.",
         ],
         "target_percent": RETRIEVAL_TARGET_PERCENT,
@@ -770,6 +825,7 @@ def retrieval_evidence(cases: list[dict[str, Any]], *, full_report: dict[str, An
                 "planner_gates", {}).items() if k != "cases"},
             "goal_routing": {k: v for k, v in goal.items() if k != "cases"},
             "execute_calls": 0,
+            "execute_after_search_sample": full_report.get("execute_after_search_sample"),
         },
         "cases": cases,
     }
@@ -829,7 +885,9 @@ def _synthetic_artifacts(folder: Path, runtime: Any) -> dict[str, str]:
             "ImplicitSurfaceDomain":runtime.artifact_import(str(WAVE_E_FIXTURES/"domain_sphere.json"),"mm",
                 artifact_type="ImplicitSurfaceDomain")["artifact_id"],
             **{kind:runtime.artifact_import(str(WAVE_C_FIXTURES/name),"mm",artifact_type=kind)["artifact_id"]
-               for kind,name in WAVE_C_SYNTHETIC.items()}}
+               for kind,name in WAVE_C_SYNTHETIC.items()},
+            **{kind:runtime.artifact_import(str(path),unit,artifact_type=kind)["artifact_id"]
+               for kind,(path,unit) in EXTRA_SYNTHETIC.items()}}
 
 
 def run(corpus_path: Path = CORPUS_PATH, *, output: Path | None = None) -> dict[str, Any]:
@@ -865,6 +923,8 @@ def run(corpus_path: Path = CORPUS_PATH, *, output: Path | None = None) -> dict[
                                 artifact_ids_by_type=artifact_ids)
                 routing=evaluate_goal_routing(corpus,runtime=runtime,
                     operation_index=operation_index,artifact_ids_by_type=artifact_ids)
+                execute_sample=asyncio.run(_execute_sample(corpus,routing,runtime=runtime,
+                    operation_index=operation_index,artifact_ids_by_type=artifact_ids))
                 gates=evaluate_planner_gates(corpus["planner_gates"],runtime=runtime,
                                              artifact_ids_by_type=artifact_ids)
                 smoke=evaluate_package_smoke(package_smoke,runtime=runtime)
@@ -873,6 +933,7 @@ def run(corpus_path: Path = CORPUS_PATH, *, output: Path | None = None) -> dict[
             finally:
                 runtime.close()
         report.update(result); report["goal_routing"]=routing
+        report["execute_after_search_sample"]=execute_sample
         report["catalog_bound_retrieval_cases"]=retrieval_cases
         report["planner_gates"]=gates; report["package_discovery_smoke"]=smoke
         search_pass=(result["eligibility"]["passes_target"] and

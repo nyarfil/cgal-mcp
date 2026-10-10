@@ -85,7 +85,7 @@ VOCABULARY: dict[str, tuple[str, ...]] = {
                        "分離メッシュ", "切断由来情報"),
     "union": ("union", "unite", "merge solids", "combine solids", "和集合", "合体", "結合"),
     "intersection": ("intersection", "intersect", "overlap volume", "overlapping volume", "common volume",
-                     "交差", "共通部分", "積集合", "重なった体積"),
+                     "交差", "交点", "共通部分", "積集合", "重なった体積"),
     "difference": ("difference", "subtract", "cut away", "carve out", "差集合", "引き算", "くり抜"),
     "surface_intersection": ("intersection test", "intersection tests",
                              "surface intersection",
@@ -96,7 +96,13 @@ VOCABULARY: dict[str, tuple[str, ...]] = {
                           "faces cross", "自己交差", "自分自身と交差", "自分自身を貫"),
     "connected_components": ("connected component", "connected components",
                              "連結成分", "分離した成分", "disconnected pieces",
-                             "separate shells", "separate pieces", "分離した殻"),
+                             "separate shells", "separate pieces", "分離した殻",
+                             "connected face components", "disconnected shells",
+                             "component ids"),
+    "corefinement": ("corefine", "corefinement", "corefining", "コリファイン"),
+    "geometric_primitives": ("primitive", "primitives", "プリミティブ"),
+    "spatial_tree": ("spatial tree", "kd tree", "kd-tree", "k-d tree", "空間木"),
+    "matrix_search": ("matrix search", "matrix-search", "行列探索"),
     "mesh_normals": ("mesh normals", "surface normals", "face normals",
                      "vertex normals", "corner normals", "面法線", "頂点法線",
                      "コーナー法線", "メッシュ法線"),
@@ -168,7 +174,7 @@ VOCABULARY: dict[str, tuple[str, ...]] = {
     "volume_meshing": ("volume mesh", "volume meshing", "tetrahedral mesh",
                        "体積メッシュ", "四面体メッシュ", "ボリュームメッシュ",
                        "四面体ボリューム", "メッシュ生成領域", "3d mesh generation",
-                       "tetrahedral volume"),
+                       "tetrahedral volume", "cell quality", "meshing domain"),
     "surface_meshing": ("surface meshing", "surface mesh generation", "曲面メッシュ生成",
                         "conforming surface mesh", "表面メッシュを生成", "表面メッシュ生成",
                         "適合する表面メッシュ"),
@@ -176,7 +182,8 @@ VOCABULARY: dict[str, tuple[str, ...]] = {
                      "shape diameter field", "セグメンテーション", "領域分割"),
     "skeleton": ("skeleton", "skeletonization", "骨格", "スケルトン"),
     "shortest_path": ("shortest path", "geodesic", "最短経路", "測地線"),
-    "parameterization": ("parameterization", "parametrization", "パラメータ化", "パラメタ化", "uv展開"),
+    "parameterization": ("parameterization", "parametrization", "parameterize",
+                         "parametrize", "テクスチャ座標", "パラメータ化", "パラメタ化", "uv展開"),
     "subdivision": ("subdivision", "細分割", "サブディビジョン"),
     "barycentric": ("barycentric", "重心座標"),
     "optimization": ("optimization", "optimisation", "最適化", "二次計画", "線形計画"),
@@ -299,7 +306,7 @@ class MatchEvidence:
     confidence: str
 
 
-def parse_query(text: str) -> QueryTerms:
+def parse_query(text: str, *, document: bool = False) -> QueryTerms:
     normalized = normalize(text)
     matches = [(concept, normalize(phrase)) for concept, aliases in VOCABULARY.items()
                for phrase in aliases if _contains(normalized, phrase)]
@@ -314,6 +321,45 @@ def parse_query(text: str) -> QueryTerms:
         concepts.discard("intersection")
     if "bounded_normal_change" in concepts:
         concepts.discard("normals")
+    if not document and "corefinement" in concepts:
+        concepts -= {"intersection", "subdivision"}
+    if "overlay" in concepts or "arrangement" in concepts:
+        # "overlay their subdivisions" names the arrangement, not a mesh subdivision.
+        concepts.discard("subdivision")
+    if "straight_skeleton" in concepts:
+        concepts.discard("skeleton")
+    if "convex_decomposition" in concepts:
+        concepts.discard("approximation")
+    # Barycentric weights "reconstruct" a query position; this is not point
+    # cloud surface reconstruction.
+    if "barycentric" in concepts and "reconstruction" in concepts and re.search(
+            r"weights|重み", normalized):
+        concepts.discard("reconstruction")
+    # 2D texture coordinates are the output of a parameterization, and
+    # "2D or 3D" names both dimensions; neither restricts the input to 2D.
+    had_2d = "dimension_2d" in concepts
+    if "dimension_2d" in concepts and (
+            "parameterization" in concepts
+            or re.search(r"2d\s*(?:または|もしくは|か|or|and|及び|および|/)\s*3d", normalized)
+            or re.search(r"2d\s*(?:texture|テクスチャ)", normalized)):
+        concepts.discard("dimension_2d")
+    # Checking a predicate's existence condition is the predicate evaluation;
+    # "manifold predicates" in a mesh-health request are mesh properties instead.
+    if re.search(r"(?:manifold|mesh|多様体)\s*predicates?", normalized):
+        concepts.discard("predicates")
+    elif "predicates" in concepts and re.search(r"robust|exact|頑健|厳密|述語で", normalized):
+        concepts.discard("integrity")
+    # Preparing a point set for reconstruction is point preprocessing, not
+    # reconstruction or a generic validation request.
+    if re.search(r"prepared for reconstruction|reconstruction prerequisites|再構成前|再構成の前提", normalized):
+        concepts -= {"reconstruction", "validation", "integrity"}
+    # "geometric primitives" qualifies the operands of another named task.
+    if not document and "geometric_primitives" in concepts and len(concepts) > 1:
+        concepts.discard("geometric_primitives")
+    # "collision-inspection" / "検査用" qualifies the input scene.
+    if "integrity" in concepts and re.search(r"衝突検査|検査用の|collision", normalized) and not re.search(
+            r"検査して|検査し、|inspect|validate|check", normalized):
+        concepts.discard("integrity")
     explicit_mesh_normal = any(_contains(normalized, phrase) for phrase in (
         "face normals", "vertex normals", "corner normals", "mesh normals",
         "頂点法線", "コーナー法線", "メッシュ法線"))
@@ -414,7 +460,9 @@ def parse_query(text: str) -> QueryTerms:
         concepts -= {"normals", "point_normals", "mesh_normals"}
     concepts = frozenset(concepts)
     word_text = normalized
-    if re.search(r"2d\s*(?:または|もしくは|か|or|and|及び|および|/)\s*3d", normalized):
+    if had_2d and "dimension_2d" not in concepts:
+        word_text = normalized.replace("2d", " ")
+    elif re.search(r"2d\s*(?:または|もしくは|か|or|and|及び|および|/)\s*3d", normalized):
         word_text = normalized.replace("2d", " ", 1)
     extra = " ".join(english for japanese, english in JA_WORD_LEXICON if japanese in normalized)
     words = tuple(dict.fromkeys(_stem(word) for word in re.findall(
@@ -429,7 +477,7 @@ def parse_query(text: str) -> QueryTerms:
 
 @lru_cache(maxsize=4096)
 def document_terms(text: str) -> QueryTerms:
-    return parse_query(text.replace(".", " ").replace("/", " ").replace("-", " "))
+    return parse_query(text.replace(".", " ").replace("/", " ").replace("-", " "), document=True)
 
 
 def fts_expression(terms: QueryTerms) -> str | None:
@@ -471,6 +519,12 @@ def match_operation(query: QueryTerms, text: str, *,
     target_concepts = set(target.concepts)
     if target_concepts & {"mesh_normals", "point_normals"}:
         target_concepts.add("normals")
+    # Kernel-level intersection operations (no mesh/surface/solid operands)
+    # carry a "do_intersect" test alias, which parses as surface_intersection and
+    # would otherwise hide that they compute intersections.
+    if target_concepts & {"self_intersection", "surface_intersection"} and not re.search(
+            r"mesh|surface|solid|polyhedr", normalize(text)):
+        target_concepts.add("intersection")
     requested = frozenset(query.concepts & PRIMARY_CONCEPTS)
     covered = requested & target_concepts
     uncovered = requested - target_concepts

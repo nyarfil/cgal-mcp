@@ -919,6 +919,29 @@ def evaluate_search_gate(root: Path = REPO, *, live: bool = True,
             result["goal_routing_unmeasured_input_model"] = goal.get("unmeasured_input_model")
     if full is not None and full.get("execute_calls") != 0:
         reasons.append("Search evidence must not claim execution measurements")
+    sample = full.get("execute_after_search_sample") if isinstance(full, dict) else None
+    if not isinstance(sample, dict):
+        reasons.append("Automatic execution after search is unmeasured")
+    else:
+        result["execute_after_search_sample"] = {k: sample.get(k) for k in ("sample_size", "succeeded")}
+        reasons.append(
+            f"Automatic execution is measured on a {sample.get('sample_size')}-intent sample only "
+            f"({sample.get('succeeded')} succeeded); the other intents are not executed")
+    blind_path = root / "docs/master/evidence/search-blind.json"
+    blind_set = root / "docs/master/search_blind_set.json"
+    try:
+        blind = json.loads(blind_path.read_text(encoding="utf-8"))
+        if blind.get("blind_set_sha256") != hashlib.sha256(blind_set.read_bytes()).hexdigest():
+            reasons.append("Blind-set evidence does not match the current blind set")
+        else:
+            op = blind["operation_level"]
+            result["blind_set"] = {"count": blind["count"], "top1_percent": op["top1_pct"],
+                                   "top3_percent": op["top3_pct"]}
+            if op["top3_pct"] < SEARCH_TARGET_PERCENT:
+                reasons.append(f"Blind-set top-3 {op['top3_pct']}% is below {SEARCH_TARGET_PERCENT}% "
+                               f"(top-1 {op['top1_pct']}%, {blind['count']} intents)")
+    except (OSError, ValueError, KeyError, UnicodeError):
+        reasons.append("Blind-set generalization evidence is missing")
     if not reasons:
         result["status"] = "met"
         if SEARCH_GATE in WAVE_A_UNMET_STANDALONE_GATES:

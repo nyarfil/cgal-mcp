@@ -280,6 +280,12 @@ class PlanBuilder:
         if analysis.get("routing_confidence") == "ambiguous":
             raise InvalidInput("ambiguous_route", "Goal matches multiple operations equally; provide operation_id")
         selected = analysis.get("recommended_operation")
+        if not isinstance(selected, str) and any(
+                candidate.get("parameter_conflicts") for candidate in candidates[:3]):
+            # The goal names several variants (for example union, intersection
+            # and difference); one operation cannot be chosen safely.
+            raise InvalidInput("ambiguous_route",
+                               "Goal names several method variants; provide operation_id")
         if (analysis.get("automatic_route_supported") is not True
                 or analysis.get("routing_confidence") != "high"
                 or not isinstance(selected, str)
@@ -393,10 +399,17 @@ class PlanBuilder:
             if condition.get("id") == "bounded_input":
                 for artifact in artifacts:
                     metadata = artifact["metadata"]
-                    limits = (("size", "maximum_bytes", artifact["size"]),
-                              ("vertices", "maximum_vertices", metadata.get("vertices")),
-                              ("faces", "maximum_faces", metadata.get("faces")),
-                              ("max_face_degree", "maximum_face_degree", metadata.get("max_face_degree")))
+                    # Point sets have no faces: face limits constrain only the
+                    # mesh/soup artifacts of a multi-input operation, and a
+                    # point set's vertex count is its point count.
+                    is_mesh = "faces" in metadata or "vertices" in metadata
+                    limits = [("size", "maximum_bytes", artifact["size"]),
+                              ("vertices", "maximum_vertices",
+                               metadata.get("vertices", metadata.get("point_count")))]
+                    if is_mesh or not any(k in metadata for k in ("point_count", "bounds")):
+                        limits += [("faces", "maximum_faces", metadata.get("faces")),
+                                   ("max_face_degree", "maximum_face_degree",
+                                    metadata.get("max_face_degree"))]
                     for label, key, actual in limits:
                         if key in condition and (not isinstance(actual, int) or actual > condition[key]):
                             raise PreconditionFailure(

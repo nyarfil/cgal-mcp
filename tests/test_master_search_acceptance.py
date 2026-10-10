@@ -270,7 +270,9 @@ class MasterSearchAcceptanceTests(unittest.TestCase):
             "requirement_ids":["major.7.2.03"],"source_packages":["Spatial_searching"],
             "expected_execution":"eligible","expected_operations":["spatial.nearest"],
             "expected_packages":["Spatial_searching"],"input_types":["PointSet3"],"constraints":{},"intent_class":"general"}]}
-        report=acceptance.evaluate(corpus,runtime=object(),
+        class _DocsOnly:
+            def docs_search(self,query,limit): return {"results":[]}
+        report=acceptance.evaluate(corpus,runtime=_DocsOnly(),
             operation_index={"spatial.nearest":{"status":"CATALOGED"}},
             artifact_ids_by_type={"PointSet3":"artifact-points"})
         self.assertEqual(report["eligibility"]["denominator"],1)

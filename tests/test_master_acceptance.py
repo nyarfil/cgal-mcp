@@ -680,7 +680,11 @@ class SearchGateEvidenceTests(unittest.TestCase):
         self.assertTrue(retrieval_only["retrieval_target_met"])
         evidence["full_search_acceptance"]["passes_search_acceptance"] = True
         both = self.gate(evidence)
-        self.assertEqual(both["status"], "met_pending_gate_list_update")
+        # Retrieval and typed acceptance alone cannot meet the gate: automatic
+        # execution is only sampled and the blind generalization set is below target.
+        self.assertEqual(both["status"], "unmet")
+        self.assertTrue([r for r in both["reasons"] if "Blind-set top-3" in r])
+        self.assertTrue([r for r in both["reasons"] if "Automatic execution" in r])
 
 
 if __name__ == "__main__":
