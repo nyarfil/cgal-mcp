@@ -9,6 +9,7 @@ import re
 from pathlib import Path
 
 from scripts import master_replay_families as replay_families
+from scripts import package_provenance
 
 REPO = Path(__file__).resolve().parents[1]
 ORIGINALS = {
@@ -1555,6 +1556,51 @@ def evaluate_performance_gate(root: Path = REPO, *, live: bool = True,
     return result
 
 
+PACKAGE_GATE = "package_harvest_provenance"
+PACKAGE_EVIDENCE = "catalog/packages.json"
+
+
+def evaluate_package_harvest_gate(root: Path = REPO, *, source_root: Path | None = None) -> dict:
+    """Machine-check the package-wide harvest: status, reason, license and provenance per package.
+
+    Met only when every package has a vocabulary status with a reason code, validated counts match
+    the operations catalog, every license is finally classified from official sources, provenance
+    hashes are present, every operation license derives from its package record, and no package
+    or operation is left for human license review. Review items keep the gate unmet.
+    """
+    reasons: list[str] = []
+    result: dict = {"gate": PACKAGE_GATE, "status": "unmet", "evidence": PACKAGE_EVIDENCE,
+                    "reasons": reasons}
+    try:
+        inventory = json.loads((root / "catalog/major_capability_inventory.json").read_text(encoding="utf-8"))
+        operations = package_provenance.load_operations(root / "cgal_mcp/master/operations.json")
+        measured = package_provenance.check_catalog(
+            root / "catalog", operations=operations,
+            policy=package_provenance.load_policy(root / "catalog/package_status_policy.json"),
+            inventory=inventory, evidence_dir=root / "docs/master/evidence",
+            source_root=source_root, repo=root)
+        bundled_ok = all((root / "catalog" / name).read_bytes()
+                         == (root / "cgal_mcp/master/catalog" / name).read_bytes()
+                         for name in ("baseline.json", "packages.json", "docs_index.jsonl"))
+    except (OSError, ValueError, KeyError, TypeError) as exc:
+        reasons.append(f"Package harvest evidence is unreadable: {type(exc).__name__}: {exc}")
+        return result
+    reasons.extend(measured.pop("blocking_reasons"))
+    if not bundled_ok:
+        reasons.append("Bundled catalog snapshot differs from the canonical catalog")
+    review = measured["human_review"]
+    result["measured"] = {**measured, "inventory_items": len(inventory["items"]),
+                          "bundled_catalog_matches": bundled_ok,
+                          "license_provenance_notice": package_provenance.NOTICE,
+                          "source_tree_rehashed": source_root is not None}
+    if not reasons and (review["packages"] or review["operations"]):
+        reasons.append(f"{len(review['packages'])} package(s) and {len(review['operations'])} operation(s) "
+                       "need human license review; licenses are provenance data, not legal advice")
+    if not reasons:
+        result["status"] = "met"
+    return result
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--refresh-requirements", action="store_true")
@@ -1579,7 +1625,8 @@ def main() -> None:
         report["major_capabilities"] = evaluate_requirements(requirements, operations)
         report["standalone_gates"] = {SEARCH_GATE: evaluate_search_gate(REPO),
                                       WORKFLOW_GATE: evaluate_workflow_gate(REPO),
-                                      PERFORMANCE_GATE: evaluate_performance_gate(REPO)}
+                                      PERFORMANCE_GATE: evaluate_performance_gate(REPO),
+                                      PACKAGE_GATE: evaluate_package_harvest_gate(REPO)}
         report["standalone_acceptance_reason"] = "Additional package, routing, workflow, host and robustness gates required"
     content = json.dumps(report, ensure_ascii=False, indent=2) + "\n"
     if args.output:

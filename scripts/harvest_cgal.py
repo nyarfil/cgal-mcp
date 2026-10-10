@@ -11,6 +11,7 @@ from pathlib import Path
 from urllib.parse import unquote, urlparse
 
 from fetch_master_baseline import ARTIFACTS, VERSION, sha256_file, verified_official_provenance, verify_receipt
+import package_provenance as provenance_rules
 
 
 DOCS_BASE_URL = f"https://doc.cgal.org/{VERSION}"
@@ -242,9 +243,15 @@ def _validate_master_reference_documents() -> dict[str, str]:
     return dict(MASTER_REFERENCE_DOCUMENTS)
 
 
-def build_catalog(source_root: Path, docs_root: Path, provenance_inputs: dict[str, object] | None = None) -> tuple[dict, dict, list[dict]]:
+def build_catalog(source_root: Path, docs_root: Path, provenance_inputs: dict[str, object] | None = None,
+                  operations_path: Path = provenance_rules.DEFAULT_OPERATIONS,
+                  policy_path: Path = provenance_rules.DEFAULT_POLICY) -> tuple[dict, dict, list[dict]]:
     overview, provenance = validate_snapshot(source_root, docs_root, provenance_inputs)
     overview_packages = parse_package_overview(overview)
+    overview_licenses = provenance_rules.parse_overview_licenses(overview)
+    overview_evidence = {"path": overview.relative_to(docs_root).as_posix(), "sha256": sha256_file(overview)}
+    operations = provenance_rules.load_operations(operations_path)
+    policy = provenance_rules.load_policy(policy_path)
     source_header_index = _headers_by_source_package(source_root)
     source_archive = provenance["source"]
     docs_archive = provenance["docs"]
@@ -256,7 +263,12 @@ def build_catalog(source_root: Path, docs_root: Path, provenance_inputs: dict[st
         headers = source_header_index.get(package_id, [])
         examples = _examples_for(source_root, package_id)
         docs_entry = _docs_entry(docs_root, package_id)
-        license_metadata = _license_metadata(source_root, package_id, headers)
+        legacy_license = _license_metadata(source_root, package_id, headers)
+        href_directory = re.search(r"\.\./([A-Za-z0-9_]+)/index\.html", listed["href"])
+        license_metadata = provenance_rules.resolve_license(
+            package_id, overview_licenses.get(href_directory.group(1)) if href_directory else None,
+            overview_evidence, headers, source_root, legacy_license)
+        docs_example_pages = provenance_rules.count_docs_example_pages(docs_root, package_id)
         missing: list[str] = []
         if docs_entry is None:
             missing.append("docs_entry_missing")
@@ -292,13 +304,18 @@ def build_catalog(source_root: Path, docs_root: Path, provenance_inputs: dict[st
                 "tree_sha256": _tree_hash(source_root, headers),
             },
             "examples": {
+                "docs_example_page_count": docs_example_pages,
                 "count": len(examples),
                 "paths": [path.relative_to(source_root).as_posix() for path in examples],
                 "tree_sha256": _tree_hash(source_root, examples),
             },
             "license": license_metadata,
-            "corroboration": {"missing": missing},
+            "corroboration": {"missing": missing, "explanations": provenance_rules.explain_corroboration(
+                package_id, missing, docs_example_pages, len(headers))},
         }
+        coverage = provenance_rules.derive_coverage(package, operations, policy)
+        provenance_rules.apply_status(
+            package, coverage, ("incomplete corroboration: " + ", ".join(missing)) if missing else "")
         packages.append(package)
         docs_index.append({
             "kind": "package",

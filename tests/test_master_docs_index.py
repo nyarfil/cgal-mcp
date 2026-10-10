@@ -79,7 +79,9 @@ class MasterDocsIndexTests(unittest.TestCase):
             build_index(source, docs, catalog, output, allow_distribution_output=True, provenance_inputs=provenance)
             results = query_index(output, "Miscellaneous")
         package_results = [result for result in results if result["kind"] == "package"]
-        self.assertEqual(package_results[0]["status"], "CATALOGED")
+        # Miscellany is explicitly EXCLUDED (no_public_headers) by catalog/package_status_policy.json;
+        # an excluded package stays reference-searchable and reports its real status.
+        self.assertEqual(package_results[0]["status"], "EXCLUDED")
 
     def test_distribution_output_requires_explicit_override(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

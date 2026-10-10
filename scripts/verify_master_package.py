@@ -22,6 +22,12 @@ try:
     assert runtime.catalog_root == Path(module.__file__).with_name("catalog")
     packages = json.loads((runtime.catalog_root / "packages.json").read_text(encoding="utf-8"))
     assert len(packages["packages"]) == 126
+    statuses = {"VALIDATED", "IMPLEMENTED", "ADAPTER_PLANNED", "CATALOGED", "BLOCKED", "EXCLUDED"}
+    licenses = {"RESOLVED", "MIXED", "NEEDS_HUMAN_REVIEW", "UNRESOLVABLE"}
+    for package in packages["packages"]:
+        assert package["status"] in statuses and package["reason_code"] and package["reason"], package["id"]
+        assert package["license"]["status"] in licenses, package["id"]
+        assert package["coverage"]["status"] == package["status"], package["id"]
     result = runtime.docs_search("Convex")
     assert result["index_available"] and result["results"], result
     assert all(r["executable"] is False and r["scope"] == "reference" for r in result["results"])
