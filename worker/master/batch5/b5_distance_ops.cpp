@@ -89,6 +89,10 @@ auto with_sampling(const SamplingSpec& spec, F&& f) {
   if (spec.grid) {
     return f(P::use_grid_sampling(true).grid_spacing(spec.grid_spacing).do_sample_vertices(spec.include_vertices));
   }
+  // CGAL 6.2.1 draws the edge samples from the process-wide default Random, not from the random_seed named
+  // parameter, so the same request would otherwise return different edge points on every run. Reseeding the
+  // default generator with the request seed makes the whole sample reproducible.
+  CGAL::get_default_random() = CGAL::Random(static_cast<unsigned int>(spec.seed));
   return f(P::use_random_uniform_sampling(true)
                .random_seed(static_cast<unsigned int>(spec.seed))
                .number_of_points_on_faces(spec.points_on_faces)

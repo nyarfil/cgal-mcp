@@ -166,7 +166,7 @@ Range cone_range(const RawMesh& mesh, std::size_t f, LD half_angle) {
 // independently cast cone thickness.
 Json thickness_check(const Request& request, Loaded& c) {
   const LD half_angle = finite_number(request.parameters, "cone_angle", 0.0, 3.0, true) / 2;
-  const LD tolerance = finite_number(request.parameters, "thickness_tolerance", 0.0, 10.0, false);
+  const LD tolerance = finite_number(request.parameters, "thickness_tolerance", 0.0, 0.5, false);
   for (const double value : c.raw) {
     if (value == -1.0) {
       validation_failure("MISSING_SDF_VALUE",
@@ -209,6 +209,8 @@ constexpr const char* kIndependence =
 Json validate_sdf_values(const Request& request) {
   const std::string validator = "mesh.validate.sdf_values";
   require_parameter_names(request, {"cone_angle", "number_of_rays", "thickness_tolerance"});
+  // A band wider than 0.5 would make the thickness check vacuous: reject it before reading the report.
+  (void)finite_number(request.parameters, "thickness_tolerance", 0.0, 0.5, false);
   auto c = load(request, validator, "sdf_values");
   Json details = thickness_check(request, c);
   details["tolerances"] = kTolerances;
@@ -240,6 +242,7 @@ Json validate_segmentation(const Request& request) {
   require_parameter_names(request, {"cone_angle", "number_of_rays", "number_of_clusters", "smoothing_lambda",
                                     "thickness_tolerance"});
   const auto clusters_requested = query_ops::integer_parameter(request, "number_of_clusters", 1, 16);
+  (void)finite_number(request.parameters, "thickness_tolerance", 0.0, 0.5, false);
   auto c = load(request, validator, "sdf_segmentation");
   Json details = thickness_check(request, c);
   const std::size_t faces = c.mesh.faces.size();

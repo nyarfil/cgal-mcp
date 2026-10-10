@@ -460,7 +460,7 @@ class AcceptanceContractTests(unittest.TestCase):
         bound = {requirement_id for family in REPLAY_FAMILIES
                  for requirement_id in family_bindings(family)}
         replay_rows = [row for row in evaluated["requirements"] if row["id"] in bound]
-        self.assertEqual(len(replay_rows), 79)
+        self.assertEqual(len(replay_rows), 80)
         self.assertTrue(all(row["status"] == "INCOMPLETE" for row in replay_rows))
 
 
@@ -496,7 +496,7 @@ class GenericFamilyReplayTests(unittest.TestCase):
                     checked += 1
                     self.assertTrue(ledger[requirement_id])
                     self.assertEqual(sorted(ledger[requirement_id] - set(binding["symbols"])), [])
-        self.assertEqual(checked, 73)
+        self.assertEqual(checked, 74)
 
     def test_published_family_reports_fail_only_for_missing_replay(self):
         for requirement_id in GENERIC_BOUND:
@@ -525,9 +525,9 @@ class GenericFamilyReplayTests(unittest.TestCase):
     def test_unbound_requirement_cannot_borrow_family_evidence(self):
         report, item, operations = family_context("major.7.3.01")
         item = copy.deepcopy(item)
-        item["id"] = "major.7.3.06"
+        item["id"] = "major.7.3.99"  # every real 7.3 requirement is bound; use an undeclared id
         reasons = _evidence_reasons(report, item, operations, REPO)
-        self.assertIn("Family contract leaves this requirement unbound: major.7.3.06", reasons)
+        self.assertIn("Family contract leaves this requirement unbound: major.7.3.99", reasons)
 
     def test_other_family_report_cannot_establish_requirement(self):
         report, _item, operations = family_context("major.7.3.01")

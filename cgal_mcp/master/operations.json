@@ -1059,9 +1059,10 @@
       "preconditions": [],
       "evidence": {
         "tests": [
+          "tests/master_batch5_cases.py",
           "tests/master_wave_a_cases.py",
-          "tests/test_master_core.py",
-          "tests/master_wave_a_mcp_e2e.py"
+          "tests/master_wave_a_mcp_e2e.py",
+          "tests/test_master_core.py"
         ],
         "worker_manifest_operation": "mesh.distance.symmetric_hausdorff"
       },
@@ -1079,8 +1080,33 @@
         "default": "package_recommended"
       },
       "validation": {
-        "required": false,
-        "validators": [],
+        "required": true,
+        "validators": [
+          "mesh.validate.hausdorff_symmetric_report"
+        ],
+        "bindings": {
+          "mesh.validate.hausdorff_symmetric_report": {
+            "artifacts": {
+              "report": {
+                "output": "validation"
+              },
+              "reference": {
+                "input": "reference"
+              },
+              "candidate": {
+                "input": "candidate"
+              }
+            },
+            "parameters": {
+              "tolerance": {
+                "parameter": "tolerance"
+              },
+              "error_bound": {
+                "parameter": "error_bound"
+              }
+            }
+          }
+        },
         "required_report_checks": {
           "status": "pass",
           "valid": true,
@@ -1111,8 +1137,24 @@
             "pass",
             "fail",
             "indeterminate"
-          ]
+          ],
+          "validators": [
+            "mesh.validate.hausdorff_symmetric_report"
+          ],
+          "validator_parameter_bindings": {
+            "mesh.validate.hausdorff_symmetric_report": {
+              "tolerance": "tolerance",
+              "error_bound": "error_bound"
+            }
+          }
         }
+      },
+      "output_contract": {
+        "report_schema_version": 1,
+        "geometry_mutation": false,
+        "source_sha256_preserved": true,
+        "producer_diagnostics_are_non_authoritative": true,
+        "note": "The report echoes parameters and input SHA-256 digests so the independent mesh.validate.hausdorff_symmetric_report validator can recompute the symmetric Hausdorff bracket."
       }
     },
     {
@@ -37818,6 +37860,186 @@
       }
     },
     {
+      "id": "mesh.validate.hausdorff_symmetric_report",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "validator",
+      "summary": "Check a mesh.distance.symmetric_hausdorff report: parameters and input digests echoed, bounds and verdict follow from the estimate, error bound and tolerance, and the estimate lies within the error bound of an independently bracketed exact symmetric Hausdorff distance.",
+      "package": "Polygon_mesh_processing",
+      "aliases": [],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Polygon_mesh_processing"
+        },
+        {
+          "kind": "operation_reference",
+          "identifier": "mesh.distance.symmetric_hausdorff"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Polygon_mesh_processing",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/distance.h",
+            "sha256": "e4e10b3837b4175dd35d22f3056cc5a89d38b8e42f3bdaa1a84a390ca900f2bd"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "report",
+            "types": [
+              "ValidationReport"
+            ],
+            "formats": [
+              "json"
+            ],
+            "unit": "none"
+          },
+          {
+            "slot": "reference",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          },
+          {
+            "slot": "candidate",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "tolerance",
+          "error_bound"
+        ],
+        "properties": {
+          "tolerance": {
+            "type": "TypedLength",
+            "minimum": 0
+          },
+          "error_bound": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0
+          }
+        }
+      },
+      "preconditions": [],
+      "validation": {
+        "required": false,
+        "validators": [],
+        "bindings": {},
+        "terminal_validator": true,
+        "validates": "mesh.distance.symmetric_hausdorff",
+        "validates_all": [
+          "mesh.distance.symmetric_hausdorff"
+        ],
+        "required_report_checks": {
+          "status": "pass",
+          "passed": true,
+          "validator": "mesh.validate.hausdorff_symmetric_report",
+          "checks.parameters_match": true,
+          "checks.source_matches": true,
+          "checks.distance_unit_matches_mesh": true,
+          "checks.verdict_follows_bounds_and_tolerance": true,
+          "checks.distance_within_error_bound_of_exact_symmetric_bracket": true
+        }
+      },
+      "output_contract": {
+        "schema": "ValidationReport/v1",
+        "required_true_checks": [
+          "parameters_match",
+          "source_matches",
+          "distance_unit_matches_mesh",
+          "verdict_follows_bounds_and_tolerance",
+          "distance_within_error_bound_of_exact_symmetric_bracket"
+        ],
+        "status": "pass",
+        "failure_or_indeterminate_publish": false,
+        "independence": "exact rational vertex distances plus best-first Lipschitz subdivision bracket over brute-force point-triangle distances in both directions; no CGAL header"
+      },
+      "dependencies": [
+        "Polygon_mesh_processing"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "long double (no CGAL header)",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "distance_unit_matches_mesh",
+            "verdict_follows_bounds_and_tolerance",
+            "distance_within_error_bound_of_exact_symmetric_bracket"
+          ],
+          "independence": "exact rational vertex distances plus best-first Lipschitz subdivision bracket over brute-force point-triangle distances in both directions; no CGAL header",
+          "input_slots": [
+            "report",
+            "reference",
+            "candidate"
+          ],
+          "output_slot": "validation"
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "long double (no CGAL header)",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "square roots force a declared tolerance: 1e-9 relative to the larger mesh diagonal; Hausdorff suprema are bracketed to 0.5% of the diagonal",
+        "exact_constructions": "none",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_batch5_cases.py"
+        ],
+        "worker_manifest_operation": "mesh.validate.hausdorff_symmetric_report",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
       "id": "mesh.intersections.do_intersect",
       "revision": 1,
       "status": "VALIDATED",
@@ -43729,7 +43951,7 @@
           "thickness_tolerance": {
             "type": "number",
             "minimum": 0,
-            "maximum": 10,
+            "maximum": 0.5,
             "description": "Declared relative band the validator allows around the range of its own cone-ray thicknesses."
           }
         }
@@ -43929,7 +44151,7 @@
           "thickness_tolerance": {
             "type": "number",
             "minimum": 0,
-            "maximum": 10,
+            "maximum": 0.5,
             "description": "Declared relative band the validator allows around the range of its own cone-ray thicknesses."
           },
           "number_of_clusters": {
@@ -44695,7 +44917,7 @@
           "thickness_tolerance": {
             "type": "number",
             "minimum": 0,
-            "maximum": 10,
+            "maximum": 0.5,
             "description": "Declared relative band the validator allows around the range of its own cone-ray thicknesses."
           }
         }
@@ -44883,7 +45105,7 @@
           "thickness_tolerance": {
             "type": "number",
             "minimum": 0,
-            "maximum": 10,
+            "maximum": 0.5,
             "description": "Declared relative band the validator allows around the range of its own cone-ray thicknesses."
           },
           "number_of_clusters": {

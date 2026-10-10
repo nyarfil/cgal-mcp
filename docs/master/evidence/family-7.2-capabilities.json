@@ -103,14 +103,14 @@
   "unbound_requirements": {},
   "family_contract_sha256": "5930af268d34a2a9b903a048e8f47e133d591788d0044832b22048f66caa1999",
   "family_contract_source_path": "scripts/master_replay_families.py",
-  "family_contract_source_sha256": "f0a8b693fd4ee390274371058673548bbd7b8387c00634f1d9c14501de774db5",
+  "family_contract_source_sha256": "421fe71b0af06a9027bd69566588e27bf088506a43cc4e8f35390169311aaa4c",
   "family_contract_source_hash_encoding": "utf8-lf",
   "catalog_baseline_sha256": "143ec18a5b64d506aad60dc24b0a1ea30940c715d1223b3465fa140aeb9d02a7",
-  "operation_registry_sha256": "0799075ba4cae20f8557c7ff7b22021e9e3657938188cc386d69704e3715b82f",
+  "operation_registry_sha256": "31396b9694feb63fb49843cfd31deb132b69b08a7c70d9a03ddbdfc3b5d9c6b7",
   "operation_registry_hash_encoding": "utf8-lf",
   "policy_catalog_sha256": "45f4be759288aaeb834a3ce97aa64ee7768048b15534618fc8c19512801f9a9f",
   "policy_catalog_hash_encoding": "utf8-lf",
-  "worker_sha256": "73f42610c07ed94b884974998f1a590ca2131f016c33e2d1fb8b2ac1498cb3a8",
+  "worker_sha256": "70875f61b62ea9e3d3585fbcd68b118924a4a165382e3c12d60daf8c967c9a6c",
   "worker_binary_format": "pe",
   "worker_manifest": {
     "actual_cgal_version": "6.2.1",
@@ -288,6 +288,15 @@
           "method": "bounded_error_symmetric_Hausdorff_distance",
           "output_format": "json",
           "output_slot": "validation",
+          "validator_parameter_bindings": {
+            "mesh.validate.hausdorff_symmetric_report": {
+              "error_bound": "error_bound",
+              "tolerance": "tolerance"
+            }
+          },
+          "validators": [
+            "mesh.validate.hausdorff_symmetric_report"
+          ],
           "verdicts": [
             "pass",
             "fail",
@@ -8258,6 +8267,40 @@
       },
       {
         "dependencies": [
+          "Polygon_mesh_processing"
+        ],
+        "effective_kernel": "long double (no CGAL header)",
+        "id": "mesh.validate.hausdorff_symmetric_report",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "distance_unit_matches_mesh",
+            "verdict_follows_bounds_and_tolerance",
+            "distance_within_error_bound_of_exact_symmetric_bracket"
+          ],
+          "independence": "exact rational vertex distances plus best-first Lipschitz subdivision bracket over brute-force point-triangle distances in both directions; no CGAL header",
+          "input_slots": [
+            "report",
+            "reference",
+            "candidate"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "ValidationReport",
+          "TriangleSurfaceMesh",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
           "Straight_skeleton_2"
         ],
         "effective_kernel": "GMP rationals and long double (no CGAL header)",
@@ -9406,7 +9449,7 @@
     ],
     "worker": "cgal-master-worker"
   },
-  "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+  "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
   "tests": [
     {
       "id": "family-7.2-replay-cases",
@@ -9726,7 +9769,7 @@
       "case_id": "aabb-closest-cube",
       "operation_id": "spatial.aabb.closest_points",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.2-replay-cases",
       "request": {
         "inputs": [
@@ -9893,7 +9936,7 @@
       "case_id": "aabb-rays-cube",
       "operation_id": "spatial.aabb.ray_first_hits",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.2-replay-cases",
       "request": {
         "inputs": [
@@ -10062,7 +10105,7 @@
       "case_id": "knn-orthogonal",
       "operation_id": "spatial.knn_3",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.2-replay-cases",
       "request": {
         "inputs": [
@@ -10241,7 +10284,7 @@
       "case_id": "knn-general",
       "operation_id": "spatial.knn_3",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.2-replay-cases",
       "request": {
         "inputs": [
@@ -10417,7 +10460,7 @@
       "case_id": "knn-nearest-single",
       "operation_id": "spatial.knn_3",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.2-replay-cases",
       "request": {
         "inputs": [
@@ -10596,7 +10639,7 @@
       "case_id": "range-zero-radius",
       "operation_id": "spatial.range_search_3",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.2-replay-cases",
       "request": {
         "inputs": [
@@ -10775,7 +10818,7 @@
       "case_id": "range-half-radius",
       "operation_id": "spatial.range_search_3",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.2-replay-cases",
       "request": {
         "inputs": [
@@ -10954,7 +10997,7 @@
       "case_id": "bbox-planar",
       "operation_id": "spatial.bbox_2",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.2-replay-cases",
       "request": {
         "inputs": [
@@ -11098,7 +11141,7 @@
       "case_id": "bbox-cube-mesh",
       "operation_id": "spatial.bbox_3",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.2-replay-cases",
       "request": {
         "inputs": [
@@ -11242,7 +11285,7 @@
       "case_id": "bbox-point-set",
       "operation_id": "spatial.bbox_3",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.2-replay-cases",
       "request": {
         "inputs": [
@@ -11386,7 +11429,7 @@
       "case_id": "aabb-intersections-cube",
       "operation_id": "spatial.aabb.intersections",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.2-replay-cases",
       "request": {
         "inputs": [
@@ -11559,7 +11602,7 @@
       "case_id": "knn-zero-k-rejected",
       "operation_id": "spatial.knn_3",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.2-replay-cases",
       "request": {
         "inputs": [
@@ -11621,7 +11664,7 @@
       "case_id": "range-unit-mismatch-rejected",
       "operation_id": "spatial.range_search_3",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.2-replay-cases",
       "request": {
         "inputs": [
@@ -11685,7 +11728,7 @@
       "case_id": "rays-unit-mismatch-rejected",
       "operation_id": "spatial.aabb.ray_first_hits",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.2-replay-cases",
       "request": {
         "inputs": [
@@ -11744,7 +11787,7 @@
       "case_id": "bbox2-rejects-3d-points",
       "operation_id": "spatial.bbox_2",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.2-replay-cases",
       "request": {
         "inputs": [
@@ -11794,7 +11837,7 @@
       "case_id": "aabb-intersections-tampered-flag-rejected",
       "operation_id": "spatial.validate.aabb_intersections",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.2-replay-cases",
       "request": {
         "inputs": [

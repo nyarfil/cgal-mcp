@@ -269,6 +269,110 @@ Json run_hausdorff(const Request& request) {
                     {"independence", "exact rational vertex distances plus best-first Lipschitz subdivision bracket over brute-force point-triangle distances; no CGAL header"}});
 }
 
+// ---- bounded_error_symmetric_Hausdorff_distance (report of mesh.distance.symmetric_hausdorff) ------------
+
+LD length_scale(const std::string& unit) {
+  if (unit == "mm") return 1e-3L;
+  if (unit == "cm") return 1e-2L;
+  if (unit == "m") return 1;
+  validation_failure("UNIT_MISMATCH", "Unsupported length unit " + unit);
+  return 0;
+}
+
+// TypedLength parameter converted to the mesh unit.
+LD typed_in_unit(const Json& value, const std::string& name, const std::string& unit, bool strictly_positive) {
+  if (!value.is_object() || value.size() != 2 || !value.contains("value") || !value.contains("unit") ||
+      !value.at("unit").is_string() || !value.at("value").is_number() || value.at("value").is_boolean()) {
+    validation_failure("PARAMETER_MISMATCH", name + " must be a TypedLength {value, unit}");
+  }
+  const LD amount = value.at("value").get<double>();
+  const LD converted = amount * length_scale(value.at("unit").get<std::string>()) / length_scale(unit);
+  if (!std::isfinite(converted) || converted < 0 || (strictly_positive && converted <= 0)) {
+    validation_failure("PARAMETER_MISMATCH",
+                       name + " must be finite and " + (strictly_positive ? "positive" : "non-negative"));
+  }
+  return converted;
+}
+
+// {value, unit} member of the report, required to be in the mesh unit.
+LD report_length(const Json& report, const char* key, const std::string& unit) {
+  const auto item = require_member(report, key, "report");
+  if (!item.is_object() || item.size() != 2 || !item.contains("value") || !item.at("value").is_number() ||
+      item.at("value").is_boolean() || !item.contains("unit") || item.at("unit") != unit ||
+      !std::isfinite(item.at("value").get<double>())) {
+    validation_failure("REPORT_VALUE_INVALID", std::string(key) + " must be a finite {value, unit} in the mesh unit");
+  }
+  return item.at("value").get<double>();
+}
+
+bool close_to(LD a, LD b) { return std::fabs(a - b) <= 1e-12L * (1 + std::fabs(b)); }
+
+Json run_symmetric_hausdorff_report(const Request& request) {
+  const std::string validator = "mesh.validate.hausdorff_symmetric_report";
+  require_inputs(request, 3, validator);
+  require_parameter_names(request, {"tolerance", "error_bound"});
+  const auto report = read_report(request.inputs[0], "ValidationReport", "report_kind", "hausdorff_bounded_symmetric");
+  const auto reference = read_raw_mesh(request.inputs[1], {"TriangleSurfaceMesh"});
+  const auto candidate = read_raw_mesh(request.inputs[2], {"TriangleSurfaceMesh"});
+  const auto tr = triangles_of(reference, "The reference mesh");
+  const auto tc = triangles_of(candidate, "The candidate mesh");
+  const std::string unit = request.inputs[1].unit;
+  if (unit != request.inputs[2].unit) validation_failure("UNIT_MISMATCH", "The meshes use different units");
+  Json checks;
+  const auto results = batch2::check_report_frame(
+      report, "mesh.distance.symmetric_hausdorff", request.parameters,
+      {{"reference_sha256", &request.inputs[1]}, {"candidate_sha256", &request.inputs[2]}}, checks);
+  const double reported = distance_value(results, unit).get<double>();
+  checks["distance_unit_matches_mesh"] = true;
+  const LD tolerance = typed_in_unit(request.parameters.at("tolerance"), "tolerance", unit, false);
+  const LD error_bound = typed_in_unit(request.parameters.at("error_bound"), "error_bound", unit, true);
+
+  // The report frame must be self-consistent with the declared bounds and verdict.
+  const LD reported_lower = std::max<LD>(0, reported - error_bound);
+  const LD reported_upper = reported + error_bound;
+  if (!close_to(report_length(report, "distance_estimate", unit), reported) ||
+      !close_to(report_length(report, "tolerance", unit), tolerance) ||
+      !close_to(report_length(report, "error_bound", unit), error_bound) ||
+      !close_to(report_length(report, "lower_bound", unit), reported_lower) ||
+      !close_to(report_length(report, "upper_bound", unit), reported_upper)) {
+    validation_failure("REPORT_BOUNDS_INCONSISTENT",
+                       "The reported estimate, bounds, tolerance or error bound disagree with the parameters");
+  }
+  const std::string expected_verdict =
+      reported_upper <= tolerance ? "pass" : (reported_lower > tolerance ? "fail" : "indeterminate");
+  const auto verdict = require_member(report, "verdict", "report");
+  const auto status = require_member(report, "status", "report");
+  const auto valid = require_member(report, "valid", "report");
+  if (!verdict.is_string() || verdict.get<std::string>() != expected_verdict || !status.is_string() ||
+      status.get<std::string>() != (expected_verdict == "pass" ? "pass" : "fail") || !valid.is_boolean() ||
+      valid.get<bool>() != (expected_verdict == "pass") ||
+      require_member(report, "method", "report") != "bounded_error_symmetric") {
+    validation_failure("VERDICT_MISMATCH", "The reported verdict does not follow from the estimate, bound and tolerance");
+  }
+  checks["verdict_follows_bounds_and_tolerance"] = true;
+
+  const LD diagonal = std::max(diagonal_of(reference), diagonal_of(candidate));
+  const LD eps = kRelativeTolerance * (1 + diagonal);
+  const auto forward = one_sided(reference, candidate, tr, tc);
+  const auto backward = one_sided(candidate, reference, tc, tr);
+  const LD upper = std::max(forward.upper, backward.upper);
+  const LD lower = std::max(forward.lower, backward.lower);
+  if (reported < lower - error_bound - eps || reported > upper + error_bound + eps) {
+    validation_failure("DISTANCE_OUT_OF_BRACKET",
+                       "The reported distance is farther than the error bound from the exact symmetric Hausdorff bracket");
+  }
+  checks["distance_within_error_bound_of_exact_symmetric_bracket"] = true;
+  return concluded(request, validator, checks,
+                   {{"verdict", expected_verdict},
+                    {"recomputed_bracket_lower", static_cast<double>(lower)},
+                    {"recomputed_bracket_upper", static_cast<double>(upper)},
+                    {"recomputed_forward_vertex_lower_bound", static_cast<double>(forward.vertex_lower)},
+                    {"recomputed_backward_vertex_lower_bound", static_cast<double>(backward.vertex_lower)},
+                    {"bracket_width_relative_to_diagonal", static_cast<double>(kBracketWidth)},
+                    {"length_tolerance_relative_to_diagonal", static_cast<double>(kRelativeTolerance)},
+                    {"independence", "exact rational vertex distances plus best-first Lipschitz subdivision bracket over brute-force point-triangle distances in both directions; no CGAL header"}});
+}
+
 // ---- max_distance_to_triangle_mesh --------------------------------------------------------------------
 
 Json run_max_to_mesh(const Request& request) {
@@ -458,6 +562,14 @@ std::vector<OperationDefinition> distance_validators() {
       "validator", run_hausdorff, {"Polygon_mesh_processing"}, "long double (no CGAL header)",
       vinfo({"parameters_match", "source_matches", "distance_unit_matches_mesh", "distance_consistent_with_exact_hausdorff_bracket"}, {"candidate", "first", "second"},
             "exact rational vertex distances plus best-first Lipschitz subdivision bracket over brute-force point-triangle distances; no CGAL header")));
+  result.push_back(query_definition(
+      "mesh.validate.hausdorff_symmetric_report", {"ValidationReport", "TriangleSurfaceMesh", "TriangleSurfaceMesh"},
+      "ValidationReport", "validator", run_symmetric_hausdorff_report, {"Polygon_mesh_processing"},
+      "long double (no CGAL header)",
+      vinfo({"parameters_match", "source_matches", "distance_unit_matches_mesh", "verdict_follows_bounds_and_tolerance",
+             "distance_within_error_bound_of_exact_symmetric_bracket"},
+            {"report", "reference", "candidate"},
+            "exact rational vertex distances plus best-first Lipschitz subdivision bracket over brute-force point-triangle distances in both directions; no CGAL header")));
   return result;
 }
 

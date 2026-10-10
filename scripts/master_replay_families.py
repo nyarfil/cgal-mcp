@@ -669,19 +669,7 @@ FAMILY_7_3 = {
             "case_ids": ["location-brute-force", "location-aabb-tree"],
         },
     },
-    "unbound": {
-        "major.7.3.06": "Six of the seven ledger symbols (sample_triangle_mesh, max_distance_to_triangle_mesh, "
-                        "approximate_Hausdorff_distance, approximate_symmetric_Hausdorff_distance, "
-                        "approximate_max_distance_to_point_set, bounded_error_Hausdorff_distance) have "
-                        "analysis operations with independent validators (mesh.distance.sample_points, "
-                        "max_to_mesh, hausdorff_approximate, hausdorff_approximate_symmetric, max_to_points, "
-                        "hausdorff_bounded), but bounded_error_symmetric_Hausdorff_distance is only reachable "
-                        "through the wave-A simplification validator mesh.distance.symmetric_hausdorff, a "
-                        "validator-role operation with validation.required false whose ValidationReport output "
-                        "carries no source hashes: it cannot carry a mandatory validator chain, so a replay "
-                        "case cannot exercise it, and a second operation for the same CGAL function would "
-                        "violate the one-operation-per-function rule.",
-    },
+    "unbound": {},
     "cases": [
         *B2_CASES_7_3,
         _case("inspect-closed-tetra", "mesh.inspect.pmp", [_mesh(TETRA)], {}, [
@@ -4500,6 +4488,215 @@ FAMILY_7_3["negative_controls"].extend([
      "expect_error_class": "INVALID_REQUEST", "expect_error_code": "INVALID_PARAMETER"},
 ])
 
+
+# 7.3.06: distances. The 0..2 cube_a is compared with cube_shift_x (the cube translated by +1 in x) and with
+# cube_scaled2 (the cube scaled by 2 about the origin, [0,4]^3). Hand derivation (distances are to the SURFACE):
+# every vertex of the cube lies on the surface of the doubled cube, and the face centres of the cube lie 2 from the
+# doubled cube's far faces, so the one-sided distance cube -> doubled cube is 2; the corner (4,4,4) of the doubled
+# cube lies 2*sqrt(3) from the cube corner (2,2,2), so the reverse and the symmetric distance are 2*sqrt(3).
+# The shifted cube is 1 from the cube in both directions. dist_points holds (1,1,3) and (5,0,0): they are 1 and 3
+# from the cube surface, and the farthest cube-surface point from the nearer of the two is a corner at sqrt(11).
+B5_FIXTURES.update({
+    "cube_shift_x.off": "76773013b165e44ba4f7668144a74ea31cb43fc61bd102d3d368f16ca4adc7c9",
+    "cube_scaled2.off": "9806a1c431df5ef11c963c2223384c1dccd0dd8a4afb717341907ecdf98cd49c",
+    "dist_points.xyz": "6a701e2716b4b8e44c99a69b822650b785a75afcb17c1f229a8bfa60349cff7c",
+    "tampered_samples_off_surface.json": "721fbf1b1199792934aadb1af009f43af1ceec958251388b423333b79032cbff",
+    "tampered_samples_vertex_dropped.json": "659b94d19326554761c0b47a8f0db5003aabc6e1bf2d2b25c3d0399cf83d829a",
+    "tampered_max_to_mesh_low.json": "ba0dbdc7df1f427e160e04996fae4ad2fc24a20c07a3889520122bd5e611ac94",
+    "tampered_max_to_points_low.json": "16052eaff94a3e2af13843e94fbbe8937f15b222337aa2e7f06677496fbd9c9a",
+    "tampered_hausdorff_above_exact.json": "d47e55cae6c8f678fef188ea1fe1e03cebb7de6068bfada09e008220bfdad1b4",
+    "tampered_hausdorff_below_vertex.json": "fbb1e09a014500628fc112041204617b74371b10553f2b2a1b0a876592e486a5",
+    "tampered_hausdorff_bounded_low.json": "7efa546ff64acc2df40e8edae2c69bdab0b04cf6351dfa3dfbd6c65c2cb8acbc",
+    "tampered_hausdorff_symmetric_low.json": "53b2d941d104b444b3b5296927ee03869e5e7586023ee6a419957de80b3e6007",
+    "tampered_hausdorff_symmetric_verdict_flipped.json":
+        "5edc5fab391a03d4d89741f19a64e54df0d4cde6e75c683bcae4dc6e5b3e057d",
+})
+D_SHIFT_X = _b5mesh("cube_shift_x.off")
+D_SCALED = _b5mesh("cube_scaled2.off")
+D_POINTS = {**_b5fx("dist_points.xyz"), "type": "PointSet3", "format": "xyz", "unit": "mm"}
+
+
+def _b5vreport(name: str) -> dict:
+    return {**_b5fx(name), "type": "ValidationReport", "format": "json", "unit": "none"}
+
+
+D_GRID = {"method": "grid", "grid_spacing": _mm_length(0.5), "include_vertices": True}
+# The random sample is seeded (CGAL::Random seed 7), so the point COUNT is pinned; the positions are validated
+# to lie on the surface but are not re-derived.
+D_RANDOM = {"method": "random_uniform", "random_seed": 7, "points_on_faces": 200, "points_on_edges": 50,
+            "include_vertices": True}
+D_SYMMETRIC_BOUNDS = {"tolerance": _mm_length(5), "error_bound": _mm_length(0.01)}
+D_CUBE_VERTICES = [[0, 0, 0], [2, 0, 0], [2, 2, 0], [0, 2, 0], [0, 0, 2], [2, 0, 2], [2, 2, 2], [0, 2, 2]]
+D_ALGORITHM = "CGAL::Polygon_mesh_processing::"
+FAMILY_7_3["requirements"]["major.7.3.06"] = {
+    "operation_ids": ["mesh.distance.sample_points", "mesh.distance.max_to_mesh",
+                      "mesh.distance.hausdorff_approximate", "mesh.distance.hausdorff_approximate_symmetric",
+                      "mesh.distance.max_to_points", "mesh.distance.hausdorff_bounded",
+                      "mesh.distance.symmetric_hausdorff"],
+    "symbols": ["sample_triangle_mesh", "max_distance_to_triangle_mesh", "approximate_Hausdorff_distance",
+                "approximate_symmetric_Hausdorff_distance", "approximate_max_distance_to_point_set",
+                "bounded_error_Hausdorff_distance", "bounded_error_symmetric_Hausdorff_distance"],
+    "symbol_notes": "Each of the seven ledger symbols is replayed through its own operation on the 0..2 cube_a, a "
+                    "+1 x-translated copy and the doubled cube, against hand-derived distances (1, 2, 2*sqrt(3), "
+                    "3, sqrt(11); see the comment above this contract). sample_triangle_mesh is replayed with a "
+                    "grid and a seeded random sample (the cube vertices come first; the sample counts are pinned "
+                    "from the run, not hand-derived, and the random positions are only checked to lie on the "
+                    "surface). The sampled and one-sided Hausdorff estimates, max_distance_to_triangle_mesh "
+                    "(exact rational brute force) and approximate_max_distance_to_point_set / "
+                    "bounded_error_Hausdorff_distance (within their declared precision/error bound of an exact "
+                    "bracket) are each checked by a CGAL-independent validator that brackets the exact value "
+                    "with GMP rational vertex distances and a Lipschitz subdivision (bracket width 0.5% of the "
+                    "mesh diagonal, tolerance 1e-9 relative). bounded_error_symmetric_Hausdorff_distance is "
+                    "replayed through mesh.distance.symmetric_hausdorff, whose report now echoes its parameters "
+                    "and the SHA-256 of both meshes and is bound to the mandatory validator "
+                    "mesh.validate.hausdorff_symmetric_report; that validator recomputes the bracket in both "
+                    "directions, checks the bounds and the pass/fail/indeterminate verdict against the "
+                    "tolerance and requires the estimate within the error bound of the exact bracket (a "
+                    "verdict of fail is replayed as well and is not hidden). Only meshes of at most 400 faces "
+                    "are validated; the validators do not certify the sampled estimate beyond the bracket.",
+    "case_ids": ["distance-samples-grid", "distance-samples-random", "distance-max-to-mesh",
+                 "distance-hausdorff-approximate", "distance-hausdorff-approximate-symmetric",
+                 "distance-max-to-points", "distance-hausdorff-bounded", "distance-symmetric-shifted-pass",
+                 "distance-symmetric-doubled-pass", "distance-symmetric-doubled-fail-verdict"],
+}
+
+
+def _symmetric_case(case_id: str, other: dict, parameters: dict, distance: float, verdict: str, lower: float,
+                    upper: float) -> dict:
+    return _case(case_id, "mesh.distance.symmetric_hausdorff", [_mesh(CUBE_A), other], parameters, [
+        ["metrics.status", "==", "fail" if verdict != "pass" else "pass"],
+        ["output:validation:json:report_kind", "==", "hausdorff_bounded_symmetric"],
+        ["output:validation:json:method", "==", "bounded_error_symmetric"],
+        ["output:validation:json:verdict", "==", verdict],
+        ["output:validation:json:valid", "==", verdict == "pass"],
+        ["output:validation:json:parameters.tolerance.value", "==", parameters["tolerance"]["value"]],
+        ["output:validation:json:parameters.tolerance.unit", "==", "mm"],
+        ["output:validation:json:parameters.error_bound.value", "==", 0.01],
+        ["output:validation:json:parameters.error_bound.unit", "==", "mm"],
+        ["output:validation:json:distance_estimate.value", "approx", [distance, 0.01]],
+        ["output:validation:json:results.distance", "approx", [distance, 0.01]],
+        ["output:validation:json:lower_bound.value", "approx", [lower, 0.011]],
+        ["output:validation:json:upper_bound.value", "approx", [upper, 0.011]],
+        ["output:validation:json:error_bound.value", "==", 0.01],
+        ["output:validation:json:tolerance.value", "==", parameters["tolerance"]["value"]],
+        ["output:validation:json:effective_concurrency", "==", "sequential"],
+        ["output:validation:json:source.reference_sha256", "==", {"path": "input:reference:sha256"}],
+        ["output:validation:json:source.candidate_sha256", "==", {"path": "input:candidate:sha256"}],
+    ])
+
+
+FAMILY_7_3["cases"].extend([
+    _case("distance-samples-grid", "mesh.distance.sample_points", [_mesh(CUBE_A)], {"sampling": D_GRID}, [
+        ["output:analysis:json:report_kind", "==", "mesh_samples"],
+        ["metrics.algorithm", "==", D_ALGORITHM + "sample_triangle_mesh"],
+        ["metrics.point_count", "==", 152],
+        ["output:analysis:json:summary.point_count", "==", 152],
+        *[[f"output:analysis:json:results.points.{index}", "==", vertex] for index, vertex in enumerate(D_CUBE_VERTICES)],
+    ]),
+    _case("distance-samples-random", "mesh.distance.sample_points", [_mesh(CUBE_A)], {"sampling": D_RANDOM}, [
+        ["output:analysis:json:report_kind", "==", "mesh_samples"],
+        # 8 vertices + 200 face points + 50 edge points.
+        ["metrics.point_count", "==", 258],
+        ["output:analysis:json:summary.point_count", "==", 258],
+        *[[f"output:analysis:json:results.points.{index}", "==", vertex] for index, vertex in enumerate(D_CUBE_VERTICES)],
+    ]),
+    _case("distance-max-to-mesh", "mesh.distance.max_to_mesh", [D_POINTS, _mesh(CUBE_A)], {}, [
+        ["output:analysis:json:report_kind", "==", "max_distance_to_mesh"],
+        ["metrics.algorithm", "==", D_ALGORITHM + "max_distance_to_triangle_mesh"],
+        # (1,1,3) is 1 above the face z=2 and (5,0,0) is 3 from the face x=2.
+        ["output:analysis:json:results.distance", "approx", [3.0, 1e-9]],
+        ["output:analysis:json:summary.point_count", "==", 2],
+        ["output:analysis:json:summary.face_count", "==", 12],
+    ]),
+    _case("distance-hausdorff-approximate", "mesh.distance.hausdorff_approximate", [_mesh(CUBE_A), D_SCALED],
+          {"sampling": D_GRID}, [
+        ["output:analysis:json:report_kind", "==", "hausdorff_approximate"],
+        ["metrics.algorithm", "==", D_ALGORITHM + "approximate_Hausdorff_distance"],
+        ["output:analysis:json:results.distance", "approx", [2.0, 1e-9]],
+    ]),
+    _case("distance-hausdorff-approximate-symmetric", "mesh.distance.hausdorff_approximate_symmetric",
+          [_mesh(CUBE_A), D_SCALED], {"sampling": D_GRID}, [
+        ["output:analysis:json:report_kind", "==", "hausdorff_approximate_symmetric"],
+        ["metrics.algorithm", "==", D_ALGORITHM + "approximate_symmetric_Hausdorff_distance"],
+        ["output:analysis:json:results.distance", "approx", [2.0 * SQRT3, 1e-6]],
+    ]),
+    _case("distance-max-to-points", "mesh.distance.max_to_points", [_mesh(CUBE_A), D_POINTS],
+          {"precision": _mm_length(0.01)}, [
+        ["output:analysis:json:report_kind", "==", "max_distance_to_points"],
+        ["metrics.algorithm", "==", D_ALGORITHM + "approximate_max_distance_to_point_set"],
+        # The exact supremum is the corner distance sqrt(11); CGAL returns it within the precision 0.01.
+        ["output:analysis:json:results.distance", "approx", [math.sqrt(11.0), 0.0101]],
+    ]),
+    _case("distance-hausdorff-bounded", "mesh.distance.hausdorff_bounded", [_mesh(CUBE_A), D_SCALED],
+          {"error_bound": _mm_length(0.01)}, [
+        ["output:analysis:json:report_kind", "==", "hausdorff_bounded"],
+        ["metrics.algorithm", "==", D_ALGORITHM + "bounded_error_Hausdorff_distance"],
+        ["output:analysis:json:results.distance", "approx", [2.0, 0.01]],
+    ]),
+    _symmetric_case("distance-symmetric-shifted-pass", D_SHIFT_X,
+                    {"tolerance": _mm_length(1.5), "error_bound": _mm_length(0.01)}, 1.0, "pass", 0.99, 1.01),
+    _symmetric_case("distance-symmetric-doubled-pass", D_SCALED, D_SYMMETRIC_BOUNDS, 2.0 * SQRT3, "pass",
+                    2.0 * SQRT3 - 0.01, 2.0 * SQRT3 + 0.01),
+    _symmetric_case("distance-symmetric-doubled-fail-verdict", D_SCALED,
+                    {"tolerance": _mm_length(2), "error_bound": _mm_length(0.01)}, 2.0 * SQRT3, "fail",
+                    2.0 * SQRT3 - 0.01, 2.0 * SQRT3 + 0.01),
+])
+FAMILY_7_3["negative_controls"].extend([
+    {"id": "distance-tampered-samples-off-surface-rejected", "operation": "mesh.validate.distance_samples",
+     "inputs": [_b5report("tampered_samples_off_surface.json"), _mesh(CUBE_A)], "parameters": {"sampling": D_GRID},
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "SAMPLE_OFF_SURFACE"},
+    {"id": "distance-tampered-samples-vertex-dropped-rejected", "operation": "mesh.validate.distance_samples",
+     "inputs": [_b5report("tampered_samples_vertex_dropped.json"), _mesh(CUBE_A)], "parameters": {"sampling": D_GRID},
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "VERTICES_MISSING"},
+    {"id": "distance-tampered-max-to-mesh-low-rejected", "operation": "mesh.validate.max_distance_to_mesh",
+     "inputs": [_b5report("tampered_max_to_mesh_low.json"), D_POINTS, _mesh(CUBE_A)], "parameters": {},
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "DISTANCE_MISMATCH"},
+    {"id": "distance-tampered-max-to-points-low-rejected", "operation": "mesh.validate.max_distance_to_points",
+     "inputs": [_b5report("tampered_max_to_points_low.json"), _mesh(CUBE_A), D_POINTS],
+     "parameters": {"precision": _mm_length(0.01)},
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "DISTANCE_OUT_OF_BRACKET"},
+    {"id": "distance-tampered-hausdorff-above-exact-rejected", "operation": "mesh.validate.hausdorff_report",
+     "inputs": [_b5report("tampered_hausdorff_above_exact.json"), _mesh(CUBE_A), D_SCALED],
+     "parameters": {"sampling": D_GRID},
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "DISTANCE_ABOVE_EXACT"},
+    {"id": "distance-tampered-hausdorff-below-vertex-rejected", "operation": "mesh.validate.hausdorff_report",
+     "inputs": [_b5report("tampered_hausdorff_below_vertex.json"), _mesh(CUBE_A), D_SCALED],
+     "parameters": {"sampling": D_GRID},
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "DISTANCE_BELOW_VERTEX_BOUND"},
+    {"id": "distance-tampered-hausdorff-bounded-low-rejected", "operation": "mesh.validate.hausdorff_report",
+     "inputs": [_b5report("tampered_hausdorff_bounded_low.json"), _mesh(CUBE_A), D_SCALED],
+     "parameters": {"error_bound": _mm_length(0.01)},
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "DISTANCE_OUT_OF_BRACKET"},
+    {"id": "distance-tampered-symmetric-low-rejected", "operation": "mesh.validate.hausdorff_symmetric_report",
+     "inputs": [_b5vreport("tampered_hausdorff_symmetric_low.json"), _mesh(CUBE_A), D_SCALED],
+     "parameters": {"tolerance": _mm_length(2), "error_bound": _mm_length(0.01)},
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "DISTANCE_OUT_OF_BRACKET"},
+    {"id": "distance-tampered-symmetric-verdict-flipped-rejected",
+     "operation": "mesh.validate.hausdorff_symmetric_report",
+     "inputs": [_b5vreport("tampered_hausdorff_symmetric_verdict_flipped.json"), _mesh(CUBE_A), D_SCALED],
+     "parameters": {"tolerance": _mm_length(2), "error_bound": _mm_length(0.01)},
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "VERDICT_MISMATCH"},
+    {"id": "distance-symmetric-report-wrong-candidate-rejected",
+     "operation": "mesh.validate.hausdorff_symmetric_report",
+     "inputs": [_b5vreport("tampered_hausdorff_symmetric_verdict_flipped.json"), _mesh(CUBE_A), D_SHIFT_X],
+     "parameters": {"tolerance": _mm_length(2), "error_bound": _mm_length(0.01)},
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "SOURCE_MISMATCH"},
+    {"id": "distance-symmetric-report-wrong-parameters-rejected",
+     "operation": "mesh.validate.hausdorff_symmetric_report",
+     "inputs": [_b5vreport("tampered_hausdorff_symmetric_verdict_flipped.json"), _mesh(CUBE_A), D_SCALED],
+     "parameters": {"tolerance": _mm_length(9), "error_bound": _mm_length(0.01)},
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "PARAMETER_MISMATCH"},
+    {"id": "distance-hausdorff-bounded-zero-error-rejected", "operation": "mesh.distance.hausdorff_bounded",
+     "inputs": [_mesh(CUBE_A), D_SCALED], "parameters": {"error_bound": _mm_length(0)},
+     "expect_error_class": "INVALID_REQUEST", "expect_error_code": "INVALID_PARAMETER"},
+    {"id": "distance-symmetric-zero-error-rejected", "operation": "mesh.distance.symmetric_hausdorff",
+     "inputs": [_mesh(CUBE_A), D_SCALED], "parameters": {"tolerance": _mm_length(1), "error_bound": _mm_length(0)},
+     "expect_error_class": "INVALID_REQUEST", "expect_error_code": "INVALID_TYPED_LENGTH"},
+    {"id": "distance-sampling-unknown-key-rejected", "operation": "mesh.distance.hausdorff_approximate",
+     "inputs": [_mesh(CUBE_A), D_SCALED], "parameters": {"sampling": {**D_GRID, "unexpected": 1}},
+     "expect_error_class": "INVALID_REQUEST", "expect_error_code": "INVALID_PARAMETER"},
+])
+
 # <<< b5-73
 
 # >>> b5-712
@@ -5308,6 +5505,15 @@ FAMILY_7_8["negative_controls"].extend([
      "parameters": B9_SEG_NARROW, "expect_error_class": "PRECONDITION_FAILED", "expect_error_code": "MESH_NOT_CLOSED"},
     {"id": "sdf-zero-cone-rejected", "operation": "mesh.segment.sdf_values", "inputs": [B9_BODY_ARM],
      "parameters": dict(B9_SDF_NARROW, cone_angle=0.0),
+     "expect_error_class": "INVALID_REQUEST", "expect_error_code": "INVALID_PARAMETER"},
+    # A thickness_tolerance above 0.5 would make the validator band vacuous (e.g. 9 admits any value in
+    # [L_min * -8, L_max * 10]); both the producer and the validator reject it.
+    {"id": "sdf-vacuous-thickness-tolerance-rejected", "operation": "mesh.segment.sdf_values",
+     "inputs": [B9_BODY_ARM], "parameters": dict(B9_SDF_NARROW, thickness_tolerance=9.0),
+     "expect_error_class": "INVALID_REQUEST", "expect_error_code": "INVALID_PARAMETER"},
+    {"id": "sdf-validator-vacuous-thickness-tolerance-rejected", "operation": "mesh.validate.sdf_values",
+     "inputs": [_b9report("tampered_sdf_thick_arm.json"), B9_BODY_ARM],
+     "parameters": dict(B9_SDF_NARROW, thickness_tolerance=9.0),
      "expect_error_class": "INVALID_REQUEST", "expect_error_code": "INVALID_PARAMETER"},
 ])
 

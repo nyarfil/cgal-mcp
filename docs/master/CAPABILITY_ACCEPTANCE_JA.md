@@ -1,7 +1,7 @@
 # 原本の主要能力を実計算で判定する
 
 原本7.1〜7.15の15分野・80要求を固定母数とし、実計算の再試験へ結び付けた要求は
-79/80です（7.1カーネル5、7.7軽量化6、7.6メッシュ再生成5、7.3解析7、7.4修復6、7.5 Boolean・clip・split・corefine・slicer 5、7.9点群6、7.2空間問合せ5、7.11三角形分割（periodic・球面を含む）5、7.12多角形7、7.13凸包・alpha shape・alpha wrap・bounding volume・重心座標5、7.14 Mesh_2・Surface_mesher・Mesh_3・Mesh_3 criteria 4、7.15 LP/QP・補間・VSA近似・sorted matrix search 4、7.10曲面再構成3（Poisson・advancing front等・alpha wrap）、7.8 SDF区分化・細分割・最短経路・近似凸分解・骨格抽出・パラメータ化6）。
+80/80です（7.1カーネル5、7.7軽量化6、7.6メッシュ再生成5、7.3解析8、7.4修復6、7.5 Boolean・clip・split・corefine・slicer 5、7.9点群6、7.2空間問合せ5、7.11三角形分割（periodic・球面を含む）5、7.12多角形7、7.13凸包・alpha shape・alpha wrap・bounding volume・重心座標5、7.14 Mesh_2・Surface_mesher・Mesh_3・Mesh_3 criteria 4、7.15 LP/QP・補間・VSA近似・sorted matrix search 4、7.10曲面再構成3（Poisson・advancing front等・alpha wrap）、7.8 SDF区分化・細分割・最短経路・近似凸分解・骨格抽出・パラメータ化6）。
 点群処理の個別Operationや凸包の基盤受入を、未完了の要求全体の達成へ加算しません。
 結合済みの要求は、各要求の説明に列挙された全variantと台帳の全subcapability symbolを、
 検証済みOperationと必須validatorを通る再試験ケースで網羅した場合だけ結び付けています。
@@ -37,8 +37,8 @@ Operation・parameter、behaviour assertion（閉じた比較演算子と選択�
 
 Linuxではworkerを`build-master/cgal-master-worker`へ置き換えます。
 
-7.9.05（OpenGR登録）と7.10.02（PolyFitのSCIP）は任意依存です。これらを含むworkerでのみ再試験でき、含まないworkerでは当該Operationが`OPTIONAL_DEPENDENCY_NOT_BUILT`を返すため、79/80は両依存を含むbuildでの値です。版・license・取得元・sha256は[第三者依存](THIRD_PARTY_DEPENDENCIES_JA.md)に記録しています。
-CIの再試験はOpenGR・SCIPを含まないworkerで走るため`--skip-unavailable-optional`で7.9・7.10を明示的に除外し、減った件数を報告します（CIは79/80を主張しません）。
+7.9.05（OpenGR登録）と7.10.02（PolyFitのSCIP）は任意依存です。これらを含むworkerでのみ再試験でき、含まないworkerでは当該Operationが`OPTIONAL_DEPENDENCY_NOT_BUILT`を返すため、80/80は両依存を含むbuildでの値です。版・license・取得元・sha256は[第三者依存](THIRD_PARTY_DEPENDENCIES_JA.md)に記録しています。
+CIの再試験はOpenGR・SCIPを含まないworkerで走るため`--skip-unavailable-optional`で7.9・7.10を明示的に除外し、減った件数を報告します（CIは80/80を主張しません）。
 7.9.05は`CGAL::OpenGR::register_point_sets`・`compute_registration_transformation`（OpenGR版）のみを対象とします。libpointmatcher版（`CGAL::pointmatcher::*`）は未導入で対象外です（台帳の必須symbolはOpenGRのヘッダを指し、pointmatcherは例題の言及のみ）。
 7.10.01 `poisson_delaunay`はCGAL 6.2.1の制約（半径の2乗の取り違え）でR=10の球の約41%が未被覆になるため、R=2 mmの球で被覆95%以上を固定し、R=10の部分結果とトーラスは対象外（負例）です。
 7.9.05の回転検査は直交性・行列式を1e-9の許容で確認します（厳密な有理数ではありません）。点の像は2進浮動小数の座標に対する厳密有理数演算で検査します。

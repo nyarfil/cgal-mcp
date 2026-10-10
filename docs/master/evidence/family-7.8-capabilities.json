@@ -120,16 +120,16 @@
     }
   },
   "unbound_requirements": {},
-  "family_contract_sha256": "cf7b3cb75d84d76ca051d1324d7d18a414625fe1604a259f6e37f0ba2ab2e95f",
+  "family_contract_sha256": "e95b009bcb07ba9c96be4f1511290eaf93ee1554c77807b1d527cabebd1c1d14",
   "family_contract_source_path": "scripts/master_replay_families.py",
-  "family_contract_source_sha256": "f0a8b693fd4ee390274371058673548bbd7b8387c00634f1d9c14501de774db5",
+  "family_contract_source_sha256": "421fe71b0af06a9027bd69566588e27bf088506a43cc4e8f35390169311aaa4c",
   "family_contract_source_hash_encoding": "utf8-lf",
   "catalog_baseline_sha256": "143ec18a5b64d506aad60dc24b0a1ea30940c715d1223b3465fa140aeb9d02a7",
-  "operation_registry_sha256": "0799075ba4cae20f8557c7ff7b22021e9e3657938188cc386d69704e3715b82f",
+  "operation_registry_sha256": "31396b9694feb63fb49843cfd31deb132b69b08a7c70d9a03ddbdfc3b5d9c6b7",
   "operation_registry_hash_encoding": "utf8-lf",
   "policy_catalog_sha256": "45f4be759288aaeb834a3ce97aa64ee7768048b15534618fc8c19512801f9a9f",
   "policy_catalog_hash_encoding": "utf8-lf",
-  "worker_sha256": "73f42610c07ed94b884974998f1a590ca2131f016c33e2d1fb8b2ac1498cb3a8",
+  "worker_sha256": "70875f61b62ea9e3d3585fbcd68b118924a4a165382e3c12d60daf8c967c9a6c",
   "worker_binary_format": "pe",
   "worker_manifest": {
     "actual_cgal_version": "6.2.1",
@@ -307,6 +307,15 @@
           "method": "bounded_error_symmetric_Hausdorff_distance",
           "output_format": "json",
           "output_slot": "validation",
+          "validator_parameter_bindings": {
+            "mesh.validate.hausdorff_symmetric_report": {
+              "error_bound": "error_bound",
+              "tolerance": "tolerance"
+            }
+          },
+          "validators": [
+            "mesh.validate.hausdorff_symmetric_report"
+          ],
           "verdicts": [
             "pass",
             "fail",
@@ -8277,6 +8286,40 @@
       },
       {
         "dependencies": [
+          "Polygon_mesh_processing"
+        ],
+        "effective_kernel": "long double (no CGAL header)",
+        "id": "mesh.validate.hausdorff_symmetric_report",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "distance_unit_matches_mesh",
+            "verdict_follows_bounds_and_tolerance",
+            "distance_within_error_bound_of_exact_symmetric_bracket"
+          ],
+          "independence": "exact rational vertex distances plus best-first Lipschitz subdivision bracket over brute-force point-triangle distances in both directions; no CGAL header",
+          "input_slots": [
+            "report",
+            "reference",
+            "candidate"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "ValidationReport",
+          "TriangleSurfaceMesh",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
           "Straight_skeleton_2"
         ],
         "effective_kernel": "GMP rationals and long double (no CGAL header)",
@@ -9425,14 +9468,14 @@
     ],
     "worker": "cgal-master-worker"
   },
-  "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+  "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
   "tests": [
     {
       "id": "family-7.8-replay-cases",
       "source_path": "tests/master_family_replay_cases.py",
       "source_sha256": "69b3216bf60de8b908dcf6f82e4fee3ffc438ee2a29cf2d756c4b558c6ce3e65",
       "source_hash_encoding": "utf8-lf",
-      "stdout_sha256": "e895b44f9ab57d50f9b50c5c971135e32e49b44d6c3c1e3fb0d965c4e95f232d",
+      "stdout_sha256": "9e2661e119a190c5fb49456eb3c021d25451593af52022a3692bd6846adda7e8",
       "exit_code": 0,
       "status": "pass"
     }
@@ -10332,7 +10375,7 @@
       "case_id": "subdivide-loop-tetra-1",
       "operation_id": "mesh.subdivide.loop",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -10493,7 +10536,7 @@
       "case_id": "subdivide-loop-tetra-2",
       "operation_id": "mesh.subdivide.loop",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -10654,7 +10697,7 @@
       "case_id": "subdivide-loop-open-square",
       "operation_id": "mesh.subdivide.loop",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -10812,7 +10855,7 @@
       "case_id": "subdivide-catmull-quad-cube-1",
       "operation_id": "mesh.subdivide.catmull_clark",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -10973,7 +11016,7 @@
       "case_id": "subdivide-catmull-quad-cube-2",
       "operation_id": "mesh.subdivide.catmull_clark",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -11134,7 +11177,7 @@
       "case_id": "subdivide-catmull-tetra",
       "operation_id": "mesh.subdivide.catmull_clark",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -11292,7 +11335,7 @@
       "case_id": "shortest-cube-corners",
       "operation_id": "mesh.path.shortest",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -11485,7 +11528,7 @@
       "case_id": "shortest-lshape-reflex",
       "operation_id": "mesh.path.shortest",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -11671,7 +11714,7 @@
       "case_id": "shortest-cube-two-sources",
       "operation_id": "mesh.path.shortest",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -11883,7 +11926,7 @@
       "case_id": "acd-l-prism-two-parts",
       "operation_id": "mesh.decompose.approx_convex",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -12062,7 +12105,7 @@
       "case_id": "acd-l-prism-two-parts-repeat",
       "operation_id": "mesh.decompose.approx_convex",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -12241,7 +12284,7 @@
       "case_id": "acd-l-prism-one-part-is-hull",
       "operation_id": "mesh.decompose.approx_convex",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -12417,7 +12460,7 @@
       "case_id": "acd-t-prism-three-parts",
       "operation_id": "mesh.decompose.approx_convex",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -12593,7 +12636,7 @@
       "case_id": "skeleton-tube-function",
       "operation_id": "mesh.skeletonize.mean_curvature",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -12752,7 +12795,7 @@
       "case_id": "skeleton-tube-class",
       "operation_id": "mesh.skeletonize.mean_curvature_flow",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -12921,7 +12964,7 @@
       "case_id": "skeleton-torus-class",
       "operation_id": "mesh.skeletonize.mean_curvature_flow",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -13090,7 +13133,7 @@
       "case_id": "param-dcm-disc",
       "operation_id": "mesh.parameterize.discrete_conformal_map",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -13247,7 +13290,7 @@
       "case_id": "param-arap-lambda-1000",
       "operation_id": "mesh.parameterize",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -13410,7 +13453,7 @@
       "case_id": "param-arap-lambda-0",
       "operation_id": "mesh.parameterize",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -13573,7 +13616,7 @@
       "case_id": "param-arap-one-iteration",
       "operation_id": "mesh.parameterize",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -13736,7 +13779,7 @@
       "case_id": "sdf-values-body-arm-narrow-cone",
       "operation_id": "mesh.segment.sdf_values",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -13901,7 +13944,7 @@
       "case_id": "sdf-values-body-arm-default-cone",
       "operation_id": "mesh.segment.sdf_values",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -14066,7 +14109,7 @@
       "case_id": "sdf-segment-body-arm-narrow-cone",
       "operation_id": "mesh.segment.sdf",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -14247,7 +14290,7 @@
       "case_id": "sdf-segment-body-arm-default-cone",
       "operation_id": "mesh.segment.sdf",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -14430,7 +14473,7 @@
       "case_id": "subdivide-loop-quad-input-rejected",
       "operation_id": "mesh.subdivide.loop",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -14482,7 +14525,7 @@
       "case_id": "subdivide-steps-over-limit-rejected",
       "operation_id": "mesh.subdivide.loop",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -14534,7 +14577,7 @@
       "case_id": "subdivide-loop-moved-vertex-rejected",
       "operation_id": "mesh.validate.loop",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -14595,7 +14638,7 @@
       "case_id": "subdivide-catmull-moved-vertex-rejected",
       "operation_id": "mesh.validate.catmull_clark",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -14656,7 +14699,7 @@
       "case_id": "shortest-tampered-distance-rejected",
       "operation_id": "mesh.validate.shortest_path",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -14729,7 +14772,7 @@
       "case_id": "shortest-tampered-path-off-surface-rejected",
       "operation_id": "mesh.validate.shortest_path",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -14802,7 +14845,7 @@
       "case_id": "shortest-tampered-wrong-source-rejected",
       "operation_id": "mesh.validate.shortest_path",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -14888,7 +14931,7 @@
       "case_id": "shortest-source-out-of-range-rejected",
       "operation_id": "mesh.path.shortest",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -14949,7 +14992,7 @@
       "case_id": "shortest-barycentric-sum-rejected",
       "operation_id": "mesh.path.shortest",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -15015,7 +15058,7 @@
       "case_id": "acd-tampered-nonconvex-part-rejected",
       "operation_id": "mesh.validate.approx_convex",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -15081,7 +15124,7 @@
       "case_id": "acd-tampered-missing-part-rejected",
       "operation_id": "mesh.validate.approx_convex",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -15147,7 +15190,7 @@
       "case_id": "acd-open-mesh-rejected",
       "operation_id": "mesh.decompose.approx_convex",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -15204,7 +15247,7 @@
       "case_id": "acd-voxel-count-too-small-rejected",
       "operation_id": "mesh.decompose.approx_convex",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -15261,7 +15304,7 @@
       "case_id": "skeleton-tampered-point-outside-rejected",
       "operation_id": "mesh.validate.skeleton",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -15325,7 +15368,7 @@
       "case_id": "skeleton-tampered-split-path-rejected",
       "operation_id": "mesh.validate.skeleton",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -15389,7 +15432,7 @@
       "case_id": "skeleton-tampered-extra-cycle-rejected",
       "operation_id": "mesh.validate.skeleton",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -15453,7 +15496,7 @@
       "case_id": "skeleton-tampered-open-loop-rejected",
       "operation_id": "mesh.validate.skeleton",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -15517,7 +15560,7 @@
       "case_id": "skeleton-default-parameters-collapse-on-torus-rejected",
       "operation_id": "mesh.validate.skeleton",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -15576,7 +15619,7 @@
       "case_id": "skeleton-open-mesh-rejected",
       "operation_id": "mesh.skeletonize.mean_curvature_flow",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -15631,7 +15674,7 @@
       "case_id": "param-tampered-flipped-triangles-rejected",
       "operation_id": "mesh.validate.parameterization_harmonic",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -15690,7 +15733,7 @@
       "case_id": "param-tampered-non-harmonic-rejected",
       "operation_id": "mesh.validate.parameterization_harmonic",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -15749,7 +15792,7 @@
       "case_id": "param-tampered-stretched-rejected",
       "operation_id": "mesh.validate.parameterization_isometric",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -15812,7 +15855,7 @@
       "case_id": "param-tight-bound-rejected",
       "operation_id": "mesh.validate.parameterization_isometric",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -15875,7 +15918,7 @@
       "case_id": "param-closed-mesh-not-disc-rejected",
       "operation_id": "mesh.parameterize.discrete_conformal_map",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -15925,7 +15968,7 @@
       "case_id": "param-arap-negative-lambda-rejected",
       "operation_id": "mesh.parameterize",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -15979,7 +16022,7 @@
       "case_id": "sdf-tampered-thick-arm-rejected",
       "operation_id": "mesh.validate.sdf_values",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -16042,7 +16085,7 @@
       "case_id": "sdf-tampered-missing-value-rejected",
       "operation_id": "mesh.validate.sdf_values",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -16105,7 +16148,7 @@
       "case_id": "sdf-tampered-wrong-component-rejected",
       "operation_id": "mesh.validate.sdf_segmentation",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -16170,7 +16213,7 @@
       "case_id": "sdf-tampered-uncovered-facet-rejected",
       "operation_id": "mesh.validate.sdf_segmentation",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -16235,7 +16278,7 @@
       "case_id": "sdf-tampered-cluster-out-of-range-rejected",
       "operation_id": "mesh.validate.sdf_segmentation",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -16300,7 +16343,7 @@
       "case_id": "sdf-open-mesh-rejected",
       "operation_id": "mesh.segment.sdf",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -16356,7 +16399,7 @@
       "case_id": "sdf-zero-cone-rejected",
       "operation_id": "mesh.segment.sdf_values",
       "revision": 1,
-      "worker_manifest_sha256": "a420717b7ecdea7461bdb0bc80b3ce15cade1ba1e7f7d3624fb4d187c99b9510",
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
       "test_id": "family-7.8-replay-cases",
       "request": {
         "inputs": [
@@ -16400,6 +16443,123 @@
       },
       "response_sha256": "b4244dab5b0f9d14d35c27de513b5663de01be3491b34c8b5d83564dfffaa85a",
       "input_hashes": [
+        "027542a8489d834565077d08854bf14ee7d152c0da8a92f41b7cfb62b0406052"
+      ],
+      "output_hashes": [],
+      "expected_error_class": "INVALID_REQUEST",
+      "status": "expected_rejection"
+    },
+    "sdf-vacuous-thickness-tolerance-rejected": {
+      "case_id": "sdf-vacuous-thickness-tolerance-rejected",
+      "operation_id": "mesh.segment.sdf_values",
+      "revision": 1,
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
+      "test_id": "family-7.8-replay-cases",
+      "request": {
+        "inputs": [
+          {
+            "artifact_id": "input-0",
+            "blob_sha256": "027542a8489d834565077d08854bf14ee7d152c0da8a92f41b7cfb62b0406052",
+            "format": "off",
+            "sha256": "027542a8489d834565077d08854bf14ee7d152c0da8a92f41b7cfb62b0406052",
+            "type": "TriangleSurfaceMesh",
+            "unit": "mm"
+          }
+        ],
+        "kernel": "package_recommended",
+        "limits": {
+          "memory_mb": 2048,
+          "wall_time_ms": 120000
+        },
+        "operation": "mesh.segment.sdf_values",
+        "parameters": {
+          "cone_angle": 0.5235987755982988,
+          "number_of_rays": 25,
+          "thickness_tolerance": 9.0
+        },
+        "protocol": 1,
+        "request_id": "sdf-vacuous-thickness-tolerance-rejected"
+      },
+      "request_sha256": "57dc73d64d9a1b96287788600633937510ce111cfc17dc7560786fec84582e46",
+      "response": {
+        "error": {
+          "class": "INVALID_REQUEST",
+          "code": "INVALID_PARAMETER",
+          "message": "thickness_tolerance is out of range",
+          "recoverable": false,
+          "suggested_operations": []
+        },
+        "metrics": {},
+        "outputs": [],
+        "protocol": 1,
+        "request_id": "sdf-vacuous-thickness-tolerance-rejected",
+        "status": "error"
+      },
+      "response_sha256": "ae458f24a766f2e7ad3dd52d2ea1e24b96f3fb6dbb8e1aa6aa9c5fe86e88b4e9",
+      "input_hashes": [
+        "027542a8489d834565077d08854bf14ee7d152c0da8a92f41b7cfb62b0406052"
+      ],
+      "output_hashes": [],
+      "expected_error_class": "INVALID_REQUEST",
+      "status": "expected_rejection"
+    },
+    "sdf-validator-vacuous-thickness-tolerance-rejected": {
+      "case_id": "sdf-validator-vacuous-thickness-tolerance-rejected",
+      "operation_id": "mesh.validate.sdf_values",
+      "revision": 1,
+      "worker_manifest_sha256": "a8708429ff86dd83619d4bce247d06c88e9e687eb0095ae897a79a8e0bbfed60",
+      "test_id": "family-7.8-replay-cases",
+      "request": {
+        "inputs": [
+          {
+            "artifact_id": "input-0",
+            "blob_sha256": "3747627f6ffeb46b8b10fed2850af8de4d6cf4cd2594dc25c002c844fcc03541",
+            "format": "json",
+            "sha256": "3747627f6ffeb46b8b10fed2850af8de4d6cf4cd2594dc25c002c844fcc03541",
+            "type": "GeometryQueryReport",
+            "unit": "none"
+          },
+          {
+            "artifact_id": "input-1",
+            "blob_sha256": "027542a8489d834565077d08854bf14ee7d152c0da8a92f41b7cfb62b0406052",
+            "format": "off",
+            "sha256": "027542a8489d834565077d08854bf14ee7d152c0da8a92f41b7cfb62b0406052",
+            "type": "TriangleSurfaceMesh",
+            "unit": "mm"
+          }
+        ],
+        "kernel": "package_recommended",
+        "limits": {
+          "memory_mb": 2048,
+          "wall_time_ms": 120000
+        },
+        "operation": "mesh.validate.sdf_values",
+        "parameters": {
+          "cone_angle": 0.5235987755982988,
+          "number_of_rays": 25,
+          "thickness_tolerance": 9.0
+        },
+        "protocol": 1,
+        "request_id": "sdf-validator-vacuous-thickness-tolerance-rejected"
+      },
+      "request_sha256": "b8cae986553f39ef41d0c7fa01d94db5326f047da654d1b9dde7ca0f75e08f0d",
+      "response": {
+        "error": {
+          "class": "INVALID_REQUEST",
+          "code": "INVALID_PARAMETER",
+          "message": "thickness_tolerance is out of range",
+          "recoverable": false,
+          "suggested_operations": []
+        },
+        "metrics": {},
+        "outputs": [],
+        "protocol": 1,
+        "request_id": "sdf-validator-vacuous-thickness-tolerance-rejected",
+        "status": "error"
+      },
+      "response_sha256": "89881fec92d3a05ce94f2dbe6aad2222257a684dd4e8dbba8cccdd41f843bf22",
+      "input_hashes": [
+        "3747627f6ffeb46b8b10fed2850af8de4d6cf4cd2594dc25c002c844fcc03541",
         "027542a8489d834565077d08854bf14ee7d152c0da8a92f41b7cfb62b0406052"
       ],
       "output_hashes": [],

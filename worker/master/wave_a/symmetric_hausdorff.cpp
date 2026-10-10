@@ -71,6 +71,17 @@ Json run_symmetric_hausdorff(const Request& request) {
       {"valid", verdict == "pass"},
       {"verdict", verdict},
       {"method", "bounded_error_symmetric"},
+      // Self-describing frame so the independent mesh.validate.hausdorff_symmetric_report validator can
+      // bind the report to its input artifacts and parameters.
+      {"schema_version", 1},
+      {"report_type", "ValidationReport"},
+      {"report_kind", "hausdorff_bounded_symmetric"},
+      {"operation", request.operation},
+      {"parameters", request.parameters},
+      {"source",
+       {{"reference_sha256", request.inputs[0].sha256},
+        {"candidate_sha256", request.inputs[1].sha256}}},
+      {"results", {{"distance", distance}, {"distance_unit", unit}}},
       {"distance_estimate", { {"value", distance}, {"unit", unit} }},
       {"lower_bound", { {"value", lower}, {"unit", unit} }},
       {"upper_bound", { {"value", upper}, {"unit", unit} }},
@@ -103,7 +114,11 @@ OperationDefinition symmetric_hausdorff_operation() {
       {"method", "bounded_error_symmetric_Hausdorff_distance"},
       {"effective_concurrency", "sequential"},
       {"bound_parameters", Json::array({"tolerance", "error_bound"})},
-      {"verdicts", Json::array({"pass", "fail", "indeterminate"})}};
+      {"verdicts", Json::array({"pass", "fail", "indeterminate"})},
+      {"validators", Json::array({"mesh.validate.hausdorff_symmetric_report"})},
+      {"validator_parameter_bindings",
+       {{"mesh.validate.hausdorff_symmetric_report",
+         {{"tolerance", "tolerance"}, {"error_bound", "error_bound"}}}}}};
   return definition;
 }
 

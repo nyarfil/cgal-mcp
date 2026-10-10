@@ -65,7 +65,7 @@ SdfParameters sdf_parameters(const Request& request) {
   SdfParameters p{};
   p.cone_angle = finite_number(request.parameters, "cone_angle", 0.0, 3.0, true);
   p.rays = query_ops::integer_parameter(request, "number_of_rays", 1, 100);
-  (void)finite_number(request.parameters, "thickness_tolerance", 0.0, 10.0, false);
+  (void)finite_number(request.parameters, "thickness_tolerance", 0.0, 0.5, false);
   return p;
 }
 

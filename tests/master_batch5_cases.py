@@ -91,6 +91,37 @@ def distance_cases(operations) -> None:
         result = pair(scratch, "mesh.distance.hausdorff_bounded", "mesh.validate.hausdorff_report", [scaled, cube],
                       {"error_bound": error})
         assert abs(result["results"]["distance"] - 2 * math.sqrt(3)) <= 0.01, result
+        # bounded_error_symmetric_Hausdorff_distance (mesh.distance.symmetric_hausdorff): the report echoes its
+        # parameters and both mesh digests and is checked by the independent symmetric validator.
+        vreport = lambda path: art(path, "ValidationReport", "none")
+        symmetric = "mesh.distance.symmetric_hausdorff"
+        symmetric_validator = "mesh.validate.hausdorff_symmetric_report"
+        assert symmetric_validator in operations[symmetric]["info"]["validators"]
+        assert operations[symmetric_validator]["role"] == "validator"
+        for other, tolerance_mm, expected, verdict in ((shifted, 1.5, 1.0, "pass"), (scaled, 5.0, 2 * math.sqrt(3), "pass"),
+                                                       (scaled, 2.0, 2 * math.sqrt(3), "fail")):
+            parameters = {"tolerance": MM(tolerance_mm), "error_bound": error}
+            path = q.ok(q.invoke(scratch, symmetric, [cube, other], parameters))
+            report_value = json.loads(path.read_text("utf-8"))
+            assert report_value["verdict"] == verdict, report_value
+            assert abs(report_value["results"]["distance"] - expected) <= 0.01, report_value
+            assert report_value["source"] == {"reference_sha256": cube["sha256"], "candidate_sha256": other["sha256"]}
+            verdict_report = json.loads(q.ok(q.invoke(scratch, symmetric_validator, [vreport(path), cube, other],
+                                                      parameters)).read_text("utf-8"))
+            assert verdict_report["status"] == "pass" and verdict_report["passed"] is True, verdict_report
+            assert verdict_report["checks"] and all(verdict_report["checks"].values()), verdict_report
+        symmetric_parameters = {"tolerance": MM(2.0), "error_bound": error}
+        for name, code, inputs, parameters in (
+                ("tampered_hausdorff_symmetric_low.json", "DISTANCE_OUT_OF_BRACKET", [cube, scaled], symmetric_parameters),
+                ("tampered_hausdorff_symmetric_verdict_flipped.json", "VERDICT_MISMATCH", [cube, scaled],
+                 symmetric_parameters),
+                ("tampered_hausdorff_symmetric_verdict_flipped.json", "SOURCE_MISMATCH", [cube, shifted],
+                 symmetric_parameters),
+                ("tampered_hausdorff_symmetric_verdict_flipped.json", "PARAMETER_MISMATCH", [cube, scaled],
+                 {"tolerance": MM(9.0), "error_bound": error})):
+            reject(scratch, symmetric_validator, [vreport(B5 / name)] + inputs, parameters, code)
+        reject(scratch, symmetric, [cube, scaled], {"tolerance": MM(1), "error_bound": MM(0)}, "INVALID_TYPED_LENGTH",
+               "INVALID_REQUEST")
         # approximate_max_distance_to_point_set: the cube vertex (0,0,0) is sqrt(4+4+4)... exact value brackets.
         result = pair(scratch, "mesh.distance.max_to_points", "mesh.validate.max_distance_to_points", [cube, points],
                       {"precision": MM(0.01)})

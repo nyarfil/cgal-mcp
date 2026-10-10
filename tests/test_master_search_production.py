@@ -166,8 +166,8 @@ class ProductionOperationSearchTests(unittest.TestCase):
         # Surface_mesh_segmentation operations.
         result = self.search("segment the shape with a shape diameter field", ["TriangleSurfaceMesh"])
         recommended = result["query_analysis"]["recommended_operation"]
-        if recommended is not None:
-            self.assertIn(recommended, {"mesh.segment.sdf", "mesh.segment.sdf_values"}, result)
+        self.assertIsNotNone(recommended, result)
+        self.assertIn(recommended, {"mesh.segment.sdf", "mesh.segment.sdf_values"}, result)
 
     def test_non_manifold_split_goal_routes_to_validated_repair(self):
         result = self.search("split non-manifold neighborhoods into repairable shells",
