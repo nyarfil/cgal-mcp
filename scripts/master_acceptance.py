@@ -965,6 +965,206 @@ def evaluate_search_gate(root: Path = REPO, *, live: bool = True,
     return result
 
 
+WORKFLOW_GATE = "multi_operation_workflow_acceptance"
+WORKFLOW_EVIDENCE = "docs/master/evidence/workflows.json"
+WORKFLOW_SPEC = "docs/master/workflows.json"
+WORKFLOW_MIN_POSITIVE = 30
+WORKFLOW_MAX_OPERATION_SHARE = 0.35
+WORKFLOW_MIN_DISTINCT_OPERATIONS = 12
+# Phase 6 work items the planner does not implement; each is listed as an unmet reason until
+# the planner/runtime gains the feature and this table is updated together with evidence for it.
+WORKFLOW_UNIMPLEMENTED_PLANNER_FEATURES = {
+    "fallback_chain": "The planner and runtime have no fallback chain: a failed step never "
+                      "retries an alternative registered operation",
+    "cost_risk_estimate": "Plans carry no cost/risk estimate (only default wall-time budgets)",
+    "automatic_preprocess_postprocess": "Preprocess/postprocess steps (repair, triangulate, "
+                                        "conversion) are never inserted automatically; "
+                                        "every DAG is declared explicitly",
+}
+
+
+def evaluate_workflow_gate(root: Path = REPO, *, live: bool = True,
+                           evidence: dict | None = None, spec: dict | None = None,
+                           worker: Path | None = None) -> dict:
+    """Verify multi-operation workflow evidence and decide the workflow gate honestly.
+
+    Every verdict is re-derived from the recorded cases and the current registry: the
+    declared DAGs and fixtures must equal the checked-in spec, every recorded outcome must
+    equal the spec expectation, each succeeded workflow must run all registry-mandated
+    validators to a pass, artifact/unit propagation must be consistent, failed workflows
+    must publish nothing, and (when ``live``) a fresh run through the real runtime and
+    worker must reproduce the recorded cases exactly.
+    """
+    reasons: list[str] = []
+    result: dict = {"gate": WORKFLOW_GATE, "status": "unmet", "evidence": WORKFLOW_EVIDENCE,
+                    "reasons": reasons}
+    path = root / WORKFLOW_EVIDENCE
+    try:
+        if evidence is None:
+            evidence = json.loads(path.read_text(encoding="utf-8"))
+        if spec is None:
+            spec = json.loads((root / WORKFLOW_SPEC).read_text(encoding="utf-8"))
+        operation_data = json.loads((root / "cgal_mcp/master/operations.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError, UnicodeError):
+        reasons.append("Workflow evidence, spec or registry is missing or unreadable")
+        return result
+    if isinstance(operation_data, dict):
+        operation_data = operation_data.get("operations", [])
+    registry = {item["id"]: item for item in operation_data}
+    if not isinstance(evidence, dict) or evidence.get("generator") != "master-workflow-evidence":
+        reasons.append("Workflow evidence has the wrong generator")
+        return result
+    from scripts import run_master_workflows as runner
+    if evidence.get("bindings") != runner.bindings(root):
+        reasons.append("Workflow evidence bindings differ from the current spec, registry, "
+                       "policies, planner, runtime or runner")
+    for name, fixture in spec.get("fixtures", {}).items():
+        try:
+            actual = hashlib.sha256((root / fixture["path"]).read_bytes()).hexdigest()
+        except OSError:
+            actual = None
+        if actual != fixture["sha256"]:
+            reasons.append(f"Workflow fixture {name} does not match its declared hash")
+    cases = evidence.get("cases")
+    workflows = spec.get("workflows", [])
+    if (not isinstance(cases, list) or evidence.get("count") != len(cases)
+            or [c.get("id") for c in cases] != [w["id"] for w in workflows]):
+        reasons.append("Workflow evidence does not cover exactly the declared workflows")
+        return result
+    fresh = None
+    if live and root.resolve() == REPO.resolve():
+        worker = worker or root / "build-master/Release/cgal-master-worker.exe"
+        if worker.is_file():
+            fresh = runner.measure(root, worker)["cases"]
+        else:
+            reasons.append("Native worker is unavailable for the live workflow rerun")
+    positives = negatives = 0
+    operation_counts: dict[str, int] = {}
+    primary_operations: set[str] = set()
+    families: set[str] = set()
+    joins = fanouts = unit_cases = omissions = 0
+    negative_kinds: dict[str, int] = {}
+    for index, (workflow, case) in enumerate(zip(workflows, cases)):
+        label = workflow["id"]
+        declared = [{"id": step["id"], "operation": step["operation"],
+                     "inputs": dict(sorted(step["inputs"].items()))} for step in workflow["steps"]]
+        if (case.get("declared_dag") != declared or case.get("expect") != workflow["expect"]
+                or case.get("category") != workflow["category"]
+                or case.get("families") != workflow["families"]
+                or case.get("fixtures") != {name: {key: spec["fixtures"][name][key]
+                                                   for key in ("sha256", "type", "unit")}
+                                            for name in workflow.get("fixtures", [])}):
+            reasons.append(f"Workflow record differs from its declaration: {label}")
+            continue
+        if fresh is not None and fresh[index] != case:
+            reasons.append(f"Workflow record differs from a fresh run through the runtime: {label}")
+        outcome = case.get("outcome", {})
+        expect = workflow["expect"]
+        if any(outcome.get(key) != value for key, value in expect.items()):
+            reasons.append(f"Workflow outcome differs from its expectation: {label}")
+            continue
+        validators = case.get("validators", [])
+        plan_steps = case.get("plan", {}).get("steps", [])
+        if plan_steps:
+            steps_by_id = {step["id"]: step for step in plan_steps}
+            for step in plan_steps:
+                if step["role"] == "validator":
+                    continue
+                required = registry[step["operation"]]["validation"]["validators"]
+                planned = [v["operation"] for v in plan_steps
+                           if v["role"] == "validator" and v["validates"] == step["id"]]
+                if sorted(planned) != sorted(required):
+                    omissions += 1
+                    reasons.append(f"Planned validators differ from the registry for {label}:{step['id']}")
+            for step in plan_steps:
+                for slot, binding in step["inputs"].items():
+                    if "step" in binding:
+                        producer = steps_by_id.get(binding["step"])
+                        if producer is None or step["input_types"][slot] not in producer["output_types"]:
+                            reasons.append(f"Workflow DAG edge is not type-consistent: {label}:{step['id']}.{slot}")
+        if workflow["category"] == "positive":
+            positives += 1
+            if outcome.get("state") != "succeeded":
+                reasons.append(f"Positive workflow did not succeed: {label}")
+                continue
+            transforms = [s for s in plan_steps if s["role"] != "validator"]
+            operations = [s["operation"] for s in transforms]
+            if len(set(operations)) < 2:
+                reasons.append(f"Positive workflow is a single operation: {label}")
+            for operation in set(operations):
+                operation_counts[operation] = operation_counts.get(operation, 0) + 1
+            primary_operations.update(operations)
+            families.update(workflow["families"])
+            consumers: dict[str, int] = {}
+            for step in transforms:
+                stepped = [b["step"] for b in step["inputs"].values() if "step" in b]
+                if len(stepped) >= 2:
+                    joins += 1
+                for source in set(stepped):
+                    consumers[source] = consumers.get(source, 0) + 1
+            fanouts += sum(1 for count in consumers.values() if count >= 2)
+            executed = {v["step_id"]: v for v in validators}
+            for step in plan_steps:
+                if step["role"] == "validator" and (
+                        step["id"] not in executed or executed[step["id"]]["status"] != "pass"):
+                    omissions += 1
+                    reasons.append(f"Validator did not run to a pass: {label}:{step['id']}")
+            fixture_units = {spec["fixtures"][name]["unit"] for name in workflow.get("fixtures", [])}
+            unit_set = {b for s in plan_steps for b in s["input_units"].values() if b != "none"}
+            output_units = {o["unit"] for o in case.get("outputs", []) if o["unit"] != "none"}
+            if len(fixture_units) != 1 or unit_set != fixture_units or not output_units <= fixture_units:
+                reasons.append(f"Unit propagation is inconsistent: {label}")
+            elif fixture_units != {"mm"}:
+                unit_cases += 1
+            expected_outputs = sum(len(registry[s["operation"]]["io"]["outputs"]) for s in transforms)
+            if len(case.get("outputs", [])) != expected_outputs or case["store_published_delta"] != expected_outputs:
+                reasons.append(f"Published outputs differ from the plan: {label}")
+        else:
+            negatives += 1
+            if outcome.get("state") == "succeeded" or case.get("store_published_delta") != 0:
+                reasons.append(f"Negative workflow silently passed or published artifacts: {label}")
+            for tag in workflow["families"]:
+                if tag in {"bad_input", "validator", "resource_limit", "typing", "units", "dag", "registry"}:
+                    negative_kinds[tag] = negative_kinds.get(tag, 0) + 1
+    result["measured"] = {
+        "positive_workflows": positives, "negative_workflows": negatives,
+        "positive_succeeded": sum(1 for w, c in zip(workflows, cases)
+                                  if w["category"] == "positive" and c["outcome"].get("state") == "succeeded"),
+        "distinct_primary_operations": len(primary_operations), "families": sorted(families),
+        "join_steps": joins, "fanout_steps": fanouts, "non_mm_unit_workflows": unit_cases,
+        "validator_omissions": omissions, "negative_kinds": negative_kinds,
+        "validator_rejections": sum(1 for c in cases if c["outcome"].get("state") == "rejected"),
+        "live_rerun": fresh is not None,
+    }
+    share = (max(operation_counts.values()) / positives) if positives and operation_counts else 1.0
+    result["measured"]["max_operation_share"] = round(share, 4)
+    if positives < WORKFLOW_MIN_POSITIVE:
+        reasons.append(f"Only {positives} positive workflows (need {WORKFLOW_MIN_POSITIVE}+)")
+    if share > WORKFLOW_MAX_OPERATION_SHARE:
+        reasons.append(f"Single-operation bias: one operation appears in {share:.0%} of workflows")
+    if len(primary_operations) < WORKFLOW_MIN_DISTINCT_OPERATIONS:
+        reasons.append(f"Only {len(primary_operations)} distinct primary operations are exercised")
+    if joins < 1 or fanouts < 1:
+        reasons.append("DAG branching (fan-out) and join are not both evidenced")
+    if unit_cases < 1:
+        reasons.append("Non-millimetre unit propagation is not evidenced")
+    for kind in ("bad_input", "validator", "resource_limit"):
+        if not negative_kinds.get(kind):
+            reasons.append(f"No negative workflow covers {kind}")
+    if not result["measured"]["validator_rejections"]:
+        reasons.append("No workflow demonstrates a validator rejection failing the workflow")
+    if omissions:
+        reasons.append(f"Validator omission count is {omissions} (must be 0)")
+    result["planner_features"] = {name: False for name in WORKFLOW_UNIMPLEMENTED_PLANNER_FEATURES}
+    reasons.extend(WORKFLOW_UNIMPLEMENTED_PLANNER_FEATURES.values())
+    if not reasons:
+        result["status"] = "met"
+        if WORKFLOW_GATE in WAVE_A_UNMET_STANDALONE_GATES:
+            result["status"] = "met_pending_gate_list_update"
+            reasons.append("Evidence supports the gate but the unmet standalone gate list still names it")
+    return result
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--refresh-requirements", action="store_true")
@@ -987,7 +1187,8 @@ def main() -> None:
             operation_data = operation_data.get("operations", [])
         operations = {o.get("id", o.get("operation", {}).get("id")): o for o in operation_data}
         report["major_capabilities"] = evaluate_requirements(requirements, operations)
-        report["standalone_gates"] = {SEARCH_GATE: evaluate_search_gate(REPO)}
+        report["standalone_gates"] = {SEARCH_GATE: evaluate_search_gate(REPO),
+                                      WORKFLOW_GATE: evaluate_workflow_gate(REPO)}
         report["standalone_acceptance_reason"] = "Additional package, routing, workflow, host and robustness gates required"
     content = json.dumps(report, ensure_ascii=False, indent=2) + "\n"
     if args.output:

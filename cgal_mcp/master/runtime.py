@@ -320,10 +320,17 @@ class MasterRuntime:
             if condition.get("id") == "bounded_input":
                 for item in inputs:
                     metadata = item.get("metadata", {})
-                    limits = (("size", "maximum_bytes", item.get("size")),
-                              ("vertices", "maximum_vertices", metadata.get("vertices")),
-                              ("faces", "maximum_faces", metadata.get("faces")),
-                              ("max_face_degree", "maximum_face_degree", metadata.get("max_face_degree")))
+                    # Mirror the plan-time rule: point sets have no faces, so face
+                    # limits constrain only the mesh/soup inputs of a mixed-input
+                    # operation and a point set's vertex count is its point count.
+                    is_mesh = "faces" in metadata or "vertices" in metadata
+                    limits = [("size", "maximum_bytes", item.get("size")),
+                              ("vertices", "maximum_vertices",
+                               metadata.get("vertices", metadata.get("point_count")))]
+                    if is_mesh or not any(k in metadata for k in ("point_count", "bounds")):
+                        limits += [("faces", "maximum_faces", metadata.get("faces")),
+                                   ("max_face_degree", "maximum_face_degree",
+                                    metadata.get("max_face_degree"))]
                     for label, key, actual in limits:
                         if key in condition and (not isinstance(actual, int) or actual > condition[key]):
                             raise PreconditionFailure(

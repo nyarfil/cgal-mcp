@@ -1290,5 +1290,16 @@ class MasterCoreTest(unittest.TestCase):
             runtime.docs_search("convex hull")
 
 
+class MixedInputBoundedPreconditionTests(unittest.TestCase):
+    def test_runtime_face_limit_ignores_point_sets_like_the_planner(self):
+        operation = {"id": "x", "preconditions": [{"id": "bounded_input", "maximum_faces": 400}]}
+        points = {"size": 100, "metadata": {"point_count": 12, "bounds": [[0, 1], [0, 1], [0, 1]]}}
+        mesh = {"size": 100, "metadata": {"vertices": 8, "faces": 12}}
+        MasterRuntime._runtime_preconditions(operation, [points, mesh])
+        with self.assertRaisesRegex(PreconditionFailure, "faces<=400"):
+            MasterRuntime._runtime_preconditions(
+                operation, [points, {"size": 1, "metadata": {"vertices": 9, "faces": 500}}])
+
+
 if __name__ == "__main__":
     unittest.main()

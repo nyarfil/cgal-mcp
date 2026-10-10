@@ -687,5 +687,97 @@ class SearchGateEvidenceTests(unittest.TestCase):
         self.assertTrue([r for r in both["reasons"] if "Automatic execution" in r])
 
 
+class WorkflowGateEvidenceTests(unittest.TestCase):
+    """The workflow gate is decided from recorded real-runtime workflow evidence."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.evidence = json.loads(
+            (REPO / acceptance_module.WORKFLOW_EVIDENCE).read_text(encoding="utf-8"))
+
+    def gate(self, evidence=None):
+        return acceptance_module.evaluate_workflow_gate(
+            REPO, live=False, evidence=evidence if evidence is not None else copy.deepcopy(self.evidence))
+
+    def test_checked_in_evidence_is_consistent_and_gate_stays_unmet_on_planner_features(self):
+        result = self.gate()
+        measured = result["measured"]
+        self.assertGreaterEqual(measured["positive_succeeded"], 30)
+        self.assertEqual(measured["positive_workflows"], measured["positive_succeeded"])
+        self.assertEqual(measured["validator_omissions"], 0)
+        self.assertGreaterEqual(measured["validator_rejections"], 1)
+        self.assertEqual(result["status"], "unmet")
+        # Only the unimplemented Phase 6 planner features remain as reasons.
+        self.assertEqual(sorted(result["reasons"]), sorted(
+            acceptance_module.WORKFLOW_UNIMPLEMENTED_PLANNER_FEATURES.values()))
+        self.assertIn(acceptance_module.WORKFLOW_GATE, acceptance_module.WAVE_A_UNMET_STANDALONE_GATES)
+
+    def test_live_rerun_through_the_real_runtime_reproduces_the_evidence(self):
+        worker = REPO / "build-master/Release/cgal-master-worker.exe"
+        if not worker.is_file():
+            self.skipTest("native worker is not built")
+        result = acceptance_module.evaluate_workflow_gate(REPO, live=True, worker=worker)
+        self.assertTrue(result["measured"]["live_rerun"])
+        self.assertFalse([r for r in result["reasons"] if "fresh run" in r or "bindings" in r])
+
+    def test_dropped_validator_is_counted_as_an_omission(self):
+        evidence = copy.deepcopy(self.evidence)
+        case = next(c for c in evidence["cases"] if c["category"] == "positive")
+        victim = next(step for step in case["plan"]["steps"] if step["role"] == "validator")
+        case["plan"]["steps"].remove(victim)
+        reasons = self.gate(evidence)["reasons"]
+        self.assertTrue([r for r in reasons if "Planned validators differ" in r])
+
+    def test_failed_validator_verdict_cannot_pass_a_workflow(self):
+        evidence = copy.deepcopy(self.evidence)
+        case = next(c for c in evidence["cases"] if c["category"] == "positive")
+        case["validators"][0]["status"] = "fail"
+        reasons = self.gate(evidence)["reasons"]
+        self.assertTrue([r for r in reasons if "Validator did not run to a pass" in r])
+
+    def test_negative_workflow_that_succeeds_or_publishes_is_rejected(self):
+        evidence = copy.deepcopy(self.evidence)
+        case = next(c for c in evidence["cases"] if c["category"] == "negative")
+        case["store_published_delta"] = 1
+        reasons = self.gate(evidence)["reasons"]
+        self.assertTrue([r for r in reasons if "silently passed or published" in r])
+
+    def test_outcome_must_match_the_declared_expectation(self):
+        evidence = copy.deepcopy(self.evidence)
+        case = next(c for c in evidence["cases"]
+                    if c["outcome"].get("state") == "rejected")
+        case["outcome"]["code"] = "SOMETHING_ELSE"
+        self.assertTrue([r for r in self.gate(evidence)["reasons"] if "differs from its expectation" in r])
+
+    def test_unit_propagation_tamper_is_detected(self):
+        evidence = copy.deepcopy(self.evidence)
+        case = next(c for c in evidence["cases"] if c["category"] == "positive"
+                    and any(o["unit"] == "cm" for o in c["outputs"]))
+        case["outputs"][0]["unit"] = "mm"
+        self.assertTrue([r for r in self.gate(evidence)["reasons"] if "Unit propagation" in r])
+
+    def test_tampered_bindings_or_missing_cases_are_rejected(self):
+        evidence = copy.deepcopy(self.evidence)
+        evidence["bindings"]["planner_sha256"] = "0" * 64
+        self.assertTrue([r for r in self.gate(evidence)["reasons"] if "bindings differ" in r])
+        evidence = copy.deepcopy(self.evidence)
+        evidence["cases"].pop()
+        evidence["count"] -= 1
+        self.assertIn("Workflow evidence does not cover exactly the declared workflows",
+                      self.gate(evidence)["reasons"])
+
+    def test_single_operation_bias_and_count_floor_are_enforced(self):
+        spec = json.loads((REPO / acceptance_module.WORKFLOW_SPEC).read_text(encoding="utf-8"))
+        evidence = copy.deepcopy(self.evidence)
+        keep = [i for i, w in enumerate(spec["workflows"]) if w["category"] == "negative"
+                or i < 10]
+        spec["workflows"] = [spec["workflows"][i] for i in keep]
+        evidence["cases"] = [evidence["cases"][i] for i in keep]
+        evidence["count"] = len(keep)
+        reasons = acceptance_module.evaluate_workflow_gate(
+            REPO, live=False, evidence=evidence, spec=spec)["reasons"]
+        self.assertTrue([r for r in reasons if "positive workflows (need 30+)" in r])
+
+
 if __name__ == "__main__":
     unittest.main()
