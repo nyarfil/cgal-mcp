@@ -612,5 +612,76 @@ class GenericFamilyReplayTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             replay_families.validate_contract(changed)
 
+
+class SearchGateEvidenceTests(unittest.TestCase):
+    """The search gate is decided from verified, replayable retrieval evidence."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.evidence = json.loads(
+            (REPO / acceptance_module.SEARCH_EVIDENCE).read_text(encoding="utf-8"))
+
+    def gate(self, evidence=None):
+        return acceptance_module.evaluate_search_gate(
+            REPO, live=False, evidence=evidence if evidence is not None else copy.deepcopy(self.evidence))
+
+    def test_checked_in_evidence_binds_current_sources_and_stays_honest(self):
+        result = self.gate()
+        self.assertEqual(result["status"], "unmet")
+        self.assertFalse([r for r in result["reasons"] if "bindings differ" in r or "case" in r])
+        self.assertEqual(result["measured"]["overall"]["denominator"], 300)
+        self.assertIn(acceptance_module.SEARCH_GATE, acceptance_module.WAVE_A_UNMET_STANDALONE_GATES)
+        self.assertEqual(len(acceptance_module.WAVE_A_UNMET_STANDALONE_GATES), 4)
+
+    def test_live_search_reproduces_the_recorded_measurement(self):
+        result = acceptance_module.evaluate_search_gate(REPO, live=True)
+        self.assertTrue(result["live_rerun"])
+        self.assertFalse([r for r in result["reasons"] if "fresh run" in r or "bindings" in r])
+
+    def test_recorded_hit_flip_is_rejected(self):
+        evidence = copy.deepcopy(self.evidence)
+        miss = next(case for case in evidence["cases"] if not case["top3"])
+        miss["top3"] = True
+        self.assertTrue([r for r in self.gate(evidence)["reasons"] if "inconsistent" in r])
+
+    def test_edited_returned_operations_are_rejected_by_summary(self):
+        evidence = copy.deepcopy(self.evidence)
+        miss = next(case for case in evidence["cases"] if not case["top3"])
+        miss["returned"] = list(miss["expected"][:1])
+        miss["top3"] = True
+        miss["top1"] = True
+        self.assertIn("Search retrieval summary differs from its recorded cases",
+                      self.gate(evidence)["reasons"])
+
+    def test_expected_operation_must_match_catalog_binding(self):
+        evidence = copy.deepcopy(self.evidence)
+        evidence["cases"][0]["expected"] = ["mesh.simplify.edge_collapse"]
+        self.assertTrue([r for r in self.gate(evidence)["reasons"] if "catalog binding" in r])
+
+    def test_stale_bindings_are_rejected(self):
+        evidence = copy.deepcopy(self.evidence)
+        evidence["bindings"]["search_vocabulary_sha256"] = "0" * 64
+        self.assertTrue([r for r in self.gate(evidence)["reasons"] if "bindings differ" in r])
+
+    def test_gate_cannot_be_met_without_the_target_and_full_acceptance(self):
+        evidence = copy.deepcopy(self.evidence)
+        for case in evidence["cases"]:
+            case["returned"] = case["expected"][:1]
+            case["top1"] = case["top3"] = True
+        from scripts import evaluate_master_search as search_eval
+        evidence["summary"] = {
+            "overall": search_eval._retrieval_summary(evidence["cases"]),
+            "development": search_eval._retrieval_summary(
+                [c for c in evidence["cases"] if c["split"] == "development"]),
+            "held_out": search_eval._retrieval_summary(
+                [c for c in evidence["cases"] if c["split"] == "held_out"])}
+        retrieval_only = self.gate(evidence)
+        self.assertEqual(retrieval_only["status"], "unmet")
+        self.assertTrue(retrieval_only["retrieval_target_met"])
+        evidence["full_search_acceptance"]["passes_search_acceptance"] = True
+        both = self.gate(evidence)
+        self.assertEqual(both["status"], "met_pending_gate_list_update")
+
+
 if __name__ == "__main__":
     unittest.main()

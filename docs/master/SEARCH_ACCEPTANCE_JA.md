@@ -74,3 +74,36 @@ reportはcorpus、package smoke、generator、test source、operation registry�
 - 語彙は幾何概念として追加した（細分、等方、適応サイズ場、長辺分割、フェアリング、メッシュ品質）。穴埋めの一段階としてのrefine／fair、平滑化と併記された最適化・固定特徴辺は独立要求としない。Operation IDが明示する概念を要約中の言及より優先する加点を加えた。
 - eligible top-3 recall: 109/109 (100%)、documentation discovery: 191/191 (100%)。eligibleのtop-1は99件、明示的曖昧は10件（従前14件）。誤route・未分類エラーは0。
 - `unmeasured_input_model`は64件のまま。goal routingは未測定64件のため`passes=false`、`execute`は呼ばず`passes_acceptance=false`、`overall_standalone_ready=false`を維持する。
+
+## 検索ゲートの実測と判定（2026-10-10、再生成値）
+
+上記のWave C/D記録は、各intentの`expected_execution`ラベルがWave C/D時点のregistryで固定されたままである。その後80/80 requirementsが検証済みOperationに束縛されたため、`documentation_only`の191件には現在は実行可能Operationへ正しくルーティングされるものが多数含まれる。ラベルが古いため、ラベル基準の指標は現在の能力を過小評価する。そこで、ルーターから独立した束縛を正解として全300件を測る第二の測定を追加した。
+
+### 検索再現率（カタログ束縛・全300件）
+
+- 正解は各intentの原本requirementに束縛された検証済みOperation ID（`catalog/major_requirements.json`の`operation_ids`）。ルーターやコーパスのラベルから導出しない。
+- 本番`capabilities_search`をlimit 3、artifact絞り込みなしで呼ぶ。top-1は先頭、top-3は上位3件のいずれかが正解Operationであること。
+- ベースライン（語彙改善前）: top-1 191/300 (63.67%)、top-3 240/300 (80.00%)。
+- 現在: top-1 239/300 (79.67%)、top-3 278/300 (92.67%)。目標95%に未達（不足7件）。
+- 分割はrequirement IDのSHA-256を3で割った余りで固定する（`held_out`は余り0）。development 175件はtop-3 169件 (96.57%)、held_out 125件はtop-3 109件 (87.20%)。
+- 来歴の宣言: コーパスは固定済みの独立ベンチマークではなく、ルーティング開発と並行して育てた作成済み開発コーパスである。語彙の追加はdevelopmentの失敗のみから導いた幾何概念・二言語名詞であり、Operation IDやクエリ文字列の直書きはない。ただしベースラインの失敗一覧（intent IDと期待Operation）は全分割で閲覧済みのため、held_outは盲検ではなく弱い汎化推定である。
+- 事前に報告済みのラベル基準の指標（型付きeligible top-3 107/109、documentation discovery 191/191、package smoke 126/126、planner gate 4/4）は維持した。
+
+### 検索ゲートの判定: 未達（`search_and_retrieval_acceptance`はunmetのまま）
+
+未達の理由は次の通りで、いずれも報告に実数で残す。
+
+1. 全300件のtop-3が92.67%で、95%に届かない（top-1は79.67%）。
+2. goal routingが通らない。`unmeasured_input_model`が64件（現行の型付きartifactで表現できない入力）。さらに`documentation_only`ラベルのうち52件が現在は実行可能planに到達し（ラベルの陳腐化。再分類にはこれらの入力型の合成artifactが必要）、7件が別Operationへ誤ルートして後段エラーになる。eligibleでは誤route 2件と未分類エラー2件が残る。
+3. `execute`は一度も呼ばない。自動実行は`UNMEASURED`のままである。
+
+`standalone_accepted`は`false`を維持する。未達ゲート4件の一覧は変更しない。ゲートが満たされると評価器は`met_pending_gate_list_update`を返し、一覧と全family evidenceの再生成を要求する。
+
+### 再現と検証
+
+```powershell
+.\.venv\Scripts\python.exe scripts/evaluate_master_search.py --output work/master-search-acceptance.json --publish-retrieval-evidence
+.\.venv\Scripts\python.exe -m unittest tests.test_master_acceptance.SearchGateEvidenceTests
+```
+
+[`evidence/search-retrieval.json`](evidence/search-retrieval.json)は全300件の返却Operationとコーパス、requirement束縛、registry、語彙、ランカー、生成器のSHA-256を記録する。`scripts/master_acceptance.py`の`evaluate_search_gate`は、束縛ハッシュ、各caseの期待Operation、ヒット判定、要約を検証し、本番検索を全件再実行して記録と一致することを確認したうえでゲートを判定する（`standalone_gates`欄）。いずれかの束縛が古い、または記録が改ざんされていればゲートは成立しない。

@@ -679,6 +679,102 @@ def evaluate_goal_routing(corpus: dict[str, Any], *, runtime: Any,
     }
 
 
+RETRIEVAL_EVIDENCE_PATH = REPO / "docs" / "master" / "evidence" / "search-retrieval.json"
+RETRIEVAL_TARGET_PERCENT = 95.0
+HELD_OUT_MODULUS = 3
+RETRIEVAL_BINDING_SOURCES = {
+    "corpus_sha256": "tests/fixtures/master/search_intents.json",
+    "major_requirements_sha256": "catalog/major_requirements.json",
+    "operations_sha256": "cgal_mcp/master/operations.json",
+    "search_vocabulary_sha256": "cgal_mcp/master/search.py",
+    "registry_ranker_sha256": "cgal_mcp/master/registry.py",
+    "generator_sha256": "scripts/evaluate_master_search.py",
+}
+
+
+def retrieval_split(requirement_id: str) -> str:
+    """Router-independent split by requirement; held_out is never used for tuning."""
+    digest = int(hashlib.sha256(requirement_id.encode("utf-8")).hexdigest(), 16)
+    return "held_out" if digest % HELD_OUT_MODULUS == 0 else "development"
+
+
+def _retrieval_summary(cases: list[dict[str, Any]]) -> dict[str, Any]:
+    total = len(cases)
+    top1 = sum(1 for case in cases if case["top1"])
+    top3 = sum(1 for case in cases if case["top3"])
+    return {"denominator": total, "top1_hits": top1, "top3_hits": top3,
+            "top1_percent": round(100 * top1 / total, 2) if total else 0.0,
+            "top3_percent": round(100 * top3 / total, 2) if total else 0.0}
+
+
+def measure_catalog_bound_retrieval(intents: list[dict[str, Any]],
+                                    requirements: dict[str, Any], *,
+                                    runtime: Any) -> list[dict[str, Any]]:
+    """Run the production ``capabilities_search`` for every intent.
+
+    The expected Operations are the replay-bound Operation IDs of the intent's
+    original major requirement (``catalog/major_requirements.json``), which are
+    independent of the router and of the corpus' own stale eligibility labels.
+    No artifact filter is applied because several bound Operations take typed
+    inputs the 300-intent corpus does not model.
+    """
+    bound = {item["id"]: list(item["operation_ids"])
+             for family in requirements["families"] for item in family["requirements"]}
+    cases = []
+    for intent in intents:
+        requirement = intent["requirement_ids"][0]
+        expected = sorted(bound[requirement])
+        returned = _candidate_ids(runtime.capabilities_search(
+            intent["query"], artifact_ids=[], constraints={}, limit=3))
+        cases.append({"id": intent["id"], "requirement": requirement,
+                      "split": retrieval_split(requirement), "expected": expected,
+                      "returned": returned,
+                      "top1": bool(returned and returned[0] in expected),
+                      "top3": bool(set(expected) & set(returned))})
+    return cases
+
+
+def retrieval_evidence(cases: list[dict[str, Any]], *, full_report: dict[str, Any],
+                       root: Path = REPO) -> dict[str, Any]:
+    by_split = {name: [case for case in cases if case["split"] == name]
+                for name in ("development", "held_out")}
+    overall = _retrieval_summary(cases)
+    goal = full_report.get("goal_routing", {})
+    return {
+        "schema_version": 1, "generator": "master-search-retrieval-evidence",
+        "protocol": ("Each of the 300 corpus intents is submitted to the production "
+                     "capabilities_search (limit 3, no artifact filter). A hit requires "
+                     "an Operation ID bound to the intent's major requirement in "
+                     "catalog/major_requirements.json to be returned (top-1: first)."),
+        "bindings": {key: _hash(root / rel) for key, rel in RETRIEVAL_BINDING_SOURCES.items()},
+        "split": {"rule": f"sha256(requirement_id) mod {HELD_OUT_MODULUS} == 0 is held_out",
+                  "held_out_requirements": sorted({c["requirement"] for c in by_split["held_out"]})},
+        "provenance": [
+            "The corpus is a checked-in authored development corpus; it was not frozen before routing work.",
+            "Vocabulary changes after the baseline were derived from development-split misses only.",
+            "The baseline miss list (ids and expected Operations) was visible for every split, so held_out is a weak, not a blind, estimate.",
+            "No per-query or Operation-ID string is hardcoded in search.py.",
+        ],
+        "target_percent": RETRIEVAL_TARGET_PERCENT,
+        "summary": {"overall": overall,
+                    "development": _retrieval_summary(by_split["development"]),
+                    "held_out": _retrieval_summary(by_split["held_out"])},
+        "passes_retrieval_target": overall["top3_percent"] >= RETRIEVAL_TARGET_PERCENT,
+        "full_search_acceptance": {
+            "passes_search_acceptance": bool(full_report.get("passes_search_acceptance")),
+            "typed_eligible_top3": full_report.get("eligibility"),
+            "documentation_discovery": full_report.get("documentation_discovery"),
+            "package_discovery_smoke": {k: v for k, v in full_report.get(
+                "package_discovery_smoke", {}).items() if k != "cases"},
+            "planner_gates": {k: v for k, v in full_report.get(
+                "planner_gates", {}).items() if k != "cases"},
+            "goal_routing": {k: v for k, v in goal.items() if k != "cases"},
+            "execute_calls": 0,
+        },
+        "cases": cases,
+    }
+
+
 def evaluate_planner_gates(gates: list[dict[str, Any]], *, runtime: Any,
                            artifact_ids_by_type: dict[str, str]) -> dict[str, Any]:
     cases=[]
@@ -772,9 +868,12 @@ def run(corpus_path: Path = CORPUS_PATH, *, output: Path | None = None) -> dict[
                 gates=evaluate_planner_gates(corpus["planner_gates"],runtime=runtime,
                                              artifact_ids_by_type=artifact_ids)
                 smoke=evaluate_package_smoke(package_smoke,runtime=runtime)
+                retrieval_cases=measure_catalog_bound_retrieval(
+                    corpus["intents"],requirements,runtime=runtime)
             finally:
                 runtime.close()
         report.update(result); report["goal_routing"]=routing
+        report["catalog_bound_retrieval_cases"]=retrieval_cases
         report["planner_gates"]=gates; report["package_discovery_smoke"]=smoke
         search_pass=(result["eligibility"]["passes_target"] and
                      result["documentation_discovery"]["passes_target"] and
@@ -795,7 +894,15 @@ def run(corpus_path: Path = CORPUS_PATH, *, output: Path | None = None) -> dict[
 def main() -> int:
     parser=argparse.ArgumentParser(); parser.add_argument("--corpus",type=Path,default=CORPUS_PATH)
     parser.add_argument("--output",type=Path,default=REPO/"work"/"master-search-acceptance.json")
+    parser.add_argument("--publish-retrieval-evidence",action="store_true",
+        help="write docs/master/evidence/search-retrieval.json from this run")
     args=parser.parse_args(); report=run(args.corpus,output=args.output)
+    if args.publish_retrieval_evidence:
+        if "catalog_bound_retrieval_cases" not in report:
+            raise SystemExit("Cannot publish retrieval evidence from an invalid corpus")
+        document=retrieval_evidence(report["catalog_bound_retrieval_cases"],full_report=report)
+        RETRIEVAL_EVIDENCE_PATH.write_text(
+            json.dumps(document,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
     keys=("status","passes_search_acceptance","passes_acceptance","overall_standalone_ready",
           "corpus_errors","package_smoke_errors","eligibility","documentation_discovery",
           "package_discovery_smoke","goal_routing","automatic_execution","planner_gates",

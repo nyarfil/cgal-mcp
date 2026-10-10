@@ -811,6 +811,122 @@ def evaluate_requirements(requirements: dict, operations: dict[str, dict], root:
             "complete": bool(rows) and validated == len(rows), "requirements": rows}
 
 
+SEARCH_GATE = "search_and_retrieval_acceptance"
+SEARCH_EVIDENCE = "docs/master/evidence/search-retrieval.json"
+SEARCH_TARGET_PERCENT = 95.0
+
+
+def evaluate_search_gate(root: Path = REPO, *, live: bool = True,
+                         evidence: dict | None = None) -> dict:
+    """Verify the retrieval evidence and decide the search gate honestly.
+
+    The gate is met only when (1) the evidence bindings match the current
+    corpus, requirement bindings, registry, vocabulary and generator; (2) every
+    recorded case matches the catalog binding and, when ``live``, a fresh run of
+    the production search; (3) top-3 recall over all 300 intents is at least 95%
+    and (4) the full search acceptance (typed recall, documentation discovery,
+    126 package smoke, 4 planner gates, goal routing) passes.
+    """
+    reasons: list[str] = []
+    result: dict = {"gate": SEARCH_GATE, "status": "unmet", "evidence": SEARCH_EVIDENCE,
+                    "target_percent": SEARCH_TARGET_PERCENT, "reasons": reasons}
+    path = root / SEARCH_EVIDENCE
+    if evidence is None:
+        if not path.is_file():
+            reasons.append("Search retrieval evidence is missing")
+            return result
+        try:
+            evidence = json.loads(path.read_text(encoding="utf-8"))
+        except (ValueError, UnicodeError):
+            reasons.append("Search retrieval evidence is not machine readable")
+            return result
+    if not isinstance(evidence, dict) or evidence.get("generator") != "master-search-retrieval-evidence":
+        reasons.append("Search retrieval evidence has the wrong generator")
+        return result
+    from scripts import evaluate_master_search as search_eval
+    bindings = evidence.get("bindings")
+    expected_bindings = {key: hashlib.sha256((root / rel).read_bytes()).hexdigest()
+                         for key, rel in search_eval.RETRIEVAL_BINDING_SOURCES.items()}
+    if bindings != expected_bindings:
+        reasons.append("Search retrieval evidence bindings differ from the current corpus, "
+                       "requirement bindings, registry, vocabulary or generator")
+    try:
+        corpus = json.loads((root / search_eval.RETRIEVAL_BINDING_SOURCES["corpus_sha256"]
+                             ).read_text(encoding="utf-8"))
+        requirements = json.loads((root / "catalog/major_requirements.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError, UnicodeError):
+        reasons.append("Search corpus or requirement bindings are unreadable")
+        return result
+    bound = {item["id"]: sorted(item["operation_ids"])
+             for family in requirements["families"] for item in family["requirements"]}
+    intents = corpus.get("intents", [])
+    cases = evidence.get("cases")
+    if not isinstance(cases, list) or len(cases) != len(intents) or len(intents) != 300:
+        reasons.append("Search retrieval evidence does not cover all 300 intents")
+        return result
+    fresh = None
+    if live and root.resolve() == REPO.resolve():
+        import tempfile
+        from cgal_mcp.master.runtime import MasterRuntime
+        with tempfile.TemporaryDirectory(prefix="master-search-gate-") as name:
+            runtime = MasterRuntime(Path(name) / "store", require_memory_limit=False)
+            try:
+                fresh = search_eval.measure_catalog_bound_retrieval(
+                    intents, requirements, runtime=runtime)
+            finally:
+                runtime.close()
+    recomputed = []
+    for index, (intent, case) in enumerate(zip(intents, cases)):
+        requirement = intent["requirement_ids"][0]
+        if (not isinstance(case, dict) or case.get("id") != intent["id"] or
+                case.get("requirement") != requirement or
+                case.get("expected") != bound.get(requirement) or
+                case.get("split") != search_eval.retrieval_split(requirement)):
+            reasons.append(f"Search retrieval case does not match the catalog binding: {intent['id']}")
+            continue
+        returned = case.get("returned")
+        if not isinstance(returned, list) or len(returned) > 3 or not all(
+                isinstance(x, str) for x in returned):
+            reasons.append(f"Search retrieval case has invalid results: {intent['id']}")
+            continue
+        top1 = bool(returned and returned[0] in case["expected"])
+        top3 = bool(set(case["expected"]) & set(returned))
+        if case.get("top1") is not top1 or case.get("top3") is not top3:
+            reasons.append(f"Search retrieval case hit flags are inconsistent: {intent['id']}")
+        if fresh is not None and fresh[index] != case:
+            reasons.append(f"Search retrieval case differs from a fresh run: {intent['id']}")
+        recomputed.append({**case, "top1": top1, "top3": top3})
+    summary = {
+        "overall": search_eval._retrieval_summary(recomputed),
+        "development": search_eval._retrieval_summary([c for c in recomputed if c["split"] == "development"]),
+        "held_out": search_eval._retrieval_summary([c for c in recomputed if c["split"] == "held_out"]),
+    }
+    if evidence.get("summary") != summary:
+        reasons.append("Search retrieval summary differs from its recorded cases")
+    result["measured"] = summary
+    result["live_rerun"] = fresh is not None
+    result["retrieval_target_met"] = summary["overall"]["top3_percent"] >= SEARCH_TARGET_PERCENT
+    if not result["retrieval_target_met"]:
+        reasons.append(
+            f"Top-3 retrieval {summary['overall']['top3_percent']}% is below {SEARCH_TARGET_PERCENT}% "
+            f"(top-1 {summary['overall']['top1_percent']}%)")
+    full = evidence.get("full_search_acceptance")
+    if not isinstance(full, dict) or full.get("passes_search_acceptance") is not True:
+        reasons.append("Full search acceptance (typed recall, documentation discovery, package smoke, "
+                       "planner gates, goal routing) is not passing")
+        if isinstance(full, dict):
+            goal = full.get("goal_routing", {}).get("documentation_only", {})
+            result["goal_routing_unmeasured_input_model"] = goal.get("unmeasured_input_model")
+    if full is not None and full.get("execute_calls") != 0:
+        reasons.append("Search evidence must not claim execution measurements")
+    if not reasons:
+        result["status"] = "met"
+        if SEARCH_GATE in WAVE_A_UNMET_STANDALONE_GATES:
+            result["status"] = "met_pending_gate_list_update"
+            reasons.append("Evidence supports the gate but the unmet standalone gate list still names it")
+    return result
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--refresh-requirements", action="store_true")
@@ -833,6 +949,7 @@ def main() -> None:
             operation_data = operation_data.get("operations", [])
         operations = {o.get("id", o.get("operation", {}).get("id")): o for o in operation_data}
         report["major_capabilities"] = evaluate_requirements(requirements, operations)
+        report["standalone_gates"] = {SEARCH_GATE: evaluate_search_gate(REPO)}
         report["standalone_acceptance_reason"] = "Additional package, routing, workflow, host and robustness gates required"
     content = json.dumps(report, ensure_ascii=False, indent=2) + "\n"
     if args.output:

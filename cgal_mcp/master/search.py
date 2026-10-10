@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import re
 import unicodedata
+from functools import lru_cache
 from dataclasses import dataclass
 from typing import Any
 
@@ -26,12 +27,15 @@ your available computation compute task input output choose help information
 VOCABULARY: dict[str, tuple[str, ...]] = {
     "convex_hull": ("convex hull", "凸包", "外側を包む", "outer envelope",
                     "smallest convex", "convex envelope"),
-    "convex_decomposition": ("convex decomposition", "凸分解", "凸部分に分割"),
+    "convex_decomposition": ("convex decomposition", "凸分解", "凸部分に分割",
+                            "近似凸", "凸部品", "凸成分", "convex parts",
+                            "convex components", "approximate convex"),
     "simplification": ("simplify", "simplification", "decimation", "decimate",
                        "simplified", "edge collapse", "edge decimation",
                        "collapse edges", "lighter mesh",
                        "軽量化", "軽量メッシュ", "簡略化", "辺縮約", "辺を縮約",
-                       "ポリゴンを減", "面数を減", "辺数を減"),
+                       "ポリゴンを減", "面数を減", "辺数を減",
+                       "garland", "heckbert", "lindstrom"),
     "repair": ("repair", "修復", "修正"),
     "non_manifold_repair": ("repair non manifold", "repair non-manifold",
                             "non-manifold neighborhoods", "non manifold neighborhoods",
@@ -46,7 +50,8 @@ VOCABULARY: dict[str, tuple[str, ...]] = {
                            "triangulate every supported face", "triangulate faces",
                            "triangulate each face", "非三角形面", "各面を三角形分割"),
     "clipping": ("clip the surface", "clip a surface", "clip a mesh", "clipping plane", "clip mesh", "cut-boundary",
-                 "mesh clipping", "メッシュをクリップ", "切断面"),
+                 "mesh clipping", "メッシュをクリップ", "切断面",
+                 "クリップ平面", "クリッピング", "clip plane", "切り詰"),
     # Clipping against a box (or any non-planar region) is not plane clipping.
     "box_clipping": ("against a box", "clip box", "clipping box", "box clipping", "clip to a box",
                      "ボックスでクリップ", "箱でクリップ"),
@@ -104,7 +109,8 @@ VOCABULARY: dict[str, tuple[str, ...]] = {
                        "dihedral", "鋭い辺", "特徴辺", "二面角"),
     "measures": ("volume", "area", "centroid", "体積", "面積", "重心"),
     "integrity": ("validity", "valid", "integrity", "inspect", "inspection",
-                  "健全性", "検査", "閉鎖性", "水密", "watertight", "manifold", "多様体"),
+                  "健全性", "検査", "閉鎖性", "水密", "watertight", "manifold", "多様体",
+                  "妥当性"),
     "validation": ("validate", "validation", "validator", "verify the result",
                    "check the result", "検証", "結果を確かめ"),
     "distance": ("distance", "distances", "距離", "hausdorff", "ハウスドルフ"),
@@ -113,7 +119,14 @@ VOCABULARY: dict[str, tuple[str, ...]] = {
     "directed_distance": ("directed hausdorff", "one-sided hausdorff",
                           "one sided hausdorff", "chamfer distance",
                           "片方向ハウスドルフ", "片側ハウスドルフ"),
-    "aabb": ("aabb", "bounding box", "bounding boxes", "境界ボックス", "包囲箱"),
+    "aabb": ("aabb", "bounding box", "bounding boxes", "境界ボックス", "包囲箱",
+             "境界箱", "有向境界箱", "軸平行", "バウンディングボックス", "外接直方体",
+             "oriented bounding box", "axis aligned", "axis-aligned"),
+    "slicing": ("slice", "slicing", "sliced", "cross section", "cross-section",
+                "スライス", "断面"),
+    "point_location": ("point location", "locate query points", "locate points",
+                       "locate point", "containing face", "closest face",
+                       "包含面", "最近傍面", "位置特定"),
     "nearest_neighbor": ("nearest neighbor", "nearest neighbour", "nearest-neighbor",
                          "近傍検索", "最近傍", "kd tree", "kd-tree", "kdtree"),
     "outliers": ("outlier", "outliers", "isolated samples", "spurious points",
@@ -141,7 +154,7 @@ VOCABULARY: dict[str, tuple[str, ...]] = {
     "advancing_front": ("advancing front", "advancing-front", "前進法"),
     "polygon": ("polygon", "polygons", "多角形", "ポリゴン", "輪郭"),
     "arrangement": ("arrangement", "アレンジメント", "曲線配置"),
-    "overlay": ("overlay", "オーバーレイ"),
+    "overlay": ("overlay", "オーバーレイ", "重ね合わせ", "重ね合せ", "重畳"),
     "straight_skeleton": ("straight skeleton", "ストレートスケルトン", "直線骨格"),
     "offset": ("offset", "オフセット", "等距離輪郭"),
     "minkowski": ("minkowski", "ミンコフスキー"),
@@ -150,10 +163,15 @@ VOCABULARY: dict[str, tuple[str, ...]] = {
     "voronoi": ("voronoi", "ボロノイ"),
     "alpha_shape": ("alpha shape", "alpha shapes", "alpha-shape", "アルファ形状"),
     "alpha_wrap": ("alpha wrap", "alpha wrapping", "アルファラップ", "アルファラッピング"),
-    "bounding_volume": ("bounding volume", "bounding sphere", "包囲体", "包囲球", "最小球"),
+    "bounding_volume": ("bounding volume", "bounding sphere", "包囲体", "包囲球", "最小球",
+                        "境界体積"),
     "volume_meshing": ("volume mesh", "volume meshing", "tetrahedral mesh",
-                       "体積メッシュ", "四面体メッシュ"),
-    "surface_meshing": ("surface meshing", "surface mesh generation", "曲面メッシュ生成"),
+                       "体積メッシュ", "四面体メッシュ", "ボリュームメッシュ",
+                       "四面体ボリューム", "メッシュ生成領域", "3d mesh generation",
+                       "tetrahedral volume"),
+    "surface_meshing": ("surface meshing", "surface mesh generation", "曲面メッシュ生成",
+                        "conforming surface mesh", "表面メッシュを生成", "表面メッシュ生成",
+                        "適合する表面メッシュ"),
     "segmentation": ("segmentation", "segmenting", "segment the shape",
                      "shape diameter field", "セグメンテーション", "領域分割"),
     "skeleton": ("skeleton", "skeletonization", "骨格", "スケルトン"),
@@ -196,6 +214,17 @@ METHOD_CONCEPTS = frozenset({
     "voronoi", "alpha_shape", "alpha_wrap", "straight_skeleton",
     "fast_envelope",
 })
+
+# Plain bilingual nouns.  They only add English search words (score and FTS
+# candidates); they never create concepts, so they cannot make routing stricter.
+JA_WORD_LEXICON: tuple[tuple[str, str], ...] = (
+    ("三角形メッシュ", "triangle mesh"), ("メッシュ", "mesh"), ("点群", "point cloud"),
+    ("平面", "plane"), ("線分", "segment"), ("四面体", "tetrahedral"),
+    ("表面", "surface"), ("ソリッド", "solid"), ("重み付き", "weighted"),
+    ("正則", "regular"), ("拘束", "constrained"), ("陰関数", "implicit"),
+    ("パラメトリック", "parametric"), ("サイト", "site"), ("照会点", "query points"),
+    ("領域", "domain"), ("凸", "convex"), ("輪郭", "contour"),
+)
 
 METHOD_PARAMETER_REQUIREMENTS: dict[str, tuple[str, Any]] = {
     "pca": ("method", "pca"),
@@ -254,6 +283,7 @@ class QueryTerms:
     words: tuple[str, ...]
     concepts: frozenset[str]
     phrases: tuple[str, ...]
+    bridge_words: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -345,13 +375,59 @@ def parse_query(text: str) -> QueryTerms:
             or "for later remeshing" in normalized
             or re.search(r"再メッシュ(?:処理)?向け", normalized)):
         concepts.discard("remeshing")
+    # A nearest-neighbour search reports distances as part of its result; it is
+    # not a request for a separate distance measurement.
+    if "nearest_neighbor" in concepts and "distance" in concepts and not re.search(
+            r"hausdorff|ハウスドルフ|chamfer|squared|二乗|2乗", normalized):
+        concepts.discard("distance")
+    # "Before constructing intersections, evaluate predicates": the predicate
+    # is the requested decision; the construction is its downstream consumer.
+    if "predicates" in concepts and "intersection" in concepts and re.search(
+            r"construct|構築|作図", normalized):
+        concepts.discard("intersection")
+    if "validation" in concepts and re.search(
+            r"validate (?:the |this |that )?(?:workflow|pipeline|approach|process)", normalized):
+        concepts.discard("validation")
+    inspects = re.search(r"inspect|check|report on|検査|健全性|妥当性", normalized)
+    orients = re.search(r"orient(?:ing)? (?:the|all|every)|reorient|unify|揃|向きを(?:修正|統一|反転)|向き付けし", normalized)
+    if "integrity" in concepts and inspects and "orientation" in concepts and not orients:
+        concepts.discard("orientation")
+    # A watertight/valid input qualifies the task; it does not ask for a
+    # separate integrity report when a different transformation is requested.
+    transform_like = {"segmentation", "skeleton", "parameterization", "simplification",
+                      "remeshing", "subdivision", "reconstruction", "convex_decomposition",
+                      "triangulation", "surface_meshing", "volume_meshing", "clipping"}
+    if "integrity" in concepts and concepts & transform_like and not re.search(
+            r"inspect|check|report on|health report|検査して|検査し、|検査を|検査結果", normalized):
+        concepts.discard("integrity")
+    if "subdivision" in concepts and "smoothing" in concepts and re.search(
+            r"smooth (?:refined|limit|surface)|滑らかな", normalized):
+        concepts.discard("smoothing")
+    if "overlay" in concepts:
+        concepts.discard("mesh_refinement")
+    if concepts & {"surface_meshing", "volume_meshing"}:
+        concepts.discard("approximation")
+    if concepts & {"normals", "point_normals", "mesh_normals"} and (
+            "法線付き" in normalized or re.search(
+                r"(?:points?|point cloud|point set)s?\s+with\s+(?:oriented\s+)?normals", normalized)
+    ) and not re.search(r"estimat|推定|compute normals|法線を(?:計算|求)", normalized):
+        concepts -= {"normals", "point_normals", "mesh_normals"}
     concepts = frozenset(concepts)
-    words = tuple(dict.fromkeys(_stem(word) for word in re.findall(r"[a-z][a-z0-9]*|[23]d", normalized)
+    word_text = normalized
+    if re.search(r"2d\s*(?:または|もしくは|か|or|and|及び|および|/)\s*3d", normalized):
+        word_text = normalized.replace("2d", " ", 1)
+    extra = " ".join(english for japanese, english in JA_WORD_LEXICON if japanese in normalized)
+    words = tuple(dict.fromkeys(_stem(word) for word in re.findall(
+        r"[a-z][a-z0-9]*|[23]d", word_text)
                                 if word not in STOP_WORDS and (len(word) >= 3 or word in {"2d", "3d"})))
+    bridge_words = tuple(dict.fromkeys(
+        _stem(word) for word in re.findall(r"[a-z][a-z0-9]*", extra)
+        if word not in STOP_WORDS and _stem(word) not in words))
     phrases = tuple(dict.fromkeys(phrase for _, phrase in sorted(retained, key=lambda item: (-len(item[1]), item[1]))))
-    return QueryTerms(normalized, words, concepts, phrases)
+    return QueryTerms(normalized, words, concepts, phrases, bridge_words)
 
 
+@lru_cache(maxsize=4096)
 def document_terms(text: str) -> QueryTerms:
     return parse_query(text.replace(".", " ").replace("/", " ").replace("-", " "))
 
@@ -413,6 +489,8 @@ def match_operation(query: QueryTerms, text: str, *,
                           if len(normalize(alias)) >= 3
                           and _contains(query.normalized, alias))
     score = 14.0 * len(covered) + 3.0 * len(words)
+    # Translated Japanese nouns are a weak tie-break, not lexical evidence.
+    score += 1.0 * len(set(query.bridge_words) & set(target.words))
     score += sum(10.0 + min(len(normalize(alias)), 40) / 4.0
                  for alias in alias_matches)
     exact_text = normalize(text)
