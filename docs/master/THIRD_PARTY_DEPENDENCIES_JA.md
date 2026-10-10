@@ -43,4 +43,4 @@ OpenGRのみ・SCIPのみの組合せも可能で、それぞれのソースフ�
 - 記載の版・licenseは取得元の公開情報に基づきます。配布時のlicense表記の最終確認は
   リリース工程で必要です。
 
-77/80はOpenGRとSCIPの両方を含むworkerでのみ再現できます。どちらかが無いworkerでは7.9または7.10が`OPTIONAL_DEPENDENCY_NOT_BUILT`となり、再試験は明確なメッセージ（requires OpenGR,SCIP）で終了するか、`--skip-unavailable-optional`で当該familyを除外して減った件数を報告します。libpointmatcherは導入しておらず対象外です。
+79/80はOpenGRとSCIPの両方を含むworkerでのみ再現できます。どちらかが無いworkerでは7.9または7.10が`OPTIONAL_DEPENDENCY_NOT_BUILT`となり、再試験は明確なメッセージ（requires OpenGR,SCIP）で終了するか、`--skip-unavailable-optional`で当該familyを除外して減った件数を報告します。libpointmatcherは導入しておらず対象外です。

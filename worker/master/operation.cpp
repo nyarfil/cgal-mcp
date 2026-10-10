@@ -17,6 +17,7 @@
 #include "batch6/b6_common.h"
 #include "batch7/b7_common.h"
 #include "batch8/b8_common.h"
+#include "batch9/b9_common.h"
 #include "reconstruction/reconstruction_common.h"
 
 #include <CGAL/version.h>
@@ -171,6 +172,12 @@ const std::vector<OperationDefinition>& operation_registry() {
     operations.push_back(std::move(operation));
   }
   for (auto& operation : batch8::validator_operations()) {
+    operations.push_back(std::move(operation));
+  }
+  for (auto& operation : batch9::producer_operations()) {
+    operations.push_back(std::move(operation));
+  }
+  for (auto& operation : batch9::validator_operations()) {
     operations.push_back(std::move(operation));
   }
   return operations;

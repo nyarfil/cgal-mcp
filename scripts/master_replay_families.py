@@ -4179,8 +4179,9 @@ FAMILY_7_8["requirements"]["major.7.8.02"] = {
                     "a covering decomposition and never that the parts are tighter than the hull. The independent "
                     "validator (exact GMP rationals over the report data) certifies that every part is a closed "
                     "outward triangle mesh and convex (every vertex on or behind every face plane), that parts "
-                    "stay inside the expanded bounding box, that every input vertex lies in some part within a "
-                    "coverage tolerance of one voxel edge (declared: longest bounding-box side / "
+                    "stay inside the expanded bounding box, that every input vertex lies in some part, measured as "
+                    "its largest signed distance to that part's face planes, up to a coverage tolerance of "
+                    "one voxel edge (declared: longest bounding-box side / "
                     "(floor(cbrt(maximum_number_of_voxels)) - 3)) and that the total part volume covers the mesh "
                     "volume up to the boundary shell and stays below the expanded box volume.",
     "case_ids": ["acd-l-prism-two-parts", "acd-l-prism-two-parts-repeat", "acd-l-prism-one-part-is-hull",
@@ -5176,6 +5177,224 @@ FAMILY_7_10["negative_controls"].extend([
     {"id": "afsr-normals-input-type-rejected", "operation": "reconstruction.advancing_front",
      "inputs": [_points(R_SPHERE_ZERO, "PointSet3Normals", "ply")], "parameters": B6_AFSR,
      "expect_error_class": "TYPE_ERROR", "expect_error_code": "INPUT_TYPE_MISMATCH"},
+])
+
+# --- Batch 9 (7.8.01 SDF segmentation, 7.11.04 periodic and on-sphere Delaunay triangulations) ---------
+B9_FIXTURES = {
+    "body_arm.off": "027542a8489d834565077d08854bf14ee7d152c0da8a92f41b7cfb62b0406052",
+    "periodic_outside_2.json": "d14ffdac514a7e95ac30ea880032f70a72f8a1b3ca84ec026bbd32d51649746c",
+    "periodic_points_2.json": "6b7777953d0b6a4daaa34b09367dc67c22269fe4661e08fa6017c115bfde7fc8",
+    "periodic_sparse_2.json": "6e9a65a2d7b25ac5a2ee81a9e1b356770064777c26ff601644e33f8f269bc646",
+    "periodic_points_3.xyz": "d55d84a532ecd45ea48f255532761410cadcf331c1e932ed193769f9179e7005",
+    "periodic_sparse_3.xyz": "f26ad4ff2417dc6fa3542b0929a77017af0e720bd1a0c6c4663f018b3b3c0601",
+    "sphere_hemisphere.xyz": "bd85dc06ae8029a1bd8d9b5f3577c26fca86f86d1d4ab6f3d0a67572c9a8c0a5",
+    "sphere_off_surface.xyz": "8bbccd7fd023ba40a3440aa47efab628ed0d4c93623b0603fe8a2b27159eb9bd",
+    "sphere_points.xyz": "eab6a0873c51d63ce9bd6dd9d9a5a3ed97838d13f0d2dd393e59ff17aa54276d",
+    "tampered_periodic2_flipped_edge.json": "30751c2e2e43efcc118d7fa12349427a45b4489686d9068c8bb1855250d77ac3",
+    "tampered_periodic2_missing_triangle.json": "cc288dbb21d6538f1f39f363b8449de3e44c0cf1039ee862c2bc51ebee183a38",
+    "tampered_periodic3_inverted_tetrahedron.json": "25149e9622028e261a3d2712c6356220aab5424b8ea2be3941dcb259cda36c47",
+    "tampered_periodic3_missing_tetrahedron.json": "516686cb184c1718f2f6e6f834227da974cde604c5164d517788fb05184d7093",
+    "tampered_sdf_missing_value.json": "a38d63edf7b66102d5e10823424a7b6d68052739cb1bc7958e29639ca5e11afa",
+    "tampered_sdf_thick_arm.json": "3747627f6ffeb46b8b10fed2850af8de4d6cf4cd2594dc25c002c844fcc03541",
+    "tampered_segment_cluster_out_of_range.json": "5aee047ae2276ea671d5fa409ee50f35e33a53491bf5c05b0b8fa456dcdde2ea",
+    "tampered_segment_uncovered_facet.json": "ab4514775e3ab306ad14f2249fbc9add79f9e0dff16acd0e1db8672d96f00190",
+    "tampered_segment_wrong_component.json": "d3aa973a0802e9f375facc336b927b5a09cf1e38d34d9a9212f194a6ad870abb",
+    "tampered_sphere_flipped_edge.json": "e477e482410e106ec3ab83e7c699b590f686fabd90430006063f8fc2afaca45a",
+    "tampered_sphere_missing_face.json": "333b5d30c74ab54e0bcc215d0f88a82f6ec0922d5059465e2d67756c8741083e",
+}
+
+
+def _b9(name: str) -> dict:
+    return {"fixture": f"batch9/{name}", "sha256": B9_FIXTURES[name]}
+
+
+def _b9report(name: str) -> dict:
+    return {**_b9(name), "type": "GeometryQueryReport", "format": "json", "unit": "none"}
+
+
+B9_BODY_ARM = _mesh(_b9("body_arm.off"))
+B9_P2 = _json_input(_b9("periodic_points_2.json"), "PointSet2")
+B9_P3 = _points(_b9("periodic_points_3.xyz"))
+B9_SPHERE = _points(_b9("sphere_points.xyz"))
+B9_SDF_NARROW = {"cone_angle": math.pi / 6, "number_of_rays": 25, "thickness_tolerance": 0.05}
+B9_SDF_DEFAULT = {"cone_angle": 2.0 * math.pi / 3.0, "number_of_rays": 25, "thickness_tolerance": 0.05}
+B9_SEG_NARROW = dict(B9_SDF_NARROW, number_of_clusters=2, smoothing_lambda=0.26)
+B9_SEG_DEFAULT = dict(B9_SDF_DEFAULT, number_of_clusters=2, smoothing_lambda=0.26)
+B9_PERIODIC_2 = {"domain_min": [0.0, 0.0], "period": _mm(1.0)}
+B9_PERIODIC_3 = {"domain_min": [0.0, 0.0, 0.0], "period": _mm(1.0)}
+B9_SPHERE_PARAMETERS = {"center": [0.0, 0.0, 0.0], "radius": _mm(10.0)}
+B9_ARM_SIDE_BOUND = 1.0 / math.cos(math.pi / 12)  # every 30-degree cone ray from an arm side facet crosses the 1 mm arm
+
+FAMILY_7_8["unbound"].pop("major.7.8.01")
+FAMILY_7_8["requirements"]["major.7.8.01"] = {
+    "operation_ids": ["mesh.segment.sdf_values", "mesh.segment.sdf"],
+    "symbols": ["sdf_values", "segmentation_from_sdf_values"],
+    "symbol_notes": "mesh.segment.sdf_values wraps CGAL::sdf_values without post-processing (raw ray thickness per "
+                    "facet) and mesh.segment.sdf runs CGAL::sdf_values (raw and post-processed) followed by "
+                    "CGAL::segmentation_from_sdf_values twice (cluster ids and segment ids); closed outward triangle "
+                    "meshes of at most 1500 faces. The fixture is a 4 mm voxel cube with a 1 x 1 x 6 mm arm (240 "
+                    "facets: 190 on the body, 50 on the arm). Raw SDF is a weighted mean of first-hit distances of "
+                    "rays inside the cone, so the independent validator casts its own 65 rays per facet over the "
+                    "declared cone (long double) and requires every raw value within [L_min (1 - t), L_max (1 + t)] "
+                    "with the declared thickness_tolerance t = 0.05 (measured shortfall and excess are 0 on both "
+                    "cones), plus positive values below the bounding-box diagonal and no missing value. Hand-derived: "
+                    "an arm side facet lies in [1, 1/cos(15 deg)] for the 30 deg cone. With the 30 deg cone and two "
+                    "clusters the segmentation splits exactly the 190 body facets from the 50 arm facets (2 "
+                    "segments); with CGAL's default 120 deg cone the wide rays blur the thickness contrast and one "
+                    "segment results (regression pin). The segmentation validator checks exactly that normalized "
+                    "values lie in [0, 1] and reach 0 and 1, that the smoothed range lies within the raw range, that "
+                    "every facet has a cluster id below number_of_clusters and a segment id, that segment ids are "
+                    "contiguous and that segments are exactly the edge-connected components of the clusters. The "
+                    "one-call segmentation_via_sdf_values wrapper is not exposed.",
+    "case_ids": ["sdf-values-body-arm-narrow-cone", "sdf-values-body-arm-default-cone",
+                 "sdf-segment-body-arm-narrow-cone", "sdf-segment-body-arm-default-cone"],
+}
+FAMILY_7_8["cases"].extend([
+    _case("sdf-values-body-arm-narrow-cone", "mesh.segment.sdf_values", [B9_BODY_ARM], B9_SDF_NARROW, [
+        ["metrics.algorithm", "==", "CGAL::sdf_values"],
+        ["output:analysis:json:report_kind", "==", "sdf_values"],
+        ["metrics.face_count", "==", 240],
+        ["metrics.missing_count", "==", 0],
+        ["output:analysis:json:results.raw_sdf.200", ">=", 1.0],
+        ["output:analysis:json:results.raw_sdf.200", "<=", B9_ARM_SIDE_BOUND],
+        ["metrics.minimum_raw_sdf", "approx", [1.0063385339762674, 1e-9]],
+        ["metrics.maximum_raw_sdf", "approx", [4.098757231406917, 1e-9]],
+    ]),
+    _case("sdf-values-body-arm-default-cone", "mesh.segment.sdf_values", [B9_BODY_ARM], B9_SDF_DEFAULT, [
+        ["metrics.algorithm", "==", "CGAL::sdf_values"],
+        ["metrics.face_count", "==", 240],
+        ["metrics.missing_count", "==", 0],
+        ["metrics.minimum_raw_sdf", "approx", [0.7584898520903698, 1e-9]],
+        ["metrics.maximum_raw_sdf", "approx", [4.193087638623196, 1e-9]],
+    ]),
+    _case("sdf-segment-body-arm-narrow-cone", "mesh.segment.sdf", [B9_BODY_ARM], B9_SEG_NARROW, [
+        ["metrics.algorithm", "==", "CGAL::segmentation_from_sdf_values"],
+        ["output:analysis:json:report_kind", "==", "sdf_segmentation"],
+        ["metrics.face_count", "==", 240],
+        ["metrics.segment_count", "==", 2],
+        ["output:analysis:json:results.segment_ids.0", "==", 1],
+        ["output:analysis:json:results.segment_ids.189", "==", 1],
+        ["output:analysis:json:results.segment_ids.190", "==", 0],
+        ["output:analysis:json:results.segment_ids.239", "==", 0],
+        ["output:analysis:json:results.cluster_ids.0", "==", 1],
+        ["output:analysis:json:results.cluster_ids.239", "==", 0],
+    ]),
+    _case("sdf-segment-body-arm-default-cone", "mesh.segment.sdf", [B9_BODY_ARM], B9_SEG_DEFAULT, [
+        ["metrics.algorithm", "==", "CGAL::segmentation_from_sdf_values"],
+        ["metrics.face_count", "==", 240],
+        ["metrics.segment_count", "==", 1],
+    ]),
+])
+FAMILY_7_8["pairs"].extend([
+    {"kind": "different_outputs", "cases": ["sdf-segment-body-arm-narrow-cone", "sdf-segment-body-arm-default-cone"]},
+])
+FAMILY_7_8["negative_controls"].extend([
+    {"id": "sdf-tampered-thick-arm-rejected", "operation": "mesh.validate.sdf_values",
+     "inputs": [_b9report("tampered_sdf_thick_arm.json"), B9_BODY_ARM], "parameters": B9_SDF_NARROW,
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "SDF_THICKNESS_MISMATCH"},
+    {"id": "sdf-tampered-missing-value-rejected", "operation": "mesh.validate.sdf_values",
+     "inputs": [_b9report("tampered_sdf_missing_value.json"), B9_BODY_ARM], "parameters": B9_SDF_NARROW,
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "MISSING_SDF_VALUE"},
+    {"id": "sdf-tampered-wrong-component-rejected", "operation": "mesh.validate.sdf_segmentation",
+     "inputs": [_b9report("tampered_segment_wrong_component.json"), B9_BODY_ARM], "parameters": B9_SEG_NARROW,
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "SEGMENTS_NOT_CLUSTER_COMPONENTS"},
+    {"id": "sdf-tampered-uncovered-facet-rejected", "operation": "mesh.validate.sdf_segmentation",
+     "inputs": [_b9report("tampered_segment_uncovered_facet.json"), B9_BODY_ARM], "parameters": B9_SEG_NARROW,
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "FACET_COVERAGE_MISMATCH"},
+    {"id": "sdf-tampered-cluster-out-of-range-rejected", "operation": "mesh.validate.sdf_segmentation",
+     "inputs": [_b9report("tampered_segment_cluster_out_of_range.json"), B9_BODY_ARM], "parameters": B9_SEG_NARROW,
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "CLUSTER_ID_OUT_OF_RANGE"},
+    {"id": "sdf-open-mesh-rejected", "operation": "mesh.segment.sdf", "inputs": [B8_DISC],
+     "parameters": B9_SEG_NARROW, "expect_error_class": "PRECONDITION_FAILED", "expect_error_code": "MESH_NOT_CLOSED"},
+    {"id": "sdf-zero-cone-rejected", "operation": "mesh.segment.sdf_values", "inputs": [B9_BODY_ARM],
+     "parameters": dict(B9_SDF_NARROW, cone_angle=0.0),
+     "expect_error_class": "INVALID_REQUEST", "expect_error_code": "INVALID_PARAMETER"},
+])
+
+FAMILY_7_11["unbound"].pop("major.7.11.04")
+FAMILY_7_11["requirements"]["major.7.11.04"] = {
+    "operation_ids": ["triangulation.periodic_delaunay_2", "triangulation.periodic_delaunay_3",
+                      "triangulation.delaunay_on_sphere_2"],
+    "symbols": ["Periodic_2_triangulation_2", "Periodic_3_Delaunay_triangulation_3",
+                "Delaunay_triangulation_on_sphere_2"],
+    "symbol_notes": "Periodic_2_Delaunay_triangulation_2 (derived from Periodic_2_triangulation_2) on 36 jittered "
+                    "points of the unit square torus, Periodic_3_Delaunay_triangulation_3 on 125 jittered points of "
+                    "the unit cube 3-torus (both converted to the 1-sheeted covering and reported as simplices of "
+                    "point index plus lattice offset) and Delaunay_triangulation_on_sphere_2 on 120 Fibonacci points "
+                    "of the radius-10 sphere. Hand-derived: a triangulation of the torus has V - E + F = 0 and "
+                    "E = 3F/2, hence F = 2V = 72 triangles; a periodic tetrahedralization has F = 2T (843 tetrahedra, "
+                    "1686 facets, 968 edges, 125 - 968 + 1686 - 843 = 0); a triangulated sphere has F = 2V - 4 = 236. "
+                    "The independent validators are exact (GMP rationals): positive simplices, closed on the torus "
+                    "modulo lattice translation, total area / volume exactly one fundamental domain, Euler "
+                    "characteristic 0, and empty circumcircles / circumspheres against every lattice translate of "
+                    "every point that can reach the ball; on the sphere, outward faces forming a closed surface with "
+                    "Euler characteristic 2, empty circles as orientation_3(p, q, r, s) <= 0 for every face and point "
+                    "(the predicate of the CGAL traits) and points on the declared sphere within 1e-9 relative. Point "
+                    "sets too sparse for the 1-sheeted covering, points outside the domain, points off the sphere and "
+                    "points confined to a hemisphere (ghost faces) are rejected. The plain non-Delaunay "
+                    "Periodic_2_triangulation_2 insertion API, periodic regular/hyperbolic variants and "
+                    "Regular_triangulation_on_sphere_2 are not exposed.",
+    "case_ids": ["periodic2-jittered-36", "periodic3-jittered-125", "sphere-fibonacci-120"],
+}
+FAMILY_7_11["cases"].extend([
+    _case("periodic2-jittered-36", "triangulation.periodic_delaunay_2", [B9_P2], B9_PERIODIC_2, [
+        ["metrics.algorithm", "==", "CGAL::Periodic_2_Delaunay_triangulation_2"],
+        ["output:analysis:json:report_kind", "==", "periodic_delaunay_triangulation_2"],
+        ["metrics.input_point_count", "==", 36],
+        ["metrics.vertex_count", "==", 36],
+        ["metrics.triangle_count", "==", 72],
+    ]),
+    _case("periodic3-jittered-125", "triangulation.periodic_delaunay_3", [B9_P3], B9_PERIODIC_3, [
+        ["metrics.algorithm", "==", "CGAL::Periodic_3_Delaunay_triangulation_3"],
+        ["output:analysis:json:report_kind", "==", "periodic_delaunay_triangulation_3"],
+        ["metrics.vertex_count", "==", 125],
+        ["metrics.tetrahedron_count", "==", 843],
+        ["metrics.facet_count", "==", 1686],
+        ["metrics.edge_count", "==", 968],
+    ]),
+    _case("sphere-fibonacci-120", "triangulation.delaunay_on_sphere_2", [B9_SPHERE], B9_SPHERE_PARAMETERS, [
+        ["metrics.algorithm", "==", "CGAL::Delaunay_triangulation_on_sphere_2"],
+        ["output:analysis:json:report_kind", "==", "delaunay_triangulation_on_sphere_2"],
+        ["metrics.vertex_count", "==", 120],
+        ["metrics.triangle_count", "==", 236],
+    ]),
+])
+FAMILY_7_11["negative_controls"].extend([
+    {"id": "periodic2-tampered-flipped-edge-rejected", "operation": "triangulation.validate.periodic_delaunay_2",
+     "inputs": [_b9report("tampered_periodic2_flipped_edge.json"), B9_P2], "parameters": B9_PERIODIC_2,
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "NOT_DELAUNAY"},
+    {"id": "periodic2-tampered-missing-triangle-rejected", "operation": "triangulation.validate.periodic_delaunay_2",
+     "inputs": [_b9report("tampered_periodic2_missing_triangle.json"), B9_P2], "parameters": B9_PERIODIC_2,
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "DOMAIN_NOT_COVERED_ONCE"},
+    {"id": "periodic2-sparse-rejected", "operation": "triangulation.periodic_delaunay_2",
+     "inputs": [_json_input(_b9("periodic_sparse_2.json"), "PointSet2")], "parameters": B9_PERIODIC_2,
+     "expect_error_class": "PRECONDITION_FAILED", "expect_error_code": "NOT_ONE_SHEETED"},
+    {"id": "periodic2-point-outside-domain-rejected", "operation": "triangulation.periodic_delaunay_2",
+     "inputs": [_json_input(_b9("periodic_outside_2.json"), "PointSet2")], "parameters": B9_PERIODIC_2,
+     "expect_error_class": "PRECONDITION_FAILED", "expect_error_code": "POINT_OUTSIDE_DOMAIN"},
+    {"id": "periodic3-tampered-missing-tetrahedron-rejected",
+     "operation": "triangulation.validate.periodic_delaunay_3",
+     "inputs": [_b9report("tampered_periodic3_missing_tetrahedron.json"), B9_P3], "parameters": B9_PERIODIC_3,
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "DOMAIN_NOT_COVERED_ONCE"},
+    {"id": "periodic3-tampered-inverted-tetrahedron-rejected",
+     "operation": "triangulation.validate.periodic_delaunay_3",
+     "inputs": [_b9report("tampered_periodic3_inverted_tetrahedron.json"), B9_P3], "parameters": B9_PERIODIC_3,
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "SIMPLEX_NOT_POSITIVE"},
+    {"id": "periodic3-sparse-rejected", "operation": "triangulation.periodic_delaunay_3",
+     "inputs": [_points(_b9("periodic_sparse_3.xyz"))], "parameters": B9_PERIODIC_3,
+     "expect_error_class": "PRECONDITION_FAILED", "expect_error_code": "NOT_ONE_SHEETED"},
+    {"id": "sphere-tampered-flipped-edge-rejected", "operation": "triangulation.validate.delaunay_on_sphere_2",
+     "inputs": [_b9report("tampered_sphere_flipped_edge.json"), B9_SPHERE], "parameters": B9_SPHERE_PARAMETERS,
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "NOT_DELAUNAY"},
+    {"id": "sphere-tampered-missing-face-rejected", "operation": "triangulation.validate.delaunay_on_sphere_2",
+     "inputs": [_b9report("tampered_sphere_missing_face.json"), B9_SPHERE], "parameters": B9_SPHERE_PARAMETERS,
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "NOT_CLOSED_SURFACE"},
+    {"id": "sphere-point-off-surface-rejected", "operation": "triangulation.delaunay_on_sphere_2",
+     "inputs": [_points(_b9("sphere_off_surface.xyz"))], "parameters": B9_SPHERE_PARAMETERS,
+     "expect_error_class": "PRECONDITION_FAILED", "expect_error_code": "POINT_NOT_ON_SPHERE"},
+    {"id": "sphere-hemisphere-rejected", "operation": "triangulation.delaunay_on_sphere_2",
+     "inputs": [_points(_b9("sphere_hemisphere.xyz"))], "parameters": B9_SPHERE_PARAMETERS,
+     "expect_error_class": "PRECONDITION_FAILED", "expect_error_code": "SPHERE_NOT_COVERED"},
 ])
 
 GENERIC_FAMILIES: dict[str, dict] = {

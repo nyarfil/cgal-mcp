@@ -43627,6 +43627,1947 @@
         "cgal_version": "6.2.1",
         "review_status": "self_verified_not_independently_reviewed"
       }
+    },
+    {
+      "id": "mesh.segment.sdf_values",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "analysis",
+      "summary": "Raw shape diameter function (SDF) value of every facet of a closed outward triangle mesh through CGAL::sdf_values (no post-processing); the validator checks every value against its own cone-ray thickness range within a declared tolerance.",
+      "package": "Surface_mesh_segmentation",
+      "major_requirements": [
+        "major.7.8.01"
+      ],
+      "aliases": [
+        "shape diameter function",
+        "sdf values",
+        "local thickness of a mesh",
+        "\u30e1\u30c3\u30b7\u30e5\u306e\u539a\u307f",
+        "\u5f62\u72b6\u76f4\u5f84\u95a2\u6570"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Surface_mesh_segmentation"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::sdf_values"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/mesh_segmentation.h"
+        },
+        {
+          "kind": "manual",
+          "identifier": "Surface_mesh_segmentation/index.html"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Surface_mesh_segmentation",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/mesh_segmentation.h",
+            "sha256": "1986da6b87a6050f48b69fcebdb4af4f84686caf1e67b3ea2d27208fd88b62cc"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "mesh",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "analysis",
+            "type": "GeometryQueryReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "cone_angle",
+          "number_of_rays",
+          "thickness_tolerance"
+        ],
+        "properties": {
+          "cone_angle": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 3.0,
+            "description": "Full opening angle (radians) of the ray cone around the inward facet normal (CGAL default 2*pi/3)."
+          },
+          "number_of_rays": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "description": "Rays cast per facet (CGAL default 25)."
+          },
+          "thickness_tolerance": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10,
+            "description": "Declared relative band the validator allows around the range of its own cone-ray thicknesses."
+          }
+        }
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 268435456,
+          "maximum_faces": 1500
+        }
+      ],
+      "validation": {
+        "required": true,
+        "validators": [
+          "mesh.validate.sdf_values"
+        ],
+        "bindings": {
+          "mesh.validate.sdf_values": {
+            "artifacts": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "mesh": {
+                "input": "mesh"
+              }
+            },
+            "parameters": {
+              "cone_angle": {
+                "parameter": "cone_angle"
+              },
+              "number_of_rays": {
+                "parameter": "number_of_rays"
+              },
+              "thickness_tolerance": {
+                "parameter": "thickness_tolerance"
+              }
+            }
+          }
+        }
+      },
+      "output_contract": {
+        "report_schema_version": 1,
+        "geometry_mutation": false,
+        "source_sha256_preserved": true,
+        "exact_rational_strings": false,
+        "producer_diagnostics_are_non_authoritative": true
+      },
+      "dependencies": [
+        "Surface_mesh_segmentation"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "input_slots": [
+            "mesh"
+          ],
+          "maximum_input_faces": 1500,
+          "source_header": "CGAL/mesh_segmentation.h",
+          "validator_parameter_bindings": {
+            "mesh.validate.sdf_values": {
+              "cone_angle": "cone_angle",
+              "number_of_rays": "number_of_rays",
+              "thickness_tolerance": "thickness_tolerance"
+            }
+          },
+          "validators": [
+            "mesh.validate.sdf_values"
+          ]
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "CGAL filtered-exact predicates (EPICK); ray casting and clustering are approximate, so correctness rests on the independent validator",
+        "exact_constructions": "none",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_family_replay_cases.py",
+          "tests/test_master_core.py"
+        ],
+        "worker_manifest_operation": "mesh.segment.sdf_values",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "mesh.segment.sdf",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "analysis",
+      "summary": "SDF-based segmentation of a closed outward triangle mesh: CGAL::sdf_values (raw and post-processed) followed by CGAL::segmentation_from_sdf_values for cluster ids and segment ids; the validator checks thickness, normalization, full facet coverage and that segments are exactly the connected components of the clusters.",
+      "package": "Surface_mesh_segmentation",
+      "major_requirements": [
+        "major.7.8.01"
+      ],
+      "aliases": [
+        "mesh segmentation",
+        "sdf segmentation",
+        "segment a mesh into parts",
+        "\u30e1\u30c3\u30b7\u30e5\u5206\u5272",
+        "\u30e1\u30c3\u30b7\u30e5\u533a\u5206\u5316"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Surface_mesh_segmentation"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::segmentation_from_sdf_values"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/mesh_segmentation.h"
+        },
+        {
+          "kind": "manual",
+          "identifier": "Surface_mesh_segmentation/index.html"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Surface_mesh_segmentation",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/mesh_segmentation.h",
+            "sha256": "1986da6b87a6050f48b69fcebdb4af4f84686caf1e67b3ea2d27208fd88b62cc"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "mesh",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "analysis",
+            "type": "GeometryQueryReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "cone_angle",
+          "number_of_rays",
+          "thickness_tolerance",
+          "number_of_clusters",
+          "smoothing_lambda"
+        ],
+        "properties": {
+          "cone_angle": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 3.0,
+            "description": "Full opening angle (radians) of the ray cone around the inward facet normal (CGAL default 2*pi/3)."
+          },
+          "number_of_rays": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "description": "Rays cast per facet (CGAL default 25)."
+          },
+          "thickness_tolerance": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10,
+            "description": "Declared relative band the validator allows around the range of its own cone-ray thicknesses."
+          },
+          "number_of_clusters": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 16,
+            "description": "Number of SDF clusters (soft clustering levels; CGAL default 5)."
+          },
+          "smoothing_lambda": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "Graph-cut smoothness weight in [0, 1] (CGAL default 0.26)."
+          }
+        }
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 268435456,
+          "maximum_faces": 1500
+        }
+      ],
+      "validation": {
+        "required": true,
+        "validators": [
+          "mesh.validate.sdf_segmentation"
+        ],
+        "bindings": {
+          "mesh.validate.sdf_segmentation": {
+            "artifacts": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "mesh": {
+                "input": "mesh"
+              }
+            },
+            "parameters": {
+              "cone_angle": {
+                "parameter": "cone_angle"
+              },
+              "number_of_rays": {
+                "parameter": "number_of_rays"
+              },
+              "thickness_tolerance": {
+                "parameter": "thickness_tolerance"
+              },
+              "number_of_clusters": {
+                "parameter": "number_of_clusters"
+              },
+              "smoothing_lambda": {
+                "parameter": "smoothing_lambda"
+              }
+            }
+          }
+        }
+      },
+      "output_contract": {
+        "report_schema_version": 1,
+        "geometry_mutation": false,
+        "source_sha256_preserved": true,
+        "exact_rational_strings": false,
+        "producer_diagnostics_are_non_authoritative": true
+      },
+      "dependencies": [
+        "Surface_mesh_segmentation"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "input_slots": [
+            "mesh"
+          ],
+          "maximum_input_faces": 1500,
+          "source_header": "CGAL/mesh_segmentation.h",
+          "validator_parameter_bindings": {
+            "mesh.validate.sdf_segmentation": {
+              "cone_angle": "cone_angle",
+              "number_of_clusters": "number_of_clusters",
+              "number_of_rays": "number_of_rays",
+              "smoothing_lambda": "smoothing_lambda",
+              "thickness_tolerance": "thickness_tolerance"
+            }
+          },
+          "validators": [
+            "mesh.validate.sdf_segmentation"
+          ]
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "CGAL filtered-exact predicates (EPICK); ray casting and clustering are approximate, so correctness rests on the independent validator",
+        "exact_constructions": "none",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_family_replay_cases.py",
+          "tests/test_master_core.py"
+        ],
+        "worker_manifest_operation": "mesh.segment.sdf",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "triangulation.periodic_delaunay_2",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "analysis",
+      "summary": "Delaunay triangulation of the flat torus (square periodic domain) through CGAL::Periodic_2_Delaunay_triangulation_2; reported as triangles of (point index, lattice offset) in the 1-sheeted covering.",
+      "package": "Periodic_2_triangulation_2",
+      "major_requirements": [
+        "major.7.11.04"
+      ],
+      "aliases": [
+        "periodic delaunay 2d",
+        "delaunay triangulation on a torus",
+        "\u5468\u671f\u7684\u30c9\u30ed\u30cd\u30fc\u4e09\u89d2\u5f62\u5206\u5272"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Periodic_2_triangulation_2"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Periodic_2_Delaunay_triangulation_2"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Periodic_2_Delaunay_triangulation_2.h"
+        },
+        {
+          "kind": "manual",
+          "identifier": "Periodic_2_triangulation_2/index.html"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Periodic_2_triangulation_2",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Periodic_2_Delaunay_triangulation_2.h",
+            "sha256": "564a7c542e239a8057077085a4e1324ab225cf47ba719369f49ccf82110b81ec"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "points",
+            "types": [
+              "PointSet2"
+            ],
+            "formats": [
+              "json"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "analysis",
+            "type": "GeometryQueryReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "domain_min",
+          "period"
+        ],
+        "properties": {
+          "domain_min": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "number"
+            },
+            "description": "Lower corner of the half-open periodic domain [domain_min, domain_min + period), in the artifact unit."
+          },
+          "period": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Edge length of the square/cubic periodic domain; domain_min + period must be exactly representable."
+          }
+        }
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 268435456
+        }
+      ],
+      "validation": {
+        "required": true,
+        "validators": [
+          "triangulation.validate.periodic_delaunay_2"
+        ],
+        "bindings": {
+          "triangulation.validate.periodic_delaunay_2": {
+            "artifacts": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "points": {
+                "input": "points"
+              }
+            },
+            "parameters": {
+              "domain_min": {
+                "parameter": "domain_min"
+              },
+              "period": {
+                "parameter": "period"
+              }
+            }
+          }
+        }
+      },
+      "output_contract": {
+        "report_schema_version": 1,
+        "geometry_mutation": false,
+        "source_sha256_preserved": true,
+        "producer_diagnostics_are_non_authoritative": true
+      },
+      "dependencies": [
+        "Periodic_2_triangulation_2"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "input_slots": [
+            "points"
+          ],
+          "maximum_input_points": 400,
+          "source_header": "CGAL/Periodic_2_Delaunay_triangulation_2.h",
+          "validator_parameter_bindings": {
+            "triangulation.validate.periodic_delaunay_2": {
+              "domain_min": "domain_min",
+              "period": "period"
+            }
+          },
+          "validators": [
+            "triangulation.validate.periodic_delaunay_2"
+          ]
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "CGAL filtered-exact predicates (EPICK) on the binary64 input; the independent validator re-evaluates every predicate exactly",
+        "exact_constructions": "none",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_family_replay_cases.py",
+          "tests/test_master_core.py"
+        ],
+        "worker_manifest_operation": "triangulation.periodic_delaunay_2",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "triangulation.periodic_delaunay_3",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "analysis",
+      "summary": "Delaunay triangulation of the flat 3-torus (cubic periodic domain) through CGAL::Periodic_3_Delaunay_triangulation_3; reported as tetrahedra of (point index, lattice offset) in the 1-sheeted covering.",
+      "package": "Periodic_3_triangulation_3",
+      "major_requirements": [
+        "major.7.11.04"
+      ],
+      "aliases": [
+        "periodic delaunay 3d",
+        "periodic tetrahedralization",
+        "\u5468\u671f\u7684\u30c9\u30ed\u30cd\u30fc\u56db\u9762\u4f53\u5206\u5272"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Periodic_3_triangulation_3"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Periodic_3_Delaunay_triangulation_3"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Periodic_3_Delaunay_triangulation_3.h"
+        },
+        {
+          "kind": "manual",
+          "identifier": "Periodic_3_triangulation_3/index.html"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Periodic_3_triangulation_3",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Periodic_3_Delaunay_triangulation_3.h",
+            "sha256": "38a551259e700e314a2796e8af5de44cbc95e71c1de3f9bf2dd267a61cd260bf"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "points",
+            "types": [
+              "PointSet3"
+            ],
+            "formats": [
+              "xyz"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "analysis",
+            "type": "GeometryQueryReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "domain_min",
+          "period"
+        ],
+        "properties": {
+          "domain_min": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            },
+            "description": "Lower corner of the half-open periodic domain [domain_min, domain_min + period), in the artifact unit."
+          },
+          "period": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Edge length of the square/cubic periodic domain; domain_min + period must be exactly representable."
+          }
+        }
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 268435456
+        }
+      ],
+      "validation": {
+        "required": true,
+        "validators": [
+          "triangulation.validate.periodic_delaunay_3"
+        ],
+        "bindings": {
+          "triangulation.validate.periodic_delaunay_3": {
+            "artifacts": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "points": {
+                "input": "points"
+              }
+            },
+            "parameters": {
+              "domain_min": {
+                "parameter": "domain_min"
+              },
+              "period": {
+                "parameter": "period"
+              }
+            }
+          }
+        }
+      },
+      "output_contract": {
+        "report_schema_version": 1,
+        "geometry_mutation": false,
+        "source_sha256_preserved": true,
+        "producer_diagnostics_are_non_authoritative": true
+      },
+      "dependencies": [
+        "Periodic_3_triangulation_3"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "input_slots": [
+            "points"
+          ],
+          "maximum_input_points": 400,
+          "source_header": "CGAL/Periodic_3_Delaunay_triangulation_3.h",
+          "validator_parameter_bindings": {
+            "triangulation.validate.periodic_delaunay_3": {
+              "domain_min": "domain_min",
+              "period": "period"
+            }
+          },
+          "validators": [
+            "triangulation.validate.periodic_delaunay_3"
+          ]
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "CGAL filtered-exact predicates (EPICK) on the binary64 input; the independent validator re-evaluates every predicate exactly",
+        "exact_constructions": "none",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_family_replay_cases.py",
+          "tests/test_master_core.py"
+        ],
+        "worker_manifest_operation": "triangulation.periodic_delaunay_3",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "triangulation.delaunay_on_sphere_2",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "analysis",
+      "summary": "Delaunay triangulation of points on a sphere through CGAL::Delaunay_triangulation_on_sphere_2 (Delaunay_triangulation_on_sphere_traits_2); the points must cover the sphere (no ghost faces).",
+      "package": "Triangulation_on_sphere_2",
+      "major_requirements": [
+        "major.7.11.04"
+      ],
+      "aliases": [
+        "delaunay on sphere",
+        "spherical delaunay triangulation",
+        "\u7403\u9762\u30c9\u30ed\u30cd\u30fc\u4e09\u89d2\u5f62\u5206\u5272"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Triangulation_on_sphere_2"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Delaunay_triangulation_on_sphere_2"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Delaunay_triangulation_on_sphere_2.h"
+        },
+        {
+          "kind": "manual",
+          "identifier": "Triangulation_on_sphere_2/index.html"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Triangulation_on_sphere_2",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Delaunay_triangulation_on_sphere_2.h",
+            "sha256": "4cbe5c68984409654fa4cd9410387f6c7955031a488b6468f1cd2b00afe9ee9f"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "points",
+            "types": [
+              "PointSet3"
+            ],
+            "formats": [
+              "xyz"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "analysis",
+            "type": "GeometryQueryReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "center",
+          "radius"
+        ],
+        "properties": {
+          "center": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            },
+            "description": "Sphere centre in the artifact unit."
+          },
+          "radius": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Sphere radius; every point must be on the sphere within CGAL's on-sphere tolerance."
+          }
+        }
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 268435456
+        }
+      ],
+      "validation": {
+        "required": true,
+        "validators": [
+          "triangulation.validate.delaunay_on_sphere_2"
+        ],
+        "bindings": {
+          "triangulation.validate.delaunay_on_sphere_2": {
+            "artifacts": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "points": {
+                "input": "points"
+              }
+            },
+            "parameters": {
+              "center": {
+                "parameter": "center"
+              },
+              "radius": {
+                "parameter": "radius"
+              }
+            }
+          }
+        }
+      },
+      "output_contract": {
+        "report_schema_version": 1,
+        "geometry_mutation": false,
+        "source_sha256_preserved": true,
+        "producer_diagnostics_are_non_authoritative": true
+      },
+      "dependencies": [
+        "Triangulation_on_sphere_2"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "input_slots": [
+            "points"
+          ],
+          "maximum_input_points": 2000,
+          "source_header": "CGAL/Delaunay_triangulation_on_sphere_2.h",
+          "validator_parameter_bindings": {
+            "triangulation.validate.delaunay_on_sphere_2": {
+              "center": "center",
+              "radius": "radius"
+            }
+          },
+          "validators": [
+            "triangulation.validate.delaunay_on_sphere_2"
+          ]
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64",
+        "predicate_policy": "CGAL filtered-exact predicates (EPICK) on the binary64 input; the independent validator re-evaluates every predicate exactly",
+        "exact_constructions": "none",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_family_replay_cases.py",
+          "tests/test_master_core.py"
+        ],
+        "worker_manifest_operation": "triangulation.delaunay_on_sphere_2",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "mesh.validate.sdf_values",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "validator",
+      "summary": "Check raw SDF values: one per facet, positive and below the bounding-box diagonal, and inside the declared band around the validator's own cone-ray thickness range.",
+      "package": "Surface_mesh_segmentation",
+      "aliases": [],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Surface_mesh_segmentation"
+        },
+        {
+          "kind": "operation_reference",
+          "identifier": "mesh.segment.sdf_values"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Surface_mesh_segmentation",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/mesh_segmentation.h",
+            "sha256": "1986da6b87a6050f48b69fcebdb4af4f84686caf1e67b3ea2d27208fd88b62cc"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "GeometryQueryReport"
+            ],
+            "formats": [
+              "json"
+            ],
+            "unit": "none"
+          },
+          {
+            "slot": "mesh",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "cone_angle",
+          "number_of_rays",
+          "thickness_tolerance"
+        ],
+        "properties": {
+          "cone_angle": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 3.0,
+            "description": "Full opening angle (radians) of the ray cone around the inward facet normal (CGAL default 2*pi/3)."
+          },
+          "number_of_rays": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "description": "Rays cast per facet (CGAL default 25)."
+          },
+          "thickness_tolerance": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10,
+            "description": "Declared relative band the validator allows around the range of its own cone-ray thicknesses."
+          }
+        }
+      },
+      "preconditions": [],
+      "validation": {
+        "required": false,
+        "validators": [],
+        "bindings": {},
+        "terminal_validator": true,
+        "validates": "mesh.segment.sdf_values",
+        "validates_all": [
+          "mesh.segment.sdf_values"
+        ],
+        "required_report_checks": {
+          "status": "pass",
+          "passed": true,
+          "validator": "mesh.validate.sdf_values",
+          "checks.mesh_closed_outward": true,
+          "checks.parameters_match": true,
+          "checks.source_matches": true,
+          "checks.distance_unit_matches_mesh": true,
+          "checks.one_value_per_facet": true,
+          "checks.values_positive_and_bounded": true,
+          "checks.thickness_within_declared_tolerance": true
+        }
+      },
+      "output_contract": {
+        "schema": "ValidationReport/v1",
+        "required_true_checks": [
+          "mesh_closed_outward",
+          "parameters_match",
+          "source_matches",
+          "distance_unit_matches_mesh",
+          "one_value_per_facet",
+          "values_positive_and_bounded",
+          "thickness_within_declared_tolerance"
+        ],
+        "status": "pass",
+        "failure_or_indeterminate_publish": false,
+        "independence": "own long double ray casting against the raw OFF facets; exact union-find for the segment partition; no CGAL header"
+      },
+      "dependencies": [
+        "Surface_mesh_segmentation"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "long double ray casting (no CGAL header)",
+        "info": {
+          "checks": [
+            "mesh_closed_outward",
+            "parameters_match",
+            "source_matches",
+            "distance_unit_matches_mesh",
+            "one_value_per_facet",
+            "values_positive_and_bounded",
+            "thickness_within_declared_tolerance"
+          ],
+          "independence": "own long double ray casting against the raw OFF facets; exact union-find for the segment partition; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "mesh"
+          ],
+          "output_slot": "validation"
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "long double ray casting (no CGAL header)",
+        "coordinate_storage": "IEEE-754 binary64 widened to long double",
+        "predicate_policy": "own long double ray casting compared with the declared thickness_tolerance; segment and cluster consistency is exact combinatorics",
+        "exact_constructions": "none",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_family_replay_cases.py",
+          "tests/test_master_core.py"
+        ],
+        "worker_manifest_operation": "mesh.validate.sdf_values",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "mesh.validate.sdf_segmentation",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "validator",
+      "summary": "Check an SDF segmentation: raw-value thickness band, normalized values in [0,1] reaching 0 and 1, cluster ids below number_of_clusters, every facet covered, contiguous segment ids equal to the edge-connected components of the clusters.",
+      "package": "Surface_mesh_segmentation",
+      "aliases": [],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Surface_mesh_segmentation"
+        },
+        {
+          "kind": "operation_reference",
+          "identifier": "mesh.segment.sdf"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Surface_mesh_segmentation",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/mesh_segmentation.h",
+            "sha256": "1986da6b87a6050f48b69fcebdb4af4f84686caf1e67b3ea2d27208fd88b62cc"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "GeometryQueryReport"
+            ],
+            "formats": [
+              "json"
+            ],
+            "unit": "none"
+          },
+          {
+            "slot": "mesh",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "cone_angle",
+          "number_of_rays",
+          "thickness_tolerance",
+          "number_of_clusters",
+          "smoothing_lambda"
+        ],
+        "properties": {
+          "cone_angle": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 3.0,
+            "description": "Full opening angle (radians) of the ray cone around the inward facet normal (CGAL default 2*pi/3)."
+          },
+          "number_of_rays": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "description": "Rays cast per facet (CGAL default 25)."
+          },
+          "thickness_tolerance": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10,
+            "description": "Declared relative band the validator allows around the range of its own cone-ray thicknesses."
+          },
+          "number_of_clusters": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 16,
+            "description": "Number of SDF clusters (soft clustering levels; CGAL default 5)."
+          },
+          "smoothing_lambda": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "Graph-cut smoothness weight in [0, 1] (CGAL default 0.26)."
+          }
+        }
+      },
+      "preconditions": [],
+      "validation": {
+        "required": false,
+        "validators": [],
+        "bindings": {},
+        "terminal_validator": true,
+        "validates": "mesh.segment.sdf",
+        "validates_all": [
+          "mesh.segment.sdf"
+        ],
+        "required_report_checks": {
+          "status": "pass",
+          "passed": true,
+          "validator": "mesh.validate.sdf_segmentation",
+          "checks.mesh_closed_outward": true,
+          "checks.parameters_match": true,
+          "checks.source_matches": true,
+          "checks.distance_unit_matches_mesh": true,
+          "checks.one_value_per_facet": true,
+          "checks.values_positive_and_bounded": true,
+          "checks.thickness_within_declared_tolerance": true,
+          "checks.normalized_values_in_unit_interval": true,
+          "checks.facets_covered": true,
+          "checks.cluster_ids_in_range": true,
+          "checks.segment_ids_contiguous": true,
+          "checks.segments_are_connected_cluster_components": true
+        }
+      },
+      "output_contract": {
+        "schema": "ValidationReport/v1",
+        "required_true_checks": [
+          "mesh_closed_outward",
+          "parameters_match",
+          "source_matches",
+          "distance_unit_matches_mesh",
+          "one_value_per_facet",
+          "values_positive_and_bounded",
+          "thickness_within_declared_tolerance",
+          "normalized_values_in_unit_interval",
+          "facets_covered",
+          "cluster_ids_in_range",
+          "segment_ids_contiguous",
+          "segments_are_connected_cluster_components"
+        ],
+        "status": "pass",
+        "failure_or_indeterminate_publish": false,
+        "independence": "own long double ray casting against the raw OFF facets; exact union-find for the segment partition; no CGAL header"
+      },
+      "dependencies": [
+        "Surface_mesh_segmentation"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "long double ray casting and exact union-find (no CGAL header)",
+        "info": {
+          "checks": [
+            "mesh_closed_outward",
+            "parameters_match",
+            "source_matches",
+            "distance_unit_matches_mesh",
+            "one_value_per_facet",
+            "values_positive_and_bounded",
+            "thickness_within_declared_tolerance",
+            "normalized_values_in_unit_interval",
+            "facets_covered",
+            "cluster_ids_in_range",
+            "segment_ids_contiguous",
+            "segments_are_connected_cluster_components"
+          ],
+          "independence": "own long double ray casting against the raw OFF facets; exact union-find for the segment partition; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "mesh"
+          ],
+          "output_slot": "validation"
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "long double ray casting and exact union-find (no CGAL header)",
+        "coordinate_storage": "IEEE-754 binary64 widened to long double",
+        "predicate_policy": "own long double ray casting compared with the declared thickness_tolerance; segment and cluster consistency is exact combinatorics",
+        "exact_constructions": "none",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_family_replay_cases.py",
+          "tests/test_master_core.py"
+        ],
+        "worker_manifest_operation": "mesh.validate.sdf_segmentation",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "triangulation.validate.periodic_delaunay_2",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "validator",
+      "summary": "Exact check of a periodic 2D Delaunay triangulation: positive triangles, closed on the torus, area exactly one domain, Euler 0, empty circumcircles over all lattice translates.",
+      "package": "Periodic_2_triangulation_2",
+      "aliases": [],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Periodic_2_triangulation_2"
+        },
+        {
+          "kind": "operation_reference",
+          "identifier": "triangulation.periodic_delaunay_2"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Periodic_2_triangulation_2",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Periodic_2_Delaunay_triangulation_2.h",
+            "sha256": "564a7c542e239a8057077085a4e1324ab225cf47ba719369f49ccf82110b81ec"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "GeometryQueryReport"
+            ],
+            "formats": [
+              "json"
+            ],
+            "unit": "none"
+          },
+          {
+            "slot": "points",
+            "types": [
+              "PointSet2"
+            ],
+            "formats": [
+              "json"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "domain_min",
+          "period"
+        ],
+        "properties": {
+          "domain_min": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "number"
+            },
+            "description": "Lower corner of the half-open periodic domain [domain_min, domain_min + period), in the artifact unit."
+          },
+          "period": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Edge length of the square/cubic periodic domain; domain_min + period must be exactly representable."
+          }
+        }
+      },
+      "preconditions": [],
+      "validation": {
+        "required": false,
+        "validators": [],
+        "bindings": {},
+        "terminal_validator": true,
+        "validates": "triangulation.periodic_delaunay_2",
+        "validates_all": [
+          "triangulation.periodic_delaunay_2"
+        ],
+        "required_report_checks": {
+          "status": "pass",
+          "passed": true,
+          "validator": "triangulation.validate.periodic_delaunay_2",
+          "checks.points_in_domain": true,
+          "checks.parameters_match": true,
+          "checks.source_matches": true,
+          "checks.distance_unit_matches_points": true,
+          "checks.vertex_set_matches_source": true,
+          "checks.simplices_positively_oriented": true,
+          "checks.covers_fundamental_domain_once": true,
+          "checks.closed_pseudomanifold_on_torus": true,
+          "checks.torus_euler_characteristic": true,
+          "checks.empty_circumscribed_balls": true
+        }
+      },
+      "output_contract": {
+        "schema": "ValidationReport/v1",
+        "required_true_checks": [
+          "points_in_domain",
+          "parameters_match",
+          "source_matches",
+          "distance_unit_matches_points",
+          "vertex_set_matches_source",
+          "simplices_positively_oriented",
+          "covers_fundamental_domain_once",
+          "closed_pseudomanifold_on_torus",
+          "torus_euler_characteristic",
+          "empty_circumscribed_balls"
+        ],
+        "status": "pass",
+        "failure_or_indeterminate_publish": false,
+        "independence": "exact GMP rational orientation, measure, combinatorics and circumscribed-ball tests; no CGAL header"
+      },
+      "dependencies": [
+        "Periodic_2_triangulation_2"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "GMP rationals (no CGAL header)",
+        "info": {
+          "checks": [
+            "points_in_domain",
+            "parameters_match",
+            "source_matches",
+            "distance_unit_matches_points",
+            "vertex_set_matches_source",
+            "simplices_positively_oriented",
+            "covers_fundamental_domain_once",
+            "closed_pseudomanifold_on_torus",
+            "torus_euler_characteristic",
+            "empty_circumscribed_balls"
+          ],
+          "independence": "exact GMP rational orientation, measure, combinatorics and circumscribed-ball tests; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "points"
+          ],
+          "output_slot": "validation"
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "GMP rationals (no CGAL header)",
+        "coordinate_storage": "IEEE-754 binary64 converted to exact rationals",
+        "predicate_policy": "exact rational predicates and constructions; only the on-sphere radius check uses a declared relative tolerance of 1e-9",
+        "exact_constructions": "all compared quantities are exact rationals",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_family_replay_cases.py",
+          "tests/test_master_core.py"
+        ],
+        "worker_manifest_operation": "triangulation.validate.periodic_delaunay_2",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "triangulation.validate.periodic_delaunay_3",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "validator",
+      "summary": "Exact check of a periodic 3D Delaunay triangulation: positive tetrahedra, closed on the 3-torus, volume exactly one domain, Euler 0, empty circumspheres over all lattice translates.",
+      "package": "Periodic_3_triangulation_3",
+      "aliases": [],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Periodic_3_triangulation_3"
+        },
+        {
+          "kind": "operation_reference",
+          "identifier": "triangulation.periodic_delaunay_3"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Periodic_3_triangulation_3",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Periodic_3_Delaunay_triangulation_3.h",
+            "sha256": "38a551259e700e314a2796e8af5de44cbc95e71c1de3f9bf2dd267a61cd260bf"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "GeometryQueryReport"
+            ],
+            "formats": [
+              "json"
+            ],
+            "unit": "none"
+          },
+          {
+            "slot": "points",
+            "types": [
+              "PointSet3"
+            ],
+            "formats": [
+              "xyz"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "domain_min",
+          "period"
+        ],
+        "properties": {
+          "domain_min": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            },
+            "description": "Lower corner of the half-open periodic domain [domain_min, domain_min + period), in the artifact unit."
+          },
+          "period": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Edge length of the square/cubic periodic domain; domain_min + period must be exactly representable."
+          }
+        }
+      },
+      "preconditions": [],
+      "validation": {
+        "required": false,
+        "validators": [],
+        "bindings": {},
+        "terminal_validator": true,
+        "validates": "triangulation.periodic_delaunay_3",
+        "validates_all": [
+          "triangulation.periodic_delaunay_3"
+        ],
+        "required_report_checks": {
+          "status": "pass",
+          "passed": true,
+          "validator": "triangulation.validate.periodic_delaunay_3",
+          "checks.points_in_domain": true,
+          "checks.parameters_match": true,
+          "checks.source_matches": true,
+          "checks.distance_unit_matches_points": true,
+          "checks.vertex_set_matches_source": true,
+          "checks.simplices_positively_oriented": true,
+          "checks.covers_fundamental_domain_once": true,
+          "checks.closed_pseudomanifold_on_torus": true,
+          "checks.torus_euler_characteristic": true,
+          "checks.empty_circumscribed_balls": true
+        }
+      },
+      "output_contract": {
+        "schema": "ValidationReport/v1",
+        "required_true_checks": [
+          "points_in_domain",
+          "parameters_match",
+          "source_matches",
+          "distance_unit_matches_points",
+          "vertex_set_matches_source",
+          "simplices_positively_oriented",
+          "covers_fundamental_domain_once",
+          "closed_pseudomanifold_on_torus",
+          "torus_euler_characteristic",
+          "empty_circumscribed_balls"
+        ],
+        "status": "pass",
+        "failure_or_indeterminate_publish": false,
+        "independence": "exact GMP rational orientation, measure, combinatorics and circumscribed-ball tests; no CGAL header"
+      },
+      "dependencies": [
+        "Periodic_3_triangulation_3"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "GMP rationals (no CGAL header)",
+        "info": {
+          "checks": [
+            "points_in_domain",
+            "parameters_match",
+            "source_matches",
+            "distance_unit_matches_points",
+            "vertex_set_matches_source",
+            "simplices_positively_oriented",
+            "covers_fundamental_domain_once",
+            "closed_pseudomanifold_on_torus",
+            "torus_euler_characteristic",
+            "empty_circumscribed_balls"
+          ],
+          "independence": "exact GMP rational orientation, measure, combinatorics and circumscribed-ball tests; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "points"
+          ],
+          "output_slot": "validation"
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "GMP rationals (no CGAL header)",
+        "coordinate_storage": "IEEE-754 binary64 converted to exact rationals",
+        "predicate_policy": "exact rational predicates and constructions; only the on-sphere radius check uses a declared relative tolerance of 1e-9",
+        "exact_constructions": "all compared quantities are exact rationals",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_family_replay_cases.py",
+          "tests/test_master_core.py"
+        ],
+        "worker_manifest_operation": "triangulation.validate.periodic_delaunay_3",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "triangulation.validate.delaunay_on_sphere_2",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "validator",
+      "summary": "Exact check of a Delaunay triangulation on the sphere: outward faces forming a closed surface with Euler 2 and empty circles on the sphere (orientation_3 of every point against every face).",
+      "package": "Triangulation_on_sphere_2",
+      "aliases": [],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Triangulation_on_sphere_2"
+        },
+        {
+          "kind": "operation_reference",
+          "identifier": "triangulation.delaunay_on_sphere_2"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Triangulation_on_sphere_2",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Delaunay_triangulation_on_sphere_2.h",
+            "sha256": "4cbe5c68984409654fa4cd9410387f6c7955031a488b6468f1cd2b00afe9ee9f"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "GeometryQueryReport"
+            ],
+            "formats": [
+              "json"
+            ],
+            "unit": "none"
+          },
+          {
+            "slot": "points",
+            "types": [
+              "PointSet3"
+            ],
+            "formats": [
+              "xyz"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "center",
+          "radius"
+        ],
+        "properties": {
+          "center": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            },
+            "description": "Sphere centre in the artifact unit."
+          },
+          "radius": {
+            "type": "TypedLength",
+            "exclusiveMinimum": 0,
+            "description": "Sphere radius; every point must be on the sphere within CGAL's on-sphere tolerance."
+          }
+        }
+      },
+      "preconditions": [],
+      "validation": {
+        "required": false,
+        "validators": [],
+        "bindings": {},
+        "terminal_validator": true,
+        "validates": "triangulation.delaunay_on_sphere_2",
+        "validates_all": [
+          "triangulation.delaunay_on_sphere_2"
+        ],
+        "required_report_checks": {
+          "status": "pass",
+          "passed": true,
+          "validator": "triangulation.validate.delaunay_on_sphere_2",
+          "checks.parameters_match": true,
+          "checks.source_matches": true,
+          "checks.distance_unit_matches_points": true,
+          "checks.points_on_declared_sphere": true,
+          "checks.vertex_set_matches_source": true,
+          "checks.faces_oriented_outward": true,
+          "checks.closed_oriented_surface": true,
+          "checks.sphere_euler_characteristic": true,
+          "checks.empty_circles_on_sphere": true
+        }
+      },
+      "output_contract": {
+        "schema": "ValidationReport/v1",
+        "required_true_checks": [
+          "parameters_match",
+          "source_matches",
+          "distance_unit_matches_points",
+          "points_on_declared_sphere",
+          "vertex_set_matches_source",
+          "faces_oriented_outward",
+          "closed_oriented_surface",
+          "sphere_euler_characteristic",
+          "empty_circles_on_sphere"
+        ],
+        "status": "pass",
+        "failure_or_indeterminate_publish": false,
+        "independence": "exact GMP rational orientation, measure, combinatorics and circumscribed-ball tests; no CGAL header"
+      },
+      "dependencies": [
+        "Triangulation_on_sphere_2"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "GMP rationals (no CGAL header)",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "distance_unit_matches_points",
+            "points_on_declared_sphere",
+            "vertex_set_matches_source",
+            "faces_oriented_outward",
+            "closed_oriented_surface",
+            "sphere_euler_characteristic",
+            "empty_circles_on_sphere"
+          ],
+          "independence": "exact GMP rational orientation, measure, combinatorics and circumscribed-ball tests; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "points"
+          ],
+          "output_slot": "validation"
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "GMP rationals (no CGAL header)",
+        "coordinate_storage": "IEEE-754 binary64 converted to exact rationals",
+        "predicate_policy": "exact rational predicates and constructions; only the on-sphere radius check uses a declared relative tolerance of 1e-9",
+        "exact_constructions": "all compared quantities are exact rationals",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_family_replay_cases.py",
+          "tests/test_master_core.py"
+        ],
+        "worker_manifest_operation": "triangulation.validate.delaunay_on_sphere_2",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed"
+      }
     }
   ]
 }

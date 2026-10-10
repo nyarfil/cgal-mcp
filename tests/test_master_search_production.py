@@ -155,6 +155,20 @@ class ProductionOperationSearchTests(unittest.TestCase):
         self.assert_route("poisson surface reconstruction with open boundary", ["PointSet3Normals"],
                           "reconstruction.poisson_delaunay")
 
+    def test_batch9_triangulation_operations_route_and_sdf_goal_stays_in_segmentation(self):
+        self.assert_route("periodic delaunay triangulation of 2D points", ["PointSet2"],
+                          "triangulation.periodic_delaunay_2")
+        self.assert_route("periodic delaunay triangulation of 3D points", ["PointSet3"],
+                          "triangulation.periodic_delaunay_3")
+        self.assert_route("delaunay triangulation on a sphere", ["PointSet3"],
+                          "triangulation.delaunay_on_sphere_2")
+        # SDF segmentation is now registered (major.7.8.01); a shape-diameter goal must never leave the
+        # Surface_mesh_segmentation operations.
+        result = self.search("segment the shape with a shape diameter field", ["TriangleSurfaceMesh"])
+        recommended = result["query_analysis"]["recommended_operation"]
+        if recommended is not None:
+            self.assertIn(recommended, {"mesh.segment.sdf", "mesh.segment.sdf_values"}, result)
+
     def test_non_manifold_split_goal_routes_to_validated_repair(self):
         result = self.search("split non-manifold neighborhoods into repairable shells",
                              ["TriangleSurfaceMesh"])
@@ -183,8 +197,6 @@ class ProductionOperationSearchTests(unittest.TestCase):
             ("simplify inside an external geometric envelope",
              ["TriangleSurfaceMesh"]),
             ("simplify using Fast Envelope", ["TriangleSurfaceMesh"]),
-            ("segment the shape with a shape diameter field",
-             ["TriangleSurfaceMesh"]),
             ("split surface faces along cutter intersections and retain provenance",
              ["TriangleSurfaceMesh", "TriangleSurfaceMesh"]),
             ("florble the totally unrelated nonsense", ["PointSet3"]),
