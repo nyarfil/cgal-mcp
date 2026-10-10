@@ -262,7 +262,10 @@ class WorkerSupervisor:
         if response.get("status") == "error":
             error = response.get("error", {})
             original_class = str(error.get("class", "WORKER_ERROR"))
-            failure = WorkerFailure(str(error.get("code", "worker_error")), str(error.get("message", "Worker failed")),
+            code = str(error.get("code", "worker_error"))
+            if original_class.upper() == "RESOURCE_LIMIT" and code == "MEMORY_LIMIT":
+                code = "memory_limit"  # same code as the Job Object / OS-status detection path
+            failure = WorkerFailure(code, str(error.get("message", "Worker failed")),
                                     WORKER_CLASS_MAP.get(original_class.upper(), "worker_error"),
                                     bool(error.get("recoverable", False)),
                                     tuple(error.get("suggested_operations", [])))

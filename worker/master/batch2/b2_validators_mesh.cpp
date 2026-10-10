@@ -396,7 +396,7 @@ Json run_split_validator(const Request& request) {
   const Vec n = plane_normal_parameter(request, raw_normal);
   const Q d = exact_of(signed_length_parameter(request, "offset", request.inputs[1].unit));
   const auto source = load_mesh(request.inputs[1], {"TriangleSurfaceMesh"}, "source", kMaximumFaces);
-  const auto candidate = load_mesh(request.inputs[0], {"PolygonSoup3"}, "candidate", kMaximumOutputFaces);
+  const auto candidate = load_mesh(request.inputs[0], {"TriangleSurfaceMesh"}, "candidate", kMaximumOutputFaces);
   Json checks = json_checks({"source_triangles_nondegenerate"});
   reject_coplanar_faces(source, n, d);
   checks["plane_avoids_source_faces"] = true;
@@ -579,7 +579,7 @@ std::vector<OperationDefinition> mesh_validator_operations() {
              "clipped_region_covered_exactly", "cap_consistent"},
             {"candidate", "source"}, "Sutherland-Hodgman polygon clipping and exact weighted-area tiling per source face; no CGAL header")));
   result.push_back(query_definition(
-      "mesh.validate.split", {"PolygonSoup3", "TriangleSurfaceMesh"}, "ValidationReport", "validator",
+      "mesh.validate.split", {"TriangleSurfaceMesh", "TriangleSurfaceMesh"}, "ValidationReport", "validator",
       run_split_validator, {"PMP_Boolean_operations"}, gmp,
       vinfo({"source_triangles_nondegenerate", "plane_avoids_source_faces", "triangles_inside_source_faces",
              "orientation_preserved", "no_overlap_within_source_face", "surface_covered_exactly",

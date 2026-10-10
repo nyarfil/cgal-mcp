@@ -2,6 +2,7 @@
 #include "protocol.h"
 
 #include <iostream>
+#include <new>
 #include <string>
 
 int main(int argc, char** argv) {
@@ -47,6 +48,15 @@ int main(int argc, char** argv) {
                               std::string("Malformed JSON request: ") +
                                   error.what());
     std::cout << error_result(request_id, wrapped).dump() << '\n';
+    return 0;
+  } catch (const std::bad_alloc&) {
+    // Memory cap (Job Object / rlimit) exhausted: report a structured resource limit, never a silent crash.
+    std::cerr << "bad_alloc: worker memory limit reached" << std::endl;
+    std::cout << error_result(request_id,
+                              WorkerError("RESOURCE_LIMIT", "MEMORY_LIMIT",
+                                          "Worker exhausted its memory limit", false))
+                     .dump()
+              << std::endl;
     return 0;
   } catch (const std::exception& error) {
     std::cout << internal_error_result(request_id, error.what()).dump() << '\n';

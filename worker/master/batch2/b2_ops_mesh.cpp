@@ -241,7 +241,7 @@ Json split_plane(const Request& request) {
   reject_coplanar_faces(mesh, plane);
   PMP::split(mesh, plane);
   mesh.collect_garbage();
-  auto output = write_epeck_mesh(request, mesh, "PolygonSoup3", request.inputs[0].unit);
+  auto output = write_epeck_mesh(request, mesh, "TriangleSurfaceMesh", request.inputs[0].unit);
   Json metrics{{"input_face_count", raw.faces.size()}, {"output_face_count", mesh.number_of_faces()},
                {"algorithm", "CGAL::Polygon_mesh_processing::split"}};
   return success_result(request, Json::array({std::move(output)}), std::move(metrics));
@@ -294,7 +294,7 @@ std::vector<OperationDefinition> mesh_producer_operations() {
             {{"source_header", "CGAL/Polygon_mesh_processing/clip.h"}, {"maximum_input_faces", kMaximumFaces},
              {"maximum_output_faces", kMaximumOutputFaces}})));
   result.push_back(query_definition(
-      "mesh.split.plane", {"TriangleSurfaceMesh"}, "PolygonSoup3", "transform", split_plane,
+      "mesh.split.plane", {"TriangleSurfaceMesh"}, "TriangleSurfaceMesh", "transform", split_plane,
       {"PMP_Boolean_operations"}, kEpeckName,
       pinfo("mesh.validate.split", {"normal", "offset"}, {"source"},
             {{"source_header", "CGAL/Polygon_mesh_processing/clip.h"}, {"maximum_input_faces", kMaximumFaces},

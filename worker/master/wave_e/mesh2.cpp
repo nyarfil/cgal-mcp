@@ -399,6 +399,7 @@ Json run_refine_validator(const Request& request) {
       }
     }
     total += twice_area(vertices[t[0]], vertices[t[1]], vertices[t[2]]);
+    CGAL::exact(total);  // collapse the lazy DAG: a deep sum chain overflows the stack
   }
   for (std::size_t i = 0; i < n; ++i) {
     if (!used[i]) fail_validation("UNUSED_VERTEX", "A candidate vertex is in no triangle");

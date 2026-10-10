@@ -323,6 +323,7 @@ Validation2 validate_triangulation_2(const Triangulation2Data& candidate,
       }
     }
     total += twice_area(vertices[t[0]], vertices[t[1]], vertices[t[2]]);
+    CGAL::exact(total);  // collapse the lazy DAG: a deep sum chain overflows the stack
   }
   for (std::size_t i = 0; i < n; ++i) {
     if (!used[i]) fail_validation("UNUSED_VERTEX", "A source point is not a triangle vertex");
@@ -562,6 +563,7 @@ Json run_delaunay_3_validator(const Request& request) {
       fail_validation("TETRAHEDRON_NOT_POSITIVE", "Tetrahedron is not positively oriented");
     }
     total += six_volume(vertices[t[0]], vertices[t[1]], vertices[t[2]], vertices[t[3]]);
+    CGAL::exact(total);  // collapse the lazy DAG: a deep sum chain overflows the stack
     for (int k = 0; k < 4; ++k) {
       used[t[k]] = true;
       Index3 facet{t[(k + 1) % 4], t[(k + 2) % 4], t[(k + 3) % 4]};

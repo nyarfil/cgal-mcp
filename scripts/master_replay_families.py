@@ -421,7 +421,7 @@ B2_NEG_7_5 = [
      "parameters": {**B_PLANE_X1, "clip_volume": False}, "expect_error_class": "VALIDATION_FAILED",
      "expect_error_code": "REGION_NOT_COVERED_EXACTLY"},
     {"id": "split-straddling-candidate-rejected", "operation": "mesh.validate.split",
-     "inputs": [_qmesh("cube12.off", "PolygonSoup3"), Q_CUBE], "parameters": B_PLANE_X1,
+     "inputs": [_qmesh("cube12.off"), Q_CUBE], "parameters": B_PLANE_X1,
      "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "TRIANGLE_STRADDLES_PLANE"},
     {"id": "corefine-unrefined-candidate-rejected", "operation": "mesh.validate.corefine",
      "inputs": [Q_TETRA, Q_TETRA, B_TETRA_B], "parameters": {},
