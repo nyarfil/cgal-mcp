@@ -942,6 +942,21 @@ def evaluate_search_gate(root: Path = REPO, *, live: bool = True,
                                f"(top-1 {op['top1_pct']}%, {blind['count']} intents)")
     except (OSError, ValueError, KeyError, UnicodeError):
         reasons.append("Blind-set generalization evidence is missing")
+    blind2_path = root / "docs/master/evidence/search-blind-2.json"
+    blind2_set = root / "docs/master/search_blind_set_2.json"
+    try:
+        blind2 = json.loads(blind2_path.read_text(encoding="utf-8"))
+        if blind2.get("blind_set_sha256") != hashlib.sha256(blind2_set.read_bytes()).hexdigest():
+            reasons.append("Second blind-set evidence does not match the current second blind set")
+        else:
+            op2 = blind2["operation_level"]
+            result["blind_set_2"] = {"count": blind2["count"], "top1_percent": op2["top1_pct"],
+                                     "top3_percent": op2["top3_pct"]}
+            if op2["top3_pct"] < SEARCH_TARGET_PERCENT:
+                reasons.append(f"Second blind-set top-3 {op2['top3_pct']}% is below {SEARCH_TARGET_PERCENT}% "
+                               f"(top-1 {op2['top1_pct']}%, {blind2['count']} intents)")
+    except (OSError, ValueError, KeyError, UnicodeError):
+        reasons.append("Second blind-set generalization evidence is missing")
     if not reasons:
         result["status"] = "met"
         if SEARCH_GATE in WAVE_A_UNMET_STANDALONE_GATES:

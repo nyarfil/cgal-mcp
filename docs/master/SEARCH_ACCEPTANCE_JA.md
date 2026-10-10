@@ -144,3 +144,12 @@ reportはcorpus、package smoke、generator、test source、operation registry�
 ### 実行サンプルの失敗原因（10/15 → 15/15）
 
 失敗は検索の誤選択ではなく、評価器の合成入力が選択Operationの前提を満たしていないことだった。`_EXECUTE_OVERRIDES`で選択Operation向けの入力とパラメータだけを差し替えた（三角形限定の修復へ四角形soup、corefineの両オペランドに同一メッシュ、10点以上が必要な再構成へ4点、スキーマ最小値の許容誤差、線形計画ソルバー指定の誤り）。選択されたOperationは変えず、行ごとに差し替えをreportへ記録する。
+
+## 第二盲検セットの測定（2026-10-11）
+
+上記手順に従い、ルーター・語彙・フレーズ・既存盲検セットを閲覧していない別エージェントが `docs/master/search_blind_set_2.json`（140件、英72・日68、全15 family、期待Operationはレジストリ説明から作成）を作成し、測定前にコミットした（c39c919）。測定は1回のみで、測定後の調整はしない。[`evidence/search-blind-2.json`](evidence/search-blind-2.json)に記録した。
+
+- Operation単位 top-1 74.29%、top-3 91.43%（英語 top-3 93.06%、日本語 top-3 89.71%）。要求単位 top-3 93.57%。
+- 目標95%に未達。検索ゲートは未達のまま。基準は緩めていない。
+- 範囲外6件は参考記録のみ（分母外）。検索は常に3候補を返すため、検索単体ではfail-closedを示せない。
+- `scripts/master_acceptance.py`の`evaluate_search_gate`は、この証拠を追加記録として読み、ハッシュ不一致または95%未満なら理由に加える。

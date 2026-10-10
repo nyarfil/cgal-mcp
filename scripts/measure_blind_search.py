@@ -18,6 +18,15 @@ BLIND = REPO / "docs" / "master" / "search_blind_set.json"
 EVIDENCE = REPO / "docs" / "master" / "evidence" / "search-blind.json"
 
 
+def _arg(name: str, default: Path) -> Path:
+    # Optional "--set PATH" / "--evidence PATH" (relative to the repository root) select another blind set.
+    return REPO / sys.argv[sys.argv.index(name) + 1] if name in sys.argv else default
+
+
+BLIND = _arg("--set", BLIND)
+EVIDENCE = _arg("--evidence", EVIDENCE)
+
+
 def _sha(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
@@ -39,6 +48,11 @@ def measure() -> dict:
                           "expected": sorted(exact), "returned": ids,
                           "op_top1": bool(ids and ids[0] in exact), "op_top3": bool(exact & set(ids)),
                           "req_top1": bool(ids and ids[0] in req), "req_top3": bool(req & set(ids))})
+        # Informational fail-closed probes (not in the denominators): record what search returns.
+        out_of_scope = [{"id": item["id"], "language": item["language"], "query": item["query"],
+                         "returned": [c["operation_id"] for c in runtime.capabilities_search(
+                             item["query"], artifact_ids=[], constraints={}, limit=3)["candidates"]]}
+                        for item in blind.get("out_of_scope_intents", [])]
     finally:
         runtime.close()
     n = len(cases)
@@ -56,6 +70,7 @@ def measure() -> dict:
                                    "op_top3_pct": pct("op_top3", rows),
                                    "req_top3_pct": pct("req_top3", rows)}
                             for lang in ("en", "ja") for rows in [[c for c in cases if c["language"] == lang]]},
+            **({"out_of_scope_probes": out_of_scope} if out_of_scope else {}),
             "cases": cases}
 
 
