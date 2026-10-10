@@ -1,11 +1,11 @@
 {
  "bindings": {
-  "generator_sha256": "770ba92bcee3e3e2c49d1f7cb0fe0f89beb7687384e56c3319a71a0e36081ec4",
+  "generator_sha256": "46b5eaf61445b5b6bd4eebd14dbfdbb5b48ba7eb4b52d3928af07c7252a43d52",
   "operations_sha256": "d5b97e95472a3a88308c4173c45cc3961a8907fec3d1c54737e37ee9ca913632",
-  "planner_sha256": "778c3f45231db32ee0a7e2e93e14b6d81b2e397cf77b5b9daadea398a17224d1",
+  "planner_sha256": "030ad268a2f1e46af8d1dc3a319b85db4231c75269a1269a5aaaad6ff2624791",
   "policies_sha256": "1f9aa3c8988c8ed486a7c48171c212f89905263a576a7cbb1e7f10d1aab721c8",
-  "runtime_sha256": "669cd3fe1f78784cf6f6b40a5f485697237c029b9a60201c6c663ee03f6e0b14",
-  "spec_sha256": "7acc6e59ec56b7ce42a37921c227672dd85b758f3eb8b51ae69ca6e37ad5c35d"
+  "runtime_sha256": "d2874573981285be32c64804e6f6996e416e5ee5c01698a2df295510cfb96816",
+  "spec_sha256": "9e9369564b6d82960ad19d8a948b80eb2983092d77f17f28a42b7f2b44d93adc"
  },
  "cases": [
   {
@@ -84,6 +84,87 @@
     }
    ],
    "plan": {
+    "estimate": {
+     "basis": "registry metadata only",
+     "highest_risk": "mutating_validated",
+     "inserted_steps": [],
+     "mutating_steps": 1,
+     "step_count": 6,
+     "steps": [
+      {
+       "cost_tier": "large",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 67108864,
+        "maximum_faces": 2000000,
+        "maximum_vertices": 1000000
+       },
+       "operation": "mesh.repair.orient",
+       "risk": "read_only",
+       "role": "transform",
+       "step_id": "orient"
+      },
+      {
+       "cost_tier": "large",
+       "cost_units": 2,
+       "input_bound": {
+        "maximum_bytes": 67108864,
+        "maximum_faces": 2000000,
+        "maximum_vertices": 1000000
+       },
+       "operation": "mesh.validate.repair_orientation",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "orient_validate_1"
+      },
+      {
+       "cost_tier": "medium",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 2000
+       },
+       "operation": "mesh.subdivide.loop",
+       "risk": "mutating_validated",
+       "role": "transform",
+       "step_id": "loop"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.loop",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "loop_validate_1"
+      },
+      {
+       "cost_tier": "large",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 200000,
+        "maximum_vertices": 200000
+       },
+       "operation": "mesh.inspect.pmp",
+       "risk": "read_only",
+       "role": "analysis",
+       "step_id": "inspect"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.pmp_inspection_report",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "inspect_validate_1"
+      }
+     ],
+     "total_cost_units": 7,
+     "validator_steps": 3
+    },
+    "rules": {},
     "steps": [
      {
       "id": "orient",
@@ -328,6 +409,87 @@
     }
    ],
    "plan": {
+    "estimate": {
+     "basis": "registry metadata only",
+     "highest_risk": "mutating_validated",
+     "inserted_steps": [],
+     "mutating_steps": 1,
+     "step_count": 6,
+     "steps": [
+      {
+       "cost_tier": "large",
+       "cost_units": 2,
+       "input_bound": {
+        "maximum_bytes": 67108864,
+        "maximum_faces": 2000000,
+        "maximum_vertices": 1000000
+       },
+       "operation": "mesh.repair.fill_holes",
+       "risk": "read_only",
+       "role": "transform",
+       "step_id": "fill"
+      },
+      {
+       "cost_tier": "large",
+       "cost_units": 3,
+       "input_bound": {
+        "maximum_bytes": 67108864,
+        "maximum_faces": 2000000,
+        "maximum_vertices": 1000000
+       },
+       "operation": "mesh.validate.repair_fill_holes",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "fill_validate_1"
+      },
+      {
+       "cost_tier": "medium",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 2000
+       },
+       "operation": "mesh.subdivide.loop",
+       "risk": "mutating_validated",
+       "role": "transform",
+       "step_id": "loop"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.loop",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "loop_validate_1"
+      },
+      {
+       "cost_tier": "large",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 200000,
+        "maximum_vertices": 200000
+       },
+       "operation": "mesh.analysis.measures",
+       "risk": "read_only",
+       "role": "analysis",
+       "step_id": "measure"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.measures_report",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "measure_validate_1"
+      }
+     ],
+     "total_cost_units": 9,
+     "validator_steps": 3
+    },
+    "rules": {},
     "steps": [
      {
       "id": "fill",
@@ -555,6 +717,66 @@
     }
    ],
    "plan": {
+    "estimate": {
+     "basis": "registry metadata only",
+     "highest_risk": "read_only",
+     "inserted_steps": [],
+     "mutating_steps": 0,
+     "step_count": 4,
+     "steps": [
+      {
+       "cost_tier": "large",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 67108864,
+        "maximum_faces": 2000000,
+        "maximum_vertices": 1000000
+       },
+       "operation": "mesh.repair.stitch_borders",
+       "risk": "read_only",
+       "role": "transform",
+       "step_id": "stitch"
+      },
+      {
+       "cost_tier": "large",
+       "cost_units": 2,
+       "input_bound": {
+        "maximum_bytes": 67108864,
+        "maximum_faces": 2000000,
+        "maximum_vertices": 1000000
+       },
+       "operation": "mesh.validate.repair_stitch_borders",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "stitch_validate_1"
+      },
+      {
+       "cost_tier": "large",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 200000,
+        "maximum_vertices": 200000
+       },
+       "operation": "mesh.analysis.connected_components",
+       "risk": "read_only",
+       "role": "analysis",
+       "step_id": "components"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.connected_components_report",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "components_validate_1"
+      }
+     ],
+     "total_cost_units": 5,
+     "validator_steps": 2
+    },
+    "rules": {},
     "steps": [
      {
       "id": "stitch",
@@ -728,6 +950,66 @@
     }
    ],
    "plan": {
+    "estimate": {
+     "basis": "registry metadata only",
+     "highest_risk": "read_only",
+     "inserted_steps": [],
+     "mutating_steps": 0,
+     "step_count": 4,
+     "steps": [
+      {
+       "cost_tier": "large",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 67108864,
+        "maximum_faces": 2000000,
+        "maximum_vertices": 1000000
+       },
+       "operation": "mesh.repair.remove_degenerate",
+       "risk": "read_only",
+       "role": "transform",
+       "step_id": "clean"
+      },
+      {
+       "cost_tier": "large",
+       "cost_units": 2,
+       "input_bound": {
+        "maximum_bytes": 67108864,
+        "maximum_faces": 2000000,
+        "maximum_vertices": 1000000
+       },
+       "operation": "mesh.validate.repair_remove_degenerate",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "clean_validate_1"
+      },
+      {
+       "cost_tier": "large",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 200000,
+        "maximum_vertices": 200000
+       },
+       "operation": "mesh.analysis.self_intersections",
+       "risk": "read_only",
+       "role": "analysis",
+       "step_id": "self"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.self_intersections_report",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "self_validate_1"
+      }
+     ],
+     "total_cost_units": 5,
+     "validator_steps": 2
+    },
+    "rules": {},
     "steps": [
      {
       "id": "clean",
@@ -918,6 +1200,92 @@
     }
    ],
    "plan": {
+    "estimate": {
+     "basis": "registry metadata only",
+     "highest_risk": "read_only",
+     "inserted_steps": [],
+     "mutating_steps": 0,
+     "step_count": 6,
+     "steps": [
+      {
+       "cost_tier": "large",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 67108864,
+        "maximum_faces": 2000000,
+        "maximum_vertices": 1000000
+       },
+       "operation": "mesh.repair.polygon_soup",
+       "risk": "read_only",
+       "role": "transform",
+       "step_id": "clean"
+      },
+      {
+       "cost_tier": "large",
+       "cost_units": 2,
+       "input_bound": {
+        "maximum_bytes": 67108864,
+        "maximum_faces": 2000000,
+        "maximum_vertices": 1000000
+       },
+       "operation": "mesh.validate.repair_polygon_soup",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "clean_validate_1"
+      },
+      {
+       "cost_tier": "large",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 67108864,
+        "maximum_faces": 2000000,
+        "maximum_vertices": 1000000
+       },
+       "operation": "mesh.repair.orient",
+       "risk": "read_only",
+       "role": "transform",
+       "step_id": "orient"
+      },
+      {
+       "cost_tier": "large",
+       "cost_units": 2,
+       "input_bound": {
+        "maximum_bytes": 67108864,
+        "maximum_faces": 2000000,
+        "maximum_vertices": 1000000
+       },
+       "operation": "mesh.validate.repair_orientation",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "orient_validate_1"
+      },
+      {
+       "cost_tier": "large",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 200000,
+        "maximum_vertices": 200000
+       },
+       "operation": "mesh.analysis.measures",
+       "risk": "read_only",
+       "role": "analysis",
+       "step_id": "measure"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.measures_report",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "measure_validate_1"
+      }
+     ],
+     "total_cost_units": 8,
+     "validator_steps": 3
+    },
+    "rules": {},
     "steps": [
      {
       "id": "clean",
@@ -1164,6 +1532,90 @@
     }
    ],
    "plan": {
+    "estimate": {
+     "basis": "registry metadata only",
+     "highest_risk": "mutating_validated",
+     "inserted_steps": [],
+     "mutating_steps": 1,
+     "step_count": 7,
+     "steps": [
+      {
+       "cost_tier": "medium",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 20000
+       },
+       "operation": "mesh.remesh.isotropic",
+       "risk": "mutating_validated",
+       "role": "transform",
+       "step_id": "remesh"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.isotropic_remesh",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "remesh_validate_1"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.simplify.edge_collapse",
+       "risk": "read_only",
+       "role": "transform",
+       "step_id": "simplify"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.simplification_integrity",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "simplify_validate_1"
+      },
+      {
+       "cost_tier": "small",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 400
+       },
+       "operation": "mesh.distance.symmetric_hausdorff",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "simplify_validate_2"
+      },
+      {
+       "cost_tier": "small",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 400
+       },
+       "operation": "mesh.distance.hausdorff_approximate",
+       "risk": "read_only",
+       "role": "analysis",
+       "step_id": "compare"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.hausdorff_report",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "compare_validate_1"
+      }
+     ],
+     "total_cost_units": 7,
+     "validator_steps": 4
+    },
+    "rules": {},
     "steps": [
      {
       "id": "remesh",
@@ -1450,6 +1902,90 @@
     }
    ],
    "plan": {
+    "estimate": {
+     "basis": "registry metadata only",
+     "highest_risk": "mutating_validated",
+     "inserted_steps": [],
+     "mutating_steps": 2,
+     "step_count": 7,
+     "steps": [
+      {
+       "cost_tier": "medium",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 20000
+       },
+       "operation": "mesh.smooth.shape",
+       "risk": "mutating_validated",
+       "role": "transform",
+       "step_id": "smooth"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.shape_smoothing",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "smooth_validate_1"
+      },
+      {
+       "cost_tier": "medium",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 20000
+       },
+       "operation": "mesh.remesh.isotropic",
+       "risk": "mutating_validated",
+       "role": "transform",
+       "step_id": "remesh"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.isotropic_remesh",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "remesh_validate_1"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.simplify.edge_collapse",
+       "risk": "read_only",
+       "role": "transform",
+       "step_id": "simplify"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.simplification_integrity",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "simplify_validate_1"
+      },
+      {
+       "cost_tier": "small",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 400
+       },
+       "operation": "mesh.distance.symmetric_hausdorff",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "simplify_validate_2"
+      }
+     ],
+     "total_cost_units": 7,
+     "validator_steps": 4
+    },
+    "rules": {},
     "steps": [
      {
       "id": "smooth",
@@ -1710,6 +2246,61 @@
     }
    ],
    "plan": {
+    "estimate": {
+     "basis": "registry metadata only",
+     "highest_risk": "mutating_validated",
+     "inserted_steps": [],
+     "mutating_steps": 1,
+     "step_count": 4,
+     "steps": [
+      {
+       "cost_tier": "medium",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 20000
+       },
+       "operation": "mesh.refine.local",
+       "risk": "mutating_validated",
+       "role": "transform",
+       "step_id": "refine"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.refinement",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "refine_validate_1"
+      },
+      {
+       "cost_tier": "large",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 200000,
+        "maximum_vertices": 200000
+       },
+       "operation": "mesh.analysis.measures",
+       "risk": "read_only",
+       "role": "analysis",
+       "step_id": "measure"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.measures_report",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "measure_validate_1"
+      }
+     ],
+     "total_cost_units": 4,
+     "validator_steps": 2
+    },
+    "rules": {},
     "steps": [
      {
       "id": "refine",
@@ -1905,6 +2496,86 @@
     }
    ],
    "plan": {
+    "estimate": {
+     "basis": "registry metadata only",
+     "highest_risk": "mutating_validated",
+     "inserted_steps": [],
+     "mutating_steps": 2,
+     "step_count": 6,
+     "steps": [
+      {
+       "cost_tier": "large",
+       "cost_units": 2,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 400000,
+        "maximum_vertices": 200000
+       },
+       "operation": "mesh.boolean.union",
+       "risk": "read_only",
+       "role": "transform",
+       "step_id": "union"
+      },
+      {
+       "cost_tier": "large",
+       "cost_units": 2,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 2000000,
+        "maximum_vertices": 1000000
+       },
+       "operation": "mesh.validate.boolean_union",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "union_validate_1"
+      },
+      {
+       "cost_tier": "medium",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 20000
+       },
+       "operation": "mesh.components.keep_largest",
+       "risk": "mutating_validated",
+       "role": "transform",
+       "step_id": "largest"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.components_keep_largest",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "largest_validate_1"
+      },
+      {
+       "cost_tier": "medium",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 2000
+       },
+       "operation": "mesh.subdivide.loop",
+       "risk": "mutating_validated",
+       "role": "transform",
+       "step_id": "loop"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.loop",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "loop_validate_1"
+      }
+     ],
+     "total_cost_units": 8,
+     "validator_steps": 3
+    },
+    "rules": {},
     "steps": [
      {
       "id": "union",
@@ -2147,6 +2818,66 @@
     }
    ],
    "plan": {
+    "estimate": {
+     "basis": "registry metadata only",
+     "highest_risk": "read_only",
+     "inserted_steps": [],
+     "mutating_steps": 0,
+     "step_count": 4,
+     "steps": [
+      {
+       "cost_tier": "large",
+       "cost_units": 2,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 400000,
+        "maximum_vertices": 200000
+       },
+       "operation": "mesh.boolean.difference",
+       "risk": "read_only",
+       "role": "transform",
+       "step_id": "diff"
+      },
+      {
+       "cost_tier": "large",
+       "cost_units": 2,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 2000000,
+        "maximum_vertices": 1000000
+       },
+       "operation": "mesh.validate.boolean_difference",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "diff_validate_1"
+      },
+      {
+       "cost_tier": "large",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 200000,
+        "maximum_vertices": 200000
+       },
+       "operation": "mesh.analysis.measures",
+       "risk": "read_only",
+       "role": "analysis",
+       "step_id": "measure"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.measures_report",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "measure_validate_1"
+      }
+     ],
+     "total_cost_units": 6,
+     "validator_steps": 2
+    },
+    "rules": {},
     "steps": [
      {
       "id": "diff",
@@ -2358,6 +3089,92 @@
     }
    ],
    "plan": {
+    "estimate": {
+     "basis": "registry metadata only",
+     "highest_risk": "read_only",
+     "inserted_steps": [],
+     "mutating_steps": 0,
+     "step_count": 6,
+     "steps": [
+      {
+       "cost_tier": "large",
+       "cost_units": 2,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 400000,
+        "maximum_vertices": 200000
+       },
+       "operation": "mesh.boolean.union",
+       "risk": "read_only",
+       "role": "transform",
+       "step_id": "union"
+      },
+      {
+       "cost_tier": "large",
+       "cost_units": 2,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 2000000,
+        "maximum_vertices": 1000000
+       },
+       "operation": "mesh.validate.boolean_union",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "union_validate_1"
+      },
+      {
+       "cost_tier": "large",
+       "cost_units": 2,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 400000,
+        "maximum_vertices": 200000
+       },
+       "operation": "mesh.boolean.difference",
+       "risk": "read_only",
+       "role": "transform",
+       "step_id": "diff"
+      },
+      {
+       "cost_tier": "large",
+       "cost_units": 2,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 2000000,
+        "maximum_vertices": 1000000
+       },
+       "operation": "mesh.validate.boolean_difference",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "diff_validate_1"
+      },
+      {
+       "cost_tier": "large",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 200000,
+        "maximum_vertices": 200000
+       },
+       "operation": "mesh.inspect.pmp",
+       "risk": "read_only",
+       "role": "analysis",
+       "step_id": "inspect"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.pmp_inspection_report",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "inspect_validate_1"
+      }
+     ],
+     "total_cost_units": 10,
+     "validator_steps": 3
+    },
+    "rules": {},
     "steps": [
      {
       "id": "union",
@@ -2604,6 +3421,61 @@
     }
    ],
    "plan": {
+    "estimate": {
+     "basis": "registry metadata only",
+     "highest_risk": "mutating_validated",
+     "inserted_steps": [],
+     "mutating_steps": 1,
+     "step_count": 4,
+     "steps": [
+      {
+       "cost_tier": "small",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 600
+       },
+       "operation": "mesh.clip.plane",
+       "risk": "mutating_validated",
+       "role": "transform",
+       "step_id": "clip"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.clip",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "clip_validate_1"
+      },
+      {
+       "cost_tier": "large",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 200000,
+        "maximum_vertices": 200000
+       },
+       "operation": "mesh.analysis.measures",
+       "risk": "read_only",
+       "role": "analysis",
+       "step_id": "measure"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.measures_report",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "measure_validate_1"
+      }
+     ],
+     "total_cost_units": 4,
+     "validator_steps": 2
+    },
+    "rules": {},
     "steps": [
      {
       "id": "clip",
@@ -2782,6 +3654,61 @@
     }
    ],
    "plan": {
+    "estimate": {
+     "basis": "registry metadata only",
+     "highest_risk": "mutating_validated",
+     "inserted_steps": [],
+     "mutating_steps": 1,
+     "step_count": 4,
+     "steps": [
+      {
+       "cost_tier": "small",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 600
+       },
+       "operation": "mesh.corefine",
+       "risk": "mutating_validated",
+       "role": "transform",
+       "step_id": "core"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.corefine",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "core_validate_1"
+      },
+      {
+       "cost_tier": "large",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 200000,
+        "maximum_vertices": 200000
+       },
+       "operation": "mesh.analysis.connected_components",
+       "risk": "read_only",
+       "role": "analysis",
+       "step_id": "components"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.connected_components_report",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "components_validate_1"
+      }
+     ],
+     "total_cost_units": 4,
+     "validator_steps": 2
+    },
+    "rules": {},
     "steps": [
      {
       "id": "core",
@@ -2981,6 +3908,82 @@
     }
    ],
    "plan": {
+    "estimate": {
+     "basis": "registry metadata only",
+     "highest_risk": "mutating_validated",
+     "inserted_steps": [],
+     "mutating_steps": 2,
+     "step_count": 6,
+     "steps": [
+      {
+       "cost_tier": "medium",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 2000
+       },
+       "operation": "mesh.subdivide.catmull_clark",
+       "risk": "mutating_validated",
+       "role": "transform",
+       "step_id": "catmull"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.catmull_clark",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "catmull_validate_1"
+      },
+      {
+       "cost_tier": "medium",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 20000
+       },
+       "operation": "mesh.triangulate.faces",
+       "risk": "mutating_validated",
+       "role": "transform",
+       "step_id": "tri"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.triangulated_faces",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "tri_validate_1"
+      },
+      {
+       "cost_tier": "large",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 200000,
+        "maximum_vertices": 200000
+       },
+       "operation": "mesh.analysis.measures",
+       "risk": "read_only",
+       "role": "analysis",
+       "step_id": "measure"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.measures_report",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "measure_validate_1"
+      }
+     ],
+     "total_cost_units": 6,
+     "validator_steps": 3
+    },
+    "rules": {},
     "steps": [
      {
       "id": "catmull",
@@ -3225,6 +4228,81 @@
     }
    ],
    "plan": {
+    "estimate": {
+     "basis": "registry metadata only",
+     "highest_risk": "mutating_validated",
+     "inserted_steps": [],
+     "mutating_steps": 1,
+     "step_count": 6,
+     "steps": [
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 16777216
+       },
+       "operation": "reconstruction.alpha_wrap",
+       "risk": "read_only",
+       "role": "transform",
+       "step_id": "wrap"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "reconstruction.validate.alpha_wrap",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "wrap_validate_1"
+      },
+      {
+       "cost_tier": "medium",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 20000
+       },
+       "operation": "mesh.remesh.isotropic",
+       "risk": "mutating_validated",
+       "role": "transform",
+       "step_id": "remesh"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.isotropic_remesh",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "remesh_validate_1"
+      },
+      {
+       "cost_tier": "large",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 200000,
+        "maximum_vertices": 200000
+       },
+       "operation": "mesh.analysis.measures",
+       "risk": "read_only",
+       "role": "analysis",
+       "step_id": "measure"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.measures_report",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "measure_validate_1"
+      }
+     ],
+     "total_cost_units": 6,
+     "validator_steps": 3
+    },
+    "rules": {},
     "steps": [
      {
       "id": "wrap",
@@ -3469,6 +4547,81 @@
     }
    ],
    "plan": {
+    "estimate": {
+     "basis": "registry metadata only",
+     "highest_risk": "mutating_validated",
+     "inserted_steps": [],
+     "mutating_steps": 1,
+     "step_count": 6,
+     "steps": [
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 16777216
+       },
+       "operation": "reconstruction.poisson",
+       "risk": "read_only",
+       "role": "transform",
+       "step_id": "poisson"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "reconstruction.validate.poisson",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "poisson_validate_1"
+      },
+      {
+       "cost_tier": "medium",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 20000
+       },
+       "operation": "mesh.remesh.isotropic",
+       "risk": "mutating_validated",
+       "role": "transform",
+       "step_id": "remesh"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.isotropic_remesh",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "remesh_validate_1"
+      },
+      {
+       "cost_tier": "large",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 200000,
+        "maximum_vertices": 200000
+       },
+       "operation": "mesh.inspect.pmp",
+       "risk": "read_only",
+       "role": "analysis",
+       "step_id": "inspect"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.pmp_inspection_report",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "inspect_validate_1"
+      }
+     ],
+     "total_cost_units": 6,
+     "validator_steps": 3
+    },
+    "rules": {},
     "steps": [
      {
       "id": "poisson",
@@ -3729,6 +4882,123 @@
     }
    ],
    "plan": {
+    "estimate": {
+     "basis": "registry metadata only",
+     "highest_risk": "read_only",
+     "inserted_steps": [],
+     "mutating_steps": 0,
+     "step_count": 11,
+     "steps": [
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "pointset.remove_outliers",
+       "risk": "read_only",
+       "role": "transform",
+       "step_id": "outliers"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "pointset.validate.basic",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "outliers_validate_1"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "pointset.validate.subset",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "outliers_validate_2"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "pointset.validate.outliers_removed",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "outliers_validate_3"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "pointset.simplify.grid",
+       "risk": "read_only",
+       "role": "transform",
+       "step_id": "grid"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "pointset.validate.basic",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "grid_validate_1"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "pointset.validate.subset",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "grid_validate_2"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 16777216
+       },
+       "operation": "reconstruction.advancing_front",
+       "risk": "read_only",
+       "role": "transform",
+       "step_id": "afsr"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "reconstruction.validate.interpolating",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "afsr_validate_1"
+      },
+      {
+       "cost_tier": "large",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 200000,
+        "maximum_vertices": 200000
+       },
+       "operation": "mesh.analysis.measures",
+       "risk": "read_only",
+       "role": "analysis",
+       "step_id": "measure"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.measures_report",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "measure_validate_1"
+      }
+     ],
+     "total_cost_units": 11,
+     "validator_steps": 7
+    },
+    "rules": {},
     "steps": [
      {
       "id": "outliers",
@@ -4112,6 +5382,96 @@
     }
    ],
    "plan": {
+    "estimate": {
+     "basis": "registry metadata only",
+     "highest_risk": "read_only",
+     "inserted_steps": [],
+     "mutating_steps": 0,
+     "step_count": 8,
+     "steps": [
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 2,
+       "input_bound": {},
+       "operation": "pointset.smooth.jet",
+       "risk": "read_only",
+       "role": "transform",
+       "step_id": "jet"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "pointset.validate.basic",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "jet_validate_1"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "pointset.validate.smoothed",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "jet_validate_2"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "pointset.validate.smoothing_quality",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "jet_validate_3"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 16777216
+       },
+       "operation": "reconstruction.alpha_wrap",
+       "risk": "read_only",
+       "role": "transform",
+       "step_id": "wrap"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "reconstruction.validate.alpha_wrap",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "wrap_validate_1"
+      },
+      {
+       "cost_tier": "large",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 200000,
+        "maximum_vertices": 200000
+       },
+       "operation": "mesh.analysis.connected_components",
+       "risk": "read_only",
+       "role": "analysis",
+       "step_id": "components"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.connected_components_report",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "components_validate_1"
+      }
+     ],
+     "total_cost_units": 9,
+     "validator_steps": 5
+    },
+    "rules": {},
     "steps": [
      {
       "id": "jet",
@@ -4415,6 +5775,79 @@
     }
    ],
    "plan": {
+    "estimate": {
+     "basis": "registry metadata only",
+     "highest_risk": "mutating_validated",
+     "inserted_steps": [],
+     "mutating_steps": 1,
+     "step_count": 6,
+     "steps": [
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "hull.convex_3",
+       "risk": "read_only",
+       "role": "transform",
+       "step_id": "hull"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "hull.validate.convex_enclosure",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "hull_validate_1"
+      },
+      {
+       "cost_tier": "medium",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 2000
+       },
+       "operation": "mesh.subdivide.loop",
+       "risk": "mutating_validated",
+       "role": "transform",
+       "step_id": "loop"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.loop",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "loop_validate_1"
+      },
+      {
+       "cost_tier": "large",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 200000,
+        "maximum_vertices": 200000
+       },
+       "operation": "mesh.analysis.measures",
+       "risk": "read_only",
+       "role": "analysis",
+       "step_id": "measure"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.measures_report",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "measure_validate_1"
+      }
+     ],
+     "total_cost_units": 6,
+     "validator_steps": 3
+    },
+    "rules": {},
     "steps": [
      {
       "id": "hull",
@@ -4657,6 +6090,108 @@
     }
    ],
    "plan": {
+    "estimate": {
+     "basis": "registry metadata only",
+     "highest_risk": "read_only",
+     "inserted_steps": [],
+     "mutating_steps": 0,
+     "step_count": 10,
+     "steps": [
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "pointset.remove_outliers",
+       "risk": "read_only",
+       "role": "transform",
+       "step_id": "outliers"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "pointset.validate.basic",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "outliers_validate_1"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "pointset.validate.subset",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "outliers_validate_2"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "pointset.validate.outliers_removed",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "outliers_validate_3"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 2,
+       "input_bound": {},
+       "operation": "pointset.normals.estimate",
+       "risk": "read_only",
+       "role": "transform",
+       "step_id": "estimate"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "pointset.validate.basic",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "estimate_validate_1"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "pointset.validate.normals_estimated",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "estimate_validate_2"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "pointset.normals.orient_mst",
+       "risk": "read_only",
+       "role": "transform",
+       "step_id": "orient"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "pointset.validate.basic",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "orient_validate_1"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "pointset.validate.normals_oriented",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "orient_validate_2"
+      }
+     ],
+     "total_cost_units": 11,
+     "validator_steps": 7
+    },
+    "rules": {},
     "steps": [
      {
       "id": "outliers",
@@ -4996,6 +6531,65 @@
     }
    ],
    "plan": {
+    "estimate": {
+     "basis": "registry metadata only",
+     "highest_risk": "read_only",
+     "inserted_steps": [],
+     "mutating_steps": 0,
+     "step_count": 5,
+     "steps": [
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "pointset.simplify.random",
+       "risk": "read_only",
+       "role": "transform",
+       "step_id": "simp"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "pointset.validate.basic",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "simp_validate_1"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "pointset.validate.subset",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "simp_validate_2"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456
+       },
+       "operation": "triangulation.delaunay_3",
+       "risk": "read_only",
+       "role": "transform",
+       "step_id": "dt"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "triangulation.validate.delaunay_3",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "dt_validate_1"
+      }
+     ],
+     "total_cost_units": 5,
+     "validator_steps": 3
+    },
+    "rules": {},
     "steps": [
      {
       "id": "simp",
@@ -5214,6 +6808,85 @@
     }
    ],
    "plan": {
+    "estimate": {
+     "basis": "registry metadata only",
+     "highest_risk": "read_only",
+     "inserted_steps": [],
+     "mutating_steps": 0,
+     "step_count": 7,
+     "steps": [
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 16777216
+       },
+       "operation": "reconstruction.alpha_wrap",
+       "risk": "read_only",
+       "role": "transform",
+       "step_id": "wrap"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "reconstruction.validate.alpha_wrap",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "wrap_validate_1"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "pointset.simplify.random",
+       "risk": "read_only",
+       "role": "transform",
+       "step_id": "thin"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "pointset.validate.basic",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "thin_validate_1"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "pointset.validate.subset",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "thin_validate_2"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456
+       },
+       "operation": "spatial.aabb.closest_points",
+       "risk": "read_only",
+       "role": "analysis",
+       "step_id": "closest"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "spatial.validate.closest_points_report",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "closest_validate_1"
+      }
+     ],
+     "total_cost_units": 7,
+     "validator_steps": 4
+    },
+    "rules": {},
     "steps": [
      {
       "id": "wrap",
@@ -5483,6 +7156,59 @@
     }
    ],
    "plan": {
+    "estimate": {
+     "basis": "registry metadata only",
+     "highest_risk": "mutating_validated",
+     "inserted_steps": [],
+     "mutating_steps": 1,
+     "step_count": 4,
+     "steps": [
+      {
+       "cost_tier": "medium",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 20000
+       },
+       "operation": "mesh.remesh.isotropic",
+       "risk": "mutating_validated",
+       "role": "transform",
+       "step_id": "remesh"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.isotropic_remesh",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "remesh_validate_1"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456
+       },
+       "operation": "spatial.aabb.closest_points",
+       "risk": "read_only",
+       "role": "analysis",
+       "step_id": "closest"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "spatial.validate.closest_points_report",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "closest_validate_1"
+      }
+     ],
+     "total_cost_units": 4,
+     "validator_steps": 2
+    },
+    "rules": {},
     "steps": [
      {
       "id": "remesh",
@@ -5671,6 +7397,66 @@
     }
    ],
    "plan": {
+    "estimate": {
+     "basis": "registry metadata only",
+     "highest_risk": "read_only",
+     "inserted_steps": [],
+     "mutating_steps": 0,
+     "step_count": 5,
+     "steps": [
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "pointset.simplify.grid",
+       "risk": "read_only",
+       "role": "transform",
+       "step_id": "grid"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "pointset.validate.basic",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "grid_validate_1"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "pointset.validate.subset",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "grid_validate_2"
+      },
+      {
+       "cost_tier": "small",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 400
+       },
+       "operation": "mesh.distance.max_to_mesh",
+       "risk": "read_only",
+       "role": "analysis",
+       "step_id": "maxdist"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.max_distance_to_mesh",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "maxdist_validate_1"
+      }
+     ],
+     "total_cost_units": 5,
+     "validator_steps": 3
+    },
+    "rules": {},
     "steps": [
      {
       "id": "grid",
@@ -5880,6 +7666,65 @@
     }
    ],
    "plan": {
+    "estimate": {
+     "basis": "registry metadata only",
+     "highest_risk": "read_only",
+     "inserted_steps": [],
+     "mutating_steps": 0,
+     "step_count": 5,
+     "steps": [
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "pointset.simplify.random",
+       "risk": "read_only",
+       "role": "transform",
+       "step_id": "simp"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "pointset.validate.basic",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "simp_validate_1"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "pointset.validate.subset",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "simp_validate_2"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456
+       },
+       "operation": "spatial.bbox_3",
+       "risk": "read_only",
+       "role": "analysis",
+       "step_id": "bbox"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "spatial.validate.bbox_report",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "bbox_validate_1"
+      }
+     ],
+     "total_cost_units": 5,
+     "validator_steps": 3
+    },
+    "rules": {},
     "steps": [
      {
       "id": "simp",
@@ -6079,6 +7924,60 @@
     }
    ],
    "plan": {
+    "estimate": {
+     "basis": "registry metadata only",
+     "highest_risk": "mutating_validated",
+     "inserted_steps": [],
+     "mutating_steps": 1,
+     "step_count": 4,
+     "steps": [
+      {
+       "cost_tier": "medium",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 20000
+       },
+       "operation": "mesh.remesh.isotropic",
+       "risk": "mutating_validated",
+       "role": "transform",
+       "step_id": "remesh"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.isotropic_remesh",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "remesh_validate_1"
+      },
+      {
+       "cost_tier": "medium",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 20000
+       },
+       "operation": "mesh.slice.compute",
+       "risk": "read_only",
+       "role": "analysis",
+       "step_id": "slice"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.slice",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "slice_validate_1"
+      }
+     ],
+     "total_cost_units": 4,
+     "validator_steps": 2
+    },
+    "rules": {},
     "steps": [
      {
       "id": "remesh",
@@ -6257,6 +8156,58 @@
     }
    ],
    "plan": {
+    "estimate": {
+     "basis": "registry metadata only",
+     "highest_risk": "read_only",
+     "inserted_steps": [],
+     "mutating_steps": 0,
+     "step_count": 4,
+     "steps": [
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 67108864
+       },
+       "operation": "hull.convex_2",
+       "risk": "read_only",
+       "role": "transform",
+       "step_id": "hull"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "hull.validate.convex_enclosure_2",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "hull_validate_1"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456
+       },
+       "operation": "polygon.boolean",
+       "risk": "read_only",
+       "role": "analysis",
+       "step_id": "join"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "polygon.validate.boolean",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "join_validate_1"
+      }
+     ],
+     "total_cost_units": 4,
+     "validator_steps": 2
+    },
+    "rules": {},
     "steps": [
      {
       "id": "hull",
@@ -6445,6 +8396,58 @@
     }
    ],
    "plan": {
+    "estimate": {
+     "basis": "registry metadata only",
+     "highest_risk": "read_only",
+     "inserted_steps": [],
+     "mutating_steps": 0,
+     "step_count": 4,
+     "steps": [
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 67108864
+       },
+       "operation": "hull.convex_2",
+       "risk": "read_only",
+       "role": "transform",
+       "step_id": "hull"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "hull.validate.convex_enclosure_2",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "hull_validate_1"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456
+       },
+       "operation": "polygon.minkowski_sum",
+       "risk": "read_only",
+       "role": "analysis",
+       "step_id": "sum"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "polygon.validate.minkowski_sum",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "sum_validate_1"
+      }
+     ],
+     "total_cost_units": 4,
+     "validator_steps": 2
+    },
+    "rules": {},
     "steps": [
      {
       "id": "hull",
@@ -6633,6 +8636,58 @@
     }
    ],
    "plan": {
+    "estimate": {
+     "basis": "registry metadata only",
+     "highest_risk": "read_only",
+     "inserted_steps": [],
+     "mutating_steps": 0,
+     "step_count": 4,
+     "steps": [
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 67108864
+       },
+       "operation": "hull.convex_2",
+       "risk": "read_only",
+       "role": "transform",
+       "step_id": "hull"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "hull.validate.convex_enclosure_2",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "hull_validate_1"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 67108864
+       },
+       "operation": "shape.barycentric",
+       "risk": "read_only",
+       "role": "analysis",
+       "step_id": "bary"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "shape.validate.barycentric",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "bary_validate_1"
+      }
+     ],
+     "total_cost_units": 4,
+     "validator_steps": 2
+    },
+    "rules": {},
     "steps": [
      {
       "id": "hull",
@@ -6832,6 +8887,81 @@
     }
    ],
    "plan": {
+    "estimate": {
+     "basis": "registry metadata only",
+     "highest_risk": "mutating_validated",
+     "inserted_steps": [],
+     "mutating_steps": 1,
+     "step_count": 6,
+     "steps": [
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 4096
+       },
+       "operation": "mesh.surface.generate",
+       "risk": "read_only",
+       "role": "transform",
+       "step_id": "surface"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.surface_mesh",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "surface_validate_1"
+      },
+      {
+       "cost_tier": "medium",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 20000
+       },
+       "operation": "mesh.remesh.isotropic",
+       "risk": "mutating_validated",
+       "role": "transform",
+       "step_id": "remesh"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.isotropic_remesh",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "remesh_validate_1"
+      },
+      {
+       "cost_tier": "large",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 200000,
+        "maximum_vertices": 200000
+       },
+       "operation": "mesh.analysis.measures",
+       "risk": "read_only",
+       "role": "analysis",
+       "step_id": "measure"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.measures_report",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "measure_validate_1"
+      }
+     ],
+     "total_cost_units": 6,
+     "validator_steps": 3
+    },
+    "rules": {},
     "steps": [
      {
       "id": "surface",
@@ -7075,6 +9205,91 @@
     }
    ],
    "plan": {
+    "estimate": {
+     "basis": "registry metadata only",
+     "highest_risk": "mutating_validated",
+     "inserted_steps": [],
+     "mutating_steps": 1,
+     "step_count": 7,
+     "steps": [
+      {
+       "cost_tier": "medium",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 20000
+       },
+       "operation": "mesh.remesh.isotropic",
+       "risk": "mutating_validated",
+       "role": "transform",
+       "step_id": "remesh"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.isotropic_remesh",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "remesh_validate_1"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.simplify.edge_collapse",
+       "risk": "read_only",
+       "role": "transform",
+       "step_id": "simplify"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.simplification_integrity",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "simplify_validate_1"
+      },
+      {
+       "cost_tier": "small",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 400
+       },
+       "operation": "mesh.distance.symmetric_hausdorff",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "simplify_validate_2"
+      },
+      {
+       "cost_tier": "large",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 200000,
+        "maximum_vertices": 200000
+       },
+       "operation": "mesh.analysis.measures",
+       "risk": "read_only",
+       "role": "analysis",
+       "step_id": "measure"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.measures_report",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "measure_validate_1"
+      }
+     ],
+     "total_cost_units": 7,
+     "validator_steps": 4
+    },
+    "rules": {},
     "steps": [
      {
       "id": "remesh",
@@ -7352,6 +9567,79 @@
     }
    ],
    "plan": {
+    "estimate": {
+     "basis": "registry metadata only",
+     "highest_risk": "mutating_validated",
+     "inserted_steps": [],
+     "mutating_steps": 1,
+     "step_count": 6,
+     "steps": [
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "hull.convex_3",
+       "risk": "read_only",
+       "role": "transform",
+       "step_id": "hull"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "hull.validate.convex_enclosure",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "hull_validate_1"
+      },
+      {
+       "cost_tier": "small",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 600
+       },
+       "operation": "mesh.clip.plane",
+       "risk": "mutating_validated",
+       "role": "transform",
+       "step_id": "clip"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.clip",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "clip_validate_1"
+      },
+      {
+       "cost_tier": "large",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 200000,
+        "maximum_vertices": 200000
+       },
+       "operation": "mesh.analysis.measures",
+       "risk": "read_only",
+       "role": "analysis",
+       "step_id": "measure"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.measures_report",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "measure_validate_1"
+      }
+     ],
+     "total_cost_units": 6,
+     "validator_steps": 3
+    },
+    "rules": {},
     "steps": [
      {
       "id": "hull",
@@ -7595,6 +9883,82 @@
     }
    ],
    "plan": {
+    "estimate": {
+     "basis": "registry metadata only",
+     "highest_risk": "mutating_validated",
+     "inserted_steps": [],
+     "mutating_steps": 2,
+     "step_count": 6,
+     "steps": [
+      {
+       "cost_tier": "small",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 600
+       },
+       "operation": "mesh.clip.plane",
+       "risk": "mutating_validated",
+       "role": "transform",
+       "step_id": "clip"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.clip",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "clip_validate_1"
+      },
+      {
+       "cost_tier": "medium",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 2000
+       },
+       "operation": "mesh.subdivide.loop",
+       "risk": "mutating_validated",
+       "role": "transform",
+       "step_id": "loop"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.loop",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "loop_validate_1"
+      },
+      {
+       "cost_tier": "large",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 200000,
+        "maximum_vertices": 200000
+       },
+       "operation": "mesh.inspect.pmp",
+       "risk": "read_only",
+       "role": "analysis",
+       "step_id": "inspect"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.pmp_inspection_report",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "inspect_validate_1"
+      }
+     ],
+     "total_cost_units": 6,
+     "validator_steps": 3
+    },
+    "rules": {},
     "steps": [
      {
       "id": "clip",
@@ -7838,6 +10202,91 @@
     }
    ],
    "plan": {
+    "estimate": {
+     "basis": "registry metadata only",
+     "highest_risk": "mutating_validated",
+     "inserted_steps": [],
+     "mutating_steps": 1,
+     "step_count": 7,
+     "steps": [
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.simplify.edge_collapse",
+       "risk": "read_only",
+       "role": "transform",
+       "step_id": "simplify"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.simplification_integrity",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "simplify_validate_1"
+      },
+      {
+       "cost_tier": "small",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 400
+       },
+       "operation": "mesh.distance.symmetric_hausdorff",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "simplify_validate_2"
+      },
+      {
+       "cost_tier": "medium",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 2000
+       },
+       "operation": "mesh.subdivide.loop",
+       "risk": "mutating_validated",
+       "role": "transform",
+       "step_id": "loop"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.loop",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "loop_validate_1"
+      },
+      {
+       "cost_tier": "large",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 200000,
+        "maximum_vertices": 200000
+       },
+       "operation": "mesh.inspect.pmp",
+       "risk": "read_only",
+       "role": "analysis",
+       "step_id": "inspect"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.pmp_inspection_report",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "inspect_validate_1"
+      }
+     ],
+     "total_cost_units": 7,
+     "validator_steps": 4
+    },
+    "rules": {},
     "steps": [
      {
       "id": "simplify",
@@ -8114,6 +10563,79 @@
     }
    ],
    "plan": {
+    "estimate": {
+     "basis": "registry metadata only",
+     "highest_risk": "mutating_validated",
+     "inserted_steps": [],
+     "mutating_steps": 1,
+     "step_count": 6,
+     "steps": [
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "hull.convex_3",
+       "risk": "read_only",
+       "role": "transform",
+       "step_id": "hull"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "hull.validate.convex_enclosure",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "hull_validate_1"
+      },
+      {
+       "cost_tier": "medium",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 2000
+       },
+       "operation": "mesh.subdivide.loop",
+       "risk": "mutating_validated",
+       "role": "transform",
+       "step_id": "loop"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.loop",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "loop_validate_1"
+      },
+      {
+       "cost_tier": "large",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 200000,
+        "maximum_vertices": 200000
+       },
+       "operation": "mesh.analysis.self_intersections",
+       "risk": "read_only",
+       "role": "analysis",
+       "step_id": "self"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.self_intersections_report",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "self_validate_1"
+      }
+     ],
+     "total_cost_units": 6,
+     "validator_steps": 3
+    },
+    "rules": {},
     "steps": [
      {
       "id": "hull",
@@ -8340,6 +10862,61 @@
     }
    ],
    "plan": {
+    "estimate": {
+     "basis": "registry metadata only",
+     "highest_risk": "mutating_validated",
+     "inserted_steps": [],
+     "mutating_steps": 1,
+     "step_count": 4,
+     "steps": [
+      {
+       "cost_tier": "medium",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 2000
+       },
+       "operation": "mesh.subdivide.loop",
+       "risk": "mutating_validated",
+       "role": "transform",
+       "step_id": "loop"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.loop",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "loop_validate_1"
+      },
+      {
+       "cost_tier": "large",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 200000,
+        "maximum_vertices": 200000
+       },
+       "operation": "mesh.analysis.measures",
+       "risk": "read_only",
+       "role": "analysis",
+       "step_id": "measure"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.measures_report",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "measure_validate_1"
+      }
+     ],
+     "total_cost_units": 4,
+     "validator_steps": 2
+    },
+    "rules": {},
     "steps": [
      {
       "id": "loop",
@@ -8541,6 +11118,95 @@
     }
    ],
    "plan": {
+    "estimate": {
+     "basis": "registry metadata only",
+     "highest_risk": "read_only",
+     "inserted_steps": [],
+     "mutating_steps": 0,
+     "step_count": 7,
+     "steps": [
+      {
+       "cost_tier": "large",
+       "cost_units": 2,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 400000,
+        "maximum_vertices": 200000
+       },
+       "operation": "mesh.boolean.union",
+       "risk": "read_only",
+       "role": "transform",
+       "step_id": "union"
+      },
+      {
+       "cost_tier": "large",
+       "cost_units": 2,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 2000000,
+        "maximum_vertices": 1000000
+       },
+       "operation": "mesh.validate.boolean_union",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "union_validate_1"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.simplify.edge_collapse",
+       "risk": "read_only",
+       "role": "transform",
+       "step_id": "simplify"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.simplification_integrity",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "simplify_validate_1"
+      },
+      {
+       "cost_tier": "small",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 400
+       },
+       "operation": "mesh.distance.symmetric_hausdorff",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "simplify_validate_2"
+      },
+      {
+       "cost_tier": "small",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 400
+       },
+       "operation": "mesh.distance.hausdorff_approximate",
+       "risk": "read_only",
+       "role": "analysis",
+       "step_id": "compare"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.hausdorff_report",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "compare_validate_1"
+      }
+     ],
+     "total_cost_units": 9,
+     "validator_steps": 4
+    },
+    "rules": {},
     "steps": [
      {
       "id": "union",
@@ -8828,6 +11494,58 @@
     }
    ],
    "plan": {
+    "estimate": {
+     "basis": "registry metadata only",
+     "highest_risk": "read_only",
+     "inserted_steps": [],
+     "mutating_steps": 0,
+     "step_count": 4,
+     "steps": [
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 67108864
+       },
+       "operation": "hull.convex_2",
+       "risk": "read_only",
+       "role": "transform",
+       "step_id": "hull"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "hull.validate.convex_enclosure_2",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "hull_validate_1"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456
+       },
+       "operation": "arrangement.overlay",
+       "risk": "read_only",
+       "role": "analysis",
+       "step_id": "overlay"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "arrangement.validate.overlay",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "overlay_validate_1"
+      }
+     ],
+     "total_cost_units": 4,
+     "validator_steps": 2
+    },
+    "rules": {},
     "steps": [
      {
       "id": "hull",
@@ -9027,6 +11745,101 @@
     }
    ],
    "plan": {
+    "estimate": {
+     "basis": "registry metadata only",
+     "highest_risk": "read_only",
+     "inserted_steps": [],
+     "mutating_steps": 0,
+     "step_count": 9,
+     "steps": [
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "pointset.remove_outliers",
+       "risk": "read_only",
+       "role": "transform",
+       "step_id": "outliers"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "pointset.validate.basic",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "outliers_validate_1"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "pointset.validate.subset",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "outliers_validate_2"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "pointset.validate.outliers_removed",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "outliers_validate_3"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "pointset.simplify.grid",
+       "risk": "read_only",
+       "role": "transform",
+       "step_id": "grid"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "pointset.validate.basic",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "grid_validate_1"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "pointset.validate.subset",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "grid_validate_2"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456
+       },
+       "operation": "triangulation.delaunay_3",
+       "risk": "read_only",
+       "role": "transform",
+       "step_id": "dt"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "triangulation.validate.delaunay_3",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "dt_validate_1"
+      }
+     ],
+     "total_cost_units": 9,
+     "validator_steps": 6
+    },
+    "rules": {},
     "steps": [
      {
       "id": "outliers",
@@ -9356,6 +12169,82 @@
     }
    ],
    "plan": {
+    "estimate": {
+     "basis": "registry metadata only",
+     "highest_risk": "mutating_validated",
+     "inserted_steps": [],
+     "mutating_steps": 2,
+     "step_count": 6,
+     "steps": [
+      {
+       "cost_tier": "medium",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 20000
+       },
+       "operation": "mesh.smooth.shape",
+       "risk": "mutating_validated",
+       "role": "transform",
+       "step_id": "smooth"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.shape_smoothing",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "smooth_validate_1"
+      },
+      {
+       "cost_tier": "medium",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 2000
+       },
+       "operation": "mesh.subdivide.loop",
+       "risk": "mutating_validated",
+       "role": "transform",
+       "step_id": "loop"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.loop",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "loop_validate_1"
+      },
+      {
+       "cost_tier": "large",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 200000,
+        "maximum_vertices": 200000
+       },
+       "operation": "mesh.analysis.measures",
+       "risk": "read_only",
+       "role": "analysis",
+       "step_id": "measure"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.measures_report",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "measure_validate_1"
+      }
+     ],
+     "total_cost_units": 6,
+     "validator_steps": 3
+    },
+    "rules": {},
     "steps": [
      {
       "id": "smooth",
@@ -9607,6 +12496,69 @@
     "validation_status": "not_run"
    },
    "plan": {
+    "estimate": {
+     "basis": "registry metadata only",
+     "highest_risk": "mutating_validated",
+     "inserted_steps": [],
+     "mutating_steps": 1,
+     "step_count": 5,
+     "steps": [
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.simplify.edge_collapse",
+       "risk": "read_only",
+       "role": "transform",
+       "step_id": "simplify"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.simplification_integrity",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "simplify_validate_1"
+      },
+      {
+       "cost_tier": "small",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 400
+       },
+       "operation": "mesh.distance.symmetric_hausdorff",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "simplify_validate_2"
+      },
+      {
+       "cost_tier": "medium",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 2000
+       },
+       "operation": "mesh.subdivide.loop",
+       "risk": "mutating_validated",
+       "role": "transform",
+       "step_id": "loop"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.loop",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "loop_validate_1"
+      }
+     ],
+     "total_cost_units": 5,
+     "validator_steps": 3
+    },
+    "rules": {},
     "steps": [
      {
       "id": "simplify",
@@ -9919,6 +12871,61 @@
     "validation_status": "failed"
    },
    "plan": {
+    "estimate": {
+     "basis": "registry metadata only",
+     "highest_risk": "mutating_validated",
+     "inserted_steps": [],
+     "mutating_steps": 1,
+     "step_count": 4,
+     "steps": [
+      {
+       "cost_tier": "medium",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 20000
+       },
+       "operation": "mesh.remesh.isotropic",
+       "risk": "mutating_validated",
+       "role": "transform",
+       "step_id": "remesh"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.isotropic_remesh",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "remesh_validate_1"
+      },
+      {
+       "cost_tier": "large",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 200000,
+        "maximum_vertices": 200000
+       },
+       "operation": "mesh.analysis.measures",
+       "risk": "read_only",
+       "role": "analysis",
+       "step_id": "measure"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.measures_report",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "measure_validate_1"
+      }
+     ],
+     "total_cost_units": 4,
+     "validator_steps": 2
+    },
+    "rules": {},
     "steps": [
      {
       "id": "remesh",
@@ -10068,6 +13075,61 @@
     "validation_status": "not_run"
    },
    "plan": {
+    "estimate": {
+     "basis": "registry metadata only",
+     "highest_risk": "mutating_validated",
+     "inserted_steps": [],
+     "mutating_steps": 1,
+     "step_count": 4,
+     "steps": [
+      {
+       "cost_tier": "medium",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 20000
+       },
+       "operation": "mesh.remesh.isotropic",
+       "risk": "mutating_validated",
+       "role": "transform",
+       "step_id": "remesh"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.isotropic_remesh",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "remesh_validate_1"
+      },
+      {
+       "cost_tier": "large",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 200000,
+        "maximum_vertices": 200000
+       },
+       "operation": "mesh.analysis.measures",
+       "risk": "read_only",
+       "role": "analysis",
+       "step_id": "measure"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.measures_report",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "measure_validate_1"
+      }
+     ],
+     "total_cost_units": 4,
+     "validator_steps": 2
+    },
+    "rules": {},
     "steps": [
      {
       "id": "remesh",
@@ -10216,6 +13278,74 @@
     "validation_status": "failed"
    },
    "plan": {
+    "estimate": {
+     "basis": "registry metadata only",
+     "highest_risk": "read_only",
+     "inserted_steps": [],
+     "mutating_steps": 0,
+     "step_count": 6,
+     "steps": [
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 2,
+       "input_bound": {},
+       "operation": "pointset.smooth.jet",
+       "risk": "read_only",
+       "role": "transform",
+       "step_id": "jet"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "pointset.validate.basic",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "jet_validate_1"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "pointset.validate.smoothed",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "jet_validate_2"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "pointset.validate.smoothing_quality",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "jet_validate_3"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 16777216
+       },
+       "operation": "reconstruction.alpha_wrap",
+       "risk": "read_only",
+       "role": "transform",
+       "step_id": "wrap"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "reconstruction.validate.alpha_wrap",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "wrap_validate_1"
+      }
+     ],
+     "total_cost_units": 7,
+     "validator_steps": 4
+    },
+    "rules": {},
     "steps": [
      {
       "id": "jet",
@@ -10434,6 +13564,92 @@
     "validation_status": "not_run"
    },
    "plan": {
+    "estimate": {
+     "basis": "registry metadata only",
+     "highest_risk": "read_only",
+     "inserted_steps": [],
+     "mutating_steps": 0,
+     "step_count": 8,
+     "steps": [
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 2,
+       "input_bound": {},
+       "operation": "pointset.normals.estimate",
+       "risk": "read_only",
+       "role": "transform",
+       "step_id": "estimate"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "pointset.validate.basic",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "estimate_validate_1"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "pointset.validate.normals_estimated",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "estimate_validate_2"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "pointset.normals.orient_mst",
+       "risk": "read_only",
+       "role": "transform",
+       "step_id": "orient"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "pointset.validate.basic",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "orient_validate_1"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "pointset.validate.normals_oriented",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "orient_validate_2"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 16777216
+       },
+       "operation": "reconstruction.poisson",
+       "risk": "read_only",
+       "role": "transform",
+       "step_id": "poisson"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "reconstruction.validate.poisson",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "poisson_validate_1"
+      }
+     ],
+     "total_cost_units": 9,
+     "validator_steps": 5
+    },
+    "rules": {},
     "steps": [
      {
       "id": "estimate",
@@ -10735,6 +13951,60 @@
     "validation_status": "not_run"
    },
    "plan": {
+    "estimate": {
+     "basis": "registry metadata only",
+     "highest_risk": "mutating_validated",
+     "inserted_steps": [],
+     "mutating_steps": 1,
+     "step_count": 4,
+     "steps": [
+      {
+       "cost_tier": "medium",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 20000
+       },
+       "operation": "mesh.remesh.isotropic",
+       "risk": "mutating_validated",
+       "role": "transform",
+       "step_id": "remesh"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.isotropic_remesh",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "remesh_validate_1"
+      },
+      {
+       "cost_tier": "small",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 400
+       },
+       "operation": "mesh.distance.hausdorff_approximate",
+       "risk": "read_only",
+       "role": "analysis",
+       "step_id": "compare"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.hausdorff_report",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "compare_validate_1"
+      }
+     ],
+     "total_cost_units": 4,
+     "validator_steps": 2
+    },
+    "rules": {},
     "steps": [
      {
       "id": "remesh",
@@ -10890,6 +14160,48 @@
     "validation_status": "not_run"
    },
    "plan": {
+    "estimate": {
+     "basis": "registry metadata only",
+     "highest_risk": "read_only",
+     "inserted_steps": [],
+     "mutating_steps": 0,
+     "step_count": 3,
+     "steps": [
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.simplify.edge_collapse",
+       "risk": "read_only",
+       "role": "transform",
+       "step_id": "simplify"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.simplification_integrity",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "simplify_validate_1"
+      },
+      {
+       "cost_tier": "small",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 400
+       },
+       "operation": "mesh.distance.symmetric_hausdorff",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "simplify_validate_2"
+      }
+     ],
+     "total_cost_units": 3,
+     "validator_steps": 2
+    },
+    "rules": {},
     "steps": [
      {
       "id": "simplify",
@@ -11011,6 +14323,39 @@
     "state": "refused"
    },
    "plan": {
+    "estimate": {
+     "basis": "registry metadata only",
+     "highest_risk": "mutating_validated",
+     "inserted_steps": [],
+     "mutating_steps": 1,
+     "step_count": 2,
+     "steps": [
+      {
+       "cost_tier": "medium",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 2000
+       },
+       "operation": "mesh.subdivide.loop",
+       "risk": "mutating_validated",
+       "role": "transform",
+       "step_id": "loop"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.loop",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "loop_validate_1"
+      }
+     ],
+     "total_cost_units": 2,
+     "validator_steps": 1
+    },
+    "rules": {},
     "steps": [
      {
       "id": "loop",
@@ -11098,6 +14443,39 @@
     "state": "refused"
    },
    "plan": {
+    "estimate": {
+     "basis": "registry metadata only",
+     "highest_risk": "mutating_validated",
+     "inserted_steps": [],
+     "mutating_steps": 1,
+     "step_count": 2,
+     "steps": [
+      {
+       "cost_tier": "medium",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 2000
+       },
+       "operation": "mesh.subdivide.loop",
+       "risk": "mutating_validated",
+       "role": "transform",
+       "step_id": "loop"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.loop",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "loop_validate_1"
+      }
+     ],
+     "total_cost_units": 2,
+     "validator_steps": 1
+    },
+    "rules": {},
     "steps": [
      {
       "id": "loop",
@@ -11230,6 +14608,44 @@
     "validation_status": "not_run"
    },
    "plan": {
+    "estimate": {
+     "basis": "registry metadata only",
+     "highest_risk": "read_only",
+     "inserted_steps": [],
+     "mutating_steps": 0,
+     "step_count": 2,
+     "steps": [
+      {
+       "cost_tier": "large",
+       "cost_units": 2,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 400000,
+        "maximum_vertices": 200000
+       },
+       "operation": "mesh.boolean.union",
+       "risk": "read_only",
+       "role": "transform",
+       "step_id": "union"
+      },
+      {
+       "cost_tier": "large",
+       "cost_units": 2,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 2000000,
+        "maximum_vertices": 1000000
+       },
+       "operation": "mesh.validate.boolean_union",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "union_validate_1"
+      }
+     ],
+     "total_cost_units": 4,
+     "validator_steps": 1
+    },
+    "rules": {},
     "steps": [
      {
       "id": "union",
@@ -11492,6 +14908,60 @@
     "validation_status": "not_run"
    },
    "plan": {
+    "estimate": {
+     "basis": "registry metadata only",
+     "highest_risk": "mutating_validated",
+     "inserted_steps": [],
+     "mutating_steps": 2,
+     "step_count": 4,
+     "steps": [
+      {
+       "cost_tier": "medium",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 20000
+       },
+       "operation": "mesh.components.keep_largest",
+       "risk": "mutating_validated",
+       "role": "transform",
+       "step_id": "largest"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.components_keep_largest",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "largest_validate_1"
+      },
+      {
+       "cost_tier": "medium",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 2000
+       },
+       "operation": "mesh.subdivide.loop",
+       "risk": "mutating_validated",
+       "role": "transform",
+       "step_id": "loop"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.loop",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "loop_validate_1"
+      }
+     ],
+     "total_cost_units": 4,
+     "validator_steps": 2
+    },
+    "rules": {},
     "steps": [
      {
       "id": "largest",
@@ -11592,9 +15062,2409 @@
    },
    "store_published_delta": 0,
    "validators": []
+  },
+  {
+   "category": "positive",
+   "declared_dag": [
+    {
+     "id": "loop",
+     "inputs": {
+      "source": "fixture:tetra_soup"
+     },
+     "operation": "mesh.subdivide.loop"
+    }
+   ],
+   "expect": {
+    "state": "succeeded"
+   },
+   "families": [
+    "mesh",
+    "repair",
+    "planner_rules"
+   ],
+   "fixtures": {
+    "tetra_soup": {
+     "sha256": "c363f3006ae2317b0dd94ee94fcdf31d2307588ea8d267e9dd2266b17413eed3",
+     "type": "PolygonSoup3",
+     "unit": "mm"
+    }
+   },
+   "id": "wf42-rules-soup-loop-auto-orient-inspect",
+   "outcome": {
+    "execution_status": "succeeded",
+    "state": "succeeded",
+    "validation_status": "passed"
+   },
+   "outputs": [
+    {
+     "format": "off",
+     "sha256": "3ac1ffaa61bfee2fd6c5069ebd5a245c0b9e380a96aecdbb7652ed05cedd3e81",
+     "size": 66,
+     "type": "TriangleSurfaceMesh",
+     "unit": "mm"
+    },
+    {
+     "format": "off",
+     "sha256": "42a844d3bfa941f1cd5604a813ff6dede08694ec84e7dbdfa72a7e2ee4faa58f",
+     "size": 371,
+     "type": "TriangleSurfaceMesh",
+     "unit": "mm"
+    },
+    {
+     "format": "json",
+     "sha256": "9a384b108e117888648bc8ecb230659ee8e83a207b220a7955b7aa0075278a0f",
+     "size": 814,
+     "type": "GeometryAnalysisReport",
+     "unit": "none"
+    }
+   ],
+   "plan": {
+    "estimate": {
+     "basis": "registry metadata only",
+     "highest_risk": "mutating_validated",
+     "inserted_steps": [
+      "loop__pre_source",
+      "loop__post_inspect"
+     ],
+     "mutating_steps": 1,
+     "step_count": 6,
+     "steps": [
+      {
+       "cost_tier": "large",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 67108864,
+        "maximum_faces": 2000000,
+        "maximum_vertices": 1000000
+       },
+       "operation": "mesh.repair.orient",
+       "risk": "read_only",
+       "role": "transform",
+       "step_id": "loop__pre_source"
+      },
+      {
+       "cost_tier": "large",
+       "cost_units": 2,
+       "input_bound": {
+        "maximum_bytes": 67108864,
+        "maximum_faces": 2000000,
+        "maximum_vertices": 1000000
+       },
+       "operation": "mesh.validate.repair_orientation",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "loop__pre_source_validate_1"
+      },
+      {
+       "cost_tier": "medium",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 2000
+       },
+       "operation": "mesh.subdivide.loop",
+       "risk": "mutating_validated",
+       "role": "transform",
+       "step_id": "loop"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.loop",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "loop_validate_1"
+      },
+      {
+       "cost_tier": "large",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 200000,
+        "maximum_vertices": 200000
+       },
+       "operation": "mesh.inspect.pmp",
+       "risk": "read_only",
+       "role": "analysis",
+       "step_id": "loop__post_inspect"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.pmp_inspection_report",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "loop__post_inspect_validate_1"
+      }
+     ],
+     "total_cost_units": 7,
+     "validator_steps": 3
+    },
+    "rules": {
+     "postprocess": true,
+     "preprocess": true
+    },
+    "steps": [
+     {
+      "id": "loop__pre_source",
+      "input_types": {
+       "source": "PolygonSoup3"
+      },
+      "input_units": {
+       "source": "mm"
+      },
+      "inputs": {
+       "source": {
+        "artifact_sha256": "c363f3006ae2317b0dd94ee94fcdf31d2307588ea8d267e9dd2266b17413eed3"
+       }
+      },
+      "inserted_by": {
+       "for_slot": "source",
+       "for_step": "loop",
+       "phase": "preprocess",
+       "reason": "source is PolygonSoup3 but mesh.subdivide.loop requires TriangleSurfaceMesh",
+       "rule": "soup_to_triangle_mesh"
+      },
+      "operation": "mesh.repair.orient",
+      "output_types": [
+       "TriangleSurfaceMesh"
+      ],
+      "role": "transform",
+      "validates": null
+     },
+     {
+      "id": "loop__pre_source_validate_1",
+      "input_types": {
+       "candidate": "TriangleSurfaceMesh",
+       "source": "PolygonSoup3"
+      },
+      "input_units": {
+       "candidate": "mm",
+       "source": "mm"
+      },
+      "inputs": {
+       "candidate": {
+        "slot": "geometry",
+        "step": "loop__pre_source"
+       },
+       "source": {
+        "artifact_sha256": "c363f3006ae2317b0dd94ee94fcdf31d2307588ea8d267e9dd2266b17413eed3"
+       }
+      },
+      "operation": "mesh.validate.repair_orientation",
+      "output_types": [
+       "ValidationReport"
+      ],
+      "role": "validator",
+      "validates": "loop__pre_source"
+     },
+     {
+      "id": "loop",
+      "input_types": {
+       "source": "TriangleSurfaceMesh"
+      },
+      "input_units": {
+       "source": "mm"
+      },
+      "inputs": {
+       "source": {
+        "slot": "geometry",
+        "step": "loop__pre_source"
+       }
+      },
+      "operation": "mesh.subdivide.loop",
+      "output_types": [
+       "TriangleSurfaceMesh"
+      ],
+      "role": "transform",
+      "validates": null
+     },
+     {
+      "id": "loop_validate_1",
+      "input_types": {
+       "candidate": "TriangleSurfaceMesh",
+       "source": "TriangleSurfaceMesh"
+      },
+      "input_units": {
+       "candidate": "mm",
+       "source": "mm"
+      },
+      "inputs": {
+       "candidate": {
+        "slot": "geometry",
+        "step": "loop"
+       },
+       "source": {
+        "slot": "geometry",
+        "step": "loop__pre_source"
+       }
+      },
+      "operation": "mesh.validate.loop",
+      "output_types": [
+       "ValidationReport"
+      ],
+      "role": "validator",
+      "validates": "loop"
+     },
+     {
+      "id": "loop__post_inspect",
+      "input_types": {
+       "mesh": "TriangleSurfaceMesh"
+      },
+      "input_units": {
+       "mesh": "mm"
+      },
+      "inputs": {
+       "mesh": {
+        "slot": "geometry",
+        "step": "loop"
+       }
+      },
+      "inserted_by": {
+       "for_slot": "geometry",
+       "for_step": "loop",
+       "phase": "postprocess",
+       "reason": "terminal TriangleSurfaceMesh output of mesh.subdivide.loop",
+       "rule": "terminal_mesh_inspection"
+      },
+      "operation": "mesh.inspect.pmp",
+      "output_types": [
+       "GeometryAnalysisReport"
+      ],
+      "role": "analysis",
+      "validates": null
+     },
+     {
+      "id": "loop__post_inspect_validate_1",
+      "input_types": {
+       "candidate": "GeometryAnalysisReport",
+       "source": "TriangleSurfaceMesh"
+      },
+      "input_units": {
+       "candidate": "none",
+       "source": "mm"
+      },
+      "inputs": {
+       "candidate": {
+        "slot": "analysis",
+        "step": "loop__post_inspect"
+       },
+       "source": {
+        "slot": "geometry",
+        "step": "loop"
+       }
+      },
+      "operation": "mesh.validate.pmp_inspection_report",
+      "output_types": [
+       "ValidationReport"
+      ],
+      "role": "validator",
+      "validates": "loop__post_inspect"
+     }
+    ],
+    "steps_sha256": "7da2814c1869afeacfc848180dae06f1a92fe3b02d191ef977c41f44dd89dfbd"
+   },
+   "rules": {
+    "postprocess": true,
+    "preprocess": true
+   },
+   "store_published_delta": 3,
+   "validators": [
+    {
+     "operation": "mesh.validate.repair_orientation",
+     "report_sha256": "7551ecadf2dc10f635928e73d4202c8900af0df4234b53525f45e8125deb654b",
+     "status": "pass",
+     "step_id": "loop__pre_source_validate_1"
+    },
+    {
+     "operation": "mesh.validate.loop",
+     "report_sha256": "694b1285c289ba5bf25a09bf3de62be658a37fb5d68cd95f6afbbc2f8777661b",
+     "status": "pass",
+     "step_id": "loop_validate_1"
+    },
+    {
+     "operation": "mesh.validate.pmp_inspection_report",
+     "report_sha256": "ed19a4fd1ad7ce979a988722ea997e1d98b3057e4da6d40e6112020b38b7e201",
+     "status": "pass",
+     "step_id": "loop__post_inspect_validate_1"
+    }
+   ]
+  },
+  {
+   "alternatives_dag": [
+    [
+     {
+      "id": "union",
+      "inputs": {
+       "source_a": "fixture:cube_a",
+       "source_b": "fixture:cube_overlap"
+      },
+      "operation": "mesh.boolean.union"
+     },
+     {
+      "id": "loop",
+      "inputs": {
+       "source": {
+        "slot": "geometry",
+        "step": "union"
+       }
+      },
+      "operation": "mesh.subdivide.loop"
+     }
+    ]
+   ],
+   "category": "positive",
+   "declared_dag": [
+    {
+     "id": "union",
+     "inputs": {
+      "source_a": "fixture:cube_a",
+      "source_b": "fixture:cube_overlap_cm"
+     },
+     "operation": "mesh.boolean.union"
+    }
+   ],
+   "expect": {
+    "state": "succeeded"
+   },
+   "fallback_plans": [],
+   "families": [
+    "mesh",
+    "boolean",
+    "units",
+    "fallback"
+   ],
+   "fixtures": {
+    "cube_a": {
+     "sha256": "727bedd5d13712e7506e15aeb1ea35b5da660bf2143bf28e8f257b0aa7eb2164",
+     "type": "TriangleSurfaceMesh",
+     "unit": "mm"
+    },
+    "cube_overlap": {
+     "sha256": "76773013b165e44ba4f7668144a74ea31cb43fc61bd102d3d368f16ca4adc7c9",
+     "type": "TriangleSurfaceMesh",
+     "unit": "mm"
+    },
+    "cube_overlap_cm": {
+     "sha256": "76773013b165e44ba4f7668144a74ea31cb43fc61bd102d3d368f16ca4adc7c9",
+     "type": "TriangleSurfaceMesh",
+     "unit": "cm"
+    }
+   },
+   "id": "wf43-fallback-plan-time-block",
+   "outcome": {
+    "execution_status": "succeeded",
+    "state": "succeeded",
+    "validation_status": "passed"
+   },
+   "outputs": [
+    {
+     "format": "off",
+     "sha256": "8761ffb76bc4ad5ef958bf6d5c8d18e1000e7a5851a5d06499fef09390cfa1a5",
+     "size": 584,
+     "type": "TriangleSurfaceMesh",
+     "unit": "mm"
+    },
+    {
+     "format": "off",
+     "sha256": "30bc163883ee2573692a65dc8cbad31ef7d65f1b6cede1f351d69818db26dcdd",
+     "size": 3416,
+     "type": "TriangleSurfaceMesh",
+     "unit": "mm"
+    }
+   ],
+   "plan": {
+    "estimate": {
+     "basis": "registry metadata only",
+     "highest_risk": "mutating_validated",
+     "inserted_steps": [],
+     "mutating_steps": 1,
+     "step_count": 4,
+     "steps": [
+      {
+       "cost_tier": "large",
+       "cost_units": 2,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 400000,
+        "maximum_vertices": 200000
+       },
+       "operation": "mesh.boolean.union",
+       "risk": "read_only",
+       "role": "transform",
+       "step_id": "union"
+      },
+      {
+       "cost_tier": "large",
+       "cost_units": 2,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 2000000,
+        "maximum_vertices": 1000000
+       },
+       "operation": "mesh.validate.boolean_union",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "union_validate_1"
+      },
+      {
+       "cost_tier": "medium",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 268435456,
+        "maximum_faces": 2000
+       },
+       "operation": "mesh.subdivide.loop",
+       "risk": "mutating_validated",
+       "role": "transform",
+       "step_id": "loop"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "mesh.validate.loop",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "loop_validate_1"
+      }
+     ],
+     "total_cost_units": 6,
+     "validator_steps": 2
+    },
+    "rules": {},
+    "steps": [
+     {
+      "id": "union",
+      "input_types": {
+       "source_a": "TriangleSurfaceMesh",
+       "source_b": "TriangleSurfaceMesh"
+      },
+      "input_units": {
+       "source_a": "mm",
+       "source_b": "mm"
+      },
+      "inputs": {
+       "source_a": {
+        "artifact_sha256": "727bedd5d13712e7506e15aeb1ea35b5da660bf2143bf28e8f257b0aa7eb2164"
+       },
+       "source_b": {
+        "artifact_sha256": "76773013b165e44ba4f7668144a74ea31cb43fc61bd102d3d368f16ca4adc7c9"
+       }
+      },
+      "operation": "mesh.boolean.union",
+      "output_types": [
+       "TriangleSurfaceMesh"
+      ],
+      "role": "transform",
+      "validates": null
+     },
+     {
+      "id": "union_validate_1",
+      "input_types": {
+       "candidate": "TriangleSurfaceMesh",
+       "source_a": "TriangleSurfaceMesh",
+       "source_b": "TriangleSurfaceMesh"
+      },
+      "input_units": {
+       "candidate": "mm",
+       "source_a": "mm",
+       "source_b": "mm"
+      },
+      "inputs": {
+       "candidate": {
+        "slot": "geometry",
+        "step": "union"
+       },
+       "source_a": {
+        "artifact_sha256": "727bedd5d13712e7506e15aeb1ea35b5da660bf2143bf28e8f257b0aa7eb2164"
+       },
+       "source_b": {
+        "artifact_sha256": "76773013b165e44ba4f7668144a74ea31cb43fc61bd102d3d368f16ca4adc7c9"
+       }
+      },
+      "operation": "mesh.validate.boolean_union",
+      "output_types": [
+       "ValidationReport"
+      ],
+      "role": "validator",
+      "validates": "union"
+     },
+     {
+      "id": "loop",
+      "input_types": {
+       "source": "TriangleSurfaceMesh"
+      },
+      "input_units": {
+       "source": "mm"
+      },
+      "inputs": {
+       "source": {
+        "slot": "geometry",
+        "step": "union"
+       }
+      },
+      "operation": "mesh.subdivide.loop",
+      "output_types": [
+       "TriangleSurfaceMesh"
+      ],
+      "role": "transform",
+      "validates": null
+     },
+     {
+      "id": "loop_validate_1",
+      "input_types": {
+       "candidate": "TriangleSurfaceMesh",
+       "source": "TriangleSurfaceMesh"
+      },
+      "input_units": {
+       "candidate": "mm",
+       "source": "mm"
+      },
+      "inputs": {
+       "candidate": {
+        "slot": "geometry",
+        "step": "loop"
+       },
+       "source": {
+        "slot": "geometry",
+        "step": "union"
+       }
+      },
+      "operation": "mesh.validate.loop",
+      "output_types": [
+       "ValidationReport"
+      ],
+      "role": "validator",
+      "validates": "loop"
+     }
+    ],
+    "steps_sha256": "d9bc84e9a31e22003161b63193ebcf26c7559b19c05f68ec33a8c13166290cf3"
+   },
+   "plan_attempts": [
+    {
+     "candidate": 0,
+     "class": "invalid_input",
+     "code": "unit_mismatch",
+     "status": "blocked"
+    },
+    {
+     "candidate": 1,
+     "status": "planned"
+    }
+   ],
+   "store_published_delta": 2,
+   "validators": [
+    {
+     "operation": "mesh.validate.boolean_union",
+     "report_sha256": "fdf396c645b9e67378f4bbfe99a56695d804783c1171124fda435fffbdc7421e",
+     "status": "pass",
+     "step_id": "union_validate_1"
+    },
+    {
+     "operation": "mesh.validate.loop",
+     "report_sha256": "5e3a2ee562f5d08dd13c58f07d7482b2188653dd12adbbba5c156121ac7d9a0c",
+     "status": "pass",
+     "step_id": "loop_validate_1"
+    }
+   ]
+  },
+  {
+   "alternatives_dag": [
+    [
+     {
+      "id": "wrap",
+      "inputs": {
+       "points": "fixture:sphere_points"
+      },
+      "operation": "reconstruction.alpha_wrap"
+     },
+     {
+      "id": "inspect",
+      "inputs": {
+       "mesh": {
+        "slot": "geometry",
+        "step": "wrap"
+       }
+      },
+      "operation": "mesh.inspect.pmp"
+     }
+    ]
+   ],
+   "category": "positive",
+   "declared_dag": [
+    {
+     "id": "estimate",
+     "inputs": {
+      "points": "fixture:sphere_points"
+     },
+     "operation": "pointset.normals.estimate"
+    },
+    {
+     "id": "orient",
+     "inputs": {
+      "points": {
+       "slot": "points",
+       "step": "estimate"
+      }
+     },
+     "operation": "pointset.normals.orient_mst"
+    },
+    {
+     "id": "poisson",
+     "inputs": {
+      "points": {
+       "slot": "points",
+       "step": "orient"
+      }
+     },
+     "operation": "reconstruction.poisson"
+    }
+   ],
+   "expect": {
+    "state": "succeeded"
+   },
+   "fallback_plans": [
+    {
+     "estimate": {
+      "basis": "registry metadata only",
+      "highest_risk": "read_only",
+      "inserted_steps": [],
+      "mutating_steps": 0,
+      "step_count": 4,
+      "steps": [
+       {
+        "cost_tier": "unbounded",
+        "cost_units": 1,
+        "input_bound": {
+         "maximum_bytes": 16777216
+        },
+        "operation": "reconstruction.alpha_wrap",
+        "risk": "read_only",
+        "role": "transform",
+        "step_id": "wrap"
+       },
+       {
+        "cost_tier": "unbounded",
+        "cost_units": 1,
+        "input_bound": {},
+        "operation": "reconstruction.validate.alpha_wrap",
+        "risk": "read_only",
+        "role": "validator",
+        "step_id": "wrap_validate_1"
+       },
+       {
+        "cost_tier": "large",
+        "cost_units": 1,
+        "input_bound": {
+         "maximum_bytes": 268435456,
+         "maximum_faces": 200000,
+         "maximum_vertices": 200000
+        },
+        "operation": "mesh.inspect.pmp",
+        "risk": "read_only",
+        "role": "analysis",
+        "step_id": "inspect"
+       },
+       {
+        "cost_tier": "unbounded",
+        "cost_units": 1,
+        "input_bound": {},
+        "operation": "mesh.validate.pmp_inspection_report",
+        "risk": "read_only",
+        "role": "validator",
+        "step_id": "inspect_validate_1"
+       }
+      ],
+      "total_cost_units": 4,
+      "validator_steps": 2
+     },
+     "rules": {},
+     "steps": [
+      {
+       "id": "wrap",
+       "input_types": {
+        "points": "PointSet3"
+       },
+       "input_units": {
+        "points": "mm"
+       },
+       "inputs": {
+        "points": {
+         "artifact_sha256": "eec51f63b0fd681275fb2cb2039b36f5908d814253d4f0963019e36cd05b6db0"
+        }
+       },
+       "operation": "reconstruction.alpha_wrap",
+       "output_types": [
+        "TriangleSurfaceMesh"
+       ],
+       "role": "transform",
+       "validates": null
+      },
+      {
+       "id": "wrap_validate_1",
+       "input_types": {
+        "candidate": "TriangleSurfaceMesh",
+        "source": "PointSet3"
+       },
+       "input_units": {
+        "candidate": "mm",
+        "source": "mm"
+       },
+       "inputs": {
+        "candidate": {
+         "slot": "geometry",
+         "step": "wrap"
+        },
+        "source": {
+         "artifact_sha256": "eec51f63b0fd681275fb2cb2039b36f5908d814253d4f0963019e36cd05b6db0"
+        }
+       },
+       "operation": "reconstruction.validate.alpha_wrap",
+       "output_types": [
+        "ValidationReport"
+       ],
+       "role": "validator",
+       "validates": "wrap"
+      },
+      {
+       "id": "inspect",
+       "input_types": {
+        "mesh": "TriangleSurfaceMesh"
+       },
+       "input_units": {
+        "mesh": "mm"
+       },
+       "inputs": {
+        "mesh": {
+         "slot": "geometry",
+         "step": "wrap"
+        }
+       },
+       "operation": "mesh.inspect.pmp",
+       "output_types": [
+        "GeometryAnalysisReport"
+       ],
+       "role": "analysis",
+       "validates": null
+      },
+      {
+       "id": "inspect_validate_1",
+       "input_types": {
+        "candidate": "GeometryAnalysisReport",
+        "source": "TriangleSurfaceMesh"
+       },
+       "input_units": {
+        "candidate": "none",
+        "source": "mm"
+       },
+       "inputs": {
+        "candidate": {
+         "slot": "analysis",
+         "step": "inspect"
+        },
+        "source": {
+         "slot": "geometry",
+         "step": "wrap"
+        }
+       },
+       "operation": "mesh.validate.pmp_inspection_report",
+       "output_types": [
+        "ValidationReport"
+       ],
+       "role": "validator",
+       "validates": "inspect"
+      }
+     ],
+     "steps_sha256": "55ac766a8e1566fd098245883bc673eb31c10019647d9a30023a5732f019f2e7"
+    }
+   ],
+   "families": [
+    "pointset",
+    "reconstruction",
+    "fallback"
+   ],
+   "fixtures": {
+    "sphere_points": {
+     "sha256": "eec51f63b0fd681275fb2cb2039b36f5908d814253d4f0963019e36cd05b6db0",
+     "type": "PointSet3",
+     "unit": "mm"
+    }
+   },
+   "id": "wf44-fallback-runtime-failure",
+   "outcome": {
+    "execution_status": "succeeded",
+    "fallback_chain": [
+     {
+      "error_class": "unmet_precondition",
+      "error_code": "EMPTY_RECONSTRUCTION",
+      "index": 0,
+      "state": "failed"
+     },
+     {
+      "error_class": null,
+      "error_code": null,
+      "index": 1,
+      "state": "succeeded"
+     }
+    ],
+    "served_by_index": 1,
+    "state": "succeeded",
+    "validation_status": "passed"
+   },
+   "outputs": [
+    {
+     "format": "off",
+     "sha256": "91592438546b0cddcfa24bb2aba5848d3e6e975a4464ce516ed594437dfbb879",
+     "size": 10279,
+     "type": "TriangleSurfaceMesh",
+     "unit": "mm"
+    },
+    {
+     "format": "json",
+     "sha256": "932070a8deca609266629ae6c37f6bbf65bd60253b13da4b41432f488f8b798f",
+     "size": 819,
+     "type": "GeometryAnalysisReport",
+     "unit": "none"
+    }
+   ],
+   "plan": {
+    "estimate": {
+     "basis": "registry metadata only",
+     "highest_risk": "read_only",
+     "inserted_steps": [],
+     "mutating_steps": 0,
+     "step_count": 8,
+     "steps": [
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 2,
+       "input_bound": {},
+       "operation": "pointset.normals.estimate",
+       "risk": "read_only",
+       "role": "transform",
+       "step_id": "estimate"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "pointset.validate.basic",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "estimate_validate_1"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "pointset.validate.normals_estimated",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "estimate_validate_2"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "pointset.normals.orient_mst",
+       "risk": "read_only",
+       "role": "transform",
+       "step_id": "orient"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "pointset.validate.basic",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "orient_validate_1"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "pointset.validate.normals_oriented",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "orient_validate_2"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 16777216
+       },
+       "operation": "reconstruction.poisson",
+       "risk": "read_only",
+       "role": "transform",
+       "step_id": "poisson"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "reconstruction.validate.poisson",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "poisson_validate_1"
+      }
+     ],
+     "total_cost_units": 9,
+     "validator_steps": 5
+    },
+    "rules": {},
+    "steps": [
+     {
+      "id": "estimate",
+      "input_types": {
+       "points": "PointSet3"
+      },
+      "input_units": {
+       "points": "mm"
+      },
+      "inputs": {
+       "points": {
+        "artifact_sha256": "eec51f63b0fd681275fb2cb2039b36f5908d814253d4f0963019e36cd05b6db0"
+       }
+      },
+      "operation": "pointset.normals.estimate",
+      "output_types": [
+       "PointSet3Normals"
+      ],
+      "role": "transform",
+      "validates": null
+     },
+     {
+      "id": "estimate_validate_1",
+      "input_types": {
+       "points": "PointSet3Normals"
+      },
+      "input_units": {
+       "points": "mm"
+      },
+      "inputs": {
+       "points": {
+        "slot": "points",
+        "step": "estimate"
+       }
+      },
+      "operation": "pointset.validate.basic",
+      "output_types": [
+       "ValidationReport"
+      ],
+      "role": "validator",
+      "validates": "estimate"
+     },
+     {
+      "id": "estimate_validate_2",
+      "input_types": {
+       "candidate": "PointSet3Normals",
+       "source": "PointSet3"
+      },
+      "input_units": {
+       "candidate": "mm",
+       "source": "mm"
+      },
+      "inputs": {
+       "candidate": {
+        "slot": "points",
+        "step": "estimate"
+       },
+       "source": {
+        "artifact_sha256": "eec51f63b0fd681275fb2cb2039b36f5908d814253d4f0963019e36cd05b6db0"
+       }
+      },
+      "operation": "pointset.validate.normals_estimated",
+      "output_types": [
+       "ValidationReport"
+      ],
+      "role": "validator",
+      "validates": "estimate"
+     },
+     {
+      "id": "orient",
+      "input_types": {
+       "points": "PointSet3Normals"
+      },
+      "input_units": {
+       "points": "mm"
+      },
+      "inputs": {
+       "points": {
+        "slot": "points",
+        "step": "estimate"
+       }
+      },
+      "operation": "pointset.normals.orient_mst",
+      "output_types": [
+       "PointSet3Normals"
+      ],
+      "role": "transform",
+      "validates": null
+     },
+     {
+      "id": "orient_validate_1",
+      "input_types": {
+       "points": "PointSet3Normals"
+      },
+      "input_units": {
+       "points": "mm"
+      },
+      "inputs": {
+       "points": {
+        "slot": "points",
+        "step": "orient"
+       }
+      },
+      "operation": "pointset.validate.basic",
+      "output_types": [
+       "ValidationReport"
+      ],
+      "role": "validator",
+      "validates": "orient"
+     },
+     {
+      "id": "orient_validate_2",
+      "input_types": {
+       "candidate": "PointSet3Normals",
+       "source": "PointSet3Normals"
+      },
+      "input_units": {
+       "candidate": "mm",
+       "source": "mm"
+      },
+      "inputs": {
+       "candidate": {
+        "slot": "points",
+        "step": "orient"
+       },
+       "source": {
+        "slot": "points",
+        "step": "estimate"
+       }
+      },
+      "operation": "pointset.validate.normals_oriented",
+      "output_types": [
+       "ValidationReport"
+      ],
+      "role": "validator",
+      "validates": "orient"
+     },
+     {
+      "id": "poisson",
+      "input_types": {
+       "points": "PointSet3Normals"
+      },
+      "input_units": {
+       "points": "mm"
+      },
+      "inputs": {
+       "points": {
+        "slot": "points",
+        "step": "orient"
+       }
+      },
+      "operation": "reconstruction.poisson",
+      "output_types": [
+       "TriangleSurfaceMesh"
+      ],
+      "role": "transform",
+      "validates": null
+     },
+     {
+      "id": "poisson_validate_1",
+      "input_types": {
+       "candidate": "TriangleSurfaceMesh",
+       "source": "PointSet3Normals"
+      },
+      "input_units": {
+       "candidate": "mm",
+       "source": "mm"
+      },
+      "inputs": {
+       "candidate": {
+        "slot": "geometry",
+        "step": "poisson"
+       },
+       "source": {
+        "slot": "points",
+        "step": "orient"
+       }
+      },
+      "operation": "reconstruction.validate.poisson",
+      "output_types": [
+       "ValidationReport"
+      ],
+      "role": "validator",
+      "validates": "poisson"
+     }
+    ],
+    "steps_sha256": "bb03899c9321f9e250699c555e6991b1002b20bbd81a684c86147ced52065d15"
+   },
+   "plan_attempts": [
+    {
+     "candidate": 0,
+     "status": "planned"
+    },
+    {
+     "candidate": 1,
+     "status": "planned"
+    }
+   ],
+   "store_published_delta": 2,
+   "validators": [
+    {
+     "operation": "reconstruction.validate.alpha_wrap",
+     "report_sha256": "f7fadd8b397c1d9fb5042e85dab6a01082271886a7a34c24df42b1705d74cafc",
+     "status": "pass",
+     "step_id": "wrap_validate_1"
+    },
+    {
+     "operation": "mesh.validate.pmp_inspection_report",
+     "report_sha256": "aba4302db0ce621f00a2b7aeaed16058fc9ce8d83dfdc7c3fae8bee8a219f858",
+     "status": "pass",
+     "step_id": "inspect_validate_1"
+    }
+   ]
+  },
+  {
+   "alternatives_dag": [
+    [
+     {
+      "id": "wrap",
+      "inputs": {
+       "points": "fixture:torus_points"
+      },
+      "operation": "reconstruction.alpha_wrap"
+     },
+     {
+      "id": "inspect",
+      "inputs": {
+       "mesh": {
+        "slot": "geometry",
+        "step": "wrap"
+       }
+      },
+      "operation": "mesh.inspect.pmp"
+     }
+    ]
+   ],
+   "category": "positive",
+   "declared_dag": [
+    {
+     "id": "jet",
+     "inputs": {
+      "points": "fixture:torus_points"
+     },
+     "operation": "pointset.smooth.jet"
+    },
+    {
+     "id": "wrap",
+     "inputs": {
+      "points": {
+       "slot": "points",
+       "step": "jet"
+      }
+     },
+     "operation": "reconstruction.alpha_wrap"
+    }
+   ],
+   "expect": {
+    "state": "succeeded"
+   },
+   "fallback_plans": [
+    {
+     "estimate": {
+      "basis": "registry metadata only",
+      "highest_risk": "read_only",
+      "inserted_steps": [],
+      "mutating_steps": 0,
+      "step_count": 4,
+      "steps": [
+       {
+        "cost_tier": "unbounded",
+        "cost_units": 1,
+        "input_bound": {
+         "maximum_bytes": 16777216
+        },
+        "operation": "reconstruction.alpha_wrap",
+        "risk": "read_only",
+        "role": "transform",
+        "step_id": "wrap"
+       },
+       {
+        "cost_tier": "unbounded",
+        "cost_units": 1,
+        "input_bound": {},
+        "operation": "reconstruction.validate.alpha_wrap",
+        "risk": "read_only",
+        "role": "validator",
+        "step_id": "wrap_validate_1"
+       },
+       {
+        "cost_tier": "large",
+        "cost_units": 1,
+        "input_bound": {
+         "maximum_bytes": 268435456,
+         "maximum_faces": 200000,
+         "maximum_vertices": 200000
+        },
+        "operation": "mesh.inspect.pmp",
+        "risk": "read_only",
+        "role": "analysis",
+        "step_id": "inspect"
+       },
+       {
+        "cost_tier": "unbounded",
+        "cost_units": 1,
+        "input_bound": {},
+        "operation": "mesh.validate.pmp_inspection_report",
+        "risk": "read_only",
+        "role": "validator",
+        "step_id": "inspect_validate_1"
+       }
+      ],
+      "total_cost_units": 4,
+      "validator_steps": 2
+     },
+     "rules": {},
+     "steps": [
+      {
+       "id": "wrap",
+       "input_types": {
+        "points": "PointSet3"
+       },
+       "input_units": {
+        "points": "mm"
+       },
+       "inputs": {
+        "points": {
+         "artifact_sha256": "1b431b05d6b8c211119a08793b2c330ed4982cddb648d1c0751b8dfb3582a4f5"
+        }
+       },
+       "operation": "reconstruction.alpha_wrap",
+       "output_types": [
+        "TriangleSurfaceMesh"
+       ],
+       "role": "transform",
+       "validates": null
+      },
+      {
+       "id": "wrap_validate_1",
+       "input_types": {
+        "candidate": "TriangleSurfaceMesh",
+        "source": "PointSet3"
+       },
+       "input_units": {
+        "candidate": "mm",
+        "source": "mm"
+       },
+       "inputs": {
+        "candidate": {
+         "slot": "geometry",
+         "step": "wrap"
+        },
+        "source": {
+         "artifact_sha256": "1b431b05d6b8c211119a08793b2c330ed4982cddb648d1c0751b8dfb3582a4f5"
+        }
+       },
+       "operation": "reconstruction.validate.alpha_wrap",
+       "output_types": [
+        "ValidationReport"
+       ],
+       "role": "validator",
+       "validates": "wrap"
+      },
+      {
+       "id": "inspect",
+       "input_types": {
+        "mesh": "TriangleSurfaceMesh"
+       },
+       "input_units": {
+        "mesh": "mm"
+       },
+       "inputs": {
+        "mesh": {
+         "slot": "geometry",
+         "step": "wrap"
+        }
+       },
+       "operation": "mesh.inspect.pmp",
+       "output_types": [
+        "GeometryAnalysisReport"
+       ],
+       "role": "analysis",
+       "validates": null
+      },
+      {
+       "id": "inspect_validate_1",
+       "input_types": {
+        "candidate": "GeometryAnalysisReport",
+        "source": "TriangleSurfaceMesh"
+       },
+       "input_units": {
+        "candidate": "none",
+        "source": "mm"
+       },
+       "inputs": {
+        "candidate": {
+         "slot": "analysis",
+         "step": "inspect"
+        },
+        "source": {
+         "slot": "geometry",
+         "step": "wrap"
+        }
+       },
+       "operation": "mesh.validate.pmp_inspection_report",
+       "output_types": [
+        "ValidationReport"
+       ],
+       "role": "validator",
+       "validates": "inspect"
+      }
+     ],
+     "steps_sha256": "bd7a0e6364096efbf3a196ff35c576ed96f967d5d09f44c1285a1bd679647e8e"
+    }
+   ],
+   "families": [
+    "pointset",
+    "validator",
+    "fallback"
+   ],
+   "fixtures": {
+    "torus_points": {
+     "sha256": "1b431b05d6b8c211119a08793b2c330ed4982cddb648d1c0751b8dfb3582a4f5",
+     "type": "PointSet3",
+     "unit": "mm"
+    }
+   },
+   "id": "wf45-fallback-validator-rejection",
+   "outcome": {
+    "execution_status": "succeeded",
+    "fallback_chain": [
+     {
+      "error_class": "validation_failure",
+      "error_code": "ROUGHNESS_NOT_REDUCED",
+      "index": 0,
+      "state": "rejected"
+     },
+     {
+      "error_class": null,
+      "error_code": null,
+      "index": 1,
+      "state": "succeeded"
+     }
+    ],
+    "served_by_index": 1,
+    "state": "succeeded",
+    "validation_status": "passed"
+   },
+   "outputs": [
+    {
+     "format": "off",
+     "sha256": "2bce1a3f5094e30d3d113dcdeae4e3fd420e2ae8027f25866f7f5979eb039f53",
+     "size": 20690,
+     "type": "TriangleSurfaceMesh",
+     "unit": "mm"
+    },
+    {
+     "format": "json",
+     "sha256": "9c382d3d58a9edd308da2d609d6b0a900b1842960f88afe509fd53661099fe90",
+     "size": 819,
+     "type": "GeometryAnalysisReport",
+     "unit": "none"
+    }
+   ],
+   "plan": {
+    "estimate": {
+     "basis": "registry metadata only",
+     "highest_risk": "read_only",
+     "inserted_steps": [],
+     "mutating_steps": 0,
+     "step_count": 6,
+     "steps": [
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 2,
+       "input_bound": {},
+       "operation": "pointset.smooth.jet",
+       "risk": "read_only",
+       "role": "transform",
+       "step_id": "jet"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "pointset.validate.basic",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "jet_validate_1"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "pointset.validate.smoothed",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "jet_validate_2"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "pointset.validate.smoothing_quality",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "jet_validate_3"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 16777216
+       },
+       "operation": "reconstruction.alpha_wrap",
+       "risk": "read_only",
+       "role": "transform",
+       "step_id": "wrap"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "reconstruction.validate.alpha_wrap",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "wrap_validate_1"
+      }
+     ],
+     "total_cost_units": 7,
+     "validator_steps": 4
+    },
+    "rules": {},
+    "steps": [
+     {
+      "id": "jet",
+      "input_types": {
+       "points": "PointSet3"
+      },
+      "input_units": {
+       "points": "mm"
+      },
+      "inputs": {
+       "points": {
+        "artifact_sha256": "1b431b05d6b8c211119a08793b2c330ed4982cddb648d1c0751b8dfb3582a4f5"
+       }
+      },
+      "operation": "pointset.smooth.jet",
+      "output_types": [
+       "PointSet3"
+      ],
+      "role": "transform",
+      "validates": null
+     },
+     {
+      "id": "jet_validate_1",
+      "input_types": {
+       "points": "PointSet3"
+      },
+      "input_units": {
+       "points": "mm"
+      },
+      "inputs": {
+       "points": {
+        "slot": "points",
+        "step": "jet"
+       }
+      },
+      "operation": "pointset.validate.basic",
+      "output_types": [
+       "ValidationReport"
+      ],
+      "role": "validator",
+      "validates": "jet"
+     },
+     {
+      "id": "jet_validate_2",
+      "input_types": {
+       "candidate": "PointSet3",
+       "source": "PointSet3"
+      },
+      "input_units": {
+       "candidate": "mm",
+       "source": "mm"
+      },
+      "inputs": {
+       "candidate": {
+        "slot": "points",
+        "step": "jet"
+       },
+       "source": {
+        "artifact_sha256": "1b431b05d6b8c211119a08793b2c330ed4982cddb648d1c0751b8dfb3582a4f5"
+       }
+      },
+      "operation": "pointset.validate.smoothed",
+      "output_types": [
+       "ValidationReport"
+      ],
+      "role": "validator",
+      "validates": "jet"
+     },
+     {
+      "id": "jet_validate_3",
+      "input_types": {
+       "candidate": "PointSet3",
+       "source": "PointSet3"
+      },
+      "input_units": {
+       "candidate": "mm",
+       "source": "mm"
+      },
+      "inputs": {
+       "candidate": {
+        "slot": "points",
+        "step": "jet"
+       },
+       "source": {
+        "artifact_sha256": "1b431b05d6b8c211119a08793b2c330ed4982cddb648d1c0751b8dfb3582a4f5"
+       }
+      },
+      "operation": "pointset.validate.smoothing_quality",
+      "output_types": [
+       "ValidationReport"
+      ],
+      "role": "validator",
+      "validates": "jet"
+     },
+     {
+      "id": "wrap",
+      "input_types": {
+       "points": "PointSet3"
+      },
+      "input_units": {
+       "points": "mm"
+      },
+      "inputs": {
+       "points": {
+        "slot": "points",
+        "step": "jet"
+       }
+      },
+      "operation": "reconstruction.alpha_wrap",
+      "output_types": [
+       "TriangleSurfaceMesh"
+      ],
+      "role": "transform",
+      "validates": null
+     },
+     {
+      "id": "wrap_validate_1",
+      "input_types": {
+       "candidate": "TriangleSurfaceMesh",
+       "source": "PointSet3"
+      },
+      "input_units": {
+       "candidate": "mm",
+       "source": "mm"
+      },
+      "inputs": {
+       "candidate": {
+        "slot": "geometry",
+        "step": "wrap"
+       },
+       "source": {
+        "slot": "points",
+        "step": "jet"
+       }
+      },
+      "operation": "reconstruction.validate.alpha_wrap",
+      "output_types": [
+       "ValidationReport"
+      ],
+      "role": "validator",
+      "validates": "wrap"
+     }
+    ],
+    "steps_sha256": "f81844f71512f456fcfa90c056874ec6f348fd011d5aab3e90155a141cc8e033"
+   },
+   "plan_attempts": [
+    {
+     "candidate": 0,
+     "status": "planned"
+    },
+    {
+     "candidate": 1,
+     "status": "planned"
+    }
+   ],
+   "store_published_delta": 2,
+   "validators": [
+    {
+     "operation": "reconstruction.validate.alpha_wrap",
+     "report_sha256": "9479c7b5e45a17c01537729e6b1a3395dd5e68d260dd1bb0c900ac8506e23079",
+     "status": "pass",
+     "step_id": "wrap_validate_1"
+    },
+    {
+     "operation": "mesh.validate.pmp_inspection_report",
+     "report_sha256": "2550622435d178229aa3eda5b1b709d4c57d063cf70ad828e8ad8a3b09c648e8",
+     "status": "pass",
+     "step_id": "inspect_validate_1"
+    }
+   ]
+  },
+  {
+   "alternatives_dag": [
+    [
+     {
+      "id": "estimate",
+      "inputs": {
+       "points": "fixture:sphere_points"
+      },
+      "operation": "pointset.normals.estimate"
+     },
+     {
+      "id": "orient",
+      "inputs": {
+       "points": {
+        "slot": "points",
+        "step": "estimate"
+       }
+      },
+      "operation": "pointset.normals.orient_mst"
+     },
+     {
+      "id": "poisson",
+      "inputs": {
+       "points": {
+        "slot": "points",
+        "step": "orient"
+       }
+      },
+      "operation": "reconstruction.poisson"
+     }
+    ]
+   ],
+   "category": "negative",
+   "declared_dag": [
+    {
+     "id": "estimate",
+     "inputs": {
+      "points": "fixture:sphere_points"
+     },
+     "operation": "pointset.normals.estimate"
+    },
+    {
+     "id": "orient",
+     "inputs": {
+      "points": {
+       "slot": "points",
+       "step": "estimate"
+      }
+     },
+     "operation": "pointset.normals.orient_mst"
+    },
+    {
+     "id": "poisson",
+     "inputs": {
+      "points": {
+       "slot": "points",
+       "step": "orient"
+      }
+     },
+     "operation": "reconstruction.poisson"
+    }
+   ],
+   "expect": {
+    "code": "EMPTY_RECONSTRUCTION",
+    "stage": "execute",
+    "state": "failed"
+   },
+   "fallback_plans": [
+    {
+     "estimate": {
+      "basis": "registry metadata only",
+      "highest_risk": "read_only",
+      "inserted_steps": [],
+      "mutating_steps": 0,
+      "step_count": 8,
+      "steps": [
+       {
+        "cost_tier": "unbounded",
+        "cost_units": 2,
+        "input_bound": {},
+        "operation": "pointset.normals.estimate",
+        "risk": "read_only",
+        "role": "transform",
+        "step_id": "estimate"
+       },
+       {
+        "cost_tier": "unbounded",
+        "cost_units": 1,
+        "input_bound": {},
+        "operation": "pointset.validate.basic",
+        "risk": "read_only",
+        "role": "validator",
+        "step_id": "estimate_validate_1"
+       },
+       {
+        "cost_tier": "unbounded",
+        "cost_units": 1,
+        "input_bound": {},
+        "operation": "pointset.validate.normals_estimated",
+        "risk": "read_only",
+        "role": "validator",
+        "step_id": "estimate_validate_2"
+       },
+       {
+        "cost_tier": "unbounded",
+        "cost_units": 1,
+        "input_bound": {},
+        "operation": "pointset.normals.orient_mst",
+        "risk": "read_only",
+        "role": "transform",
+        "step_id": "orient"
+       },
+       {
+        "cost_tier": "unbounded",
+        "cost_units": 1,
+        "input_bound": {},
+        "operation": "pointset.validate.basic",
+        "risk": "read_only",
+        "role": "validator",
+        "step_id": "orient_validate_1"
+       },
+       {
+        "cost_tier": "unbounded",
+        "cost_units": 1,
+        "input_bound": {},
+        "operation": "pointset.validate.normals_oriented",
+        "risk": "read_only",
+        "role": "validator",
+        "step_id": "orient_validate_2"
+       },
+       {
+        "cost_tier": "unbounded",
+        "cost_units": 1,
+        "input_bound": {
+         "maximum_bytes": 16777216
+        },
+        "operation": "reconstruction.poisson",
+        "risk": "read_only",
+        "role": "transform",
+        "step_id": "poisson"
+       },
+       {
+        "cost_tier": "unbounded",
+        "cost_units": 1,
+        "input_bound": {},
+        "operation": "reconstruction.validate.poisson",
+        "risk": "read_only",
+        "role": "validator",
+        "step_id": "poisson_validate_1"
+       }
+      ],
+      "total_cost_units": 9,
+      "validator_steps": 5
+     },
+     "rules": {},
+     "steps": [
+      {
+       "id": "estimate",
+       "input_types": {
+        "points": "PointSet3"
+       },
+       "input_units": {
+        "points": "mm"
+       },
+       "inputs": {
+        "points": {
+         "artifact_sha256": "eec51f63b0fd681275fb2cb2039b36f5908d814253d4f0963019e36cd05b6db0"
+        }
+       },
+       "operation": "pointset.normals.estimate",
+       "output_types": [
+        "PointSet3Normals"
+       ],
+       "role": "transform",
+       "validates": null
+      },
+      {
+       "id": "estimate_validate_1",
+       "input_types": {
+        "points": "PointSet3Normals"
+       },
+       "input_units": {
+        "points": "mm"
+       },
+       "inputs": {
+        "points": {
+         "slot": "points",
+         "step": "estimate"
+        }
+       },
+       "operation": "pointset.validate.basic",
+       "output_types": [
+        "ValidationReport"
+       ],
+       "role": "validator",
+       "validates": "estimate"
+      },
+      {
+       "id": "estimate_validate_2",
+       "input_types": {
+        "candidate": "PointSet3Normals",
+        "source": "PointSet3"
+       },
+       "input_units": {
+        "candidate": "mm",
+        "source": "mm"
+       },
+       "inputs": {
+        "candidate": {
+         "slot": "points",
+         "step": "estimate"
+        },
+        "source": {
+         "artifact_sha256": "eec51f63b0fd681275fb2cb2039b36f5908d814253d4f0963019e36cd05b6db0"
+        }
+       },
+       "operation": "pointset.validate.normals_estimated",
+       "output_types": [
+        "ValidationReport"
+       ],
+       "role": "validator",
+       "validates": "estimate"
+      },
+      {
+       "id": "orient",
+       "input_types": {
+        "points": "PointSet3Normals"
+       },
+       "input_units": {
+        "points": "mm"
+       },
+       "inputs": {
+        "points": {
+         "slot": "points",
+         "step": "estimate"
+        }
+       },
+       "operation": "pointset.normals.orient_mst",
+       "output_types": [
+        "PointSet3Normals"
+       ],
+       "role": "transform",
+       "validates": null
+      },
+      {
+       "id": "orient_validate_1",
+       "input_types": {
+        "points": "PointSet3Normals"
+       },
+       "input_units": {
+        "points": "mm"
+       },
+       "inputs": {
+        "points": {
+         "slot": "points",
+         "step": "orient"
+        }
+       },
+       "operation": "pointset.validate.basic",
+       "output_types": [
+        "ValidationReport"
+       ],
+       "role": "validator",
+       "validates": "orient"
+      },
+      {
+       "id": "orient_validate_2",
+       "input_types": {
+        "candidate": "PointSet3Normals",
+        "source": "PointSet3Normals"
+       },
+       "input_units": {
+        "candidate": "mm",
+        "source": "mm"
+       },
+       "inputs": {
+        "candidate": {
+         "slot": "points",
+         "step": "orient"
+        },
+        "source": {
+         "slot": "points",
+         "step": "estimate"
+        }
+       },
+       "operation": "pointset.validate.normals_oriented",
+       "output_types": [
+        "ValidationReport"
+       ],
+       "role": "validator",
+       "validates": "orient"
+      },
+      {
+       "id": "poisson",
+       "input_types": {
+        "points": "PointSet3Normals"
+       },
+       "input_units": {
+        "points": "mm"
+       },
+       "inputs": {
+        "points": {
+         "slot": "points",
+         "step": "orient"
+        }
+       },
+       "operation": "reconstruction.poisson",
+       "output_types": [
+        "TriangleSurfaceMesh"
+       ],
+       "role": "transform",
+       "validates": null
+      },
+      {
+       "id": "poisson_validate_1",
+       "input_types": {
+        "candidate": "TriangleSurfaceMesh",
+        "source": "PointSet3Normals"
+       },
+       "input_units": {
+        "candidate": "mm",
+        "source": "mm"
+       },
+       "inputs": {
+        "candidate": {
+         "slot": "geometry",
+         "step": "poisson"
+        },
+        "source": {
+         "slot": "points",
+         "step": "orient"
+        }
+       },
+       "operation": "reconstruction.validate.poisson",
+       "output_types": [
+        "ValidationReport"
+       ],
+       "role": "validator",
+       "validates": "poisson"
+      }
+     ],
+     "steps_sha256": "bb03899c9321f9e250699c555e6991b1002b20bbd81a684c86147ced52065d15"
+    }
+   ],
+   "families": [
+    "pointset",
+    "reconstruction",
+    "fallback"
+   ],
+   "fixtures": {
+    "sphere_points": {
+     "sha256": "eec51f63b0fd681275fb2cb2039b36f5908d814253d4f0963019e36cd05b6db0",
+     "type": "PointSet3",
+     "unit": "mm"
+    }
+   },
+   "id": "neg20-fallback-chain-exhausted",
+   "outcome": {
+    "class": "unmet_precondition",
+    "code": "EMPTY_RECONSTRUCTION",
+    "execution_status": "failed",
+    "fallback_chain": [
+     {
+      "error_class": "unmet_precondition",
+      "error_code": "EMPTY_RECONSTRUCTION",
+      "index": 0,
+      "state": "failed"
+     },
+     {
+      "error_class": "unmet_precondition",
+      "error_code": "EMPTY_RECONSTRUCTION",
+      "index": 1,
+      "state": "failed"
+     }
+    ],
+    "served_by_index": null,
+    "stage": "execute",
+    "state": "failed",
+    "validation_status": "not_run"
+   },
+   "plan": {
+    "estimate": {
+     "basis": "registry metadata only",
+     "highest_risk": "read_only",
+     "inserted_steps": [],
+     "mutating_steps": 0,
+     "step_count": 8,
+     "steps": [
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 2,
+       "input_bound": {},
+       "operation": "pointset.normals.estimate",
+       "risk": "read_only",
+       "role": "transform",
+       "step_id": "estimate"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "pointset.validate.basic",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "estimate_validate_1"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "pointset.validate.normals_estimated",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "estimate_validate_2"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "pointset.normals.orient_mst",
+       "risk": "read_only",
+       "role": "transform",
+       "step_id": "orient"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "pointset.validate.basic",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "orient_validate_1"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "pointset.validate.normals_oriented",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "orient_validate_2"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {
+        "maximum_bytes": 16777216
+       },
+       "operation": "reconstruction.poisson",
+       "risk": "read_only",
+       "role": "transform",
+       "step_id": "poisson"
+      },
+      {
+       "cost_tier": "unbounded",
+       "cost_units": 1,
+       "input_bound": {},
+       "operation": "reconstruction.validate.poisson",
+       "risk": "read_only",
+       "role": "validator",
+       "step_id": "poisson_validate_1"
+      }
+     ],
+     "total_cost_units": 9,
+     "validator_steps": 5
+    },
+    "rules": {},
+    "steps": [
+     {
+      "id": "estimate",
+      "input_types": {
+       "points": "PointSet3"
+      },
+      "input_units": {
+       "points": "mm"
+      },
+      "inputs": {
+       "points": {
+        "artifact_sha256": "eec51f63b0fd681275fb2cb2039b36f5908d814253d4f0963019e36cd05b6db0"
+       }
+      },
+      "operation": "pointset.normals.estimate",
+      "output_types": [
+       "PointSet3Normals"
+      ],
+      "role": "transform",
+      "validates": null
+     },
+     {
+      "id": "estimate_validate_1",
+      "input_types": {
+       "points": "PointSet3Normals"
+      },
+      "input_units": {
+       "points": "mm"
+      },
+      "inputs": {
+       "points": {
+        "slot": "points",
+        "step": "estimate"
+       }
+      },
+      "operation": "pointset.validate.basic",
+      "output_types": [
+       "ValidationReport"
+      ],
+      "role": "validator",
+      "validates": "estimate"
+     },
+     {
+      "id": "estimate_validate_2",
+      "input_types": {
+       "candidate": "PointSet3Normals",
+       "source": "PointSet3"
+      },
+      "input_units": {
+       "candidate": "mm",
+       "source": "mm"
+      },
+      "inputs": {
+       "candidate": {
+        "slot": "points",
+        "step": "estimate"
+       },
+       "source": {
+        "artifact_sha256": "eec51f63b0fd681275fb2cb2039b36f5908d814253d4f0963019e36cd05b6db0"
+       }
+      },
+      "operation": "pointset.validate.normals_estimated",
+      "output_types": [
+       "ValidationReport"
+      ],
+      "role": "validator",
+      "validates": "estimate"
+     },
+     {
+      "id": "orient",
+      "input_types": {
+       "points": "PointSet3Normals"
+      },
+      "input_units": {
+       "points": "mm"
+      },
+      "inputs": {
+       "points": {
+        "slot": "points",
+        "step": "estimate"
+       }
+      },
+      "operation": "pointset.normals.orient_mst",
+      "output_types": [
+       "PointSet3Normals"
+      ],
+      "role": "transform",
+      "validates": null
+     },
+     {
+      "id": "orient_validate_1",
+      "input_types": {
+       "points": "PointSet3Normals"
+      },
+      "input_units": {
+       "points": "mm"
+      },
+      "inputs": {
+       "points": {
+        "slot": "points",
+        "step": "orient"
+       }
+      },
+      "operation": "pointset.validate.basic",
+      "output_types": [
+       "ValidationReport"
+      ],
+      "role": "validator",
+      "validates": "orient"
+     },
+     {
+      "id": "orient_validate_2",
+      "input_types": {
+       "candidate": "PointSet3Normals",
+       "source": "PointSet3Normals"
+      },
+      "input_units": {
+       "candidate": "mm",
+       "source": "mm"
+      },
+      "inputs": {
+       "candidate": {
+        "slot": "points",
+        "step": "orient"
+       },
+       "source": {
+        "slot": "points",
+        "step": "estimate"
+       }
+      },
+      "operation": "pointset.validate.normals_oriented",
+      "output_types": [
+       "ValidationReport"
+      ],
+      "role": "validator",
+      "validates": "orient"
+     },
+     {
+      "id": "poisson",
+      "input_types": {
+       "points": "PointSet3Normals"
+      },
+      "input_units": {
+       "points": "mm"
+      },
+      "inputs": {
+       "points": {
+        "slot": "points",
+        "step": "orient"
+       }
+      },
+      "operation": "reconstruction.poisson",
+      "output_types": [
+       "TriangleSurfaceMesh"
+      ],
+      "role": "transform",
+      "validates": null
+     },
+     {
+      "id": "poisson_validate_1",
+      "input_types": {
+       "candidate": "TriangleSurfaceMesh",
+       "source": "PointSet3Normals"
+      },
+      "input_units": {
+       "candidate": "mm",
+       "source": "mm"
+      },
+      "inputs": {
+       "candidate": {
+        "slot": "geometry",
+        "step": "poisson"
+       },
+       "source": {
+        "slot": "points",
+        "step": "orient"
+       }
+      },
+      "operation": "reconstruction.validate.poisson",
+      "output_types": [
+       "ValidationReport"
+      ],
+      "role": "validator",
+      "validates": "poisson"
+     }
+    ],
+    "steps_sha256": "bb03899c9321f9e250699c555e6991b1002b20bbd81a684c86147ced52065d15"
+   },
+   "plan_attempts": [
+    {
+     "candidate": 0,
+     "status": "planned"
+    },
+    {
+     "candidate": 1,
+     "status": "planned"
+    }
+   ],
+   "store_published_delta": 0,
+   "validators": [
+    {
+     "operation": "pointset.validate.basic",
+     "report_sha256": "2c9a00b82f25ebdedd3c61dabd08a4192f452ed0bbbd67db615e8bfe0633317e",
+     "status": "pass",
+     "step_id": "estimate_validate_1"
+    },
+    {
+     "operation": "pointset.validate.normals_estimated",
+     "report_sha256": "1cdf15861ed1ad55a93f228c255fdd83b3551d8f3cda7b50f85834954e0c9652",
+     "status": "pass",
+     "step_id": "estimate_validate_2"
+    },
+    {
+     "operation": "pointset.validate.basic",
+     "report_sha256": "2c9a00b82f25ebdedd3c61dabd08a4192f452ed0bbbd67db615e8bfe0633317e",
+     "status": "pass",
+     "step_id": "orient_validate_1"
+    },
+    {
+     "operation": "pointset.validate.normals_oriented",
+     "report_sha256": "5767c11e909ba144f2ae59c6432162751a08706beded60829730f7fc4ce807c1",
+     "status": "pass",
+     "step_id": "orient_validate_2"
+    }
+   ]
+  },
+  {
+   "alternatives_dag": [
+    [
+     {
+      "id": "compare",
+      "inputs": {
+       "first": "fixture:torus_mesh",
+       "second": "fixture:torus_mesh"
+      },
+      "operation": "mesh.distance.hausdorff_approximate"
+     }
+    ]
+   ],
+   "category": "negative",
+   "declared_dag": [
+    {
+     "id": "compare",
+     "inputs": {
+      "first": "fixture:torus_mesh",
+      "second": "fixture:torus_mesh"
+     },
+     "operation": "mesh.distance.hausdorff_approximate"
+    }
+   ],
+   "expect": {
+    "code": "unmet_precondition",
+    "stage": "plan",
+    "state": "refused"
+   },
+   "families": [
+    "mesh",
+    "resource_limit",
+    "fallback"
+   ],
+   "fixtures": {
+    "torus_mesh": {
+     "sha256": "9e0c68b2f4f231ca358e2d75be73fa1a39ef810162d6fa6b5c362754f47d3b49",
+     "type": "TriangleSurfaceMesh",
+     "unit": "mm"
+    }
+   },
+   "id": "neg21-fallback-all-blocked",
+   "outcome": {
+    "class": "unmet_precondition",
+    "code": "unmet_precondition",
+    "stage": "plan",
+    "state": "refused"
+   },
+   "store_published_delta": 0
   }
  ],
- "count": 61,
+ "count": 67,
  "generator": "master-workflow-evidence",
  "schema_version": 1,
  "worker_sha256": "2a1e0089c29fa3dc520972d2a8b08200e47075e9c1ca440a56ac4381931dd3e8"

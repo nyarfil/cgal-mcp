@@ -67,10 +67,10 @@ def _error(exc: MasterError) -> dict:
 
 
 def _resolve_dag(runtime: MasterRuntime, workflow: dict, spec: dict, root: Path,
-                 artifacts: dict[str, dict]) -> list[dict]:
+                 artifacts: dict[str, dict], declared_steps: list | None = None) -> list[dict]:
     """Substitute declared fixture references with imported artifact ids."""
     steps = []
-    for declared in workflow["steps"]:
+    for declared in (workflow["steps"] if declared_steps is None else declared_steps):
         step = {key: value for key, value in declared.items() if key != "inputs"}
         step["inputs"] = {}
         for slot, binding in declared["inputs"].items():
@@ -111,7 +111,10 @@ def _plan_record(plan: dict) -> dict:
          "output_types": [output["type"] for output in step["outputs"]]}
         for step in plan["steps"]]
     # Plan identifiers embed per-run artifact ids, so the evidence binds the typed step list instead.
-    return {"steps": steps, "steps_sha256": canonical_sha(steps)}
+    steps = [({**entry, "inserted_by": source["inserted_by"]} if "inserted_by" in source else entry)
+             for entry, source in zip(steps, plan["steps"])]
+    return {"steps": steps, "steps_sha256": canonical_sha(steps), "estimate": plan["estimate"],
+            "rules": plan.get("rules", {})}
 
 
 async def run_workflow(runtime: MasterRuntime, workflow: dict, spec: dict, root: Path) -> dict:
@@ -121,6 +124,13 @@ async def run_workflow(runtime: MasterRuntime, workflow: dict, spec: dict, root:
         "declared_dag": [{"id": step["id"], "operation": step["operation"],
                           "inputs": {slot: binding for slot, binding in sorted(step["inputs"].items())}}
                          for step in workflow["steps"]],
+        **({"rules": workflow["rules"]} if "rules" in workflow else {}),
+        **({"alternatives_dag": [[{"id": step["id"], "operation": step["operation"],
+                                   "inputs": {slot: binding for slot, binding
+                                              in sorted(step["inputs"].items())}}
+                                  for step in alternative["steps"]]
+                                 for alternative in workflow["alternatives"]]}
+           if "alternatives" in workflow else {}),
         "fixtures": {name: {"sha256": spec["fixtures"][name]["sha256"],
                             "type": spec["fixtures"][name]["type"],
                             "unit": spec["fixtures"][name]["unit"]}
@@ -133,8 +143,15 @@ async def run_workflow(runtime: MasterRuntime, workflow: dict, spec: dict, root:
         return record
     base_artifacts = runtime.store.counts()["artifacts"]
     try:
-        plan = runtime.plan({"steps": _resolve_dag(runtime, workflow, spec, root, artifacts),
-                             **({"policy": workflow["policy"]} if "policy" in workflow else {})})
+        request = {"steps": _resolve_dag(runtime, workflow, spec, root, artifacts),
+                   **({"policy": workflow["policy"]} if "policy" in workflow else {}),
+                   **({"rules": workflow["rules"]} if "rules" in workflow else {})}
+        if "alternatives" in workflow:
+            request["alternatives"] = [
+                {"steps": _resolve_dag(runtime, workflow, spec, root, artifacts, alternative["steps"]),
+                 **({"rules": alternative["rules"]} if "rules" in alternative else {})}
+                for alternative in workflow["alternatives"]]
+        plan = runtime.plan(request)
     except MasterError as exc:
         record["outcome"] = {"state": "refused", "stage": "plan", **_error(exc)}
         record["store_published_delta"] = runtime.store.counts()["artifacts"] - base_artifacts
@@ -142,6 +159,11 @@ async def run_workflow(runtime: MasterRuntime, workflow: dict, spec: dict, root:
             print("DEBUG", workflow["id"], exc.message, file=sys.stderr)
         return record
     record["plan"] = _plan_record(plan)
+    if plan.get("fallbacks") is not None:
+        record["plan_attempts"] = [{key: value for key, value in attempt.items() if key != "plan_id"}
+                                   for attempt in plan["fallback_attempts"]]
+        record["fallback_plans"] = [_plan_record(runtime.store.get_plan(plan_id))
+                                    for plan_id in plan["fallbacks"]]
     limits = workflow.get("limits", {})
     try:
         job = await runtime.execute(plan["plan_id"], **limits)
@@ -159,6 +181,11 @@ async def run_workflow(runtime: MasterRuntime, workflow: dict, spec: dict, root:
         outcome.update({"class": detail["error"]["class"], "code": detail["error"]["code"]})
         if os.environ.get("MASTER_WF_DEBUG"):
             print("DEBUG", workflow["id"], detail["error"]["message"], file=sys.stderr)
+    if detail.get("fallback_chain"):
+        outcome["fallback_chain"] = [{key: value for key, value in entry.items()
+                                      if key not in {"plan_id", "job_id"}}
+                                     for entry in detail["fallback_chain"]]
+        outcome["served_by_index"] = detail["served_by_index"]
     record["outcome"] = outcome
     if detail["state"] == "succeeded":
         record["outputs"] = [

@@ -167,11 +167,53 @@ class MasterRuntime:
             raise InvalidInput("execution_limits", "Execution limits are outside allowed bounds")
         job_id = "job_" + uuid.uuid4().hex
         job = self.store.create_job(job_id, plan_id)
-        task = asyncio.create_task(self._run(job_id, plan, wall_time_ms, memory_mb),
+        task = asyncio.create_task(self._run_chain(job_id, plan, wall_time_ms, memory_mb),
                                    name=f"cgal-master-{job_id}")
         self.tasks[job_id] = task
         task.add_done_callback(lambda _: self.tasks.pop(job_id, None))
         return job
+
+    @staticmethod
+    def _chain_entry(index: int, plan_id: str, job_id: str, detail: dict[str, Any]) -> dict[str, Any]:
+        error = detail.get("error") or {}
+        return {"index": index, "plan_id": plan_id, "job_id": job_id, "state": detail["state"],
+                "error_class": error.get("class"), "error_code": error.get("code")}
+
+    async def _run_chain(self, job_id: str, plan: dict[str, Any], wall_time_ms: int,
+                         memory_mb: int) -> None:
+        """Run the plan, then its declared fallback plans after a failed/rejected job.
+
+        Every attempt is a normal job with its own validators; the fallback chain, with each
+        failure reason, is recorded on the job the caller polls. A fallback never runs after
+        success, cancellation or an internal failure, and the last failure stays visible."""
+        await self._run(job_id, plan, wall_time_ms, memory_mb)
+        fallbacks = plan.get("fallbacks") or []
+        if not fallbacks:
+            return
+        current = self.store.get_job(job_id)
+        chain = [self._chain_entry(0, plan["plan_id"], job_id, current)]
+        allowed = set(plan.get("fallback_reason_classes", []))
+        for index, fallback_id in enumerate(fallbacks, 1):
+            if (current["state"] not in {"failed", "rejected"}
+                    or (current.get("error") or {}).get("class") not in allowed):
+                break
+            fallback_plan = self.store.get_plan(fallback_id)
+            if fallback_plan["registry_revision"] != self.registry.revision:
+                break
+            fallback_job = "job_" + uuid.uuid4().hex
+            self.store.create_job(fallback_job, fallback_id)
+            await self._run(fallback_job, fallback_plan, wall_time_ms, memory_mb)
+            current = self.store.get_job(fallback_job)
+            chain.append(self._chain_entry(index, fallback_id, fallback_job, current))
+        if len(chain) > 1:
+            final = {key: value for key, value in current.items() if key not in {"job_id", "plan_id"}}
+            final["error"] = current.get("error")
+            self.store.update_job(job_id, state=current["state"],
+                                  execution_status=current["execution_status"],
+                                  validation_status=current["validation_status"],
+                                  detail={**final, "fallback_chain": chain,
+                                          "served_by_index": chain[-1]["index"]
+                                          if current["state"] == "succeeded" else None})
 
     async def _run(self, job_id: str, plan: dict[str, Any], wall_time_ms: int,
                    memory_mb: int) -> None:

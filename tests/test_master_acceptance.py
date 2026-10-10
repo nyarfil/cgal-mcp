@@ -699,18 +699,44 @@ class WorkflowGateEvidenceTests(unittest.TestCase):
         return acceptance_module.evaluate_workflow_gate(
             REPO, live=False, evidence=evidence if evidence is not None else copy.deepcopy(self.evidence))
 
-    def test_checked_in_evidence_is_consistent_and_gate_stays_unmet_on_planner_features(self):
+    def test_checked_in_evidence_is_consistent_and_planner_features_are_evidenced(self):
         result = self.gate()
         measured = result["measured"]
         self.assertGreaterEqual(measured["positive_succeeded"], 30)
         self.assertEqual(measured["positive_workflows"], measured["positive_succeeded"])
         self.assertEqual(measured["validator_omissions"], 0)
+        self.assertEqual(measured["estimate_problems"], 0)
         self.assertGreaterEqual(measured["validator_rejections"], 1)
-        self.assertEqual(result["status"], "unmet")
-        # Only the unimplemented Phase 6 planner features remain as reasons.
-        self.assertEqual(sorted(result["reasons"]), sorted(
-            acceptance_module.WORKFLOW_UNIMPLEMENTED_PLANNER_FEATURES.values()))
+        self.assertEqual(result["planner_features"], {
+            "fallback_chain": True, "cost_risk_estimate": True,
+            "automatic_preprocess_postprocess": True})
+        self.assertEqual(result["status"], "met_pending_gate_list_update")
+        self.assertEqual(len(result["reasons"]), 1)
         self.assertIn(acceptance_module.WORKFLOW_GATE, acceptance_module.WAVE_A_UNMET_STANDALONE_GATES)
+
+    def test_tampered_estimate_is_detected(self):
+        evidence = copy.deepcopy(self.evidence)
+        case = next(c for c in evidence["cases"] if c["category"] == "positive")
+        case["plan"]["estimate"]["steps"][0]["cost_units"] += 5
+        self.assertTrue([r for r in self.gate(evidence)["reasons"] if "estimate problem" in r])
+
+    def test_dropped_or_unrecorded_inserted_step_metadata_is_detected(self):
+        evidence = copy.deepcopy(self.evidence)
+        case = next(c for c in evidence["cases"] if c["id"].startswith("wf42"))
+        for step in case["plan"]["steps"]:
+            step.pop("inserted_by", None)
+        reasons = self.gate(evidence)["reasons"]
+        self.assertTrue([r for r in reasons if "estimate problem" in r or "not evidenced" in r])
+
+    def test_silent_fallback_is_detected(self):
+        evidence = copy.deepcopy(self.evidence)
+        case = next(c for c in evidence["cases"] if c["id"].startswith("wf44"))
+        case["outcome"]["fallback_chain"][0]["error_code"] = None
+        self.assertTrue([r for r in self.gate(evidence)["reasons"] if "Fallback chain is inconsistent" in r])
+        evidence = copy.deepcopy(self.evidence)
+        case = next(c for c in evidence["cases"] if c["id"].startswith("wf44"))
+        del case["outcome"]["fallback_chain"]
+        self.assertTrue(self.gate(evidence)["reasons"])
 
     def test_live_rerun_through_the_real_runtime_reproduces_the_evidence(self):
         worker = REPO / "build-master/Release/cgal-master-worker.exe"

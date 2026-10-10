@@ -971,16 +971,70 @@ WORKFLOW_SPEC = "docs/master/workflows.json"
 WORKFLOW_MIN_POSITIVE = 30
 WORKFLOW_MAX_OPERATION_SHARE = 0.35
 WORKFLOW_MIN_DISTINCT_OPERATIONS = 12
-# Phase 6 work items the planner does not implement; each is listed as an unmet reason until
-# the planner/runtime gains the feature and this table is updated together with evidence for it.
-WORKFLOW_UNIMPLEMENTED_PLANNER_FEATURES = {
-    "fallback_chain": "The planner and runtime have no fallback chain: a failed step never "
-                      "retries an alternative registered operation",
-    "cost_risk_estimate": "Plans carry no cost/risk estimate (only default wall-time budgets)",
-    "automatic_preprocess_postprocess": "Preprocess/postprocess steps (repair, triangulate, "
-                                        "conversion) are never inserted automatically; "
-                                        "every DAG is declared explicitly",
+# Phase 6 planner work items. Each feature is listed as an unmet reason unless the recorded
+# workflow evidence demonstrates it (re-derived below from the recorded plans and outcomes).
+WORKFLOW_PLANNER_FEATURES = {
+    "fallback_chain": "Fallback chains are not evidenced for plan-time blocks, runtime failures "
+                      "and validator rejections together with exhausted and all-blocked chains",
+    "cost_risk_estimate": "Per-plan cost/risk estimates are missing or differ from the registry",
+    "automatic_preprocess_postprocess": "Automatic preprocess and postprocess step insertion is "
+                                        "not evidenced with recorded, validated inserted steps",
 }
+WORKFLOW_RULE_OPERATIONS = {"soup_to_triangle_mesh": ("preprocess", "mesh.repair.orient"),
+                            "terminal_mesh_inspection": ("postprocess", "mesh.inspect.pmp")}
+
+
+def _workflow_estimate_problems(plan: dict, registry: dict) -> list[str]:
+    """Recompute a plan's cost/risk estimate from registry metadata only."""
+    estimate, steps = plan.get("estimate"), plan.get("steps", [])
+    if not isinstance(estimate, dict) or len(estimate.get("steps", [])) != len(steps):
+        return ["estimate missing or not covering every step"]
+    problems, entries = [], estimate["steps"]
+    for entry, step in zip(entries, steps):
+        operation = registry[step["operation"]]
+        bound = next(({k: c[k] for k in ("maximum_faces", "maximum_vertices", "maximum_bytes") if k in c}
+                      for c in operation.get("preconditions", []) if c.get("id") == "bounded_input"), {})
+        faces = bound.get("maximum_faces")
+        tier = ("unbounded" if faces is None else "small" if faces <= 1000
+                else "medium" if faces <= 50000 else "large")
+        mutating = (step["role"] != "validator"
+                    and operation.get("output_contract", {}).get("geometry_mutation") is True)
+        units = 1 + sum(1 for c in operation.get("preconditions", []) if "worker_check" in c)
+        expected = {"step_id": step["id"], "operation": step["operation"], "role": step["role"],
+                    "input_bound": bound, "cost_tier": tier, "cost_units": units,
+                    "risk": "mutating_validated" if mutating else "read_only"}
+        if entry != expected:
+            problems.append(f"estimate entry differs from the registry: {step['id']}")
+    expected_totals = {
+        "basis": "registry metadata only", "total_cost_units": sum(e["cost_units"] for e in entries),
+        "step_count": len(entries),
+        "validator_steps": sum(1 for e in entries if e["role"] == "validator"),
+        "mutating_steps": sum(1 for e in entries if e["risk"] == "mutating_validated"),
+        "highest_risk": ("mutating_validated" if any(e["risk"] == "mutating_validated" for e in entries)
+                         else "read_only"),
+        "inserted_steps": [step["id"] for step in steps if "inserted_by" in step]}
+    if {k: estimate.get(k) for k in expected_totals} != expected_totals:
+        problems.append("estimate totals differ from the plan")
+    return problems
+
+
+def _workflow_inserted_problems(plan: dict, rules: dict) -> list[str]:
+    problems, steps = [], {step["id"]: step for step in plan.get("steps", [])}
+    for step in plan.get("steps", []):
+        meta = step.get("inserted_by")
+        if meta is None:
+            continue
+        rule = WORKFLOW_RULE_OPERATIONS.get(meta.get("rule"))
+        target = steps.get(meta.get("for_step"))
+        if (rule is None or rule[0] != meta.get("phase") or not rules.get(rule[0])
+                or step["operation"] != rule[1] or target is None or not meta.get("reason")):
+            problems.append(f"inserted step is not a recorded rule application: {step['id']}")
+        elif rule[0] == "preprocess":
+            if target["inputs"].get(meta["for_slot"], {}).get("step") != step["id"]:
+                problems.append(f"preprocess step is not wired into its consumer: {step['id']}")
+        elif not any(b.get("step") == target["id"] for b in step["inputs"].values()):
+            problems.append(f"postprocess step does not consume its producer: {step['id']}")
+    return problems
 
 
 def evaluate_workflow_gate(root: Path = REPO, *, live: bool = True,
@@ -1042,13 +1096,22 @@ def evaluate_workflow_gate(root: Path = REPO, *, live: bool = True,
     operation_counts: dict[str, int] = {}
     primary_operations: set[str] = set()
     families: set[str] = set()
-    joins = fanouts = unit_cases = omissions = 0
+    joins = fanouts = unit_cases = omissions = estimate_problems = 0
+    inserted_phases: set[str] = set()
+    succeeded_inserted: set[str] = set()
+    fallback_kinds: set[str] = set()
     negative_kinds: dict[str, int] = {}
     for index, (workflow, case) in enumerate(zip(workflows, cases)):
         label = workflow["id"]
         declared = [{"id": step["id"], "operation": step["operation"],
                      "inputs": dict(sorted(step["inputs"].items()))} for step in workflow["steps"]]
-        if (case.get("declared_dag") != declared or case.get("expect") != workflow["expect"]
+        alternatives_dag = [[{"id": step["id"], "operation": step["operation"],
+                              "inputs": dict(sorted(step["inputs"].items()))}
+                             for step in alternative["steps"]]
+                            for alternative in workflow.get("alternatives", [])]
+        if (case.get("alternatives_dag", []) != alternatives_dag
+                or case.get("rules", {}) != workflow.get("rules", {})
+                or case.get("declared_dag") != declared or case.get("expect") != workflow["expect"]
                 or case.get("category") != workflow["category"]
                 or case.get("families") != workflow["families"]
                 or case.get("fixtures") != {name: {key: spec["fixtures"][name][key]
@@ -1064,24 +1127,67 @@ def evaluate_workflow_gate(root: Path = REPO, *, live: bool = True,
             reasons.append(f"Workflow outcome differs from its expectation: {label}")
             continue
         validators = case.get("validators", [])
-        plan_steps = case.get("plan", {}).get("steps", [])
-        if plan_steps:
-            steps_by_id = {step["id"]: step for step in plan_steps}
-            for step in plan_steps:
+        plan_records = ([case["plan"]] + case.get("fallback_plans", [])) if "plan" in case else []
+        chain = outcome.get("fallback_chain", [])
+        served_index = outcome.get("served_by_index") if chain else 0
+        served = (plan_records[served_index]
+                  if plan_records and served_index is not None and served_index < len(plan_records)
+                  else {})
+        plan_steps = served.get("steps", [])
+        for record in plan_records:
+            for problem in _workflow_estimate_problems(record, registry):
+                estimate_problems += 1
+                reasons.append(f"Plan estimate problem for {label}: {problem}")
+            for problem in _workflow_inserted_problems(record, workflow.get("rules", {})):
+                reasons.append(f"Plan rule problem for {label}: {problem}")
+            for step in record["steps"]:
+                if "inserted_by" in step:
+                    inserted_phases.add(step["inserted_by"].get("phase"))
+                    if outcome.get("state") == "succeeded" and record is served:
+                        succeeded_inserted.add(step["inserted_by"].get("phase"))
+            steps_by_id = {step["id"]: step for step in record["steps"]}
+            for step in record["steps"]:
                 if step["role"] == "validator":
                     continue
                 required = registry[step["operation"]]["validation"]["validators"]
-                planned = [v["operation"] for v in plan_steps
+                planned = [v["operation"] for v in record["steps"]
                            if v["role"] == "validator" and v["validates"] == step["id"]]
                 if sorted(planned) != sorted(required):
                     omissions += 1
                     reasons.append(f"Planned validators differ from the registry for {label}:{step['id']}")
-            for step in plan_steps:
+            for step in record["steps"]:
                 for slot, binding in step["inputs"].items():
                     if "step" in binding:
                         producer = steps_by_id.get(binding["step"])
                         if producer is None or step["input_types"][slot] not in producer["output_types"]:
                             reasons.append(f"Workflow DAG edge is not type-consistent: {label}:{step['id']}.{slot}")
+        if "alternatives" in workflow:
+            attempts = case.get("plan_attempts", [])
+            planned_count = sum(1 for a in attempts if a["status"] == "planned")
+            blocked = [a for a in attempts if a["status"] == "blocked"]
+            if ("plan" in case and (len(attempts) != 1 + len(workflow["alternatives"])
+                                    or planned_count != len(plan_records))
+                    or any(not a.get("class") or not a.get("code") for a in blocked)):
+                reasons.append(f"Fallback plan attempts are not fully recorded: {label}")
+            if chain:
+                states = [e["state"] for e in chain]
+                if (len(chain) > planned_count or [e["index"] for e in chain] != list(range(len(chain)))
+                        or any(e["state"] not in {"failed", "rejected"} or not e["error_code"]
+                               for e in chain[:-1])
+                        or states[-1] != outcome.get("state")
+                        or served_index != (len(chain) - 1 if states[-1] == "succeeded" else None)):
+                    reasons.append(f"Fallback chain is inconsistent or silent: {label}")
+                elif states[-1] == "succeeded":
+                    fallback_kinds.add({"failed": "runtime_failure",
+                                        "rejected": "validator_rejection"}[states[0]])
+                elif workflow["category"] == "negative" and len(chain) > 1:
+                    fallback_kinds.add("exhausted")
+            elif outcome.get("state") == "succeeded" and blocked:
+                fallback_kinds.add("plan_block")
+            elif outcome.get("state") == "refused" and not planned_count:
+                fallback_kinds.add("all_blocked")
+        elif chain or case.get("plan_attempts") or case.get("fallback_plans"):
+            reasons.append(f"Fallback records appear without declared alternatives: {label}")
         if workflow["category"] == "positive":
             positives += 1
             if outcome.get("state") != "succeeded":
@@ -1110,6 +1216,13 @@ def evaluate_workflow_gate(root: Path = REPO, *, live: bool = True,
                     omissions += 1
                     reasons.append(f"Validator did not run to a pass: {label}:{step['id']}")
             fixture_units = {spec["fixtures"][name]["unit"] for name in workflow.get("fixtures", [])}
+            if "alternatives" in workflow:
+                # A fallback chain declares fixtures for every candidate; judge the served plan only.
+                used = {(binding["artifact_sha256"], step["input_units"][slot])
+                        for step in plan_steps for slot, binding in step["inputs"].items()
+                        if "artifact_sha256" in binding}
+                fixture_units = {spec["fixtures"][name]["unit"] for name in workflow.get("fixtures", [])
+                                 if (spec["fixtures"][name]["sha256"], spec["fixtures"][name]["unit"]) in used}
             unit_set = {b for s in plan_steps for b in s["input_units"].values() if b != "none"}
             output_units = {o["unit"] for o in case.get("outputs", []) if o["unit"] != "none"}
             if len(fixture_units) != 1 or unit_set != fixture_units or not output_units <= fixture_units:
@@ -1155,8 +1268,21 @@ def evaluate_workflow_gate(root: Path = REPO, *, live: bool = True,
         reasons.append("No workflow demonstrates a validator rejection failing the workflow")
     if omissions:
         reasons.append(f"Validator omission count is {omissions} (must be 0)")
-    result["planner_features"] = {name: False for name in WORKFLOW_UNIMPLEMENTED_PLANNER_FEATURES}
-    reasons.extend(WORKFLOW_UNIMPLEMENTED_PLANNER_FEATURES.values())
+    estimates_ok = (bool(cases) and not estimate_problems
+                    and all("estimate" in c["plan"] for c in cases if "plan" in c))
+    features = {
+        "fallback_chain": fallback_kinds >= {"plan_block", "runtime_failure", "validator_rejection",
+                                             "exhausted", "all_blocked"},
+        "cost_risk_estimate": estimates_ok,
+        "automatic_preprocess_postprocess": succeeded_inserted >= {"preprocess", "postprocess"},
+    }
+    result["planner_features"] = features
+    result["measured"]["fallback_kinds"] = sorted(fallback_kinds)
+    result["measured"]["inserted_rule_phases"] = sorted(inserted_phases)
+    result["measured"]["estimate_problems"] = estimate_problems
+    for name, ok in features.items():
+        if not ok:
+            reasons.append(WORKFLOW_PLANNER_FEATURES[name])
     if not reasons:
         result["status"] = "met"
         if WORKFLOW_GATE in WAVE_A_UNMET_STANDALONE_GATES:

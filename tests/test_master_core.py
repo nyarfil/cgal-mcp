@@ -7,7 +7,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from cgal_mcp.master.errors import InvalidInput, PreconditionFailure, UnsupportedOperation, WorkerFailure
+from cgal_mcp.master.errors import InvalidInput, MasterError, PreconditionFailure, UnsupportedOperation, WorkerFailure
 from cgal_mcp.master.formats import inspect_bytes
 from cgal_mcp.master.planner import _acyclic, _prepare_parameters
 from cgal_mcp.master.registry import OperationRegistry
@@ -1299,6 +1299,75 @@ class MixedInputBoundedPreconditionTests(unittest.TestCase):
         with self.assertRaisesRegex(PreconditionFailure, "faces<=400"):
             MasterRuntime._runtime_preconditions(
                 operation, [points, {"size": 1, "metadata": {"vertices": 9, "faces": 500}}])
+
+
+class PlannerFeatureTests(unittest.TestCase):
+    """Rules, cost/risk estimate and fallback-chain planning (no worker execution)."""
+
+    SOUP = Path("tests/fixtures/master/wave_a_repair/tetra_flipped_soup.off")
+    TORUS = Path("tests/fixtures/master/batch8/torus.off")
+
+    def setUp(self):
+        self.temporary = tempfile.TemporaryDirectory()
+        self.runtime = MasterRuntime(Path(self.temporary.name) / "data",
+                                     worker=make_worker(Path(self.temporary.name)),
+                                     require_memory_limit=False)
+        self.soup = self.runtime.artifact_import(str(self.SOUP), "mm",
+                                                 artifact_type="PolygonSoup3")["artifact_id"]
+        self.torus = self.runtime.artifact_import(str(self.TORUS), "mm",
+                                                  artifact_type="TriangleSurfaceMesh")["artifact_id"]
+
+    def tearDown(self):
+        self.runtime.close()
+        self.temporary.cleanup()
+
+    def loop(self, source):
+        return {"id": "loop", "operation": "mesh.subdivide.loop", "inputs": {"source": source},
+                "parameters": {"steps": 1}}
+
+    def test_rules_insert_recorded_pre_and_post_steps_and_validate_them(self):
+        plan = self.runtime.plan({"steps": [self.loop(self.soup)],
+                                  "rules": {"preprocess": True, "postprocess": True}})
+        inserted = {step["id"]: step["inserted_by"] for step in plan["steps"] if "inserted_by" in step}
+        self.assertEqual(sorted(inserted), ["loop__post_inspect", "loop__pre_source"])
+        self.assertEqual(inserted["loop__pre_source"]["phase"], "preprocess")
+        self.assertEqual(inserted["loop__post_inspect"]["for_step"], "loop")
+        self.assertEqual(sorted(plan["estimate"]["inserted_steps"]), sorted(inserted))
+        self.assertTrue([s for s in plan["steps"]
+                         if s["role"] == "validator" and s["validates"] == "loop__pre_source"])
+        with self.assertRaises(MasterError):
+            self.runtime.plan({"steps": [self.loop(self.soup)]})
+
+    def test_rules_are_validated_and_inserted_by_cannot_be_spoofed(self):
+        for bad in ({"rules": {"other": True}}, {"rules": {"preprocess": "yes"}}):
+            with self.assertRaises(InvalidInput):
+                self.runtime.plan({"steps": [self.loop(self.torus)], **bad})
+        spoofed = self.loop(self.torus)
+        spoofed["inserted_by"] = {"rule": "soup_to_triangle_mesh"}
+        with self.assertRaises(InvalidInput):
+            self.runtime.plan({"steps": [spoofed]})
+
+    def test_estimate_is_deterministic_and_registry_derived(self):
+        first = self.runtime.plan({"steps": [self.loop(self.torus)]})["estimate"]
+        second = self.runtime.plan({"steps": [self.loop(self.torus)]})["estimate"]
+        self.assertEqual(first, second)
+        self.assertEqual(first["basis"], "registry metadata only")
+        self.assertEqual(first["highest_risk"], "mutating_validated")
+        self.assertEqual(first["total_cost_units"], sum(e["cost_units"] for e in first["steps"]))
+
+    def test_fallback_chain_skips_blocked_candidate_and_records_the_reason(self):
+        blocked = {"id": "cmp", "operation": "mesh.distance.hausdorff_approximate",
+                   "inputs": {"first": self.torus, "second": self.torus},
+                   "parameters": {"sampling": {"method": "grid", "grid_spacing": {"value": 0.5, "unit": "mm"},
+                                               "include_vertices": True}}}
+        plan = self.runtime.plan({"steps": [blocked], "alternatives": [{"steps": [
+            {"id": "m", "operation": "mesh.analysis.measures", "inputs": {"mesh": self.torus},
+             "parameters": {}}]}]})
+        self.assertEqual([a["status"] for a in plan["fallback_attempts"]], ["blocked", "planned"])
+        self.assertEqual(plan["fallback_attempts"][0]["code"], "unmet_precondition")
+        self.assertEqual(plan["fallbacks"], [])
+        with self.assertRaisesRegex(PreconditionFailure, "Every fallback candidate is blocked"):
+            self.runtime.plan({"steps": [blocked], "alternatives": [{"steps": [blocked]}]})
 
 
 if __name__ == "__main__":

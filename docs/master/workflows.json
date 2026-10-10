@@ -3258,6 +3258,456 @@
     "stage": "execute",
     "code": "AMBIGUOUS_COMPONENT_TIE"
    }
+  },
+  {
+   "id": "wf42-rules-soup-loop-auto-orient-inspect",
+   "category": "positive",
+   "families": [
+    "mesh",
+    "repair",
+    "planner_rules"
+   ],
+   "description": "a flipped soup feeds subdivision directly; the planner inserts orient before and inspection after",
+   "fixtures": [
+    "tetra_soup"
+   ],
+   "steps": [
+    {
+     "id": "loop",
+     "operation": "mesh.subdivide.loop",
+     "inputs": {
+      "source": "fixture:tetra_soup"
+     },
+     "parameters": {
+      "steps": 1
+     }
+    }
+   ],
+   "expect": {
+    "state": "succeeded"
+   },
+   "rules": {
+    "preprocess": true,
+    "postprocess": true
+   }
+  },
+  {
+   "id": "wf43-fallback-plan-time-block",
+   "category": "positive",
+   "families": [
+    "mesh",
+    "boolean",
+    "units",
+    "fallback"
+   ],
+   "description": "a union of millimetre and centimetre operands is blocked at planning; the declared same-unit union then subdivision is served",
+   "fixtures": [
+    "cube_a",
+    "cube_overlap_cm",
+    "cube_overlap"
+   ],
+   "steps": [
+    {
+     "id": "union",
+     "operation": "mesh.boolean.union",
+     "inputs": {
+      "source_a": "fixture:cube_a",
+      "source_b": "fixture:cube_overlap_cm"
+     },
+     "parameters": {
+      "operation": "union"
+     }
+    }
+   ],
+   "expect": {
+    "state": "succeeded"
+   },
+   "alternatives": [
+    {
+     "steps": [
+      {
+       "id": "union",
+       "operation": "mesh.boolean.union",
+       "inputs": {
+        "source_a": "fixture:cube_a",
+        "source_b": "fixture:cube_overlap"
+       },
+       "parameters": {
+        "operation": "union"
+       }
+      },
+      {
+       "id": "loop",
+       "operation": "mesh.subdivide.loop",
+       "inputs": {
+        "source": {
+         "step": "union",
+         "slot": "geometry"
+        }
+       },
+       "parameters": {
+        "steps": 1
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "wf44-fallback-runtime-failure",
+   "category": "positive",
+   "families": [
+    "pointset",
+    "reconstruction",
+    "fallback"
+   ],
+   "description": "Poisson from estimated normals yields nothing; the alpha-wrap alternative is served",
+   "fixtures": [
+    "sphere_points"
+   ],
+   "steps": [
+    {
+     "id": "estimate",
+     "operation": "pointset.normals.estimate",
+     "inputs": {
+      "points": "fixture:sphere_points"
+     },
+     "parameters": {
+      "method": "pca",
+      "neighbors": 12
+     }
+    },
+    {
+     "id": "orient",
+     "operation": "pointset.normals.orient_mst",
+     "inputs": {
+      "points": {
+       "step": "estimate",
+       "slot": "points"
+      }
+     },
+     "parameters": {
+      "neighbors": 12,
+      "drop_unoriented": false
+     }
+    },
+    {
+     "id": "poisson",
+     "operation": "reconstruction.poisson",
+     "inputs": {
+      "points": {
+       "step": "orient",
+       "slot": "points"
+      }
+     },
+     "parameters": {
+      "sm_angle": 20,
+      "sm_radius": 2,
+      "sm_distance": 0.375,
+      "max_deviation": {
+       "value": 3.0,
+       "unit": "mm"
+      }
+     }
+    }
+   ],
+   "expect": {
+    "state": "succeeded"
+   },
+   "alternatives": [
+    {
+     "steps": [
+      {
+       "id": "wrap",
+       "operation": "reconstruction.alpha_wrap",
+       "inputs": {
+        "points": "fixture:sphere_points"
+       },
+       "parameters": {
+        "alpha": {
+         "value": 3.0,
+         "unit": "mm"
+        },
+        "offset": {
+         "value": 0.5,
+         "unit": "mm"
+        }
+       }
+      },
+      {
+       "id": "inspect",
+       "operation": "mesh.inspect.pmp",
+       "inputs": {
+        "mesh": {
+         "step": "wrap",
+         "slot": "geometry"
+        }
+       },
+       "parameters": {}
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "wf45-fallback-validator-rejection",
+   "category": "positive",
+   "families": [
+    "pointset",
+    "validator",
+    "fallback"
+   ],
+   "description": "jet smoothing is rejected by its validator; direct alpha wrapping is served",
+   "fixtures": [
+    "torus_points"
+   ],
+   "steps": [
+    {
+     "id": "jet",
+     "operation": "pointset.smooth.jet",
+     "inputs": {
+      "points": "fixture:torus_points"
+     },
+     "parameters": {
+      "neighbors": 12,
+      "degree_fitting": 2,
+      "degree_monge": 2
+     }
+    },
+    {
+     "id": "wrap",
+     "operation": "reconstruction.alpha_wrap",
+     "inputs": {
+      "points": {
+       "step": "jet",
+       "slot": "points"
+      }
+     },
+     "parameters": {
+      "alpha": {
+       "value": 2.5,
+       "unit": "mm"
+      },
+      "offset": {
+       "value": 0.5,
+       "unit": "mm"
+      }
+     }
+    }
+   ],
+   "expect": {
+    "state": "succeeded"
+   },
+   "alternatives": [
+    {
+     "steps": [
+      {
+       "id": "wrap",
+       "operation": "reconstruction.alpha_wrap",
+       "inputs": {
+        "points": "fixture:torus_points"
+       },
+       "parameters": {
+        "alpha": {
+         "value": 2.5,
+         "unit": "mm"
+        },
+        "offset": {
+         "value": 0.5,
+         "unit": "mm"
+        }
+       }
+      },
+      {
+       "id": "inspect",
+       "operation": "mesh.inspect.pmp",
+       "inputs": {
+        "mesh": {
+         "step": "wrap",
+         "slot": "geometry"
+        }
+       },
+       "parameters": {}
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "neg20-fallback-chain-exhausted",
+   "category": "negative",
+   "families": [
+    "pointset",
+    "reconstruction",
+    "fallback"
+   ],
+   "description": "every declared alternative also fails; the job fails closed with the whole chain recorded and nothing published",
+   "fixtures": [
+    "sphere_points"
+   ],
+   "steps": [
+    {
+     "id": "estimate",
+     "operation": "pointset.normals.estimate",
+     "inputs": {
+      "points": "fixture:sphere_points"
+     },
+     "parameters": {
+      "method": "pca",
+      "neighbors": 12
+     }
+    },
+    {
+     "id": "orient",
+     "operation": "pointset.normals.orient_mst",
+     "inputs": {
+      "points": {
+       "step": "estimate",
+       "slot": "points"
+      }
+     },
+     "parameters": {
+      "neighbors": 12,
+      "drop_unoriented": false
+     }
+    },
+    {
+     "id": "poisson",
+     "operation": "reconstruction.poisson",
+     "inputs": {
+      "points": {
+       "step": "orient",
+       "slot": "points"
+      }
+     },
+     "parameters": {
+      "sm_angle": 20,
+      "sm_radius": 2,
+      "sm_distance": 0.375,
+      "max_deviation": {
+       "value": 3.0,
+       "unit": "mm"
+      }
+     }
+    }
+   ],
+   "expect": {
+    "state": "failed",
+    "stage": "execute",
+    "code": "EMPTY_RECONSTRUCTION"
+   },
+   "alternatives": [
+    {
+     "steps": [
+      {
+       "id": "estimate",
+       "operation": "pointset.normals.estimate",
+       "inputs": {
+        "points": "fixture:sphere_points"
+       },
+       "parameters": {
+        "method": "pca",
+        "neighbors": 16
+       }
+      },
+      {
+       "id": "orient",
+       "operation": "pointset.normals.orient_mst",
+       "inputs": {
+        "points": {
+         "step": "estimate",
+         "slot": "points"
+        }
+       },
+       "parameters": {
+        "neighbors": 16,
+        "drop_unoriented": false
+       }
+      },
+      {
+       "id": "poisson",
+       "operation": "reconstruction.poisson",
+       "inputs": {
+        "points": {
+         "step": "orient",
+         "slot": "points"
+        }
+       },
+       "parameters": {
+        "sm_angle": 20,
+        "sm_radius": 2,
+        "sm_distance": 0.375,
+        "max_deviation": {
+         "value": 3.0,
+         "unit": "mm"
+        }
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "neg21-fallback-all-blocked",
+   "category": "negative",
+   "families": [
+    "mesh",
+    "resource_limit",
+    "fallback"
+   ],
+   "description": "every candidate is blocked at planning so nothing runs",
+   "fixtures": [
+    "torus_mesh"
+   ],
+   "steps": [
+    {
+     "id": "compare",
+     "operation": "mesh.distance.hausdorff_approximate",
+     "inputs": {
+      "first": "fixture:torus_mesh",
+      "second": "fixture:torus_mesh"
+     },
+     "parameters": {
+      "sampling": {
+       "method": "grid",
+       "grid_spacing": {
+        "value": 0.5,
+        "unit": "mm"
+       },
+       "include_vertices": true
+      }
+     }
+    }
+   ],
+   "expect": {
+    "state": "refused",
+    "stage": "plan",
+    "code": "unmet_precondition"
+   },
+   "alternatives": [
+    {
+     "steps": [
+      {
+       "id": "compare",
+       "operation": "mesh.distance.hausdorff_approximate",
+       "inputs": {
+        "first": "fixture:torus_mesh",
+        "second": "fixture:torus_mesh"
+       },
+       "parameters": {
+        "sampling": {
+         "method": "grid",
+         "grid_spacing": {
+          "value": 0.5,
+          "unit": "mm"
+         },
+         "include_vertices": true
+        }
+       }
+      }
+     ]
+    }
+   ]
   }
  ]
 }

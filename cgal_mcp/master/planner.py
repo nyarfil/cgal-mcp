@@ -7,7 +7,7 @@ import copy
 import math
 from typing import Any
 
-from .errors import InvalidInput, PreconditionFailure, UnsupportedOperation
+from .errors import InvalidInput, MasterError, PreconditionFailure, UnsupportedOperation
 from .registry import OperationRegistry
 from .store import ArtifactStore
 from .util import canonical_json, digest_bytes
@@ -228,6 +228,23 @@ def _acyclic(steps: list[dict[str, Any]]) -> None:
         raise InvalidInput("cyclic_plan", "Plan dependency graph contains a cycle")
 
 
+# Automatic preprocess rules (opt-in through ``request["rules"]["preprocess"]``). A rule
+# applies when a step input has a source type the operation does not accept and the rule
+# converts exactly that type into one the operation accepts. The inserted step is a normal
+# registered operation (so it gets its own mandatory validators) and records why it exists.
+PREPROCESS_RULES = (
+    {"id": "soup_to_triangle_mesh", "from": "PolygonSoup3", "to": "TriangleSurfaceMesh",
+     "operation": "mesh.repair.orient", "slot": "source", "output_slot": "geometry"},
+)
+# Postprocess rule (opt-in through ``request["rules"]["postprocess"]``): every terminal,
+# non-validator step that publishes a TriangleSurfaceMesh is followed by a mesh inspection
+# report so the delivered surface always carries an independently validated health report.
+POSTPROCESS_RULE = {"id": "terminal_mesh_inspection", "type": "TriangleSurfaceMesh",
+                    "operation": "mesh.inspect.pmp", "slot": "mesh"}
+RULE_KEYS = {"preprocess", "postprocess"}
+MAX_FALLBACK_ALTERNATIVES = 4
+
+
 class PlanBuilder:
     def __init__(self, registry: OperationRegistry, store: ArtifactStore):
         self.registry = registry
@@ -236,8 +253,16 @@ class PlanBuilder:
     def build(self, request: dict[str, Any]) -> dict[str, Any]:
         if not isinstance(request, dict):
             raise InvalidInput("plan_request", "Plan request must be an object")
+        if "alternatives" in request:
+            return self._build_chain(request)
+        rules = request.get("rules", {})
+        if (not isinstance(rules, dict) or set(rules) - RULE_KEYS
+                or not all(type(value) is bool for value in rules.values())):
+            raise InvalidInput("plan_rules", "Plan rules must map preprocess/postprocess to booleans")
+        if rules and "steps" not in request:
+            raise InvalidInput("plan_rules", "Plan rules apply only to explicit DAG plans")
         if "steps" in request:
-            steps = self._explicit_steps(request["steps"])
+            steps = self._explicit_steps(request["steps"], rules)
             route = {"mode": "explicit_dag"}
         else:
             operation_id, route = self._select_operation(request)
@@ -253,9 +278,149 @@ class PlanBuilder:
         _acyclic(steps)
         body = {"schema_version": 1, "registry_revision": self.registry.revision,
                 "steps": steps, "route": route, "policy": request.get("policy", {}),
-                "immutable": True}
+                "estimate": self._estimate(steps), "immutable": True}
+        if rules:
+            body["rules"] = {key: rules[key] for key in sorted(rules)}
         plan_id = "plan_" + digest_bytes(canonical_json(body))
         return self.store.persist_plan({"plan_id": plan_id, **body})
+
+    def _build_chain(self, request: dict[str, Any]) -> dict[str, Any]:
+        """Plan an ordered fallback chain; the chain is recorded and never silent.
+
+        Candidate 0 is the request itself, then each declared alternative (which inherits
+        the request policy). A candidate the planner refuses (unmet precondition, blocked
+        operation, invalid input) is recorded with its failure code and skipped; the first
+        plannable candidate becomes the head and the remaining plannable ones become the
+        runtime fallbacks, tried in order only after a failed or rejected job."""
+        alternatives = request["alternatives"]
+        if (not isinstance(alternatives, list) or not alternatives
+                or len(alternatives) > MAX_FALLBACK_ALTERNATIVES
+                or not all(isinstance(item, dict) and "alternatives" not in item
+                           for item in alternatives)):
+            raise InvalidInput("plan_alternatives", "Alternatives must be a short list of plan requests")
+        inherited = {key: value for key, value in request.items()
+                     if key not in {"alternatives", "steps", "rules"}}
+        candidates = [{key: value for key, value in request.items() if key != "alternatives"}]
+        candidates += [{**inherited, **item} for item in alternatives]
+        plans: list[dict[str, Any]] = []
+        attempts: list[dict[str, Any]] = []
+        for index, candidate in enumerate(candidates):
+            try:
+                plan = self.build(candidate)
+            except MasterError as exc:
+                attempts.append({"candidate": index, "status": "blocked",
+                                 "class": exc.failure_class, "code": exc.code})
+                continue
+            plans.append(plan)
+            attempts.append({"candidate": index, "status": "planned", "plan_id": plan["plan_id"]})
+        if not plans:
+            codes = ", ".join(f"{a['candidate']}:{a['code']}" for a in attempts)
+            raise PreconditionFailure(f"Every fallback candidate is blocked ({codes})")
+        head = {key: value for key, value in plans[0].items() if key != "plan_id"}
+        head["fallbacks"] = [plan["plan_id"] for plan in plans[1:]]
+        head["fallback_attempts"] = attempts
+        head["fallback_reason_classes"] = ["validation_failure", "unmet_precondition",
+                                           "worker_error", "resource_limit", "invalid_input"]
+        plan_id = "plan_" + digest_bytes(canonical_json(head))
+        return self.store.persist_plan({"plan_id": plan_id, **head})
+
+    def _estimate(self, steps: list[dict[str, Any]]) -> dict[str, Any]:
+        """Deterministic cost/risk estimate derived only from registry metadata.
+
+        Per step: ``input_bound`` is the registry bounded_input limit (faces/vertices/bytes);
+        ``cost_tier`` is small (<=1000 faces), medium (<=50000), large, or unbounded when the
+        registry declares no face limit; ``cost_units`` is 1 for the step plus 1 for each
+        worker precondition check (validators are costed as their own steps); ``risk`` is
+        read_only for validators and non-mutating operations, otherwise mutating_validated
+        (a mutating operation without validators cannot be planned). Plan totals sum the
+        units and report the highest risk and every inserted rule step."""
+        entries = []
+        for step in steps:
+            operation = self.registry.get(step["operation"])
+            bound = next(({key: condition[key] for key in ("maximum_faces", "maximum_vertices",
+                                                           "maximum_bytes") if key in condition}
+                          for condition in operation.get("preconditions", [])
+                          if condition.get("id") == "bounded_input"), {})
+            faces = bound.get("maximum_faces")
+            tier = ("unbounded" if faces is None else "small" if faces <= 1000
+                    else "medium" if faces <= 50000 else "large")
+            mutating = (step.get("role") != "validator"
+                        and operation.get("output_contract", {}).get("geometry_mutation") is True)
+            entries.append({
+                "step_id": step["id"], "operation": step["operation"], "role": step.get("role", "transform"),
+                "input_bound": bound, "cost_tier": tier,
+                "cost_units": 1 + sum(1 for c in operation.get("preconditions", []) if "worker_check" in c),
+                "risk": "mutating_validated" if mutating else "read_only"})
+        return {"basis": "registry metadata only", "steps": entries,
+                "total_cost_units": sum(entry["cost_units"] for entry in entries),
+                "step_count": len(entries),
+                "validator_steps": sum(1 for entry in entries if entry["role"] == "validator"),
+                "mutating_steps": sum(1 for entry in entries if entry["risk"] == "mutating_validated"),
+                "highest_risk": ("mutating_validated"
+                                 if any(entry["risk"] == "mutating_validated" for entry in entries)
+                                 else "read_only"),
+                "inserted_steps": [step["id"] for step in steps if "inserted_by" in step]}
+
+    def _apply_rules(self, raw_steps: list[Any], rules: dict[str, bool]) -> list[Any]:
+        """Insert rule-driven preprocess/postprocess steps; every insertion is recorded."""
+        out_types: dict[tuple[str, str], str] = {}
+        result: list[Any] = []
+        for raw in raw_steps:
+            if not isinstance(raw, dict) or not isinstance(raw.get("operation"), str):
+                return raw_steps  # shape errors are reported by the explicit-step parser
+            operation = self.registry.get(raw["operation"], executable=True)
+            inputs = raw.get("inputs", {})
+            if rules.get("preprocess") and isinstance(inputs, dict):
+                inputs = dict(inputs)
+                for spec in operation["io"]["inputs"]:
+                    binding = inputs.get(spec["slot"])
+                    source_type = None
+                    if isinstance(binding, dict) and "step" in binding:
+                        source_type = out_types.get((binding["step"], binding.get("slot", "geometry")))
+                    elif isinstance(binding, (str, dict)):
+                        artifact_id = binding if isinstance(binding, str) else binding.get("artifact_id")
+                        if isinstance(artifact_id, str):
+                            source_type = self.store.inspect(artifact_id)["type"]
+                    if source_type is None or source_type in spec["types"]:
+                        continue
+                    rule = next((r for r in PREPROCESS_RULES
+                                 if r["from"] == source_type and r["to"] in spec["types"]), None)
+                    if rule is None:
+                        continue
+                    inserted_id = f"{raw['id']}__pre_{spec['slot']}"
+                    result.append({
+                        "id": inserted_id, "operation": rule["operation"],
+                        "inputs": {rule["slot"]: binding}, "parameters": {},
+                        "inserted_by": {"rule": rule["id"], "phase": "preprocess",
+                                        "for_step": raw["id"], "for_slot": spec["slot"],
+                                        "reason": f"{spec['slot']} is {source_type} but "
+                                                  f"{raw['operation']} requires {', '.join(spec['types'])}"}})
+                    out_types[(inserted_id, rule["output_slot"])] = rule["to"]
+                    inputs[spec["slot"]] = {"step": inserted_id, "slot": rule["output_slot"]}
+                raw = {**raw, "inputs": inputs}
+            for output in operation["io"]["outputs"]:
+                out_types[(raw["id"], output["slot"])] = output["type"]
+            result.append(raw)
+        if rules.get("postprocess"):
+            consumed = {binding["step"] for raw in result if isinstance(raw.get("inputs"), dict)
+                        for binding in raw["inputs"].values()
+                        if isinstance(binding, dict) and "step" in binding}
+            for raw in list(result):
+                if raw["id"] in consumed or "inserted_by" in raw:
+                    continue
+                operation = self.registry.get(raw["operation"], executable=True)
+                if operation.get("role", "transform") == "validator":
+                    continue
+                for output in operation["io"]["outputs"]:
+                    if output["type"] == POSTPROCESS_RULE["type"]:
+                        result.append({
+                            "id": f"{raw['id']}__post_inspect", "operation": POSTPROCESS_RULE["operation"],
+                            "inputs": {POSTPROCESS_RULE["slot"]: {"step": raw["id"], "slot": output["slot"]}},
+                            "parameters": {},
+                            "inserted_by": {"rule": POSTPROCESS_RULE["id"], "phase": "postprocess",
+                                            "for_step": raw["id"], "for_slot": output["slot"],
+                                            "reason": f"terminal {output['type']} output of {raw['operation']}"}})
+        return result
 
     def _select_operation(self, request: dict[str, Any]) -> tuple[str, dict[str, Any]]:
         if isinstance(request.get("operation_id"), str):
@@ -565,9 +730,13 @@ class PlanBuilder:
                 "outputs": validator["io"]["outputs"], "validates": step["id"],
                 "policies": []}
 
-    def _explicit_steps(self, raw_steps: Any) -> list[dict[str, Any]]:
+    def _explicit_steps(self, raw_steps: Any, rules: dict[str, bool] | None = None) -> list[dict[str, Any]]:
         if not isinstance(raw_steps, list) or not raw_steps:
             raise InvalidInput("plan_steps", "Explicit plan steps must be a non-empty array")
+        if any(isinstance(raw, dict) and "inserted_by" in raw for raw in raw_steps):
+            raise InvalidInput("plan_step", "Only planner rules may mark a step as inserted")
+        if rules:
+            raw_steps = self._apply_rules(raw_steps, rules)
         # Foundation explicit DAG accepts artifact bindings and typed step references.
         result: list[dict[str, Any]] = []
         produced: dict[tuple[str, str], dict[str, str]] = {}
@@ -643,6 +812,8 @@ class PlanBuilder:
                     "resolution": "runtime_before_dispatch_from_inspected_candidate"}
             if isinstance(raw.get("validates"), str):
                 step["validates"] = raw["validates"]
+            if isinstance(raw.get("inserted_by"), dict):
+                step["inserted_by"] = copy.deepcopy(raw["inserted_by"])
             if step["kernel"] not in operation["kernel"]["supported"]:
                 raise InvalidInput("kernel_unsupported", f"Unsupported kernel for {operation['id']}")
             result.append(step)
