@@ -13,7 +13,7 @@ from typing import Any, Iterable
 
 from .errors import InvalidInput, UnsupportedOperation
 from .policies import PolicyRegistry
-from .search import (DIRECT_VALIDATOR_CONTRACTS, METHOD_CONCEPTS, enriched_text,
+from .search import (ABSTAIN, DIRECT_VALIDATOR_CONTRACTS, DISCOVERY_WEIGHTS, abstain_strength, METHOD_CONCEPTS, enriched_text,
                      document_terms, match_operation, parse_query, PhraseIndex, requested_parameter_features,
                      requested_parameter_values)
 from .util import ID_RE, canonical_json
@@ -21,7 +21,6 @@ from .util import ID_RE, canonical_json
 
 EXECUTABLE_STATUSES = {"IMPLEMENTED", "VALIDATED"}
 # Discovery-only score penalty per uncovered query concept (see search()).
-UNCOVERED_CONCEPT_PENALTY = 6.0
 ALL_STATUSES = {"DISCOVERED", "CATALOGED", "ADAPTER_PLANNED", "IMPLEMENTED",
                 "VALIDATED", "DEPRECATED", "BLOCKED", "EXCLUDED"}
 LEGACY_STATUSES = {"blocked_by_dependency": "BLOCKED", "excluded_with_reason": "EXCLUDED"}
@@ -430,7 +429,7 @@ class OperationRegistry:
     def search(self, query: str, *, input_types: list[str] | None = None,
                status: list[str] | None = None, dependencies: list[str] | None = None,
                kernel: str | None = None, allowed_licenses: list[str] | None = None,
-               limit: int = 8, discovery: bool = False) -> dict[str, Any]:
+               limit: int = 8, discovery: bool = False, explain: bool = False) -> dict[str, Any]:
         """Rank registered operations for ``query``.
 
         ``discovery`` (capabilities_search, never planning) adds the authored
@@ -450,6 +449,7 @@ class OperationRegistry:
                                dict[str, Any], dict[str, list[Any]],
                                dict[str, str]]] = []
         blocked_soft: dict[str, bool] = {}
+        channel_features: dict[str, dict[str, float]] = {}
         fts_scores: dict[str, float] = {}
         fts_terms = list(parsed.words)
         for concept in sorted(parsed.concepts):
@@ -464,6 +464,9 @@ class OperationRegistry:
                     fts_scores[operation_id] = 8.0 / (1.0 + abs(float(rank)))
             except sqlite3.OperationalError:
                 fts_scores = {}
+        query_tokens = (self.phrase_index.query_tokens(query, parsed.bridge_words)
+                        if discovery else frozenset())
+        query_weight = self.phrase_index.query_weight(query_tokens) if discovery else 0.0
         available_dependencies = set(dependencies or [])
         normalized_status = ({LEGACY_STATUSES.get(item.lower(), item.upper()) for item in status}
                              if status else None)
@@ -496,15 +499,30 @@ class OperationRegistry:
             ])
             phrases = self.search_phrases.get(operation["id"], ()) if discovery else ()
             phrase_bonus = self.phrase_index.bonus(
-                operation["id"], query, parsed.bridge_words) if phrases else 0.0
+                operation["id"], query, parsed.bridge_words,
+                query_tokens=query_tokens) if phrases else 0.0
             evidence = match_operation(parsed, primary_text, aliases=aliases,
                                        phrases=phrases, phrase_bonus=phrase_bonus)
             fts_score = fts_scores.get(operation["id"], 0.0)
-            score = evidence.score + fts_score
             # A concept named by the Operation ID itself is its primary identity;
             # an incidental mention in the summary must not tie with it.
-            score += 6.0 * len(evidence.covered_primary_concepts
-                               & document_terms(operation["id"]).concepts)
+            id_bonus = 6.0 * len(evidence.covered_primary_concepts
+                                 & document_terms(operation["id"]).concepts)
+            if discovery:
+                # Discovery ranks by weighted evidence channels (weights fitted by
+                # cross-validation, see docs/master/SEARCH_ACCEPTANCE_JA.md) and by the
+                # share of the query's IDF mass that the operation's own search
+                # document explains.  Planning keeps the unweighted sum below.
+                weights = DISCOVERY_WEIGHTS
+                coverage = (self.phrase_index.document_overlap(operation["id"], query_tokens)
+                            / query_weight) if query_weight > 0 else 0.0
+                score = (weights["evidence"] * (evidence.score - phrase_bonus)
+                         + weights["phrase"] * phrase_bonus
+                         + weights["fts"] * fts_score + weights["identity"] * id_bonus
+                         + weights["coverage"] * coverage)
+            else:
+                coverage = 0.0
+                score = evidence.score + fts_score + id_bonus
             if fts_score:
                 reasons.append("FTS5 registry index matched")
             if score <= 0:
@@ -551,6 +569,15 @@ class OperationRegistry:
             if operation["status"] in EXECUTABLE_STATUSES:
                 score += 1.0
                 reasons.append("registered adapter available")
+            channel_features[operation["id"]] = {
+                "coverage": coverage, "phrase_bonus": phrase_bonus,
+                "evidence_rest": evidence.score - phrase_bonus, "fts": fts_score,
+                "identity": id_bonus,
+                "uncovered": float(len(evidence.uncovered_primary_concepts)),
+                "executable": 1.0 if operation["status"] in EXECUTABLE_STATUSES else 0.0,
+                "covered_concepts": float(len(evidence.covered_primary_concepts)),
+                "alias_matches": float(len(evidence.alias_matches)),
+                "word_matches": float(len(evidence.word_matches))}
             candidates.append((route_supported, score, operation,
                                reasons, evidence, required_parameters,
                                parameter_conflicts, required_features))
@@ -559,7 +586,7 @@ class OperationRegistry:
         if discovery:
             def discovery_key(item: Any) -> tuple[Any, ...]:
                 hard = not item[0] and not blocked_soft.get(item[2]["id"], False)
-                penalty = (UNCOVERED_CONCEPT_PENALTY * len(item[4].uncovered_primary_concepts)
+                penalty = (DISCOVERY_WEIGHTS["penalty"] * len(item[4].uncovered_primary_concepts)
                            if blocked_soft.get(item[2]["id"], False) else 0.0)
                 return (hard, -(item[1] - penalty), item[2]["id"])
             candidates.sort(key=discovery_key)
@@ -580,6 +607,21 @@ class OperationRegistry:
             else:
                 route_confidence = "ambiguous" if gap <= 2.0 else safe[0][4].confidence
         primary = sorted(parsed.concepts)
+        top_features = (channel_features.get(candidates[0][2]["id"]) if candidates else None)
+        top_evidence = (None if top_features is None else
+                        {**top_features, "score": candidates[0][1],
+                         "unknown_share": self.phrase_index.unknown_share(query_tokens)})
+        abstained = False
+        closest: list[dict[str, Any]] = []
+        strength: float | None = None
+        if discovery and not explain:
+            strength = abstain_strength(top_evidence, len(primary))
+            if strength < ABSTAIN["threshold"]:
+                abstained = True
+                closest = [{"operation_id": item[2]["id"], "score": item[1]} for item in candidates[:3]]
+                candidates = []
+                route_confidence, recommended = "none", None
+                recommended_parameters, recommended_features = {}, {}
         return {"query": query, "search_mode": self.search_mode, "candidates": [
             {"operation_id": operation["id"], "revision": operation["revision"],
              "status": operation["status"], "score": score, "why": reasons,
@@ -593,7 +635,11 @@ class OperationRegistry:
              "required_parameter_features": required_features,
              "parameter_conflicts": parameter_conflicts,
              "input_types": [kind for spec in operation["io"]["inputs"] for kind in spec.get("types", [])],
-             "output_types": [spec.get("type") for spec in operation["io"]["outputs"]]}
+             "output_types": [spec.get("type") for spec in operation["io"]["outputs"]],
+             **({"channels": {**channel_features[operation["id"]],
+                              "hard": (not route_supported
+                                       and not blocked_soft.get(operation["id"], False))}}
+                if explain else {})}
             for (route_supported, score, operation, reasons, evidence,
                  required_parameters, parameter_conflicts,
                  required_features) in candidates[:limit]
@@ -606,6 +652,14 @@ class OperationRegistry:
             "required_parameters": recommended_parameters,
             "required_parameter_features": recommended_features,
             "automatic_route_supported": recommended is not None,
+            "top_evidence": top_evidence,
+            **({"abstained": abstained,
+                "evidence_strength": None if strength in (None, -math.inf) else round(strength, 3),
+                "abstain_threshold": ABSTAIN["threshold"],
+                **({"abstain_reason": "query evidence is below the calibrated threshold; no operation "
+                                      "is offered as executable",
+                    "closest_operations_not_executable": closest} if abstained else {})}
+               if discovery and not explain else {}),
         }}
 
     def verify_manifest(self, manifest: dict[str, Any], required_operation: str) -> dict[str, Any]:

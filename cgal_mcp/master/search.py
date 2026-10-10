@@ -267,7 +267,159 @@ JA_WORD_LEXICON: tuple[tuple[str, str], ...] = (
     ("視線", "ray"), ("包む", "wrap enclose"), ("囲む", "enclose"), ("周期", "periodic"),
     ("重み", "weight"), ("境界", "boundary"), ("生成", "generate"), ("解析", "analysis"),
     ("円形", "circle"), ("円を", "circle"), ("粗い", "coarse"), ("細分", "refine subdivide"),
+    # Broader bilingual vocabulary (generic geometry verbs/nouns, kanji and kana variants).
+    ("削る", "reduce remove"), ("削除", "remove delete"), ("取り除", "remove"), ("除去", "remove"),
+    ("落と", "reduce"), ("少なく", "fewer reduce"), ("少ない", "fewer reduce"), ("半分", "half reduce"),
+    ("縮約", "collapse simplify"), ("統合", "merge"), ("頂点数", "vertex count reduce"),
+    ("面数", "face count triangle count"), ("三角形数", "triangle count"), ("点数", "point count"),
+    ("ポリゴン数", "polygon count simplify"), ("データ量", "size reduce"),
+    ("軽い", "lightweight simplify"), ("作り直", "rebuild remesh"),
+    ("再構築", "rebuild reconstruct remesh"), ("やり直", "redo rebuild"),
+    ("整える", "regularize improve"), ("揃える", "uniform equalize"), ("そろえ", "uniform"),
+    ("一定", "constant uniform"), ("一様", "uniform"), ("目標長", "target length"),
+    ("辺長", "edge length"), ("長さ", "length"), ("品質", "quality"), ("歪み", "distortion"),
+    ("適応", "adaptive"), ("密度", "density"), ("疎", "sparse"), ("細かい", "fine dense"),
+    ("穴を塞", "fill hole"), ("塞ぐ", "fill close"), ("埋め", "fill"), ("閉じ", "close closed"),
+    ("水密", "watertight closed"), ("開いた", "open boundary"), ("境界ループ", "boundary loop hole"),
+    ("縫い", "stitch weld"), ("溶接", "weld"), ("接合", "join stitch"), ("重複", "duplicate"),
+    ("面積ゼロ", "zero area degenerate"), ("向きを揃", "orient consistent"),
+    ("裏表", "orientation flip"), ("一貫", "consistent"), ("非多様体", "non manifold"),
+    ("つまみ", "pinch"), ("くびれ", "pinch"), ("自己交差", "self intersection"),
+    ("乖離", "deviation distance"), ("離れ", "distance away"), ("隔たり", "distance"),
+    ("最悪", "worst maximum"), ("両方向", "both directions symmetric"),
+    ("双方向", "symmetric both directions"), ("対称", "symmetric"), ("片方向", "one sided directed"),
+    ("保証", "guaranteed bound"), ("上界", "upper bound"), ("下界", "lower bound"),
+    ("許容", "tolerance"), ("公差", "tolerance"), ("精度", "accuracy precision"), ("厳密", "exact"),
+    ("正確", "exact"), ("概算", "approximate estimate"), ("サンプル", "sample"), ("標本", "sample"),
+    ("ばらま", "scatter sample"), ("最近傍", "nearest neighbor"), ("球内", "ball radius range"),
+    ("範囲内", "within range"), ("半径内", "within radius"), ("バウンディング", "bounding"),
+    ("包囲", "bounding enclosing"), ("直方体", "box"), ("箱", "box"),
+    ("交点", "intersection point hit"), ("当たる", "hit intersect"), ("当たり", "hit"),
+    ("最初に", "first"), ("射線", "ray"), ("貫く", "pierce intersect"), ("刺さ", "pierce"),
+    ("含まれる", "contained inside"), ("属する", "belong contained"), ("位置", "position location"),
+    ("座標", "coordinates"), ("重心座標", "barycentric coordinates"), ("射影", "project closest"),
+    ("投影", "project"), ("最も近い", "closest nearest"), ("なめらか", "smooth"), ("外皮", "shell wrap"),
+    ("殻", "shell"), ("くるむ", "wrap enclose"), ("包み込", "wrap enclose"), ("包装", "wrap"),
+    ("かぶせ", "wrap cover"), ("被せ", "wrap cover"), ("覆う", "cover enclose"),
+    ("覆い", "cover enclose"), ("収縮", "shrink"), ("ぐちゃぐちゃ", "messy broken"),
+    ("乱れた", "noisy messy"), ("不完全", "incomplete broken"), ("壊れ", "broken defective"),
+    ("欠け", "missing"), ("スキャン", "scan point cloud"), ("計測点", "measured points scan"),
+    ("測定点", "measured points scan"), ("ばらばら", "scattered unordered"), ("散在", "scattered"),
+    ("法線ベクトル", "normal vector"), ("どちらを向", "facing orientation normal"),
+    ("表面の向き", "surface normal orientation"), ("面の向き", "face orientation normal"),
+    ("水平", "horizontal"), ("垂直", "perpendicular vertical"), ("角度", "angle"), ("鋭い", "sharp"),
+    ("尖", "sharp"), ("急な", "steep sharp"), ("折れ線", "polyline"), ("折れ目", "crease sharp edge"),
+    ("稜線", "ridge sharp edge"), ("エッジ", "edge"), ("特徴", "feature"), ("輪郭線", "contour outline"),
+    ("形状直径", "shape diameter"), ("部位", "part region segment"), ("部分", "part"),
+    ("意味のある", "meaningful segment"), ("パーツ", "part"), ("切り分け", "segment split"),
+    ("分ける", "split divide"), ("分けて", "split divide"), ("ばらし", "split separate"),
+    ("細分化", "subdivide refine"), ("細分割", "subdivision"), ("四つ", "four"),
+    ("ループ細分", "loop subdivision"), ("展開図", "unfold flatten parameterization"),
+    ("展開", "unfold flatten parameterize"), ("貼る", "map texture"), ("写像", "mapping"),
+    ("等角", "conformal angle preserving"), ("角度を保", "angle preserving conformal"),
+    ("剛体", "rigid"), ("変換", "transformation"), ("重ね", "overlay align register overlap"),
+    ("重ね合", "register align overlay"), ("位置合", "register align"),
+    ("アライメント", "alignment registration"), ("平面分割", "planar subdivision arrangement"),
+    ("線分群", "segments arrangement"), ("交わる", "cross intersect"), ("交差する", "cross intersect"),
+    ("横切", "cross traverse"), ("通過", "pass cross"), ("ゾーン", "zone"), ("畳み込み", "convolution"),
+    ("縮約畳み込み", "reduced convolution"), ("掃引", "sweep"), ("スイープ", "sweep"),
+    ("移動", "move motion"), ("ロボット", "robot motion"), ("経路計画", "path planning"),
+    ("膨張", "dilate offset"), ("内側へ", "inward offset"), ("外側へ", "outward offset"),
+    ("包含判定", "containment inside outside test"), ("内部判定", "inside test"), ("凹", "concave"),
+    ("単純", "simple"), ("穴あき", "with holes"), ("穴付き", "with holes"), ("最小角", "minimum angle"),
+    ("メッシュ生成", "mesh generation"), ("制約線", "constraint edge constrained"),
+    ("拘束線", "constraint edge constrained"), ("パワー", "power weighted"),
+    ("トーラス", "torus periodic"), ("球面上", "on sphere"), ("最小化", "minimize"), ("最大化", "maximize"),
+    ("線形", "linear"), ("二次", "quadratic"), ("制約付き", "constrained"), ("目的関数", "objective"),
+    ("不等式", "inequality"), ("上下限", "bounds"), ("散布", "scattered"),
+    ("自然近傍", "natural neighbor"), ("中心", "center"), ("被覆", "cover coverage"),
+    ("区間", "interval"), ("配置", "placement"), ("ソート済み", "sorted"),
+    ("最小包含", "smallest enclosing"), ("外接", "circumscribed bounding enclosing"),
+    ("内接", "inscribed"), ("囲う", "enclose"), ("左回り", "left turn orientation"),
+    ("右回り", "right turn orientation"), ("左折", "left turn"), ("共線", "collinear"),
+    ("一直線", "collinear line"), ("同一平面", "coplanar"), ("同一直線", "collinear"),
+    ("同一円周", "cocircular"), ("同一球面", "cospherical"), ("円の内側", "inside circle incircle"),
+    ("外接円", "circumcircle incircle"), ("符号", "sign"), ("丸め", "rounding"), ("誤差なし", "exact"),
+    ("厳密に", "exact"), ("有理数", "rational exact"), ("基本図形", "primitive geometric objects"),
+    ("オブジェクト", "object"), ("作りたい", "construct build"), ("構築", "construct build"),
+    ("距離の二乗", "squared distance"), ("二乗", "squared"), ("2乗", "squared"),
+    ("どこで交わ", "intersection location"), ("点間隔", "spacing"), ("間隔", "spacing interval"),
+    ("平均間隔", "average spacing"), ("孤立", "isolated outlier"), ("外れ", "outlier"),
+    ("雑音", "noise"), ("ぶれ", "noise jitter"), ("ガタつ", "noisy jitter"),
+    ("尖った特徴", "sharp features"), ("特徴を残", "preserve features"), ("特徴を保", "preserve features"),
+    ("種", "seed"), ("乱数", "random"), ("シード", "seed"), ("再現", "reproducible deterministic"),
+    ("セル", "cell"), ("クラスタリング", "clustering"), ("代表点", "representative"),
+    ("集約", "cluster aggregate"), ("前処理", "preprocess"), ("下処理", "preprocess"),
+    ("前提", "prerequisite"), ("診断", "diagnostic inspect"), ("点検", "inspect"),
+    ("調べ", "examine check inspect"), ("確かめ", "verify check"), ("チェック", "check"),
+    ("健全", "valid health"), ("妥当", "valid"), ("不正", "invalid"), ("レポート", "report"),
+    ("報告", "report"), ("表面積", "surface area"), ("容積", "volume"), ("最大の", "largest"),
+    ("一番大きい", "largest"), ("最大成分", "largest component"), ("シェル", "shell"),
+    ("島", "island component"), ("ばらばらの部分", "disconnected pieces components"),
+    ("削り取", "subtract carve difference"), ("切り取", "cut subtract"), ("引き算", "subtract"),
+    ("足し合わせ", "union merge"), ("くっつ", "union join"), ("共有", "shared common"),
+    ("重なる部分", "overlap intersection"), ("交わり", "intersection overlap"),
+    ("残り", "remainder difference"), ("立体", "solid"), ("平面で切", "cut plane clip"),
+    ("切り落とし", "chop clip"), ("切り取り", "clip cut"), ("上側", "upper side above"),
+    ("片側", "one side"), ("輪切り", "slice section"), ("蓋", "cap"), ("ふた", "cap"),
+    ("両側", "both sides"), ("切断線", "cut line"), ("交線", "intersection curve polyline"),
+    ("交差曲線", "intersection curve"), ("交差線", "intersection curve"),
+    ("交わる線", "intersection curve"),
 )
+
+# English thesaurus: everyday wording for geometry tasks mapped to the words the
+# documentation uses.  Like the Japanese lexicon it only adds retrieval words.
+EN_SYNONYMS: dict[str, str] = {
+    "thin": "reduce downsample simplify", "coarsen": "simplify reduce decimate",
+    "shrink": "reduce simplify", "fewer": "reduce simplify", "lighter": "simplify reduce",
+    "lightweight": "simplify reduce", "compress": "simplify reduce", "decrease": "reduce",
+    "chop": "clip cut", "trim": "clip cut remove", "carve": "subtract difference",
+    "punch": "subtract difference", "fuse": "union merge", "glue": "stitch weld",
+    "seam": "stitch weld", "patch": "fill hole repair", "plug": "fill hole",
+    "gap": "hole crack", "crack": "hole gap", "seal": "close fill", "mend": "repair",
+    "heal": "repair", "jitter": "noise", "noisy": "noise", "fuzz": "noise",
+    "bumpy": "noise smooth", "relax": "smooth", "rebuild": "remesh reconstruct",
+    "regenerate": "remesh", "retriangulate": "remesh triangulate", "resample": "remesh sample",
+    "tessellate": "triangulate", "subdivide": "refine subdivision", "partition": "segment",
+    "decompose": "segment decomposition", "fragment": "component", "island": "component",
+    "piece": "component", "flatten": "parameterization unfold",
+    "unwrap": "parameterization unfold", "unfold": "parameterization flatten",
+    "texture": "parameterization", "envelop": "enclose wrap", "enclose": "wrap hull",
+    "wrap": "enclose shell alpha", "shrinkwrap": "wrap alpha shell", "skin": "surface wrap",
+    "medial": "skeleton centerline", "centerline": "skeleton", "spine": "skeleton",
+    "thickness": "diameter shape", "closest": "nearest", "nearby": "nearest neighbor",
+    "proximity": "nearest distance", "within": "range radius", "ball": "range radius",
+    "hit": "intersection", "pierce": "intersect", "collide": "intersect collision",
+    "clash": "intersect", "overlap": "intersection", "interfere": "intersect", "shoot": "ray",
+    "probe": "ray", "beam": "ray", "deviation": "distance", "discrepancy": "distance error",
+    "drift": "deviation distance", "worst": "maximum", "farthest": "maximum",
+    "both": "symmetric", "mutual": "symmetric", "bidirectional": "symmetric",
+    "guarantee": "bound", "guaranteed": "bound", "certified": "bound", "tolerance": "bound",
+    "robust": "exact predicate", "rational": "exact", "left": "orientation predicate",
+    "turn": "orientation predicate", "collinear": "predicate", "coplanar": "predicate",
+    "cocircular": "predicate", "sign": "orientation predicate",
+    "superimpose": "register alignment", "align": "register alignment", "scan": "point cloud",
+    "scanned": "point cloud", "lidar": "point cloud", "photogrammetry": "point cloud",
+    "facing": "normal orientation", "outward": "orientation", "flip": "orientation",
+    "consistent": "orientation", "crease": "sharp feature", "ridge": "sharp feature",
+    "corner": "sharp feature", "fold": "sharp feature", "dihedral": "angle sharp",
+    "inflate": "offset", "dilate": "offset", "erode": "offset", "grow": "offset",
+    "buffer": "offset", "inset": "offset interior", "sweep": "minkowski",
+    "robot": "minkowski motion", "convolution": "minkowski", "inside": "containment",
+    "contain": "containment", "enclosed": "containment", "locate": "location",
+    "scattered": "interpolation", "estimate": "approximate", "optimal": "optimization",
+    "minimize": "optimization", "minimise": "optimization", "maximize": "optimization",
+    "cost": "optimization", "constraint": "constrained", "graded": "adaptive",
+    "tetrahedron": "tetrahedral volume", "tetrahedralize": "tetrahedral volume mesh",
+    "tetrahedralization": "tetrahedral volume mesh", "facility": "center",
+    "cover": "center coverage", "centre": "center", "periodic": "torus", "torus": "periodic",
+    "sphere": "spherical", "spherical": "sphere", "unoriented": "orientation",
+    "oriented": "orientation", "watertight": "closed", "closed": "watertight",
+    "border": "boundary", "boundary": "border", "loop": "boundary", "polyline": "curve",
+    "hole": "gap", "noise": "outlier", "outlier": "noise", "spacing": "density",
+    "density": "spacing", "average": "mean", "mean": "average", "largest": "maximum",
+    "biggest": "largest", "smallest": "minimum",
+}
 
 METHOD_PARAMETER_REQUIREMENTS: dict[str, tuple[str, Any]] = {
     "pca": ("method", "pca"),
@@ -318,6 +470,9 @@ def _stem(word: str) -> str:
     if word.endswith("s") and len(word) > 4 and not word.endswith(("ss", "sis")):
         return word[:-1]
     return word
+
+
+_EN_SYNONYM_LOOKUP = {_stem(key): value for key, value in EN_SYNONYMS.items()}
 
 
 @dataclass(frozen=True)
@@ -504,8 +659,9 @@ def parse_query(text: str, *, document: bool = False) -> QueryTerms:
     words = tuple(dict.fromkeys(_stem(word) for word in re.findall(
         r"[a-z][a-z0-9]*|[23]d", word_text)
                                 if word not in STOP_WORDS and (len(word) >= 3 or word in {"2d", "3d"})))
+    synonyms = " ".join(_EN_SYNONYM_LOOKUP[word] for word in words if word in _EN_SYNONYM_LOOKUP)
     bridge_words = tuple(dict.fromkeys(
-        _stem(word) for word in re.findall(r"[a-z][a-z0-9]*", extra)
+        _stem(word) for word in re.findall(r"[a-z][a-z0-9]*", extra + " " + synonyms)
         if word not in STOP_WORDS and _stem(word) not in words))
     phrases = tuple(dict.fromkeys(phrase for _, phrase in sorted(retained, key=lambda item: (-len(item[1]), item[1]))))
     return QueryTerms(normalized, words, concepts, phrases, bridge_words)
@@ -642,6 +798,33 @@ def requested_parameter_features(concepts: frozenset[str]) -> dict[str, str]:
 # operation's own documentation.  They add retrieval evidence only: they never
 # change an operation's status, parameters, policies or the registry hash.
 
+# Discovery (capabilities_search) evidence-channel weights.  Fitted by 5-fold
+# cross-validation over the pooled development corpus and both authored blind
+# sets (scripts/tune_search.py); planning never reads them.
+DISCOVERY_WEIGHTS: dict[str, float] = {
+    "evidence": 1.0, "phrase": 0.8, "fts": 0.5, "identity": 0.0,
+    "coverage": 70.0, "penalty": 6.0,
+}
+
+# Fail-closed threshold for discovery.  strength = sum(weight * feature) of the top candidate's
+# evidence; below the threshold capabilities_search returns no candidate.  Fitted by
+# scripts/tune_search.py abstain (target in-scope false-abstain 2%); see
+# docs/master/evidence/search-abstain.json.  Feature units: score, covered primary concepts,
+# percent of query IDF mass known to the phrase index, number of query primary concepts.
+ABSTAIN: dict[str, Any] = {
+    "weights": {"score": 1.0, "covered_concepts": 10.0, "known_mass": 0.3, "query_concepts": 6.0},
+    "threshold": 56.52,
+}
+
+
+def abstain_strength(top: dict[str, float] | None, query_concepts: int) -> float:
+    if top is None:
+        return -math.inf
+    w = ABSTAIN["weights"]
+    return (w["score"] * top["score"] + w["covered_concepts"] * top["covered_concepts"]
+            + w["known_mass"] * 100.0 * (1.0 - top["unknown_share"])
+            + w["query_concepts"] * query_concepts)
+
 PHRASE_SCALE = 3.0
 PHRASE_CAP = 30.0
 _JA_RUN = re.compile(r"[\u3040-\u30ff\u3400-\u9fff\uff66-\uff9f]+")
@@ -662,6 +845,24 @@ def _canonical_word(word: str) -> str:
     return word
 
 
+# Japanese request boilerplate (politeness, desire, auxiliary forms).  It carries
+# no geometry, so it is removed before character n-grams are formed; otherwise
+# every query would share meaningless grams ("したい", "ください") with nothing.
+_JA_BOILERPLATE = re.compile(
+    r"(?:してください|して下さい|してほしい|してもらいたい|してもらえ|したいです|したい|たいです|"
+    r"お願いします|お願い|ください|下さい|ほしい|欲しい|ですか|でしょうか|ます|です|ません|"
+    r"できる|でき|について|において|として|という|ような|ように|による|により|ための|ために|"
+    r"から|まで|ので|ながら|しながら|する|した|して|され|さ?れる|いる|ある|ない|もの|こと|など)")
+_JA_SPLIT = re.compile("[" + "".join(sorted(_JA_PARTICLES)) + "]")
+
+
+def _ja_segments(run: str) -> list[str]:
+    """Content segments of one Japanese run: boilerplate and particles removed."""
+    cleaned = _JA_BOILERPLATE.sub(" ", run)
+    return [part for part in _JA_SPLIT.sub(" ", cleaned).split() if part]
+
+
+@lru_cache(maxsize=8192)
 def retrieval_tokens(text: str) -> frozenset[str]:
     """English canonical words plus Japanese character bigrams of one text."""
     normalized = normalize(text)
@@ -670,14 +871,13 @@ def retrieval_tokens(text: str) -> frozenset[str]:
         if word not in STOP_WORDS and (len(word) >= 3 or word in {"2d", "3d"}):
             tokens.add(_canonical_word(word))
     for run in _JA_RUN.findall(normalized):
-        if len(run) == 1:
-            if run not in _JA_PARTICLES:
-                tokens.add("ja:" + run)
-            continue
-        for index in range(len(run) - 1):
-            gram = run[index:index + 2]
-            if not set(gram) <= _JA_PARTICLES:
-                tokens.add("ja:" + gram)
+        for segment in _ja_segments(run):
+            if len(segment) == 1:
+                if not "぀" <= segment <= "ゟ":
+                    tokens.add("ja:" + segment)
+                continue
+            for index in range(len(segment) - 1):
+                tokens.add("ja:" + segment[index:index + 2])
     return frozenset(tokens)
 
 
@@ -697,6 +897,7 @@ class PhraseIndex:
             if context_by_operation and key in context_by_operation:
                 merged |= retrieval_tokens(context_by_operation[key])
             documents[key] = frozenset(merged)
+        self._documents = documents
         frequency: dict[str, int] = {}
         for tokens in documents.values():
             for token in tokens:
@@ -709,13 +910,36 @@ class PhraseIndex:
     def weight(self, token: str) -> float:
         return self._idf.get(token, self._default_idf)
 
+    def query_tokens(self, query_text: str, extra_tokens: Iterable[str] = ()) -> frozenset[str]:
+        return retrieval_tokens(query_text) | frozenset(
+            _canonical_word(word) for word in extra_tokens)
+
+    def query_weight(self, query_tokens: frozenset[str]) -> float:
+        return sum(self.weight(token) for token in query_tokens)
+
+    def unknown_share(self, query_tokens: frozenset[str]) -> float:
+        """Share of the query's IDF mass carried by tokens no operation document contains."""
+        total = self.query_weight(query_tokens)
+        if total <= 0:
+            return 1.0
+        return sum(self.weight(token) for token in query_tokens
+                   if token not in self._idf) / total
+
+    def document_overlap(self, operation_id: str, query_tokens: frozenset[str]) -> float:
+        """IDF mass of the query tokens that the operation's whole search document shares."""
+        document = self._documents.get(operation_id)
+        if not document:
+            return 0.0
+        return sum(self.weight(token) for token in query_tokens & document)
+
     def bonus(self, operation_id: str, query_text: str,
-              extra_tokens: Iterable[str] = ()) -> float:
+              extra_tokens: Iterable[str] = (),
+              query_tokens: frozenset[str] | None = None) -> float:
         tokens_by_phrase = self._tokens.get(operation_id)
         if not tokens_by_phrase:
             return 0.0
-        query_tokens = retrieval_tokens(query_text) | frozenset(
-            _canonical_word(word) for word in extra_tokens)
+        if query_tokens is None:
+            query_tokens = self.query_tokens(query_text, extra_tokens)
         credits: list[float] = []
         for tokens in tokens_by_phrase:
             if not tokens:
