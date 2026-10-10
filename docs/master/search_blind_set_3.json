@@ -1,0 +1,1856 @@
+{
+ "schema_version": 1,
+ "provenance": {
+  "author": "independent blind-set author agent (Claude Sonnet 5.5 subagent)",
+  "date": "2026-10-11",
+  "method": "Written only from cgal_mcp/master/operations.json operation summaries, catalog/major_requirements.json requirement bindings and general CGAL knowledge. The author did not read search.py, search_data.json, tune_search.py, any search evidence, earlier blind sets, the 300-intent corpus or the out-of-scope probe set, and ran no search or measurement before commit. Phrasings avoid registry aliases on purpose. Expected operations are bound to major requirement operation_ids; OOS probes are expected to abstain."
+ },
+ "intents": [
+  {
+   "id": "b3-001",
+   "language": "en",
+   "family": "7.1",
+   "requirement_id": "major.7.1.01",
+   "query": "Are these three 2D points collinear, or do they make a left or right turn? I need an exact orientation test.",
+   "expected_operations": [
+    "kernel.predicates.evaluate"
+   ]
+  },
+  {
+   "id": "b3-002",
+   "language": "ja",
+   "family": "7.1",
+   "requirement_id": "major.7.1.03",
+   "query": "4点が同一平面上にあるかを厳密に判定して、ついでに三角形の外心と重心も出してほしい",
+   "expected_operations": [
+    "kernel.predicates.evaluate"
+   ]
+  },
+  {
+   "id": "b3-003",
+   "language": "en",
+   "family": "7.1",
+   "requirement_id": "major.7.1.02",
+   "query": "Build a sphere, a plane and an iso box from raw coordinates and report their exact derived properties after an affine transform.",
+   "expected_operations": [
+    "kernel.primitives.construct"
+   ]
+  },
+  {
+   "id": "b3-004",
+   "language": "ja",
+   "family": "7.1",
+   "requirement_id": "major.7.1.02",
+   "query": "三角形と四面体を座標から作って、アフィン変換後の点とベクトルを厳密値で確認したい",
+   "expected_operations": [
+    "kernel.primitives.construct"
+   ]
+  },
+  {
+   "id": "b3-005",
+   "language": "en",
+   "family": "7.1",
+   "requirement_id": "major.7.1.04",
+   "query": "Does this segment pierce that triangle in 3D? If so give me the crossing point or overlap piece.",
+   "expected_operations": [
+    "kernel.intersections.compute"
+   ]
+  },
+  {
+   "id": "b3-006",
+   "language": "ja",
+   "family": "7.1",
+   "requirement_id": "major.7.1.04",
+   "query": "2本の線分が交わるかどうか判定して、交わるなら交点の座標を返してください",
+   "expected_operations": [
+    "kernel.intersections.compute"
+   ]
+  },
+  {
+   "id": "b3-007",
+   "language": "en",
+   "family": "7.1",
+   "requirement_id": "major.7.1.05",
+   "query": "what is the exact squared distance between a point and a plane?",
+   "expected_operations": [
+    "kernel.distance.squared"
+   ]
+  },
+  {
+   "id": "b3-008",
+   "language": "ja",
+   "family": "7.1",
+   "requirement_id": "major.7.1.05",
+   "query": "点と線分の距離の二乗を求めて、2つの候補のどちらが近いかも比較したい",
+   "expected_operations": [
+    "kernel.distance.squared"
+   ]
+  },
+  {
+   "id": "b3-009",
+   "language": "en",
+   "family": "7.2",
+   "requirement_id": "major.7.2.01",
+   "query": "For each probe point, find the nearest spot on the surface mesh and the triangle it sits on.",
+   "expected_operations": [
+    "spatial.aabb.closest_points"
+   ]
+  },
+  {
+   "id": "b3-010",
+   "language": "ja",
+   "family": "7.2",
+   "requirement_id": "major.7.2.01",
+   "query": "メッシュ表面上でクエリ点ごとに一番近い点と、その点が乗っている三角形を知りたい",
+   "expected_operations": [
+    "spatial.aabb.closest_points"
+   ]
+  },
+  {
+   "id": "b3-011",
+   "language": "en",
+   "family": "7.2",
+   "requirement_id": "major.7.2.01",
+   "query": "Shoot a bunch of rays at the model and tell me the first thing each one strikes.",
+   "expected_operations": [
+    "spatial.aabb.ray_first_hits"
+   ]
+  },
+  {
+   "id": "b3-012",
+   "language": "ja",
+   "family": "7.2",
+   "requirement_id": "major.7.2.01",
+   "query": "光線をいくつか飛ばして、それぞれが最初にぶつかる位置と面を取得したい",
+   "expected_operations": [
+    "spatial.aabb.ray_first_hits"
+   ]
+  },
+  {
+   "id": "b3-013",
+   "language": "en",
+   "family": "7.2",
+   "requirement_id": "major.7.2.02",
+   "query": "List every cloud point lying within radius 2.5 of each query location.",
+   "expected_operations": [
+    "spatial.range_search_3"
+   ]
+  },
+  {
+   "id": "b3-014",
+   "language": "ja",
+   "family": "7.2",
+   "requirement_id": "major.7.2.02",
+   "query": "3次元の点群から、指定した半径以内に入る点をすべて列挙してほしい",
+   "expected_operations": [
+    "spatial.range_search_3"
+   ]
+  },
+  {
+   "id": "b3-015",
+   "language": "en",
+   "family": "7.2",
+   "requirement_id": "major.7.2.03",
+   "query": "give me the 5 closest neighbours of each query point in a 3D point cloud",
+   "expected_operations": [
+    "spatial.knn_3"
+   ]
+  },
+  {
+   "id": "b3-016",
+   "language": "ja",
+   "family": "7.2",
+   "requirement_id": "major.7.2.03",
+   "query": "各クエリ点について点群の中から近い順にk個の近傍を検索して",
+   "expected_operations": [
+    "spatial.knn_3"
+   ]
+  },
+  {
+   "id": "b3-017",
+   "language": "en",
+   "family": "7.2",
+   "requirement_id": "major.7.2.04",
+   "query": "Which triangles might each ray pass through? I want the full candidate face list per ray, not just the nearest.",
+   "expected_operations": [
+    "spatial.aabb.intersections"
+   ]
+  },
+  {
+   "id": "b3-018",
+   "language": "ja",
+   "family": "7.2",
+   "requirement_id": "major.7.2.05",
+   "query": "平面上の点群をぴったり囲む軸に平行な外接矩形が欲しい",
+   "expected_operations": [
+    "spatial.bbox_2"
+   ]
+  },
+  {
+   "id": "b3-019",
+   "language": "en",
+   "family": "7.2",
+   "requirement_id": "major.7.2.05",
+   "query": "axis-aligned box that tightly encloses a triangle mesh",
+   "expected_operations": [
+    "spatial.bbox_3"
+   ]
+  },
+  {
+   "id": "b3-020",
+   "language": "en",
+   "family": "7.3",
+   "requirement_id": "major.7.3.01",
+   "query": "Check whether this mesh is healthy before I touch it: closed, manifold, any defects? Don't modify anything.",
+   "expected_operations": [
+    "mesh.inspect.pmp"
+   ]
+  },
+  {
+   "id": "b3-021",
+   "language": "ja",
+   "family": "7.3",
+   "requirement_id": "major.7.3.01",
+   "query": "メッシュを加工する前に、修復せずに健全性だけ点検したい。閉じているか、非多様体がないか",
+   "expected_operations": [
+    "mesh.inspect.pmp"
+   ]
+  },
+  {
+   "id": "b3-022",
+   "language": "en",
+   "family": "7.3",
+   "requirement_id": "major.7.3.02",
+   "query": "How many separate pieces does this model consist of, and how large is each one?",
+   "expected_operations": [
+    "mesh.components.label"
+   ]
+  },
+  {
+   "id": "b3-023",
+   "language": "ja",
+   "family": "7.3",
+   "requirement_id": "major.7.3.02",
+   "query": "メッシュがいくつの独立した塊に分かれているか数えて、面ごとに所属を付けてほしい",
+   "expected_operations": [
+    "mesh.components.label"
+   ]
+  },
+  {
+   "id": "b3-024",
+   "language": "en",
+   "family": "7.3",
+   "requirement_id": "major.7.3.02",
+   "query": "extract only the shell that contains face 12 as its own mesh",
+   "expected_operations": [
+    "mesh.components.component"
+   ]
+  },
+  {
+   "id": "b3-025",
+   "language": "ja",
+   "family": "7.3",
+   "requirement_id": "major.7.3.02",
+   "query": "小さな破片はゴミなので捨てて、大きい順に上位2つの部品だけ残したい",
+   "expected_operations": [
+    "mesh.components.keep_largest"
+   ]
+  },
+  {
+   "id": "b3-026",
+   "language": "en",
+   "family": "7.3",
+   "requirement_id": "major.7.3.03",
+   "query": "Compute per-face and per-vertex unit normals for this surface.",
+   "expected_operations": [
+    "mesh.analysis.normals"
+   ]
+  },
+  {
+   "id": "b3-027",
+   "language": "ja",
+   "family": "7.3",
+   "requirement_id": "major.7.3.03",
+   "query": "面の法線ベクトルと頂点の法線ベクトルを計算してください",
+   "expected_operations": [
+    "mesh.analysis.normals"
+   ]
+  },
+  {
+   "id": "b3-028",
+   "language": "en",
+   "family": "7.3",
+   "requirement_id": "major.7.3.04",
+   "query": "Surface area, enclosed volume and the centre of mass of a closed model, please.",
+   "expected_operations": [
+    "mesh.analysis.measures"
+   ]
+  },
+  {
+   "id": "b3-029",
+   "language": "ja",
+   "family": "7.3",
+   "requirement_id": "major.7.3.04",
+   "query": "この閉じたモデルの表面積と体積と体積重心を知りたい",
+   "expected_operations": [
+    "mesh.analysis.measures"
+   ]
+  },
+  {
+   "id": "b3-030",
+   "language": "en",
+   "family": "7.3",
+   "requirement_id": "major.7.3.05",
+   "query": "Find crease edges sharper than 40 degrees and group the faces into smooth patches.",
+   "expected_operations": [
+    "mesh.features.detect"
+   ]
+  },
+  {
+   "id": "b3-031",
+   "language": "ja",
+   "family": "7.3",
+   "requirement_id": "major.7.3.05",
+   "query": "角度のしきい値を決めて、境界辺と二面角で鋭い辺だけを一覧にしてほしい",
+   "expected_operations": [
+    "mesh.analysis.sharp_features",
+    "mesh.features.detect"
+   ]
+  },
+  {
+   "id": "b3-032",
+   "language": "en",
+   "family": "7.3",
+   "requirement_id": "major.7.3.06",
+   "query": "How far apart are the scan and the reference mesh in the worst direction, both ways round? Symmetric Hausdorff please.",
+   "expected_operations": [
+    "mesh.distance.symmetric_hausdorff",
+    "mesh.distance.hausdorff_approximate_symmetric"
+   ]
+  },
+  {
+   "id": "b3-033",
+   "language": "ja",
+   "family": "7.3",
+   "requirement_id": "major.7.3.06",
+   "query": "元のメッシュと加工後のメッシュの最大偏差を、誤差保証付きで測りたい",
+   "expected_operations": [
+    "mesh.distance.hausdorff_bounded",
+    "mesh.distance.symmetric_hausdorff",
+    "mesh.distance.hausdorff_approximate"
+   ]
+  },
+  {
+   "id": "b3-034",
+   "language": "en",
+   "family": "7.3",
+   "requirement_id": "major.7.3.06",
+   "query": "scatter sample points over a mesh surface on a regular spacing of 0.5",
+   "expected_operations": [
+    "mesh.distance.sample_points"
+   ]
+  },
+  {
+   "id": "b3-035",
+   "language": "en",
+   "family": "7.3",
+   "requirement_id": "major.7.3.06",
+   "query": "How far is the worst measured point from the CAD surface? I have a point cloud and a mesh.",
+   "expected_operations": [
+    "mesh.distance.max_to_mesh"
+   ]
+  },
+  {
+   "id": "b3-036",
+   "language": "en",
+   "family": "7.3",
+   "requirement_id": "major.7.3.07",
+   "query": "Does this mesh cut through itself anywhere? List the offending face pairs.",
+   "expected_operations": [
+    "mesh.analysis.self_intersections"
+   ]
+  },
+  {
+   "id": "b3-037",
+   "language": "ja",
+   "family": "7.3",
+   "requirement_id": "major.7.3.07",
+   "query": "2つのメッシュが干渉しているかどうかだけ真偽で知りたい。片方が内側に入っている場合も含めて",
+   "expected_operations": [
+    "mesh.intersections.do_intersect"
+   ]
+  },
+  {
+   "id": "b3-038",
+   "language": "en",
+   "family": "7.3",
+   "requirement_id": "major.7.3.07",
+   "query": "Give me the curves where two meshes cross each other, as polylines.",
+   "expected_operations": [
+    "mesh.intersections.polylines"
+   ]
+  },
+  {
+   "id": "b3-039",
+   "language": "en",
+   "family": "7.3",
+   "requirement_id": "major.7.3.08",
+   "query": "Which triangle is this point on, and what are its barycentric coordinates in it?",
+   "expected_operations": [
+    "mesh.location.locate"
+   ]
+  },
+  {
+   "id": "b3-040",
+   "language": "en",
+   "family": "7.4",
+   "requirement_id": "major.7.4.01",
+   "query": "My STL import has triangles facing random ways; make them consistent and outward.",
+   "expected_operations": [
+    "mesh.repair.orient"
+   ]
+  },
+  {
+   "id": "b3-041",
+   "language": "ja",
+   "family": "7.4",
+   "requirement_id": "major.7.4.01",
+   "query": "三角形スープの面の向きがばらばらなので、揃えて閉じた形なら外向きにしたい",
+   "expected_operations": [
+    "mesh.repair.orient"
+   ]
+  },
+  {
+   "id": "b3-042",
+   "language": "en",
+   "family": "7.4",
+   "requirement_id": "major.7.4.02",
+   "query": "Weld the duplicated seam vertices so the cracks along the borders close up.",
+   "expected_operations": [
+    "mesh.repair.stitch_borders"
+   ]
+  },
+  {
+   "id": "b3-043",
+   "language": "ja",
+   "family": "7.4",
+   "requirement_id": "major.7.4.02",
+   "query": "境界に残っている重複した頂点を縫い合わせて、隙間をふさぎたい",
+   "expected_operations": [
+    "mesh.repair.stitch_borders"
+   ]
+  },
+  {
+   "id": "b3-044",
+   "language": "en",
+   "family": "7.4",
+   "requirement_id": "major.7.4.03",
+   "query": "remove zero-area slivers and collapsed triangles from my mesh",
+   "expected_operations": [
+    "mesh.repair.remove_degenerate"
+   ]
+  },
+  {
+   "id": "b3-045",
+   "language": "ja",
+   "family": "7.4",
+   "requirement_id": "major.7.4.03",
+   "query": "面積ゼロに潰れた三角形や辺を削除して",
+   "expected_operations": [
+    "mesh.repair.remove_degenerate"
+   ]
+  },
+  {
+   "id": "b3-046",
+   "language": "en",
+   "family": "7.4",
+   "requirement_id": "major.7.4.04",
+   "query": "Patch the holes whose boundary has at most 30 edges with a plain triangulated fill.",
+   "expected_operations": [
+    "mesh.repair.fill_holes"
+   ]
+  },
+  {
+   "id": "b3-047",
+   "language": "ja",
+   "family": "7.4",
+   "requirement_id": "major.7.4.04",
+   "query": "穴を滑らかなパッチで埋めたい。内部に頂点を足してフェアリングもしてほしい",
+   "expected_operations": [
+    "mesh.repair.fill_holes_refine_fair"
+   ]
+  },
+  {
+   "id": "b3-048",
+   "language": "en",
+   "family": "7.4",
+   "requirement_id": "major.7.4.05",
+   "query": "Clean up a triangle soup: duplicated points, repeated polygons and orphan points.",
+   "expected_operations": [
+    "mesh.repair.polygon_soup"
+   ]
+  },
+  {
+   "id": "b3-049",
+   "language": "ja",
+   "family": "7.4",
+   "requirement_id": "major.7.4.05",
+   "query": "同じ位置の重複点や重複した三角形、使われていない点を取り除きたい",
+   "expected_operations": [
+    "mesh.repair.polygon_soup"
+   ]
+  },
+  {
+   "id": "b3-050",
+   "language": "en",
+   "family": "7.4",
+   "requirement_id": "major.7.4.06",
+   "query": "Split the pinched vertices so that every vertex neighbourhood becomes a proper disk.",
+   "expected_operations": [
+    "mesh.repair.manifold_preprocess"
+   ]
+  },
+  {
+   "id": "b3-051",
+   "language": "ja",
+   "family": "7.4",
+   "requirement_id": "major.7.4.06",
+   "query": "非多様体になっている頂点を複製して、多様体として扱える形にしたい",
+   "expected_operations": [
+    "mesh.repair.manifold_preprocess"
+   ]
+  },
+  {
+   "id": "b3-052",
+   "language": "en",
+   "family": "7.5",
+   "requirement_id": "major.7.5.02",
+   "query": "Merge two solids into one watertight body.",
+   "expected_operations": [
+    "mesh.boolean.union"
+   ]
+  },
+  {
+   "id": "b3-053",
+   "language": "ja",
+   "family": "7.5",
+   "requirement_id": "major.7.5.02",
+   "query": "2つの立体を合体させて一つの形にしたい",
+   "expected_operations": [
+    "mesh.boolean.union"
+   ]
+  },
+  {
+   "id": "b3-054",
+   "language": "en",
+   "family": "7.5",
+   "requirement_id": "major.7.5.02",
+   "query": "Keep only the volume where the two bodies overlap.",
+   "expected_operations": [
+    "mesh.boolean.intersection"
+   ]
+  },
+  {
+   "id": "b3-055",
+   "language": "ja",
+   "family": "7.5",
+   "requirement_id": "major.7.5.02",
+   "query": "2つの閉じたメッシュの共通部分だけを取り出したい",
+   "expected_operations": [
+    "mesh.boolean.intersection"
+   ]
+  },
+  {
+   "id": "b3-056",
+   "language": "en",
+   "family": "7.5",
+   "requirement_id": "major.7.5.02",
+   "query": "Cut a pocket: subtract the cutter solid from the part.",
+   "expected_operations": [
+    "mesh.boolean.difference"
+   ]
+  },
+  {
+   "id": "b3-057",
+   "language": "ja",
+   "family": "7.5",
+   "requirement_id": "major.7.5.02",
+   "query": "AからBを引いた形状を作りたい。穴あけ加工のイメージ",
+   "expected_operations": [
+    "mesh.boolean.difference"
+   ]
+  },
+  {
+   "id": "b3-058",
+   "language": "en",
+   "family": "7.5",
+   "requirement_id": "major.7.5.01",
+   "query": "Refine mesh A along the lines where it meets mesh B, leaving B alone.",
+   "expected_operations": [
+    "mesh.corefine"
+   ]
+  },
+  {
+   "id": "b3-059",
+   "language": "ja",
+   "family": "7.5",
+   "requirement_id": "major.7.5.01",
+   "query": "自己交差している面を交線で分割して、交差のないメッシュにしたい",
+   "expected_operations": [
+    "mesh.autorefine"
+   ]
+  },
+  {
+   "id": "b3-060",
+   "language": "en",
+   "family": "7.5",
+   "requirement_id": "major.7.5.03",
+   "query": "Chop off everything above z=5 and keep the lower part, closing the cut face.",
+   "expected_operations": [
+    "mesh.clip.plane"
+   ]
+  },
+  {
+   "id": "b3-061",
+   "language": "ja",
+   "family": "7.5",
+   "requirement_id": "major.7.5.03",
+   "query": "平面で切って、片側だけを残したい",
+   "expected_operations": [
+    "mesh.clip.plane"
+   ]
+  },
+  {
+   "id": "b3-062",
+   "language": "en",
+   "family": "7.5",
+   "requirement_id": "major.7.5.04",
+   "query": "Cut the mesh along a plane into two separate pieces.",
+   "expected_operations": [
+    "mesh.split.plane"
+   ]
+  },
+  {
+   "id": "b3-063",
+   "language": "ja",
+   "family": "7.5",
+   "requirement_id": "major.7.5.05",
+   "query": "平面でスライスして、断面の輪郭を折れ線として取り出したい",
+   "expected_operations": [
+    "mesh.slice.compute"
+   ]
+  },
+  {
+   "id": "b3-064",
+   "language": "en",
+   "family": "7.5",
+   "requirement_id": "major.7.5.05",
+   "query": "contour of the part at z=3 for a layer preview",
+   "expected_operations": [
+    "mesh.slice.compute"
+   ]
+  },
+  {
+   "id": "b3-065",
+   "language": "en",
+   "family": "7.6",
+   "requirement_id": "major.7.6.01",
+   "query": "Convert the quads and n-gon faces into triangles.",
+   "expected_operations": [
+    "mesh.triangulate.faces"
+   ]
+  },
+  {
+   "id": "b3-066",
+   "language": "ja",
+   "family": "7.6",
+   "requirement_id": "major.7.6.01",
+   "query": "多角形の面をすべて三角形に分割して",
+   "expected_operations": [
+    "mesh.triangulate.faces"
+   ]
+  },
+  {
+   "id": "b3-067",
+   "language": "en",
+   "family": "7.6",
+   "requirement_id": "major.7.6.02",
+   "query": "Add more vertices inside the triangles but keep the boundary frozen.",
+   "expected_operations": [
+    "mesh.refine.local"
+   ]
+  },
+  {
+   "id": "b3-068",
+   "language": "ja",
+   "family": "7.6",
+   "requirement_id": "major.7.6.02",
+   "query": "境界は動かさず、内部に頂点を増やして細かくしたい",
+   "expected_operations": [
+    "mesh.refine.local"
+   ]
+  },
+  {
+   "id": "b3-069",
+   "language": "en",
+   "family": "7.6",
+   "requirement_id": "major.7.6.03",
+   "query": "Remesh to a uniform 1 mm edge length with nice near-equilateral triangles.",
+   "expected_operations": [
+    "mesh.remesh.isotropic"
+   ]
+  },
+  {
+   "id": "b3-070",
+   "language": "ja",
+   "family": "7.6",
+   "requirement_id": "major.7.6.03",
+   "query": "三角形の大きさを揃えたいので、目標の辺長を指定してリメッシュして",
+   "expected_operations": [
+    "mesh.remesh.isotropic"
+   ]
+  },
+  {
+   "id": "b3-071",
+   "language": "en",
+   "family": "7.6",
+   "requirement_id": "major.7.6.03",
+   "query": "just cut the edges that are longer than 2.0 into shorter pieces, shape unchanged",
+   "expected_operations": [
+    "mesh.remesh.split_long_edges"
+   ]
+  },
+  {
+   "id": "b3-072",
+   "language": "ja",
+   "family": "7.6",
+   "requirement_id": "major.7.6.03",
+   "query": "長すぎる辺だけを分割して、形はそのままにしたい",
+   "expected_operations": [
+    "mesh.remesh.split_long_edges"
+   ]
+  },
+  {
+   "id": "b3-073",
+   "language": "en",
+   "family": "7.6",
+   "requirement_id": "major.7.6.04",
+   "query": "Relax the triangle layout to improve angles while the shape and boundary stay put.",
+   "expected_operations": [
+    "mesh.smooth.tangential_relaxation"
+   ]
+  },
+  {
+   "id": "b3-074",
+   "language": "ja",
+   "family": "7.6",
+   "requirement_id": "major.7.6.04",
+   "query": "曲率フローで表面を滑らかにしたい。境界は固定、体積は保つオプション付きで",
+   "expected_operations": [
+    "mesh.smooth.shape"
+   ]
+  },
+  {
+   "id": "b3-075",
+   "language": "en",
+   "family": "7.6",
+   "requirement_id": "major.7.6.05",
+   "query": "Denser triangles where the surface curves a lot, coarser on flat areas.",
+   "expected_operations": [
+    "mesh.remesh.adaptive"
+   ]
+  },
+  {
+   "id": "b3-076",
+   "language": "ja",
+   "family": "7.6",
+   "requirement_id": "major.7.6.05",
+   "query": "曲率に応じて三角形のサイズが変わる適応的なリメッシュがしたい",
+   "expected_operations": [
+    "mesh.remesh.adaptive"
+   ]
+  },
+  {
+   "id": "b3-077",
+   "language": "en",
+   "family": "7.7",
+   "requirement_id": "major.7.7.01",
+   "query": "Reduce this scan to roughly 20% of its faces while keeping the shape.",
+   "expected_operations": [
+    "mesh.simplify.edge_collapse"
+   ]
+  },
+  {
+   "id": "b3-078",
+   "language": "ja",
+   "family": "7.7",
+   "requirement_id": "major.7.7.03",
+   "query": "ポリゴン数を半分に間引きたい。二次誤差メトリクスで",
+   "expected_operations": [
+    "mesh.simplify.edge_collapse"
+   ]
+  },
+  {
+   "id": "b3-079",
+   "language": "en",
+   "family": "7.7",
+   "requirement_id": "major.7.7.02",
+   "query": "decimate with Lindstrom-Turk placement for a low-poly LOD",
+   "expected_operations": [
+    "mesh.simplify.edge_collapse"
+   ]
+  },
+  {
+   "id": "b3-080",
+   "language": "ja",
+   "family": "7.7",
+   "requirement_id": "major.7.7.06",
+   "query": "法線の変化量に上限を付けて簡略化したい",
+   "expected_operations": [
+    "mesh.simplify.edge_collapse"
+   ]
+  },
+  {
+   "id": "b3-081",
+   "language": "en",
+   "family": "7.7",
+   "requirement_id": "major.7.7.05",
+   "query": "simplify the mesh but make sure it stays within a polyhedral envelope of the original",
+   "expected_operations": [
+    "mesh.simplify.edge_collapse"
+   ]
+  },
+  {
+   "id": "b3-082",
+   "language": "en",
+   "family": "7.8",
+   "requirement_id": "major.7.8.01",
+   "query": "Split a closed mesh into parts according to local thickness (shape diameter).",
+   "expected_operations": [
+    "mesh.segment.sdf"
+   ]
+  },
+  {
+   "id": "b3-083",
+   "language": "ja",
+   "family": "7.8",
+   "requirement_id": "major.7.8.01",
+   "query": "各面の厚み(形状直径関数)の生の値だけが欲しい",
+   "expected_operations": [
+    "mesh.segment.sdf_values"
+   ]
+  },
+  {
+   "id": "b3-084",
+   "language": "en",
+   "family": "7.8",
+   "requirement_id": "major.7.8.02",
+   "query": "Break this model into a handful of convex pieces for collision detection.",
+   "expected_operations": [
+    "mesh.decompose.approx_convex"
+   ]
+  },
+  {
+   "id": "b3-085",
+   "language": "ja",
+   "family": "7.8",
+   "requirement_id": "major.7.8.02",
+   "query": "物理シミュレーションの衝突判定用に、形状を凸な部品へ分解したい",
+   "expected_operations": [
+    "mesh.decompose.approx_convex"
+   ]
+  },
+  {
+   "id": "b3-086",
+   "language": "en",
+   "family": "7.8",
+   "requirement_id": "major.7.8.03",
+   "query": "Extract a curve skeleton, the medial centerline, of a closed shape.",
+   "expected_operations": [
+    "mesh.skeletonize.mean_curvature",
+    "mesh.skeletonize.mean_curvature_flow"
+   ]
+  },
+  {
+   "id": "b3-087",
+   "language": "ja",
+   "family": "7.8",
+   "requirement_id": "major.7.8.03",
+   "query": "メッシュから中心線のスケルトンを抽出したい。品質と中心寄せの度合いを調整できるように",
+   "expected_operations": [
+    "mesh.skeletonize.mean_curvature_flow"
+   ]
+  },
+  {
+   "id": "b3-088",
+   "language": "en",
+   "family": "7.8",
+   "requirement_id": "major.7.8.04",
+   "query": "geodesic distance along the surface between two points on the mesh",
+   "expected_operations": [
+    "mesh.path.shortest"
+   ]
+  },
+  {
+   "id": "b3-089",
+   "language": "ja",
+   "family": "7.8",
+   "requirement_id": "major.7.8.04",
+   "query": "表面に沿った最短経路を求めたい",
+   "expected_operations": [
+    "mesh.path.shortest"
+   ]
+  },
+  {
+   "id": "b3-090",
+   "language": "en",
+   "family": "7.8",
+   "requirement_id": "major.7.8.05",
+   "query": "Unwrap a disc-shaped patch to 2D UV coordinates with low distortion, as-rigid-as-possible.",
+   "expected_operations": [
+    "mesh.parameterize"
+   ]
+  },
+  {
+   "id": "b3-091",
+   "language": "ja",
+   "family": "7.8",
+   "requirement_id": "major.7.8.05",
+   "query": "円盤状のメッシュを円の内側へ等角に写してUV展開したい",
+   "expected_operations": [
+    "mesh.parameterize.discrete_conformal_map"
+   ]
+  },
+  {
+   "id": "b3-092",
+   "language": "en",
+   "family": "7.8",
+   "requirement_id": "major.7.8.06",
+   "query": "Smooth quad-style subdivision of a mesh.",
+   "expected_operations": [
+    "mesh.subdivide.catmull_clark"
+   ]
+  },
+  {
+   "id": "b3-093",
+   "language": "ja",
+   "family": "7.8",
+   "requirement_id": "major.7.8.06",
+   "query": "三角形メッシュを一段階だけループ法で細分割して滑らかにしたい",
+   "expected_operations": [
+    "mesh.subdivide.loop"
+   ]
+  },
+  {
+   "id": "b3-094",
+   "language": "en",
+   "family": "7.9",
+   "requirement_id": "major.7.9.01",
+   "query": "Estimate normals for a bare point cloud using PCA.",
+   "expected_operations": [
+    "pointset.normals.estimate"
+   ]
+  },
+  {
+   "id": "b3-095",
+   "language": "ja",
+   "family": "7.9",
+   "requirement_id": "major.7.9.01",
+   "query": "点群の各点の法線ベクトルを推定したい",
+   "expected_operations": [
+    "pointset.normals.estimate"
+   ]
+  },
+  {
+   "id": "b3-096",
+   "language": "en",
+   "family": "7.9",
+   "requirement_id": "major.7.9.01",
+   "query": "Make the normals of my point cloud point consistently, propagating along a minimum spanning tree.",
+   "expected_operations": [
+    "pointset.normals.orient_mst"
+   ]
+  },
+  {
+   "id": "b3-097",
+   "language": "en",
+   "family": "7.9",
+   "requirement_id": "major.7.9.02",
+   "query": "Get rid of the stray noisy points that sit far from everything else.",
+   "expected_operations": [
+    "pointset.remove_outliers"
+   ]
+  },
+  {
+   "id": "b3-098",
+   "language": "ja",
+   "family": "7.9",
+   "requirement_id": "major.7.9.02",
+   "query": "外れ値になっている孤立した点を除去したい",
+   "expected_operations": [
+    "pointset.remove_outliers"
+   ]
+  },
+  {
+   "id": "b3-099",
+   "language": "en",
+   "family": "7.9",
+   "requirement_id": "major.7.9.02",
+   "query": "What is the typical spacing between neighbouring points in this cloud?",
+   "expected_operations": [
+    "pointset.spacing.average"
+   ]
+  },
+  {
+   "id": "b3-100",
+   "language": "ja",
+   "family": "7.9",
+   "requirement_id": "major.7.9.02",
+   "query": "点群の平均的な点間隔を知りたい",
+   "expected_operations": [
+    "pointset.spacing.average"
+   ]
+  },
+  {
+   "id": "b3-101",
+   "language": "en",
+   "family": "7.9",
+   "requirement_id": "major.7.9.03",
+   "query": "Denoise the cloud by fitting local polynomial surfaces.",
+   "expected_operations": [
+    "pointset.smooth.jet"
+   ]
+  },
+  {
+   "id": "b3-102",
+   "language": "ja",
+   "family": "7.9",
+   "requirement_id": "major.7.9.03",
+   "query": "法線付きの点群を、鋭い特徴を残したまま平滑化したい",
+   "expected_operations": [
+    "pointset.smooth.bilateral"
+   ]
+  },
+  {
+   "id": "b3-103",
+   "language": "en",
+   "family": "7.9",
+   "requirement_id": "major.7.9.04",
+   "query": "Thin the point cloud onto a voxel grid with cell size 0.1.",
+   "expected_operations": [
+    "pointset.simplify.grid"
+   ]
+  },
+  {
+   "id": "b3-104",
+   "language": "ja",
+   "family": "7.9",
+   "requirement_id": "major.7.9.04",
+   "query": "点群をシード固定でランダムに間引きたい",
+   "expected_operations": [
+    "pointset.simplify.random"
+   ]
+  },
+  {
+   "id": "b3-105",
+   "language": "en",
+   "family": "7.9",
+   "requirement_id": "major.7.9.04",
+   "query": "Cluster-based point decimation where I cap the maximum cluster size.",
+   "expected_operations": [
+    "pointset.simplify.hierarchy"
+   ]
+  },
+  {
+   "id": "b3-106",
+   "language": "en",
+   "family": "7.9",
+   "requirement_id": "major.7.9.05",
+   "query": "Align the moving scan to the reference scan rigidly and give me the 3x4 matrix.",
+   "expected_operations": [
+    "pointset.registration.compute_transformation"
+   ]
+  },
+  {
+   "id": "b3-107",
+   "language": "ja",
+   "family": "7.9",
+   "requirement_id": "major.7.9.05",
+   "query": "2つの点群を位置合わせして、変換後の点群を得たい",
+   "expected_operations": [
+    "pointset.registration.register"
+   ]
+  },
+  {
+   "id": "b3-108",
+   "language": "en",
+   "family": "7.10",
+   "requirement_id": "major.7.10.01",
+   "query": "Build a watertight surface from oriented points using Poisson.",
+   "expected_operations": [
+    "reconstruction.poisson",
+    "reconstruction.poisson_delaunay"
+   ]
+  },
+  {
+   "id": "b3-109",
+   "language": "ja",
+   "family": "7.10",
+   "requirement_id": "major.7.10.01",
+   "query": "法線付きの点群からポアソン法で曲面を再構成したい",
+   "expected_operations": [
+    "reconstruction.poisson",
+    "reconstruction.poisson_delaunay"
+   ]
+  },
+  {
+   "id": "b3-110",
+   "language": "en",
+   "family": "7.10",
+   "requirement_id": "major.7.10.02",
+   "query": "Connect-the-dots triangulation that interpolates every scanned point, no normals available.",
+   "expected_operations": [
+    "reconstruction.advancing_front"
+   ]
+  },
+  {
+   "id": "b3-111",
+   "language": "ja",
+   "family": "7.10",
+   "requirement_id": "major.7.10.02",
+   "query": "ノイズの多いスキャン点群を、スケールスペース法で再構成したい",
+   "expected_operations": [
+    "reconstruction.scale_space"
+   ]
+  },
+  {
+   "id": "b3-112",
+   "language": "en",
+   "family": "7.10",
+   "requirement_id": "major.7.10.03",
+   "query": "Shrink-wrap a watertight, manifold skin around this dirty geometry.",
+   "expected_operations": [
+    "reconstruction.alpha_wrap"
+   ]
+  },
+  {
+   "id": "b3-113",
+   "language": "ja",
+   "family": "7.10",
+   "requirement_id": "major.7.10.03",
+   "query": "散らかったデータの外側を覆う密閉した外皮をアルファラッピングで作りたい",
+   "expected_operations": [
+    "reconstruction.alpha_wrap"
+   ]
+  },
+  {
+   "id": "b3-114",
+   "language": "en",
+   "family": "7.10",
+   "requirement_id": "major.7.10.02",
+   "query": "Recover a clean planar-faced CAD-like model from a point scan using plane detection and an optimisation.",
+   "expected_operations": [
+    "reconstruction.polygonal_surface"
+   ]
+  },
+  {
+   "id": "b3-115",
+   "language": "ja",
+   "family": "7.10",
+   "requirement_id": "major.7.10.02",
+   "query": "平面を検出して空間を運動学的に分割し、ポリゴン面で再構成したい",
+   "expected_operations": [
+    "reconstruction.kinetic_surface"
+   ]
+  },
+  {
+   "id": "b3-116",
+   "language": "en",
+   "family": "7.11",
+   "requirement_id": "major.7.11.01",
+   "query": "Triangulate scattered 2D points the Delaunay way.",
+   "expected_operations": [
+    "triangulation.delaunay_2"
+   ]
+  },
+  {
+   "id": "b3-117",
+   "language": "ja",
+   "family": "7.11",
+   "requirement_id": "major.7.11.01",
+   "query": "平面上の点集合のドロネー三角形分割を作りたい",
+   "expected_operations": [
+    "triangulation.delaunay_2"
+   ]
+  },
+  {
+   "id": "b3-118",
+   "language": "en",
+   "family": "7.11",
+   "requirement_id": "major.7.11.01",
+   "query": "Tetrahedralize a 3D point cloud, Delaunay style.",
+   "expected_operations": [
+    "triangulation.delaunay_3"
+   ]
+  },
+  {
+   "id": "b3-119",
+   "language": "en",
+   "family": "7.11",
+   "requirement_id": "major.7.11.02",
+   "query": "A triangulation that is forced to keep these polyline edges.",
+   "expected_operations": [
+    "triangulation.constrained_2"
+   ]
+  },
+  {
+   "id": "b3-120",
+   "language": "ja",
+   "family": "7.11",
+   "requirement_id": "major.7.11.02",
+   "query": "指定した線分を必ず辺として残す三角形分割がしたい",
+   "expected_operations": [
+    "triangulation.constrained_2"
+   ]
+  },
+  {
+   "id": "b3-121",
+   "language": "en",
+   "family": "7.11",
+   "requirement_id": "major.7.11.03",
+   "query": "Weighted Delaunay with one weight per point in the plane, power-diagram style.",
+   "expected_operations": [
+    "triangulation.regular_2"
+   ]
+  },
+  {
+   "id": "b3-122",
+   "language": "ja",
+   "family": "7.11",
+   "requirement_id": "major.7.11.03",
+   "query": "各点に重みのある3次元のドロネー分割を作りたい",
+   "expected_operations": [
+    "triangulation.regular_3"
+   ]
+  },
+  {
+   "id": "b3-123",
+   "language": "en",
+   "family": "7.11",
+   "requirement_id": "major.7.11.04",
+   "query": "Triangulate points on a torus where the square wraps around.",
+   "expected_operations": [
+    "triangulation.periodic_delaunay_2"
+   ]
+  },
+  {
+   "id": "b3-124",
+   "language": "ja",
+   "family": "7.11",
+   "requirement_id": "major.7.11.04",
+   "query": "立方体の周期境界条件を持つ3次元のドロネー四面体分割",
+   "expected_operations": [
+    "triangulation.periodic_delaunay_3"
+   ]
+  },
+  {
+   "id": "b3-125",
+   "language": "ja",
+   "family": "7.11",
+   "requirement_id": "major.7.11.04",
+   "query": "球面上に分布した点のドロネー三角形分割がほしい",
+   "expected_operations": [
+    "triangulation.delaunay_on_sphere_2"
+   ]
+  },
+  {
+   "id": "b3-126",
+   "language": "en",
+   "family": "7.11",
+   "requirement_id": "major.7.11.05",
+   "query": "Voronoi cells for these sites in the plane.",
+   "expected_operations": [
+    "triangulation.voronoi_dual"
+   ]
+  },
+  {
+   "id": "b3-127",
+   "language": "ja",
+   "family": "7.11",
+   "requirement_id": "major.7.11.05",
+   "query": "母点集合からボロノイ図を作りたい",
+   "expected_operations": [
+    "triangulation.voronoi_dual"
+   ]
+  },
+  {
+   "id": "b3-128",
+   "language": "en",
+   "family": "7.12",
+   "requirement_id": "major.7.12.01",
+   "query": "Is this polygon with holes simple and counter-clockwise? Also its area and centroid.",
+   "expected_operations": [
+    "polygon.analysis.properties"
+   ]
+  },
+  {
+   "id": "b3-129",
+   "language": "ja",
+   "family": "7.12",
+   "requirement_id": "major.7.12.01",
+   "query": "多角形の面積、重心、向き、凸かどうかを調べたい",
+   "expected_operations": [
+    "polygon.analysis.properties"
+   ]
+  },
+  {
+   "id": "b3-130",
+   "language": "en",
+   "family": "7.12",
+   "requirement_id": "major.7.12.01",
+   "query": "Which of my points fall inside the footprint, and which lie right on its edge?",
+   "expected_operations": [
+    "polygon.query.containment"
+   ]
+  },
+  {
+   "id": "b3-131",
+   "language": "ja",
+   "family": "7.12",
+   "requirement_id": "major.7.12.01",
+   "query": "点が多角形の内側か外側か境界上かを判定したい",
+   "expected_operations": [
+    "polygon.query.containment"
+   ]
+  },
+  {
+   "id": "b3-132",
+   "language": "en",
+   "family": "7.12",
+   "requirement_id": "major.7.12.02",
+   "query": "Turn a pile of line segments into a planar subdivision with vertices, edges and faces.",
+   "expected_operations": [
+    "arrangement.build"
+   ]
+  },
+  {
+   "id": "b3-133",
+   "language": "ja",
+   "family": "7.12",
+   "requirement_id": "major.7.12.02",
+   "query": "線分の配置に対して、ある線分が通過する頂点・辺・面を調べたい",
+   "expected_operations": [
+    "arrangement.zone"
+   ]
+  },
+  {
+   "id": "b3-134",
+   "language": "en",
+   "family": "7.12",
+   "requirement_id": "major.7.12.03",
+   "query": "Overlay two outlines and count how many of them cover each resulting region.",
+   "expected_operations": [
+    "arrangement.overlay"
+   ]
+  },
+  {
+   "id": "b3-135",
+   "language": "en",
+   "family": "7.12",
+   "requirement_id": "major.7.12.04",
+   "query": "union or difference of two 2D outlines",
+   "expected_operations": [
+    "polygon.boolean"
+   ]
+  },
+  {
+   "id": "b3-136",
+   "language": "ja",
+   "family": "7.12",
+   "requirement_id": "major.7.12.04",
+   "query": "二次元の輪郭同士の和・積・差を計算したい",
+   "expected_operations": [
+    "polygon.boolean"
+   ]
+  },
+  {
+   "id": "b3-137",
+   "language": "en",
+   "family": "7.12",
+   "requirement_id": "major.7.12.05",
+   "query": "Straight skeleton inside a floor plan outline.",
+   "expected_operations": [
+    "polygon.straight_skeleton.interior"
+   ]
+  },
+  {
+   "id": "b3-138",
+   "language": "ja",
+   "family": "7.12",
+   "requirement_id": "major.7.12.05",
+   "query": "多角形の外側のストレートスケルトンが欲しい",
+   "expected_operations": [
+    "polygon.straight_skeleton.exterior"
+   ]
+  },
+  {
+   "id": "b3-139",
+   "language": "en",
+   "family": "7.12",
+   "requirement_id": "major.7.12.06",
+   "query": "Shrink this outline inward by 3 mm with mitered corners.",
+   "expected_operations": [
+    "polygon.offset.interior"
+   ]
+  },
+  {
+   "id": "b3-140",
+   "language": "ja",
+   "family": "7.12",
+   "requirement_id": "major.7.12.06",
+   "query": "輪郭を外側へ5mmだけオフセットしたい",
+   "expected_operations": [
+    "polygon.offset.exterior"
+   ]
+  },
+  {
+   "id": "b3-141",
+   "language": "en",
+   "family": "7.12",
+   "requirement_id": "major.7.12.07",
+   "query": "Sweep a robot footprint around an obstacle polygon to grow the forbidden configuration space.",
+   "expected_operations": [
+    "polygon.minkowski_sum",
+    "polygon.minkowski_sum_reduced_convolution"
+   ]
+  },
+  {
+   "id": "b3-142",
+   "language": "ja",
+   "family": "7.12",
+   "requirement_id": "major.7.12.07",
+   "query": "2つの多角形のミンコフスキー和を求めたい",
+   "expected_operations": [
+    "polygon.minkowski_sum",
+    "polygon.minkowski_sum_reduced_convolution"
+   ]
+  },
+  {
+   "id": "b3-143",
+   "language": "en",
+   "family": "7.13",
+   "requirement_id": "major.7.13.01",
+   "query": "Wrap an outline around these planar points, the tightest convex one.",
+   "expected_operations": [
+    "hull.convex_2"
+   ]
+  },
+  {
+   "id": "b3-144",
+   "language": "ja",
+   "family": "7.13",
+   "requirement_id": "major.7.13.01",
+   "query": "3次元の点群を包む凸な殻を作りたい",
+   "expected_operations": [
+    "hull.convex_3"
+   ]
+  },
+  {
+   "id": "b3-145",
+   "language": "en",
+   "family": "7.13",
+   "requirement_id": "major.7.13.02",
+   "query": "Concave-ish outline of a 2D point cloud controlled by an alpha radius.",
+   "expected_operations": [
+    "shape.alpha_shape_2"
+   ]
+  },
+  {
+   "id": "b3-146",
+   "language": "ja",
+   "family": "7.13",
+   "requirement_id": "major.7.13.02",
+   "query": "3次元点群のアルファシェイプを求めたい",
+   "expected_operations": [
+    "shape.alpha_shape_3",
+    "shape.fixed_alpha_shape_3"
+   ]
+  },
+  {
+   "id": "b3-147",
+   "language": "en",
+   "family": "7.13",
+   "requirement_id": "major.7.13.02",
+   "query": "Alpha shape of a 3D set of points with a single fixed alpha value.",
+   "expected_operations": [
+    "shape.fixed_alpha_shape_3"
+   ]
+  },
+  {
+   "id": "b3-148",
+   "language": "en",
+   "family": "7.13",
+   "requirement_id": "major.7.13.04",
+   "query": "Smallest circle that encloses all of these planar points.",
+   "expected_operations": [
+    "shape.bounding.circle"
+   ]
+  },
+  {
+   "id": "b3-149",
+   "language": "ja",
+   "family": "7.13",
+   "requirement_id": "major.7.13.04",
+   "query": "球の集まりを全部含む最小の外接球を求めたい",
+   "expected_operations": [
+    "shape.bounding.sphere"
+   ]
+  },
+  {
+   "id": "b3-150",
+   "language": "en",
+   "family": "7.13",
+   "requirement_id": "major.7.13.05",
+   "query": "Generalized barycentric coordinates of an interior point of a polygon, mean value or Wachspress.",
+   "expected_operations": [
+    "shape.barycentric"
+   ]
+  },
+  {
+   "id": "b3-151",
+   "language": "ja",
+   "family": "7.13",
+   "requirement_id": "major.7.13.05",
+   "query": "多角形の内部の点について、一般化重心座標を計算したい",
+   "expected_operations": [
+    "shape.barycentric"
+   ]
+  },
+  {
+   "id": "b3-152",
+   "language": "en",
+   "family": "7.14",
+   "requirement_id": "major.7.14.01",
+   "query": "Quality triangle mesh of a region with holes, bounded aspect ratio and a maximum edge length.",
+   "expected_operations": [
+    "mesh2.refine.delaunay"
+   ]
+  },
+  {
+   "id": "b3-153",
+   "language": "ja",
+   "family": "7.14",
+   "requirement_id": "major.7.14.01",
+   "query": "穴のある領域を、形状比と最大辺長を守る三角形メッシュに分割したい",
+   "expected_operations": [
+    "mesh2.refine.delaunay"
+   ]
+  },
+  {
+   "id": "b3-154",
+   "language": "en",
+   "family": "7.14",
+   "requirement_id": "major.7.14.02",
+   "query": "Mesh the surface of an ellipsoid with angle and size criteria.",
+   "expected_operations": [
+    "mesh.surface.generate"
+   ]
+  },
+  {
+   "id": "b3-155",
+   "language": "ja",
+   "family": "7.14",
+   "requirement_id": "major.7.14.02",
+   "query": "トーラスの表面メッシュを、角度とサイズの基準を指定して生成したい",
+   "expected_operations": [
+    "mesh.surface.generate"
+   ]
+  },
+  {
+   "id": "b3-156",
+   "language": "en",
+   "family": "7.14",
+   "requirement_id": "major.7.14.03",
+   "query": "Tetrahedral volume mesh of a closed surface for finite element analysis.",
+   "expected_operations": [
+    "mesh.volume.generate"
+   ]
+  },
+  {
+   "id": "b3-157",
+   "language": "ja",
+   "family": "7.14",
+   "requirement_id": "major.7.14.04",
+   "query": "球の内部を四面体で埋めるメッシュを、セルサイズの基準付きで作りたい",
+   "expected_operations": [
+    "mesh.volume.generate"
+   ]
+  },
+  {
+   "id": "b3-158",
+   "language": "en",
+   "family": "7.15",
+   "requirement_id": "major.7.15.01",
+   "query": "Minimise a quadratic objective subject to linear constraints, exactly.",
+   "expected_operations": [
+    "optimization.quadratic_program"
+   ]
+  },
+  {
+   "id": "b3-159",
+   "language": "ja",
+   "family": "7.15",
+   "requirement_id": "major.7.15.01",
+   "query": "線形計画問題を厳密に解きたい",
+   "expected_operations": [
+    "optimization.quadratic_program"
+   ]
+  },
+  {
+   "id": "b3-160",
+   "language": "en",
+   "family": "7.15",
+   "requirement_id": "major.7.15.02",
+   "query": "Estimate values at new locations from scattered samples using natural neighbour coordinates.",
+   "expected_operations": [
+    "optimization.interpolate"
+   ]
+  },
+  {
+   "id": "b3-161",
+   "language": "ja",
+   "family": "7.15",
+   "requirement_id": "major.7.15.02",
+   "query": "散らばった観測値から、任意の位置の値を自然近傍補間で推定したい",
+   "expected_operations": [
+    "optimization.interpolate"
+   ]
+  },
+  {
+   "id": "b3-162",
+   "language": "en",
+   "family": "7.15",
+   "requirement_id": "major.7.15.03",
+   "query": "Approximate a dense mesh with a few planar proxies, variational shape approximation.",
+   "expected_operations": [
+    "optimization.approximate_mesh"
+   ]
+  },
+  {
+   "id": "b3-163",
+   "language": "ja",
+   "family": "7.15",
+   "requirement_id": "major.7.15.04",
+   "query": "一次元上の点に対するp-center問題を厳密に解きたい",
+   "expected_operations": [
+    "optimization.matrix_search"
+   ]
+  }
+ ],
+ "out_of_scope_intents": [
+  {
+   "id": "b3-oos-01",
+   "language": "en",
+   "category": "non_geometry",
+   "query": "What is a good recipe for carbonara?"
+  },
+  {
+   "id": "b3-oos-02",
+   "language": "ja",
+   "category": "non_geometry",
+   "query": "明日の東京の天気を教えて"
+  },
+  {
+   "id": "b3-oos-03",
+   "language": "en",
+   "category": "non_geometry",
+   "query": "Write a SQL query that joins orders to customers and sums revenue by month."
+  },
+  {
+   "id": "b3-oos-04",
+   "language": "ja",
+   "category": "non_geometry",
+   "query": "来週の会議の議事録を要約してください"
+  },
+  {
+   "id": "b3-oos-05",
+   "language": "en",
+   "category": "non_geometry",
+   "query": "Translate this paragraph into French."
+  },
+  {
+   "id": "b3-oos-06",
+   "language": "ja",
+   "category": "non_geometry",
+   "query": "Pythonでリストを重複なしにソートする書き方は？"
+  },
+  {
+   "id": "b3-oos-07",
+   "language": "en",
+   "category": "non_geometry",
+   "query": "How do I rebase a git branch onto main?"
+  },
+  {
+   "id": "b3-oos-08",
+   "language": "ja",
+   "category": "non_geometry",
+   "query": "おすすめのラーメン屋を教えて"
+  },
+  {
+   "id": "b3-oos-09",
+   "language": "en",
+   "category": "other_library",
+   "query": "Blur and sharpen a JPEG image using OpenCV."
+  },
+  {
+   "id": "b3-oos-10",
+   "language": "ja",
+   "category": "other_library",
+   "query": "PyTorchでCNNを学習させるコードを書いて"
+  },
+  {
+   "id": "b3-oos-11",
+   "language": "en",
+   "category": "other_library",
+   "query": "Render this scene in Blender with Cycles and a HDRI sky."
+  },
+  {
+   "id": "b3-oos-12",
+   "language": "ja",
+   "category": "other_library",
+   "query": "Shapelyで多角形のbufferを取りたい"
+  },
+  {
+   "id": "b3-oos-13",
+   "language": "en",
+   "category": "other_library",
+   "query": "Run an FFT on this signal with NumPy and plot the spectrum."
+  },
+  {
+   "id": "b3-oos-14",
+   "language": "ja",
+   "category": "other_library",
+   "query": "Open3Dで点群をICPで位置合わせして可視化して"
+  },
+  {
+   "id": "b3-oos-15",
+   "language": "en",
+   "category": "other_library",
+   "query": "Compute a finite-element stress solution with FEniCS."
+  },
+  {
+   "id": "b3-oos-16",
+   "language": "ja",
+   "category": "other_library",
+   "query": "Unityでキャラクターのアニメーションを再生したい"
+  },
+  {
+   "id": "b3-oos-17",
+   "language": "en",
+   "category": "cgal_unsupported",
+   "query": "Find the smallest enclosing ellipse of a planar point set."
+  },
+  {
+   "id": "b3-oos-18",
+   "language": "ja",
+   "category": "cgal_unsupported",
+   "query": "双曲面上のドロネー三角形分割を作りたい"
+  },
+  {
+   "id": "b3-oos-19",
+   "language": "en",
+   "category": "cgal_unsupported",
+   "query": "Partition a simple polygon into the minimum number of convex pieces."
+  },
+  {
+   "id": "b3-oos-20",
+   "language": "ja",
+   "category": "cgal_unsupported",
+   "query": "Nefポリヘドロンで任意の3次元ブール演算を行いたい"
+  },
+  {
+   "id": "b3-oos-21",
+   "language": "en",
+   "category": "cgal_unsupported",
+   "query": "Deform a mesh by dragging handle vertices with as-rigid-as-possible deformation."
+  },
+  {
+   "id": "b3-oos-22",
+   "language": "ja",
+   "category": "cgal_unsupported",
+   "query": "可視領域(ビジビリティポリゴン)を点光源から計算して"
+  },
+  {
+   "id": "b3-oos-23",
+   "language": "en",
+   "category": "cgal_unsupported",
+   "query": "Find the largest empty rectangle among a set of obstacle points."
+  },
+  {
+   "id": "b3-oos-24",
+   "language": "ja",
+   "category": "cgal_unsupported",
+   "query": "線分のドロネーグラフを作りたい"
+  },
+  {
+   "id": "b3-oos-25",
+   "language": "en",
+   "category": "cgal_unsupported",
+   "query": "Detect planes and cylinders in a point cloud with efficient RANSAC."
+  },
+  {
+   "id": "b3-oos-26",
+   "language": "ja",
+   "category": "cgal_unsupported",
+   "query": "曲線アークの円弧交差を含む円形カーネルで交点を計算して"
+  },
+  {
+   "id": "b3-oos-27",
+   "language": "en",
+   "category": "cgal_unsupported",
+   "query": "Compute a minimum-area bounding rectangle of a point set."
+  },
+  {
+   "id": "b3-oos-28",
+   "language": "ja",
+   "category": "cgal_unsupported",
+   "query": "メッシュからレーザ照射の影を計算して"
+  },
+  {
+   "id": "b3-oos-29",
+   "language": "en",
+   "category": "other_library",
+   "query": "Generate an STL of a gear with 24 teeth in a CAD modeler."
+  },
+  {
+   "id": "b3-oos-30",
+   "language": "ja",
+   "category": "other_library",
+   "query": "メッシュの色を赤に変更してテクスチャを貼りたい"
+  },
+  {
+   "id": "b3-oos-31",
+   "language": "en",
+   "category": "cgal_unsupported",
+   "query": "Optimal transport reconstruction of a curve from noisy samples."
+  },
+  {
+   "id": "b3-oos-32",
+   "language": "ja",
+   "category": "non_geometry",
+   "query": "ありがとう、助かりました"
+  },
+  {
+   "id": "b3-oos-33",
+   "language": "en",
+   "category": "vague",
+   "query": "hmm, not sure what I want"
+  },
+  {
+   "id": "b3-oos-34",
+   "language": "ja",
+   "category": "vague",
+   "query": "何かいい感じにしておいて"
+  }
+ ]
+}
