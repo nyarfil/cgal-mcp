@@ -98,14 +98,14 @@
   "unbound_requirements": {},
   "family_contract_sha256": "3443afbf3b401972ca3779450ed751c50a46a84c05cd45386c23172281aecb00",
   "family_contract_source_path": "scripts/master_replay_families.py",
-  "family_contract_source_sha256": "62ab53b0a6a4a3d1c54ed481ea9b8c4b150ffa217c411361963b55b1f3ae9d25",
+  "family_contract_source_sha256": "df0d262e9c0142588b0a8c94475774c4390ed6b6b8fd98c76e2fa1346afd71b1",
   "family_contract_source_hash_encoding": "utf8-lf",
   "catalog_baseline_sha256": "143ec18a5b64d506aad60dc24b0a1ea30940c715d1223b3465fa140aeb9d02a7",
-  "operation_registry_sha256": "e850c738442633f48e77eeed4cdc40aa1a0d454cd5ee23ef05a3923b918d2af5",
+  "operation_registry_sha256": "17a1f46651a22157a5e0da2bbaec64b3731ffa64470b422ba1f0026d23659afd",
   "operation_registry_hash_encoding": "utf8-lf",
   "policy_catalog_sha256": "45f4be759288aaeb834a3ce97aa64ee7768048b15534618fc8c19512801f9a9f",
   "policy_catalog_hash_encoding": "utf8-lf",
-  "worker_sha256": "3d2a394425b00f51fae6f7e581a86831fcf4355be60df97cad01309c8fab1379",
+  "worker_sha256": "ba003e9957123f82846dedd8eb8b9258cfa946467a81d899ad031fecbc40fc55",
   "worker_binary_format": "pe",
   "worker_manifest": {
     "actual_cgal_version": "6.2.1",
@@ -500,11 +500,15 @@
               "degree_fitting": "degree_fitting",
               "degree_monge": "degree_monge",
               "neighbors": "neighbors"
+            },
+            "pointset.validate.smoothing_quality": {
+              "neighbors": "neighbors"
             }
           },
           "validators": [
             "pointset.validate.basic",
-            "pointset.validate.smoothed"
+            "pointset.validate.smoothed",
+            "pointset.validate.smoothing_quality"
           ]
         },
         "input_types": [
@@ -8669,6 +8673,79 @@
         "supported_kernels": [
           "package_recommended"
         ]
+      },
+      {
+        "dependencies": [
+          "Point_set_processing_3"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "pointset.smooth.bilateral",
+        "info": {
+          "input_format": "ascii_ply_with_x_y_z_nx_ny_nz",
+          "output_format": "ascii_ply_with_x_y_z_nx_ny_nz",
+          "required_parameters": [
+            "neighbors",
+            "sharpness_angle"
+          ],
+          "source_header": "CGAL/bilateral_smooth_point_set.h",
+          "validator_parameter_bindings": {
+            "pointset.validate.smoothing_quality": {
+              "neighbors": "neighbors"
+            }
+          },
+          "validators": [
+            "pointset.validate.basic",
+            "pointset.validate.smoothing_quality"
+          ]
+        },
+        "input_types": [
+          "PointSet3Normals"
+        ],
+        "output_type": "PointSet3Normals",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Point_set_processing_3"
+        ],
+        "effective_kernel": "long double (no CGAL header)",
+        "id": "pointset.validate.smoothing_quality",
+        "info": {
+          "bound_parameters": [
+            "neighbors"
+          ],
+          "checks": [
+            "finite_coordinates",
+            "point_count_preserved",
+            "displacement_within_neighborhood",
+            "local_roughness_reduced"
+          ],
+          "independence": "brute-force k-nearest neighbours and a Jacobi plane fit over raw binary64 input and output; no CGAL header and no replay of the smoothing algorithm",
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation",
+          "required_parameters": [
+            "neighbors"
+          ]
+        },
+        "input_types": [
+          "PointSet3",
+          "PointSet3Normals",
+          "PointSet3",
+          "PointSet3Normals"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
       }
     ],
     "protocol": 1,
@@ -8680,7 +8757,7 @@
     ],
     "worker": "cgal-master-worker"
   },
-  "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+  "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
   "tests": [
     {
       "id": "family-7.6-replay-cases",
@@ -9796,7 +9873,7 @@
       "case_id": "tri-lprism-faces",
       "operation_id": "mesh.triangulate.faces",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -9993,7 +10070,7 @@
       "case_id": "tri-lprism-face",
       "operation_id": "mesh.triangulate.faces",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -10190,7 +10267,7 @@
       "case_id": "tri-quadcube",
       "operation_id": "mesh.triangulate.faces",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -10387,7 +10464,7 @@
       "case_id": "refine-hexadecagon",
       "operation_id": "mesh.refine.local",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -10608,7 +10685,7 @@
       "case_id": "refine-hexadecagon-dense",
       "operation_id": "mesh.refine.local",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -10829,7 +10906,7 @@
       "case_id": "iso-square",
       "operation_id": "mesh.remesh.isotropic",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -11068,7 +11145,7 @@
       "case_id": "iso-sphere",
       "operation_id": "mesh.remesh.isotropic",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -11307,7 +11384,7 @@
       "case_id": "iso-oblate-uniform",
       "operation_id": "mesh.remesh.isotropic",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -11549,7 +11626,7 @@
       "case_id": "split-square",
       "operation_id": "mesh.remesh.split_long_edges",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -11757,7 +11834,7 @@
       "case_id": "relax-grid3",
       "operation_id": "mesh.smooth.tangential_relaxation",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -11968,7 +12045,7 @@
       "case_id": "smooth-grid5",
       "operation_id": "mesh.smooth.shape",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -12189,7 +12266,7 @@
       "case_id": "smooth-sphere-volume",
       "operation_id": "mesh.smooth.shape",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -12411,7 +12488,7 @@
       "case_id": "adaptive-oblate-isotropic",
       "operation_id": "mesh.remesh.adaptive",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -12698,7 +12775,7 @@
       "case_id": "adaptive-oblate-split",
       "operation_id": "mesh.remesh.adaptive",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -12985,7 +13062,7 @@
       "case_id": "tri-wrong-vertices-rejected",
       "operation_id": "mesh.validate.triangulated_faces",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -13044,7 +13121,7 @@
       "case_id": "refine-nonmanifold-rejected",
       "operation_id": "mesh.refine.local",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -13100,7 +13177,7 @@
       "case_id": "iso-unremeshed-rejected",
       "operation_id": "mesh.validate.isotropic_remesh",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -13168,7 +13245,7 @@
       "case_id": "iso-nonpositive-length-rejected",
       "operation_id": "mesh.remesh.isotropic",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -13229,7 +13306,7 @@
       "case_id": "split-unsplit-rejected",
       "operation_id": "mesh.validate.split_long_edges",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -13293,7 +13370,7 @@
       "case_id": "relax-changed-connectivity-rejected",
       "operation_id": "mesh.validate.tangential_relaxation",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -13357,7 +13434,7 @@
       "case_id": "smooth-unsmoothed-rejected",
       "operation_id": "mesh.validate.shape_smoothing",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -13422,7 +13499,7 @@
       "case_id": "smooth-open-volume-rejected",
       "operation_id": "mesh.smooth.shape",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -13480,7 +13557,7 @@
       "case_id": "adaptive-uniform-remesh-rejected",
       "operation_id": "mesh.validate.adaptive_remesh",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [
@@ -13557,7 +13634,7 @@
       "case_id": "adaptive-inverted-range-rejected",
       "operation_id": "mesh.remesh.adaptive",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.6-replay-cases",
       "request": {
         "inputs": [

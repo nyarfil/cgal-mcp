@@ -2060,7 +2060,8 @@
         "required": true,
         "validators": [
           "pointset.validate.basic",
-          "pointset.validate.smoothed"
+          "pointset.validate.smoothed",
+          "pointset.validate.smoothing_quality"
         ],
         "bindings": {
           "pointset.validate.basic": {
@@ -2088,6 +2089,21 @@
               },
               "degree_monge": {
                 "parameter": "degree_monge"
+              }
+            }
+          },
+          "pointset.validate.smoothing_quality": {
+            "artifacts": {
+              "candidate": {
+                "output": "points"
+              },
+              "source": {
+                "input": "points"
+              }
+            },
+            "parameters": {
+              "neighbors": {
+                "parameter": "neighbors"
               }
             }
           }
@@ -2119,11 +2135,15 @@
               "degree_fitting": "degree_fitting",
               "degree_monge": "degree_monge",
               "neighbors": "neighbors"
+            },
+            "pointset.validate.smoothing_quality": {
+              "neighbors": "neighbors"
             }
           },
           "validators": [
             "pointset.validate.basic",
-            "pointset.validate.smoothed"
+            "pointset.validate.smoothed",
+            "pointset.validate.smoothing_quality"
           ]
         }
       },
@@ -41564,6 +41584,366 @@
         "source_kind": "official_release",
         "cgal_version": "6.2.1",
         "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "pointset.smooth.bilateral",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "transform",
+      "summary": "Smooth an oriented point set with the bilateral filter, preserving sharp features.",
+      "aliases": [
+        "bilateral point smoothing",
+        "feature preserving smoothing",
+        "\u70b9\u7fa4\u30d0\u30a4\u30e9\u30c6\u30e9\u30eb\u5e73\u6ed1\u5316"
+      ],
+      "package": "Point_set_processing_3",
+      "major_requirements": [
+        "major.7.9.03"
+      ],
+      "dependencies": [
+        "Point_set_processing_3"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Point_set_processing_3"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::bilateral_smooth_point_set"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/bilateral_smooth_point_set.h"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Point_set_processing_3",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/bilateral_smooth_point_set.h",
+            "sha256": "5986e2812be487384d962f97f4db985b5a1b52a3cb87ac02a0c274bef748396b"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "points",
+            "types": [
+              "PointSet3Normals"
+            ],
+            "formats": [
+              "ply"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "points",
+            "type": "PointSet3Normals",
+            "format": "ply",
+            "unit_from": "points",
+            "required_properties": [
+              "x",
+              "y",
+              "z",
+              "nx",
+              "ny",
+              "nz"
+            ],
+            "ascii_only": true
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "neighbors",
+          "sharpness_angle"
+        ],
+        "properties": {
+          "neighbors": {
+            "type": "integer",
+            "minimum": 2,
+            "maximum": 1000
+          },
+          "sharpness_angle": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "exclusiveMaximum": 90
+          }
+        }
+      },
+      "preconditions": [
+        {
+          "id": "finite_coordinates",
+          "property": "finite",
+          "equals": true
+        },
+        {
+          "id": "minimum_point_count",
+          "property": "point_count",
+          "minimum": 3
+        },
+        {
+          "id": "nonzero_normals",
+          "property": "normals_nonzero",
+          "equals": true
+        },
+        {
+          "id": "unit_normals",
+          "property": "normals_unit",
+          "equals": true
+        }
+      ],
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64"
+      },
+      "validation": {
+        "required": true,
+        "validators": [
+          "pointset.validate.basic",
+          "pointset.validate.smoothing_quality"
+        ],
+        "bindings": {
+          "pointset.validate.basic": {
+            "artifacts": {
+              "points": {
+                "output": "points"
+              }
+            }
+          },
+          "pointset.validate.smoothing_quality": {
+            "artifacts": {
+              "candidate": {
+                "output": "points"
+              },
+              "source": {
+                "input": "points"
+              }
+            },
+            "parameters": {
+              "neighbors": {
+                "parameter": "neighbors"
+              }
+            }
+          }
+        }
+      },
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "info": {
+          "input_format": "ascii_ply_with_x_y_z_nx_ny_nz",
+          "output_format": "ascii_ply_with_x_y_z_nx_ny_nz",
+          "required_parameters": [
+            "neighbors",
+            "sharpness_angle"
+          ],
+          "source_header": "CGAL/bilateral_smooth_point_set.h",
+          "validator_parameter_bindings": {
+            "pointset.validate.smoothing_quality": {
+              "neighbors": "neighbors"
+            }
+          },
+          "validators": [
+            "pointset.validate.basic",
+            "pointset.validate.smoothing_quality"
+          ]
+        }
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_family_replay_cases.py",
+          "tests/test_master_core.py"
+        ],
+        "worker_manifest_operation": "pointset.smooth.bilateral"
+      },
+      "parameter_preconditions": [
+        {
+          "parameter": "neighbors",
+          "input": "points",
+          "less_than_metadata": "point_count"
+        }
+      ]
+    },
+    {
+      "id": "pointset.validate.smoothing_quality",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "validator",
+      "summary": "Independently validate point-set smoothing: displacement within the k-neighbourhood and a strict drop of local plane-fit roughness (no CGAL replay).",
+      "aliases": [
+        "validate smoothing quality",
+        "independent smoothing check"
+      ],
+      "package": "Point_set_processing_3",
+      "dependencies": [
+        "Point_set_processing_3"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Point_set_processing_3"
+        },
+        {
+          "kind": "adapter_source",
+          "identifier": "worker/master/batch7/b7_smoothing_validators.cpp"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Point_set_processing_3",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/bilateral_smooth_point_set.h",
+            "sha256": "5986e2812be487384d962f97f4db985b5a1b52a3cb87ac02a0c274bef748396b"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "PointSet3",
+              "PointSet3Normals"
+            ],
+            "formats": [
+              "xyz",
+              "ply"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          },
+          {
+            "slot": "source",
+            "types": [
+              "PointSet3",
+              "PointSet3Normals"
+            ],
+            "formats": [
+              "xyz",
+              "ply"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "neighbors"
+        ],
+        "properties": {
+          "neighbors": {
+            "type": "integer",
+            "minimum": 2,
+            "maximum": 1000
+          }
+        }
+      },
+      "preconditions": [],
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "validation": {
+        "required": false,
+        "validators": [],
+        "bindings": {},
+        "terminal_validator": true,
+        "validates": "pointset.smooth.jet",
+        "validates_all": [
+          "pointset.smooth.jet",
+          "pointset.smooth.bilateral"
+        ],
+        "required_report_checks": {
+          "status": "pass",
+          "passed": true,
+          "validator": "pointset.validate.smoothing_quality",
+          "checks.finite_coordinates": true,
+          "checks.point_count_preserved": true,
+          "checks.displacement_within_neighborhood": true,
+          "checks.local_roughness_reduced": true
+        },
+        "required_report_fields": [
+          "coordinates_modified",
+          "roughness_ratio"
+        ],
+        "required_report_minimum": {
+          "point_count": 3
+        }
+      },
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "long double (no CGAL header)",
+        "info": {
+          "bound_parameters": [
+            "neighbors"
+          ],
+          "checks": [
+            "finite_coordinates",
+            "point_count_preserved",
+            "displacement_within_neighborhood",
+            "local_roughness_reduced"
+          ],
+          "independence": "brute-force k-nearest neighbours and a Jacobi plane fit over raw binary64 input and output; no CGAL header and no replay of the smoothing algorithm",
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation",
+          "required_parameters": [
+            "neighbors"
+          ]
+        }
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_family_replay_cases.py",
+          "tests/test_master_core.py"
+        ],
+        "worker_manifest_operation": "pointset.validate.smoothing_quality"
       }
     }
   ]

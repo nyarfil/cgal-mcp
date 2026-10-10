@@ -148,14 +148,14 @@
   },
   "family_contract_sha256": "fed0862f89fc29e7fe45456675762456f92dcfed6b28f4d1ebfc629fc05f52e8",
   "family_contract_source_path": "scripts/master_replay_families.py",
-  "family_contract_source_sha256": "62ab53b0a6a4a3d1c54ed481ea9b8c4b150ffa217c411361963b55b1f3ae9d25",
+  "family_contract_source_sha256": "df0d262e9c0142588b0a8c94475774c4390ed6b6b8fd98c76e2fa1346afd71b1",
   "family_contract_source_hash_encoding": "utf8-lf",
   "catalog_baseline_sha256": "143ec18a5b64d506aad60dc24b0a1ea30940c715d1223b3465fa140aeb9d02a7",
-  "operation_registry_sha256": "e850c738442633f48e77eeed4cdc40aa1a0d454cd5ee23ef05a3923b918d2af5",
+  "operation_registry_sha256": "17a1f46651a22157a5e0da2bbaec64b3731ffa64470b422ba1f0026d23659afd",
   "operation_registry_hash_encoding": "utf8-lf",
   "policy_catalog_sha256": "45f4be759288aaeb834a3ce97aa64ee7768048b15534618fc8c19512801f9a9f",
   "policy_catalog_hash_encoding": "utf8-lf",
-  "worker_sha256": "3d2a394425b00f51fae6f7e581a86831fcf4355be60df97cad01309c8fab1379",
+  "worker_sha256": "ba003e9957123f82846dedd8eb8b9258cfa946467a81d899ad031fecbc40fc55",
   "worker_binary_format": "pe",
   "worker_manifest": {
     "actual_cgal_version": "6.2.1",
@@ -550,11 +550,15 @@
               "degree_fitting": "degree_fitting",
               "degree_monge": "degree_monge",
               "neighbors": "neighbors"
+            },
+            "pointset.validate.smoothing_quality": {
+              "neighbors": "neighbors"
             }
           },
           "validators": [
             "pointset.validate.basic",
-            "pointset.validate.smoothed"
+            "pointset.validate.smoothed",
+            "pointset.validate.smoothing_quality"
           ]
         },
         "input_types": [
@@ -8719,6 +8723,79 @@
         "supported_kernels": [
           "package_recommended"
         ]
+      },
+      {
+        "dependencies": [
+          "Point_set_processing_3"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "pointset.smooth.bilateral",
+        "info": {
+          "input_format": "ascii_ply_with_x_y_z_nx_ny_nz",
+          "output_format": "ascii_ply_with_x_y_z_nx_ny_nz",
+          "required_parameters": [
+            "neighbors",
+            "sharpness_angle"
+          ],
+          "source_header": "CGAL/bilateral_smooth_point_set.h",
+          "validator_parameter_bindings": {
+            "pointset.validate.smoothing_quality": {
+              "neighbors": "neighbors"
+            }
+          },
+          "validators": [
+            "pointset.validate.basic",
+            "pointset.validate.smoothing_quality"
+          ]
+        },
+        "input_types": [
+          "PointSet3Normals"
+        ],
+        "output_type": "PointSet3Normals",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Point_set_processing_3"
+        ],
+        "effective_kernel": "long double (no CGAL header)",
+        "id": "pointset.validate.smoothing_quality",
+        "info": {
+          "bound_parameters": [
+            "neighbors"
+          ],
+          "checks": [
+            "finite_coordinates",
+            "point_count_preserved",
+            "displacement_within_neighborhood",
+            "local_roughness_reduced"
+          ],
+          "independence": "brute-force k-nearest neighbours and a Jacobi plane fit over raw binary64 input and output; no CGAL header and no replay of the smoothing algorithm",
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation",
+          "required_parameters": [
+            "neighbors"
+          ]
+        },
+        "input_types": [
+          "PointSet3",
+          "PointSet3Normals",
+          "PointSet3",
+          "PointSet3Normals"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
       }
     ],
     "protocol": 1,
@@ -8730,7 +8807,7 @@
     ],
     "worker": "cgal-master-worker"
   },
-  "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+  "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
   "tests": [
     {
       "id": "family-7.3-replay-cases",
@@ -9555,7 +9632,7 @@
       "case_id": "features-cube-30",
       "operation_id": "mesh.features.detect",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -9715,7 +9792,7 @@
       "case_id": "features-cube-100",
       "operation_id": "mesh.features.detect",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -9875,7 +9952,7 @@
       "case_id": "features-bent-30",
       "operation_id": "mesh.features.detect",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -10035,7 +10112,7 @@
       "case_id": "features-bent-60",
       "operation_id": "mesh.features.detect",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -10195,7 +10272,7 @@
       "case_id": "features-open-square",
       "operation_id": "mesh.features.detect",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -10355,7 +10432,7 @@
       "case_id": "inspect-closed-tetra",
       "operation_id": "mesh.inspect.pmp",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -10495,7 +10572,7 @@
       "case_id": "inspect-open-tetra",
       "operation_id": "mesh.inspect.pmp",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -10635,7 +10712,7 @@
       "case_id": "inspect-quad-cube",
       "operation_id": "mesh.inspect.pmp",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -10775,7 +10852,7 @@
       "case_id": "self-intersection-free-tetra",
       "operation_id": "mesh.analysis.self_intersections",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -10914,7 +10991,7 @@
       "case_id": "self-intersecting-tetrahedra",
       "operation_id": "mesh.analysis.self_intersections",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -11053,7 +11130,7 @@
       "case_id": "normals-tetra",
       "operation_id": "mesh.analysis.normals",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -11196,7 +11273,7 @@
       "case_id": "normals-cube",
       "operation_id": "mesh.analysis.normals",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -11339,7 +11416,7 @@
       "case_id": "normals-inward-cube",
       "operation_id": "mesh.analysis.normals",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -11482,7 +11559,7 @@
       "case_id": "measures-tetra",
       "operation_id": "mesh.analysis.measures",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -11622,7 +11699,7 @@
       "case_id": "measures-cube",
       "operation_id": "mesh.analysis.measures",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -11762,7 +11839,7 @@
       "case_id": "components-label-three",
       "operation_id": "mesh.components.label",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -11911,7 +11988,7 @@
       "case_id": "components-extract-second-tetra",
       "operation_id": "mesh.components.component",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -12066,7 +12143,7 @@
       "case_id": "components-extract-lone-triangle",
       "operation_id": "mesh.components.component",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -12221,7 +12298,7 @@
       "case_id": "components-keep-two-largest",
       "operation_id": "mesh.components.keep_largest",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -12378,7 +12455,7 @@
       "case_id": "location-brute-force",
       "operation_id": "mesh.location.locate",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -12552,7 +12629,7 @@
       "case_id": "location-aabb-tree",
       "operation_id": "mesh.location.locate",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -12726,7 +12803,7 @@
       "case_id": "intersect-cubes-overlap",
       "operation_id": "mesh.intersections.do_intersect",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -12896,7 +12973,7 @@
       "case_id": "intersect-cubes-far",
       "operation_id": "mesh.intersections.do_intersect",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -13066,7 +13143,7 @@
       "case_id": "intersect-contained-surfaces-only",
       "operation_id": "mesh.intersections.do_intersect",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -13236,7 +13313,7 @@
       "case_id": "intersect-contained-bounded-sides",
       "operation_id": "mesh.intersections.do_intersect",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -13406,7 +13483,7 @@
       "case_id": "intersect-polylines-shifted-cubes",
       "operation_id": "mesh.intersections.polylines",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -13576,7 +13653,7 @@
       "case_id": "features-angle-out-of-range-rejected",
       "operation_id": "mesh.features.detect",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -13628,7 +13705,7 @@
       "case_id": "features-tampered-missing-sharp-edge-rejected",
       "operation_id": "mesh.validate.features",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -13689,7 +13766,7 @@
       "case_id": "components-keep-one-tie-rejected",
       "operation_id": "mesh.components.keep_largest",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -13741,7 +13818,7 @@
       "case_id": "components-seed-face-out-of-range-rejected",
       "operation_id": "mesh.components.component",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -13793,7 +13870,7 @@
       "case_id": "components-tampered-partition-rejected",
       "operation_id": "mesh.validate.components_label",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -13852,7 +13929,7 @@
       "case_id": "location-tampered-distance-rejected",
       "operation_id": "mesh.validate.location",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -13922,7 +13999,7 @@
       "case_id": "intersect-tampered-point-off-surface-rejected",
       "operation_id": "mesh.validate.intersection_polylines",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -13990,7 +14067,7 @@
       "case_id": "intersect-tampered-segment-dropped-rejected",
       "operation_id": "mesh.validate.intersection_polylines",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -14058,7 +14135,7 @@
       "case_id": "intersect-tampered-chord-shortcut-rejected",
       "operation_id": "mesh.validate.intersection_polylines",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -14126,7 +14203,7 @@
       "case_id": "intersect-tampered-flag-rejected",
       "operation_id": "mesh.validate.do_intersect",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -14196,7 +14273,7 @@
       "case_id": "intersect-coplanar-overlap-rejected",
       "operation_id": "mesh.intersections.polylines",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -14255,7 +14332,7 @@
       "case_id": "intersect-open-mesh-bounded-sides-rejected",
       "operation_id": "mesh.intersections.do_intersect",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -14316,7 +14393,7 @@
       "case_id": "intersect-overlap-flag-type-rejected",
       "operation_id": "mesh.intersections.do_intersect",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [

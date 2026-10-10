@@ -460,7 +460,7 @@ class AcceptanceContractTests(unittest.TestCase):
         bound = {requirement_id for family in REPLAY_FAMILIES
                  for requirement_id in family_bindings(family)}
         replay_rows = [row for row in evaluated["requirements"] if row["id"] in bound]
-        self.assertEqual(len(replay_rows), 73)
+        self.assertEqual(len(replay_rows), 74)
         self.assertTrue(all(row["status"] == "INCOMPLETE" for row in replay_rows))
 
 
@@ -496,7 +496,7 @@ class GenericFamilyReplayTests(unittest.TestCase):
                     checked += 1
                     self.assertTrue(ledger[requirement_id])
                     self.assertEqual(sorted(ledger[requirement_id] - set(binding["symbols"])), [])
-        self.assertEqual(checked, 67)
+        self.assertEqual(checked, 68)
 
     def test_published_family_reports_fail_only_for_missing_replay(self):
         for requirement_id in GENERIC_BOUND:

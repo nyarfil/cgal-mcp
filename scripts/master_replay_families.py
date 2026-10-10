@@ -4687,6 +4687,114 @@ FAMILY_7_9["negative_controls"].extend([
      "expect_error_class": "INVALID_REQUEST", "expect_error_code": "MISSING_PARAMETER"},
 ])
 
+# --- Batch 7 (7.9.03 smoothing: jet_smooth_point_set and bilateral_smooth_point_set) -------------------
+def _b7fx(name: str, sha: str) -> dict:
+    return {"fixture": f"batch7/{name}", "sha256": sha}
+
+
+B7 = {
+    "noisy_plane.xyz": _b7fx("noisy_plane.xyz", "5b5ff340a264539a0cc6f04b2a2cffef3272c468fa4e091d9dd5a72ea532636f"),
+    "noisy_quadric.xyz": _b7fx("noisy_quadric.xyz", "bd47c9d89aec41f753a7717ddb3113d04a81dbc558b76813ce5716cb8907c255"),
+    "noisy_roof.xyz": _b7fx("noisy_roof.xyz", "3b4d82bb60e5be8174f7fed11d0e57694cc08c68c6ec131a1515751765c8f46c"),
+    "noisy_sphere.xyz": _b7fx("noisy_sphere.xyz", "64849b95cd722164e2785cea294f5d9d6b17d402cf2db93d3c581ebbf9388857"),
+    "tampered_plane_displaced.xyz": _b7fx("tampered_plane_displaced.xyz", "467e3f0aef00e8f6178a157ea084ef071fd53de37942f35b249bbbaa29f83577"),
+    "tampered_plane_rougher.xyz": _b7fx("tampered_plane_rougher.xyz", "36d8e7a4d0243c89f0d54bef9a6598e1352021cf62d0bdc24d4fd508fb4c8c23"),
+    "tampered_plane_short.xyz": _b7fx("tampered_plane_short.xyz", "7e45e4eb52dd0acf6e5880f69a8fb16d849dce2fd51cb361a905d24b17dd98a8"),
+    "noisy_plane_normals.ply": _b7fx("noisy_plane_normals.ply", "99a8aa3ae04e7fb3466cc3f427c22272d815b729ad54047295d204f373659b61"),
+    "noisy_roof_normals.ply": _b7fx("noisy_roof_normals.ply", "e2fe9824ae3caa548f6e300ba664d8bd3ff4261f5148ff762de058e61e5b0347"),
+    "noisy_sphere_normals.ply": _b7fx("noisy_sphere_normals.ply", "f0e3d186be80a4d18d793c04b8635bf77dde1aa73e94b03dca9ba69d1c92a8b2"),
+    "plane_zero_normal.ply": _b7fx("plane_zero_normal.ply", "8ea649bb67df5e0358610c4d2f44baa89176b9246f24875c1ecfc7a6509359c5"),
+}
+B7_JET = {"neighbors": 12, "degree_fitting": 2, "degree_monge": 2}
+B7_BILATERAL = {"neighbors": 12, "sharpness_angle": 30.0}
+
+
+def _b7_checks(measure: str, source: float, result: float, reduction: float | None) -> list[list]:
+    """Pin the analytic deviation of the input and of the output; reduction is the declared tolerance."""
+    path = f"points.{measure}"
+    checks = [
+        [f"input:points:measure:{path}", "approx", [source, 1e-8]],
+        [f"output:points:measure:{path}", "approx", [result, 1e-6]],
+        ["output:points:measure:points.count", "==", {"path": "input:points:measure:points.count"}],
+    ]
+    if reduction is None:  # contrast: no improvement near the crease
+        checks.append([f"output:points:measure:{path}", ">", {"path": f"input:points:measure:{path}"}])
+    else:  # the deviation falls to at most `reduction` times the input deviation
+        checks.append([f"output:points:measure:{path}", "<", reduction * source])
+    return checks
+
+
+def _b7_jet(case_id: str, fixture: str, measure: str, source: float, result: float,
+            reduction: float | None = 0.75) -> dict:
+    return _case(case_id, "pointset.smooth.jet", [_points(B7[fixture])], B7_JET,
+                 [["metrics.coordinates_modified", "==", True],
+                  ["metrics.output_point_count", "==", {"path": "input:points:measure:points.count"}]] +
+                 _b7_checks(measure, source, result, reduction))
+
+
+def _b7_bilateral(case_id: str, fixture: str, measure: str, source: float, result: float, movement: float,
+                  reduction: float = 0.75) -> dict:
+    return _case(case_id, "pointset.smooth.bilateral", [_points(B7[fixture], "PointSet3Normals", "ply")],
+                 B7_BILATERAL,
+                 [["metrics.point_count", "==", {"path": "input:points:measure:points.count"}],
+                  ["metrics.moved_point_count", "==", {"path": "input:points:measure:points.count"}],
+                  ["metrics.mean_squared_movement", "approx", [movement, 1e-9]],
+                  ["output:points:measure:points.max_normal_length_error", "<", 1e-6]] +
+                 _b7_checks(measure, source, result, reduction))
+
+
+FAMILY_7_9["unbound"].pop("major.7.9.03")
+FAMILY_7_9["requirements"]["major.7.9.03"] = {
+    "operation_ids": ["pointset.smooth.jet", "pointset.smooth.bilateral"],
+    "symbols": ["jet_smooth_point_set", "bilateral_smooth_point_set"],
+    "symbol_notes": "PLACEHOLDER",
+    "case_ids": ["smooth-jet-plane", "smooth-jet-sphere", "smooth-jet-quadric", "smooth-jet-roof-blunts-crease",
+                 "smooth-bilateral-plane", "smooth-bilateral-plane-repeat", "smooth-bilateral-sphere",
+                 "smooth-bilateral-roof-keeps-crease"],
+}
+FAMILY_7_9["cases"].extend([
+    _b7_jet("smooth-jet-plane", "noisy_plane.xyz", "rms_abs_z", 0.087735433, 0.045335536),
+    _b7_jet("smooth-jet-sphere", "noisy_sphere.xyz", "rms_sphere_radius_error", 0.08408654, 0.049474583),
+    _b7_jet("smooth-jet-quadric", "noisy_quadric.xyz", "rms_quadric_residual", 0.080912033, 0.050092029),
+    _b7_jet("smooth-jet-roof-blunts-crease", "noisy_roof.xyz", "rms_roof_residual_near_crease",
+            0.028608811, 0.03035482, reduction=None),
+    _b7_bilateral("smooth-bilateral-plane", "noisy_plane_normals.ply", "rms_abs_z", 0.087735433, 0.031958183,
+                  0.005567698349983829),
+    _b7_bilateral("smooth-bilateral-plane-repeat", "noisy_plane_normals.ply", "rms_abs_z", 0.087735433,
+                  0.031958183, 0.005567698349983829),
+    _b7_bilateral("smooth-bilateral-sphere", "noisy_sphere_normals.ply", "rms_sphere_radius_error", 0.08408654,
+                  0.044832988, 0.004265519879276086),
+    _b7_bilateral("smooth-bilateral-roof-keeps-crease", "noisy_roof_normals.ply", "rms_roof_residual_near_crease",
+                  0.028608811, 0.010192587, 0.00046443940569112813, reduction=0.5),
+])
+FAMILY_7_9["pairs"].extend([
+    {"kind": "equal_outputs", "cases": ["smooth-bilateral-plane", "smooth-bilateral-plane-repeat"]},
+])
+FAMILY_7_9["negative_controls"].extend([
+    {"id": "smoothing-unsmoothed-candidate-rejected", "operation": "pointset.validate.smoothing_quality",
+     "inputs": [_points(B7["noisy_plane.xyz"]), _points(B7["noisy_plane.xyz"])], "parameters": {"neighbors": 12},
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "ROUGHNESS_NOT_REDUCED"},
+    {"id": "smoothing-rougher-candidate-rejected", "operation": "pointset.validate.smoothing_quality",
+     "inputs": [_points(B7["tampered_plane_rougher.xyz"]), _points(B7["noisy_plane.xyz"])],
+     "parameters": {"neighbors": 12},
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "ROUGHNESS_NOT_REDUCED"},
+    {"id": "smoothing-displaced-point-rejected", "operation": "pointset.validate.smoothing_quality",
+     "inputs": [_points(B7["tampered_plane_displaced.xyz"]), _points(B7["noisy_plane.xyz"])],
+     "parameters": {"neighbors": 12},
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "DISPLACEMENT_EXCEEDS_NEIGHBORHOOD"},
+    {"id": "smoothing-dropped-point-rejected", "operation": "pointset.validate.smoothing_quality",
+     "inputs": [_points(B7["tampered_plane_short.xyz"]), _points(B7["noisy_plane.xyz"])],
+     "parameters": {"neighbors": 12},
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "POINT_COUNT_CHANGED"},
+    {"id": "bilateral-sharpness-angle-90-rejected", "operation": "pointset.smooth.bilateral",
+     "inputs": [_points(B7["noisy_plane_normals.ply"], "PointSet3Normals", "ply")],
+     "parameters": dict(B7_BILATERAL, sharpness_angle=90.0),
+     "expect_error_class": "INVALID_REQUEST", "expect_error_code": "INVALID_PARAMETER"},
+    {"id": "bilateral-zero-normal-rejected", "operation": "pointset.smooth.bilateral",
+     "inputs": [_points(B7["plane_zero_normal.ply"], "PointSet3Normals", "ply")], "parameters": B7_BILATERAL,
+     "expect_error_class": "PRECONDITION_FAILED", "expect_error_code": "ZERO_NORMAL"},
+])
+
 # 7.10.01 and 7.10.02
 for _key in ("major.7.10.01", "major.7.10.02"):
     FAMILY_7_10["unbound"].pop(_key)
@@ -5162,8 +5270,22 @@ def _points_measure(name: str, content: bytes) -> object:
     points, normals = _parse_points(content)
     if name == "count":
         return len(points)
+    # Analytic known-surface deviations (smoothing, 7.9.03): independent of CGAL and of the worker.
+    if name == "rms_abs_z":  # plane z = 0
+        return math.sqrt(sum(p[2] ** 2 for p in points) / len(points))
+    if name == "rms_sphere_radius_error":  # sphere of radius 5 about the origin
+        return math.sqrt(sum((math.hypot(*p) - 5.0) ** 2 for p in points) / len(points))
+    if name == "rms_quadric_residual":  # vertical residual of z = 0.05 (x^2 + y^2)
+        return math.sqrt(sum((p[2] - 0.05 * (p[0] ** 2 + p[1] ** 2)) ** 2 for p in points) / len(points))
+    if name == "rms_roof_residual":  # vertical residual of the roof z = 0.5 |x|
+        return math.sqrt(sum((p[2] - 0.5 * abs(p[0])) ** 2 for p in points) / len(points))
+    if name == "rms_roof_residual_near_crease":  # roof fixture, grid columns 4..7 (x = -0.75 .. 0.75), by index
+        near = [p for index, p in enumerate(points) if 4 <= index // 12 <= 7]
+        return math.sqrt(sum((p[2] - 0.5 * abs(p[0])) ** 2 for p in near) / len(near))
     if normals is None:
         raise ValueError("point set has no normals")
+    if name == "max_normal_length_error":
+        return max(abs(math.sqrt(sum(value * value for value in normal)) - 1.0) for normal in normals)
     if name == "min_abs_normal_z":
         return min(abs(normal[2]) / math.sqrt(sum(value * value for value in normal))
                    for normal in normals)

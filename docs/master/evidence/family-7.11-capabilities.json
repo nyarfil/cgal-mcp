@@ -85,14 +85,14 @@
   },
   "family_contract_sha256": "186f5d022abb9b6e5d097a268c0ccab7575117cc84ed088c4f4164148e82408d",
   "family_contract_source_path": "scripts/master_replay_families.py",
-  "family_contract_source_sha256": "62ab53b0a6a4a3d1c54ed481ea9b8c4b150ffa217c411361963b55b1f3ae9d25",
+  "family_contract_source_sha256": "df0d262e9c0142588b0a8c94475774c4390ed6b6b8fd98c76e2fa1346afd71b1",
   "family_contract_source_hash_encoding": "utf8-lf",
   "catalog_baseline_sha256": "143ec18a5b64d506aad60dc24b0a1ea30940c715d1223b3465fa140aeb9d02a7",
-  "operation_registry_sha256": "e850c738442633f48e77eeed4cdc40aa1a0d454cd5ee23ef05a3923b918d2af5",
+  "operation_registry_sha256": "17a1f46651a22157a5e0da2bbaec64b3731ffa64470b422ba1f0026d23659afd",
   "operation_registry_hash_encoding": "utf8-lf",
   "policy_catalog_sha256": "45f4be759288aaeb834a3ce97aa64ee7768048b15534618fc8c19512801f9a9f",
   "policy_catalog_hash_encoding": "utf8-lf",
-  "worker_sha256": "3d2a394425b00f51fae6f7e581a86831fcf4355be60df97cad01309c8fab1379",
+  "worker_sha256": "ba003e9957123f82846dedd8eb8b9258cfa946467a81d899ad031fecbc40fc55",
   "worker_binary_format": "pe",
   "worker_manifest": {
     "actual_cgal_version": "6.2.1",
@@ -487,11 +487,15 @@
               "degree_fitting": "degree_fitting",
               "degree_monge": "degree_monge",
               "neighbors": "neighbors"
+            },
+            "pointset.validate.smoothing_quality": {
+              "neighbors": "neighbors"
             }
           },
           "validators": [
             "pointset.validate.basic",
-            "pointset.validate.smoothed"
+            "pointset.validate.smoothed",
+            "pointset.validate.smoothing_quality"
           ]
         },
         "input_types": [
@@ -8656,6 +8660,79 @@
         "supported_kernels": [
           "package_recommended"
         ]
+      },
+      {
+        "dependencies": [
+          "Point_set_processing_3"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "pointset.smooth.bilateral",
+        "info": {
+          "input_format": "ascii_ply_with_x_y_z_nx_ny_nz",
+          "output_format": "ascii_ply_with_x_y_z_nx_ny_nz",
+          "required_parameters": [
+            "neighbors",
+            "sharpness_angle"
+          ],
+          "source_header": "CGAL/bilateral_smooth_point_set.h",
+          "validator_parameter_bindings": {
+            "pointset.validate.smoothing_quality": {
+              "neighbors": "neighbors"
+            }
+          },
+          "validators": [
+            "pointset.validate.basic",
+            "pointset.validate.smoothing_quality"
+          ]
+        },
+        "input_types": [
+          "PointSet3Normals"
+        ],
+        "output_type": "PointSet3Normals",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Point_set_processing_3"
+        ],
+        "effective_kernel": "long double (no CGAL header)",
+        "id": "pointset.validate.smoothing_quality",
+        "info": {
+          "bound_parameters": [
+            "neighbors"
+          ],
+          "checks": [
+            "finite_coordinates",
+            "point_count_preserved",
+            "displacement_within_neighborhood",
+            "local_roughness_reduced"
+          ],
+          "independence": "brute-force k-nearest neighbours and a Jacobi plane fit over raw binary64 input and output; no CGAL header and no replay of the smoothing algorithm",
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation",
+          "required_parameters": [
+            "neighbors"
+          ]
+        },
+        "input_types": [
+          "PointSet3",
+          "PointSet3Normals",
+          "PointSet3",
+          "PointSet3Normals"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
       }
     ],
     "protocol": 1,
@@ -8667,7 +8744,7 @@
     ],
     "worker": "cgal-master-worker"
   },
-  "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+  "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
   "tests": [
     {
       "id": "family-7.11-replay-cases",
@@ -9134,7 +9211,7 @@
       "case_id": "regular2-zero-weights",
       "operation_id": "triangulation.regular_2",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.11-replay-cases",
       "request": {
         "inputs": [
@@ -9307,7 +9384,7 @@
       "case_id": "regular2-hidden-point",
       "operation_id": "triangulation.regular_2",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.11-replay-cases",
       "request": {
         "inputs": [
@@ -9480,7 +9557,7 @@
       "case_id": "regular3-zero-weights",
       "operation_id": "triangulation.regular_3",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.11-replay-cases",
       "request": {
         "inputs": [
@@ -9661,7 +9738,7 @@
       "case_id": "regular3-hidden-point",
       "operation_id": "triangulation.regular_3",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.11-replay-cases",
       "request": {
         "inputs": [
@@ -9842,7 +9919,7 @@
       "case_id": "voronoi-square-centre",
       "operation_id": "triangulation.voronoi_dual",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.11-replay-cases",
       "request": {
         "inputs": [
@@ -9996,7 +10073,7 @@
       "case_id": "voronoi-scatter",
       "operation_id": "triangulation.voronoi_dual",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.11-replay-cases",
       "request": {
         "inputs": [
@@ -10150,7 +10227,7 @@
       "case_id": "dt2-grid",
       "operation_id": "triangulation.delaunay_2",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.11-replay-cases",
       "request": {
         "inputs": [
@@ -10310,7 +10387,7 @@
       "case_id": "dt3-cube",
       "operation_id": "triangulation.delaunay_3",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.11-replay-cases",
       "request": {
         "inputs": [
@@ -10468,7 +10545,7 @@
       "case_id": "dt3-cloud",
       "operation_id": "triangulation.delaunay_3",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.11-replay-cases",
       "request": {
         "inputs": [
@@ -10626,7 +10703,7 @@
       "case_id": "cdt-delaunay",
       "operation_id": "triangulation.constrained_2",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.11-replay-cases",
       "request": {
         "inputs": [
@@ -10794,7 +10871,7 @@
       "case_id": "ct-plain",
       "operation_id": "triangulation.constrained_2",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.11-replay-cases",
       "request": {
         "inputs": [
@@ -10963,7 +11040,7 @@
       "case_id": "regular2-weight-count-rejected",
       "operation_id": "triangulation.regular_2",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.11-replay-cases",
       "request": {
         "inputs": [
@@ -11019,7 +11096,7 @@
       "case_id": "regular2-duplicate-point-rejected",
       "operation_id": "triangulation.regular_2",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.11-replay-cases",
       "request": {
         "inputs": [
@@ -11076,7 +11153,7 @@
       "case_id": "regular2-collinear-rejected",
       "operation_id": "triangulation.regular_2",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.11-replay-cases",
       "request": {
         "inputs": [
@@ -11133,7 +11210,7 @@
       "case_id": "voronoi-collinear-rejected",
       "operation_id": "triangulation.voronoi_dual",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.11-replay-cases",
       "request": {
         "inputs": [
@@ -11183,7 +11260,7 @@
       "case_id": "regular2-tampered-hidden-rejected",
       "operation_id": "triangulation.validate.regular_2",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.11-replay-cases",
       "request": {
         "inputs": [
@@ -11251,7 +11328,7 @@
       "case_id": "regular2-tampered-nonregular-rejected",
       "operation_id": "triangulation.validate.regular_2",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.11-replay-cases",
       "request": {
         "inputs": [
@@ -11319,7 +11396,7 @@
       "case_id": "regular3-tampered-hidden-rejected",
       "operation_id": "triangulation.validate.regular_3",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.11-replay-cases",
       "request": {
         "inputs": [
@@ -11391,7 +11468,7 @@
       "case_id": "regular3-tampered-missing-cell-rejected",
       "operation_id": "triangulation.validate.regular_3",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.11-replay-cases",
       "request": {
         "inputs": [
@@ -11463,7 +11540,7 @@
       "case_id": "voronoi-tampered-edge-rejected",
       "operation_id": "triangulation.validate.voronoi_dual",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.11-replay-cases",
       "request": {
         "inputs": [
@@ -11522,7 +11599,7 @@
       "case_id": "voronoi-tampered-vertex-rejected",
       "operation_id": "triangulation.validate.voronoi_dual",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.11-replay-cases",
       "request": {
         "inputs": [
@@ -11581,7 +11658,7 @@
       "case_id": "dt2-collinear-rejected",
       "operation_id": "triangulation.delaunay_2",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.11-replay-cases",
       "request": {
         "inputs": [
@@ -11631,7 +11708,7 @@
       "case_id": "cdt-crossing-constraints-rejected",
       "operation_id": "triangulation.constrained_2",
       "revision": 1,
-      "worker_manifest_sha256": "e9ad3434ca627fc401810c617d465c4aca8354fe65eef2e7f31ddc975784cb30",
+      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
       "test_id": "family-7.11-replay-cases",
       "request": {
         "inputs": [
