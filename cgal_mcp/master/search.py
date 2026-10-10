@@ -6,11 +6,12 @@ it cannot make an unregistered capability executable.
 """
 from __future__ import annotations
 
+import math
 import re
 import unicodedata
 from functools import lru_cache
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Iterable
 
 
 STOP_WORDS = frozenset("""
@@ -231,6 +232,41 @@ JA_WORD_LEXICON: tuple[tuple[str, str], ...] = (
     ("正則", "regular"), ("拘束", "constrained"), ("陰関数", "implicit"),
     ("パラメトリック", "parametric"), ("サイト", "site"), ("照会点", "query points"),
     ("領域", "domain"), ("凸", "convex"), ("輪郭", "contour"),
+    # General bilingual geometry nouns/verbs (bridge words for Japanese queries).
+    ("四角形", "quad quadrilateral"), ("三角形", "triangle"), ("多角形", "polygon"),
+    ("頂点", "vertex"), ("面積", "area"), ("体積", "volume"), ("重心", "centroid"),
+    ("曲率", "curvature"), ("曲面", "surface"), ("曲線", "curve"), ("直線", "line"),
+    ("球面", "sphere"), ("交差", "intersection"), ("干渉", "interference collision intersect"),
+    ("衝突", "collision intersect"), ("貫通", "intersect"), ("距離", "distance"),
+    ("近傍", "neighbor nearest"), ("最近", "nearest closest"), ("近い", "nearest closest"),
+    ("半径", "radius"), ("範囲", "range"), ("検索", "search query"), ("探索", "search"),
+    ("厚み", "thickness"), ("肉厚", "thickness"), ("断面", "section slice"),
+    ("スライス", "slice"), ("切断", "cut clip"), ("分割", "split divide partition"),
+    ("分離", "separate split"), ("結合", "merge union combine"), ("合体", "union merge"),
+    ("引く", "subtract difference"), ("差し引", "subtract difference"),
+    ("くり抜", "subtract difference"), ("重なり", "overlap intersection"),
+    ("共通", "common intersection"), ("穴", "hole"), ("隙間", "gap crack"),
+    ("継ぎ目", "seam"), ("修復", "repair fix"), ("補修", "repair fix"),
+    ("欠陥", "defect repair inspect"), ("検査", "inspect check"), ("確認", "verify check"),
+    ("検証", "validate verify"), ("滑らか", "smooth"), ("平滑", "smooth"),
+    ("ノイズ", "noise"), ("外れ値", "outlier"), ("間引", "thin reduce downsample"),
+    ("削減", "reduce"), ("減ら", "reduce"), ("軽量", "lightweight simplify"),
+    ("軽く", "lightweight reduce"), ("簡略", "simplify"), ("細かく", "refine denser"),
+    ("粗く", "coarse"), ("均一", "uniform"), ("再構成", "reconstruct"), ("復元", "reconstruct"),
+    ("展開", "unfold parameterize"), ("テクスチャ", "texture parameterize"),
+    ("骨格", "skeleton"), ("中心線", "skeleton centerline"), ("外形", "outline hull"),
+    ("外周", "boundary outline"), ("内側", "inside inward"), ("外側", "outside outward"),
+    ("包含", "contain inside"), ("内外", "inside outside"), ("測定", "measure"),
+    ("計測", "measure"), ("計算", "compute"), ("推定", "estimate"), ("整列", "align"),
+    ("位置合わせ", "registration align"), ("裏返", "flip orientation"), ("反転", "flip"),
+    ("最短", "shortest"), ("経路", "path route"), ("最適", "optimal optimize"),
+    ("制約", "constraint"), ("近似", "approximate approximation"), ("クラスタ", "cluster"),
+    ("部品", "part component"), ("連結", "connected"), ("成分", "component"),
+    ("最大", "maximum largest"), ("最小", "minimum smallest"), ("誤差", "error deviation"),
+    ("ずれ", "deviation"), ("偏差", "deviation"), ("光線", "ray"), ("レイ", "ray"),
+    ("視線", "ray"), ("包む", "wrap enclose"), ("囲む", "enclose"), ("周期", "periodic"),
+    ("重み", "weight"), ("境界", "boundary"), ("生成", "generate"), ("解析", "analysis"),
+    ("円形", "circle"), ("円を", "circle"), ("粗い", "coarse"), ("細分", "refine subdivide"),
 )
 
 METHOD_PARAMETER_REQUIREMENTS: dict[str, tuple[str, Any]] = {
@@ -507,7 +543,9 @@ def lexical_score(query: QueryTerms, text: str, *, aliases: tuple[str, ...] = ()
 
 
 def match_operation(query: QueryTerms, text: str, *,
-                    aliases: tuple[str, ...] = ()) -> MatchEvidence:
+                    aliases: tuple[str, ...] = (),
+                    phrases: tuple[str, ...] = (),
+                    phrase_bonus: float = 0.0) -> MatchEvidence:
     """Return explicit routing evidence without consulting acceptance corpora.
 
     FTS and word overlap may discover a candidate, but they never compensate
@@ -517,6 +555,10 @@ def match_operation(query: QueryTerms, text: str, *,
     """
     target = document_terms(" ".join((text, *aliases)))
     target_concepts = set(target.concepts)
+    if phrases:
+        # Authored search phrases describe the same registered operation; the
+        # geometric concepts they name count as covered, never as new methods.
+        target_concepts |= document_terms(" ".join(phrases)).concepts
     if target_concepts & {"mesh_normals", "point_normals"}:
         target_concepts.add("normals")
     # Kernel-level intersection operations (no mesh/surface/solid operands)
@@ -550,13 +592,14 @@ def match_operation(query: QueryTerms, text: str, *,
     exact_text = normalize(text)
     if query.normalized and query.normalized in exact_text:
         score += 30.0
+    score += phrase_bonus
     # Concept-bearing goals require complete semantic coverage.  A query with
     # only distinctive registered words/aliases remains discoverable, but is
     # deliberately medium confidence until the planner sees a clear score gap.
     route_supported = bool(requested and covered) and not uncovered
     if route_supported and score >= 14.0:
         confidence = "high"
-    elif not requested and (alias_matches or len(words) >= 2):
+    elif not requested and (alias_matches or len(words) >= 2 or phrase_bonus >= 6.0):
         route_supported = True
         confidence = "medium"
     else:
@@ -592,3 +635,99 @@ def requested_parameter_features(concepts: frozenset[str]) -> dict[str, str]:
             for parameter, requirement in [PARAMETER_FEATURE_REQUIREMENTS.get(
                 concept, ("", ""))]
             if parameter}
+
+
+# --- Authored search phrases (data, not code) ---------------------------------
+# ``search_data.json`` holds concise bilingual phrases written from each
+# operation's own documentation.  They add retrieval evidence only: they never
+# change an operation's status, parameters, policies or the registry hash.
+
+PHRASE_SCALE = 3.0
+PHRASE_CAP = 30.0
+_JA_RUN = re.compile(r"[\u3040-\u30ff\u3400-\u9fff\uff66-\uff9f]+")
+_JA_PARTICLES = frozenset("のをはがにでともやへ")
+_CANON_RULES: tuple[tuple[str, str], ...] = (
+    ("ification", "if"), ("ify", "if"), ("ation", "at"), ("ions", ""), ("ion", ""),
+)
+
+
+def _canonical_word(word: str) -> str:
+    word = _stem(word)
+    for suffix, replacement in _CANON_RULES:
+        if word.endswith(suffix) and len(word) - len(suffix) >= 4:
+            word = word[:-len(suffix)] + replacement
+            break
+    if word.endswith("e") and len(word) > 5:
+        word = word[:-1]
+    return word
+
+
+def retrieval_tokens(text: str) -> frozenset[str]:
+    """English canonical words plus Japanese character bigrams of one text."""
+    normalized = normalize(text)
+    tokens: set[str] = set()
+    for word in re.findall(r"[a-z][a-z0-9]*|[23]d", normalized):
+        if word not in STOP_WORDS and (len(word) >= 3 or word in {"2d", "3d"}):
+            tokens.add(_canonical_word(word))
+    for run in _JA_RUN.findall(normalized):
+        if len(run) == 1:
+            if run not in _JA_PARTICLES:
+                tokens.add("ja:" + run)
+            continue
+        for index in range(len(run) - 1):
+            gram = run[index:index + 2]
+            if not set(gram) <= _JA_PARTICLES:
+                tokens.add("ja:" + gram)
+    return frozenset(tokens)
+
+
+class PhraseIndex:
+    """IDF-weighted phrase evidence over every operation's authored phrases."""
+
+    def __init__(self, phrases_by_operation: dict[str, tuple[str, ...]],
+                 context_by_operation: dict[str, str] | None = None):
+        self.phrases = {key: tuple(value) for key, value in phrases_by_operation.items()}
+        self._tokens = {key: tuple(retrieval_tokens(phrase) for phrase in value)
+                        for key, value in self.phrases.items()}
+        documents: dict[str, frozenset[str]] = {}
+        for key in set(self.phrases) | set(context_by_operation or {}):
+            merged: set[str] = set()
+            for tokens in self._tokens.get(key, ()):
+                merged |= tokens
+            if context_by_operation and key in context_by_operation:
+                merged |= retrieval_tokens(context_by_operation[key])
+            documents[key] = frozenset(merged)
+        frequency: dict[str, int] = {}
+        for tokens in documents.values():
+            for token in tokens:
+                frequency[token] = frequency.get(token, 0) + 1
+        total = max(len(documents), 1)
+        self._idf = {token: math.log((total + 1) / (count + 0.5))
+                     for token, count in frequency.items()}
+        self._default_idf = math.log(total + 1)
+
+    def weight(self, token: str) -> float:
+        return self._idf.get(token, self._default_idf)
+
+    def bonus(self, operation_id: str, query_text: str,
+              extra_tokens: Iterable[str] = ()) -> float:
+        tokens_by_phrase = self._tokens.get(operation_id)
+        if not tokens_by_phrase:
+            return 0.0
+        query_tokens = retrieval_tokens(query_text) | frozenset(
+            _canonical_word(word) for word in extra_tokens)
+        credits: list[float] = []
+        for tokens in tokens_by_phrase:
+            if not tokens:
+                continue
+            total = sum(self.weight(token) for token in tokens)
+            matched = sum(self.weight(token) for token in tokens & query_tokens)
+            if total <= 0 or matched < 2.0:
+                continue
+            # Rare shared tokens carry the evidence; precision (coverage of the
+            # phrase) scales it so that long generic phrases do not dominate.
+            credits.append(PHRASE_SCALE * min(matched, 8.0) * (0.5 + 0.5 * matched / total))
+        if not credits:
+            return 0.0
+        credits.sort(reverse=True)
+        return min(PHRASE_CAP, credits[0] + 0.3 * sum(credits[1:3]))

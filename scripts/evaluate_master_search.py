@@ -518,9 +518,16 @@ def _routing_probe(intent: dict[str, Any], *, runtime: Any,
                    operation_index: dict[str, dict[str, Any]],
                    artifact_ids_by_type: dict[str, str]) -> tuple[dict[str, Any], dict[str, Any]]:
     """Build a valid goal-plan request and run the production planner once."""
-    seed_artifacts = [artifact_ids_by_type[item] for item in intent["input_types"]]
-    preview = runtime.capabilities_search(intent["query"], artifact_ids=seed_artifacts,
-                                          constraints={}, limit=5)
+    # The probe previews the same conservative search the planner runs
+    # (discovery=False), so the parameters it builds match the planned operation.
+    registry = getattr(runtime, "registry", None)
+    if registry is not None:
+        preview = registry.search(intent["query"], input_types=list(intent["input_types"]),
+                                  status=["IMPLEMENTED", "VALIDATED"], limit=5)
+    else:  # lightweight runtimes used by unit tests
+        preview = runtime.capabilities_search(
+            intent["query"], artifact_ids=[artifact_ids_by_type[item] for item in intent["input_types"]],
+            constraints={}, limit=5)
     candidates = _candidate_ids(preview)
     analysis = preview.get("query_analysis", {})
     route_selected = analysis.get("recommended_operation")
@@ -691,6 +698,33 @@ def evaluate_goal_routing(corpus: dict[str, Any], *, runtime: Any,
     }
 
 
+_FIXTURES = Path(__file__).resolve().parents[1] / "tests" / "fixtures" / "master"
+# The execute sample runs the operation the router selected on a fixture that
+# satisfies that operation's own preconditions.  These overrides replace only
+# the synthetic probe inputs/parameters that are invalid for the operation
+# (a quad soup for a triangle-only repair, one mesh used as both corefine
+# operands, a 4-point set for a >=10-point reconstruction, schema-minimum
+# tolerances); they never change which operation is selected.
+_EXECUTE_OVERRIDES: dict[str, dict[str, Any]] = {
+    "mesh.repair.orient": {"fixtures": [("PolygonSoup3", "wave_a_repair/tetra_flipped_soup.off", "mm")]},
+    "mesh.corefine": {"fixtures": [("TriangleSurfaceMesh", "query/tetra.off", "mm"),
+                                   ("TriangleSurfaceMesh", "batch2/tetra_b.off", "mm")]},
+    "mesh.segment.sdf_values": {
+        "fixtures": [("TriangleSurfaceMesh", "query/cube12.off", "mm")],
+        "parameters": {"cone_angle": 2.0943951, "number_of_rays": 25, "thickness_tolerance": 0.25}},
+    "reconstruction.poisson_delaunay": {
+        "fixtures": [("PointSet3Normals", "reconstruction/sphere_dense_normals.ply", "mm")],
+        "parameters": {"sm_angle": 20, "sm_radius": 2, "sm_distance": 0.375,
+                       "max_deviation": {"value": 3.0, "unit": "mm"},
+                       "max_circumradius": {"value": 6.0, "unit": "mm"}, "min_coverage": 0.5}},
+    "reconstruction.poisson": {
+        "fixtures": [("PointSet3Normals", "reconstruction/sphere_dense_normals.ply", "mm")],
+        "parameters": {"sm_angle": 20, "sm_radius": 2, "sm_distance": 0.375,
+                       "max_deviation": {"value": 3.0, "unit": "mm"}}},
+    "optimization.quadratic_program": {"parameters": {"solver": "quadratic"}},
+}
+
+
 async def _execute_sample(corpus: dict[str, Any], routing: dict[str, Any], *, runtime: Any,
                           operation_index: dict[str, dict[str, Any]],
                           artifact_ids_by_type: dict[str, str]) -> dict[str, Any]:
@@ -713,8 +747,17 @@ async def _execute_sample(corpus: dict[str, Any], routing: dict[str, Any], *, ru
         intent = by_id[intent_id]
         row: dict[str, Any] = {"id": intent_id, "family": family}
         try:
-            request, _ = _routing_probe(intent, runtime=runtime, operation_index=operation_index,
-                                        artifact_ids_by_type=artifact_ids_by_type)
+            request, context = _routing_probe(intent, runtime=runtime, operation_index=operation_index,
+                                              artifact_ids_by_type=artifact_ids_by_type)
+            override = _EXECUTE_OVERRIDES.get(context.get("preview_top_operation") or "", {})
+            if override.get("fixtures"):
+                request["inputs"] = [
+                    runtime.artifact_import(str(_FIXTURES / name), unit, artifact_type=kind)["artifact_id"]
+                    for kind, name, unit in override["fixtures"]]
+                row["fixture_override"] = [name for _, name, _ in override["fixtures"]]
+            if override.get("parameters"):
+                request["parameters"] = {**request["parameters"], **override["parameters"]}
+                row["parameter_override"] = sorted(override["parameters"])
             plan = runtime.plan(request)
             row["selected_operation"] = plan.get("route", {}).get("selected")
             queued = await runtime.execute(plan["plan_id"])
@@ -722,6 +765,10 @@ async def _execute_sample(corpus: dict[str, Any], routing: dict[str, Any], *, ru
             status = runtime.job_status(queued["job_id"])
             row.update(state=status.get("state"), execution_status=status.get("execution_status"),
                        validation_status=status.get("validation_status"))
+            if status.get("state") != "succeeded" or status.get("validation_status") not in {"passed", "not_required", None}:
+                # Keep the failure cause in the report (truncated; evidence, not a verdict).
+                row["job_detail"] = {key: str(value)[:600] for key, value in status.items()
+                                     if key not in {"job_id", "plan_id"} and value not in (None, "", [], {})}
             row["ok"] = (status.get("state") == "succeeded"
                          and status.get("validation_status") in {"passed", "not_required", None})
         except Exception as error:
@@ -741,6 +788,7 @@ RETRIEVAL_BINDING_SOURCES = {
     "major_requirements_sha256": "catalog/major_requirements.json",
     "operations_sha256": "cgal_mcp/master/operations.json",
     "search_vocabulary_sha256": "cgal_mcp/master/search.py",
+    "search_data_sha256": "cgal_mcp/master/search_data.json",
     "registry_ranker_sha256": "cgal_mcp/master/registry.py",
     "generator_sha256": "scripts/evaluate_master_search.py",
 }

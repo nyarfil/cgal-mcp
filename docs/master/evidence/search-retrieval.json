@@ -6,9 +6,10 @@
     "corpus_sha256": "54646cb2eec0884aab1ec51b14a5c7fcaf3b458dda0f25720598de10daf8dd7b",
     "major_requirements_sha256": "77e99f25842687bbfeeb22e8e27f6bac8b4d94fae5a66b50cf8c383410b8de9e",
     "operations_sha256": "d5b97e95472a3a88308c4173c45cc3961a8907fec3d1c54737e37ee9ca913632",
-    "search_vocabulary_sha256": "58b44af41ca1e0647816f2c91bd22a5362d62d282d81c323a12e6f1d0f0d77b5",
-    "registry_ranker_sha256": "2ec91e2728bcfd5c4ad3a46ae6aebe854d01502fd9150a169215f0586c5ae5ea",
-    "generator_sha256": "5f9b656284d68f109b63dd6f0119e0076eee41d7971f32b18a46d52b4cef1c7f"
+    "search_vocabulary_sha256": "0e2cfd087b47fc569543bdf98d3bdd413ac4a82644d831c6d61d760fc3f00e19",
+    "search_data_sha256": "37acdfe0953ca9e18403ca8c06252c64a295781b289e91c89bef91fb98ead53d",
+    "registry_ranker_sha256": "35be623b28bcad312fbb0c13904092ee4e02c6e2c1ff91f116b41d00fef25183",
+    "generator_sha256": "2512627337dd087563289dd55b969906cb99b0e8c79dcbf4ea2e9fe7586b319c"
   },
   "split": {
     "rule": "sha256(requirement_id) mod 3 == 0 is held_out",
@@ -58,24 +59,24 @@
   "summary": {
     "overall": {
       "denominator": 300,
-      "top1_hits": 261,
-      "top3_hits": 289,
-      "top1_percent": 87.0,
-      "top3_percent": 96.33
+      "top1_hits": 266,
+      "top3_hits": 294,
+      "top1_percent": 88.67,
+      "top3_percent": 98.0
     },
     "development": {
       "denominator": 175,
-      "top1_hits": 159,
-      "top3_hits": 170,
-      "top1_percent": 90.86,
-      "top3_percent": 97.14
+      "top1_hits": 156,
+      "top3_hits": 171,
+      "top1_percent": 89.14,
+      "top3_percent": 97.71
     },
     "held_out": {
       "denominator": 125,
-      "top1_hits": 102,
-      "top3_hits": 119,
-      "top1_percent": 81.6,
-      "top3_percent": 95.2
+      "top1_hits": 110,
+      "top3_hits": 123,
+      "top1_percent": 88.0,
+      "top3_percent": 98.4
     }
   },
   "passes_retrieval_target": true,
@@ -112,8 +113,8 @@
     "goal_routing": {
       "eligible": {
         "denominator": 300,
-        "expected_top1": 236,
-        "ambiguous_explicit": 55,
+        "expected_top1": 241,
+        "ambiguous_explicit": 50,
         "clarification_required": 0,
         "wrong_executable_route": 0,
         "wrong_route_with_post_error": 0,
@@ -142,7 +143,7 @@
     "execute_calls": 0,
     "execute_after_search_sample": {
       "sample_size": 15,
-      "succeeded": 10,
+      "succeeded": 15,
       "selection_rule": "first goal-routed top-1 intent of each family in corpus order",
       "families": [
         "7.1",
@@ -192,20 +193,27 @@
         {
           "id": "intent-ja-053",
           "family": "7.4",
+          "fixture_override": [
+            "wave_a_repair/tetra_flipped_soup.off"
+          ],
           "selected_operation": "mesh.repair.orient",
-          "state": "failed",
-          "execution_status": "failed",
-          "validation_status": "not_run",
-          "ok": false
+          "state": "succeeded",
+          "execution_status": "succeeded",
+          "validation_status": "passed",
+          "ok": true
         },
         {
           "id": "intent-ja-077",
           "family": "7.5",
+          "fixture_override": [
+            "query/tetra.off",
+            "batch2/tetra_b.off"
+          ],
           "selected_operation": "mesh.corefine",
-          "state": "rejected",
+          "state": "succeeded",
           "execution_status": "succeeded",
-          "validation_status": "failed",
-          "ok": false
+          "validation_status": "passed",
+          "ok": true
         },
         {
           "id": "intent-ja-097",
@@ -228,11 +236,19 @@
         {
           "id": "intent-ja-141",
           "family": "7.8",
+          "fixture_override": [
+            "query/cube12.off"
+          ],
+          "parameter_override": [
+            "cone_angle",
+            "number_of_rays",
+            "thickness_tolerance"
+          ],
           "selected_operation": "mesh.segment.sdf_values",
-          "state": "rejected",
+          "state": "succeeded",
           "execution_status": "succeeded",
-          "validation_status": "failed",
-          "ok": false
+          "validation_status": "passed",
+          "ok": true
         },
         {
           "id": "intent-ja-165",
@@ -246,11 +262,20 @@
         {
           "id": "intent-en-191",
           "family": "7.10",
+          "fixture_override": [
+            "reconstruction/sphere_dense_normals.ply"
+          ],
+          "parameter_override": [
+            "max_deviation",
+            "sm_angle",
+            "sm_distance",
+            "sm_radius"
+          ],
           "selected_operation": "reconstruction.poisson",
-          "state": "failed",
-          "execution_status": "failed",
-          "validation_status": "not_run",
-          "ok": false
+          "state": "succeeded",
+          "execution_status": "succeeded",
+          "validation_status": "passed",
+          "ok": true
         },
         {
           "id": "intent-en-203",
@@ -291,11 +316,14 @@
         {
           "id": "intent-ja-285",
           "family": "7.15",
+          "parameter_override": [
+            "solver"
+          ],
           "selected_operation": "optimization.quadratic_program",
-          "state": "failed",
-          "execution_status": "failed",
-          "validation_status": "not_run",
-          "ok": false
+          "state": "succeeded",
+          "execution_status": "succeeded",
+          "validation_status": "passed",
+          "ok": true
         }
       ],
       "scope": "sample only; the other intents remain unexecuted"
@@ -311,8 +339,8 @@
       ],
       "returned": [
         "kernel.predicates.evaluate",
-        "kernel.validate.predicates_report",
-        "kernel.intersections.compute"
+        "pointset.normals.orient_mst",
+        "kernel.validate.predicates_report"
       ],
       "top1": true,
       "top3": true
@@ -341,8 +369,8 @@
       ],
       "returned": [
         "kernel.primitives.construct",
-        "spatial.aabb.intersections",
-        "kernel.validate.primitives_report"
+        "kernel.distance.squared",
+        "arrangement.build"
       ],
       "top1": true,
       "top3": true
@@ -356,8 +384,8 @@
       ],
       "returned": [
         "kernel.primitives.construct",
-        "spatial.aabb.intersections",
-        "kernel.validate.primitives_report"
+        "kernel.distance.squared",
+        "spatial.aabb.intersections"
       ],
       "top1": true,
       "top3": true
@@ -385,11 +413,11 @@
         "kernel.predicates.evaluate"
       ],
       "returned": [
-        "kernel.predicates.evaluate",
         "kernel.intersections.compute",
+        "kernel.predicates.evaluate",
         "mesh.inspect.pmp"
       ],
-      "top1": true,
+      "top1": false,
       "top3": true
     },
     {
@@ -401,8 +429,8 @@
       ],
       "returned": [
         "kernel.intersections.compute",
-        "mesh.intersections.do_intersect",
-        "mesh.intersections.polylines"
+        "mesh.corefine",
+        "mesh.autorefine"
       ],
       "top1": true,
       "top3": true
@@ -417,7 +445,7 @@
       "returned": [
         "kernel.intersections.compute",
         "spatial.aabb.intersections",
-        "mesh.boolean.intersection"
+        "arrangement.build"
       ],
       "top1": true,
       "top3": true
@@ -431,8 +459,8 @@
       ],
       "returned": [
         "kernel.distance.squared",
-        "mesh.distance.sample_points",
-        "mesh.distance.hausdorff_approximate"
+        "mesh.distance.max_to_points",
+        "mesh.volume.generate"
       ],
       "top1": true,
       "top3": true
@@ -446,8 +474,8 @@
       ],
       "returned": [
         "kernel.distance.squared",
-        "mesh.distance.sample_points",
-        "mesh.distance.hausdorff_approximate"
+        "mesh.distance.max_to_points",
+        "mesh.location.locate"
       ],
       "top1": true,
       "top3": true
@@ -461,11 +489,11 @@
         "spatial.aabb.ray_first_hits"
       ],
       "returned": [
-        "spatial.aabb.intersections",
         "spatial.aabb.ray_first_hits",
-        "spatial.validate.ray_hits_report"
+        "spatial.aabb.intersections",
+        "kernel.intersections.compute"
       ],
-      "top1": false,
+      "top1": true,
       "top3": true
     },
     {
@@ -479,7 +507,7 @@
       "returned": [
         "spatial.aabb.ray_first_hits",
         "spatial.aabb.intersections",
-        "spatial.validate.ray_hits_report"
+        "spatial.aabb.closest_points"
       ],
       "top1": true,
       "top3": true
@@ -493,9 +521,9 @@
         "spatial.range_search_3"
       ],
       "returned": [
-        "spatial.range_search_3",
         "spatial.knn_3",
-        "pointset.validate.registered_points"
+        "spatial.range_search_3",
+        "spatial.validate.knn_report"
       ],
       "top1": true,
       "top3": true
@@ -524,11 +552,11 @@
         "spatial.knn_3"
       ],
       "returned": [
-        "spatial.range_search_3",
         "spatial.knn_3",
-        "pointset.spacing.average"
+        "pointset.spacing.average",
+        "spatial.range_search_3"
       ],
-      "top1": false,
+      "top1": true,
       "top3": true
     },
     {
@@ -555,8 +583,8 @@
       ],
       "returned": [
         "spatial.aabb.intersections",
-        "mesh.boolean.intersection",
-        "kernel.intersections.compute"
+        "kernel.intersections.compute",
+        "mesh.corefine"
       ],
       "top1": true,
       "top3": true
@@ -569,11 +597,11 @@
         "spatial.aabb.intersections"
       ],
       "returned": [
-        "spatial.aabb.intersections",
         "kernel.intersections.compute",
-        "mesh.boolean.intersection"
+        "mesh.intersections.polylines",
+        "spatial.aabb.intersections"
       ],
-      "top1": true,
+      "top1": false,
       "top3": true
     },
     {
@@ -585,12 +613,12 @@
         "spatial.bbox_3"
       ],
       "returned": [
-        "spatial.aabb.closest_points",
-        "spatial.aabb.intersections",
-        "spatial.aabb.ray_first_hits"
+        "spatial.bbox_3",
+        "spatial.aabb.ray_first_hits",
+        "spatial.aabb.closest_points"
       ],
-      "top1": false,
-      "top3": false
+      "top1": true,
+      "top3": true
     },
     {
       "id": "intent-en-020",
@@ -602,8 +630,8 @@
       ],
       "returned": [
         "spatial.bbox_3",
-        "spatial.aabb.closest_points",
-        "spatial.bbox_2"
+        "spatial.bbox_2",
+        "spatial.aabb.closest_points"
       ],
       "top1": true,
       "top3": true
@@ -618,8 +646,8 @@
       ],
       "returned": [
         "mesh.inspect.pmp",
-        "mesh.analysis.self_intersections",
-        "polygon.analysis.properties"
+        "reconstruction.alpha_wrap",
+        "mesh.analysis.self_intersections"
       ],
       "top1": true,
       "top3": true
@@ -651,7 +679,7 @@
       "returned": [
         "mesh.inspect.pmp",
         "polygon.analysis.properties",
-        "mesh.analysis.self_intersections"
+        "reconstruction.alpha_wrap"
       ],
       "top1": true,
       "top3": true
@@ -667,7 +695,7 @@
       "returned": [
         "mesh.inspect.pmp",
         "polygon.analysis.properties",
-        "mesh.analysis.self_intersections"
+        "reconstruction.alpha_wrap"
       ],
       "top1": true,
       "top3": true
@@ -682,11 +710,11 @@
         "mesh.components.label"
       ],
       "returned": [
-        "mesh.analysis.connected_components",
         "mesh.components.component",
-        "mesh.segment.sdf"
+        "mesh.components.label",
+        "mesh.analysis.connected_components"
       ],
-      "top1": false,
+      "top1": true,
       "top3": true
     },
     {
@@ -699,11 +727,11 @@
         "mesh.components.label"
       ],
       "returned": [
-        "mesh.analysis.connected_components",
         "mesh.components.component",
-        "mesh.segment.sdf"
+        "mesh.components.label",
+        "mesh.analysis.connected_components"
       ],
-      "top1": false,
+      "top1": true,
       "top3": true
     },
     {
@@ -749,8 +777,8 @@
       ],
       "returned": [
         "mesh.analysis.normals",
-        "mesh.validate.features",
-        "mesh.validate.normals_report"
+        "pointset.normals.estimate",
+        "mesh.simplify.edge_collapse"
       ],
       "top1": true,
       "top3": true
@@ -764,8 +792,8 @@
       ],
       "returned": [
         "mesh.analysis.normals",
-        "mesh.validate.features",
-        "mesh.validate.normals_report"
+        "pointset.normals.estimate",
+        "mesh.simplify.edge_collapse"
       ],
       "top1": true,
       "top3": true
@@ -779,8 +807,8 @@
       ],
       "returned": [
         "mesh.analysis.normals",
-        "mesh.validate.features",
-        "mesh.validate.normals_report"
+        "pointset.normals.estimate",
+        "mesh.surface.generate"
       ],
       "top1": true,
       "top3": true
@@ -794,8 +822,8 @@
       ],
       "returned": [
         "mesh.analysis.normals",
-        "mesh.validate.features",
-        "mesh.validate.normals_report"
+        "pointset.normals.estimate",
+        "mesh.volume.generate"
       ],
       "top1": true,
       "top3": true
@@ -809,8 +837,8 @@
       ],
       "returned": [
         "mesh.analysis.measures",
-        "mesh.boolean.union",
-        "mesh.clip.plane"
+        "polygon.analysis.properties",
+        "mesh.smooth.shape"
       ],
       "top1": true,
       "top3": true
@@ -824,8 +852,8 @@
       ],
       "returned": [
         "mesh.analysis.measures",
-        "mesh.boolean.union",
-        "mesh.clip.plane"
+        "polygon.analysis.properties",
+        "mesh.decompose.approx_convex"
       ],
       "top1": true,
       "top3": true
@@ -838,11 +866,11 @@
         "mesh.analysis.measures"
       ],
       "returned": [
-        "mesh.boolean.union",
         "mesh.analysis.measures",
-        "mesh.decompose.approx_convex"
+        "mesh.boolean.union",
+        "polygon.analysis.properties"
       ],
-      "top1": false,
+      "top1": true,
       "top3": true
     },
     {
@@ -853,11 +881,11 @@
         "mesh.analysis.measures"
       ],
       "returned": [
-        "mesh.boolean.union",
         "mesh.analysis.measures",
-        "mesh.smooth.shape"
+        "mesh.boolean.union",
+        "polygon.analysis.properties"
       ],
-      "top1": false,
+      "top1": true,
       "top3": true
     },
     {
@@ -900,7 +928,7 @@
       "returned": [
         "mesh.analysis.sharp_features",
         "mesh.features.detect",
-        "mesh.volume.generate"
+        "pointset.smooth.bilateral"
       ],
       "top1": false,
       "top3": true
@@ -915,7 +943,7 @@
       "returned": [
         "mesh.analysis.sharp_features",
         "mesh.features.detect",
-        "mesh.volume.generate"
+        "pointset.smooth.bilateral"
       ],
       "top1": false,
       "top3": true
@@ -934,9 +962,9 @@
         "mesh.distance.symmetric_hausdorff"
       ],
       "returned": [
+        "mesh.distance.max_to_points",
         "mesh.distance.symmetric_hausdorff",
-        "mesh.distance.hausdorff_approximate",
-        "mesh.distance.hausdorff_approximate_symmetric"
+        "mesh.distance.hausdorff_bounded"
       ],
       "top1": true,
       "top3": true
@@ -955,9 +983,9 @@
         "mesh.distance.symmetric_hausdorff"
       ],
       "returned": [
+        "mesh.distance.max_to_points",
         "mesh.distance.symmetric_hausdorff",
-        "mesh.distance.hausdorff_approximate",
-        "mesh.distance.hausdorff_approximate_symmetric"
+        "mesh.distance.hausdorff_bounded"
       ],
       "top1": true,
       "top3": true
@@ -977,8 +1005,8 @@
       ],
       "returned": [
         "mesh.distance.symmetric_hausdorff",
-        "mesh.simplify.edge_collapse",
-        "mesh.validate.hausdorff_symmetric_report"
+        "mesh.validate.hausdorff_symmetric_report",
+        "mesh.distance.max_to_points"
       ],
       "top1": true,
       "top3": true
@@ -998,8 +1026,8 @@
       ],
       "returned": [
         "mesh.distance.symmetric_hausdorff",
-        "mesh.simplify.edge_collapse",
-        "mesh.validate.hausdorff_symmetric_report"
+        "mesh.validate.hausdorff_symmetric_report",
+        "mesh.distance.max_to_points"
       ],
       "top1": true,
       "top3": true
@@ -1014,11 +1042,11 @@
         "mesh.intersections.polylines"
       ],
       "returned": [
+        "mesh.autorefine",
         "mesh.analysis.self_intersections",
-        "mesh.volume.generate",
-        "mesh.autorefine"
+        "mesh.volume.generate"
       ],
-      "top1": true,
+      "top1": false,
       "top3": true
     },
     {
@@ -1031,11 +1059,11 @@
         "mesh.intersections.polylines"
       ],
       "returned": [
+        "mesh.autorefine",
         "mesh.analysis.self_intersections",
-        "mesh.volume.generate",
-        "mesh.autorefine"
+        "mesh.volume.generate"
       ],
-      "top1": true,
+      "top1": false,
       "top3": true
     },
     {
@@ -1049,8 +1077,8 @@
       ],
       "returned": [
         "mesh.analysis.self_intersections",
-        "mesh.volume.generate",
-        "mesh.autorefine"
+        "mesh.autorefine",
+        "mesh.volume.generate"
       ],
       "top1": true,
       "top3": true
@@ -1066,8 +1094,8 @@
       ],
       "returned": [
         "mesh.analysis.self_intersections",
-        "mesh.volume.generate",
-        "mesh.autorefine"
+        "mesh.autorefine",
+        "mesh.volume.generate"
       ],
       "top1": true,
       "top3": true
@@ -1081,8 +1109,8 @@
       ],
       "returned": [
         "mesh.location.locate",
-        "shape.barycentric",
-        "shape.validate.barycentric"
+        "spatial.aabb.closest_points",
+        "shape.barycentric"
       ],
       "top1": true,
       "top3": true
@@ -1096,8 +1124,8 @@
       ],
       "returned": [
         "mesh.location.locate",
-        "shape.barycentric",
-        "shape.validate.barycentric"
+        "spatial.aabb.closest_points",
+        "shape.barycentric"
       ],
       "top1": true,
       "top3": true
@@ -1112,7 +1140,7 @@
       "returned": [
         "mesh.location.locate",
         "mesh.path.shortest",
-        "shape.barycentric"
+        "spatial.aabb.closest_points"
       ],
       "top1": true,
       "top3": true
@@ -1127,7 +1155,7 @@
       "returned": [
         "mesh.location.locate",
         "mesh.path.shortest",
-        "shape.barycentric"
+        "spatial.aabb.closest_points"
       ],
       "top1": true,
       "top3": true
@@ -1142,7 +1170,7 @@
       "returned": [
         "mesh.repair.orient",
         "mesh.repair.polygon_soup",
-        "mesh.validate.repair_orientation"
+        "mesh.repair.manifold_preprocess"
       ],
       "top1": true,
       "top3": true
@@ -1157,7 +1185,7 @@
       "returned": [
         "mesh.repair.orient",
         "mesh.repair.polygon_soup",
-        "mesh.validate.repair_orientation"
+        "mesh.repair.fill_holes"
       ],
       "top1": true,
       "top3": true
@@ -1171,8 +1199,8 @@
       ],
       "returned": [
         "mesh.repair.orient",
-        "mesh.repair.polygon_soup",
-        "pointset.normals.orient_mst"
+        "pointset.normals.orient_mst",
+        "mesh.repair.polygon_soup"
       ],
       "top1": true,
       "top3": true
@@ -1186,8 +1214,8 @@
       ],
       "returned": [
         "mesh.repair.orient",
-        "mesh.repair.polygon_soup",
-        "pointset.normals.orient_mst"
+        "pointset.normals.orient_mst",
+        "mesh.repair.polygon_soup"
       ],
       "top1": true,
       "top3": true
@@ -1201,7 +1229,7 @@
       ],
       "returned": [
         "mesh.repair.stitch_borders",
-        "mesh.validate.repair_polygon_soup",
+        "mesh.boolean.union",
         "mesh.repair.polygon_soup"
       ],
       "top1": true,
@@ -1216,8 +1244,8 @@
       ],
       "returned": [
         "mesh.repair.stitch_borders",
-        "mesh.validate.repair_polygon_soup",
-        "mesh.repair.polygon_soup"
+        "mesh.repair.polygon_soup",
+        "mesh.simplify.edge_collapse"
       ],
       "top1": true,
       "top3": true
@@ -1231,7 +1259,7 @@
       ],
       "returned": [
         "mesh.repair.stitch_borders",
-        "mesh.validate.repair_polygon_soup",
+        "mesh.validate.repair_stitch_borders",
         "mesh.repair.polygon_soup"
       ],
       "top1": true,
@@ -1246,7 +1274,7 @@
       ],
       "returned": [
         "mesh.repair.stitch_borders",
-        "mesh.validate.repair_polygon_soup",
+        "mesh.validate.repair_stitch_borders",
         "mesh.repair.polygon_soup"
       ],
       "top1": true,
@@ -1262,7 +1290,7 @@
       "returned": [
         "mesh.repair.remove_degenerate",
         "mesh.repair.polygon_soup",
-        "mesh.validate.repair_remove_degenerate"
+        "mesh.repair.orient"
       ],
       "top1": true,
       "top3": true
@@ -1277,7 +1305,7 @@
       "returned": [
         "mesh.repair.remove_degenerate",
         "mesh.repair.polygon_soup",
-        "mesh.validate.repair_remove_degenerate"
+        "mesh.repair.manifold_preprocess"
       ],
       "top1": true,
       "top3": true
@@ -1292,7 +1320,7 @@
       "returned": [
         "mesh.repair.remove_degenerate",
         "mesh.repair.polygon_soup",
-        "mesh.validate.repair_remove_degenerate"
+        "mesh.validate.tetrahedral_mesh"
       ],
       "top1": true,
       "top3": true
@@ -1307,7 +1335,7 @@
       "returned": [
         "mesh.repair.remove_degenerate",
         "mesh.repair.polygon_soup",
-        "mesh.validate.repair_remove_degenerate"
+        "mesh.validate.tetrahedral_mesh"
       ],
       "top1": true,
       "top3": true
@@ -1323,7 +1351,7 @@
       "returned": [
         "mesh.repair.fill_holes",
         "mesh.repair.fill_holes_refine_fair",
-        "triangulation.validate.periodic_delaunay_2"
+        "mesh2.refine.delaunay"
       ],
       "top1": true,
       "top3": true
@@ -1339,7 +1367,7 @@
       "returned": [
         "mesh.repair.fill_holes",
         "mesh.repair.fill_holes_refine_fair",
-        "triangulation.validate.periodic_delaunay_2"
+        "mesh2.refine.delaunay"
       ],
       "top1": true,
       "top3": true
@@ -1355,7 +1383,7 @@
       "returned": [
         "mesh.repair.fill_holes_refine_fair",
         "mesh.repair.fill_holes",
-        "mesh.validate.repair_fill_holes_refine_fair"
+        "mesh2.refine.delaunay"
       ],
       "top1": true,
       "top3": true
@@ -1371,7 +1399,7 @@
       "returned": [
         "mesh.repair.fill_holes_refine_fair",
         "mesh.repair.fill_holes",
-        "mesh.validate.repair_fill_holes_refine_fair"
+        "mesh2.refine.delaunay"
       ],
       "top1": true,
       "top3": true
@@ -1386,7 +1414,7 @@
       "returned": [
         "mesh.repair.polygon_soup",
         "mesh.repair.orient",
-        "mesh.validate.repair_polygon_soup"
+        "mesh.validate.repair_orientation"
       ],
       "top1": true,
       "top3": true
@@ -1401,7 +1429,7 @@
       "returned": [
         "mesh.repair.polygon_soup",
         "mesh.repair.orient",
-        "mesh.validate.repair_polygon_soup"
+        "mesh.validate.repair_orientation"
       ],
       "top1": true,
       "top3": true
@@ -1416,7 +1444,7 @@
       "returned": [
         "mesh.repair.orient",
         "mesh.repair.polygon_soup",
-        "mesh.validate.repair_polygon_soup"
+        "mesh.validate.repair_orientation"
       ],
       "top1": false,
       "top3": true
@@ -1431,7 +1459,7 @@
       "returned": [
         "mesh.repair.orient",
         "mesh.repair.polygon_soup",
-        "mesh.validate.repair_polygon_soup"
+        "mesh.validate.repair_orientation"
       ],
       "top1": false,
       "top3": true
@@ -1445,8 +1473,8 @@
       ],
       "returned": [
         "mesh.repair.manifold_preprocess",
-        "mesh.autorefine",
-        "mesh.boolean.intersection"
+        "mesh.subdivide.loop",
+        "mesh.triangulate.faces"
       ],
       "top1": true,
       "top3": true
@@ -1460,8 +1488,8 @@
       ],
       "returned": [
         "mesh.repair.manifold_preprocess",
-        "mesh.autorefine",
-        "mesh.boolean.intersection"
+        "mesh.subdivide.loop",
+        "mesh.triangulate.faces"
       ],
       "top1": true,
       "top3": true
@@ -1475,8 +1503,8 @@
       ],
       "returned": [
         "mesh.repair.manifold_preprocess",
-        "mesh.volume.generate",
-        "spatial.aabb.intersections"
+        "mesh.validate.repair_manifold_preprocess",
+        "mesh.components.component"
       ],
       "top1": true,
       "top3": true
@@ -1490,8 +1518,8 @@
       ],
       "returned": [
         "mesh.repair.manifold_preprocess",
-        "mesh.slice.compute",
-        "mesh.path.shortest"
+        "mesh.validate.repair_manifold_preprocess",
+        "mesh.components.component"
       ],
       "top1": true,
       "top3": true
@@ -1507,7 +1535,7 @@
       "returned": [
         "mesh.corefine",
         "arrangement.overlay",
-        "mesh.boolean.intersection"
+        "mesh.volume.generate"
       ],
       "top1": true,
       "top3": true
@@ -1523,7 +1551,7 @@
       "returned": [
         "mesh.corefine",
         "arrangement.overlay",
-        "mesh.boolean.intersection"
+        "mesh.autorefine"
       ],
       "top1": true,
       "top3": true
@@ -1570,9 +1598,9 @@
         "mesh.boolean.union"
       ],
       "returned": [
-        "mesh.boolean.intersection",
         "mesh.boolean.union",
-        "mesh.boolean.difference"
+        "mesh.boolean.difference",
+        "mesh.corefine"
       ],
       "top1": true,
       "top3": true
@@ -1587,9 +1615,9 @@
         "mesh.boolean.union"
       ],
       "returned": [
-        "mesh.boolean.intersection",
         "mesh.boolean.union",
-        "mesh.boolean.difference"
+        "mesh.boolean.difference",
+        "mesh.clip.plane"
       ],
       "top1": true,
       "top3": true
@@ -1604,11 +1632,11 @@
         "mesh.boolean.union"
       ],
       "returned": [
-        "polygon.boolean",
+        "mesh.boolean.union",
         "mesh.boolean.intersection",
-        "mesh.boolean.union"
+        "mesh.validate.boolean_union"
       ],
-      "top1": false,
+      "top1": true,
       "top3": true
     },
     {
@@ -1621,11 +1649,11 @@
         "mesh.boolean.union"
       ],
       "returned": [
-        "polygon.boolean",
+        "mesh.boolean.union",
         "mesh.boolean.intersection",
-        "mesh.boolean.union"
+        "mesh.validate.boolean_union"
       ],
-      "top1": false,
+      "top1": true,
       "top3": true
     },
     {
@@ -1638,8 +1666,8 @@
       ],
       "returned": [
         "mesh.clip.plane",
-        "mesh.parameterize",
-        "mesh.slice.compute"
+        "mesh.split.plane",
+        "polygon.boolean"
       ],
       "top1": true,
       "top3": true
@@ -1654,8 +1682,8 @@
       ],
       "returned": [
         "mesh.clip.plane",
-        "mesh.parameterize",
-        "mesh.slice.compute"
+        "mesh.split.plane",
+        "polygon.boolean"
       ],
       "top1": true,
       "top3": true
@@ -1670,8 +1698,8 @@
       ],
       "returned": [
         "mesh.clip.plane",
-        "mesh.validate.volume_mesh",
-        "mesh.subdivide.catmull_clark"
+        "mesh.split.plane",
+        "polygon.boolean"
       ],
       "top1": true,
       "top3": true
@@ -1686,8 +1714,8 @@
       ],
       "returned": [
         "mesh.clip.plane",
-        "mesh.simplify.edge_collapse",
-        "mesh.validate.volume_mesh"
+        "mesh.split.plane",
+        "polygon.boolean"
       ],
       "top1": true,
       "top3": true
@@ -1701,12 +1729,12 @@
         "mesh.split.plane"
       ],
       "returned": [
-        "mesh.boolean.intersection",
-        "mesh.validate.boolean_intersection",
-        "mesh.validate.do_intersect"
+        "arrangement.build",
+        "mesh.corefine",
+        "mesh.autorefine"
       ],
       "top1": false,
-      "top3": false
+      "top3": true
     },
     {
       "id": "intent-ja-090",
@@ -1717,12 +1745,12 @@
         "mesh.split.plane"
       ],
       "returned": [
-        "mesh.boolean.intersection",
-        "mesh.validate.boolean_intersection",
-        "mesh.validate.do_intersect"
+        "arrangement.build",
+        "mesh.corefine",
+        "mesh.autorefine"
       ],
       "top1": false,
-      "top3": false
+      "top3": true
     },
     {
       "id": "intent-en-091",
@@ -1735,7 +1763,7 @@
       "returned": [
         "mesh.autorefine",
         "mesh.split.plane",
-        "mesh.validate.approx_convex"
+        "mesh.analysis.connected_components"
       ],
       "top1": false,
       "top3": true
@@ -1751,7 +1779,7 @@
       "returned": [
         "mesh.autorefine",
         "mesh.split.plane",
-        "mesh.validate.approx_convex"
+        "mesh.analysis.connected_components"
       ],
       "top1": false,
       "top3": true
@@ -1765,8 +1793,8 @@
       ],
       "returned": [
         "mesh.slice.compute",
-        "polygon.validate.offset",
-        "polygon.straight_skeleton.exterior"
+        "mesh.validate.slice",
+        "mesh.triangulate.faces"
       ],
       "top1": true,
       "top3": true
@@ -1780,8 +1808,8 @@
       ],
       "returned": [
         "mesh.slice.compute",
-        "polygon.validate.offset",
-        "polygon.straight_skeleton.exterior"
+        "mesh.validate.slice",
+        "mesh.triangulate.faces"
       ],
       "top1": true,
       "top3": true
@@ -1795,8 +1823,8 @@
       ],
       "returned": [
         "mesh.slice.compute",
-        "mesh.validate.slice",
-        "mesh2.refine.delaunay"
+        "mesh.clip.plane",
+        "mesh.volume.generate"
       ],
       "top1": true,
       "top3": true
@@ -1810,8 +1838,8 @@
       ],
       "returned": [
         "mesh.slice.compute",
-        "mesh.validate.slice",
-        "spatial.validate.aabb_intersections"
+        "mesh.clip.plane",
+        "triangulation.regular_2"
       ],
       "top1": true,
       "top3": true
@@ -1825,8 +1853,8 @@
       ],
       "returned": [
         "mesh.triangulate.faces",
-        "mesh.validate.repair_polygon_soup",
-        "mesh.repair.polygon_soup"
+        "mesh.simplify.edge_collapse",
+        "mesh.smooth.tangential_relaxation"
       ],
       "top1": true,
       "top3": true
@@ -1840,8 +1868,8 @@
       ],
       "returned": [
         "mesh.triangulate.faces",
-        "mesh.validate.repair_polygon_soup",
-        "mesh.repair.polygon_soup"
+        "mesh.simplify.edge_collapse",
+        "mesh.smooth.tangential_relaxation"
       ],
       "top1": true,
       "top3": true
@@ -1855,7 +1883,7 @@
       ],
       "returned": [
         "mesh.triangulate.faces",
-        "spatial.aabb.closest_points",
+        "mesh.parameterize.discrete_conformal_map",
         "mesh.simplify.edge_collapse"
       ],
       "top1": true,
@@ -1870,8 +1898,8 @@
       ],
       "returned": [
         "mesh.triangulate.faces",
-        "spatial.aabb.closest_points",
-        "mesh.distance.sample_points"
+        "mesh.surface.generate",
+        "mesh.validate.triangulated_faces"
       ],
       "top1": true,
       "top3": true
@@ -1884,30 +1912,15 @@
         "mesh.refine.local"
       ],
       "returned": [
-        "mesh.refine.local",
         "mesh2.refine.delaunay",
-        "mesh.autorefine"
+        "mesh.refine.local",
+        "mesh.corefine"
       ],
-      "top1": true,
+      "top1": false,
       "top3": true
     },
     {
       "id": "intent-ja-102",
-      "requirement": "major.7.6.02",
-      "split": "development",
-      "expected": [
-        "mesh.refine.local"
-      ],
-      "returned": [
-        "mesh.refine.local",
-        "mesh2.refine.delaunay",
-        "mesh.autorefine"
-      ],
-      "top1": true,
-      "top3": true
-    },
-    {
-      "id": "intent-en-103",
       "requirement": "major.7.6.02",
       "split": "development",
       "expected": [
@@ -1922,6 +1935,21 @@
       "top3": true
     },
     {
+      "id": "intent-en-103",
+      "requirement": "major.7.6.02",
+      "split": "development",
+      "expected": [
+        "mesh.refine.local"
+      ],
+      "returned": [
+        "mesh2.refine.delaunay",
+        "mesh.refine.local",
+        "mesh.corefine"
+      ],
+      "top1": false,
+      "top3": true
+    },
+    {
       "id": "intent-en-104",
       "requirement": "major.7.6.02",
       "split": "development",
@@ -1931,7 +1959,7 @@
       "returned": [
         "mesh2.refine.delaunay",
         "mesh.refine.local",
-        "mesh.autorefine"
+        "mesh.corefine"
       ],
       "top1": false,
       "top3": true
@@ -1947,7 +1975,7 @@
       "returned": [
         "mesh.remesh.isotropic",
         "mesh.remesh.adaptive",
-        "mesh.validate.isotropic_remesh"
+        "mesh.triangulate.faces"
       ],
       "top1": true,
       "top3": true
@@ -1963,7 +1991,7 @@
       "returned": [
         "mesh.remesh.isotropic",
         "mesh.remesh.adaptive",
-        "mesh.validate.isotropic_remesh"
+        "mesh.triangulate.faces"
       ],
       "top1": true,
       "top3": true
@@ -1979,7 +2007,7 @@
       "returned": [
         "mesh.remesh.isotropic",
         "mesh.remesh.adaptive",
-        "mesh.validate.isotropic_remesh"
+        "mesh.remesh.split_long_edges"
       ],
       "top1": true,
       "top3": true
@@ -1995,7 +2023,7 @@
       "returned": [
         "mesh.remesh.isotropic",
         "mesh.remesh.adaptive",
-        "mesh.validate.isotropic_remesh"
+        "mesh.remesh.split_long_edges"
       ],
       "top1": true,
       "top3": true
@@ -2010,8 +2038,8 @@
       ],
       "returned": [
         "mesh.smooth.tangential_relaxation",
-        "mesh.validate.shape_smoothing",
-        "mesh.smooth.shape"
+        "mesh.smooth.shape",
+        "pointset.smooth.jet"
       ],
       "top1": true,
       "top3": true
@@ -2026,8 +2054,8 @@
       ],
       "returned": [
         "mesh.smooth.tangential_relaxation",
-        "mesh.validate.shape_smoothing",
-        "mesh.smooth.shape"
+        "mesh.smooth.shape",
+        "pointset.smooth.jet"
       ],
       "top1": true,
       "top3": true
@@ -2043,7 +2071,7 @@
       "returned": [
         "mesh.smooth.tangential_relaxation",
         "mesh.features.detect",
-        "mesh.segment.sdf"
+        "reconstruction.scale_space"
       ],
       "top1": true,
       "top3": true
@@ -2059,7 +2087,7 @@
       "returned": [
         "mesh.smooth.tangential_relaxation",
         "mesh.features.detect",
-        "mesh.segment.sdf"
+        "pointset.validate.smoothing_quality"
       ],
       "top1": true,
       "top3": true
@@ -2073,8 +2101,8 @@
       ],
       "returned": [
         "mesh.remesh.adaptive",
-        "mesh.validate.adaptive_remesh",
-        "mesh.autorefine"
+        "pointset.simplify.hierarchy",
+        "mesh.refine.local"
       ],
       "top1": true,
       "top3": true
@@ -2088,8 +2116,8 @@
       ],
       "returned": [
         "mesh.remesh.adaptive",
-        "mesh.validate.adaptive_remesh",
-        "mesh.autorefine"
+        "pointset.simplify.hierarchy",
+        "mesh.refine.local"
       ],
       "top1": true,
       "top3": true
@@ -2103,8 +2131,8 @@
       ],
       "returned": [
         "mesh.remesh.adaptive",
-        "mesh.validate.adaptive_remesh",
-        "mesh.decompose.approx_convex"
+        "mesh.refine.local",
+        "pointset.simplify.hierarchy"
       ],
       "top1": true,
       "top3": true
@@ -2118,8 +2146,8 @@
       ],
       "returned": [
         "mesh.remesh.adaptive",
-        "mesh.validate.adaptive_remesh",
-        "mesh.decompose.approx_convex"
+        "mesh.refine.local",
+        "pointset.simplify.hierarchy"
       ],
       "top1": true,
       "top3": true
@@ -2148,8 +2176,8 @@
       ],
       "returned": [
         "kernel.predicates.evaluate",
-        "kernel.validate.predicates_report",
-        "kernel.intersections.compute"
+        "kernel.intersections.compute",
+        "pointset.normals.orient_mst"
       ],
       "top1": true,
       "top3": true
@@ -2179,7 +2207,7 @@
       "returned": [
         "kernel.predicates.evaluate",
         "pointset.normals.orient_mst",
-        "triangulation.validate.delaunay_3"
+        "kernel.validate.predicates_report"
       ],
       "top1": true,
       "top3": true
@@ -2208,8 +2236,8 @@
       ],
       "returned": [
         "kernel.primitives.construct",
-        "spatial.aabb.intersections",
-        "kernel.validate.primitives_report"
+        "kernel.distance.squared",
+        "arrangement.build"
       ],
       "top1": true,
       "top3": true
@@ -2238,8 +2266,8 @@
       ],
       "returned": [
         "kernel.primitives.construct",
-        "spatial.aabb.intersections",
-        "kernel.validate.primitives_report"
+        "kernel.distance.squared",
+        "spatial.aabb.intersections"
       ],
       "top1": true,
       "top3": true
@@ -2267,11 +2295,11 @@
         "kernel.predicates.evaluate"
       ],
       "returned": [
-        "kernel.predicates.evaluate",
         "kernel.intersections.compute",
+        "kernel.predicates.evaluate",
         "mesh.inspect.pmp"
       ],
-      "top1": true,
+      "top1": false,
       "top3": true
     },
     {
@@ -2297,11 +2325,11 @@
         "kernel.predicates.evaluate"
       ],
       "returned": [
-        "kernel.predicates.evaluate",
         "kernel.intersections.compute",
+        "kernel.predicates.evaluate",
         "mesh.inspect.pmp"
       ],
-      "top1": true,
+      "top1": false,
       "top3": true
     },
     {
@@ -2313,8 +2341,8 @@
       ],
       "returned": [
         "mesh.simplify.edge_collapse",
-        "mesh.validate.simplification_integrity",
-        "pointset.simplify.random"
+        "pointset.simplify.random",
+        "mesh.distance.symmetric_hausdorff"
       ],
       "top1": true,
       "top3": true
@@ -2328,8 +2356,8 @@
       ],
       "returned": [
         "kernel.intersections.compute",
-        "spatial.aabb.intersections",
-        "mesh.boolean.intersection"
+        "arrangement.build",
+        "spatial.aabb.intersections"
       ],
       "top1": true,
       "top3": true
@@ -2343,8 +2371,8 @@
       ],
       "returned": [
         "mesh.simplify.edge_collapse",
-        "mesh.validate.simplification_integrity",
-        "pointset.simplify.random"
+        "pointset.simplify.grid",
+        "pointset.simplify.hierarchy"
       ],
       "top1": true,
       "top3": true
@@ -2359,7 +2387,7 @@
       "returned": [
         "kernel.intersections.compute",
         "spatial.aabb.intersections",
-        "mesh.boolean.intersection"
+        "arrangement.build"
       ],
       "top1": true,
       "top3": true
@@ -2374,7 +2402,7 @@
       "returned": [
         "mesh.simplify.edge_collapse",
         "mesh.validate.simplification_integrity",
-        "pointset.simplify.random"
+        "mesh.distance.symmetric_hausdorff"
       ],
       "top1": true,
       "top3": true
@@ -2388,8 +2416,8 @@
       ],
       "returned": [
         "kernel.distance.squared",
-        "mesh.distance.sample_points",
-        "mesh.distance.hausdorff_approximate"
+        "mesh.distance.max_to_mesh",
+        "mesh.volume.generate"
       ],
       "top1": true,
       "top3": true
@@ -2404,7 +2432,7 @@
       "returned": [
         "mesh.simplify.edge_collapse",
         "mesh.validate.simplification_integrity",
-        "pointset.simplify.random"
+        "mesh.distance.symmetric_hausdorff"
       ],
       "top1": true,
       "top3": true
@@ -2418,8 +2446,8 @@
       ],
       "returned": [
         "kernel.distance.squared",
-        "mesh.validate.hausdorff_symmetric_report",
-        "mesh.distance.sample_points"
+        "mesh.distance.max_to_points",
+        "mesh.location.locate"
       ],
       "top1": true,
       "top3": true
@@ -2434,7 +2462,7 @@
       "returned": [
         "mesh.simplify.edge_collapse",
         "mesh.validate.simplification_integrity",
-        "pointset.simplify.random"
+        "mesh.distance.symmetric_hausdorff"
       ],
       "top1": true,
       "top3": true
@@ -2450,7 +2478,7 @@
       "returned": [
         "spatial.aabb.ray_first_hits",
         "spatial.aabb.intersections",
-        "spatial.validate.ray_hits_report"
+        "mesh.triangulate.faces"
       ],
       "top1": true,
       "top3": true
@@ -2465,7 +2493,7 @@
       "returned": [
         "mesh.simplify.edge_collapse",
         "mesh.validate.simplification_integrity",
-        "pointset.simplify.random"
+        "mesh.distance.symmetric_hausdorff"
       ],
       "top1": true,
       "top3": true
@@ -2481,7 +2509,7 @@
       "returned": [
         "spatial.aabb.ray_first_hits",
         "spatial.aabb.intersections",
-        "spatial.validate.ray_hits_report"
+        "mesh.location.locate"
       ],
       "top1": true,
       "top3": true
@@ -2497,7 +2525,7 @@
       "returned": [
         "mesh.segment.sdf_values",
         "mesh.segment.sdf",
-        "mesh.validate.sdf_segmentation"
+        "mesh.simplify.edge_collapse"
       ],
       "top1": true,
       "top3": true
@@ -2513,7 +2541,7 @@
       "returned": [
         "mesh.segment.sdf_values",
         "mesh.segment.sdf",
-        "mesh.validate.sdf_segmentation"
+        "mesh.simplify.edge_collapse"
       ],
       "top1": true,
       "top3": true
@@ -2529,7 +2557,7 @@
       "returned": [
         "mesh.segment.sdf_values",
         "mesh.segment.sdf",
-        "mesh.validate.sdf_segmentation"
+        "mesh.triangulate.faces"
       ],
       "top1": true,
       "top3": true
@@ -2545,7 +2573,7 @@
       "returned": [
         "mesh.segment.sdf_values",
         "mesh.segment.sdf",
-        "mesh.validate.sdf_segmentation"
+        "mesh.triangulate.faces"
       ],
       "top1": true,
       "top3": true
@@ -2559,8 +2587,8 @@
       ],
       "returned": [
         "mesh.decompose.approx_convex",
-        "mesh.validate.approx_convex",
-        "hull.validate.convex_enclosure"
+        "mesh.distance.symmetric_hausdorff",
+        "mesh.volume.generate"
       ],
       "top1": true,
       "top3": true
@@ -2574,8 +2602,8 @@
       ],
       "returned": [
         "mesh.decompose.approx_convex",
-        "mesh.validate.approx_convex",
-        "hull.validate.convex_enclosure"
+        "mesh.volume.generate",
+        "mesh.distance.symmetric_hausdorff"
       ],
       "top1": true,
       "top3": true
@@ -2589,8 +2617,8 @@
       ],
       "returned": [
         "mesh.decompose.approx_convex",
-        "mesh.validate.approx_convex",
-        "mesh.simplify.edge_collapse"
+        "mesh.boolean.intersection",
+        "optimization.approximate_mesh"
       ],
       "top1": true,
       "top3": true
@@ -2604,8 +2632,8 @@
       ],
       "returned": [
         "mesh.decompose.approx_convex",
-        "mesh.validate.approx_convex",
-        "mesh.volume.generate"
+        "mesh.volume.generate",
+        "mesh.boolean.intersection"
       ],
       "top1": true,
       "top3": true
@@ -2620,8 +2648,8 @@
       ],
       "returned": [
         "mesh.skeletonize.mean_curvature",
-        "mesh.skeletonize.mean_curvature_flow",
-        "mesh.validate.skeleton"
+        "polygon.straight_skeleton.interior",
+        "mesh.skeletonize.mean_curvature_flow"
       ],
       "top1": true,
       "top3": true
@@ -2636,8 +2664,8 @@
       ],
       "returned": [
         "mesh.skeletonize.mean_curvature",
-        "mesh.skeletonize.mean_curvature_flow",
-        "mesh.validate.skeleton"
+        "polygon.straight_skeleton.interior",
+        "mesh.skeletonize.mean_curvature_flow"
       ],
       "top1": true,
       "top3": true
@@ -2653,7 +2681,7 @@
       "returned": [
         "mesh.skeletonize.mean_curvature",
         "mesh.skeletonize.mean_curvature_flow",
-        "mesh.validate.skeleton"
+        "polygon.straight_skeleton.interior"
       ],
       "top1": true,
       "top3": true
@@ -2669,7 +2697,7 @@
       "returned": [
         "mesh.skeletonize.mean_curvature",
         "mesh.skeletonize.mean_curvature_flow",
-        "mesh.validate.skeleton"
+        "polygon.straight_skeleton.interior"
       ],
       "top1": true,
       "top3": true
@@ -2683,8 +2711,8 @@
       ],
       "returned": [
         "mesh.path.shortest",
-        "mesh.validate.shortest_path",
-        "mesh.simplify.edge_collapse"
+        "mesh.distance.sample_points",
+        "triangulation.constrained_2"
       ],
       "top1": true,
       "top3": true
@@ -2698,8 +2726,8 @@
       ],
       "returned": [
         "mesh.path.shortest",
-        "mesh.validate.shortest_path",
-        "mesh.simplify.edge_collapse"
+        "mesh.distance.sample_points",
+        "mesh.triangulate.faces"
       ],
       "top1": true,
       "top3": true
@@ -2713,7 +2741,7 @@
       ],
       "returned": [
         "mesh.path.shortest",
-        "mesh.validate.shortest_path",
+        "reconstruction.poisson",
         "mesh.simplify.edge_collapse"
       ],
       "top1": true,
@@ -2728,7 +2756,7 @@
       ],
       "returned": [
         "mesh.path.shortest",
-        "mesh.validate.shortest_path",
+        "reconstruction.poisson",
         "mesh.simplify.edge_collapse"
       ],
       "top1": true,
@@ -2745,7 +2773,7 @@
       "returned": [
         "mesh.parameterize",
         "mesh.parameterize.discrete_conformal_map",
-        "mesh.validate.parameterization_harmonic"
+        "mesh2.refine.delaunay"
       ],
       "top1": true,
       "top3": true
@@ -2761,7 +2789,7 @@
       "returned": [
         "mesh.parameterize",
         "mesh.parameterize.discrete_conformal_map",
-        "mesh.validate.parameterization_harmonic"
+        "mesh2.refine.delaunay"
       ],
       "top1": true,
       "top3": true
@@ -2777,7 +2805,7 @@
       "returned": [
         "mesh.parameterize",
         "mesh.parameterize.discrete_conformal_map",
-        "mesh.validate.parameterization_isometric"
+        "optimization.approximate_mesh"
       ],
       "top1": true,
       "top3": true
@@ -2793,7 +2821,7 @@
       "returned": [
         "mesh.parameterize",
         "mesh.parameterize.discrete_conformal_map",
-        "mesh.validate.parameterization_isometric"
+        "shape.bounding.circle"
       ],
       "top1": true,
       "top3": true
@@ -2809,7 +2837,7 @@
       "returned": [
         "mesh.subdivide.catmull_clark",
         "mesh.subdivide.loop",
-        "mesh.validate.max_distance_to_points"
+        "arrangement.zone"
       ],
       "top1": true,
       "top3": true
@@ -2825,7 +2853,7 @@
       "returned": [
         "mesh.subdivide.catmull_clark",
         "mesh.subdivide.loop",
-        "mesh.validate.max_distance_to_points"
+        "mesh.smooth.shape"
       ],
       "top1": true,
       "top3": true
@@ -2841,7 +2869,7 @@
       "returned": [
         "mesh.subdivide.catmull_clark",
         "mesh.subdivide.loop",
-        "mesh.validate.max_distance_to_points"
+        "arrangement.zone"
       ],
       "top1": true,
       "top3": true
@@ -2857,7 +2885,7 @@
       "returned": [
         "mesh.subdivide.catmull_clark",
         "mesh.subdivide.loop",
-        "mesh.validate.max_distance_to_points"
+        "arrangement.zone"
       ],
       "top1": true,
       "top3": true
@@ -2872,8 +2900,8 @@
       ],
       "returned": [
         "pointset.normals.estimate",
-        "pointset.normals.orient_mst",
-        "pointset.validate.basic"
+        "reconstruction.advancing_front",
+        "pointset.normals.orient_mst"
       ],
       "top1": true,
       "top3": true
@@ -2888,8 +2916,8 @@
       ],
       "returned": [
         "pointset.normals.estimate",
-        "pointset.normals.orient_mst",
-        "pointset.validate.basic"
+        "reconstruction.advancing_front",
+        "pointset.normals.orient_mst"
       ],
       "top1": true,
       "top3": true
@@ -2903,9 +2931,9 @@
         "pointset.normals.orient_mst"
       ],
       "returned": [
-        "pointset.normals.orient_mst",
         "pointset.normals.estimate",
-        "pointset.validate.normals_oriented"
+        "pointset.normals.orient_mst",
+        "reconstruction.advancing_front"
       ],
       "top1": true,
       "top3": true
@@ -2919,9 +2947,9 @@
         "pointset.normals.orient_mst"
       ],
       "returned": [
-        "pointset.normals.orient_mst",
         "pointset.normals.estimate",
-        "pointset.validate.normals_oriented"
+        "pointset.normals.orient_mst",
+        "reconstruction.advancing_front"
       ],
       "top1": true,
       "top3": true
@@ -2936,8 +2964,8 @@
       ],
       "returned": [
         "pointset.remove_outliers",
-        "pointset.validate.outliers_removed",
-        "hull.convex_3"
+        "pointset.smooth.jet",
+        "shape.bounding.sphere"
       ],
       "top1": true,
       "top3": true
@@ -2952,8 +2980,8 @@
       ],
       "returned": [
         "pointset.remove_outliers",
-        "pointset.validate.outliers_removed",
-        "hull.convex_3"
+        "pointset.smooth.jet",
+        "triangulation.delaunay_3"
       ],
       "top1": true,
       "top3": true
@@ -2968,8 +2996,8 @@
       ],
       "returned": [
         "pointset.remove_outliers",
-        "pointset.validate.outliers_removed",
-        "shape.fixed_alpha_shape_3"
+        "reconstruction.scale_space",
+        "hull.convex_3"
       ],
       "top1": true,
       "top3": true
@@ -2984,8 +3012,8 @@
       ],
       "returned": [
         "pointset.remove_outliers",
-        "pointset.validate.outliers_removed",
-        "shape.fixed_alpha_shape_3"
+        "reconstruction.scale_space",
+        "pointset.smooth.jet"
       ],
       "top1": true,
       "top3": true
@@ -3000,8 +3028,8 @@
       ],
       "returned": [
         "pointset.smooth.jet",
-        "pointset.smooth.bilateral",
-        "pointset.validate.smoothing_quality"
+        "reconstruction.scale_space",
+        "mesh.smooth.shape"
       ],
       "top1": true,
       "top3": true
@@ -3016,8 +3044,8 @@
       ],
       "returned": [
         "pointset.smooth.jet",
-        "pointset.smooth.bilateral",
-        "pointset.validate.smoothing_quality"
+        "reconstruction.scale_space",
+        "mesh.smooth.shape"
       ],
       "top1": true,
       "top3": true
@@ -3032,7 +3060,7 @@
       ],
       "returned": [
         "pointset.smooth.jet",
-        "pointset.validate.smoothing_quality",
+        "reconstruction.scale_space",
         "pointset.smooth.bilateral"
       ],
       "top1": true,
@@ -3048,7 +3076,7 @@
       ],
       "returned": [
         "pointset.smooth.jet",
-        "pointset.validate.smoothing_quality",
+        "reconstruction.scale_space",
         "pointset.smooth.bilateral"
       ],
       "top1": true,
@@ -3082,7 +3110,7 @@
       "returned": [
         "spatial.knn_3",
         "spatial.range_search_3",
-        "triangulation.periodic_delaunay_3"
+        "spatial.validate.knn_report"
       ],
       "top1": true,
       "top3": true
@@ -3098,8 +3126,8 @@
       ],
       "returned": [
         "pointset.simplify.hierarchy",
-        "pointset.simplify.random",
-        "pointset.simplify.grid"
+        "pointset.simplify.grid",
+        "pointset.simplify.random"
       ],
       "top1": true,
       "top3": true
@@ -3115,8 +3143,8 @@
       ],
       "returned": [
         "pointset.simplify.hierarchy",
-        "pointset.simplify.random",
-        "pointset.simplify.grid"
+        "pointset.simplify.grid",
+        "pointset.simplify.random"
       ],
       "top1": true,
       "top3": true
@@ -3132,7 +3160,7 @@
       "returned": [
         "pointset.registration.register",
         "pointset.registration.compute_transformation",
-        "pointset.validate.registration_transformation"
+        "pointset.normals.estimate"
       ],
       "top1": true,
       "top3": true
@@ -3148,7 +3176,7 @@
       "returned": [
         "pointset.registration.register",
         "pointset.registration.compute_transformation",
-        "pointset.validate.registration_transformation"
+        "pointset.normals.estimate"
       ],
       "top1": true,
       "top3": true
@@ -3164,7 +3192,7 @@
       "returned": [
         "pointset.registration.register",
         "pointset.registration.compute_transformation",
-        "pointset.validate.registration_transformation"
+        "kernel.primitives.construct"
       ],
       "top1": true,
       "top3": true
@@ -3180,7 +3208,7 @@
       "returned": [
         "pointset.registration.register",
         "pointset.registration.compute_transformation",
-        "pointset.validate.registration_transformation"
+        "kernel.primitives.construct"
       ],
       "top1": true,
       "top3": true
@@ -3194,9 +3222,9 @@
         "pointset.spacing.average"
       ],
       "returned": [
-        "mesh.distance.max_to_points",
-        "pointset.registration.register",
-        "pointset.smooth.jet"
+        "reconstruction.scale_space",
+        "pointset.normals.orient_mst",
+        "reconstruction.polygonal_surface"
       ],
       "top1": false,
       "top3": false
@@ -3210,9 +3238,9 @@
         "pointset.spacing.average"
       ],
       "returned": [
-        "mesh.distance.max_to_points",
-        "pointset.registration.register",
-        "pointset.smooth.jet"
+        "reconstruction.scale_space",
+        "pointset.normals.orient_mst",
+        "pointset.smooth.bilateral"
       ],
       "top1": false,
       "top3": false
@@ -3226,9 +3254,9 @@
         "pointset.spacing.average"
       ],
       "returned": [
-        "mesh.volume.generate",
-        "reconstruction.polygonal_surface",
-        "reconstruction.kinetic_surface"
+        "reconstruction.poisson",
+        "reconstruction.kinetic_surface",
+        "mesh.distance.max_to_points"
       ],
       "top1": false,
       "top3": false
@@ -3242,9 +3270,9 @@
         "pointset.spacing.average"
       ],
       "returned": [
-        "triangulation.regular_3",
-        "triangulation.regular_2",
-        "mesh.volume.generate"
+        "reconstruction.scale_space",
+        "reconstruction.poisson",
+        "reconstruction.kinetic_surface"
       ],
       "top1": false,
       "top3": false
@@ -3260,7 +3288,7 @@
       "returned": [
         "reconstruction.poisson",
         "reconstruction.poisson_delaunay",
-        "reconstruction.validate.poisson_boundary"
+        "reconstruction.polygonal_surface"
       ],
       "top1": true,
       "top3": true
@@ -3274,9 +3302,9 @@
         "reconstruction.poisson_delaunay"
       ],
       "returned": [
-        "reconstruction.poisson",
         "reconstruction.poisson_delaunay",
-        "reconstruction.validate.poisson_boundary"
+        "reconstruction.poisson",
+        "reconstruction.scale_space"
       ],
       "top1": true,
       "top3": true
@@ -3292,7 +3320,7 @@
       "returned": [
         "reconstruction.poisson",
         "reconstruction.poisson_delaunay",
-        "reconstruction.validate.poisson"
+        "reconstruction.alpha_wrap"
       ],
       "top1": true,
       "top3": true
@@ -3308,7 +3336,7 @@
       "returned": [
         "reconstruction.poisson",
         "reconstruction.poisson_delaunay",
-        "reconstruction.validate.poisson"
+        "reconstruction.alpha_wrap"
       ],
       "top1": true,
       "top3": true
@@ -3326,7 +3354,7 @@
       "returned": [
         "reconstruction.advancing_front",
         "reconstruction.scale_space",
-        "reconstruction.validate.interpolating"
+        "mesh.simplify.edge_collapse"
       ],
       "top1": true,
       "top3": true
@@ -3344,7 +3372,7 @@
       "returned": [
         "reconstruction.advancing_front",
         "reconstruction.scale_space",
-        "reconstruction.validate.interpolating"
+        "mesh.volume.generate"
       ],
       "top1": true,
       "top3": true
@@ -3362,7 +3390,7 @@
       "returned": [
         "reconstruction.advancing_front",
         "reconstruction.scale_space",
-        "reconstruction.validate.interpolating"
+        "spatial.bbox_3"
       ],
       "top1": true,
       "top3": true
@@ -3380,7 +3408,7 @@
       "returned": [
         "reconstruction.advancing_front",
         "reconstruction.scale_space",
-        "reconstruction.validate.interpolating"
+        "spatial.bbox_3"
       ],
       "top1": true,
       "top3": true
@@ -3393,12 +3421,12 @@
         "reconstruction.alpha_wrap"
       ],
       "returned": [
-        "polygon.offset.exterior",
         "polygon.offset.interior",
-        "triangulation.periodic_delaunay_2"
+        "polygon.offset.exterior",
+        "reconstruction.alpha_wrap"
       ],
       "top1": false,
-      "top3": false
+      "top3": true
     },
     {
       "id": "intent-ja-198",
@@ -3408,12 +3436,12 @@
         "reconstruction.alpha_wrap"
       ],
       "returned": [
-        "polygon.offset.exterior",
         "polygon.offset.interior",
-        "triangulation.periodic_delaunay_2"
+        "polygon.offset.exterior",
+        "reconstruction.alpha_wrap"
       ],
       "top1": false,
-      "top3": false
+      "top3": true
     },
     {
       "id": "intent-en-199",
@@ -3424,8 +3452,8 @@
       ],
       "returned": [
         "reconstruction.alpha_wrap",
-        "mesh.slice.compute",
-        "mesh.split.plane"
+        "triangulation.periodic_delaunay_2",
+        "reconstruction.scale_space"
       ],
       "top1": true,
       "top3": true
@@ -3438,11 +3466,11 @@
         "reconstruction.alpha_wrap"
       ],
       "returned": [
-        "mesh.slice.compute",
-        "mesh.split.plane",
-        "reconstruction.alpha_wrap"
+        "reconstruction.alpha_wrap",
+        "triangulation.periodic_delaunay_2",
+        "reconstruction.scale_space"
       ],
-      "top1": false,
+      "top1": true,
       "top3": true
     },
     {
@@ -3454,11 +3482,11 @@
         "triangulation.delaunay_3"
       ],
       "returned": [
-        "triangulation.periodic_delaunay_3",
         "triangulation.delaunay_3",
+        "triangulation.periodic_delaunay_3",
         "triangulation.delaunay_on_sphere_2"
       ],
-      "top1": false,
+      "top1": true,
       "top3": true
     },
     {
@@ -3470,11 +3498,11 @@
         "triangulation.delaunay_3"
       ],
       "returned": [
-        "triangulation.periodic_delaunay_3",
         "triangulation.delaunay_3",
-        "triangulation.delaunay_on_sphere_2"
+        "triangulation.delaunay_on_sphere_2",
+        "triangulation.delaunay_2"
       ],
-      "top1": false,
+      "top1": true,
       "top3": true
     },
     {
@@ -3486,11 +3514,11 @@
         "triangulation.delaunay_3"
       ],
       "returned": [
+        "triangulation.validate.delaunay_2",
         "triangulation.delaunay_3",
-        "triangulation.periodic_delaunay_3",
-        "triangulation.regular_3"
+        "triangulation.validate.periodic_delaunay_2"
       ],
-      "top1": true,
+      "top1": false,
       "top3": true
     },
     {
@@ -3502,11 +3530,11 @@
         "triangulation.delaunay_3"
       ],
       "returned": [
+        "triangulation.validate.delaunay_2",
         "triangulation.delaunay_3",
-        "triangulation.periodic_delaunay_3",
-        "triangulation.regular_3"
+        "triangulation.validate.periodic_delaunay_2"
       ],
-      "top1": true,
+      "top1": false,
       "top3": true
     },
     {
@@ -3518,8 +3546,8 @@
       ],
       "returned": [
         "triangulation.constrained_2",
-        "triangulation.periodic_delaunay_3",
-        "triangulation.periodic_delaunay_2"
+        "triangulation.delaunay_2",
+        "triangulation.regular_2"
       ],
       "top1": true,
       "top3": true
@@ -3533,8 +3561,8 @@
       ],
       "returned": [
         "triangulation.constrained_2",
-        "triangulation.periodic_delaunay_3",
-        "triangulation.periodic_delaunay_2"
+        "triangulation.delaunay_2",
+        "triangulation.regular_2"
       ],
       "top1": true,
       "top3": true
@@ -3548,8 +3576,8 @@
       ],
       "returned": [
         "triangulation.constrained_2",
-        "triangulation.regular_2",
-        "triangulation.delaunay_2"
+        "triangulation.delaunay_2",
+        "triangulation.regular_2"
       ],
       "top1": true,
       "top3": true
@@ -3563,8 +3591,8 @@
       ],
       "returned": [
         "triangulation.constrained_2",
-        "triangulation.regular_2",
-        "triangulation.periodic_delaunay_2"
+        "triangulation.delaunay_2",
+        "triangulation.regular_2"
       ],
       "top1": true,
       "top3": true
@@ -3578,11 +3606,11 @@
         "triangulation.regular_3"
       ],
       "returned": [
-        "triangulation.regular_3",
+        "triangulation.voronoi_dual",
         "triangulation.regular_2",
-        "triangulation.voronoi_dual"
+        "triangulation.regular_3"
       ],
-      "top1": true,
+      "top1": false,
       "top3": true
     },
     {
@@ -3594,11 +3622,11 @@
         "triangulation.regular_3"
       ],
       "returned": [
-        "triangulation.regular_3",
+        "triangulation.voronoi_dual",
         "triangulation.regular_2",
-        "triangulation.voronoi_dual"
+        "triangulation.regular_3"
       ],
-      "top1": true,
+      "top1": false,
       "top3": true
     },
     {
@@ -3643,11 +3671,11 @@
         "triangulation.periodic_delaunay_3"
       ],
       "returned": [
+        "triangulation.delaunay_on_sphere_2",
         "triangulation.voronoi_dual",
-        "triangulation.periodic_delaunay_3",
         "triangulation.periodic_delaunay_2"
       ],
-      "top1": false,
+      "top1": true,
       "top3": true
     },
     {
@@ -3660,11 +3688,11 @@
         "triangulation.periodic_delaunay_3"
       ],
       "returned": [
+        "triangulation.delaunay_on_sphere_2",
         "triangulation.voronoi_dual",
-        "triangulation.periodic_delaunay_3",
         "triangulation.periodic_delaunay_2"
       ],
-      "top1": false,
+      "top1": true,
       "top3": true
     },
     {
@@ -3677,9 +3705,9 @@
         "triangulation.periodic_delaunay_3"
       ],
       "returned": [
+        "triangulation.delaunay_on_sphere_2",
         "triangulation.periodic_delaunay_2",
-        "triangulation.periodic_delaunay_3",
-        "triangulation.delaunay_on_sphere_2"
+        "triangulation.periodic_delaunay_3"
       ],
       "top1": true,
       "top3": true
@@ -3694,9 +3722,9 @@
         "triangulation.periodic_delaunay_3"
       ],
       "returned": [
+        "triangulation.delaunay_on_sphere_2",
         "triangulation.periodic_delaunay_2",
-        "triangulation.periodic_delaunay_3",
-        "triangulation.delaunay_on_sphere_2"
+        "triangulation.periodic_delaunay_3"
       ],
       "top1": true,
       "top3": true
@@ -3710,8 +3738,8 @@
       ],
       "returned": [
         "triangulation.voronoi_dual",
-        "triangulation.validate.delaunay_3",
-        "triangulation.validate.delaunay_on_sphere_2"
+        "triangulation.delaunay_2",
+        "triangulation.validate.delaunay_2"
       ],
       "top1": true,
       "top3": true
@@ -3725,8 +3753,8 @@
       ],
       "returned": [
         "triangulation.voronoi_dual",
-        "triangulation.validate.delaunay_3",
-        "triangulation.validate.delaunay_on_sphere_2"
+        "triangulation.delaunay_2",
+        "triangulation.validate.delaunay_2"
       ],
       "top1": true,
       "top3": true
@@ -3741,7 +3769,7 @@
       "returned": [
         "triangulation.voronoi_dual",
         "triangulation.validate.voronoi_dual",
-        "triangulation.validate.delaunay_3"
+        "triangulation.regular_3"
       ],
       "top1": true,
       "top3": true
@@ -3756,7 +3784,7 @@
       "returned": [
         "triangulation.voronoi_dual",
         "triangulation.validate.voronoi_dual",
-        "triangulation.validate.delaunay_3"
+        "triangulation.regular_3"
       ],
       "top1": true,
       "top3": true
@@ -3771,8 +3799,8 @@
       ],
       "returned": [
         "polygon.analysis.properties",
-        "polygon.validate.properties_report",
-        "polygon.validate.straight_skeleton"
+        "polygon.validate.straight_skeleton",
+        "polygon.validate.containment_report"
       ],
       "top1": true,
       "top3": true
@@ -3787,8 +3815,8 @@
       ],
       "returned": [
         "polygon.analysis.properties",
-        "polygon.validate.properties_report",
-        "polygon.validate.straight_skeleton"
+        "polygon.validate.straight_skeleton",
+        "polygon.validate.containment_report"
       ],
       "top1": true,
       "top3": true
@@ -3803,8 +3831,8 @@
       ],
       "returned": [
         "polygon.analysis.properties",
-        "polygon.validate.properties_report",
-        "polygon.validate.straight_skeleton"
+        "polygon.validate.containment_report",
+        "triangulation.validate.delaunay_2"
       ],
       "top1": true,
       "top3": true
@@ -3819,8 +3847,8 @@
       ],
       "returned": [
         "polygon.analysis.properties",
-        "polygon.validate.properties_report",
-        "polygon.validate.straight_skeleton"
+        "polygon.validate.containment_report",
+        "triangulation.validate.delaunay_2"
       ],
       "top1": true,
       "top3": true
@@ -3868,7 +3896,7 @@
       "returned": [
         "arrangement.build",
         "arrangement.zone",
-        "arrangement.overlay"
+        "reconstruction.polygonal_surface"
       ],
       "top1": true,
       "top3": true
@@ -3884,7 +3912,7 @@
       "returned": [
         "arrangement.build",
         "arrangement.zone",
-        "arrangement.overlay"
+        "reconstruction.polygonal_surface"
       ],
       "top1": true,
       "top3": true
@@ -3898,8 +3926,8 @@
       ],
       "returned": [
         "arrangement.overlay",
-        "arrangement.validate.overlay",
-        "arrangement.build"
+        "arrangement.build",
+        "arrangement.validate.build"
       ],
       "top1": true,
       "top3": true
@@ -3913,8 +3941,8 @@
       ],
       "returned": [
         "arrangement.overlay",
-        "arrangement.validate.overlay",
-        "arrangement.build"
+        "arrangement.build",
+        "arrangement.validate.build"
       ],
       "top1": true,
       "top3": true
@@ -3928,8 +3956,8 @@
       ],
       "returned": [
         "arrangement.overlay",
-        "arrangement.validate.overlay",
-        "arrangement.build"
+        "arrangement.build",
+        "arrangement.zone"
       ],
       "top1": true,
       "top3": true
@@ -3943,8 +3971,8 @@
       ],
       "returned": [
         "arrangement.overlay",
-        "arrangement.validate.overlay",
-        "arrangement.build"
+        "arrangement.build",
+        "arrangement.zone"
       ],
       "top1": true,
       "top3": true
@@ -3957,12 +3985,12 @@
         "polygon.boolean"
       ],
       "returned": [
-        "polygon.straight_skeleton.exterior",
-        "polygon.minkowski_sum_reduced_convolution",
-        "polygon.straight_skeleton.interior"
+        "polygon.boolean",
+        "polygon.minkowski_sum",
+        "polygon.query.containment"
       ],
-      "top1": false,
-      "top3": false
+      "top1": true,
+      "top3": true
     },
     {
       "id": "intent-ja-234",
@@ -3972,12 +4000,12 @@
         "polygon.boolean"
       ],
       "returned": [
-        "polygon.straight_skeleton.exterior",
-        "polygon.minkowski_sum_reduced_convolution",
-        "polygon.straight_skeleton.interior"
+        "polygon.boolean",
+        "polygon.minkowski_sum",
+        "polygon.analysis.properties"
       ],
-      "top1": false,
-      "top3": false
+      "top1": true,
+      "top3": true
     },
     {
       "id": "intent-en-235",
@@ -3987,12 +4015,12 @@
         "polygon.boolean"
       ],
       "returned": [
-        "polygon.boolean",
+        "polygon.minkowski_sum",
         "polygon.validate.offset",
-        "polygon.validate.boolean"
+        "mesh.validate.boolean_union"
       ],
-      "top1": true,
-      "top3": true
+      "top1": false,
+      "top3": false
     },
     {
       "id": "intent-en-236",
@@ -4002,12 +4030,12 @@
         "polygon.boolean"
       ],
       "returned": [
-        "polygon.boolean",
+        "polygon.minkowski_sum",
         "polygon.validate.offset",
-        "polygon.validate.boolean"
+        "mesh.validate.boolean_union"
       ],
-      "top1": true,
-      "top3": true
+      "top1": false,
+      "top3": false
     },
     {
       "id": "intent-ja-237",
@@ -4018,8 +4046,8 @@
         "polygon.straight_skeleton.interior"
       ],
       "returned": [
-        "polygon.straight_skeleton.exterior",
         "polygon.straight_skeleton.interior",
+        "polygon.straight_skeleton.exterior",
         "polygon.offset.interior"
       ],
       "top1": true,
@@ -4034,8 +4062,8 @@
         "polygon.straight_skeleton.interior"
       ],
       "returned": [
-        "polygon.straight_skeleton.exterior",
         "polygon.straight_skeleton.interior",
+        "polygon.straight_skeleton.exterior",
         "polygon.offset.interior"
       ],
       "top1": true,
@@ -4082,8 +4110,8 @@
         "polygon.offset.interior"
       ],
       "returned": [
-        "polygon.offset.exterior",
         "polygon.offset.interior",
+        "polygon.offset.exterior",
         "reconstruction.kinetic_surface"
       ],
       "top1": true,
@@ -4098,8 +4126,8 @@
         "polygon.offset.interior"
       ],
       "returned": [
-        "polygon.offset.exterior",
         "polygon.offset.interior",
+        "polygon.offset.exterior",
         "reconstruction.kinetic_surface"
       ],
       "top1": true,
@@ -4114,8 +4142,8 @@
         "polygon.offset.interior"
       ],
       "returned": [
-        "polygon.offset.exterior",
         "polygon.offset.interior",
+        "polygon.offset.exterior",
         "reconstruction.kinetic_surface"
       ],
       "top1": true,
@@ -4130,8 +4158,8 @@
         "polygon.offset.interior"
       ],
       "returned": [
-        "polygon.offset.exterior",
         "polygon.offset.interior",
+        "polygon.offset.exterior",
         "reconstruction.kinetic_surface"
       ],
       "top1": true,
@@ -4148,7 +4176,7 @@
       "returned": [
         "polygon.minkowski_sum_reduced_convolution",
         "polygon.minkowski_sum",
-        "polygon.validate.minkowski_sum"
+        "polygon.boolean"
       ],
       "top1": true,
       "top3": true
@@ -4164,7 +4192,7 @@
       "returned": [
         "polygon.minkowski_sum_reduced_convolution",
         "polygon.minkowski_sum",
-        "polygon.validate.minkowski_sum"
+        "polygon.boolean"
       ],
       "top1": true,
       "top3": true
@@ -4178,9 +4206,9 @@
         "polygon.minkowski_sum_reduced_convolution"
       ],
       "returned": [
-        "polygon.minkowski_sum",
         "polygon.minkowski_sum_reduced_convolution",
-        "polygon.validate.minkowski_sum"
+        "polygon.minkowski_sum",
+        "polygon.boolean"
       ],
       "top1": true,
       "top3": true
@@ -4194,9 +4222,9 @@
         "polygon.minkowski_sum_reduced_convolution"
       ],
       "returned": [
-        "polygon.minkowski_sum",
         "polygon.minkowski_sum_reduced_convolution",
-        "polygon.validate.minkowski_sum"
+        "polygon.minkowski_sum",
+        "polygon.boolean"
       ],
       "top1": true,
       "top3": true
@@ -4211,8 +4239,8 @@
       ],
       "returned": [
         "hull.convex_3",
-        "mesh.decompose.approx_convex",
-        "hull.validate.convex_enclosure"
+        "shape.alpha_shape_2",
+        "mesh.decompose.approx_convex"
       ],
       "top1": true,
       "top3": true
@@ -4228,7 +4256,7 @@
       "returned": [
         "hull.convex_3",
         "mesh.decompose.approx_convex",
-        "hull.validate.convex_enclosure"
+        "shape.alpha_shape_2"
       ],
       "top1": true,
       "top3": true
@@ -4275,8 +4303,8 @@
         "shape.fixed_alpha_shape_3"
       ],
       "returned": [
-        "shape.alpha_shape_2",
         "shape.alpha_shape_3",
+        "shape.alpha_shape_2",
         "shape.fixed_alpha_shape_3"
       ],
       "top1": true,
@@ -4292,8 +4320,8 @@
         "shape.fixed_alpha_shape_3"
       ],
       "returned": [
-        "shape.alpha_shape_2",
         "shape.alpha_shape_3",
+        "shape.alpha_shape_2",
         "shape.fixed_alpha_shape_3"
       ],
       "top1": true,
@@ -4309,9 +4337,9 @@
         "shape.fixed_alpha_shape_3"
       ],
       "returned": [
-        "shape.alpha_shape_2",
+        "shape.fixed_alpha_shape_3",
         "shape.alpha_shape_3",
-        "shape.fixed_alpha_shape_3"
+        "shape.alpha_shape_2"
       ],
       "top1": true,
       "top3": true
@@ -4326,9 +4354,9 @@
         "shape.fixed_alpha_shape_3"
       ],
       "returned": [
-        "shape.alpha_shape_2",
+        "shape.fixed_alpha_shape_3",
         "shape.alpha_shape_3",
-        "shape.fixed_alpha_shape_3"
+        "shape.alpha_shape_2"
       ],
       "top1": true,
       "top3": true
@@ -4342,8 +4370,8 @@
       ],
       "returned": [
         "reconstruction.alpha_wrap",
-        "reconstruction.validate.alpha_wrap",
-        "polygon.validate.offset"
+        "polygon.validate.offset",
+        "polygon.offset.interior"
       ],
       "top1": true,
       "top3": true
@@ -4357,8 +4385,8 @@
       ],
       "returned": [
         "reconstruction.alpha_wrap",
-        "reconstruction.validate.alpha_wrap",
-        "polygon.validate.offset"
+        "polygon.validate.offset",
+        "polygon.offset.interior"
       ],
       "top1": true,
       "top3": true
@@ -4372,8 +4400,8 @@
       ],
       "returned": [
         "reconstruction.alpha_wrap",
-        "reconstruction.validate.alpha_wrap",
-        "mesh.slice.compute"
+        "triangulation.periodic_delaunay_2",
+        "polygon.validate.offset"
       ],
       "top1": true,
       "top3": true
@@ -4387,8 +4415,8 @@
       ],
       "returned": [
         "reconstruction.alpha_wrap",
-        "reconstruction.validate.alpha_wrap",
-        "mesh.validate.slice"
+        "triangulation.periodic_delaunay_2",
+        "polygon.validate.offset"
       ],
       "top1": true,
       "top3": true
@@ -4403,8 +4431,8 @@
       ],
       "returned": [
         "shape.bounding.sphere",
-        "shape.validate.min_sphere",
-        "shape.validate.min_circle"
+        "shape.alpha_shape_3",
+        "mesh.volume.generate"
       ],
       "top1": true,
       "top3": true
@@ -4419,8 +4447,8 @@
       ],
       "returned": [
         "shape.bounding.sphere",
-        "shape.validate.min_sphere",
-        "shape.validate.min_circle"
+        "shape.alpha_shape_3",
+        "mesh.volume.generate"
       ],
       "top1": true,
       "top3": true
@@ -4435,8 +4463,8 @@
       ],
       "returned": [
         "shape.bounding.sphere",
-        "shape.validate.min_sphere",
-        "shape.validate.min_circle"
+        "spatial.bbox_3",
+        "mesh.surface.generate"
       ],
       "top1": true,
       "top3": true
@@ -4451,8 +4479,8 @@
       ],
       "returned": [
         "shape.bounding.sphere",
-        "shape.validate.min_sphere",
-        "shape.validate.min_circle"
+        "spatial.bbox_3",
+        "shape.bounding.circle"
       ],
       "top1": true,
       "top3": true
@@ -4467,7 +4495,7 @@
       "returned": [
         "shape.barycentric",
         "mesh.location.locate",
-        "mesh.validate.location"
+        "mesh.simplify.edge_collapse"
       ],
       "top1": true,
       "top3": true
@@ -4482,7 +4510,7 @@
       "returned": [
         "shape.barycentric",
         "mesh.location.locate",
-        "mesh.validate.location"
+        "mesh.simplify.edge_collapse"
       ],
       "top1": true,
       "top3": true
@@ -4497,7 +4525,7 @@
       "returned": [
         "shape.barycentric",
         "mesh.location.locate",
-        "mesh.validate.location"
+        "shape.validate.barycentric"
       ],
       "top1": true,
       "top3": true
@@ -4512,7 +4540,7 @@
       "returned": [
         "shape.barycentric",
         "mesh.location.locate",
-        "mesh.validate.location"
+        "shape.validate.barycentric"
       ],
       "top1": true,
       "top3": true
@@ -4526,8 +4554,8 @@
       ],
       "returned": [
         "mesh2.refine.delaunay",
-        "mesh.validate.delaunay_refinement_2",
-        "arrangement.build"
+        "triangulation.periodic_delaunay_2",
+        "triangulation.constrained_2"
       ],
       "top1": true,
       "top3": true
@@ -4541,8 +4569,8 @@
       ],
       "returned": [
         "mesh2.refine.delaunay",
-        "mesh.validate.delaunay_refinement_2",
-        "arrangement.build"
+        "triangulation.periodic_delaunay_2",
+        "triangulation.constrained_2"
       ],
       "top1": true,
       "top3": true
@@ -4556,8 +4584,8 @@
       ],
       "returned": [
         "mesh2.refine.delaunay",
-        "mesh.validate.delaunay_refinement_2",
-        "mesh.surface.generate"
+        "mesh.surface.generate",
+        "mesh.validate.volume_mesh"
       ],
       "top1": true,
       "top3": true
@@ -4571,8 +4599,8 @@
       ],
       "returned": [
         "mesh2.refine.delaunay",
-        "mesh.validate.delaunay_refinement_2",
-        "mesh.surface.generate"
+        "mesh.surface.generate",
+        "mesh.validate.volume_mesh"
       ],
       "top1": true,
       "top3": true
@@ -4586,8 +4614,8 @@
       ],
       "returned": [
         "mesh.surface.generate",
-        "mesh.validate.surface_mesh",
-        "mesh.validate.volume_mesh"
+        "reconstruction.poisson",
+        "mesh.simplify.edge_collapse"
       ],
       "top1": true,
       "top3": true
@@ -4601,8 +4629,8 @@
       ],
       "returned": [
         "mesh.surface.generate",
-        "mesh.validate.surface_mesh",
-        "mesh.validate.volume_mesh"
+        "reconstruction.poisson",
+        "mesh.simplify.edge_collapse"
       ],
       "top1": true,
       "top3": true
@@ -4616,7 +4644,7 @@
       ],
       "returned": [
         "mesh.surface.generate",
-        "mesh.validate.surface_mesh",
+        "mesh.validate.volume_mesh",
         "mesh.volume.generate"
       ],
       "top1": true,
@@ -4631,7 +4659,7 @@
       ],
       "returned": [
         "mesh.surface.generate",
-        "mesh.validate.surface_mesh",
+        "mesh.validate.volume_mesh",
         "mesh.volume.generate"
       ],
       "top1": true,
@@ -4646,8 +4674,8 @@
       ],
       "returned": [
         "mesh.volume.generate",
-        "mesh.validate.volume_mesh",
-        "mesh.validate.tetrahedral_mesh"
+        "triangulation.delaunay_3",
+        "triangulation.periodic_delaunay_3"
       ],
       "top1": true,
       "top3": true
@@ -4661,8 +4689,8 @@
       ],
       "returned": [
         "mesh.volume.generate",
-        "mesh.validate.volume_mesh",
-        "mesh.validate.tetrahedral_mesh"
+        "triangulation.delaunay_3",
+        "triangulation.periodic_delaunay_3"
       ],
       "top1": true,
       "top3": true
@@ -4676,8 +4704,8 @@
       ],
       "returned": [
         "mesh.volume.generate",
-        "mesh.validate.tetrahedral_mesh",
-        "mesh.validate.volume_mesh"
+        "triangulation.delaunay_3",
+        "mesh.validate.surface_mesh"
       ],
       "top1": true,
       "top3": true
@@ -4691,8 +4719,8 @@
       ],
       "returned": [
         "mesh.volume.generate",
-        "mesh.validate.tetrahedral_mesh",
-        "mesh.validate.volume_mesh"
+        "triangulation.delaunay_3",
+        "mesh.validate.surface_mesh"
       ],
       "top1": true,
       "top3": true
@@ -4706,8 +4734,8 @@
       ],
       "returned": [
         "mesh.volume.generate",
-        "mesh.validate.volume_mesh",
-        "mesh.validate.tetrahedral_mesh"
+        "mesh2.refine.delaunay",
+        "mesh.validate.delaunay_refinement_2"
       ],
       "top1": true,
       "top3": true
@@ -4721,8 +4749,8 @@
       ],
       "returned": [
         "mesh.volume.generate",
-        "mesh.validate.volume_mesh",
-        "mesh.validate.tetrahedral_mesh"
+        "mesh2.refine.delaunay",
+        "mesh.validate.delaunay_refinement_2"
       ],
       "top1": true,
       "top3": true
@@ -4736,8 +4764,8 @@
       ],
       "returned": [
         "mesh.volume.generate",
-        "mesh.validate.volume_mesh",
-        "mesh.validate.tetrahedral_mesh"
+        "mesh.validate.delaunay_refinement_2",
+        "mesh2.refine.delaunay"
       ],
       "top1": true,
       "top3": true
@@ -4751,8 +4779,8 @@
       ],
       "returned": [
         "mesh.volume.generate",
-        "mesh.validate.volume_mesh",
-        "mesh.validate.tetrahedral_mesh"
+        "mesh.validate.delaunay_refinement_2",
+        "mesh2.refine.delaunay"
       ],
       "top1": true,
       "top3": true
@@ -4765,11 +4793,11 @@
         "optimization.quadratic_program"
       ],
       "returned": [
-        "optimization.interpolate",
-        "optimization.approximate_mesh",
-        "optimization.quadratic_program"
+        "optimization.quadratic_program",
+        "optimization.matrix_search",
+        "optimization.interpolate"
       ],
-      "top1": false,
+      "top1": true,
       "top3": true
     },
     {
@@ -4780,11 +4808,11 @@
         "optimization.quadratic_program"
       ],
       "returned": [
-        "optimization.interpolate",
-        "optimization.approximate_mesh",
-        "optimization.quadratic_program"
+        "optimization.quadratic_program",
+        "optimization.matrix_search",
+        "optimization.interpolate"
       ],
-      "top1": false,
+      "top1": true,
       "top3": true
     },
     {
@@ -4825,11 +4853,11 @@
         "optimization.interpolate"
       ],
       "returned": [
-        "mesh.repair.fill_holes",
         "optimization.interpolate",
-        "optimization.validate.interpolation"
+        "shape.barycentric",
+        "mesh.repair.fill_holes"
       ],
-      "top1": false,
+      "top1": true,
       "top3": true
     },
     {
@@ -4840,11 +4868,11 @@
         "optimization.interpolate"
       ],
       "returned": [
-        "mesh.repair.fill_holes",
         "optimization.interpolate",
-        "optimization.validate.interpolation"
+        "shape.barycentric",
+        "mesh.repair.fill_holes"
       ],
-      "top1": false,
+      "top1": true,
       "top3": true
     },
     {
@@ -4856,8 +4884,8 @@
       ],
       "returned": [
         "optimization.interpolate",
-        "mesh.repair.fill_holes",
-        "optimization.validate.interpolation"
+        "shape.barycentric",
+        "mesh.repair.fill_holes"
       ],
       "top1": true,
       "top3": true
@@ -4871,8 +4899,8 @@
       ],
       "returned": [
         "optimization.interpolate",
-        "mesh.repair.fill_holes",
-        "optimization.validate.interpolation"
+        "shape.barycentric",
+        "mesh.repair.fill_holes"
       ],
       "top1": true,
       "top3": true
@@ -4886,8 +4914,8 @@
       ],
       "returned": [
         "optimization.approximate_mesh",
-        "mesh.distance.hausdorff_approximate",
-        "mesh.distance.hausdorff_approximate_symmetric"
+        "mesh.distance.max_to_points",
+        "mesh.distance.hausdorff_approximate"
       ],
       "top1": true,
       "top3": true
@@ -4900,11 +4928,11 @@
         "optimization.approximate_mesh"
       ],
       "returned": [
+        "mesh.distance.max_to_points",
         "optimization.approximate_mesh",
-        "mesh.distance.hausdorff_approximate",
-        "mesh.distance.hausdorff_approximate_symmetric"
+        "mesh.distance.hausdorff_approximate"
       ],
-      "top1": true,
+      "top1": false,
       "top3": true
     },
     {
@@ -4917,7 +4945,7 @@
       "returned": [
         "optimization.approximate_mesh",
         "mesh.distance.hausdorff_approximate",
-        "mesh.distance.hausdorff_approximate_symmetric"
+        "mesh.distance.max_to_points"
       ],
       "top1": true,
       "top3": true
@@ -4932,7 +4960,7 @@
       "returned": [
         "optimization.approximate_mesh",
         "mesh.distance.hausdorff_approximate",
-        "mesh.distance.hausdorff_approximate_symmetric"
+        "mesh.distance.max_to_points"
       ],
       "top1": true,
       "top3": true
@@ -4946,7 +4974,8 @@
       ],
       "returned": [
         "optimization.matrix_search",
-        "optimization.validate.matrix_search"
+        "optimization.quadratic_program",
+        "mesh.volume.generate"
       ],
       "top1": true,
       "top3": true
@@ -4960,7 +4989,8 @@
       ],
       "returned": [
         "optimization.matrix_search",
-        "optimization.validate.matrix_search"
+        "optimization.quadratic_program",
+        "triangulation.periodic_delaunay_2"
       ],
       "top1": true,
       "top3": true
@@ -4974,8 +5004,8 @@
       ],
       "returned": [
         "optimization.matrix_search",
-        "optimization.validate.matrix_search",
-        "mesh.validate.tetrahedral_mesh"
+        "mesh.intersections.polylines",
+        "triangulation.delaunay_on_sphere_2"
       ],
       "top1": true,
       "top3": true
@@ -4989,8 +5019,8 @@
       ],
       "returned": [
         "optimization.matrix_search",
-        "optimization.validate.matrix_search",
-        "mesh.validate.tetrahedral_mesh"
+        "mesh.location.locate",
+        "mesh.intersections.polylines"
       ],
       "top1": true,
       "top3": true

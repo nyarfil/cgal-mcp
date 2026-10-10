@@ -14,12 +14,14 @@ from typing import Any, Iterable
 from .errors import InvalidInput, UnsupportedOperation
 from .policies import PolicyRegistry
 from .search import (DIRECT_VALIDATOR_CONTRACTS, METHOD_CONCEPTS, enriched_text,
-                     document_terms, match_operation, parse_query, requested_parameter_features,
+                     document_terms, match_operation, parse_query, PhraseIndex, requested_parameter_features,
                      requested_parameter_values)
 from .util import ID_RE, canonical_json
 
 
 EXECUTABLE_STATUSES = {"IMPLEMENTED", "VALIDATED"}
+# Discovery-only score penalty per uncovered query concept (see search()).
+UNCOVERED_CONCEPT_PENALTY = 6.0
 ALL_STATUSES = {"DISCOVERED", "CATALOGED", "ADAPTER_PLANNED", "IMPLEMENTED",
                 "VALIDATED", "DEPRECATED", "BLOCKED", "EXCLUDED"}
 LEGACY_STATUSES = {"blocked_by_dependency": "BLOCKED", "excluded_with_reason": "EXCLUDED"}
@@ -125,8 +127,30 @@ class OperationRegistry:
             "operations": {key: self.operations[key] for key in sorted(self.operations)},
             "policy_revision": self.policy_registry.revision,
         })).hexdigest()
+        self.search_phrases = self._load_search_phrases()
+        self.phrase_index = PhraseIndex(self.search_phrases, {
+            key: " ".join([operation["summary"], *operation.get("aliases", [])])
+            for key, operation in self.operations.items()})
         self._search = sqlite3.connect(":memory:")
         self._build_index()
+
+    def _load_search_phrases(self) -> dict[str, tuple[str, ...]]:
+        """Load search-only phrases for registered operations (unknown IDs are ignored)."""
+        path = Path(__file__).with_name("search_data.json")
+        if not path.is_file():
+            return {}
+        try:
+            document = json.loads(path.read_text(encoding="utf-8"))
+            raw = document["operations"]
+        except (OSError, ValueError, KeyError, TypeError) as exc:
+            raise InvalidInput("search_data_read", f"Cannot load search data {path}: {exc}") from exc
+        result: dict[str, tuple[str, ...]] = {}
+        for key, value in raw.items():
+            if not (isinstance(value, list) and all(isinstance(item, str) for item in value)):
+                raise InvalidInput("search_data_schema", f"Invalid search phrases for {key}")
+            if key in self.operations:
+                result[key] = tuple(value)
+        return result
 
     def _validate_links(self) -> None:
         for policy in self.policy_registry.policies.values():
@@ -374,19 +398,25 @@ class OperationRegistry:
     def _build_index(self) -> None:
         try:
             self._search.execute("CREATE VIRTUAL TABLE operation_fts USING fts5(id UNINDEXED, text, tokenize='trigram')")
+            self._search.execute("CREATE VIRTUAL TABLE operation_fts_discovery USING fts5(id UNINDEXED, text, tokenize='trigram')")
             self.search_mode = "fts5-trigram"
         except sqlite3.OperationalError:
             self._search.execute("CREATE VIRTUAL TABLE operation_fts USING fts5(id UNINDEXED, text)")
+            self._search.execute("CREATE VIRTUAL TABLE operation_fts_discovery USING fts5(id UNINDEXED, text)")
             self.search_mode = "fts5-unicode61"
         for operation in self.operations.values():
-            search_text = enriched_text(" ".join([
-                operation["id"], operation["summary"], operation["package"],
-                *operation.get("aliases", []), *operation.get("dependencies", []),
-                *(item.get("identifier", "") for item in operation.get("sources", [])),
-                *(kind for spec in operation["io"]["inputs"] for kind in spec.get("types", [])),
-                *(spec.get("type", "") for spec in operation["io"]["outputs"]),
-            ]))
-            self._search.execute("INSERT INTO operation_fts(id,text) VALUES(?,?)", (operation["id"], search_text))
+            phrases = self.search_phrases.get(operation["id"], ())
+            for table, extra in (("operation_fts", ()), ("operation_fts_discovery", phrases)):
+                search_text = enriched_text(" ".join([
+                    operation["id"], operation["summary"], operation["package"],
+                    *operation.get("aliases", []), *extra,
+                    *operation.get("dependencies", []),
+                    *(item.get("identifier", "") for item in operation.get("sources", [])),
+                    *(kind for spec in operation["io"]["inputs"] for kind in spec.get("types", [])),
+                    *(spec.get("type", "") for spec in operation["io"]["outputs"]),
+                ]))
+                self._search.execute(f"INSERT INTO {table}(id,text) VALUES(?,?)",
+                                     (operation["id"], search_text))
         self._search.commit()
 
     def get(self, operation_id: str, executable: bool = False) -> dict[str, Any]:
@@ -400,7 +430,17 @@ class OperationRegistry:
     def search(self, query: str, *, input_types: list[str] | None = None,
                status: list[str] | None = None, dependencies: list[str] | None = None,
                kernel: str | None = None, allowed_licenses: list[str] | None = None,
-               limit: int = 8) -> dict[str, Any]:
+               limit: int = 8, discovery: bool = False) -> dict[str, Any]:
+        """Rank registered operations for ``query``.
+
+        ``discovery`` (capabilities_search, never planning) adds the authored
+        search phrases as evidence and ranks an operation whose only blocker is
+        an uncovered concept by score minus a penalty instead of sinking it below
+        every covered operation: a user's incidental word (``sample points`` of
+        data, an ``area`` limit) must not hide the operation that otherwise
+        matches the whole request.  Planning keeps the conservative evidence, so
+        ``plan(goal=...)`` routing is unchanged by search phrases.
+        """
         if not isinstance(query, str) or not query.strip():
             raise InvalidInput("search_query", "Search query must not be empty")
         if type(limit) is not int or not 1 <= limit <= 100:
@@ -409,15 +449,17 @@ class OperationRegistry:
         candidates: list[tuple[bool, float, dict[str, Any], list[str], Any,
                                dict[str, Any], dict[str, list[Any]],
                                dict[str, str]]] = []
+        blocked_soft: dict[str, bool] = {}
         fts_scores: dict[str, float] = {}
         fts_terms = list(parsed.words)
         for concept in sorted(parsed.concepts):
             fts_terms.append(concept.replace("_", " "))
+        table = "operation_fts_discovery" if discovery else "operation_fts"
         if fts_terms:
             expression = " OR ".join('"' + term.replace('"', '""') + '"' for term in fts_terms)
             try:
                 for operation_id, rank in self._search.execute(
-                        "SELECT id,bm25(operation_fts) FROM operation_fts WHERE text MATCH ?",
+                        f"SELECT id,bm25({table}) FROM {table} WHERE text MATCH ?",
                         (expression,)).fetchall():
                     fts_scores[operation_id] = 8.0 / (1.0 + abs(float(rank)))
             except sqlite3.OperationalError:
@@ -452,7 +494,11 @@ class OperationRegistry:
                 operation["id"], operation["summary"], operation["package"],
                 *aliases, *schema_parameters,
             ])
-            evidence = match_operation(parsed, primary_text, aliases=aliases)
+            phrases = self.search_phrases.get(operation["id"], ()) if discovery else ()
+            phrase_bonus = self.phrase_index.bonus(
+                operation["id"], query, parsed.bridge_words) if phrases else 0.0
+            evidence = match_operation(parsed, primary_text, aliases=aliases,
+                                       phrases=phrases, phrase_bonus=phrase_bonus)
             fts_score = fts_scores.get(operation["id"], 0.0)
             score = evidence.score + fts_score
             # A concept named by the Operation ID itself is its primary identity;
@@ -472,6 +518,7 @@ class OperationRegistry:
             if evidence.word_matches or evidence.alias_matches:
                 reasons.append("registry alias/text matched")
             route_supported = evidence.route_supported
+            concept_supported = route_supported
             if operation.get("role", "transform") == "validator" and "validation" not in parsed.concepts:
                 direct_contract = any(
                     concept in evidence.covered_primary_concepts
@@ -507,7 +554,17 @@ class OperationRegistry:
             candidates.append((route_supported, score, operation,
                                reasons, evidence, required_parameters,
                                parameter_conflicts, required_features))
-        candidates.sort(key=lambda item: (not item[0], -item[1], item[2]["id"]))
+            soft_blocked = not route_supported and not concept_supported
+            blocked_soft[operation["id"]] = soft_blocked
+        if discovery:
+            def discovery_key(item: Any) -> tuple[Any, ...]:
+                hard = not item[0] and not blocked_soft.get(item[2]["id"], False)
+                penalty = (UNCOVERED_CONCEPT_PENALTY * len(item[4].uncovered_primary_concepts)
+                           if blocked_soft.get(item[2]["id"], False) else 0.0)
+                return (hard, -(item[1] - penalty), item[2]["id"])
+            candidates.sort(key=discovery_key)
+        else:
+            candidates.sort(key=lambda item: (not item[0], -item[1], item[2]["id"]))
         safe = [item for item in candidates if item[0]]
         route_confidence = "none"
         recommended: str | None = None

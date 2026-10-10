@@ -2,10 +2,11 @@
   "schema_version": 1,
   "generator": "measure-blind-search",
   "blind_set_sha256": "2897f677c459c65762be1ef2d699f5fc3f08ee5c45d59d85f809df619d39307d",
-  "generator_sha256": "5de7c1dc7419c7a60b447c77f5a4b5f86071d02f8ad88b23b71ae7977508f924",
-  "search_py_sha256": "58b44af41ca1e0647816f2c91bd22a5362d62d282d81c323a12e6f1d0f0d77b5",
-  "registry_py_sha256": "2ec91e2728bcfd5c4ad3a46ae6aebe854d01502fd9150a169215f0586c5ae5ea",
+  "generator_sha256": "580d99947c39487bf4393bb7bf6fe02bded9fe93579922a48446a4f6ea8f174a",
+  "search_py_sha256": "0e2cfd087b47fc569543bdf98d3bdd413ac4a82644d831c6d61d760fc3f00e19",
+  "registry_py_sha256": "35be623b28bcad312fbb0c13904092ee4e02c6e2c1ff91f116b41d00fef25183",
   "operations_sha256": "d5b97e95472a3a88308c4173c45cc3961a8907fec3d1c54737e37ee9ca913632",
+  "search_data_sha256": "37acdfe0953ca9e18403ca8c06252c64a295781b289e91c89bef91fb98ead53d",
   "count": 118,
   "families": [
     "7.1",
@@ -25,25 +26,25 @@
     "7.9"
   ],
   "operation_level": {
-    "top1_pct": 38.14,
-    "top3_pct": 47.46
+    "top1_pct": 79.66,
+    "top3_pct": 87.29
   },
   "requirement_level": {
-    "top1_pct": 38.14,
-    "top3_pct": 47.46
+    "top1_pct": 80.51,
+    "top3_pct": 85.59
   },
   "by_language": {
     "en": {
       "count": 59,
-      "op_top1_pct": 45.76,
-      "op_top3_pct": 55.93,
-      "req_top3_pct": 54.24
+      "op_top1_pct": 83.05,
+      "op_top3_pct": 89.83,
+      "req_top3_pct": 86.44
     },
     "ja": {
       "count": 59,
-      "op_top1_pct": 30.51,
-      "op_top3_pct": 38.98,
-      "req_top3_pct": 40.68
+      "op_top1_pct": 76.27,
+      "op_top3_pct": 84.75,
+      "req_top3_pct": 84.75
     }
   },
   "cases": [
@@ -55,13 +56,13 @@
         "kernel.primitives.construct"
       ],
       "returned": [
-        "kernel.intersections.compute",
         "kernel.primitives.construct",
-        "kernel.distance.squared"
+        "arrangement.build",
+        "kernel.intersections.compute"
       ],
-      "op_top1": false,
+      "op_top1": true,
       "op_top3": true,
-      "req_top1": false,
+      "req_top1": true,
       "req_top3": true
     },
     {
@@ -72,14 +73,14 @@
         "kernel.primitives.construct"
       ],
       "returned": [
+        "kernel.primitives.construct",
         "arrangement.build",
-        "arrangement.validate.build",
-        "arrangement.zone"
+        "triangulation.constrained_2"
       ],
-      "op_top1": false,
-      "op_top3": false,
-      "req_top1": false,
-      "req_top3": false
+      "op_top1": true,
+      "op_top3": true,
+      "req_top1": true,
+      "req_top3": true
     },
     {
       "id": "blind-en-003",
@@ -90,8 +91,8 @@
       ],
       "returned": [
         "kernel.predicates.evaluate",
-        "optimization.interpolate",
-        "mesh.path.shortest"
+        "hull.convex_2",
+        "spatial.bbox_2"
       ],
       "op_top1": true,
       "op_top3": true,
@@ -106,14 +107,14 @@
         "kernel.predicates.evaluate"
       ],
       "returned": [
-        "arrangement.build",
-        "hull.convex_2",
-        "kernel.distance.squared"
+        "kernel.predicates.evaluate",
+        "polygon.query.containment",
+        "kernel.primitives.construct"
       ],
-      "op_top1": false,
-      "op_top3": false,
-      "req_top1": false,
-      "req_top3": false
+      "op_top1": true,
+      "op_top3": true,
+      "req_top1": true,
+      "req_top3": true
     },
     {
       "id": "blind-en-005",
@@ -123,14 +124,14 @@
         "kernel.intersections.compute"
       ],
       "returned": [
+        "kernel.intersections.compute",
         "spatial.bbox_3",
-        "kernel.distance.squared",
-        "kernel.primitives.construct"
+        "mesh.autorefine"
       ],
-      "op_top1": false,
-      "op_top3": false,
-      "req_top1": false,
-      "req_top3": false
+      "op_top1": true,
+      "op_top3": true,
+      "req_top1": true,
+      "req_top3": true
     },
     {
       "id": "blind-ja-006",
@@ -142,7 +143,7 @@
       "returned": [
         "kernel.intersections.compute",
         "spatial.aabb.intersections",
-        "mesh.boolean.intersection"
+        "mesh.intersections.polylines"
       ],
       "op_top1": true,
       "op_top3": true,
@@ -158,8 +159,8 @@
       ],
       "returned": [
         "kernel.distance.squared",
-        "mesh.distance.sample_points",
-        "mesh.distance.hausdorff_approximate"
+        "pointset.registration.register",
+        "pointset.remove_outliers"
       ],
       "op_top1": true,
       "op_top3": true,
@@ -175,8 +176,8 @@
       ],
       "returned": [
         "kernel.distance.squared",
-        "mesh.distance.sample_points",
-        "mesh.validate.hausdorff_symmetric_report"
+        "mesh.distance.max_to_mesh",
+        "mesh.distance.hausdorff_approximate"
       ],
       "op_top1": true,
       "op_top3": true,
@@ -191,14 +192,14 @@
         "spatial.knn_3"
       ],
       "returned": [
-        "pointset.registration.register",
-        "mesh.location.locate",
-        "mesh.validate.location"
+        "spatial.knn_3",
+        "spatial.aabb.closest_points",
+        "mesh.location.locate"
       ],
-      "op_top1": false,
-      "op_top3": false,
-      "req_top1": false,
-      "req_top3": false
+      "op_top1": true,
+      "op_top3": true,
+      "req_top1": true,
+      "req_top3": true
     },
     {
       "id": "blind-ja-010",
@@ -208,14 +209,14 @@
         "spatial.knn_3"
       ],
       "returned": [
-        "mesh.distance.max_to_points",
-        "pointset.registration.register",
-        "pointset.smooth.jet"
+        "spatial.knn_3",
+        "spatial.aabb.closest_points",
+        "reconstruction.polygonal_surface"
       ],
-      "op_top1": false,
-      "op_top3": false,
-      "req_top1": false,
-      "req_top3": false
+      "op_top1": true,
+      "op_top3": true,
+      "req_top1": true,
+      "req_top3": true
     },
     {
       "id": "blind-en-011",
@@ -226,8 +227,8 @@
       ],
       "returned": [
         "spatial.aabb.closest_points",
-        "reconstruction.poisson",
-        "spatial.bbox_3"
+        "mesh.location.locate",
+        "reconstruction.poisson"
       ],
       "op_top1": true,
       "op_top3": true,
@@ -242,14 +243,14 @@
         "spatial.aabb.closest_points"
       ],
       "returned": [
-        "mesh.location.locate",
-        "optimization.interpolate",
-        "polygon.query.containment"
+        "spatial.aabb.closest_points",
+        "spatial.knn_3",
+        "triangulation.delaunay_2"
       ],
-      "op_top1": false,
-      "op_top3": false,
-      "req_top1": false,
-      "req_top3": false
+      "op_top1": true,
+      "op_top3": true,
+      "req_top1": true,
+      "req_top3": true
     },
     {
       "id": "blind-en-013",
@@ -259,14 +260,14 @@
         "spatial.aabb.ray_first_hits"
       ],
       "returned": [
+        "spatial.aabb.ray_first_hits",
         "mesh.slice.compute",
-        "mesh.path.shortest",
-        "optimization.approximate_mesh"
+        "mesh.path.shortest"
       ],
-      "op_top1": false,
-      "op_top3": false,
-      "req_top1": false,
-      "req_top3": false
+      "op_top1": true,
+      "op_top3": true,
+      "req_top1": true,
+      "req_top3": true
     },
     {
       "id": "blind-ja-014",
@@ -278,7 +279,7 @@
       "returned": [
         "spatial.aabb.ray_first_hits",
         "spatial.aabb.intersections",
-        "spatial.validate.ray_hits_report"
+        "mesh.triangulate.faces"
       ],
       "op_top1": true,
       "op_top3": true,
@@ -294,8 +295,8 @@
       ],
       "returned": [
         "spatial.bbox_3",
-        "spatial.aabb.closest_points",
-        "spatial.aabb.intersections"
+        "spatial.bbox_2",
+        "spatial.aabb.closest_points"
       ],
       "op_top1": true,
       "op_top3": true,
@@ -310,14 +311,14 @@
         "spatial.bbox_3"
       ],
       "returned": [
-        "spatial.aabb.intersections",
-        "spatial.aabb.ray_first_hits",
-        "spatial.aabb.closest_points"
+        "spatial.bbox_2",
+        "spatial.bbox_3",
+        "spatial.aabb.ray_first_hits"
       ],
       "op_top1": false,
-      "op_top3": false,
-      "req_top1": false,
-      "req_top3": false
+      "op_top3": true,
+      "req_top1": true,
+      "req_top3": true
     },
     {
       "id": "blind-en-017",
@@ -328,8 +329,8 @@
       ],
       "returned": [
         "mesh.inspect.pmp",
-        "mesh.validate.catmull_clark",
-        "mesh.validate.loop"
+        "mesh.simplify.edge_collapse",
+        "optimization.quadratic_program"
       ],
       "op_top1": true,
       "op_top3": true,
@@ -344,13 +345,13 @@
         "mesh.inspect.pmp"
       ],
       "returned": [
-        "mesh.volume.generate",
         "mesh.inspect.pmp",
-        "mesh.repair.remove_degenerate"
+        "mesh.smooth.tangential_relaxation",
+        "mesh.boolean.union"
       ],
-      "op_top1": false,
+      "op_top1": true,
       "op_top3": true,
-      "req_top1": false,
+      "req_top1": true,
       "req_top3": true
     },
     {
@@ -361,14 +362,14 @@
         "mesh.analysis.measures"
       ],
       "returned": [
-        "mesh.boolean.union",
-        "mesh.decompose.approx_convex",
-        "mesh.clip.plane"
+        "mesh.analysis.measures",
+        "mesh.clip.plane",
+        "mesh.boolean.union"
       ],
-      "op_top1": false,
-      "op_top3": false,
-      "req_top1": false,
-      "req_top3": false
+      "op_top1": true,
+      "op_top3": true,
+      "req_top1": true,
+      "req_top3": true
     },
     {
       "id": "blind-ja-020",
@@ -379,8 +380,8 @@
       ],
       "returned": [
         "mesh.analysis.measures",
-        "mesh.boolean.union",
-        "mesh.smooth.shape"
+        "polygon.analysis.properties",
+        "mesh.boolean.intersection"
       ],
       "op_top1": true,
       "op_top3": true,
@@ -395,12 +396,12 @@
         "mesh.analysis.sharp_features"
       ],
       "returned": [
-        "reconstruction.polygonal_surface",
-        "mesh.volume.generate",
+        "mesh.analysis.sharp_features",
+        "mesh.repair.stitch_borders",
         "mesh.features.detect"
       ],
-      "op_top1": false,
-      "op_top3": false,
+      "op_top1": true,
+      "op_top3": true,
       "req_top1": false,
       "req_top3": true
     },
@@ -411,7 +412,11 @@
       "expected": [
         "mesh.analysis.sharp_features"
       ],
-      "returned": [],
+      "returned": [
+        "mesh.repair.fill_holes",
+        "mesh.intersections.polylines",
+        "reconstruction.poisson_delaunay"
+      ],
       "op_top1": false,
       "op_top3": false,
       "req_top1": false,
@@ -425,13 +430,13 @@
         "mesh.distance.hausdorff_bounded"
       ],
       "returned": [
-        "mesh.simplify.edge_collapse",
-        "mesh.surface.generate",
-        "mesh.distance.hausdorff_bounded"
+        "mesh.distance.hausdorff_approximate",
+        "mesh.distance.hausdorff_bounded",
+        "mesh.intersections.do_intersect"
       ],
       "op_top1": false,
       "op_top3": true,
-      "req_top1": false,
+      "req_top1": true,
       "req_top3": true
     },
     {
@@ -442,14 +447,14 @@
         "mesh.distance.hausdorff_bounded"
       ],
       "returned": [
-        "hull.validate.convex_enclosure",
-        "mesh.analysis.connected_components",
-        "mesh.analysis.measures"
+        "mesh.distance.max_to_mesh",
+        "mesh.distance.max_to_points",
+        "mesh.distance.hausdorff_approximate_symmetric"
       ],
       "op_top1": false,
       "op_top3": false,
-      "req_top1": false,
-      "req_top3": false
+      "req_top1": true,
+      "req_top3": true
     },
     {
       "id": "blind-en-025",
@@ -459,14 +464,14 @@
         "mesh.repair.fill_holes"
       ],
       "returned": [
-        "mesh.volume.generate",
-        "reconstruction.polygonal_surface",
+        "mesh.smooth.shape",
+        "mesh.repair.fill_holes",
         "mesh.parameterize"
       ],
       "op_top1": false,
-      "op_top3": false,
+      "op_top3": true,
       "req_top1": false,
-      "req_top3": false
+      "req_top3": true
     },
     {
       "id": "blind-ja-026",
@@ -478,7 +483,7 @@
       "returned": [
         "mesh.repair.fill_holes",
         "mesh.repair.fill_holes_refine_fair",
-        "arrangement.build"
+        "polygon.minkowski_sum_reduced_convolution"
       ],
       "op_top1": true,
       "op_top3": true,
@@ -495,7 +500,7 @@
       "returned": [
         "mesh.repair.remove_degenerate",
         "mesh.repair.polygon_soup",
-        "mesh.validate.repair_remove_degenerate"
+        "mesh.components.component"
       ],
       "op_top1": true,
       "op_top3": true,
@@ -512,7 +517,7 @@
       "returned": [
         "mesh.repair.remove_degenerate",
         "mesh.repair.polygon_soup",
-        "mesh.validate.repair_remove_degenerate"
+        "mesh.triangulate.faces"
       ],
       "op_top1": true,
       "op_top3": true,
@@ -527,14 +532,14 @@
         "mesh.repair.orient"
       ],
       "returned": [
-        "mesh.path.shortest",
-        "spatial.aabb.closest_points",
-        "optimization.approximate_mesh"
+        "mesh.repair.orient",
+        "reconstruction.poisson",
+        "spatial.aabb.closest_points"
       ],
-      "op_top1": false,
-      "op_top3": false,
-      "req_top1": false,
-      "req_top3": false
+      "op_top1": true,
+      "op_top3": true,
+      "req_top1": true,
+      "req_top3": true
     },
     {
       "id": "blind-ja-030",
@@ -545,8 +550,8 @@
       ],
       "returned": [
         "mesh.repair.orient",
-        "pointset.normals.orient_mst",
-        "polygon.analysis.properties"
+        "polygon.analysis.properties",
+        "polygon.straight_skeleton.exterior"
       ],
       "op_top1": true,
       "op_top3": true,
@@ -562,8 +567,8 @@
       ],
       "returned": [
         "mesh.repair.stitch_borders",
-        "mesh.validate.repair_stitch_borders",
-        "mesh.validate.autorefine"
+        "mesh.boolean.union",
+        "mesh.repair.manifold_preprocess"
       ],
       "op_top1": true,
       "op_top3": true,
@@ -577,9 +582,13 @@
       "expected": [
         "mesh.repair.stitch_borders"
       ],
-      "returned": [],
-      "op_top1": false,
-      "op_top3": false,
+      "returned": [
+        "mesh.repair.stitch_borders",
+        "shape.barycentric",
+        "mesh.smooth.tangential_relaxation"
+      ],
+      "op_top1": true,
+      "op_top3": true,
       "req_top1": false,
       "req_top3": false
     },
@@ -591,14 +600,14 @@
         "mesh.boolean.difference"
       ],
       "returned": [
-        "mesh.validate.volume_mesh",
-        "mesh.validate.simplification_integrity",
-        "mesh.volume.generate"
+        "mesh.boolean.difference",
+        "mesh.volume.generate",
+        "shape.alpha_shape_3"
       ],
-      "op_top1": false,
-      "op_top3": false,
-      "req_top1": false,
-      "req_top3": false
+      "op_top1": true,
+      "op_top3": true,
+      "req_top1": true,
+      "req_top3": true
     },
     {
       "id": "blind-ja-034",
@@ -607,11 +616,15 @@
       "expected": [
         "mesh.boolean.difference"
       ],
-      "returned": [],
+      "returned": [
+        "mesh.boolean.union",
+        "mesh.boolean.difference",
+        "mesh.boolean.intersection"
+      ],
       "op_top1": false,
-      "op_top3": false,
-      "req_top1": false,
-      "req_top3": false
+      "op_top3": true,
+      "req_top1": true,
+      "req_top3": true
     },
     {
       "id": "blind-en-035",
@@ -622,8 +635,8 @@
       ],
       "returned": [
         "mesh.clip.plane",
-        "mesh.intersections.do_intersect",
-        "mesh.volume.generate"
+        "mesh.split.plane",
+        "mesh.boolean.intersection"
       ],
       "op_top1": true,
       "op_top3": true,
@@ -639,7 +652,7 @@
       ],
       "returned": [
         "mesh.clip.plane",
-        "mesh.parameterize",
+        "mesh.split.plane",
         "mesh.slice.compute"
       ],
       "op_top1": true,
@@ -656,8 +669,8 @@
       ],
       "returned": [
         "mesh.slice.compute",
-        "mesh.validate.slice",
-        "mesh.parameterize"
+        "mesh.clip.plane",
+        "reconstruction.advancing_front"
       ],
       "op_top1": true,
       "op_top3": true,
@@ -673,8 +686,8 @@
       ],
       "returned": [
         "mesh.slice.compute",
-        "polygon.validate.offset",
-        "polygon.straight_skeleton.exterior"
+        "mesh.validate.slice",
+        "mesh.intersections.polylines"
       ],
       "op_top1": true,
       "op_top3": true,
@@ -689,14 +702,14 @@
         "mesh.autorefine"
       ],
       "returned": [
-        "spatial.aabb.closest_points",
-        "arrangement.overlay",
-        "arrangement.build"
+        "mesh.autorefine",
+        "mesh.analysis.self_intersections",
+        "mesh.corefine"
       ],
-      "op_top1": false,
-      "op_top3": false,
-      "req_top1": false,
-      "req_top3": false
+      "op_top1": true,
+      "op_top3": true,
+      "req_top1": true,
+      "req_top3": true
     },
     {
       "id": "blind-ja-040",
@@ -707,7 +720,7 @@
       ],
       "returned": [
         "mesh.autorefine",
-        "mesh.validate.refinement",
+        "mesh.corefine",
         "mesh.analysis.self_intersections"
       ],
       "op_top1": true,
@@ -723,9 +736,9 @@
         "mesh.remesh.isotropic"
       ],
       "returned": [
-        "triangulation.voronoi_dual",
-        "triangulation.regular_3",
-        "triangulation.regular_2"
+        "triangulation.constrained_2",
+        "triangulation.regular_2",
+        "triangulation.delaunay_on_sphere_2"
       ],
       "op_top1": false,
       "op_top3": false,
@@ -740,9 +753,9 @@
         "mesh.remesh.isotropic"
       ],
       "returned": [
-        "triangulation.voronoi_dual",
-        "triangulation.periodic_delaunay_3",
-        "triangulation.periodic_delaunay_2"
+        "triangulation.constrained_2",
+        "triangulation.delaunay_2",
+        "triangulation.delaunay_on_sphere_2"
       ],
       "op_top1": false,
       "op_top3": false,
@@ -757,13 +770,13 @@
         "mesh.triangulate.faces"
       ],
       "returned": [
-        "mesh.repair.polygon_soup",
         "mesh.triangulate.faces",
-        "mesh2.refine.delaunay"
+        "mesh.repair.polygon_soup",
+        "mesh.subdivide.catmull_clark"
       ],
-      "op_top1": false,
+      "op_top1": true,
       "op_top3": true,
-      "req_top1": false,
+      "req_top1": true,
       "req_top3": true
     },
     {
@@ -774,14 +787,14 @@
         "mesh.triangulate.faces"
       ],
       "returned": [
-        "mesh.repair.polygon_soup",
-        "polygon.straight_skeleton.exterior",
-        "polygon.minkowski_sum_reduced_convolution"
+        "mesh.triangulate.faces",
+        "mesh2.refine.delaunay",
+        "polygon.minkowski_sum"
       ],
-      "op_top1": false,
-      "op_top3": false,
-      "req_top1": false,
-      "req_top3": false
+      "op_top1": true,
+      "op_top3": true,
+      "req_top1": true,
+      "req_top3": true
     },
     {
       "id": "blind-en-045",
@@ -792,8 +805,8 @@
       ],
       "returned": [
         "mesh.smooth.shape",
-        "mesh.skeletonize.mean_curvature_flow",
-        "mesh.skeletonize.mean_curvature"
+        "mesh.smooth.tangential_relaxation",
+        "mesh.repair.orient"
       ],
       "op_top1": true,
       "op_top3": true,
@@ -808,14 +821,14 @@
         "mesh.smooth.shape"
       ],
       "returned": [
-        "mesh.validate.approx_convex",
-        "arrangement.build",
-        "arrangement.overlay"
+        "mesh.smooth.shape",
+        "mesh.path.shortest",
+        "mesh.simplify.edge_collapse"
       ],
-      "op_top1": false,
-      "op_top3": false,
-      "req_top1": false,
-      "req_top3": false
+      "op_top1": true,
+      "op_top3": true,
+      "req_top1": true,
+      "req_top3": true
     },
     {
       "id": "blind-en-047",
@@ -826,8 +839,8 @@
       ],
       "returned": [
         "mesh.remesh.split_long_edges",
-        "mesh.repair.fill_holes_refine_fair",
-        "mesh.repair.fill_holes"
+        "mesh.analysis.sharp_features",
+        "mesh.intersections.polylines"
       ],
       "op_top1": true,
       "op_top3": true,
@@ -841,11 +854,15 @@
       "expected": [
         "mesh.remesh.split_long_edges"
       ],
-      "returned": [],
-      "op_top1": false,
-      "op_top3": false,
-      "req_top1": false,
-      "req_top3": false
+      "returned": [
+        "mesh.remesh.split_long_edges",
+        "mesh.subdivide.loop",
+        "mesh.repair.manifold_preprocess"
+      ],
+      "op_top1": true,
+      "op_top3": true,
+      "req_top1": true,
+      "req_top3": true
     },
     {
       "id": "blind-en-049",
@@ -855,14 +872,14 @@
         "mesh.simplify.edge_collapse"
       ],
       "returned": [
-        "mesh.repair.manifold_preprocess",
         "mesh.clip.plane",
-        "mesh.components.keep_largest"
+        "mesh.simplify.edge_collapse",
+        "mesh.remesh.split_long_edges"
       ],
       "op_top1": false,
-      "op_top3": false,
+      "op_top3": true,
       "req_top1": false,
-      "req_top3": false
+      "req_top3": true
     },
     {
       "id": "blind-ja-050",
@@ -871,11 +888,15 @@
       "expected": [
         "mesh.simplify.edge_collapse"
       ],
-      "returned": [],
-      "op_top1": false,
-      "op_top3": false,
-      "req_top1": false,
-      "req_top3": false
+      "returned": [
+        "mesh.simplify.edge_collapse",
+        "triangulation.constrained_2",
+        "mesh.triangulate.faces"
+      ],
+      "op_top1": true,
+      "op_top3": true,
+      "req_top1": true,
+      "req_top3": true
     },
     {
       "id": "blind-en-051",
@@ -885,9 +906,9 @@
         "mesh.simplify.edge_collapse"
       ],
       "returned": [
-        "reconstruction.polygonal_surface",
-        "reconstruction.kinetic_surface",
-        "mesh.segment.sdf"
+        "mesh.distance.max_to_points",
+        "mesh.surface.generate",
+        "spatial.aabb.intersections"
       ],
       "op_top1": false,
       "op_top3": false,
@@ -902,14 +923,14 @@
         "mesh.simplify.edge_collapse"
       ],
       "returned": [
-        "mesh.analysis.measures",
-        "mesh.boolean.intersection",
-        "mesh.boolean.union"
+        "mesh.simplify.edge_collapse",
+        "mesh.volume.generate",
+        "mesh.surface.generate"
       ],
-      "op_top1": false,
-      "op_top3": false,
-      "req_top1": false,
-      "req_top3": false
+      "op_top1": true,
+      "op_top3": true,
+      "req_top1": true,
+      "req_top3": true
     },
     {
       "id": "blind-en-053",
@@ -920,8 +941,8 @@
       ],
       "returned": [
         "mesh.simplify.edge_collapse",
-        "pointset.simplify.random",
-        "pointset.simplify.hierarchy"
+        "pointset.simplify.hierarchy",
+        "pointset.simplify.random"
       ],
       "op_top1": true,
       "op_top3": true,
@@ -935,7 +956,11 @@
       "expected": [
         "mesh.simplify.edge_collapse"
       ],
-      "returned": [],
+      "returned": [
+        "pointset.simplify.grid",
+        "mesh.repair.fill_holes",
+        "reconstruction.poisson_delaunay"
+      ],
       "op_top1": false,
       "op_top3": false,
       "req_top1": false,
@@ -951,7 +976,7 @@
       "returned": [
         "mesh.analysis.sharp_features",
         "mesh.features.detect",
-        "mesh.volume.generate"
+        "pointset.smooth.bilateral"
       ],
       "op_top1": false,
       "op_top3": false,
@@ -966,9 +991,9 @@
         "mesh.simplify.edge_collapse"
       ],
       "returned": [
-        "mesh.analysis.sharp_features",
         "mesh.volume.generate",
-        "mesh.features.detect"
+        "mesh.analysis.sharp_features",
+        "pointset.smooth.bilateral"
       ],
       "op_top1": false,
       "op_top3": false,
@@ -983,14 +1008,14 @@
         "mesh.skeletonize.mean_curvature"
       ],
       "returned": [
-        "mesh.volume.generate",
-        "reconstruction.poisson_delaunay",
-        "mesh.intersections.do_intersect"
+        "mesh.skeletonize.mean_curvature",
+        "mesh.boolean.union",
+        "shape.fixed_alpha_shape_3"
       ],
-      "op_top1": false,
-      "op_top3": false,
-      "req_top1": false,
-      "req_top3": false
+      "op_top1": true,
+      "op_top3": true,
+      "req_top1": true,
+      "req_top3": true
     },
     {
       "id": "blind-ja-058",
@@ -999,11 +1024,15 @@
       "expected": [
         "mesh.skeletonize.mean_curvature"
       ],
-      "returned": [],
-      "op_top1": false,
-      "op_top3": false,
-      "req_top1": false,
-      "req_top3": false
+      "returned": [
+        "mesh.skeletonize.mean_curvature",
+        "polygon.straight_skeleton.interior",
+        "mesh.analysis.sharp_features"
+      ],
+      "op_top1": true,
+      "op_top3": true,
+      "req_top1": true,
+      "req_top3": true
     },
     {
       "id": "blind-en-059",
@@ -1013,14 +1042,14 @@
         "mesh.path.shortest"
       ],
       "returned": [
-        "mesh.intersections.do_intersect",
-        "mesh.boolean.intersection",
-        "mesh.boolean.union"
+        "mesh.path.shortest",
+        "mesh.split.plane",
+        "mesh.corefine"
       ],
-      "op_top1": false,
-      "op_top3": false,
-      "req_top1": false,
-      "req_top3": false
+      "op_top1": true,
+      "op_top3": true,
+      "req_top1": true,
+      "req_top3": true
     },
     {
       "id": "blind-ja-060",
@@ -1031,8 +1060,8 @@
       ],
       "returned": [
         "mesh.path.shortest",
-        "mesh.validate.shortest_path",
-        "arrangement.build"
+        "spatial.aabb.closest_points",
+        "mesh.location.locate"
       ],
       "op_top1": true,
       "op_top3": true,
@@ -1047,9 +1076,9 @@
         "mesh.subdivide.loop"
       ],
       "returned": [
-        "mesh.segment.sdf",
-        "mesh.smooth.tangential_relaxation",
-        "mesh.features.detect"
+        "mesh.features.detect",
+        "mesh.smooth.shape",
+        "mesh.segment.sdf"
       ],
       "op_top1": false,
       "op_top3": false,
@@ -1064,13 +1093,13 @@
         "mesh.subdivide.loop"
       ],
       "returned": [
-        "mesh.validate.loop",
         "mesh.subdivide.loop",
-        "hull.validate.convex_enclosure"
+        "mesh.simplify.edge_collapse",
+        "mesh.triangulate.faces"
       ],
-      "op_top1": false,
+      "op_top1": true,
       "op_top3": true,
-      "req_top1": false,
+      "req_top1": true,
       "req_top3": true
     },
     {
@@ -1081,11 +1110,11 @@
         "mesh.segment.sdf"
       ],
       "returned": [
-        "mesh.segment.sdf",
         "mesh.segment.sdf_values",
-        "mesh.decompose.approx_convex"
+        "mesh.segment.sdf",
+        "pointset.smooth.jet"
       ],
-      "op_top1": true,
+      "op_top1": false,
       "op_top3": true,
       "req_top1": true,
       "req_top3": true
@@ -1097,11 +1126,15 @@
       "expected": [
         "mesh.segment.sdf"
       ],
-      "returned": [],
-      "op_top1": false,
-      "op_top3": false,
-      "req_top1": false,
-      "req_top3": false
+      "returned": [
+        "mesh.segment.sdf",
+        "mesh.segment.sdf_values",
+        "mesh.split.plane"
+      ],
+      "op_top1": true,
+      "op_top3": true,
+      "req_top1": true,
+      "req_top3": true
     },
     {
       "id": "blind-en-065",
@@ -1111,9 +1144,9 @@
         "pointset.normals.estimate"
       ],
       "returned": [
-        "mesh.path.shortest",
-        "reconstruction.polygonal_surface",
-        "mesh.distance.sample_points"
+        "spatial.aabb.closest_points",
+        "mesh.distance.sample_points",
+        "reconstruction.polygonal_surface"
       ],
       "op_top1": false,
       "op_top3": false,
@@ -1128,9 +1161,9 @@
         "pointset.normals.estimate"
       ],
       "returned": [
-        "arrangement.build",
-        "arrangement.overlay",
-        "arrangement.validate.build"
+        "mesh.distance.max_to_mesh",
+        "mesh.smooth.shape",
+        "reconstruction.poisson"
       ],
       "op_top1": false,
       "op_top3": false,
@@ -1145,14 +1178,14 @@
         "pointset.remove_outliers"
       ],
       "returned": [
-        "mesh.validate.intersection_polylines",
-        "arrangement.validate.overlay",
-        "polygon.validate.boolean"
+        "pointset.remove_outliers",
+        "mesh.distance.max_to_points",
+        "mesh.distance.max_to_mesh"
       ],
-      "op_top1": false,
-      "op_top3": false,
-      "req_top1": false,
-      "req_top3": false
+      "op_top1": true,
+      "op_top3": true,
+      "req_top1": true,
+      "req_top3": true
     },
     {
       "id": "blind-ja-068",
@@ -1161,11 +1194,15 @@
       "expected": [
         "pointset.remove_outliers"
       ],
-      "returned": [],
-      "op_top1": false,
-      "op_top3": false,
-      "req_top1": false,
-      "req_top3": false
+      "returned": [
+        "pointset.remove_outliers",
+        "mesh.distance.max_to_mesh",
+        "triangulation.delaunay_2"
+      ],
+      "op_top1": true,
+      "op_top3": true,
+      "req_top1": true,
+      "req_top3": true
     },
     {
       "id": "blind-en-069",
@@ -1193,8 +1230,8 @@
       ],
       "returned": [
         "pointset.simplify.grid",
-        "mesh.decompose.approx_convex",
-        "mesh.distance.sample_points"
+        "mesh.distance.sample_points",
+        "mesh.decompose.approx_convex"
       ],
       "op_top1": true,
       "op_top3": true,
@@ -1209,14 +1246,14 @@
         "pointset.registration.register"
       ],
       "returned": [
-        "mesh.intersections.do_intersect",
-        "mesh.distance.hausdorff_approximate_symmetric",
-        "mesh.validate.volume_mesh"
+        "pointset.registration.register",
+        "kernel.distance.squared",
+        "mesh.boolean.intersection"
       ],
-      "op_top1": false,
-      "op_top3": false,
-      "req_top1": false,
-      "req_top3": false
+      "op_top1": true,
+      "op_top3": true,
+      "req_top1": true,
+      "req_top3": true
     },
     {
       "id": "blind-ja-072",
@@ -1225,11 +1262,15 @@
       "expected": [
         "pointset.registration.register"
       ],
-      "returned": [],
-      "op_top1": false,
-      "op_top3": false,
-      "req_top1": false,
-      "req_top3": false
+      "returned": [
+        "pointset.registration.register",
+        "mesh.boolean.union",
+        "polygon.boolean"
+      ],
+      "op_top1": true,
+      "op_top3": true,
+      "req_top1": true,
+      "req_top3": true
     },
     {
       "id": "blind-en-073",
@@ -1239,9 +1280,9 @@
         "reconstruction.poisson"
       ],
       "returned": [
-        "reconstruction.validate.poisson_boundary",
-        "reconstruction.validate.polygonal_surface",
-        "reconstruction.validate.poisson"
+        "pointset.validate.normals_estimated",
+        "pointset.validate.smoothed",
+        "pointset.normals.orient_mst"
       ],
       "op_top1": false,
       "op_top3": false,
@@ -1256,8 +1297,8 @@
         "reconstruction.poisson"
       ],
       "returned": [
-        "pointset.validate.normals_oriented",
-        "pointset.validate.normals_estimated",
+        "pointset.normals.estimate",
+        "reconstruction.advancing_front",
         "pointset.normals.orient_mst"
       ],
       "op_top1": false,
@@ -1273,14 +1314,14 @@
         "reconstruction.scale_space"
       ],
       "returned": [
-        "mesh.validate.sdf_segmentation",
-        "mesh.segment.sdf",
-        "mesh.smooth.tangential_relaxation"
+        "reconstruction.scale_space",
+        "reconstruction.poisson",
+        "pointset.smooth.jet"
       ],
-      "op_top1": false,
-      "op_top3": false,
-      "req_top1": false,
-      "req_top3": false
+      "op_top1": true,
+      "op_top3": true,
+      "req_top1": true,
+      "req_top3": true
     },
     {
       "id": "blind-ja-076",
@@ -1290,14 +1331,14 @@
         "reconstruction.scale_space"
       ],
       "returned": [
-        "mesh.smooth.tangential_relaxation",
-        "reconstruction.validate.alpha_wrap",
-        "mesh.validate.shape_smoothing"
+        "reconstruction.scale_space",
+        "reconstruction.poisson",
+        "mesh.smooth.shape"
       ],
-      "op_top1": false,
-      "op_top3": false,
-      "req_top1": false,
-      "req_top3": false
+      "op_top1": true,
+      "op_top3": true,
+      "req_top1": true,
+      "req_top3": true
     },
     {
       "id": "blind-en-077",
@@ -1308,8 +1349,8 @@
       ],
       "returned": [
         "reconstruction.alpha_wrap",
-        "reconstruction.polygonal_surface",
-        "reconstruction.kinetic_surface"
+        "hull.convex_3",
+        "triangulation.periodic_delaunay_2"
       ],
       "op_top1": true,
       "op_top3": true,
@@ -1325,8 +1366,8 @@
       ],
       "returned": [
         "pointset.normals.orient_mst",
-        "mesh.repair.orient",
-        "kernel.predicates.evaluate"
+        "pointset.normals.estimate",
+        "mesh.repair.orient"
       ],
       "op_top1": false,
       "op_top3": false,
@@ -1342,8 +1383,8 @@
       ],
       "returned": [
         "reconstruction.polygonal_surface",
-        "mesh.path.shortest",
-        "triangulation.delaunay_on_sphere_2"
+        "optimization.approximate_mesh",
+        "pointset.smooth.jet"
       ],
       "op_top1": true,
       "op_top3": true,
@@ -1359,8 +1400,8 @@
       ],
       "returned": [
         "reconstruction.polygonal_surface",
-        "hull.convex_2",
-        "kernel.distance.squared"
+        "pointset.normals.estimate",
+        "mesh.split.plane"
       ],
       "op_top1": true,
       "op_top3": true,
@@ -1375,14 +1416,14 @@
         "triangulation.constrained_2"
       ],
       "returned": [
-        "triangulation.regular_2",
-        "triangulation.voronoi_dual",
-        "triangulation.delaunay_2"
+        "triangulation.constrained_2",
+        "triangulation.delaunay_2",
+        "triangulation.regular_2"
       ],
-      "op_top1": false,
-      "op_top3": false,
-      "req_top1": false,
-      "req_top3": false
+      "op_top1": true,
+      "op_top3": true,
+      "req_top1": true,
+      "req_top3": true
     },
     {
       "id": "blind-ja-082",
@@ -1393,8 +1434,8 @@
       ],
       "returned": [
         "triangulation.constrained_2",
-        "triangulation.voronoi_dual",
-        "triangulation.periodic_delaunay_3"
+        "triangulation.delaunay_2",
+        "mesh.triangulate.faces"
       ],
       "op_top1": true,
       "op_top3": true,
@@ -1410,7 +1451,7 @@
       ],
       "returned": [
         "triangulation.regular_3",
-        "triangulation.periodic_delaunay_3",
+        "triangulation.regular_2",
         "triangulation.delaunay_3"
       ],
       "op_top1": true,
@@ -1426,12 +1467,12 @@
         "triangulation.regular_3"
       ],
       "returned": [
-        "triangulation.regular_3",
         "triangulation.regular_2",
-        "triangulation.voronoi_dual"
+        "triangulation.delaunay_2",
+        "triangulation.constrained_2"
       ],
-      "op_top1": true,
-      "op_top3": true,
+      "op_top1": false,
+      "op_top3": false,
       "req_top1": true,
       "req_top3": true
     },
@@ -1444,8 +1485,8 @@
       ],
       "returned": [
         "triangulation.delaunay_on_sphere_2",
-        "triangulation.periodic_delaunay_3",
-        "triangulation.periodic_delaunay_2"
+        "triangulation.periodic_delaunay_2",
+        "triangulation.delaunay_3"
       ],
       "op_top1": true,
       "op_top3": true,
@@ -1460,12 +1501,12 @@
         "triangulation.delaunay_on_sphere_2"
       ],
       "returned": [
-        "triangulation.periodic_delaunay_3",
-        "triangulation.periodic_delaunay_2",
-        "triangulation.delaunay_3"
+        "triangulation.delaunay_on_sphere_2",
+        "triangulation.delaunay_2",
+        "triangulation.periodic_delaunay_2"
       ],
-      "op_top1": false,
-      "op_top3": false,
+      "op_top1": true,
+      "op_top3": true,
       "req_top1": true,
       "req_top3": true
     },
@@ -1477,14 +1518,14 @@
         "triangulation.voronoi_dual"
       ],
       "returned": [
-        "reconstruction.kinetic_surface",
-        "reconstruction.polygonal_surface",
-        "kernel.distance.squared"
+        "triangulation.voronoi_dual",
+        "arrangement.build",
+        "reconstruction.kinetic_surface"
       ],
-      "op_top1": false,
-      "op_top3": false,
-      "req_top1": false,
-      "req_top3": false
+      "op_top1": true,
+      "op_top3": true,
+      "req_top1": true,
+      "req_top3": true
     },
     {
       "id": "blind-ja-088",
@@ -1494,26 +1535,9 @@
         "triangulation.voronoi_dual"
       ],
       "returned": [
-        "arrangement.build",
-        "hull.convex_2",
-        "kernel.distance.squared"
-      ],
-      "op_top1": false,
-      "op_top3": false,
-      "req_top1": false,
-      "req_top3": false
-    },
-    {
-      "id": "blind-en-089",
-      "language": "en",
-      "family": "7.12",
-      "expected": [
-        "polygon.analysis.properties"
-      ],
-      "returned": [
-        "polygon.analysis.properties",
-        "polygon.validate.straight_skeleton",
-        "polygon.validate.properties_report"
+        "triangulation.voronoi_dual",
+        "spatial.knn_3",
+        "spatial.aabb.closest_points"
       ],
       "op_top1": true,
       "op_top3": true,
@@ -1521,8 +1545,8 @@
       "req_top3": true
     },
     {
-      "id": "blind-ja-090",
-      "language": "ja",
+      "id": "blind-en-089",
+      "language": "en",
       "family": "7.12",
       "expected": [
         "polygon.analysis.properties"
@@ -1538,6 +1562,23 @@
       "req_top3": true
     },
     {
+      "id": "blind-ja-090",
+      "language": "ja",
+      "family": "7.12",
+      "expected": [
+        "polygon.analysis.properties"
+      ],
+      "returned": [
+        "polygon.analysis.properties",
+        "mesh.validate.repair_polygon_soup",
+        "mesh.repair.polygon_soup"
+      ],
+      "op_top1": true,
+      "op_top3": true,
+      "req_top1": true,
+      "req_top3": true
+    },
+    {
       "id": "blind-en-091",
       "language": "en",
       "family": "7.12",
@@ -1546,8 +1587,8 @@
       ],
       "returned": [
         "arrangement.build",
-        "arrangement.zone",
-        "mesh.repair.fill_holes_refine_fair"
+        "kernel.intersections.compute",
+        "arrangement.zone"
       ],
       "op_top1": true,
       "op_top3": true,
@@ -1563,8 +1604,8 @@
       ],
       "returned": [
         "arrangement.build",
-        "kernel.distance.squared",
-        "kernel.intersections.compute"
+        "triangulation.voronoi_dual",
+        "mesh.autorefine"
       ],
       "op_top1": true,
       "op_top3": true,
@@ -1579,11 +1620,11 @@
         "polygon.minkowski_sum"
       ],
       "returned": [
-        "polygon.minkowski_sum_reduced_convolution",
-        "polygon.straight_skeleton.interior",
-        "polygon.minkowski_sum"
+        "polygon.minkowski_sum",
+        "polygon.boolean",
+        "mesh.intersections.do_intersect"
       ],
-      "op_top1": false,
+      "op_top1": true,
       "op_top3": true,
       "req_top1": true,
       "req_top3": true
@@ -1596,13 +1637,13 @@
         "polygon.minkowski_sum"
       ],
       "returned": [
-        "polygon.straight_skeleton.exterior",
-        "polygon.straight_skeleton.interior",
-        "polygon.minkowski_sum_reduced_convolution"
+        "polygon.minkowski_sum",
+        "polygon.boolean",
+        "mesh.simplify.edge_collapse"
       ],
-      "op_top1": false,
-      "op_top3": false,
-      "req_top1": false,
+      "op_top1": true,
+      "op_top3": true,
+      "req_top1": true,
       "req_top3": true
     },
     {
@@ -1615,7 +1656,7 @@
       "returned": [
         "polygon.offset.exterior",
         "polygon.offset.interior",
-        "mesh.distance.sample_points"
+        "reconstruction.kinetic_surface"
       ],
       "op_top1": true,
       "op_top3": true,
@@ -1630,11 +1671,11 @@
         "polygon.offset.exterior"
       ],
       "returned": [
-        "polygon.offset.interior",
         "polygon.offset.exterior",
-        "mesh.distance.sample_points"
+        "mesh.simplify.edge_collapse",
+        "polygon.offset.interior"
       ],
-      "op_top1": false,
+      "op_top1": true,
       "op_top3": true,
       "req_top1": true,
       "req_top3": true
@@ -1648,8 +1689,8 @@
       ],
       "returned": [
         "hull.convex_2",
-        "shape.fixed_alpha_shape_3",
-        "spatial.bbox_3"
+        "hull.convex_3",
+        "shape.alpha_shape_3"
       ],
       "op_top1": true,
       "op_top3": true,
@@ -1664,14 +1705,14 @@
         "hull.convex_2"
       ],
       "returned": [
-        "polygon.straight_skeleton.exterior",
+        "hull.convex_2",
         "polygon.straight_skeleton.interior",
-        "polygon.minkowski_sum_reduced_convolution"
+        "polygon.minkowski_sum"
       ],
-      "op_top1": false,
-      "op_top3": false,
-      "req_top1": false,
-      "req_top3": false
+      "op_top1": true,
+      "op_top3": true,
+      "req_top1": true,
+      "req_top3": true
     },
     {
       "id": "blind-en-099",
@@ -1681,14 +1722,14 @@
         "shape.alpha_shape_2"
       ],
       "returned": [
-        "optimization.interpolate",
-        "shape.barycentric",
-        "triangulation.periodic_delaunay_2"
+        "shape.alpha_shape_2",
+        "triangulation.delaunay_2",
+        "hull.convex_2"
       ],
-      "op_top1": false,
-      "op_top3": false,
-      "req_top1": false,
-      "req_top3": false
+      "op_top1": true,
+      "op_top3": true,
+      "req_top1": true,
+      "req_top3": true
     },
     {
       "id": "blind-ja-100",
@@ -1698,14 +1739,14 @@
         "shape.alpha_shape_2"
       ],
       "returned": [
-        "polygon.straight_skeleton.exterior",
-        "polygon.straight_skeleton.interior",
-        "polygon.query.containment"
+        "shape.alpha_shape_2",
+        "hull.convex_2",
+        "polygon.offset.interior"
       ],
-      "op_top1": false,
-      "op_top3": false,
-      "req_top1": false,
-      "req_top3": false
+      "op_top1": true,
+      "op_top3": true,
+      "req_top1": true,
+      "req_top3": true
     },
     {
       "id": "blind-en-101",
@@ -1716,8 +1757,8 @@
       ],
       "returned": [
         "shape.bounding.circle",
-        "reconstruction.kinetic_surface",
-        "triangulation.regular_2"
+        "shape.bounding.sphere",
+        "hull.convex_2"
       ],
       "op_top1": true,
       "op_top3": true,
@@ -1732,14 +1773,14 @@
         "shape.bounding.circle"
       ],
       "returned": [
-        "arrangement.build",
-        "hull.convex_2",
-        "kernel.distance.squared"
+        "shape.bounding.circle",
+        "shape.bounding.sphere",
+        "hull.convex_2"
       ],
-      "op_top1": false,
-      "op_top3": false,
-      "req_top1": false,
-      "req_top3": false
+      "op_top1": true,
+      "op_top3": true,
+      "req_top1": true,
+      "req_top3": true
     },
     {
       "id": "blind-en-103",
@@ -1749,13 +1790,13 @@
         "shape.barycentric"
       ],
       "returned": [
-        "polygon.offset.interior",
         "shape.barycentric",
+        "polygon.offset.interior",
         "polygon.straight_skeleton.exterior"
       ],
-      "op_top1": false,
+      "op_top1": true,
       "op_top3": true,
-      "req_top1": false,
+      "req_top1": true,
       "req_top3": true
     },
     {
@@ -1766,14 +1807,14 @@
         "shape.barycentric"
       ],
       "returned": [
-        "polygon.straight_skeleton.exterior",
-        "polygon.minkowski_sum_reduced_convolution",
-        "polygon.straight_skeleton.interior"
+        "mesh.simplify.edge_collapse",
+        "polygon.boolean",
+        "shape.barycentric"
       ],
       "op_top1": false,
-      "op_top3": false,
+      "op_top3": true,
       "req_top1": false,
-      "req_top3": false
+      "req_top3": true
     },
     {
       "id": "blind-en-105",
@@ -1783,14 +1824,14 @@
         "mesh2.refine.delaunay"
       ],
       "returned": [
-        "reconstruction.polygonal_surface",
+        "mesh2.refine.delaunay",
         "mesh.surface.generate",
-        "mesh.parameterize"
+        "mesh.volume.generate"
       ],
-      "op_top1": false,
-      "op_top3": false,
-      "req_top1": false,
-      "req_top3": false
+      "op_top1": true,
+      "op_top3": true,
+      "req_top1": true,
+      "req_top3": true
     },
     {
       "id": "blind-ja-106",
@@ -1800,14 +1841,14 @@
         "mesh2.refine.delaunay"
       ],
       "returned": [
-        "mesh.repair.polygon_soup",
-        "polygon.straight_skeleton.exterior",
-        "polygon.minkowski_sum_reduced_convolution"
+        "mesh2.refine.delaunay",
+        "mesh.triangulate.faces",
+        "mesh.remesh.isotropic"
       ],
-      "op_top1": false,
-      "op_top3": false,
-      "req_top1": false,
-      "req_top3": false
+      "op_top1": true,
+      "op_top3": true,
+      "req_top1": true,
+      "req_top3": true
     },
     {
       "id": "blind-en-107",
@@ -1817,13 +1858,13 @@
         "mesh.surface.generate"
       ],
       "returned": [
-        "mesh.volume.generate",
         "mesh.surface.generate",
-        "mesh.repair.fill_holes_refine_fair"
+        "reconstruction.alpha_wrap",
+        "triangulation.periodic_delaunay_2"
       ],
-      "op_top1": false,
+      "op_top1": true,
       "op_top3": true,
-      "req_top1": false,
+      "req_top1": true,
       "req_top3": true
     },
     {
@@ -1835,8 +1876,8 @@
       ],
       "returned": [
         "mesh.surface.generate",
-        "mesh.validate.surface_mesh",
-        "mesh.validate.volume_mesh"
+        "reconstruction.poisson",
+        "mesh.volume.generate"
       ],
       "op_top1": true,
       "op_top3": true,
@@ -1851,14 +1892,14 @@
         "mesh.volume.generate"
       ],
       "returned": [
-        "optimization.approximate_mesh",
-        "mesh.skeletonize.mean_curvature_flow",
-        "reconstruction.kinetic_surface"
+        "mesh.volume.generate",
+        "mesh.repair.fill_holes_refine_fair",
+        "mesh2.refine.delaunay"
       ],
-      "op_top1": false,
-      "op_top3": false,
-      "req_top1": false,
-      "req_top3": false
+      "op_top1": true,
+      "op_top3": true,
+      "req_top1": true,
+      "req_top3": true
     },
     {
       "id": "blind-ja-110",
@@ -1868,13 +1909,13 @@
         "mesh.volume.generate"
       ],
       "returned": [
-        "mesh.validate.tetrahedral_mesh",
-        "mesh.validate.volume_mesh",
-        "mesh.volume.generate"
+        "mesh.volume.generate",
+        "triangulation.delaunay_3",
+        "mesh.smooth.shape"
       ],
-      "op_top1": false,
+      "op_top1": true,
       "op_top3": true,
-      "req_top1": false,
+      "req_top1": true,
       "req_top3": true
     },
     {
@@ -1886,8 +1927,8 @@
       ],
       "returned": [
         "optimization.quadratic_program",
-        "mesh.validate.surface_mesh",
-        "reconstruction.validate.polygonal_surface"
+        "hull.convex_3",
+        "mesh.decompose.approx_convex"
       ],
       "op_top1": true,
       "op_top3": true,
@@ -1902,14 +1943,14 @@
         "optimization.quadratic_program"
       ],
       "returned": [
-        "hull.convex_2",
-        "hull.convex_3",
-        "hull.validate.convex_enclosure"
+        "optimization.matrix_search",
+        "optimization.quadratic_program",
+        "hull.convex_3"
       ],
       "op_top1": false,
-      "op_top3": false,
+      "op_top3": true,
       "req_top1": false,
-      "req_top3": false
+      "req_top3": true
     },
     {
       "id": "blind-en-113",
@@ -1920,8 +1961,8 @@
       ],
       "returned": [
         "optimization.interpolate",
-        "shape.barycentric",
-        "triangulation.regular_2"
+        "hull.convex_2",
+        "triangulation.delaunay_2"
       ],
       "op_top1": true,
       "op_top3": true,
@@ -1936,14 +1977,14 @@
         "optimization.interpolate"
       ],
       "returned": [
-        "arrangement.build",
-        "arrangement.overlay",
+        "optimization.interpolate",
+        "shape.barycentric",
         "arrangement.zone"
       ],
-      "op_top1": false,
-      "op_top3": false,
-      "req_top1": false,
-      "req_top3": false
+      "op_top1": true,
+      "op_top3": true,
+      "req_top1": true,
+      "req_top3": true
     },
     {
       "id": "blind-en-115",
@@ -1954,8 +1995,8 @@
       ],
       "returned": [
         "optimization.approximate_mesh",
-        "mesh.distance.hausdorff_approximate",
-        "mesh.distance.hausdorff_approximate_symmetric"
+        "mesh.distance.hausdorff_approximate_symmetric",
+        "mesh.distance.hausdorff_approximate"
       ],
       "op_top1": true,
       "op_top3": true,
@@ -1970,13 +2011,13 @@
         "optimization.approximate_mesh"
       ],
       "returned": [
-        "mesh.distance.hausdorff_approximate",
+        "optimization.approximate_mesh",
         "mesh.distance.hausdorff_approximate_symmetric",
-        "optimization.approximate_mesh"
+        "mesh.distance.hausdorff_approximate"
       ],
-      "op_top1": false,
+      "op_top1": true,
       "op_top3": true,
-      "req_top1": false,
+      "req_top1": true,
       "req_top3": true
     },
     {
@@ -1989,7 +2030,7 @@
       "returned": [
         "optimization.matrix_search",
         "kernel.distance.squared",
-        "triangulation.periodic_delaunay_2"
+        "kernel.primitives.construct"
       ],
       "op_top1": true,
       "op_top3": true,
@@ -2004,19 +2045,20 @@
         "optimization.matrix_search"
       ],
       "returned": [
-        "mesh.distance.sample_points",
-        "mesh.validate.hausdorff_symmetric_report",
-        "mesh.distance.symmetric_hausdorff"
+        "kernel.distance.squared",
+        "optimization.matrix_search",
+        "mesh.distance.hausdorff_approximate_symmetric"
       ],
       "op_top1": false,
-      "op_top3": false,
+      "op_top3": true,
       "req_top1": false,
-      "req_top3": false
+      "req_top3": true
     }
   ],
   "measurement_history": [
     "Run 1 (before reverting two over-broad vocabulary rules that broke fail-closed regression tests): op top-1 37.29%, top-3 47.46%.",
-    "Run 2 (published, current search.py): op top-1 38.14%, top-3 47.46%. No blind case was inspected or used for tuning between the runs; the change only restored fail-closed behaviour required by tests/test_master_search_production.py."
+    "Run 2 (published, current search.py): op top-1 38.14%, top-3 47.46%. No blind case was inspected or used for tuning between the runs; the change only restored fail-closed behaviour required by tests/test_master_search_production.py.",
+    "Run 3 (frozen code: operation-side bilingual search phrases in search_data.json authored from operation docs, IDF phrase evidence with Japanese bigrams, discovery-mode soft ranking of uncovered concepts; no blind case or miss was read or used; the set is considered contaminated for future tuning after this iteration). Result: op top-1 79.66%, top-3 87.29%."
   ],
-  "interpretation": "Blind generalization is far below the 95% target: the tuned vocabulary does not generalize to paraphrases that avoid registry alias strings. The search gate therefore stays unmet."
+  "interpretation": "Run 3: operation-side bilingual phrases raised blind top-3 from 47.46% to 87.29% (top-1 38.14% to 79.66%), still below the 95% target, so the search gate stays unmet. The blind set is now considered contaminated: it was measured three times against successive router versions and the author of the phrases knew it existed, although no blind case or miss was read. A future acceptance claim needs a fresh blind set authored by a different agent (see SEARCH_ACCEPTANCE_JA.md)."
 }

@@ -48,6 +48,7 @@ def measure() -> dict:
             "search_py_sha256": _sha(REPO / "cgal_mcp" / "master" / "search.py"),
             "registry_py_sha256": _sha(REPO / "cgal_mcp" / "master" / "registry.py"),
             "operations_sha256": _sha(REPO / "cgal_mcp" / "master" / "operations.json"),
+            "search_data_sha256": _sha(REPO / "cgal_mcp" / "master" / "search_data.json"),
             "count": n, "families": sorted({c["family"] for c in cases}),
             "operation_level": {"top1_pct": pct("op_top1"), "top3_pct": pct("op_top3")},
             "requirement_level": {"top1_pct": pct("req_top1"), "top3_pct": pct("req_top3")},
@@ -61,5 +62,13 @@ def measure() -> dict:
 if __name__ == "__main__":
     result = measure()
     if "--publish" in sys.argv:
+        # Keep the human-authored run history and add this run (never re-measured).
+        previous = json.loads(EVIDENCE.read_text(encoding="utf-8")) if EVIDENCE.is_file() else {}
+        note = (sys.argv[sys.argv.index("--note") + 1] if "--note" in sys.argv else "")
+        history = list(previous.get("measurement_history", []))
+        history.append(f"{note} Result: op top-1 {result['operation_level']['top1_pct']}%, "
+                       f"top-3 {result['operation_level']['top3_pct']}%.")
+        result["measurement_history"] = history
+        result["interpretation"] = previous.get("interpretation", "")
         EVIDENCE.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(json.dumps({k: v for k, v in result.items() if k != "cases"}, ensure_ascii=False, indent=1))

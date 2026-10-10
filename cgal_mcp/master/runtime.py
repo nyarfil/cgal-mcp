@@ -132,7 +132,8 @@ class MasterRuntime:
             input_types = [self.store.inspect(artifact_id)["type"] for artifact_id in artifact_ids]
         return self.registry.search(query, input_types=input_types,
             status=constraints.get("status"), dependencies=constraints.get("dependencies"),
-            kernel=constraints.get("kernel"), allowed_licenses=constraints.get("allowed_licenses"), limit=limit)
+            kernel=constraints.get("kernel"), allowed_licenses=constraints.get("allowed_licenses"), limit=limit,
+            discovery=True)
 
     def capabilities_describe(self, operation_id: str) -> dict[str, Any]:
         operation = self.registry.get(operation_id)
