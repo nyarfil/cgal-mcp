@@ -1333,6 +1333,22 @@ PERFORMANCE_REQUIRED_FAULT_KINDS = {
 }
 PERFORMANCE_LIVE_MODES = ["exit_kill", "access_violation", "oversized_stdout",
                           "native_garbage_request", "garbage_input_files"]
+# Persistent-worker fault modes: every mode must fault a REUSED pooled process and be followed
+# by a replacement process that reproduces the golden result.
+PERFORMANCE_REQUIRED_PERSISTENT_MODES = {
+    "exit_kill", "abort", "access_violation", "hang", "hang_with_child", "garbage_stdout",
+    "multi_line_stdout", "trailing_garbage", "oversized_stdout", "wrong_request_id",
+    "stderr_flood_exit", "native_external_kill", "native_memory_cap"}
+PERFORMANCE_REQUIRED_RECYCLE_CASES = ("job_count", "lifetime", "memory_residue", "executable_change")
+PERFORMANCE_CACHE_CASES = ("tampered_entry", "tampered_blob", "stale_worker")
+# Plan Phase 10 lists "AABB reuse"; Spec 32.2/32.3 add "AABB trees where safe" and "parsed mesh
+# representation in persistent worker" / no duplicate PLY->Surface_mesh conversion. Not built.
+PERFORMANCE_AABB_REASON = (
+    "AABB-tree and parsed-geometry reuse inside persistent workers (Plan Phase 10 'AABB reuse'; "
+    "Spec 32.2 'AABB trees where safe', 'parsed mesh representation in persistent worker'; Spec 32.3) "
+    "is not implemented: input parsing is per-operation (no shared native artifact reader) and a "
+    "cross-job native cache would hold memory against the per-job cap that persistent recycling "
+    "currently guarantees; see docs/master/PERSISTENT_WORKER_CACHE_JA.md")
 PERFORMANCE_REQUIRED_LIMIT_KINDS = {"bounded_input": 3, "import_limit": 1, "execution_limits": 9,
                                     "configuration": 8, "native_resource_cap": 2}
 
@@ -1350,8 +1366,11 @@ def evaluate_performance_gate(root: Path = REPO, *, live: bool = True,
     Re-derived from the evidence and the current registry: all fifteen families measured at
     three increasing input scales within the registry bounds and the declared memory/wall
     ceilings, every resource-limit refusal exact, crash containment 100% over at least the
-    declared trial floor for every fault kind, and the Phase 10 work items still named as
-    reasons while the lifecycle evidence shows them absent. Timings are never gated on speed.
+    declared trial floor for every fault kind, and the Phase 10 work items (persistent workers,
+    artifact/result cache, AABB reuse) each evidenced: persistent fault containment on reused
+    processes with replacement, cross-job isolation against one-shot results for every family,
+    recycling, idle reaping and cache safety. AABB reuse has no implementation, so it stays a
+    reason. Timings are never gated on speed.
     """
     reasons: list[str] = []
     result: dict = {"gate": PERFORMANCE_GATE, "status": "unmet", "evidence": PERFORMANCE_EVIDENCE,
@@ -1517,17 +1536,77 @@ def evaluate_performance_gate(root: Path = REPO, *, live: bool = True,
         "modes": len(modes), "trials": total_trials, "contained": total_contained,
         "contained_percent": round(100.0 * total_contained / total_trials, 4) if total_trials else 0.0}
 
-    # (4) lifecycle and Phase 10 work items
+    # (4) lifecycle and Phase 10 work items: persistent workers, result cache, AABB reuse
     life = deterministic.get("lifecycle", {})
     if life.get("idle_worker_processes_after_jobs") != 0:
         reasons.append("Idle runtime retains worker processes")
-    if not life.get("persistent_worker_pool") and life.get("second_call_executed_worker"):
-        reasons.append("Persistent workers are not implemented (each call starts a fresh worker process), "
-                       "so persistent-worker crash recovery and resource reclamation are unevidenced")
-    if not life.get("operation_result_cache") and life.get("second_call_executed_worker"):
-        reasons.append("Artifact/result cache and AABB reuse are not implemented, so their effect on "
-                       "performance is unmeasured")
+    persistent = deterministic.get("persistent")
+    if not isinstance(persistent, dict):
+        reasons.append("Persistent-worker and result-cache evidence is missing")
+        persistent = {}
+    pmodes = persistent.get("containment", {})
+    for name in sorted(PERFORMANCE_REQUIRED_PERSISTENT_MODES - set(pmodes)):
+        reasons.append(f"Persistent-worker fault mode {name} lacks evidence")
+    for name, record in sorted(pmodes.items()):
+        trials = record.get("trials", 0)
+        if trials < PERFORMANCE_MIN_TRIALS_PER_MODE:
+            reasons.append(f"Persistent fault mode {name} has {trials} trials "
+                           f"(need {PERFORMANCE_MIN_TRIALS_PER_MODE}+)")
+        if record.get("contained") != trials or record.get("failures"):
+            reasons.append(f"Persistent fault mode {name} contained {record.get('contained')} of {trials}: "
+                           f"{(record.get('failures') or ['unspecified'])[0]}")
+        if (record.get("faulted_job_ran_on_reused_worker") != trials
+                or record.get("replacement_started_after_fault") != trials):
+            reasons.append(f"Persistent fault mode {name} did not fault a reused worker and replace it "
+                           "in every trial")
+        expected = record.get("expected")
+        for outcome in record.get("outcomes", {}):
+            if not expected or json.loads(outcome)[1:] != expected:
+                reasons.append(f"Persistent fault mode {name} produced an unexpected classification {outcome}")
+    isolation = persistent.get("isolation", {})
+    if not (isolation.get("persistent_identical_to_one_shot")
+            and isolation.get("reproducible_one_shot") == isolation.get("operations") == len(family_ops)
+            and isolation.get("persistent_processes_started") == 1
+            and isolation.get("persistent_requests_reused", 0) > 0):
+        reasons.append("Persistent workers are not shown to reproduce one-shot results for every "
+                       "family representative within one reused process (cross-job isolation)")
+    if not (isolation.get("cache_identical_to_one_shot")
+            and isolation.get("cache_hits") == isolation.get("operations")):
+        reasons.append("Result-cache hits are not shown identical to one-shot results for every family")
+    recycle = persistent.get("lifecycle", {})
+    for name in PERFORMANCE_REQUIRED_RECYCLE_CASES:
+        row = recycle.get(name, {})
+        if not (row.get("recycled_for_reason") and row.get("results_identical")):
+            reasons.append(f"Persistent-worker recycling on {name} is unevidenced")
+    idle = recycle.get("idle_reap", {})
+    if not (idle.get("idle_workers_after_timeout") == 0 and idle.get("processes_alive_after_timeout") == 0
+            and idle.get("recycled_for_reason")):
+        reasons.append("Persistent workers are not shown reaped when idle (Phase 10 idle-load criterion)")
+    caps = recycle.get("per_cap_pools", {})
+    if not (caps.get("all_succeeded") and caps.get("processes_started") == 2):
+        reasons.append("Persistent workers are not shown isolated per memory cap")
+    cache = persistent.get("cache", {})
+    hit = cache.get("miss_then_hit", {})
+    bad = cache.get("resigned_bad_candidate", {})
+    stale = cache.get("stale_registry", {})
+    if not (cache.get("all_passed") and hit.get("transform_skipped_validators_live")
+            and hit.get("identical_outputs") and hit.get("second_validation_status") == "passed"
+            and all(cache.get(n, {}).get("counter_incremented") and cache.get(n, {}).get("transform_executed")
+                    for n in PERFORMANCE_CACHE_CASES)
+            and stale.get("entries_after_reopen") == 0
+            and bad.get("state") in {"rejected", "failed"} and bad.get("published") == 0
+            and bad.get("stored_after_failure") == 0
+            and cache.get("eviction", {}).get("entries", 99) <= cache.get("eviction", {}).get("max_entries", 0)):
+        reasons.append("Result-cache safety (hit/miss, tamper, stale, live re-validation, bound) is unevidenced")
+    if not persistent.get("aabb_reuse"):
+        reasons.append(PERFORMANCE_AABB_REASON)
     result["measured"]["lifecycle"] = life
+    result["measured"]["persistent"] = {
+        "fault_modes": len(pmodes), "trials": sum(r.get("trials", 0) for r in pmodes.values()),
+        "contained": sum(r.get("contained", 0) for r in pmodes.values()),
+        "isolation": isolation, "recycling": sorted(k for k, v in recycle.items()
+                                                    if v.get("recycled_for_reason")),
+        "cache_all_passed": cache.get("all_passed")}
 
     if live:
         try:

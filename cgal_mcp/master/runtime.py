@@ -20,7 +20,8 @@ from .package_terms import PACKAGE_REFERENCE_TERMS, package_reference_score
 from .search import QueryTerms, fts_expression, lexical_score, parse_query
 from .store import ArtifactStore
 from .resources import ResourceConfig
-from .supervisor import WorkerSupervisor, default_worker_path
+from .result_cache import ResultCache
+from .supervisor import PersistentPolicy, WorkerSupervisor, default_worker_path
 from .util import digest_file, within
 
 
@@ -97,16 +98,35 @@ class MasterRuntime:
                  resource_config: ResourceConfig | None = None,
                  require_memory_limit: bool = True, catalog_root: Path | None = None,
                  allowed_file_roots: list[Path] | None = None,
-                 docs_index: Path | None = None):
+                 docs_index: Path | None = None,
+                 persistent_workers: PersistentPolicy | bool | None = None,
+                 result_cache: bool | None = None):
         resources = resource_config or ResourceConfig()
         if concurrency is not None:
             resources = resources.with_concurrency(concurrency)
         self.registry = OperationRegistry(operations, policies=policies)
         self.store = ArtifactStore(root)
         self.planner = PlanBuilder(self.registry, self.store)
+        # Both are opt-in (constructor or environment); the default stays one process per
+        # request and no result reuse.
+        if persistent_workers is None:
+            persistent_workers = PersistentPolicy.from_environment(resources.concurrency)
+        elif persistent_workers is True:
+            persistent_workers = PersistentPolicy(max_idle_workers=resources.concurrency)
+        elif persistent_workers is False:
+            persistent_workers = None
         self.supervisor = WorkerSupervisor(self.registry, worker or default_worker_path(),
                                            require_memory_limit=require_memory_limit,
-                                           max_memory_mb=resources.max_memory_mb)
+                                           max_memory_mb=resources.max_memory_mb,
+                                           persistent=persistent_workers)
+        if result_cache is None:
+            raw = os.environ.get("CGAL_MASTER_RESULT_CACHE", "0").strip()
+            if raw not in {"0", "1"}:
+                raise ValueError("CGAL_MASTER_RESULT_CACHE must be 0 or 1")
+            result_cache = raw == "1"
+        self.result_cache = (ResultCache(self.store.root / "result-cache",
+                                         registry_revision=self.registry.revision)
+                             if result_cache else None)
         self.catalog_root = _catalog_path(catalog_root)
         self.docs_index = _docs_index_path(docs_index, self.catalog_root)
         self.allowed_file_roots = (None if allowed_file_roots is None else
@@ -120,6 +140,7 @@ class MasterRuntime:
     def close(self) -> None:
         if any(not task.done() for task in self.tasks.values()):
             raise RuntimeError("Cannot close MasterRuntime while jobs are running")
+        self.supervisor.kill_all_sync()
         self.store.close()
         self.registry.close()
 
@@ -244,7 +265,13 @@ class MasterRuntime:
                         "parameters": step["parameters"], "output_dir": str(step_dir.resolve()),
                         "kernel": step["kernel"],
                         "limits": {"wall_time_ms": wall_time_ms, "memory_mb": memory_mb}}
-                    response, evidence = await self.supervisor.execute(request, step_dir)
+                    cache_note: dict[str, Any] | None = None
+                    response = None
+                    if self.result_cache is not None and step.get("role") != "validator":
+                        response, evidence, cache_note = await self._cache_lookup(
+                            operation, step, inputs, request, step_dir)
+                    if response is None:
+                        response, evidence = await self.supervisor.execute(request, step_dir)
                     self._recheck_inputs(inputs)
                     for output in response["outputs"]:
                         inspection = None
@@ -288,7 +315,7 @@ class MasterRuntime:
                         validation_reports.append({**step_result, "report": report})
                     else:
                         transforms.append({**step_result, "step": step, "inputs": inputs,
-                                           "outputs": response["outputs"]})
+                                           "outputs": response["outputs"], "result_cache": cache_note})
                 artifacts: list[dict[str, Any]] = []
                 for transform in transforms:
                     step = transform["step"]
@@ -300,6 +327,7 @@ class MasterRuntime:
                     if required_validators - passed:
                         raise WorkerFailure("validator_not_run", f"Validators did not pass for {operation['id']}",
                                             "validation_failure", False)
+                    self._cache_store(plan, transform, operation, produced, validation_reports)
                     input_hashes = [item["sha256"] for item in transform["inputs"]]
                     for output_spec in operation["io"]["outputs"]:
                         descriptor = produced[(step["id"], output_spec["slot"])]
@@ -310,7 +338,9 @@ class MasterRuntime:
                              "input_hashes": input_hashes,
                              "parameters": {"values": step["parameters"],
                                             "normalization": step.get("parameter_normalization", [])},
-                             "build": transform["build"]})
+                             "build": transform["build"],
+                             **({"result_cache": transform["result_cache"]}
+                                if transform["result_cache"] is not None else {})})
                         artifacts.append(artifact)
                 self.store.complete_job_success(job_id, artifacts, validation_reports)
         except asyncio.CancelledError:
@@ -332,6 +362,60 @@ class MasterRuntime:
             self._quarantine(staging, job_id)
         else:
             shutil.rmtree(staging, ignore_errors=True)
+
+    async def _cache_lookup(self, operation: dict[str, Any], step: dict[str, Any],
+                            inputs: list[dict[str, Any]], request: dict[str, Any], step_dir: Path):
+        assert self.result_cache is not None
+        manifest = await self.supervisor.manifest(operation["id"])
+        worker_sha = manifest["supervisor_executable_sha256"]
+        key = self.result_cache.key(operation=operation, step=step, inputs=inputs,
+                                    worker_sha256=worker_sha,
+                                    cgal_version=manifest.get("actual_cgal_version"))
+        note: dict[str, Any] = {"key": key, "worker_sha256": worker_sha, "hit": False}
+        body = self.result_cache.lookup(key, worker_sha, step_dir)
+        if body is None:
+            return None, None, note
+        response = {"protocol": 1, "request_id": request["request_id"], "status": "ok",
+                    "outputs": [{"slot": item["slot"], "type": item["type"], "format": item["format"],
+                                 "unit": item["unit"], "path": str((step_dir / item["filename"]).resolve())}
+                                for item in body["outputs"]],
+                    "metrics": body.get("metrics", {}), "diagnostics": body.get("diagnostics", [])}
+        try:
+            self.supervisor.check_response(request, response, step_dir)
+        except WorkerFailure:
+            for item in body["outputs"]:
+                (step_dir / item["filename"]).unlink(missing_ok=True)
+            self.result_cache.discard(key)
+            return None, None, note
+        note.update(hit=True, stored_validator_verdicts=body.get("validator_verdicts", []))
+        return response, {"manifest": manifest, "diagnostics": {"result_cache": "hit"}}, note
+
+    def _cache_store(self, plan: dict[str, Any], transform: dict[str, Any], operation: dict[str, Any],
+                     produced: dict[tuple[str, str], dict[str, Any]],
+                     validation_reports: list[dict[str, Any]]) -> None:
+        note = transform.get("result_cache")
+        if self.result_cache is None or note is None or note.get("hit"):
+            return
+        step = transform["step"]
+        verdicts = []
+        for item in validation_reports:
+            validator_step = next(candidate for candidate in plan["steps"] if candidate["id"] == item["step_id"])
+            if validator_step.get("validates") != step["id"]:
+                continue
+            slot = self.registry.get(item["operation"])["io"]["outputs"][0]["slot"]
+            verdicts.append({"operation": item["operation"], "status": item["report"].get("status"),
+                             "report_sha256": produced[(item["step_id"], slot)]["sha256"]})
+        outputs = [produced[(step["id"], spec["slot"])] for spec in operation["io"]["outputs"]]
+        try:
+            self.result_cache.store(note["key"], worker_sha256=note["worker_sha256"], operation=operation["id"],
+                                    outputs=outputs, metrics=transform["metrics"],
+                                    diagnostics=transform["diagnostics"], verdicts=verdicts)
+        except OSError:
+            pass  # a cache write failure never affects the validated job result
+
+    async def aclose(self) -> None:
+        await self.supervisor.shutdown()
+        self.close()
 
     def _resolve_inputs(self, step: dict[str, Any],
                         produced: dict[tuple[str, str], dict[str, Any]]) -> list[dict[str, Any]]:
@@ -752,7 +836,10 @@ class MasterRuntime:
                               "max_memory_mb": self.resources.max_memory_mb,
                               "default_wall_time_ms": self.resources.default_wall_time_ms,
                               "max_wall_time_ms": self.resources.max_wall_time_ms},
-                "max_import_bytes": 512 * 1024 * 1024}
+                "max_import_bytes": 512 * 1024 * 1024,
+                "worker_pool": self.supervisor.pool_status(),
+                "result_cache": (self.result_cache.status() if self.result_cache is not None
+                                 else {"enabled": False})}
 
     def job_status(self, job_id: str) -> dict[str, Any]:
         return self.store.get_job(job_id)

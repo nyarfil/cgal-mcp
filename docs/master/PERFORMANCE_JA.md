@@ -16,8 +16,9 @@ Python host、取込みparser、manifest照会のメモリはこの値に含み�
 入力保持、未検証出力の非公開を確認しました。中止時点はnative process起動から50ms後で、
 アルゴリズム内部の特定区間での応答時間を保証する測定ではありません。
 
-各規模1回の合成fixture測定です。全主要能力の性能受入、cache効果、永続workerの
-復旧・資源回収は未完了です。結果cacheは無効で、workerは処理ごとに起動します。
+各規模1回の合成fixture測定です（既定の1要求=1 process、cacheなしで測定）。
+永続workerと結果cacheはopt-inで、その証拠は下記「永続workerと結果cache」と
+[`PERSISTENT_WORKER_CACHE_JA.md`](PERSISTENT_WORKER_CACHE_JA.md)を参照してください。
 機械可読の入力・出力・worker hashと測定範囲は
 [`evidence/hull-performance-windows.json`](evidence/hull-performance-windows.json)に記録しています。
 
@@ -62,7 +63,15 @@ WindowsではJob Object、POSIXではprocessの資源制限を使用します。
   不正入力、実workerの外部kill、host強制終了）。各試行で出力非公開、process回収、staging残留なし、
   次の呼び出しが正しい結果を再現することを確認。試行数は計画に記載がないため各20回と宣言。
 - 修正した実欠陥: `triangulation.delaunay_3`と`mesh2.refine.delaunay`のvalidatorがスタックオーバーフロー(0xC00000FD)で落ちた原因は、Epeck(lazy)の面積・体積を三角形ごとに`+=`で累積して作られる深いlazy DAGの再帰評価でした。各加算後に`CGAL::exact`でDAGを畳み、再帰を排除しました（検証意味は不変）。両Operationは宣言範囲の上限（1000点、size 0.25）でも成功・検証済みです。メモリ上限超過は、workerが`std::bad_alloc`を捕捉して構造化`RESOURCE_LIMIT/MEMORY_LIMIT`を返し、supervisorが`memory_limit`(resource_limit)へ分類します（64MiB上限の実測ケースで確認）。`mesh.split.plane`の出力型宣言をPolygonSoup3から実際のTriangleSurfaceMeshへ修正し、`mesh.validate.split`の候補入力型も合わせました。
-- 未達の理由（残り2件）: 永続workerと結果cache／AABB再利用は未実装で、効果は未測定です。計画のPhase 10は作業項目として列挙するのみで、受入基準は基準値・idle時無負荷です。永続workerは現在の1 process=1 requestのprotocol(`worker/master/main.cpp`)の全面改修（多重要求、要求間のstate隔離、監督付き再起動、故障復旧と資源回収の新しい証拠）が必要で、cacheはinput hash+op+registry digest keyのstoreと無効化・validator再実行規則の設計が必要です。いずれも中規模以上（各1〜2 phase相当）で、半端な実装は安全性を損なうため行っていません。
+- 永続workerと結果cache（opt-in、`--stage persistent`）: 再利用中のprocessへの故障注入13種×20試行
+  （proxy経由のkill/abort/アクセス違反/hang/孫process/不正・複数行・後続ゴミ出力/巨大出力/偽ID/stderr氾濫、
+  実workerの外部kill、実workerのメモリ上限64MiB）が全て封じ込められ、毎回新processへ置換され、次の呼び出しが
+  golden結果を再現。15 family代表Operationを1つの永続processで順・逆・再実行し、1回実行と出力hashが一致
+  （job間汚染なし）。cache hitも15件一致。job数・寿命・残留メモリ・実行ファイル変更での退役、idle 30秒後の
+  process 0、memory上限ごとのpool分離、cacheの改ざん・stale→miss、正しく署名された誤候補をlive validatorが拒否、
+  件数上限での削除を確認。速度は参考値のみ（`timings.persistent`）。
+- 未達の理由（残り1件）: AABB木／parsed geometryのjob間再利用（計画Phase 10「AABB reuse」、設計書32.2/32.3）は
+  未実装です。理由は[`PERSISTENT_WORKER_CACHE_JA.md`](PERSISTENT_WORKER_CACHE_JA.md)に記載。
 - 修正: 孫processがpipeを保持するとtimeoutが効かない不具合を`supervisor.py`で修正（job closeを先に実行）。
 - 多くのOperationはworker内部上限がregistryの宣言値より小さく、上限超過は構造化エラーで拒否される
   （例: `pointset.remove_outliers`は400点、simplify検証は400面）。上限超過probeは証拠の`ceiling_probes`に記録。

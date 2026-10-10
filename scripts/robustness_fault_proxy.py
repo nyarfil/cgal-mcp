@@ -39,10 +39,91 @@ def relay(code: int, out: bytes, err: bytes) -> None:
     sys.exit(code)
 
 
+def _session_fault() -> str:
+    """Persistent mode: the harness rewrites a file between jobs (env is fixed at spawn)."""
+    path = os.environ.get("CGAL_ROBUST_FAULT_FILE")
+    if path and os.path.isfile(path):
+        return Path(path).read_text(encoding="ascii").strip() or "none"
+    return os.environ.get("CGAL_ROBUST_FAULT", "none")
+
+
+def serve() -> None:
+    """Session-protocol proxy: relays to ONE real `--serve` native worker, injecting faults."""
+    # Started lazily on the first line (the supervisor's spawn health check), i.e. only after
+    # the supervisor placed this proxy in its kill-on-close Job Object, so the child inherits it.
+    native = None
+    out = sys.stdout.buffer
+
+    def native_roundtrip(line: bytes) -> bytes:
+        nonlocal native
+        if native is None:
+            native = subprocess.Popen(real_worker() + ["--serve"], stdin=subprocess.PIPE,
+                                      stdout=subprocess.PIPE)
+        native.stdin.write(line)
+        native.stdin.flush()
+        return native.stdout.readline()
+
+    for line in sys.stdin.buffer:
+        if not line.strip():
+            continue
+        try:
+            request = json.loads(line)
+        except ValueError:
+            request = {}
+        if isinstance(request, dict) and "control" in request:
+            out.write(native_roundtrip(line)); out.flush()
+            continue
+        fault = _session_fault()
+        request_id = request.get("request_id", "") if isinstance(request, dict) else ""
+        if fault == "none":
+            out.write(native_roundtrip(line)); out.flush()
+            continue
+        if fault == "exit_kill":
+            os._exit(137)
+        if fault == "abort":
+            os.abort()
+        if fault == "access_violation":
+            ctypes.string_at(0)
+        if fault == "hang":
+            time.sleep(3600)
+        if fault == "hang_with_child":
+            child = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(3600)"])
+            Path(os.environ["CGAL_ROBUST_PIDFILE"]).write_text(str(child.pid))
+            time.sleep(3600)
+        if fault == "garbage_stdout":
+            out.write(b"\xff\xfe\x00 not json at all\n"); out.flush()
+            continue  # keep serving: the supervisor must not reuse this process
+        if fault == "multi_line_stdout":
+            out.write(b'{"protocol":1}\n{"protocol":1}\n'); out.flush()
+            continue
+        if fault == "trailing_garbage":
+            # a genuine response followed by unsolicited output (cross-job contamination risk)
+            out.write(native_roundtrip(line)); out.write(b'{"protocol":1,"status":"ok"}\n'); out.flush()
+            continue
+        if fault == "oversized_stdout":
+            out.write(b"x" * (3 * 1024 * 1024)); out.flush()
+            continue
+        if fault == "wrong_request_id":
+            out.write(json.dumps({"protocol": 1, "request_id": "forged", "status": "ok",
+                                  "outputs": []}).encode() + b"\n"); out.flush()
+            continue
+        if fault == "stderr_flood_exit":
+            sys.stderr.buffer.write(b"E" * (5 * 1024 * 1024)); sys.stderr.buffer.flush()
+            sys.exit(1)
+        sys.stderr.write(f"unknown fault {fault}\n")
+        sys.exit(2)
+    if native is not None:
+        native.stdin.close()
+        native.wait()
+
+
 def main() -> None:
     arguments = sys.argv[1:]
     if "--manifest" in arguments:
         relay(*forward(arguments, b""))
+    if "--serve" in arguments:
+        serve()
+        return
     fault = os.environ.get("CGAL_ROBUST_FAULT", "none")
     payload = sys.stdin.buffer.read()
     if fault == "none":

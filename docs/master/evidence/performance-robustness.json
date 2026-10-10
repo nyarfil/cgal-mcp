@@ -1,12 +1,13 @@
 {
  "bindings": {
-  "generator_sha256": "0ff01bece894787931fafc635deb8984518faec98f6bb311114c5211c9e230ba",
+  "generator_sha256": "b3739e3c53598a61692d374d77dec03251f2abff382904aa24404824d738b441",
   "operations_sha256": "78abd290a0bcdf4c04f9500ba0b329bf604b555d213f28b2ff7fe260fdb894b9",
-  "proxy_sha256": "bcc7d7b539d94341b04b01de1b5ec6d247e40c52db3def5bf7426f104cf9a30d",
+  "proxy_sha256": "304ab3f74fe59c419e5983fe742af749c989092512886df25bed8246aa5032c5",
   "resources_sha256": "1d480200130ed486beb4723c5181b3cc0066d59b7594d0c59fb924de4cdb27ff",
-  "runtime_sha256": "d2874573981285be32c64804e6f6996e416e5ee5c01698a2df295510cfb96816",
+  "result_cache_sha256": "06de1510d84be6a5e8ac52946e5b820d5fb4c806bc7d34ce4e2d0b840a5a2a95",
+  "runtime_sha256": "36100fa82ba5d5fda759ebdd81f0f770c4204bdbce4fe346d320fdae45abad22",
   "store_sha256": "4e3f06b0de9b48071e621f93d178f77741737b72f49367cec2f92d595ee03be7",
-  "supervisor_sha256": "e806c90f08883a2b388a4027d6049df8176b7bd5ec68700c550a13c78cf18ab2"
+  "supervisor_sha256": "b81227ba93e20da12ed79e530f836c3ab3f911d1c09c952e997e6ccbfa399fdc"
  },
  "declared": {
   "fault_injection": "scripts/robustness_fault_proxy.py (test-only proxy; the native worker binary and the registry are unchanged)",
@@ -844,10 +845,11 @@
    }
   },
   "lifecycle": {
+   "default_mode": "one_shot",
    "idle_worker_processes_after_jobs": 0,
    "operation": "hull.convex_3",
-   "operation_result_cache": false,
-   "persistent_worker_pool": false,
+   "operation_result_cache": "opt_in (CGAL_MASTER_RESULT_CACHE=1); see persistent stage",
+   "persistent_worker_pool": "opt_in (CGAL_MASTER_PERSISTENT_WORKERS=1); see persistent stage",
    "processes_first_call": 2,
    "processes_second_call": 2,
    "result_identical": true,
@@ -1257,6 +1259,356 @@
     "trials": 20
    }
   ],
+  "persistent": {
+   "cache": {
+    "all_passed": true,
+    "eviction": {
+     "entries": 2,
+     "evicted": 1,
+     "max_entries": 2
+    },
+    "miss_then_hit": {
+     "first_processes": 2,
+     "first_state": "succeeded",
+     "hits": 1,
+     "identical_outputs": true,
+     "second_processes": 1,
+     "second_state": "succeeded",
+     "second_validation_status": "passed",
+     "stores": 1,
+     "transform_skipped_validators_live": true
+    },
+    "resigned_bad_candidate": {
+     "outputs": 0,
+     "published": 0,
+     "state": "rejected",
+     "stored_after_failure": 0,
+     "validation_status": "failed"
+    },
+    "stale_registry": {
+     "entries_after_reopen": 0,
+     "entries_before": 1,
+     "identical_outputs": true,
+     "next_run_transform_executed": true,
+     "rejected_stale": 1
+    },
+    "stale_worker": {
+     "counter_incremented": true,
+     "identical_outputs": true,
+     "state": "succeeded",
+     "transform_executed": true
+    },
+    "tampered_blob": {
+     "counter_incremented": true,
+     "identical_outputs": true,
+     "state": "succeeded",
+     "transform_executed": true
+    },
+    "tampered_entry": {
+     "counter_incremented": true,
+     "identical_outputs": true,
+     "state": "succeeded",
+     "transform_executed": true
+    }
+   },
+   "containment": {
+    "abort": {
+     "contained": 20,
+     "expected": [
+      "worker_crash",
+      "worker_crash"
+     ],
+     "failures": [],
+     "faulted_job_ran_on_reused_worker": 20,
+     "mode": "abort",
+     "outcomes": {
+      "[\"failed\",\"worker_crash\",\"worker_crash\"]": 20
+     },
+     "recycle_reasons": [
+      "crash"
+     ],
+     "replacement_started_after_fault": 20,
+     "trials": 20
+    },
+    "access_violation": {
+     "contained": 20,
+     "expected": [
+      "worker_crash",
+      "worker_crash"
+     ],
+     "failures": [],
+     "faulted_job_ran_on_reused_worker": 20,
+     "mode": "access_violation",
+     "outcomes": {
+      "[\"failed\",\"worker_crash\",\"worker_crash\"]": 20
+     },
+     "recycle_reasons": [
+      "crash"
+     ],
+     "replacement_started_after_fault": 20,
+     "trials": 20
+    },
+    "exit_kill": {
+     "contained": 20,
+     "expected": [
+      "worker_crash",
+      "worker_crash"
+     ],
+     "failures": [],
+     "faulted_job_ran_on_reused_worker": 20,
+     "mode": "exit_kill",
+     "outcomes": {
+      "[\"failed\",\"worker_crash\",\"worker_crash\"]": 20
+     },
+     "recycle_reasons": [
+      "crash"
+     ],
+     "replacement_started_after_fault": 20,
+     "trials": 20
+    },
+    "garbage_stdout": {
+     "contained": 20,
+     "expected": [
+      "worker_protocol",
+      "worker_response_malformed"
+     ],
+     "failures": [],
+     "faulted_job_ran_on_reused_worker": 20,
+     "mode": "garbage_stdout",
+     "outcomes": {
+      "[\"failed\",\"worker_protocol\",\"worker_response_malformed\"]": 20
+     },
+     "recycle_reasons": [
+      "protocol_violation"
+     ],
+     "replacement_started_after_fault": 20,
+     "trials": 20
+    },
+    "hang": {
+     "contained": 20,
+     "expected": [
+      "timeout",
+      "worker_timeout"
+     ],
+     "failures": [],
+     "faulted_job_ran_on_reused_worker": 20,
+     "mode": "hang",
+     "outcomes": {
+      "[\"failed\",\"timeout\",\"worker_timeout\"]": 20
+     },
+     "recycle_reasons": [
+      "timeout"
+     ],
+     "replacement_started_after_fault": 20,
+     "trials": 20
+    },
+    "hang_with_child": {
+     "contained": 20,
+     "expected": [
+      "timeout",
+      "worker_timeout"
+     ],
+     "failures": [],
+     "faulted_job_ran_on_reused_worker": 20,
+     "mode": "hang_with_child",
+     "outcomes": {
+      "[\"failed\",\"timeout\",\"worker_timeout\"]": 20
+     },
+     "recycle_reasons": [
+      "timeout"
+     ],
+     "replacement_started_after_fault": 20,
+     "trials": 20
+    },
+    "multi_line_stdout": {
+     "contained": 20,
+     "expected": [
+      "worker_protocol",
+      "worker_response_identity"
+     ],
+     "failures": [],
+     "faulted_job_ran_on_reused_worker": 20,
+     "mode": "multi_line_stdout",
+     "outcomes": {
+      "[\"failed\",\"worker_protocol\",\"worker_response_identity\"]": 20
+     },
+     "recycle_reasons": [
+      "protocol_violation"
+     ],
+     "replacement_started_after_fault": 20,
+     "trials": 20
+    },
+    "native_external_kill": {
+     "contained": 20,
+     "expected": [
+      "worker_crash",
+      "worker_crash"
+     ],
+     "failures": [],
+     "faulted_job_ran_on_reused_worker": 20,
+     "mode": "native_external_kill",
+     "outcomes": {
+      "[\"failed\",\"worker_crash\",\"worker_crash\"]": 20
+     },
+     "recycle_reasons": [
+      "crash"
+     ],
+     "replacement_started_after_fault": 20,
+     "trials": 20
+    },
+    "native_memory_cap": {
+     "contained": 20,
+     "expected": [
+      "resource_limit",
+      "memory_limit"
+     ],
+     "failures": [],
+     "faulted_job_ran_on_reused_worker": 20,
+     "mode": "native_memory_cap",
+     "outcomes": {
+      "[\"failed\",\"resource_limit\",\"memory_limit\"]": 20
+     },
+     "recycle_reasons": [
+      "error_response"
+     ],
+     "replacement_started_after_fault": 20,
+     "trials": 20
+    },
+    "oversized_stdout": {
+     "contained": 20,
+     "expected": [
+      "worker_protocol",
+      "worker_stdout_limit"
+     ],
+     "failures": [],
+     "faulted_job_ran_on_reused_worker": 20,
+     "mode": "oversized_stdout",
+     "outcomes": {
+      "[\"failed\",\"worker_protocol\",\"worker_stdout_limit\"]": 20
+     },
+     "recycle_reasons": [
+      "protocol_violation"
+     ],
+     "replacement_started_after_fault": 20,
+     "trials": 20
+    },
+    "stderr_flood_exit": {
+     "contained": 20,
+     "expected": [
+      "worker_crash",
+      "worker_crash"
+     ],
+     "failures": [],
+     "faulted_job_ran_on_reused_worker": 20,
+     "mode": "stderr_flood_exit",
+     "outcomes": {
+      "[\"failed\",\"worker_crash\",\"worker_crash\"]": 20
+     },
+     "recycle_reasons": [
+      "crash"
+     ],
+     "replacement_started_after_fault": 20,
+     "trials": 20
+    },
+    "trailing_garbage": {
+     "contained": 20,
+     "expected": [
+      "worker_protocol",
+      "worker_response_malformed"
+     ],
+     "failures": [],
+     "faulted_job_ran_on_reused_worker": 20,
+     "mode": "trailing_garbage",
+     "outcomes": {
+      "[\"failed\",\"worker_protocol\",\"worker_response_malformed\"]": 20
+     },
+     "recycle_reasons": [
+      "post_job_health_check_failed"
+     ],
+     "replacement_started_after_fault": 20,
+     "trials": 20
+    },
+    "wrong_request_id": {
+     "contained": 20,
+     "expected": [
+      "worker_protocol",
+      "worker_response_identity"
+     ],
+     "failures": [],
+     "faulted_job_ran_on_reused_worker": 20,
+     "mode": "wrong_request_id",
+     "outcomes": {
+      "[\"failed\",\"worker_protocol\",\"worker_response_identity\"]": 20
+     },
+     "recycle_reasons": [
+      "protocol_violation"
+     ],
+     "replacement_started_after_fault": 20,
+     "trials": 20
+    }
+   },
+   "default_policy": {
+    "idle_timeout_s": 30.0,
+    "max_idle_workers": 2,
+    "max_jobs_per_worker": 64,
+    "max_lifetime_s": 600.0,
+    "recycle_private_fraction": 0.25,
+    "session_protocol": 1
+   },
+   "isolation": {
+    "cache_hits": 15,
+    "cache_identical_to_one_shot": true,
+    "cache_mismatches": [],
+    "cache_misses": 15,
+    "non_reproducible_one_shot": [],
+    "operations": 15,
+    "persistent_identical_to_one_shot": true,
+    "persistent_mismatches": [],
+    "persistent_processes_started": 1,
+    "persistent_requests_reused": 95,
+    "reproducible_one_shot": 15
+   },
+   "lifecycle": {
+    "executable_change": {
+     "processes_started": 2,
+     "recycled_for_reason": true,
+     "results_identical": true
+    },
+    "idle_reap": {
+     "idle_workers_after_job": 1,
+     "idle_workers_after_timeout": 0,
+     "processes_alive_after_timeout": 0,
+     "recycled_for_reason": true,
+     "results_identical": true
+    },
+    "job_count": {
+     "all_exited_after_shutdown": true,
+     "processes_started": 2,
+     "recycled_for_reason": true,
+     "results_identical": true
+    },
+    "lifetime": {
+     "all_exited_after_shutdown": true,
+     "processes_started": 2,
+     "recycled_for_reason": true,
+     "results_identical": true
+    },
+    "memory_residue": {
+     "all_exited_after_shutdown": true,
+     "processes_started": 4,
+     "recycled_for_reason": true,
+     "results_identical": true
+    },
+    "per_cap_pools": {
+     "all_succeeded": true,
+     "idle_caps_mb": [
+      256,
+      512
+     ],
+     "processes_started": 2
+    }
+   }
+  },
   "scale_cases": [
    {
     "axis": "query_count",
@@ -2826,7 +3178,7 @@
    }
   ]
  },
- "deterministic_sha256": "87de00abe237e45be27910676c139330a88f9c3f8a1a15a47f3ccabf9094e09b",
+ "deterministic_sha256": "4c91d9c632ff618b96a5650c394da008790c3ef403822cb81fdde2bd352d95b9",
  "generator": "master-performance-robustness",
  "platform": {
   "os": "win32",
@@ -2844,44 +3196,44 @@
   "containment": {
    "abort": {
     "host_handle_growth": -43,
-    "mean_trial_seconds": 3.078
+    "mean_trial_seconds": 3.046
    },
    "access_violation": {
-    "host_handle_growth": 6,
-    "mean_trial_seconds": 0.074
+    "host_handle_growth": 7,
+    "mean_trial_seconds": 0.073
    },
    "bad_schema": {
     "host_handle_growth": -3,
-    "mean_trial_seconds": 0.07
+    "mean_trial_seconds": 0.065
    },
    "empty_stdout": {
-    "host_handle_growth": 8,
+    "host_handle_growth": 6,
     "mean_trial_seconds": 0.066
    },
    "error_response_unknown_class": {
-    "host_handle_growth": -2,
-    "mean_trial_seconds": 0.067
+    "host_handle_growth": -4,
+    "mean_trial_seconds": 0.066
    },
    "exit_kill": {
-    "host_handle_growth": 7,
-    "mean_trial_seconds": 0.061
+    "host_handle_growth": 8,
+    "mean_trial_seconds": 0.067
    },
    "garbage_input_files": {},
    "garbage_output": {
-    "host_handle_growth": -3,
-    "mean_trial_seconds": 0.23
+    "host_handle_growth": -2,
+    "mean_trial_seconds": 0.227
    },
    "garbage_stdout": {
-    "host_handle_growth": -2,
+    "host_handle_growth": -3,
     "mean_trial_seconds": 0.066
    },
    "hang": {
-    "host_handle_growth": -4,
-    "mean_trial_seconds": 1.043
+    "host_handle_growth": -3,
+    "mean_trial_seconds": 1.037
    },
    "hang_partial_output": {
-    "host_handle_growth": -3,
-    "mean_trial_seconds": 1.039
+    "host_handle_growth": -4,
+    "mean_trial_seconds": 1.036
    },
    "hang_with_child": {
     "host_handle_growth": 6,
@@ -2889,53 +3241,53 @@
    },
    "host_process_killed": {},
    "multi_line_stdout": {
-    "host_handle_growth": 7,
-    "mean_trial_seconds": 0.066
+    "host_handle_growth": 8,
+    "mean_trial_seconds": 0.065
    },
    "native_bad_output_dir": {
-    "host_handle_growth": 7,
-    "mean_trial_seconds": 0.085
+    "host_handle_growth": 8,
+    "mean_trial_seconds": 0.088
    },
    "native_empty_request": {
     "host_handle_growth": 6,
-    "mean_trial_seconds": 0.128
+    "mean_trial_seconds": 0.084
    },
    "native_external_kill": {},
    "native_garbage_request": {
-    "host_handle_growth": 6,
-    "mean_trial_seconds": 2.838
+    "host_handle_growth": 7,
+    "mean_trial_seconds": 2.98
    },
    "native_missing_input_file": {
-    "host_handle_growth": -2,
-    "mean_trial_seconds": 0.087
+    "host_handle_growth": -4,
+    "mean_trial_seconds": 0.089
    },
    "native_truncated_request": {
-    "host_handle_growth": -4,
-    "mean_trial_seconds": 0.084
+    "host_handle_growth": -2,
+    "mean_trial_seconds": 0.086
    },
    "native_unknown_operation": {
-    "host_handle_growth": 8,
-    "mean_trial_seconds": 0.084
+    "host_handle_growth": 5,
+    "mean_trial_seconds": 0.09
    },
    "native_wrong_protocol": {
     "host_handle_growth": -3,
-    "mean_trial_seconds": 0.083
+    "mean_trial_seconds": 0.084
    },
    "output_path_escape": {
-    "host_handle_growth": 8,
-    "mean_trial_seconds": 0.068
+    "host_handle_growth": 5,
+    "mean_trial_seconds": 0.069
    },
    "oversized_stdout": {
-    "host_handle_growth": 6,
-    "mean_trial_seconds": 0.072
+    "host_handle_growth": -2,
+    "mean_trial_seconds": 0.07
    },
    "stderr_flood_exit": {
-    "host_handle_growth": -4,
-    "mean_trial_seconds": 0.079
+    "host_handle_growth": 7,
+    "mean_trial_seconds": 0.076
    },
    "truncate_output": {
-    "host_handle_growth": 7,
-    "mean_trial_seconds": 0.231
+    "host_handle_growth": 8,
+    "mean_trial_seconds": 0.227
    },
    "wrong_request_id": {
     "host_handle_growth": 6,
@@ -2944,25 +3296,185 @@
   },
   "limits": {
    "memory-cap-native": {
-    "seconds_per_trial": 0.146
+    "seconds_per_trial": 0.149
    },
    "wall-cap-native": {
-    "seconds_per_trial": 0.233
+    "seconds_per_trial": 0.23
+   }
+  },
+  "persistent": {
+   "containment": {
+    "abort": {
+     "mean_trial_seconds": 2.562
+    },
+    "access_violation": {
+     "mean_trial_seconds": 0.041
+    },
+    "exit_kill": {
+     "mean_trial_seconds": 0.032
+    },
+    "garbage_stdout": {
+     "mean_trial_seconds": 0.034
+    },
+    "hang": {
+     "mean_trial_seconds": 1.038
+    },
+    "hang_with_child": {
+     "mean_trial_seconds": 1.042
+    },
+    "multi_line_stdout": {
+     "mean_trial_seconds": 0.029
+    },
+    "native_external_kill": {
+     "mean_trial_seconds": 0.171
+    },
+    "native_memory_cap": {
+     "mean_trial_seconds": 0.133
+    },
+    "oversized_stdout": {
+     "mean_trial_seconds": 0.033
+    },
+    "stderr_flood_exit": {
+     "mean_trial_seconds": 0.043
+    },
+    "trailing_garbage": {
+     "mean_trial_seconds": 0.034
+    },
+    "wrong_request_id": {
+     "mean_trial_seconds": 0.031
+    }
+   },
+   "speed": {
+    "note": "informational; never gated (includes validator time; cache hits still run every mandatory validator live)",
+    "per_operation": {
+     "7.10:reconstruction.advancing_front": {
+      "cache_hit_s": 0.3761,
+      "cache_miss_s": 0.4049,
+      "one_shot_s": 0.4098,
+      "persistent_cold_s": 0.3422,
+      "persistent_warm_s": 0.3418
+     },
+     "7.11:triangulation.delaunay_3": {
+      "cache_hit_s": 0.3826,
+      "cache_miss_s": 0.3902,
+      "one_shot_s": 0.3693,
+      "persistent_cold_s": 0.3453,
+      "persistent_warm_s": 0.3294
+     },
+     "7.12:polygon.analysis.properties": {
+      "cache_hit_s": 0.3606,
+      "cache_miss_s": 0.3972,
+      "one_shot_s": 0.3735,
+      "persistent_cold_s": 0.3221,
+      "persistent_warm_s": 0.3291
+     },
+     "7.13:hull.convex_3": {
+      "cache_hit_s": 0.3675,
+      "cache_miss_s": 0.4172,
+      "one_shot_s": 0.3877,
+      "persistent_cold_s": 0.3367,
+      "persistent_warm_s": 0.3668
+     },
+     "7.14:mesh2.refine.delaunay": {
+      "cache_hit_s": 0.3564,
+      "cache_miss_s": 0.3913,
+      "one_shot_s": 0.3709,
+      "persistent_cold_s": 0.3228,
+      "persistent_warm_s": 0.3161
+     },
+     "7.15:optimization.interpolate": {
+      "cache_hit_s": 0.3358,
+      "cache_miss_s": 0.3881,
+      "one_shot_s": 0.3601,
+      "persistent_cold_s": 0.3472,
+      "persistent_warm_s": 0.3402
+     },
+     "7.1:kernel.distance.squared": {
+      "cache_hit_s": 0.3463,
+      "cache_miss_s": 0.3812,
+      "one_shot_s": 0.391,
+      "persistent_cold_s": 0.3418,
+      "persistent_warm_s": 0.3326
+     },
+     "7.2:spatial.knn_3": {
+      "cache_hit_s": 0.3725,
+      "cache_miss_s": 0.3944,
+      "one_shot_s": 0.3816,
+      "persistent_cold_s": 0.3431,
+      "persistent_warm_s": 0.3406
+     },
+     "7.3:mesh.analysis.measures": {
+      "cache_hit_s": 0.3539,
+      "cache_miss_s": 0.3981,
+      "one_shot_s": 0.3983,
+      "persistent_cold_s": 0.3461,
+      "persistent_warm_s": 0.3418
+     },
+     "7.4:mesh.repair.polygon_soup": {
+      "cache_hit_s": 0.4515,
+      "cache_miss_s": 0.5026,
+      "one_shot_s": 0.4817,
+      "persistent_cold_s": 0.436,
+      "persistent_warm_s": 0.462
+     },
+     "7.5:mesh.clip.plane": {
+      "cache_hit_s": 0.3464,
+      "cache_miss_s": 0.3942,
+      "one_shot_s": 0.376,
+      "persistent_cold_s": 0.328,
+      "persistent_warm_s": 0.3405
+     },
+     "7.6:mesh.remesh.isotropic": {
+      "cache_hit_s": 0.3483,
+      "cache_miss_s": 0.3999,
+      "one_shot_s": 0.3961,
+      "persistent_cold_s": 0.3571,
+      "persistent_warm_s": 0.3322
+     },
+     "7.7:mesh.simplify.edge_collapse": {
+      "cache_hit_s": 0.3959,
+      "cache_miss_s": 0.4474,
+      "one_shot_s": 0.4284,
+      "persistent_cold_s": 0.388,
+      "persistent_warm_s": 0.3744
+     },
+     "7.8:mesh.subdivide.loop": {
+      "cache_hit_s": 0.3463,
+      "cache_miss_s": 0.3907,
+      "one_shot_s": 0.3849,
+      "persistent_cold_s": 0.3398,
+      "persistent_warm_s": 0.3331
+     },
+     "7.9:pointset.simplify.grid": {
+      "cache_hit_s": 0.4165,
+      "cache_miss_s": 0.451,
+      "one_shot_s": 0.4452,
+      "persistent_cold_s": 0.3636,
+      "persistent_warm_s": 0.3722
+     }
+    },
+    "totals_s": {
+     "cache_hit_s": 5.557,
+     "cache_miss_s": 6.148,
+     "one_shot_s": 5.955,
+     "persistent_cold_s": 5.26,
+     "persistent_warm_s": 5.253
+    }
    }
   },
   "scale": {
    "7.10:reconstruction.advancing_front:ceiling_probe": {
-    "execution_validation_seconds": 0.094,
-    "import_seconds": 0.19,
+    "execution_validation_seconds": 0.086,
+    "import_seconds": 0.205,
     "measured_processes": 1,
     "memory_measurement": "Windows GetProcessMemoryInfo OS peak counters",
     "memory_scope": "compute and validator workers; excludes import, host and manifest",
     "output_sha256": [],
-    "peak_worker_commit_bytes": 7774208,
-    "peak_worker_rss_bytes": 13037568
+    "peak_worker_commit_bytes": 7852032,
+    "peak_worker_rss_bytes": 13025280
    },
    "7.10:reconstruction.advancing_front:large": {
-    "execution_validation_seconds": 1.553,
+    "execution_validation_seconds": 1.53,
     "import_seconds": 0.177,
     "measured_processes": 2,
     "memory_measurement": "Windows GetProcessMemoryInfo OS peak counters",
@@ -2970,105 +3482,105 @@
     "output_sha256": [
      "60cc458bdf6b947e35fe1cf4f54eaa08543c0073256f9bc26eaccbdab9060958"
     ],
-    "peak_worker_commit_bytes": 26939392,
-    "peak_worker_rss_bytes": 32714752
+    "peak_worker_commit_bytes": 27009024,
+    "peak_worker_rss_bytes": 32743424
    },
    "7.10:reconstruction.advancing_front:medium": {
-    "execution_validation_seconds": 0.586,
-    "import_seconds": 0.149,
+    "execution_validation_seconds": 0.581,
+    "import_seconds": 0.166,
     "measured_processes": 2,
     "memory_measurement": "Windows GetProcessMemoryInfo OS peak counters",
     "memory_scope": "compute and validator workers; excludes import, host and manifest",
     "output_sha256": [
      "8fb1bedc0d16a76ff666a4ccc4167bccf9fa81d4fb67b890945540bbae3db8d8"
     ],
-    "peak_worker_commit_bytes": 8196096,
-    "peak_worker_rss_bytes": 14102528
+    "peak_worker_commit_bytes": 8298496,
+    "peak_worker_rss_bytes": 14106624
    },
    "7.10:reconstruction.advancing_front:small": {
-    "execution_validation_seconds": 0.419,
-    "import_seconds": 0.139,
+    "execution_validation_seconds": 0.42,
+    "import_seconds": 0.145,
     "measured_processes": 2,
     "memory_measurement": "Windows GetProcessMemoryInfo OS peak counters",
     "memory_scope": "compute and validator workers; excludes import, host and manifest",
     "output_sha256": [
      "5d401530f2349ca533d01164190e73dbc64806a172dbd92f73736a24e04e214e"
     ],
-    "peak_worker_commit_bytes": 3461120,
-    "peak_worker_rss_bytes": 9859072
+    "peak_worker_commit_bytes": 3489792,
+    "peak_worker_rss_bytes": 9822208
    },
    "7.11:triangulation.delaunay_3:ceiling_probe": {
-    "execution_validation_seconds": 0.51,
-    "import_seconds": 0.154,
+    "execution_validation_seconds": 0.505,
+    "import_seconds": 0.157,
     "measured_processes": 2,
     "memory_measurement": "Windows GetProcessMemoryInfo OS peak counters",
     "memory_scope": "compute and validator workers; excludes import, host and manifest",
     "output_sha256": [
      "c473ded10e5838b738b2d65789c9887c90cfa3e8d2be320a518928198e12a9fc"
     ],
-    "peak_worker_commit_bytes": 6479872,
-    "peak_worker_rss_bytes": 12402688
+    "peak_worker_commit_bytes": 6717440,
+    "peak_worker_rss_bytes": 12599296
    },
    "7.11:triangulation.delaunay_3:large": {
-    "execution_validation_seconds": 0.47,
-    "import_seconds": 0.149,
+    "execution_validation_seconds": 0.475,
+    "import_seconds": 0.144,
     "measured_processes": 2,
     "memory_measurement": "Windows GetProcessMemoryInfo OS peak counters",
     "memory_scope": "compute and validator workers; excludes import, host and manifest",
     "output_sha256": [
      "6fcf784d6ff811498cb19f27aebb4469f4f69ff0114041418441ad80074765cb"
     ],
-    "peak_worker_commit_bytes": 5427200,
-    "peak_worker_rss_bytes": 11419648
+    "peak_worker_commit_bytes": 5394432,
+    "peak_worker_rss_bytes": 11382784
    },
    "7.11:triangulation.delaunay_3:medium": {
-    "execution_validation_seconds": 0.433,
-    "import_seconds": 0.15,
+    "execution_validation_seconds": 0.441,
+    "import_seconds": 0.143,
     "measured_processes": 2,
     "memory_measurement": "Windows GetProcessMemoryInfo OS peak counters",
     "memory_scope": "compute and validator workers; excludes import, host and manifest",
     "output_sha256": [
      "03b326fa4cb8836de393b517b1e93635c9c66e88b5c54a40ab837163d6a10ce1"
     ],
-    "peak_worker_commit_bytes": 4317184,
-    "peak_worker_rss_bytes": 10326016
+    "peak_worker_commit_bytes": 4399104,
+    "peak_worker_rss_bytes": 10399744
    },
    "7.11:triangulation.delaunay_3:small": {
-    "execution_validation_seconds": 0.4,
-    "import_seconds": 0.153,
+    "execution_validation_seconds": 0.402,
+    "import_seconds": 0.142,
     "measured_processes": 2,
     "memory_measurement": "Windows GetProcessMemoryInfo OS peak counters",
     "memory_scope": "compute and validator workers; excludes import, host and manifest",
     "output_sha256": [
      "7327c78c42218a5b28160734d65dc215be8f275270c4d9046c7e405cd26d77f8"
     ],
-    "peak_worker_commit_bytes": 3354624,
-    "peak_worker_rss_bytes": 9609216
+    "peak_worker_commit_bytes": 3358720,
+    "peak_worker_rss_bytes": 9568256
    },
    "7.12:polygon.analysis.properties:ceiling_probe": {
-    "execution_validation_seconds": 0.07,
-    "import_seconds": 0.161,
+    "execution_validation_seconds": 0.077,
+    "import_seconds": 0.162,
     "measured_processes": 1,
     "memory_measurement": "Windows GetProcessMemoryInfo OS peak counters",
     "memory_scope": "compute and validator workers; excludes import, host and manifest",
     "output_sha256": [],
-    "peak_worker_commit_bytes": 4481024,
-    "peak_worker_rss_bytes": 10293248
+    "peak_worker_commit_bytes": 4505600,
+    "peak_worker_rss_bytes": 10326016
    },
    "7.12:polygon.analysis.properties:large": {
-    "execution_validation_seconds": 0.46,
-    "import_seconds": 0.149,
+    "execution_validation_seconds": 0.456,
+    "import_seconds": 0.147,
     "measured_processes": 2,
     "memory_measurement": "Windows GetProcessMemoryInfo OS peak counters",
     "memory_scope": "compute and validator workers; excludes import, host and manifest",
     "output_sha256": [
      "cc62fa9f9d4b0ac086825736eaf35aa15ac231cbceeba31f86aca2e294ec0ff4"
     ],
-    "peak_worker_commit_bytes": 8704000,
-    "peak_worker_rss_bytes": 14663680
+    "peak_worker_commit_bytes": 8683520,
+    "peak_worker_rss_bytes": 14651392
    },
    "7.12:polygon.analysis.properties:medium": {
-    "execution_validation_seconds": 0.396,
+    "execution_validation_seconds": 0.419,
     "import_seconds": 0.146,
     "measured_processes": 2,
     "memory_measurement": "Windows GetProcessMemoryInfo OS peak counters",
@@ -3076,60 +3588,60 @@
     "output_sha256": [
      "a9fe3eb6d975954863c2b1135b09e6dc59ecbaa1a8bd8e801a62d9ef65c923cf"
     ],
-    "peak_worker_commit_bytes": 4304896,
-    "peak_worker_rss_bytes": 10424320
+    "peak_worker_commit_bytes": 4354048,
+    "peak_worker_rss_bytes": 10457088
    },
    "7.12:polygon.analysis.properties:small": {
-    "execution_validation_seconds": 0.39,
-    "import_seconds": 0.143,
+    "execution_validation_seconds": 0.393,
+    "import_seconds": 0.138,
     "measured_processes": 2,
     "memory_measurement": "Windows GetProcessMemoryInfo OS peak counters",
     "memory_scope": "compute and validator workers; excludes import, host and manifest",
     "output_sha256": [
      "104c489826ac0e6d1323c2993800bd4ed2c0d9692001bb343392563f2a80bcf1"
     ],
-    "peak_worker_commit_bytes": 3223552,
-    "peak_worker_rss_bytes": 9363456
+    "peak_worker_commit_bytes": 3264512,
+    "peak_worker_rss_bytes": 9379840
    },
    "7.13:hull.convex_3:large": {
-    "execution_validation_seconds": 15.625,
-    "import_seconds": 2.853,
+    "execution_validation_seconds": 15.833,
+    "import_seconds": 2.847,
     "measured_processes": 2,
     "memory_measurement": "Windows GetProcessMemoryInfo OS peak counters",
     "memory_scope": "compute and validator workers; excludes import, host and manifest",
     "output_sha256": [
      "eb9bc90a4e02c368bca70ce373733687e1cbc375d9604c5e8ad4fb53f0f80caa"
     ],
-    "peak_worker_commit_bytes": 291409920,
-    "peak_worker_rss_bytes": 266407936
+    "peak_worker_commit_bytes": 291397632,
+    "peak_worker_rss_bytes": 266358784
    },
    "7.13:hull.convex_3:medium": {
-    "execution_validation_seconds": 1.851,
-    "import_seconds": 0.399,
+    "execution_validation_seconds": 1.816,
+    "import_seconds": 0.404,
     "measured_processes": 2,
     "memory_measurement": "Windows GetProcessMemoryInfo OS peak counters",
     "memory_scope": "compute and validator workers; excludes import, host and manifest",
     "output_sha256": [
      "eb9bc90a4e02c368bca70ce373733687e1cbc375d9604c5e8ad4fb53f0f80caa"
     ],
-    "peak_worker_commit_bytes": 32362496,
+    "peak_worker_commit_bytes": 32358400,
     "peak_worker_rss_bytes": 35799040
    },
    "7.13:hull.convex_3:small": {
-    "execution_validation_seconds": 0.411,
-    "import_seconds": 0.154,
+    "execution_validation_seconds": 0.416,
+    "import_seconds": 0.141,
     "measured_processes": 2,
     "memory_measurement": "Windows GetProcessMemoryInfo OS peak counters",
     "memory_scope": "compute and validator workers; excludes import, host and manifest",
     "output_sha256": [
      "eb9bc90a4e02c368bca70ce373733687e1cbc375d9604c5e8ad4fb53f0f80caa"
     ],
-    "peak_worker_commit_bytes": 3280896,
-    "peak_worker_rss_bytes": 9580544
+    "peak_worker_commit_bytes": 3301376,
+    "peak_worker_rss_bytes": 9605120
    },
    "7.14:mesh2.refine.delaunay:ceiling_probe": {
-    "execution_validation_seconds": 0.475,
-    "import_seconds": 0.152,
+    "execution_validation_seconds": 0.492,
+    "import_seconds": 0.156,
     "measured_processes": 2,
     "memory_measurement": "Windows GetProcessMemoryInfo OS peak counters",
     "memory_scope": "compute and validator workers; excludes import, host and manifest",
@@ -3137,59 +3649,59 @@
      "6d8510eb6dc102f72ed579b96f97aea228bbaa63b0ad3d661c78cca37095835e"
     ],
     "peak_worker_commit_bytes": 8712192,
-    "peak_worker_rss_bytes": 14602240
+    "peak_worker_rss_bytes": 14540800
    },
    "7.14:mesh2.refine.delaunay:large": {
-    "execution_validation_seconds": 0.401,
-    "import_seconds": 0.145,
+    "execution_validation_seconds": 0.413,
+    "import_seconds": 0.143,
     "measured_processes": 2,
     "memory_measurement": "Windows GetProcessMemoryInfo OS peak counters",
     "memory_scope": "compute and validator workers; excludes import, host and manifest",
     "output_sha256": [
      "7443f408dd528d87900b76c75cd998a61aeb912e0b2a07f36fa5cd3cb13c906c"
     ],
-    "peak_worker_commit_bytes": 4349952,
-    "peak_worker_rss_bytes": 10477568
+    "peak_worker_commit_bytes": 4333568,
+    "peak_worker_rss_bytes": 10465280
    },
    "7.14:mesh2.refine.delaunay:medium": {
-    "execution_validation_seconds": 0.395,
-    "import_seconds": 0.145,
+    "execution_validation_seconds": 0.415,
+    "import_seconds": 0.151,
     "measured_processes": 2,
     "memory_measurement": "Windows GetProcessMemoryInfo OS peak counters",
     "memory_scope": "compute and validator workers; excludes import, host and manifest",
     "output_sha256": [
      "40316f6a76613266b89a517588a0be075ebf1bbd106390d12ddd438b3139fbbb"
     ],
-    "peak_worker_commit_bytes": 3371008,
-    "peak_worker_rss_bytes": 9502720
+    "peak_worker_commit_bytes": 3387392,
+    "peak_worker_rss_bytes": 9531392
    },
    "7.14:mesh2.refine.delaunay:small": {
-    "execution_validation_seconds": 0.39,
-    "import_seconds": 0.147,
+    "execution_validation_seconds": 0.392,
+    "import_seconds": 0.145,
     "measured_processes": 2,
     "memory_measurement": "Windows GetProcessMemoryInfo OS peak counters",
     "memory_scope": "compute and validator workers; excludes import, host and manifest",
     "output_sha256": [
      "585f59acd2f6d6ce886560d56de1f09ae4f521f151392fc4c9deb1ed8a40f00f"
     ],
-    "peak_worker_commit_bytes": 3104768,
-    "peak_worker_rss_bytes": 9265152
+    "peak_worker_commit_bytes": 3117056,
+    "peak_worker_rss_bytes": 9285632
    },
    "7.15:optimization.interpolate:ceiling_probe": {},
    "7.15:optimization.interpolate:large": {
-    "execution_validation_seconds": 0.997,
-    "import_seconds": 0.14,
+    "execution_validation_seconds": 0.958,
+    "import_seconds": 0.137,
     "measured_processes": 2,
     "memory_measurement": "Windows GetProcessMemoryInfo OS peak counters",
     "memory_scope": "compute and validator workers; excludes import, host and manifest",
     "output_sha256": [
      "573d3e976d1c3e48e4354af52d058b7158f14deb58a735039dc869b441ccfc02"
     ],
-    "peak_worker_commit_bytes": 3428352,
+    "peak_worker_commit_bytes": 3407872,
     "peak_worker_rss_bytes": 9760768
    },
    "7.15:optimization.interpolate:medium": {
-    "execution_validation_seconds": 0.499,
+    "execution_validation_seconds": 0.515,
     "import_seconds": 0.143,
     "measured_processes": 2,
     "memory_measurement": "Windows GetProcessMemoryInfo OS peak counters",
@@ -3198,10 +3710,10 @@
      "cce34f89f902ee0744aab33467ab69253a902f37c8c03ccbeab30be5175ee51e"
     ],
     "peak_worker_commit_bytes": 3301376,
-    "peak_worker_rss_bytes": 9666560
+    "peak_worker_rss_bytes": 9674752
    },
    "7.15:optimization.interpolate:small": {
-    "execution_validation_seconds": 0.4,
+    "execution_validation_seconds": 0.402,
     "import_seconds": 0.142,
     "measured_processes": 2,
     "memory_measurement": "Windows GetProcessMemoryInfo OS peak counters",
@@ -3209,368 +3721,368 @@
     "output_sha256": [
      "1cc27259310fa3cd8f5a08834325695ca31f70fba86e940fb641514251945e12"
     ],
-    "peak_worker_commit_bytes": 3047424,
-    "peak_worker_rss_bytes": 9400320
+    "peak_worker_commit_bytes": 3043328,
+    "peak_worker_rss_bytes": 9461760
    },
    "7.1:kernel.distance.squared:ceiling_probe": {},
    "7.1:kernel.distance.squared:large": {
-    "execution_validation_seconds": 0.632,
-    "import_seconds": 0.207,
+    "execution_validation_seconds": 0.641,
+    "import_seconds": 0.201,
     "measured_processes": 2,
     "memory_measurement": "Windows GetProcessMemoryInfo OS peak counters",
     "memory_scope": "compute and validator workers; excludes import, host and manifest",
     "output_sha256": [
      "fa93aab6a49f68e6120e2c44f99f76f6e8fbf0c04ce6866530c3ae4a4b0fcc34"
     ],
-    "peak_worker_commit_bytes": 35983360,
-    "peak_worker_rss_bytes": 40058880
+    "peak_worker_commit_bytes": 36102144,
+    "peak_worker_rss_bytes": 40169472
    },
    "7.1:kernel.distance.squared:medium": {
-    "execution_validation_seconds": 0.418,
-    "import_seconds": 0.153,
+    "execution_validation_seconds": 0.41,
+    "import_seconds": 0.154,
     "measured_processes": 2,
     "memory_measurement": "Windows GetProcessMemoryInfo OS peak counters",
     "memory_scope": "compute and validator workers; excludes import, host and manifest",
     "output_sha256": [
      "2e77864c39c1d126bbc9f2ff007bc2945793faa55db4aa41e3ad2d5ebf0f992a"
     ],
-    "peak_worker_commit_bytes": 6352896,
-    "peak_worker_rss_bytes": 12075008
+    "peak_worker_commit_bytes": 6463488,
+    "peak_worker_rss_bytes": 12177408
    },
    "7.1:kernel.distance.squared:small": {
-    "execution_validation_seconds": 0.397,
-    "import_seconds": 0.155,
+    "execution_validation_seconds": 0.378,
+    "import_seconds": 0.173,
     "measured_processes": 2,
     "memory_measurement": "Windows GetProcessMemoryInfo OS peak counters",
     "memory_scope": "compute and validator workers; excludes import, host and manifest",
     "output_sha256": [
      "a5c9e41cbe0bd96a3b9192868053673a71407e6f48f47030a0325b7c2840b5f3"
     ],
-    "peak_worker_commit_bytes": 3338240,
-    "peak_worker_rss_bytes": 9416704
+    "peak_worker_commit_bytes": 3325952,
+    "peak_worker_rss_bytes": 9363456
    },
    "7.2:spatial.knn_3:ceiling_probe": {
-    "execution_validation_seconds": 0.149,
-    "import_seconds": 0.428,
+    "execution_validation_seconds": 0.152,
+    "import_seconds": 0.422,
     "measured_processes": 1,
     "memory_measurement": "Windows GetProcessMemoryInfo OS peak counters",
     "memory_scope": "compute and validator workers; excludes import, host and manifest",
     "output_sha256": [],
-    "peak_worker_commit_bytes": 17477632,
-    "peak_worker_rss_bytes": 22470656
+    "peak_worker_commit_bytes": 17465344,
+    "peak_worker_rss_bytes": 22491136
    },
    "7.2:spatial.knn_3:large": {
     "execution_validation_seconds": 0.506,
-    "import_seconds": 0.341,
+    "import_seconds": 0.345,
     "measured_processes": 2,
     "memory_measurement": "Windows GetProcessMemoryInfo OS peak counters",
     "memory_scope": "compute and validator workers; excludes import, host and manifest",
     "output_sha256": [
      "5c2221b70ca67a4f1f7a82c8297cc80979cc174f8eb8c6492c2669764607246f"
     ],
-    "peak_worker_commit_bytes": 9592832,
-    "peak_worker_rss_bytes": 14815232
+    "peak_worker_commit_bytes": 9601024,
+    "peak_worker_rss_bytes": 14835712
    },
    "7.2:spatial.knn_3:medium": {
-    "execution_validation_seconds": 0.423,
-    "import_seconds": 0.301,
+    "execution_validation_seconds": 0.428,
+    "import_seconds": 0.321,
     "measured_processes": 2,
     "memory_measurement": "Windows GetProcessMemoryInfo OS peak counters",
     "memory_scope": "compute and validator workers; excludes import, host and manifest",
     "output_sha256": [
      "c84a07c38416b71b4f86884cfb2094f69382f81382f75637eb1d278f278d6891"
     ],
-    "peak_worker_commit_bytes": 4710400,
-    "peak_worker_rss_bytes": 10428416
+    "peak_worker_commit_bytes": 4685824,
+    "peak_worker_rss_bytes": 10379264
    },
    "7.2:spatial.knn_3:small": {
-    "execution_validation_seconds": 0.389,
-    "import_seconds": 0.308,
+    "execution_validation_seconds": 0.394,
+    "import_seconds": 0.292,
     "measured_processes": 2,
     "memory_measurement": "Windows GetProcessMemoryInfo OS peak counters",
     "memory_scope": "compute and validator workers; excludes import, host and manifest",
     "output_sha256": [
      "716f90c4d7031af32bd06ed643571cb217190e65c3c449ff81e36f71c9e613cc"
     ],
-    "peak_worker_commit_bytes": 3358720,
-    "peak_worker_rss_bytes": 9179136
+    "peak_worker_commit_bytes": 3391488,
+    "peak_worker_rss_bytes": 9220096
    },
    "7.3:mesh.analysis.measures:ceiling_probe": {},
    "7.3:mesh.analysis.measures:large": {
-    "execution_validation_seconds": 1.357,
-    "import_seconds": 1.299,
+    "execution_validation_seconds": 1.369,
+    "import_seconds": 1.296,
     "measured_processes": 2,
     "memory_measurement": "Windows GetProcessMemoryInfo OS peak counters",
     "memory_scope": "compute and validator workers; excludes import, host and manifest",
     "output_sha256": [
-     "b2e42b9152faf5fd898dc6236028e8bf1757583b046f1f9088cff99deb4eec6e"
+     "4cf5b5afda8bba3b050185a4ba08f2493bf6d38c2ad8c7ef4dfec387d76e83fe"
     ],
-    "peak_worker_commit_bytes": 99504128,
-    "peak_worker_rss_bytes": 93310976
+    "peak_worker_commit_bytes": 99418112,
+    "peak_worker_rss_bytes": 93388800
    },
    "7.3:mesh.analysis.measures:medium": {
-    "execution_validation_seconds": 0.497,
-    "import_seconds": 0.244,
+    "execution_validation_seconds": 0.489,
+    "import_seconds": 0.241,
     "measured_processes": 2,
     "memory_measurement": "Windows GetProcessMemoryInfo OS peak counters",
     "memory_scope": "compute and validator workers; excludes import, host and manifest",
     "output_sha256": [
-     "095921e4bc8b12476b0bed723446565a9899e8c32bfcf84139e5a2e819511e91"
+     "3e5042cc6b3b7993e235bfc64ded7eb1093127d385344ca09d281445c0865691"
     ],
-    "peak_worker_commit_bytes": 12828672,
-    "peak_worker_rss_bytes": 17833984
+    "peak_worker_commit_bytes": 11870208,
+    "peak_worker_rss_bytes": 17752064
    },
    "7.3:mesh.analysis.measures:small": {
-    "execution_validation_seconds": 0.407,
-    "import_seconds": 0.153,
+    "execution_validation_seconds": 0.418,
+    "import_seconds": 0.167,
     "measured_processes": 2,
     "memory_measurement": "Windows GetProcessMemoryInfo OS peak counters",
     "memory_scope": "compute and validator workers; excludes import, host and manifest",
     "output_sha256": [
-     "ac569a124056f20bc33d631e2c948394bae3264a8ddc0c97633531591a587636"
+     "5d180580c44d9271caa4f292ee7d10599212b1eb3b9188c2c20acaad906351b3"
     ],
-    "peak_worker_commit_bytes": 4255744,
-    "peak_worker_rss_bytes": 10080256
+    "peak_worker_commit_bytes": 4136960,
+    "peak_worker_rss_bytes": 10055680
    },
    "7.4:mesh.repair.polygon_soup:large": {
-    "execution_validation_seconds": 14.612,
-    "import_seconds": 3.059,
+    "execution_validation_seconds": 14.023,
+    "import_seconds": 3.022,
     "measured_processes": 2,
     "memory_measurement": "Windows GetProcessMemoryInfo OS peak counters",
     "memory_scope": "compute and validator workers; excludes import, host and manifest",
     "output_sha256": [
      "d77ccc4102266f0483b6ad38f147bf79c7e126692021370daaa80f6e0ea53fad"
     ],
-    "peak_worker_commit_bytes": 561389568,
-    "peak_worker_rss_bytes": 545185792
+    "peak_worker_commit_bytes": 561491968,
+    "peak_worker_rss_bytes": 545341440
    },
    "7.4:mesh.repair.polygon_soup:medium": {
-    "execution_validation_seconds": 2.461,
-    "import_seconds": 0.55,
+    "execution_validation_seconds": 2.386,
+    "import_seconds": 0.575,
     "measured_processes": 2,
     "memory_measurement": "Windows GetProcessMemoryInfo OS peak counters",
     "memory_scope": "compute and validator workers; excludes import, host and manifest",
     "output_sha256": [
      "4482f1a16a2fea5c8acf78f784df9d6c34e7665fe7c073298cd05368db35771d"
     ],
-    "peak_worker_commit_bytes": 92438528,
+    "peak_worker_commit_bytes": 92475392,
     "peak_worker_rss_bytes": 94904320
    },
    "7.4:mesh.repair.polygon_soup:small": {
-    "execution_validation_seconds": 0.513,
-    "import_seconds": 0.167,
+    "execution_validation_seconds": 0.488,
+    "import_seconds": 0.183,
     "measured_processes": 2,
     "memory_measurement": "Windows GetProcessMemoryInfo OS peak counters",
     "memory_scope": "compute and validator workers; excludes import, host and manifest",
     "output_sha256": [
      "a52ccd60613ebf9df95fc061593af27b19f80e2a84d04f7a97dd36ff3d6caec8"
     ],
-    "peak_worker_commit_bytes": 8777728,
-    "peak_worker_rss_bytes": 14540800
+    "peak_worker_commit_bytes": 8814592,
+    "peak_worker_rss_bytes": 14544896
    },
    "7.5:mesh.clip.plane:ceiling_probe": {},
    "7.5:mesh.clip.plane:large": {
-    "execution_validation_seconds": 0.416,
-    "import_seconds": 0.144,
+    "execution_validation_seconds": 0.405,
+    "import_seconds": 0.151,
     "measured_processes": 2,
     "memory_measurement": "Windows GetProcessMemoryInfo OS peak counters",
     "memory_scope": "compute and validator workers; excludes import, host and manifest",
     "output_sha256": [
      "823d8f52d5403648eafc11d5fe96cadd0e880756fbe2b50a9d2596f0b225e586"
     ],
-    "peak_worker_commit_bytes": 3997696,
-    "peak_worker_rss_bytes": 9908224
+    "peak_worker_commit_bytes": 3993600,
+    "peak_worker_rss_bytes": 9920512
    },
    "7.5:mesh.clip.plane:medium": {
-    "execution_validation_seconds": 0.389,
-    "import_seconds": 0.148,
+    "execution_validation_seconds": 0.405,
+    "import_seconds": 0.143,
     "measured_processes": 2,
     "memory_measurement": "Windows GetProcessMemoryInfo OS peak counters",
     "memory_scope": "compute and validator workers; excludes import, host and manifest",
     "output_sha256": [
      "5c3ba0ec9c2625f6a7198be579ee16542180c511b043665f63204eafab11b854"
     ],
-    "peak_worker_commit_bytes": 3444736,
-    "peak_worker_rss_bytes": 9420800
+    "peak_worker_commit_bytes": 3436544,
+    "peak_worker_rss_bytes": 9428992
    },
    "7.5:mesh.clip.plane:small": {
-    "execution_validation_seconds": 0.398,
-    "import_seconds": 0.158,
+    "execution_validation_seconds": 0.389,
+    "import_seconds": 0.15,
     "measured_processes": 2,
     "memory_measurement": "Windows GetProcessMemoryInfo OS peak counters",
     "memory_scope": "compute and validator workers; excludes import, host and manifest",
     "output_sha256": [
      "369b9ce450075987c9708a128af11442b77e48e2f14dfaceef4a86ab57e87c14"
     ],
-    "peak_worker_commit_bytes": 3141632,
-    "peak_worker_rss_bytes": 9285632
+    "peak_worker_commit_bytes": 3117056,
+    "peak_worker_rss_bytes": 9293824
    },
    "7.6:mesh.remesh.isotropic:ceiling_probe": {
-    "execution_validation_seconds": 0.1,
-    "import_seconds": 0.246,
+    "execution_validation_seconds": 0.106,
+    "import_seconds": 0.243,
     "measured_processes": 1,
     "memory_measurement": "Windows GetProcessMemoryInfo OS peak counters",
     "memory_scope": "compute and validator workers; excludes import, host and manifest",
     "output_sha256": [],
-    "peak_worker_commit_bytes": 11599872,
-    "peak_worker_rss_bytes": 16744448
+    "peak_worker_commit_bytes": 12644352,
+    "peak_worker_rss_bytes": 16752640
    },
    "7.6:mesh.remesh.isotropic:large": {
-    "execution_validation_seconds": 0.735,
-    "import_seconds": 0.175,
+    "execution_validation_seconds": 0.708,
+    "import_seconds": 0.182,
     "measured_processes": 2,
     "memory_measurement": "Windows GetProcessMemoryInfo OS peak counters",
     "memory_scope": "compute and validator workers; excludes import, host and manifest",
     "output_sha256": [
      "737aff3844b5810e6dcbd20c48ff550443dd7b93cb47e15f829c5099d4a0bfa3"
     ],
-    "peak_worker_commit_bytes": 10436608,
-    "peak_worker_rss_bytes": 15212544
+    "peak_worker_commit_bytes": 9781248,
+    "peak_worker_rss_bytes": 14991360
    },
    "7.6:mesh.remesh.isotropic:medium": {
-    "execution_validation_seconds": 0.474,
-    "import_seconds": 0.155,
+    "execution_validation_seconds": 0.477,
+    "import_seconds": 0.152,
     "measured_processes": 2,
     "memory_measurement": "Windows GetProcessMemoryInfo OS peak counters",
     "memory_scope": "compute and validator workers; excludes import, host and manifest",
     "output_sha256": [
      "29d48c383f8fd11471a8c1d3787a90fb371ea0a1c6f141fc2f56f4f4fc7e35ed"
     ],
-    "peak_worker_commit_bytes": 5611520,
-    "peak_worker_rss_bytes": 10964992
+    "peak_worker_commit_bytes": 5529600,
+    "peak_worker_rss_bytes": 10665984
    },
    "7.6:mesh.remesh.isotropic:small": {
-    "execution_validation_seconds": 0.393,
-    "import_seconds": 0.139,
+    "execution_validation_seconds": 0.42,
+    "import_seconds": 0.152,
     "measured_processes": 2,
     "memory_measurement": "Windows GetProcessMemoryInfo OS peak counters",
     "memory_scope": "compute and validator workers; excludes import, host and manifest",
     "output_sha256": [
      "7c37e1fcba815efeb84d48f4a0350a4fcee37e4c881e3f06b50e1aa677d49570"
     ],
-    "peak_worker_commit_bytes": 3244032,
-    "peak_worker_rss_bytes": 9646080
+    "peak_worker_commit_bytes": 3215360,
+    "peak_worker_rss_bytes": 9670656
    },
    "7.7:mesh.simplify.edge_collapse:ceiling_probe": {
-    "execution_validation_seconds": 0.267,
-    "import_seconds": 0.142,
+    "execution_validation_seconds": 0.276,
+    "import_seconds": 0.154,
     "measured_processes": 2,
     "memory_measurement": "Windows GetProcessMemoryInfo OS peak counters",
     "memory_scope": "compute and validator workers; excludes import, host and manifest",
     "output_sha256": [],
-    "peak_worker_commit_bytes": 3264512,
-    "peak_worker_rss_bytes": 9474048
+    "peak_worker_commit_bytes": 3280896,
+    "peak_worker_rss_bytes": 9494528
    },
    "7.7:mesh.simplify.edge_collapse:large": {
-    "execution_validation_seconds": 0.481,
-    "import_seconds": 0.143,
+    "execution_validation_seconds": 0.519,
+    "import_seconds": 0.15,
     "measured_processes": 3,
     "memory_measurement": "Windows GetProcessMemoryInfo OS peak counters",
     "memory_scope": "compute and validator workers; excludes import, host and manifest",
     "output_sha256": [
      "88fc75296682dd5747aed5f18674ccaca5a2032ab16c8a997d9604a9846e8140"
     ],
-    "peak_worker_commit_bytes": 5369856,
-    "peak_worker_rss_bytes": 11235328
+    "peak_worker_commit_bytes": 5611520,
+    "peak_worker_rss_bytes": 11411456
    },
    "7.7:mesh.simplify.edge_collapse:medium": {
-    "execution_validation_seconds": 0.497,
-    "import_seconds": 0.145,
+    "execution_validation_seconds": 0.477,
+    "import_seconds": 0.154,
     "measured_processes": 3,
     "memory_measurement": "Windows GetProcessMemoryInfo OS peak counters",
     "memory_scope": "compute and validator workers; excludes import, host and manifest",
     "output_sha256": [
      "b3d35b1bd255aeec44735062f13766586cbdaf44a94c07549f4c17afa15e45f7"
     ],
-    "peak_worker_commit_bytes": 5566464,
-    "peak_worker_rss_bytes": 11345920
+    "peak_worker_commit_bytes": 5591040,
+    "peak_worker_rss_bytes": 11358208
    },
    "7.7:mesh.simplify.edge_collapse:small": {
-    "execution_validation_seconds": 0.469,
-    "import_seconds": 0.141,
+    "execution_validation_seconds": 0.435,
+    "import_seconds": 0.144,
     "measured_processes": 3,
     "memory_measurement": "Windows GetProcessMemoryInfo OS peak counters",
     "memory_scope": "compute and validator workers; excludes import, host and manifest",
     "output_sha256": [
      "7e4adb951b89507c14572542a0353f7d1d986e771260f8b7d98a5c876c182511"
     ],
-    "peak_worker_commit_bytes": 3878912,
-    "peak_worker_rss_bytes": 9805824
+    "peak_worker_commit_bytes": 3928064,
+    "peak_worker_rss_bytes": 9793536
    },
    "7.8:mesh.subdivide.loop:ceiling_probe": {},
    "7.8:mesh.subdivide.loop:large": {
-    "execution_validation_seconds": 0.49,
-    "import_seconds": 0.168,
+    "execution_validation_seconds": 0.502,
+    "import_seconds": 0.154,
     "measured_processes": 2,
     "memory_measurement": "Windows GetProcessMemoryInfo OS peak counters",
     "memory_scope": "compute and validator workers; excludes import, host and manifest",
     "output_sha256": [
      "9b4334b11da87c0a4d2ab7589c4c09353e3c328b1876f1dfc8d2255b15f0592c"
     ],
-    "peak_worker_commit_bytes": 9584640,
-    "peak_worker_rss_bytes": 14659584
+    "peak_worker_commit_bytes": 8265728,
+    "peak_worker_rss_bytes": 13332480
    },
    "7.8:mesh.subdivide.loop:medium": {
-    "execution_validation_seconds": 0.406,
-    "import_seconds": 0.156,
+    "execution_validation_seconds": 0.552,
+    "import_seconds": 0.19,
     "measured_processes": 2,
     "memory_measurement": "Windows GetProcessMemoryInfo OS peak counters",
     "memory_scope": "compute and validator workers; excludes import, host and manifest",
     "output_sha256": [
      "568cc59d7bdc5e251f4d67e2465795a8a70afb70364bb76a4dde3379e8f5631a"
     ],
-    "peak_worker_commit_bytes": 4059136,
-    "peak_worker_rss_bytes": 9859072
+    "peak_worker_commit_bytes": 4345856,
+    "peak_worker_rss_bytes": 9863168
    },
    "7.8:mesh.subdivide.loop:small": {
-    "execution_validation_seconds": 0.428,
-    "import_seconds": 0.147,
+    "execution_validation_seconds": 0.551,
+    "import_seconds": 0.156,
     "measured_processes": 2,
     "memory_measurement": "Windows GetProcessMemoryInfo OS peak counters",
     "memory_scope": "compute and validator workers; excludes import, host and manifest",
     "output_sha256": [
      "44fd0c38feabc6e6a0206a7c5a67ce858422c3ed4ad0fb9ffa8f129dd2b0efa8"
     ],
-    "peak_worker_commit_bytes": 3362816,
-    "peak_worker_rss_bytes": 9273344
+    "peak_worker_commit_bytes": 3358720,
+    "peak_worker_rss_bytes": 9261056
    },
    "7.9:pointset.simplify.grid:large": {
-    "execution_validation_seconds": 4.553,
-    "import_seconds": 2.827,
+    "execution_validation_seconds": 4.441,
+    "import_seconds": 2.805,
     "measured_processes": 3,
     "memory_measurement": "Windows GetProcessMemoryInfo OS peak counters",
     "memory_scope": "compute and validator workers; excludes import, host and manifest",
     "output_sha256": [
      "74c22b249a8c8bd5c53117a662659a40c05b46fa9c0e65379c2d12807056a613"
     ],
-    "peak_worker_commit_bytes": 131735552,
-    "peak_worker_rss_bytes": 129818624
+    "peak_worker_commit_bytes": 131895296,
+    "peak_worker_rss_bytes": 129777664
    },
    "7.9:pointset.simplify.grid:medium": {
-    "execution_validation_seconds": 0.888,
-    "import_seconds": 0.421,
+    "execution_validation_seconds": 0.872,
+    "import_seconds": 0.411,
     "measured_processes": 3,
     "memory_measurement": "Windows GetProcessMemoryInfo OS peak counters",
     "memory_scope": "compute and validator workers; excludes import, host and manifest",
     "output_sha256": [
      "9c1eb8d69863fb2abdc878e107221abf3f18b855de09763e59cfbaf8ae57dc0a"
     ],
-    "peak_worker_commit_bytes": 19202048,
-    "peak_worker_rss_bytes": 21983232
+    "peak_worker_commit_bytes": 18976768,
+    "peak_worker_rss_bytes": 21868544
    },
    "7.9:pointset.simplify.grid:small": {
-    "execution_validation_seconds": 0.465,
-    "import_seconds": 0.156,
+    "execution_validation_seconds": 0.453,
+    "import_seconds": 0.163,
     "measured_processes": 3,
     "memory_measurement": "Windows GetProcessMemoryInfo OS peak counters",
     "memory_scope": "compute and validator workers; excludes import, host and manifest",
     "output_sha256": [
      "6296e769bf08345e307975044056a0cbdcf988e7a994584dec9da4bce2e77aa2"
     ],
-    "peak_worker_commit_bytes": 3170304,
-    "peak_worker_rss_bytes": 9084928
+    "peak_worker_commit_bytes": 3178496,
+    "peak_worker_rss_bytes": 9093120
    }
   }
  },
- "worker_sha256": "2f334bbfc68006485e9d08dd9bda2d93fb8b372cf20ebfc0aa68ece1449990b3"
+ "worker_sha256": "3bc1e3c514dc7a0ba558119dd1a20b2c4555c26ffca476d04cff036233d3cb92"
 }

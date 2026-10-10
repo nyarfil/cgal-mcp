@@ -868,8 +868,28 @@ class PerformanceGateEvidenceTests(unittest.TestCase):
     def test_phase10_work_items_are_never_silently_dropped(self):
         evidence = copy.deepcopy(self.evidence)
         reasons = self.gate(evidence)["reasons"]
-        self.assertTrue([r for r in reasons if "Persistent workers are not implemented" in r])
-        self.assertTrue([r for r in reasons if "cache and AABB reuse are not implemented" in r])
+        self.assertTrue([r for r in reasons if "AABB-tree and parsed-geometry reuse" in r])
+        evidence = copy.deepcopy(self.evidence)
+        evidence["deterministic"].pop("persistent", None)
+        reasons = self.gate(evidence)["reasons"]
+        self.assertTrue([r for r in reasons if "Persistent-worker and result-cache evidence is missing" in r])
+
+    def test_persistent_and_cache_evidence_is_enforced(self):
+        evidence = copy.deepcopy(self.evidence)
+        persistent = evidence["deterministic"].get("persistent")
+        if not persistent:
+            self.skipTest("checked-in evidence predates persistent workers")
+        record = persistent["containment"]["hang"]
+        record["replacement_started_after_fault"] -= 1
+        persistent["isolation"]["persistent_mismatches"] = ["7.3:mesh.analysis.measures"]
+        persistent["isolation"]["persistent_identical_to_one_shot"] = False
+        persistent["cache"]["resigned_bad_candidate"]["published"] = 1
+        persistent["lifecycle"]["idle_reap"]["processes_alive_after_timeout"] = 1
+        reasons = self.gate(evidence)["reasons"]
+        self.assertTrue([r for r in reasons if "Persistent fault mode hang did not fault a reused" in r])
+        self.assertTrue([r for r in reasons if "cross-job isolation" in r])
+        self.assertTrue([r for r in reasons if "Result-cache safety" in r])
+        self.assertTrue([r for r in reasons if "reaped when idle" in r])
 
     def test_fault_proxy_is_selected_only_by_environment_not_protocol_input(self):
         import subprocess, sys, os
