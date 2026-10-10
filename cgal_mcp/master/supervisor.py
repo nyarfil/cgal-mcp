@@ -220,11 +220,15 @@ class WorkerSupervisor:
         try:
             await asyncio.wait_for(process.wait(), wall_ms / 1000)
         except asyncio.TimeoutError as exc:
-            process.kill(); await process.wait()
+            # Kill-on-close reaps grandchildren that inherited the pipes; otherwise the
+            # waits below would block on pipe EOF forever and the timeout would not be enforced.
+            process.kill(); _close_windows_job(job_handle); job_handle = None
+            await process.wait()
             await asyncio.gather(stdout_task, stderr_task)
             raise WorkerFailure("worker_timeout", f"Worker exceeded {wall_ms} ms", "timeout", True) from exc
         except asyncio.CancelledError:
-            process.kill(); await process.wait()
+            process.kill(); _close_windows_job(job_handle); job_handle = None
+            await process.wait()
             await asyncio.gather(stdout_task, stderr_task)
             raise
         finally:

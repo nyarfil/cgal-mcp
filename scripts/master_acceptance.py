@@ -1291,6 +1291,248 @@ def evaluate_workflow_gate(root: Path = REPO, *, live: bool = True,
     return result
 
 
+PERFORMANCE_GATE = "performance_resource_and_robustness_acceptance"
+PERFORMANCE_EVIDENCE = "docs/master/evidence/performance-robustness.json"
+PERFORMANCE_MIN_TRIALS_PER_MODE = 20
+PERFORMANCE_MIN_HOST_KILL_TRIALS = 5
+PERFORMANCE_MIN_GARBAGE_CASES = 12
+PERFORMANCE_REQUIRED_FAULT_KINDS = {
+    "kill": {"exit_kill", "native_external_kill"},
+    "abort": {"abort"},
+    "segfault_like": {"access_violation"},
+    "hang_past_timeout": {"hang", "hang_with_child", "hang_partial_output"},
+    "malformed_output": {"garbage_stdout", "empty_stdout", "multi_line_stdout", "wrong_request_id",
+                         "bad_schema", "output_path_escape", "truncate_output", "garbage_output"},
+    "oversized_output": {"oversized_stdout", "stderr_flood_exit"},
+    "garbage_input": {"garbage_input_files", "native_garbage_request", "native_truncated_request",
+                      "native_empty_request", "native_wrong_protocol", "native_missing_input_file"},
+    "host_death": {"host_process_killed"},
+}
+PERFORMANCE_LIVE_MODES = ["exit_kill", "access_violation", "oversized_stdout",
+                          "native_garbage_request", "garbage_input_files"]
+PERFORMANCE_REQUIRED_LIMIT_KINDS = {"bounded_input": 3, "import_limit": 1, "execution_limits": 9,
+                                    "configuration": 8, "native_resource_cap": 2}
+
+
+def row_axis_is_size_bound(rows: list[dict]) -> bool:
+    """Workload scaled by an output-size parameter on an identical input (mesh size bound)."""
+    return all(row.get("axis") == "size_bound_mm" for row in rows) and len(
+        {tuple(i["sha256"] for i in row["inputs"]) for row in rows}) == 1
+
+
+def evaluate_performance_gate(root: Path = REPO, *, live: bool = True,
+                              evidence: dict | None = None, worker: Path | None = None) -> dict:
+    """Decide the performance/resource/robustness gate from recorded real-worker evidence.
+
+    Re-derived from the evidence and the current registry: all fifteen families measured at
+    three increasing input scales within the registry bounds and the declared memory/wall
+    ceilings, every resource-limit refusal exact, crash containment 100% over at least the
+    declared trial floor for every fault kind, and the Phase 10 work items still named as
+    reasons while the lifecycle evidence shows them absent. Timings are never gated on speed.
+    """
+    reasons: list[str] = []
+    result: dict = {"gate": PERFORMANCE_GATE, "status": "unmet", "evidence": PERFORMANCE_EVIDENCE,
+                    "reasons": reasons}
+    try:
+        if evidence is None:
+            evidence = json.loads((root / PERFORMANCE_EVIDENCE).read_text(encoding="utf-8"))
+        operation_data = json.loads((root / "cgal_mcp/master/operations.json").read_text(encoding="utf-8"))
+        requirements = json.loads((root / "catalog/major_requirements.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError, UnicodeError):
+        reasons.append("Performance evidence, registry or requirements are missing or unreadable")
+        return result
+    if isinstance(operation_data, dict):
+        operation_data = operation_data.get("operations", [])
+    registry = {item["id"]: item for item in operation_data}
+    if not isinstance(evidence, dict) or evidence.get("generator") != "master-performance-robustness":
+        reasons.append("Performance evidence has the wrong generator")
+        return result
+    from scripts import measure_master_robustness as rob
+    if evidence.get("bindings") != rob.bindings(root):
+        reasons.append("Performance evidence bindings differ from the current generator, fault proxy, "
+                       "registry, runtime, supervisor, resources or store")
+    worker_path = worker or root / rob.DEFAULT_WORKER
+    if worker_path.is_file() and evidence.get("worker_sha256") != hashlib.sha256(worker_path.read_bytes()).hexdigest():
+        reasons.append("Performance evidence was measured on a different native worker binary")
+    deterministic = evidence.get("deterministic")
+    if not isinstance(deterministic, dict) or evidence.get("deterministic_sha256") != _canonical_hash(deterministic):
+        reasons.append("Deterministic evidence hash does not match its content")
+        return result
+    timings = evidence.get("timings", {})
+    declared = evidence.get("declared", {})
+    memory_ceiling = declared.get("memory_ceiling_mb")
+    wall_limit = declared.get("wall_limit_ms")
+    if declared.get("trials_per_fault_mode", 0) < PERFORMANCE_MIN_TRIALS_PER_MODE:
+        reasons.append("Declared trial count per fault mode is below the evaluator floor")
+
+    # (1) per-family scale baselines
+    cases = deterministic.get("scale_cases", [])
+    family_ops = {f["id"]: {op for r in f["requirements"] for op in r["operation_ids"]}
+                  for f in requirements["families"]}
+    by_family: dict[str, list[dict]] = {}
+    for case in cases:
+        by_family.setdefault(case.get("family"), []).append(case)
+    measured_families = []
+    for family in sorted(family_ops, key=lambda value: int(value.split(".")[1])):
+        rows = by_family.get(family, [])
+        if len(rows) < 3 or len(rows) % 3:
+            reasons.append(f"Family {family} lacks small/medium/large performance baselines")
+            continue
+        for operation in sorted({row["operation"] for row in rows}):
+            ops = [row for row in rows if row["operation"] == operation]
+            if [row["scale"] for row in ops] != ["small", "medium", "large"]:
+                reasons.append(f"Family {family} {operation} does not have exactly small/medium/large scales")
+                continue
+            definition = registry.get(operation)
+            if (definition is None or definition.get("status") != "VALIDATED"
+                    or operation not in family_ops[family]):
+                reasons.append(f"Family {family} representative {operation} is not a VALIDATED "
+                               "operation of the family")
+                continue
+            bounds = next((c for c in definition["preconditions"] if c.get("id") == "bounded_input"), {})
+            validators = len(definition["validation"]["validators"])
+            sizes = []
+            for row in ops:
+                label = f"{family} {operation} {row['scale']}"
+                if (row["status"] != "pass" or row["job_state"] != "succeeded"
+                        or row["validation_status"] != "passed"):
+                    reasons.append(f"Scale case {label} did not succeed and validate: "
+                                   f"{row['job_state']} {row['error'].get('code')} "
+                                   f"(worker processes started: {row['worker_processes_started']})")
+                if row["validators_passed"] != validators:
+                    reasons.append(f"Scale case {label} ran {row['validators_passed']} of "
+                                   f"{validators} mandatory validators")
+                if not row["worker_processes_all_exited"]:
+                    reasons.append(f"Scale case {label} left a worker process running")
+                if row["memory_ceiling_mb"] != memory_ceiling or row["wall_limit_ms"] > wall_limit:
+                    reasons.append(f"Scale case {label} used a different resource ceiling")
+                for item in row["inputs"]:
+                    meta = item["metadata"]
+                    for key, maximum, actual in (
+                            ("size", bounds.get("maximum_bytes"), item["size"]),
+                            ("vertices", bounds.get("maximum_vertices"),
+                             meta.get("vertices", meta.get("point_count"))),
+                            ("faces", bounds.get("maximum_faces"), meta.get("faces"))):
+                        if maximum is not None and actual is not None and actual > maximum:
+                            reasons.append(f"Scale case {label} exceeds the declared {key} bound")
+                sizes.append(sum(item["size"] for item in row["inputs"]))
+                timing = timings.get("scale", {}).get(f"{family}:{operation}:{row['scale']}", {})
+                peak = timing.get("peak_worker_rss_bytes")
+                if not isinstance(peak, int) or peak <= 0:
+                    reasons.append(f"Scale case {label} has no measured peak worker memory")
+                elif peak > memory_ceiling * 1024 * 1024:
+                    reasons.append(f"Scale case {label} peak worker memory exceeds the ceiling")
+                seconds = timing.get("execution_validation_seconds")
+                if not isinstance(seconds, (int, float)) or seconds * 1000 > wall_limit:
+                    reasons.append(f"Scale case {label} has no wall time within the declared limit")
+            values = [row["scale_value"] for row in ops]
+            if row_axis_is_size_bound(ops):
+                increasing = values[0] > values[1] > values[2]  # smaller mesh size bound = more work
+            else:
+                increasing = sizes[0] < sizes[1] < sizes[2]
+            if not increasing:
+                reasons.append(f"Family {family} {operation} scales do not increase")
+        measured_families.append(family)
+    probes = deterministic.get("ceiling_probes", [])
+    for probe in probes:
+        if probe["error"].get("class") == "worker_crash" or not probe["worker_processes_all_exited"]:
+            reasons.append(
+                f"Native crash inside declared bounds: {probe['operation']} at scale "
+                f"{probe['scale_value']} (error {probe['error'].get('code')}, "
+                f"{probe['worker_processes_started']} worker process(es) started); the crash is "
+                "contained but the operation does not run within its declared bounds")
+    result["measured"] = {
+        "families_with_baselines": measured_families,
+        "scale_cases": len(cases),
+        "ceiling_probes": [{"operation": p["operation"], "scale_value": p["scale_value"],
+                            "state": p["job_state"], "error": p["error"]} for p in probes],
+    }
+
+    # (2) resource-limit refusals
+    limits = deterministic.get("limit_cases", [])
+    kinds: dict[str, int] = {}
+    for case in limits:
+        ok = case["passed"] and case["observed"] == case["expected"]
+        kinds[case["kind"]] = kinds.get(case["kind"], 0) + (1 if ok else 0)
+        if not ok:
+            reasons.append(f"Resource-limit case {case['id']} did not fail closed with the expected code")
+        if case.get("published_delta", 0) != 0 or case.get("processes_all_exited") is False:
+            reasons.append(f"Resource-limit case {case['id']} published an artifact or left a process")
+        if case["kind"] == "native_resource_cap" and case.get("trials", 0) < PERFORMANCE_MIN_TRIALS_PER_MODE:
+            reasons.append(f"Resource-limit case {case['id']} has too few trials")
+    for kind, minimum in PERFORMANCE_REQUIRED_LIMIT_KINDS.items():
+        if kinds.get(kind, 0) < minimum:
+            reasons.append(f"Resource-limit coverage for {kind} is {kinds.get(kind, 0)} of {minimum}")
+    result["measured"]["limit_cases"] = {"total": len(limits), "passed_by_kind": dict(sorted(kinds.items()))}
+
+    # (3) crash containment
+    modes = deterministic.get("containment", {})
+    total_trials = total_contained = 0
+    for kind, names in PERFORMANCE_REQUIRED_FAULT_KINDS.items():
+        missing = sorted(names - set(modes))
+        if missing:
+            reasons.append(f"Fault kind {kind} lacks evidence for: {', '.join(missing)}")
+    for name, record in sorted(modes.items()):
+        floor = (PERFORMANCE_MIN_HOST_KILL_TRIALS if name == "host_process_killed"
+                 else PERFORMANCE_MIN_GARBAGE_CASES if name == "garbage_input_files"
+                 else PERFORMANCE_MIN_TRIALS_PER_MODE)
+        total_trials += record["trials"]
+        total_contained += record["contained"]
+        if record["trials"] < floor:
+            reasons.append(f"Fault mode {name} has {record['trials']} trials (need {floor}+)")
+        if record["contained"] != record["trials"] or record["failures"]:
+            reasons.append(f"Fault mode {name} contained {record['contained']} of {record['trials']} "
+                           f"trials: {(record['failures'] or ['unspecified'])[0]}")
+        if record.get("host_handle_growth_within_tolerance") is False:
+            reasons.append(f"Fault mode {name} leaked host handles beyond the declared tolerance")
+        expected = record.get("expected")
+        if expected:
+            for outcome in record.get("outcomes", {}):
+                if json.loads(outcome)[1:] != expected:
+                    reasons.append(f"Fault mode {name} produced an unexpected classification {outcome}")
+    result["measured"]["containment"] = {
+        "modes": len(modes), "trials": total_trials, "contained": total_contained,
+        "contained_percent": round(100.0 * total_contained / total_trials, 4) if total_trials else 0.0}
+
+    # (4) lifecycle and Phase 10 work items
+    life = deterministic.get("lifecycle", {})
+    if life.get("idle_worker_processes_after_jobs") != 0:
+        reasons.append("Idle runtime retains worker processes")
+    if not life.get("persistent_worker_pool") and life.get("second_call_executed_worker"):
+        reasons.append("Persistent workers are not implemented (each call starts a fresh worker process), "
+                       "so persistent-worker crash recovery and resource reclamation are unevidenced")
+    if not life.get("operation_result_cache") and life.get("second_call_executed_worker"):
+        reasons.append("Artifact/result cache and AABB reuse are not implemented, so their effect on "
+                       "performance is unmeasured")
+    result["measured"]["lifecycle"] = life
+
+    if live:
+        try:
+            fresh = rob.measure(root, worker_path if worker_path.is_file() else None, stages=("faults",),
+                                only_modes=PERFORMANCE_LIVE_MODES, trials=2, host_kill_trials=0)
+        except Exception as exc:  # a live rerun that cannot execute is a reason, never a pass
+            reasons.append(f"Live rerun of sampled fault modes could not execute: {type(exc).__name__}")
+            fresh = None
+        if fresh is not None:
+            result["measured"]["live_rerun"] = PERFORMANCE_LIVE_MODES
+            for name, record in fresh["deterministic"]["containment"].items():
+                recorded = modes.get(name, {})
+                if record["contained"] != record["trials"]:
+                    reasons.append(f"Live rerun of fault mode {name} was not fully contained")
+                if "refusals" in record:
+                    if record["refusals"] != recorded.get("refusals"):
+                        reasons.append("Live rerun of garbage input refusals differs from the evidence")
+                elif set(record["outcomes"]) != set(recorded.get("outcomes", {})):
+                    reasons.append(f"Live rerun of fault mode {name} produced different outcomes "
+                                   "than the evidence")
+    if not reasons:
+        result["status"] = "met"
+        if PERFORMANCE_GATE in WAVE_A_UNMET_STANDALONE_GATES:
+            result["status"] = "met_pending_gate_list_update"
+            reasons.append("Evidence supports the gate but the unmet standalone gate list still names it")
+    return result
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--refresh-requirements", action="store_true")
@@ -1314,7 +1556,8 @@ def main() -> None:
         operations = {o.get("id", o.get("operation", {}).get("id")): o for o in operation_data}
         report["major_capabilities"] = evaluate_requirements(requirements, operations)
         report["standalone_gates"] = {SEARCH_GATE: evaluate_search_gate(REPO),
-                                      WORKFLOW_GATE: evaluate_workflow_gate(REPO)}
+                                      WORKFLOW_GATE: evaluate_workflow_gate(REPO),
+                                      PERFORMANCE_GATE: evaluate_performance_gate(REPO)}
         report["standalone_acceptance_reason"] = "Additional package, routing, workflow, host and robustness gates required"
     content = json.dumps(report, ensure_ascii=False, indent=2) + "\n"
     if args.output:

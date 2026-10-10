@@ -805,5 +805,95 @@ class WorkflowGateEvidenceTests(unittest.TestCase):
         self.assertTrue([r for r in reasons if "positive workflows (need 30+)" in r])
 
 
+class PerformanceGateEvidenceTests(unittest.TestCase):
+    """The performance/robustness gate is decided from recorded real-worker evidence."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.evidence = json.loads(
+            (REPO / acceptance_module.PERFORMANCE_EVIDENCE).read_text(encoding="utf-8"))
+
+    def gate(self, evidence=None, rehash=True):
+        evidence = copy.deepcopy(self.evidence) if evidence is None else evidence
+        if rehash:
+            evidence["deterministic_sha256"] = acceptance_module._canonical_hash(evidence["deterministic"])
+        return acceptance_module.evaluate_performance_gate(REPO, live=False, evidence=evidence)
+
+    def test_checked_in_evidence_is_bound_and_reports_true_status(self):
+        result = self.gate(rehash=False)
+        self.assertNotEqual(result["status"], "met")
+        self.assertFalse([r for r in result["reasons"] if "bindings" in r or "hash" in r or "different native" in r])
+        self.assertEqual(len(result["measured"]["families_with_baselines"]), 15)
+        containment = result["measured"]["containment"]
+        self.assertEqual(containment["contained"], containment["trials"])
+        self.assertFalse([r for r in result["reasons"] if "contained" in r and "Fault mode" in r])
+
+    def test_tampered_deterministic_content_is_detected(self):
+        evidence = copy.deepcopy(self.evidence)
+        evidence["deterministic"]["containment"]["exit_kill"]["contained"] = 0
+        result = self.gate(evidence, rehash=False)
+        self.assertTrue([r for r in result["reasons"] if "hash does not match" in r])
+
+    def test_uncontained_trial_and_low_trial_count_fail_the_gate(self):
+        evidence = copy.deepcopy(self.evidence)
+        record = evidence["deterministic"]["containment"]["abort"]
+        record["contained"] -= 1
+        record["failures"] = ["trial 3: worker process left running or never started"]
+        record["trials"] = 5
+        reasons = self.gate(evidence)["reasons"]
+        self.assertTrue([r for r in reasons if "Fault mode abort contained" in r])
+        self.assertTrue([r for r in reasons if "Fault mode abort has 5 trials" in r])
+
+    def test_missing_family_or_fault_kind_fails_the_gate(self):
+        evidence = copy.deepcopy(self.evidence)
+        evidence["deterministic"]["scale_cases"] = [
+            c for c in evidence["deterministic"]["scale_cases"] if c["family"] != "7.9"]
+        del evidence["deterministic"]["containment"]["access_violation"]
+        reasons = self.gate(evidence)["reasons"]
+        self.assertTrue([r for r in reasons if "Family 7.9 lacks" in r])
+        self.assertTrue([r for r in reasons if "segfault_like" in r])
+
+    def test_failed_limit_case_and_unmeasured_memory_fail_the_gate(self):
+        evidence = copy.deepcopy(self.evidence)
+        case = evidence["deterministic"]["limit_cases"][0]
+        case["observed"] = {"stage": "none"}
+        case["passed"] = False
+        first = evidence["deterministic"]["scale_cases"][0]
+        evidence["timings"]["scale"][f"{first['family']}:{first['operation']}:{first['scale']}"].pop(
+            "peak_worker_rss_bytes", None)
+        reasons = self.gate(evidence)["reasons"]
+        self.assertTrue([r for r in reasons if f"Resource-limit case {case['id']}" in r])
+        self.assertTrue([r for r in reasons if "no measured peak worker memory" in r])
+
+    def test_phase10_work_items_are_never_silently_dropped(self):
+        evidence = copy.deepcopy(self.evidence)
+        reasons = self.gate(evidence)["reasons"]
+        self.assertTrue([r for r in reasons if "Persistent workers are not implemented" in r])
+        self.assertTrue([r for r in reasons if "cache and AABB reuse are not implemented" in r])
+
+    def test_fault_proxy_is_selected_only_by_environment_not_protocol_input(self):
+        import subprocess, sys, os
+        worker = REPO / "build-master/Release/cgal-master-worker.exe"
+        if not worker.is_file():
+            self.skipTest("native worker is not built")
+        env = {**os.environ, "CGAL_ROBUST_REAL_WORKER": str(worker)}
+        env.pop("CGAL_ROBUST_FAULT", None)
+        request = json.dumps({"protocol": 1, "request_id": "x", "operation": "no.such", "fault": "exit_kill",
+                              "CGAL_ROBUST_FAULT": "exit_kill"}).encode() + b"\n"
+        done = subprocess.run([sys.executable, str(REPO / "scripts/robustness_fault_proxy.py")],
+                              input=request, capture_output=True, env=env, timeout=60)
+        self.assertNotEqual(done.returncode, 137)
+
+    def test_live_containment_rerun_including_grandchild_hang(self):
+        worker = REPO / "build-master/Release/cgal-master-worker.exe"
+        if not worker.is_file():
+            self.skipTest("native worker is not built")
+        from scripts import measure_master_robustness as rob
+        fresh = rob.measure(REPO, worker, stages=("faults",),
+                            only_modes=["hang_with_child", "exit_kill"], trials=1, host_kill_trials=0)
+        for record in fresh["deterministic"]["containment"].values():
+            self.assertEqual(record["contained"], record["trials"], record["failures"])
+
+
 if __name__ == "__main__":
     unittest.main()

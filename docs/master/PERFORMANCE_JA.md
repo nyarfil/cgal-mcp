@@ -45,3 +45,26 @@ Operationの実行profileで再構築・volume生成は600秒を指定できま�
 非整数・範囲外・上限と矛盾する設定は起動時に拒否します。各jobの要求も設定上限以下に
 制限します。実際の設定値は`cgal_system_health`で確認できます。
 WindowsではJob Object、POSIXではprocessの資源制限を使用します。
+
+## 全15 familyの性能・資源・故障封じ込め測定
+
+`scripts/measure_master_robustness.py`が実workerで、各familyの代表Operationを小・中・大の3規模で測り、
+資源制限の拒否、故障注入、host強制終了を試験します。証拠は
+[`evidence/performance-robustness.json`](evidence/performance-robustness.json)です。
+`deterministic`部（hash固定）と`timings`部（時間・最大RSS。速度では合否を決めず、宣言した
+メモリ上限4GiB・壁時間上限だけで判定）を分けています。故障注入は試験専用の
+`scripts/robustness_fault_proxy.py`で行い、環境変数でのみ選択されます。native workerとregistryは変更していません。
+
+結果（`evaluate_performance_gate`、`standalone_gates`に出力。判定は未達）:
+
+- 規模測定: 15 family全てで3規模が成功し検証済み。最大RSSは最大約519MiB（7.4 500k面）。
+- 封じ込め: 27種類・518試行で100%（kill、abort、アクセス違反、timeout、孫process、不正/巨大出力、
+  不正入力、実workerの外部kill、host強制終了）。各試行で出力非公開、process回収、staging残留なし、
+  次の呼び出しが正しい結果を再現することを確認。試行数は計画に記載がないため各20回と宣言。
+- 未達の理由（実測）: `triangulation.delaunay_3`（1000点以上）と`mesh2.refine.delaunay`（size 0.25）で
+  validator processがスタックオーバーフロー(0xC00000FD)で落ちる（封じ込めは成功するが宣言範囲内で動かない）。
+  メモリ上限64MiB超過時、workerは無言でexit 1となり`worker_crash`と分類される（期待は`memory_limit`）。
+  永続worker、結果cache、AABB再利用は未実装で効果は未測定。
+- 修正: 孫processがpipeを保持するとtimeoutが効かない不具合を`supervisor.py`で修正（job closeを先に実行）。
+- 多くのOperationはworker内部上限がregistryの宣言値より小さく、上限超過は構造化エラーで拒否される
+  （例: `pointset.remove_outliers`は400点、simplify検証は400面）。上限超過probeは証拠の`ceiling_probes`に記録。
