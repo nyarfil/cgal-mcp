@@ -200,3 +200,13 @@ reportはcorpus、package smoke、generator、test source、operation registry�
 ### 最終主張には新しい盲検セット3が必須
 
 このラウンドの数値は開発データ上の値であり、検索ゲートの判定根拠にしない。最終主張には、ルーター・語彙・フレーズ・既存の盲検セット1/2・範囲外プローブを閲覧していない**別のエージェントが作る新しい盲検セット3**（前節の手順に従い、SHA-256記録後に1回だけ測定）で top-3 95%以上と範囲外のfail-closedを示す必要がある。この作業では新しい評価データを作っていない。検索ゲートは未達のまま（盲検 top-3 94.07%、goal routing・自動実行サンプルの未達も残る）で、基準は緩めていない。
+
+## 盲検セット3の測定（2026-10-11、1回のみ）
+
+ルーター・語彙・フレーズ・既存盲検セット・範囲外プローブ・300件コーパスを閲覧していない別エージェントが、各Operationの公開説明（`operations.json`のsummary）と`catalog/major_requirements.json`の束縛だけから`docs/master/search_blind_set_3.json`（範囲内163件、英87・日76、全15 family、範囲外34件）を作成し、測定前にコミットした（14bc8d1）。測定は1回のみで、測定後の調整はしていない。[`evidence/search-blind-3.json`](evidence/search-blind-3.json)に記録した。
+
+- Operation単位 top-1 88.96%、top-3 97.55%（英語 top-3 97.70%、日本語 top-3 97.37%）。要求単位 top-3 98.16%。
+- 範囲内の誤abstain 1/163（取りこぼし4件中の1件）。範囲外のabstain 21/34（61.8%、英12/17・日9/17）。範囲外の約4割はなお候補を返す。これは検索層の限界で、実行前のrouterハードゲートと検証が別に必要。
+- 注意: `b3-031`の期待Operation（`mesh.analysis.sharp_features`）は原本requirementの`operation_ids`に含まれない（要求単位の判定には効かない）。
+- `evaluate_search_gate`はこの証拠を追加記録として読む。検索再現率の基準（盲検3 top-3 95%以上）は満たしたが、検索ゲートは未達のまま: goal routingを含むfull search acceptanceが不合格、自動実行が15件サンプルのみ、盲検1（94.07%）が95%未満。基準は緩めていない。
+- この測定後、盲検セット3も参考値として扱い、以後の調整には使わない。

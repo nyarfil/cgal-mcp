@@ -957,6 +957,28 @@ def evaluate_search_gate(root: Path = REPO, *, live: bool = True,
                                f"(top-1 {op2['top1_pct']}%, {blind2['count']} intents)")
     except (OSError, ValueError, KeyError, UnicodeError):
         reasons.append("Second blind-set generalization evidence is missing")
+    # Blind set 3: authored by an independent agent before measurement, measured once (never tuned on).
+    blind3_path = root / "docs/master/evidence/search-blind-3.json"
+    blind3_set = root / "docs/master/search_blind_set_3.json"
+    try:
+        blind3 = json.loads(blind3_path.read_text(encoding="utf-8"))
+        if blind3.get("blind_set_sha256") != hashlib.sha256(blind3_set.read_bytes()).hexdigest():
+            reasons.append("Third blind-set evidence does not match the current third blind set")
+        else:
+            op3 = blind3["operation_level"]
+            probes = blind3.get("out_of_scope_probes", [])
+            abstained = sum(not p["returned"] for p in probes)
+            false_abstain = sum(not c["returned"] for c in blind3["cases"])
+            result["blind_set_3"] = {
+                "count": blind3["count"], "top1_percent": op3["top1_pct"], "top3_percent": op3["top3_pct"],
+                "by_language_top3_percent": {k: v["op_top3_pct"] for k, v in blind3["by_language"].items()},
+                "out_of_scope_abstained": f"{abstained}/{len(probes)}",
+                "in_scope_false_abstain": f"{false_abstain}/{blind3['count']}"}
+            if op3["top3_pct"] < SEARCH_TARGET_PERCENT:
+                reasons.append(f"Third blind-set top-3 {op3['top3_pct']}% is below {SEARCH_TARGET_PERCENT}% "
+                               f"(top-1 {op3['top1_pct']}%, {blind3['count']} intents)")
+    except (OSError, ValueError, KeyError, UnicodeError):
+        reasons.append("Third blind-set generalization evidence is missing")
     if not reasons:
         result["status"] = "met"
         if SEARCH_GATE in WAVE_A_UNMET_STANDALONE_GATES:
