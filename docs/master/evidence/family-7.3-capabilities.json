@@ -148,14 +148,14 @@
   },
   "family_contract_sha256": "fed0862f89fc29e7fe45456675762456f92dcfed6b28f4d1ebfc629fc05f52e8",
   "family_contract_source_path": "scripts/master_replay_families.py",
-  "family_contract_source_sha256": "df0d262e9c0142588b0a8c94475774c4390ed6b6b8fd98c76e2fa1346afd71b1",
+  "family_contract_source_sha256": "62696be63093a982b3713e5f9b9740c1e2f26ca7d4242aeb8f95b095e10fc411",
   "family_contract_source_hash_encoding": "utf8-lf",
   "catalog_baseline_sha256": "143ec18a5b64d506aad60dc24b0a1ea30940c715d1223b3465fa140aeb9d02a7",
-  "operation_registry_sha256": "17a1f46651a22157a5e0da2bbaec64b3731ffa64470b422ba1f0026d23659afd",
+  "operation_registry_sha256": "316a7b28071232920c1e91ac0beb0e6af6c68939ddce1d1964d097d985b2deda",
   "operation_registry_hash_encoding": "utf8-lf",
   "policy_catalog_sha256": "45f4be759288aaeb834a3ce97aa64ee7768048b15534618fc8c19512801f9a9f",
   "policy_catalog_hash_encoding": "utf8-lf",
-  "worker_sha256": "ba003e9957123f82846dedd8eb8b9258cfa946467a81d899ad031fecbc40fc55",
+  "worker_sha256": "1b34f64c8b849aeaf512eb4083b9cc72346f8daf876b556d5caf00f484bf1149",
   "worker_binary_format": "pe",
   "worker_manifest": {
     "actual_cgal_version": "6.2.1",
@@ -8796,6 +8796,303 @@
         "supported_kernels": [
           "package_recommended"
         ]
+      },
+      {
+        "dependencies": [
+          "Convex_decomposition_3"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "mesh.decompose.approx_convex",
+        "info": {
+          "input_slots": [
+            "mesh"
+          ],
+          "maximum_input_faces": 2000,
+          "source_header": "CGAL/approximate_convex_decomposition.h",
+          "validator_parameter_bindings": {
+            "mesh.validate.approx_convex": {
+              "maximum_depth": "maximum_depth",
+              "maximum_number_of_convex_volumes": "maximum_number_of_convex_volumes",
+              "maximum_number_of_voxels": "maximum_number_of_voxels",
+              "refitting": "refitting",
+              "split_at_concavity": "split_at_concavity",
+              "volume_error": "volume_error"
+            }
+          },
+          "validators": [
+            "mesh.validate.approx_convex"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "GeometryQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Surface_mesh_skeletonization"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "mesh.skeletonize.mean_curvature",
+        "info": {
+          "input_slots": [
+            "mesh"
+          ],
+          "maximum_input_faces": 3000,
+          "source_header": "CGAL/extract_mean_curvature_flow_skeleton.h",
+          "validators": [
+            "mesh.validate.skeleton"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "GeometryQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Surface_mesh_skeletonization"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "mesh.skeletonize.mean_curvature_flow",
+        "info": {
+          "input_slots": [
+            "mesh"
+          ],
+          "maximum_input_faces": 3000,
+          "source_header": "CGAL/Mean_curvature_flow_skeletonization.h",
+          "validator_parameter_bindings": {
+            "mesh.validate.skeleton": {
+              "is_medially_centered": "is_medially_centered",
+              "max_iterations": "max_iterations",
+              "medially_centered_speed_tradeoff": "medially_centered_speed_tradeoff",
+              "quality_speed_tradeoff": "quality_speed_tradeoff"
+            }
+          },
+          "validators": [
+            "mesh.validate.skeleton"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "GeometryQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Surface_mesh_parameterization"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "mesh.parameterize",
+        "info": {
+          "input_slots": [
+            "mesh"
+          ],
+          "maximum_input_faces": 2000,
+          "source_header": "CGAL/Surface_mesh_parameterization/ARAP_parameterizer_3.h",
+          "validator_parameter_bindings": {
+            "mesh.validate.parameterization_isometric": {
+              "iterations": "iterations",
+              "lambda": "lambda",
+              "maximum_distortion": "maximum_distortion"
+            }
+          },
+          "validators": [
+            "mesh.validate.parameterization_isometric"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "GeometryQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Surface_mesh_parameterization"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "mesh.parameterize.discrete_conformal_map",
+        "info": {
+          "input_slots": [
+            "mesh"
+          ],
+          "maximum_input_faces": 2000,
+          "source_header": "CGAL/Surface_mesh_parameterization/Discrete_conformal_map_parameterizer_3.h",
+          "validators": [
+            "mesh.validate.parameterization_harmonic"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "GeometryQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Convex_decomposition_3"
+        ],
+        "effective_kernel": "GMP rationals (no CGAL header)",
+        "id": "mesh.validate.approx_convex",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "distance_unit_matches_mesh",
+            "part_count_within_limit",
+            "parts_are_closed_outward_triangle_meshes",
+            "parts_are_convex",
+            "parts_stay_in_expanded_bounding_box",
+            "input_surface_points_covered_within_tolerance",
+            "total_volume_covers_mesh_volume_up_to_boundary_shell",
+            "total_volume_within_expanded_bounding_box"
+          ],
+          "independence": "exact GMP rationals on the raw binary64 data: face-plane convexity, closed-polyhedron topology, signed volumes and plane-slack covering; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "mesh"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "GeometryQueryReport",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Surface_mesh_skeletonization"
+        ],
+        "effective_kernel": "GMP rationals (no CGAL header)",
+        "id": "mesh.validate.skeleton",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "distance_unit_matches_mesh",
+            "skeleton_points_inside_mesh",
+            "skeleton_edges_are_simple",
+            "skeleton_edge_midpoints_inside_mesh",
+            "skeleton_connected_per_mesh_component",
+            "skeleton_cycle_count_equals_mesh_genus",
+            "surface_vertex_sets_are_disjoint_and_non_empty"
+          ],
+          "independence": "exact GMP rational ray-parity inside test, union-find components and Euler characteristic of the raw OFF data; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "mesh"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "GeometryQueryReport",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Surface_mesh_parameterization"
+        ],
+        "effective_kernel": "GMP rationals and long double (no CGAL header)",
+        "id": "mesh.validate.parameterization_harmonic",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "distance_unit_matches_mesh",
+            "uv_complete_and_finite",
+            "no_flipped_or_degenerate_triangles",
+            "boundary_image_is_simple_polygon",
+            "boundary_on_arc_length_circle",
+            "cotangent_harmonic_condition_holds"
+          ],
+          "independence": "exact GMP rational signed areas and boundary-polygon simplicity; long double cotangent weights; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "mesh"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "GeometryQueryReport",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Surface_mesh_parameterization"
+        ],
+        "effective_kernel": "GMP rationals and long double (no CGAL header)",
+        "id": "mesh.validate.parameterization_isometric",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "distance_unit_matches_mesh",
+            "uv_complete_and_finite",
+            "no_flipped_or_degenerate_triangles",
+            "boundary_image_is_simple_polygon",
+            "isometric_distortion_within_bound"
+          ],
+          "independence": "exact GMP rational signed areas and boundary-polygon simplicity; long double singular values of the per-triangle Jacobian; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "mesh"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "GeometryQueryReport",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
       }
     ],
     "protocol": 1,
@@ -8807,7 +9104,7 @@
     ],
     "worker": "cgal-master-worker"
   },
-  "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
+  "worker_manifest_sha256": "1e45fb64c24c92e847182338ff51a00bbaade67e5fc2d2d29fd5b159f66b41fb",
   "tests": [
     {
       "id": "family-7.3-replay-cases",
@@ -9632,7 +9929,7 @@
       "case_id": "features-cube-30",
       "operation_id": "mesh.features.detect",
       "revision": 1,
-      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
+      "worker_manifest_sha256": "1e45fb64c24c92e847182338ff51a00bbaade67e5fc2d2d29fd5b159f66b41fb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -9792,7 +10089,7 @@
       "case_id": "features-cube-100",
       "operation_id": "mesh.features.detect",
       "revision": 1,
-      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
+      "worker_manifest_sha256": "1e45fb64c24c92e847182338ff51a00bbaade67e5fc2d2d29fd5b159f66b41fb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -9952,7 +10249,7 @@
       "case_id": "features-bent-30",
       "operation_id": "mesh.features.detect",
       "revision": 1,
-      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
+      "worker_manifest_sha256": "1e45fb64c24c92e847182338ff51a00bbaade67e5fc2d2d29fd5b159f66b41fb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -10112,7 +10409,7 @@
       "case_id": "features-bent-60",
       "operation_id": "mesh.features.detect",
       "revision": 1,
-      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
+      "worker_manifest_sha256": "1e45fb64c24c92e847182338ff51a00bbaade67e5fc2d2d29fd5b159f66b41fb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -10272,7 +10569,7 @@
       "case_id": "features-open-square",
       "operation_id": "mesh.features.detect",
       "revision": 1,
-      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
+      "worker_manifest_sha256": "1e45fb64c24c92e847182338ff51a00bbaade67e5fc2d2d29fd5b159f66b41fb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -10432,7 +10729,7 @@
       "case_id": "inspect-closed-tetra",
       "operation_id": "mesh.inspect.pmp",
       "revision": 1,
-      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
+      "worker_manifest_sha256": "1e45fb64c24c92e847182338ff51a00bbaade67e5fc2d2d29fd5b159f66b41fb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -10572,7 +10869,7 @@
       "case_id": "inspect-open-tetra",
       "operation_id": "mesh.inspect.pmp",
       "revision": 1,
-      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
+      "worker_manifest_sha256": "1e45fb64c24c92e847182338ff51a00bbaade67e5fc2d2d29fd5b159f66b41fb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -10712,7 +11009,7 @@
       "case_id": "inspect-quad-cube",
       "operation_id": "mesh.inspect.pmp",
       "revision": 1,
-      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
+      "worker_manifest_sha256": "1e45fb64c24c92e847182338ff51a00bbaade67e5fc2d2d29fd5b159f66b41fb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -10852,7 +11149,7 @@
       "case_id": "self-intersection-free-tetra",
       "operation_id": "mesh.analysis.self_intersections",
       "revision": 1,
-      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
+      "worker_manifest_sha256": "1e45fb64c24c92e847182338ff51a00bbaade67e5fc2d2d29fd5b159f66b41fb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -10991,7 +11288,7 @@
       "case_id": "self-intersecting-tetrahedra",
       "operation_id": "mesh.analysis.self_intersections",
       "revision": 1,
-      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
+      "worker_manifest_sha256": "1e45fb64c24c92e847182338ff51a00bbaade67e5fc2d2d29fd5b159f66b41fb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -11130,7 +11427,7 @@
       "case_id": "normals-tetra",
       "operation_id": "mesh.analysis.normals",
       "revision": 1,
-      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
+      "worker_manifest_sha256": "1e45fb64c24c92e847182338ff51a00bbaade67e5fc2d2d29fd5b159f66b41fb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -11273,7 +11570,7 @@
       "case_id": "normals-cube",
       "operation_id": "mesh.analysis.normals",
       "revision": 1,
-      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
+      "worker_manifest_sha256": "1e45fb64c24c92e847182338ff51a00bbaade67e5fc2d2d29fd5b159f66b41fb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -11416,7 +11713,7 @@
       "case_id": "normals-inward-cube",
       "operation_id": "mesh.analysis.normals",
       "revision": 1,
-      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
+      "worker_manifest_sha256": "1e45fb64c24c92e847182338ff51a00bbaade67e5fc2d2d29fd5b159f66b41fb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -11559,7 +11856,7 @@
       "case_id": "measures-tetra",
       "operation_id": "mesh.analysis.measures",
       "revision": 1,
-      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
+      "worker_manifest_sha256": "1e45fb64c24c92e847182338ff51a00bbaade67e5fc2d2d29fd5b159f66b41fb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -11699,7 +11996,7 @@
       "case_id": "measures-cube",
       "operation_id": "mesh.analysis.measures",
       "revision": 1,
-      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
+      "worker_manifest_sha256": "1e45fb64c24c92e847182338ff51a00bbaade67e5fc2d2d29fd5b159f66b41fb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -11839,7 +12136,7 @@
       "case_id": "components-label-three",
       "operation_id": "mesh.components.label",
       "revision": 1,
-      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
+      "worker_manifest_sha256": "1e45fb64c24c92e847182338ff51a00bbaade67e5fc2d2d29fd5b159f66b41fb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -11988,7 +12285,7 @@
       "case_id": "components-extract-second-tetra",
       "operation_id": "mesh.components.component",
       "revision": 1,
-      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
+      "worker_manifest_sha256": "1e45fb64c24c92e847182338ff51a00bbaade67e5fc2d2d29fd5b159f66b41fb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -12143,7 +12440,7 @@
       "case_id": "components-extract-lone-triangle",
       "operation_id": "mesh.components.component",
       "revision": 1,
-      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
+      "worker_manifest_sha256": "1e45fb64c24c92e847182338ff51a00bbaade67e5fc2d2d29fd5b159f66b41fb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -12298,7 +12595,7 @@
       "case_id": "components-keep-two-largest",
       "operation_id": "mesh.components.keep_largest",
       "revision": 1,
-      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
+      "worker_manifest_sha256": "1e45fb64c24c92e847182338ff51a00bbaade67e5fc2d2d29fd5b159f66b41fb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -12455,7 +12752,7 @@
       "case_id": "location-brute-force",
       "operation_id": "mesh.location.locate",
       "revision": 1,
-      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
+      "worker_manifest_sha256": "1e45fb64c24c92e847182338ff51a00bbaade67e5fc2d2d29fd5b159f66b41fb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -12629,7 +12926,7 @@
       "case_id": "location-aabb-tree",
       "operation_id": "mesh.location.locate",
       "revision": 1,
-      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
+      "worker_manifest_sha256": "1e45fb64c24c92e847182338ff51a00bbaade67e5fc2d2d29fd5b159f66b41fb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -12803,7 +13100,7 @@
       "case_id": "intersect-cubes-overlap",
       "operation_id": "mesh.intersections.do_intersect",
       "revision": 1,
-      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
+      "worker_manifest_sha256": "1e45fb64c24c92e847182338ff51a00bbaade67e5fc2d2d29fd5b159f66b41fb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -12973,7 +13270,7 @@
       "case_id": "intersect-cubes-far",
       "operation_id": "mesh.intersections.do_intersect",
       "revision": 1,
-      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
+      "worker_manifest_sha256": "1e45fb64c24c92e847182338ff51a00bbaade67e5fc2d2d29fd5b159f66b41fb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -13143,7 +13440,7 @@
       "case_id": "intersect-contained-surfaces-only",
       "operation_id": "mesh.intersections.do_intersect",
       "revision": 1,
-      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
+      "worker_manifest_sha256": "1e45fb64c24c92e847182338ff51a00bbaade67e5fc2d2d29fd5b159f66b41fb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -13313,7 +13610,7 @@
       "case_id": "intersect-contained-bounded-sides",
       "operation_id": "mesh.intersections.do_intersect",
       "revision": 1,
-      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
+      "worker_manifest_sha256": "1e45fb64c24c92e847182338ff51a00bbaade67e5fc2d2d29fd5b159f66b41fb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -13483,7 +13780,7 @@
       "case_id": "intersect-polylines-shifted-cubes",
       "operation_id": "mesh.intersections.polylines",
       "revision": 1,
-      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
+      "worker_manifest_sha256": "1e45fb64c24c92e847182338ff51a00bbaade67e5fc2d2d29fd5b159f66b41fb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -13653,7 +13950,7 @@
       "case_id": "features-angle-out-of-range-rejected",
       "operation_id": "mesh.features.detect",
       "revision": 1,
-      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
+      "worker_manifest_sha256": "1e45fb64c24c92e847182338ff51a00bbaade67e5fc2d2d29fd5b159f66b41fb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -13705,7 +14002,7 @@
       "case_id": "features-tampered-missing-sharp-edge-rejected",
       "operation_id": "mesh.validate.features",
       "revision": 1,
-      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
+      "worker_manifest_sha256": "1e45fb64c24c92e847182338ff51a00bbaade67e5fc2d2d29fd5b159f66b41fb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -13766,7 +14063,7 @@
       "case_id": "components-keep-one-tie-rejected",
       "operation_id": "mesh.components.keep_largest",
       "revision": 1,
-      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
+      "worker_manifest_sha256": "1e45fb64c24c92e847182338ff51a00bbaade67e5fc2d2d29fd5b159f66b41fb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -13818,7 +14115,7 @@
       "case_id": "components-seed-face-out-of-range-rejected",
       "operation_id": "mesh.components.component",
       "revision": 1,
-      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
+      "worker_manifest_sha256": "1e45fb64c24c92e847182338ff51a00bbaade67e5fc2d2d29fd5b159f66b41fb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -13870,7 +14167,7 @@
       "case_id": "components-tampered-partition-rejected",
       "operation_id": "mesh.validate.components_label",
       "revision": 1,
-      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
+      "worker_manifest_sha256": "1e45fb64c24c92e847182338ff51a00bbaade67e5fc2d2d29fd5b159f66b41fb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -13929,7 +14226,7 @@
       "case_id": "location-tampered-distance-rejected",
       "operation_id": "mesh.validate.location",
       "revision": 1,
-      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
+      "worker_manifest_sha256": "1e45fb64c24c92e847182338ff51a00bbaade67e5fc2d2d29fd5b159f66b41fb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -13999,7 +14296,7 @@
       "case_id": "intersect-tampered-point-off-surface-rejected",
       "operation_id": "mesh.validate.intersection_polylines",
       "revision": 1,
-      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
+      "worker_manifest_sha256": "1e45fb64c24c92e847182338ff51a00bbaade67e5fc2d2d29fd5b159f66b41fb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -14067,7 +14364,7 @@
       "case_id": "intersect-tampered-segment-dropped-rejected",
       "operation_id": "mesh.validate.intersection_polylines",
       "revision": 1,
-      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
+      "worker_manifest_sha256": "1e45fb64c24c92e847182338ff51a00bbaade67e5fc2d2d29fd5b159f66b41fb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -14135,7 +14432,7 @@
       "case_id": "intersect-tampered-chord-shortcut-rejected",
       "operation_id": "mesh.validate.intersection_polylines",
       "revision": 1,
-      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
+      "worker_manifest_sha256": "1e45fb64c24c92e847182338ff51a00bbaade67e5fc2d2d29fd5b159f66b41fb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -14203,7 +14500,7 @@
       "case_id": "intersect-tampered-flag-rejected",
       "operation_id": "mesh.validate.do_intersect",
       "revision": 1,
-      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
+      "worker_manifest_sha256": "1e45fb64c24c92e847182338ff51a00bbaade67e5fc2d2d29fd5b159f66b41fb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -14273,7 +14570,7 @@
       "case_id": "intersect-coplanar-overlap-rejected",
       "operation_id": "mesh.intersections.polylines",
       "revision": 1,
-      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
+      "worker_manifest_sha256": "1e45fb64c24c92e847182338ff51a00bbaade67e5fc2d2d29fd5b159f66b41fb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -14332,7 +14629,7 @@
       "case_id": "intersect-open-mesh-bounded-sides-rejected",
       "operation_id": "mesh.intersections.do_intersect",
       "revision": 1,
-      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
+      "worker_manifest_sha256": "1e45fb64c24c92e847182338ff51a00bbaade67e5fc2d2d29fd5b159f66b41fb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [
@@ -14393,7 +14690,7 @@
       "case_id": "intersect-overlap-flag-type-rejected",
       "operation_id": "mesh.intersections.do_intersect",
       "revision": 1,
-      "worker_manifest_sha256": "c84bfc9da90e01e9abc37ddd96ebb69b4b89cc18215ed8807243f9c95365fccb",
+      "worker_manifest_sha256": "1e45fb64c24c92e847182338ff51a00bbaade67e5fc2d2d29fd5b159f66b41fb",
       "test_id": "family-7.3-replay-cases",
       "request": {
         "inputs": [

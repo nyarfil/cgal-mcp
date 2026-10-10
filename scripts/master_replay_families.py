@@ -1356,8 +1356,6 @@ FAMILY_7_9 = {
         },
     },
     "unbound": {
-        "major.7.9.03": "pointset.smooth.jet exposes jet_smooth_point_set only; "
-                        "bilateral_smooth_point_set is not exposed.",
         "major.7.9.05": "No validated registration operation (register_point_sets, "
                         "compute_registration_transformation).",
     },
@@ -4091,6 +4089,215 @@ FAMILY_7_8["negative_controls"].extend([
      "expect_error_class": "INVALID_REQUEST", "expect_error_code": "INVALID_PARAMETER"},
 ])
 
+# --- Batch 8 (7.8.02 approximate convex decomposition, 7.8.03 skeletonization, 7.8.05 parameterization) ---
+B8_FIXTURES = {
+    "genuine_param_arap_tight_bound.json": "7bb2f8a3d4b0b00b30b45afc98b32581dbe7aa27e56534bdfdbe4ab2b2d08719",
+    "genuine_skeleton_torus_defaults.json": "d3f284497855808f08772e0d0bcc2bdf569f49b6b22affeae2dff5194f20b250",
+    "l_prism.off": "31eace436dc15398f5f10dc2dd49b8cb74bdf2e64474e3e0a91b1bb7071d31d2",
+    "t_prism.off": "d9f568f82d727aafb908cc8dc67aa96c6b73a2987d87a2bcc09951cc85da68e7",
+    "tube.off": "799da15d1f265dcbe56c8a8e77e201957b13bee53e74f09199bf7bc541a4d3ed",
+    "torus.off": "9e0c68b2f4f231ca358e2d75be73fa1a39ef810162d6fa6b5c362754f47d3b49",
+    "disc_bump.off": "4c58462f78ff442590739aa4593576612d281ad9211c8023ca2eb3dccd436d72",
+    "tampered_acd_missing_part.json": "6beb3f4457d20633e82c2e5ae6bdbcf9b4dc95cfa45f703b0a42b2609a81f1f8",
+    "tampered_acd_nonconvex.json": "dd31270aaad206f490cc9c414c6293315e2d2b0df2472b853b7cb4482cb6a032",
+    "tampered_param_flipped.json": "6596e927bc8523dfba42c2935a9529fdab2f62600f80032cf925ea9df7e0fc18",
+    "tampered_param_nonharmonic.json": "76c627501b8ac066c68dfda5c0bb17fee9f94ce01f86199b134ce0fc700ee225",
+    "tampered_param_stretched.json": "df0bc7162b602da11fee3142bb89204d68f100e6a7f727329ecb84af8c9809ba",
+    "tampered_skeleton_extra_cycle.json": "4dee74462392ab90b2eeac8552f1aac437fe39945201e43587c04a1546a46363",
+    "tampered_skeleton_open_loop.json": "ffe8918ffbcfb9286e70e078e16e8918e0f8103793fceb98baa9d929a7ed59a4",
+    "tampered_skeleton_outside.json": "9e10f220066602bd8bdae6d71d8e737e58174370177c65560a75ee28b273e1b3",
+    "tampered_skeleton_split.json": "85424279876ab8273f2c5d464571fa1cdd79ba16ae98941347d915f3e749283d",
+}
+
+
+def _b8mesh(name: str) -> dict:
+    return _mesh({"fixture": f"batch8/{name}", "sha256": B8_FIXTURES[name]})
+
+
+def _b8report(name: str) -> dict:
+    return {"fixture": f"batch8/{name}", "sha256": B8_FIXTURES[name], "type": "GeometryQueryReport",
+            "format": "json", "unit": "none"}
+
+
+B8_L, B8_T, B8_TUBE, B8_TORUS, B8_DISC = (_b8mesh(n) for n in (
+    "l_prism.off", "t_prism.off", "tube.off", "torus.off", "disc_bump.off"))
+B8_ACD_L = {"maximum_number_of_convex_volumes": 2, "maximum_number_of_voxels": 10000, "maximum_depth": 6,
+            "volume_error": 0.01, "refitting": True, "split_at_concavity": True}
+B8_ACD_T = dict(B8_ACD_L, maximum_number_of_convex_volumes=3)
+B8_ACD_ONE = dict(B8_ACD_L, maximum_number_of_convex_volumes=1)
+B8_MCF_TUBE = {"quality_speed_tradeoff": 0.1, "medially_centered_speed_tradeoff": 0.2, "is_medially_centered": True,
+               "max_iterations": 500}
+B8_MCF_TORUS = dict(B8_MCF_TUBE, quality_speed_tradeoff=1.0)
+B8_ARAP_A = {"lambda": 1000.0, "iterations": 50, "maximum_distortion": 1.25}
+B8_ARAP_B = {"lambda": 0.0, "iterations": 50, "maximum_distortion": 1.25}
+B8_ARAP_C = {"lambda": 0.0, "iterations": 1, "maximum_distortion": 3.0}
+B8_PARAM_ALGORITHM = "CGAL::Surface_mesh_parameterization::parameterize"
+
+
+def _b8_acd(case_id, mesh, parameters, parts, total, mesh_volume):
+    return _case(case_id, "mesh.decompose.approx_convex", [mesh], parameters, [
+        ["metrics.algorithm", "==", "CGAL::approximate_convex_decomposition"],
+        ["output:analysis:json:report_kind", "==", "approximate_convex_decomposition"],
+        ["metrics.part_count", "==", parts],
+        ["metrics.mesh_volume", "approx", [mesh_volume, 1e-9]],
+        ["metrics.total_part_volume", "approx", [total, 1e-6]],
+    ])
+
+
+def _b8_skeleton(case_id, operation, mesh, parameters, algorithm, vertices, edges, first_x):
+    return _case(case_id, operation, [mesh], parameters, [
+        ["metrics.algorithm", "==", algorithm],
+        ["output:analysis:json:report_kind", "==", "mean_curvature_flow_skeleton"],
+        ["metrics.skeleton_vertex_count", "==", vertices],
+        ["metrics.skeleton_edge_count", "==", edges],
+        ["output:analysis:json:results.vertices.0.point.0", "approx", [first_x, 1e-6]],
+    ])
+
+
+def _b8_param(case_id, operation, parameters, algorithm, sample):
+    return _case(case_id, operation, [B8_DISC], parameters, [
+        ["metrics.algorithm", "==", algorithm],
+        ["output:analysis:json:report_kind", "==", "surface_parameterization"],
+        ["metrics.vertex_count", "==", 81],
+        ["metrics.face_count", "==", 128],
+        ["output:analysis:json:results.uv.40.0", "approx", [sample[0], 1e-6]],
+        ["output:analysis:json:results.uv.40.1", "approx", [sample[1], 1e-6]],
+    ])
+
+
+for _key in ("major.7.8.02", "major.7.8.03", "major.7.8.05"):
+    FAMILY_7_8["unbound"].pop(_key)
+FAMILY_7_8["requirements"]["major.7.8.02"] = {
+    "operation_ids": ["mesh.decompose.approx_convex"],
+    "symbols": ["approximate_convex_decomposition"],
+    "symbol_notes": "CGAL::approximate_convex_decomposition (closed outward triangle meshes of at most 2000 "
+                    "faces; limits on the number of convex volumes, voxels and depth, volume error, refitting and "
+                    "split at concavity are exposed) returns convex hulls that are NOT disjoint and NOT a tight "
+                    "partition. On the L-shaped prism (three unit cubes, volume 3) two parts have total volume "
+                    "4.0575 and one part is the exact hull of volume 3.5 (shoelace area 3.5, height 1, hand "
+                    "derived); on the T-shaped prism (volume 5) three parts total 5.887. The replay claims only "
+                    "a covering decomposition and never that the parts are tighter than the hull. The independent "
+                    "validator (exact GMP rationals over the report data) certifies that every part is a closed "
+                    "outward triangle mesh and convex (every vertex on or behind every face plane), that parts "
+                    "stay inside the expanded bounding box, that every input vertex lies in some part within a "
+                    "coverage tolerance of one voxel edge (declared: longest bounding-box side / "
+                    "(floor(cbrt(maximum_number_of_voxels)) - 3)) and that the total part volume covers the mesh "
+                    "volume up to the boundary shell and stays below the expanded box volume.",
+    "case_ids": ["acd-l-prism-two-parts", "acd-l-prism-two-parts-repeat", "acd-l-prism-one-part-is-hull",
+                 "acd-t-prism-three-parts"],
+}
+FAMILY_7_8["requirements"]["major.7.8.03"] = {
+    "operation_ids": ["mesh.skeletonize.mean_curvature", "mesh.skeletonize.mean_curvature_flow"],
+    "symbols": ["extract_mean_curvature_flow_skeleton", "Mean_curvature_flow_skeletonization"],
+    "symbol_notes": "mesh.skeletonize.mean_curvature wraps the free function with CGAL defaults and "
+                    "mesh.skeletonize.mean_curvature_flow wraps the class with quality_speed_tradeoff, "
+                    "medially_centered_speed_tradeoff, is_medially_centered and max_iterations. On the capped "
+                    "cylinder (genus 0, length 6, radius 1) both give the same 11 vertices and 10 edges; on the "
+                    "torus (R=3, r=1, genus 1) the CGAL defaults (quality_speed_tradeoff 0.1) collapse the "
+                    "skeleton through the surface and the validator rejects them (SKELETON_POINT_OUTSIDE, kept "
+                    "as a negative control), while quality_speed_tradeoff 1.0 with medial centering gives a "
+                    "25-vertex ring of radius about 2.9 with one cycle. CGAL does not guarantee that the surface "
+                    "vertex sets cover the mesh, so the validator only requires them to be disjoint and "
+                    "non-empty. The independent validator (exact GMP rationals, exact ray-parity point location) "
+                    "certifies that skeleton points and edge midpoints lie inside the mesh, that edges are "
+                    "simple, that the skeleton has one connected component per mesh component and that its "
+                    "cycle count equals the mesh genus from the Euler characteristic.",
+    "case_ids": ["skeleton-tube-function", "skeleton-tube-class", "skeleton-torus-class"],
+}
+FAMILY_7_8["requirements"]["major.7.8.05"] = {
+    "operation_ids": ["mesh.parameterize", "mesh.parameterize.discrete_conformal_map"],
+    "symbols": ["parameterize", "Discrete_conformal_map_parameterizer_3"],
+    "symbol_notes": "mesh.parameterize.discrete_conformal_map wraps the Discrete_conformal_map_parameterizer_3 "
+                    "(cotangent weights, arc-length circular border, default solver) and mesh.parameterize wraps "
+                    "the free parameterize with an ARAP parameterizer (lambda, iterations). Both need a "
+                    "connected disc with one boundary loop of at most 3000 faces. On the 81-vertex height-field "
+                    "disc the validators certify bijectivity exactly (every UV triangle has the same positive "
+                    "signed area in exact rationals and the UV border is a simple polygon); the harmonic "
+                    "validator also checks that the border lies on the arc-length circle (centre (0.5,0.5), "
+                    "radius 0.5, tolerance 1e-9) and that the cotangent harmonic residual is below 1e-9 "
+                    "relative (measured 1.8e-16; negative cotangent weights exist, minimum -1.34, so "
+                    "bijectivity is certified directly rather than assumed); the isometric validator bounds "
+                    "max(sigma1/s, s/sigma2) by maximum_distortion. ARAP distortion on this disc is 1.099 "
+                    "(lambda 1000, 50 iterations), 1.150 (lambda 0, 50 iterations) and 2.219 (lambda 0, "
+                    "1 iteration); the replay bounds are 1.25, 1.25 and 3.0 and a bound of 1.5 on the "
+                    "one-iteration run is rejected.",
+    "case_ids": ["param-dcm-disc", "param-arap-lambda-1000", "param-arap-lambda-0", "param-arap-one-iteration"],
+}
+FAMILY_7_8["cases"].extend([
+    _b8_acd("acd-l-prism-two-parts", B8_L, B8_ACD_L, 2, 4.0575, 3.0),
+    _b8_acd("acd-l-prism-two-parts-repeat", B8_L, B8_ACD_L, 2, 4.0575, 3.0),
+    _b8_acd("acd-l-prism-one-part-is-hull", B8_L, B8_ACD_ONE, 1, 3.5, 3.0),
+    _b8_acd("acd-t-prism-three-parts", B8_T, B8_ACD_T, 3, 5.887083333333334, 5.0),
+    _b8_skeleton("skeleton-tube-function", "mesh.skeletonize.mean_curvature", B8_TUBE, {},
+                 "CGAL::extract_mean_curvature_flow_skeleton", 11, 10, 1.0583248436666466),
+    _b8_skeleton("skeleton-tube-class", "mesh.skeletonize.mean_curvature_flow", B8_TUBE, B8_MCF_TUBE,
+                 "CGAL::Mean_curvature_flow_skeletonization", 11, 10, 1.0583248436666466),
+    _b8_skeleton("skeleton-torus-class", "mesh.skeletonize.mean_curvature_flow", B8_TORUS, B8_MCF_TORUS,
+                 "CGAL::Mean_curvature_flow_skeletonization", 25, 25, 2.8771193844904097),
+    _b8_param("param-dcm-disc", "mesh.parameterize.discrete_conformal_map", {},
+              "CGAL::Surface_mesh_parameterization::Discrete_conformal_map_parameterizer_3",
+              (0.4835980807423781, 0.5087816906534715)),
+    _b8_param("param-arap-lambda-1000", "mesh.parameterize", B8_ARAP_A, B8_PARAM_ALGORITHM,
+              (0.6451434418377412, 1.1910607191590374)),
+    _b8_param("param-arap-lambda-0", "mesh.parameterize", B8_ARAP_B, B8_PARAM_ALGORITHM,
+              (0.48599408178336134, 0.5076606039320642)),
+    _b8_param("param-arap-one-iteration", "mesh.parameterize", B8_ARAP_C, B8_PARAM_ALGORITHM,
+              (0.4841658324712831, 0.5090518321091811)),
+])
+FAMILY_7_8["pairs"].extend([
+    {"kind": "equal_outputs", "cases": ["acd-l-prism-two-parts", "acd-l-prism-two-parts-repeat"]},
+])
+FAMILY_7_8["negative_controls"].extend([
+    {"id": "acd-tampered-nonconvex-part-rejected", "operation": "mesh.validate.approx_convex",
+     "inputs": [_b8report("tampered_acd_nonconvex.json"), B8_L], "parameters": B8_ACD_L,
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "PART_NOT_CONVEX"},
+    {"id": "acd-tampered-missing-part-rejected", "operation": "mesh.validate.approx_convex",
+     "inputs": [_b8report("tampered_acd_missing_part.json"), B8_L], "parameters": B8_ACD_L,
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "VERTEX_NOT_COVERED"},
+    {"id": "acd-open-mesh-rejected", "operation": "mesh.decompose.approx_convex", "inputs": [B8_DISC],
+     "parameters": B8_ACD_L, "expect_error_class": "PRECONDITION_FAILED", "expect_error_code": "MESH_NOT_CLOSED"},
+    {"id": "acd-voxel-count-too-small-rejected", "operation": "mesh.decompose.approx_convex", "inputs": [B8_L],
+     "parameters": dict(B8_ACD_L, maximum_number_of_voxels=10),
+     "expect_error_class": "INVALID_REQUEST", "expect_error_code": "INVALID_PARAMETER"},
+    {"id": "skeleton-tampered-point-outside-rejected", "operation": "mesh.validate.skeleton",
+     "inputs": [_b8report("tampered_skeleton_outside.json"), B8_TUBE], "parameters": B8_MCF_TUBE,
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "SKELETON_POINT_OUTSIDE"},
+    {"id": "skeleton-tampered-split-path-rejected", "operation": "mesh.validate.skeleton",
+     "inputs": [_b8report("tampered_skeleton_split.json"), B8_TUBE], "parameters": B8_MCF_TUBE,
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "SKELETON_COMPONENTS_MISMATCH"},
+    {"id": "skeleton-tampered-extra-cycle-rejected", "operation": "mesh.validate.skeleton",
+     "inputs": [_b8report("tampered_skeleton_extra_cycle.json"), B8_TUBE], "parameters": B8_MCF_TUBE,
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "CYCLE_COUNT_MISMATCH"},
+    {"id": "skeleton-tampered-open-loop-rejected", "operation": "mesh.validate.skeleton",
+     "inputs": [_b8report("tampered_skeleton_open_loop.json"), B8_TORUS], "parameters": B8_MCF_TORUS,
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "CYCLE_COUNT_MISMATCH"},
+    {"id": "skeleton-default-parameters-collapse-on-torus-rejected", "operation": "mesh.validate.skeleton",
+     "inputs": [_b8report("genuine_skeleton_torus_defaults.json"), B8_TORUS], "parameters": {},
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "SKELETON_POINT_OUTSIDE"},
+    {"id": "skeleton-open-mesh-rejected", "operation": "mesh.skeletonize.mean_curvature_flow",
+     "inputs": [B8_DISC], "parameters": B8_MCF_TUBE,
+     "expect_error_class": "PRECONDITION_FAILED", "expect_error_code": "MESH_NOT_CLOSED"},
+    {"id": "param-tampered-flipped-triangles-rejected", "operation": "mesh.validate.parameterization_harmonic",
+     "inputs": [_b8report("tampered_param_flipped.json"), B8_DISC], "parameters": {},
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "FLIPPED_TRIANGLE"},
+    {"id": "param-tampered-non-harmonic-rejected", "operation": "mesh.validate.parameterization_harmonic",
+     "inputs": [_b8report("tampered_param_nonharmonic.json"), B8_DISC], "parameters": {},
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "HARMONIC_RESIDUAL_TOO_LARGE"},
+    {"id": "param-tampered-stretched-rejected", "operation": "mesh.validate.parameterization_isometric",
+     "inputs": [_b8report("tampered_param_stretched.json"), B8_DISC], "parameters": B8_ARAP_A,
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "ISOMETRIC_DISTORTION_EXCEEDS_BOUND"},
+    {"id": "param-tight-bound-rejected", "operation": "mesh.validate.parameterization_isometric",
+     "inputs": [_b8report("genuine_param_arap_tight_bound.json"), B8_DISC],
+     "parameters": dict(B8_ARAP_C, maximum_distortion=1.5),
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "ISOMETRIC_DISTORTION_EXCEEDS_BOUND"},
+    {"id": "param-closed-mesh-not-disc-rejected", "operation": "mesh.parameterize.discrete_conformal_map",
+     "inputs": [B8_TUBE], "parameters": {},
+     "expect_error_class": "PRECONDITION_FAILED", "expect_error_code": "MESH_NOT_DISC"},
+    {"id": "param-arap-negative-lambda-rejected", "operation": "mesh.parameterize", "inputs": [B8_DISC],
+     "parameters": dict(B8_ARAP_A, **{"lambda": -1.0}),
+     "expect_error_class": "INVALID_REQUEST", "expect_error_code": "INVALID_PARAMETER"},
+])
+
 # 7.13.02 Alpha_shape_2 / Alpha_shape_3 / Fixed_alpha_shape_3 (alpha = squared radius, artifact unit squared).
 B4_A2_QUAD = _b4json("alpha2_quad.json", "PointSet2")
 B4_A2_SCATTER = _b4json("alpha2_scatter.json", "PointSet2")
@@ -4743,11 +4950,18 @@ def _b7_bilateral(case_id: str, fixture: str, measure: str, source: float, resul
                  _b7_checks(measure, source, result, reduction))
 
 
-FAMILY_7_9["unbound"].pop("major.7.9.03")
 FAMILY_7_9["requirements"]["major.7.9.03"] = {
     "operation_ids": ["pointset.smooth.jet", "pointset.smooth.bilateral"],
     "symbols": ["jet_smooth_point_set", "bilateral_smooth_point_set"],
-    "symbol_notes": "PLACEHOLDER",
+    "symbol_notes": "pointset.smooth.jet wraps jet_smooth_point_set and pointset.smooth.bilateral wraps "
+                    "bilateral_smooth_point_set (normals required, sharpness angle below 90). The replay measures "
+                    "the analytic deviation of input and output points on four seeded noisy fixtures with a known "
+                    "surface (plane, sphere, quadric and a roof with a crease): smoothing lowers the RMS deviation "
+                    "on the smooth surfaces to at most 0.75 of the input; jet smoothing blunts the crease while "
+                    "bilateral smoothing keeps it (at most 0.5 of the input). The independent smoothing_quality "
+                    "validator separately certifies reduced local roughness, bounded neighbourhood displacement "
+                    "and an unchanged point count, and rejects unsmoothed, rougher, displaced and dropped-point "
+                    "candidates. The bilateral run is deterministic (repeat case with equal outputs).",
     "case_ids": ["smooth-jet-plane", "smooth-jet-sphere", "smooth-jet-quadric", "smooth-jet-roof-blunts-crease",
                  "smooth-bilateral-plane", "smooth-bilateral-plane-repeat", "smooth-bilateral-sphere",
                  "smooth-bilateral-roof-keeps-crease"],
@@ -4822,7 +5036,7 @@ FAMILY_7_10["requirements"]["major.7.10.01"] = {
                     "0.5 mm of the surface (a certified cover bound, 25 percent of R), every facet circumradius "
                     "<= 0.6 mm, and replay assertions on the output itself: closed (0 boundary edges, Euler "
                     "characteristic 2), vertex radius within 1.95 to 2.05 mm, volume within 1.0 of 4/3 pi 8 = 33.51 "
-                    "and area within 1.0 of 16 pi / 4 = 50.27 for two facet sizes (560 and 1518 facets). The "
+                    "and area within 1.0 of 4 pi R^2 = 16 pi = 50.27 for two facet sizes (560 and 1518 facets). The "
                     "torus is deliberately not replayed with this function: on dense R = 2, r = 0.8 torus samples "
                     "CGAL leaves 22 to 107 boundary edges for every tested parameter set. The R = 10 partial "
                     "result is kept as a negative control: the validator rejects it with "

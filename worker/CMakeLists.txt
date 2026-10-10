@@ -111,6 +111,11 @@ add_executable(cgal-master-worker
   master/batch7/b7_registry.cpp
   master/batch7/b7_bilateral_ops.cpp
   master/batch7/b7_smoothing_validators.cpp
+  master/batch8/b8_common.cpp
+  master/batch8/b8_registry.cpp
+  master/batch8/b8_ops.cpp
+  master/batch8/b8_validators_decomp_skeleton.cpp
+  master/batch8/b8_validators_param.cpp
 )
 # smooth_shape needs CGAL's Eigen sparse solver; enable it only where used.
 set_source_files_properties(master/wave_d/remesh_operations.cpp PROPERTIES
@@ -123,6 +128,9 @@ set_source_files_properties(master/reconstruction/reconstruction_operations.cpp 
   COMPILE_DEFINITIONS CGAL_EIGEN3_ENABLED)
 # Hole fairing (triangulate_refine_and_fair_hole) needs CGAL's Eigen sparse solver.
 set_source_files_properties(master/wave_a_repair/repair_common.cpp PROPERTIES
+  COMPILE_DEFINITIONS CGAL_EIGEN3_ENABLED)
+# Mean curvature flow skeletonization and ARAP / discrete conformal map parameterization need CGAL's Eigen support.
+set_source_files_properties(master/batch8/b8_ops.cpp PROPERTIES
   COMPILE_DEFINITIONS CGAL_EIGEN3_ENABLED)
 # Optional third-party dependencies (docs/master/THIRD_PARTY_DEPENDENCIES_JA.md). Without them the
 # worker still builds and declares the same operations, which then report UNSUPPORTED /

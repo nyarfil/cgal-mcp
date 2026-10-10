@@ -46,7 +46,7 @@ CIは台帳を公式配布物から再生成してバイト一致を検査しま
 | 7.5 Boolean | 5/5 | 7.5.01 `corefine`・`autorefine`（単独操作、厳密な面分割と自己交差の残存なしを検証）、7.5.02 union/intersection/difference、.03 `clip`（体積・曲面、厳密な重み付き面積の分割で検証）、.04 `split`・`corefine`（同、2面側の分離も検証）、.05 Polygon_mesh_slicer |
 | 7.6 再メッシュ | 5/5 | 7.6.01 面の三角形分割、.02 refine、.03 等方remesh・長辺分割、.04 平滑化・最適化、.05 適応remesh |
 | 7.7 軽量化 | 6/6 | 7.7.01〜06 |
-| 7.8 再構成 | 2/6 | 7.8.04 `Surface_mesh_shortest_path`（三角形64面以内、頂点または面の重心座標の始点8・終点32まで。面列の展開と可視窓、頂点上のDijkstraをlong doubleで独立再計算し、許容は対角線の1e-9倍と明記）、7.8.06 CatmullClark_subdivision・Loop_subdivision（独立マスク再計算validator） |
+| 7.8 再構成 | 5/6 | 7.8.04 `Surface_mesh_shortest_path`（三角形64面以内、頂点または面の重心座標の始点8・終点32まで。面列の展開と可視窓、頂点上のDijkstraをlong doubleで独立再計算し、許容は対角線の1e-9倍と明記）、7.8.06 CatmullClark_subdivision・Loop_subdivision（独立マスク再計算validator）、7.8.02 approximate_convex_decomposition（凸包は互いに重なり、結果は分割として緊密とは主張しない。独立validatorが各部品の凸性・外向き閉三角形メッシュ・入力頂点の被覆（許容は1ボクセル辺）・総体積を厳密有理数で検査）、7.8.03 extract_mean_curvature_flow_skeleton・Mean_curvature_flow_skeletonization（骨格点と辺中点のメッシュ内部判定、連結成分数、サイクル数＝種数を検査。CGAL既定値はトーラスで崩壊するため負例）、7.8.05 parameterize・Discrete_conformal_map_parameterizer_3（UV全三角形の同符号面積と単純な境界多角形を厳密に検査、調和残差1e-9以下、ARAPは歪み上限を検査） |
 | 7.9 点群 | 6/6 | 7.9.01 法線推定・MST向き付け、.02 `remove_outliers`（既存の`pointset.remove_outliers`に独立validatorを追加）、.03 平滑化（`jet_smooth_point_set`・`bilateral_smooth_point_set`。独立validator`pointset.validate.smoothing_quality`はCGALを使わず、各点の移動がk近傍距離以内であることと局所平面当てはめ粗さの厳密な減少を検査する。受入の判定は既知曲面（平面・球・二次曲面）からの解析的偏差の減少と、屋根形の折れ目での偏差で、bilateralは折れ目を保ち、jetは保たない）、.04 grid/random/hierarchy簡略化、.05 登録（`register_point_sets`・`compute_registration_transformation`、OpenGR v2023.11のSuper4PCS、任意依存。変換は厳密な有理数で直交性・各点の像・RMS・inlier率を独立validatorが検証し、乱数seedはOpenGR既定、全parameterを固定。壁時計上限に達した実行は拒否）、.06 再構成前処理（`compute_average_spacing`・`remove_outliers`）。validatorは全点対の総当たり（long double、相対1e-9の許容、境界近傍は曖昧として拒否） |
 | 7.11 三角形分割 | 4/5 | 7.11.01 Delaunay 2D/3D、.02 制約付き、.03 `Regular_triangulation_2/3`（重み付き点の持ち上げをGMP有理数で検証、重みは長さの二乗）、.05 `Voronoi_diagram_2`（外心・双対辺をGMP有理数で再計算） |
 | 7.12 多角形 | 7/7 | 7.12.01 Polygon_2/with_holesの性質・内外判定、.05 `create_interior_straight_skeleton_2`・`create_exterior_straight_skeleton_2`（輪郭の完全一致・辺ごとに1面・節点が領域内部・節点時刻が接する面辺の直線への距離に等しく境界から離れていること・面積の厳密和をvalidatorが検証、距離は対角線の1e-9倍の許容を明記。外側は穴なし単純多角形のみ）、.06 `create_interior_skeleton_and_offset_polygons_2`・`create_exterior_skeleton_and_offset_polygons_2`（各辺が元の辺に平行で距離d・凸多角形は半平面交差と、矩形は厳密な(w∓2d)(h∓2d)と照合。軸平行な非凸多角形（L字・穴あき正方形）は正方形[-d,d]²による厳密な収縮・膨張とオフセット格子上の境界片・リング数・厳密面積で照合。軸平行でない非凸多角形の空でない結果は未証明のため拒否し、保証範囲は凸多角形と軸平行多角形に限る）、.02 `Arrangement_2`・`insert`・`zone`、.03 `overlay`（面ラベル加算）、.07 `minkowski_sum_2`・`minkowski_sum_by_reduced_convolution_2`（畳み込み片の厳密判定）、.04 `Polygon_set_2`のjoin・intersection・difference（EPECK、境界鎖をGMP有理数で独立再計算） |
@@ -58,7 +58,7 @@ CIは台帳を公式配布物から再生成してバイト一致を検査しま
 未結合要求の不足（7.1・7.6は5/5、7.15は4/4結合済みで不足なし）:
 
 - 7.3.06: 7シンボルのうち6つ（`sample_triangle_mesh`・`max_distance_to_triangle_mesh`・`approximate_Hausdorff_distance`・`approximate_symmetric_Hausdorff_distance`・`approximate_max_distance_to_point_set`・`bounded_error_Hausdorff_distance`）は独立validator付きのOperationになったが、`bounded_error_symmetric_Hausdorff_distance`は軽量化validatorの`mesh.distance.symmetric_hausdorff`（validation.requiredがfalse、出力にソースハッシュなし）でしか呼べず、必須validator連鎖を持てないため再試験できない。同じCGAL関数に2つ目のOperationを作ることは1関数1Operationの規則に反する（要Opus判断: 当該Operationを必須validator連鎖付きの解析Operationへ昇格するか）。
-- 7.8.01〜03、05: 区分化(SDF)・凸分解・骨格・パラメータ化のOperationがない。
+- 7.8.01: 区分化(SDF)のOperationがない。
 - 7.11.04: periodic・on-sphere がない。
 
 注記 (7.3): 7.3.03 法線は、軸整列立方体(外向き/内向き巻きの2ケース)の各面法線・各頂点法線を
