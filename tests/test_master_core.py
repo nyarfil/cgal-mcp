@@ -771,6 +771,19 @@ class MasterCoreTest(unittest.TestCase):
         self.assertTrue(any("bounds" in item for item in
                             orient_step["deferred_preconditions"]["artifact_properties"]))
 
+    def test_symmetric_hausdorff_refuses_over_face_limit_up_front(self):
+        runtime = self.runtime()
+        small = runtime.artifact_import("tests/fixtures/master/wave_a_boolean/cube_a.off", "mm",
+                                        artifact_type="TriangleSurfaceMesh")
+        big = runtime.artifact_import("tests/fixtures/master/batch8/torus.off", "mm",
+                                      artifact_type="TriangleSurfaceMesh")
+        self.assertGreater(big["metadata"]["faces"], 400)
+        with self.assertRaisesRegex(PreconditionFailure, "requires faces<=400"):
+            runtime.plan({"operation_id": "mesh.distance.symmetric_hausdorff",
+                "inputs": [small["artifact_id"], big["artifact_id"]],
+                "parameters": {"tolerance": {"value": 1, "unit": "mm"},
+                               "error_bound": {"value": 0.01, "unit": "mm"}}})
+
     def test_wave_b_zero_normals_and_manifest_union_fail_closed(self):
         source = Path("tests/fixtures/master/wave_b/plane_normals_alternating.ply").read_text(encoding="ascii")
         lines = source.splitlines()

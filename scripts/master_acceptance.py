@@ -108,7 +108,6 @@ WAVE_A_BOUNDED_NORMAL_ANALYTIC_PROOF = {
     },
 }
 WAVE_A_UNMET_STANDALONE_GATES = {
-    "remaining_major_capability_requirements",
     "search_and_retrieval_acceptance",
     "multi_operation_workflow_acceptance",
     "host_compatibility_matrix",

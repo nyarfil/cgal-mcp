@@ -68,5 +68,10 @@ source/candidate/error、解析値、parameter差分を`negative_control_proofs`
 実行するPython source自体の任意改変・monkeypatchを防ぐセキュリティ境界ではありません。
 原本・registry・試験sourceの一致と、実行後の内容不変も検査します。
 
+7.3.06の`mesh.distance.symmetric_hausdorff`は検証が必須で、独立validatorの面数上限（400面）に合わせて
+`bounded_input`（最大400面）を前提条件に宣言しました。400面を超える入力は計算前にregistryが
+`PRECONDITION_FAILED`で拒否し、対応範囲は400面以下のメッシュに限定されます。
+この拒否は負例`distance-symmetric-over-face-limit-refused-up-front`で固定しています。
+
 全80要求、300 intent、30以上のworkflow、全host/build/protocol、故障・資源・性能の
 受入は未完了です。今回のreportも`standalone_accepted: false`を保持します。

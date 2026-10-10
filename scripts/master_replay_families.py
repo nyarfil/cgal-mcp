@@ -31,7 +31,6 @@ FIXTURE_ROOT = "tests/fixtures/master"
 FAMILY_HARNESS_PATH = "tests/master_family_replay_cases.py"
 FAMILY_CONTRACT_PATH = "scripts/master_replay_families.py"
 STANDALONE_UNMET_GATES = (
-    "remaining_major_capability_requirements",
     "search_and_retrieval_acceptance",
     "multi_operation_workflow_acceptance",
     "host_compatibility_matrix",
