@@ -10,7 +10,7 @@ CGAL Master v1の最初の区切り。全主要能力の完成・Standalone受�
 旧102ヘッダー索引は母集団に使用しない。ライセンスの根拠を保持し、
 単一条件を解決できないパッケージは理由付きの未解決状態とする。
 
-新coreは旧runtimeと別の`cgal-master-mcp` entrypoint・データ領域を使う。
+新coreは旧runtimeと別のentrypoint・データ領域を使う（1.0.0以降は`cgal-mcp`がMaster server、旧runtimeは`cgal-mcp-legacy`）。
 公開工具は固定12個。`PointSet3/XYZ → hull.convex_3 → TriangleSurfaceMesh/OFF`
 を実行し、`hull.validate.convex_enclosure`が必ず元点群と結果を照合する。
 不合格候補は隔離され、合格Artifactのみ公開する。点群、Plan、jobと生成履歴は
