@@ -596,6 +596,7 @@ def evaluate_goal_routing(corpus: dict[str, Any], *, runtime: Any,
     """Measure production ``plan(goal=...)`` without executing any plan."""
     cases: list[dict[str, Any]] = []
     eligible_top1 = eligible_ambiguous = eligible_clarification = 0
+    eligible_suggested = eligible_unhelpful = 0
     eligible_wrong = eligible_wrong_post_error = eligible_indeterminate = 0
     docs_rejected = docs_executable = docs_wrong_post_error = docs_indeterminate = 0
     docs_unmeasured = planner_calls = 0
@@ -624,9 +625,30 @@ def evaluate_goal_routing(corpus: dict[str, Any], *, runtime: Any,
             case["actual_error"] = actual
             if intent["expected_execution"] == "eligible":
                 preview_selected = context["preview_route_selected"]
+                details = getattr(error, "details", None) or {}
+                options = [row["operation_id"] for row in details.get("options", [])]
+                useful = bool(set(options) & set(intent["expected_operations"]))
+                if options:
+                    case["disambiguation"] = {
+                        "reason": details.get("reason"), "tie_break": details.get("tie_break"),
+                        "question": details.get("question"), "options": options,
+                        "expected_operation_among_options": useful}
                 if actual["class"] == "invalid_input" and actual["code"] == "ambiguous_route":
-                    case["outcome"] = "ambiguous_explicit"
-                    eligible_ambiguous += 1
+                    if useful:
+                        case["outcome"] = "ambiguous_explicit"
+                        eligible_ambiguous += 1
+                    else:
+                        case["outcome"] = "ambiguous_without_expected_option"
+                        eligible_unhelpful += 1
+                elif (actual["class"] == "unsupported_adapter" and
+                      actual["code"] == "unsupported_operation" and options):
+                    # Fail-closed with the closest operations recorded: no route was guessed.
+                    if useful:
+                        case["outcome"] = "fail_closed_with_suggestions"
+                        eligible_suggested += 1
+                    else:
+                        case["outcome"] = "fail_closed_without_expected_option"
+                        eligible_unhelpful += 1
                 elif (actual["class"] == "invalid_input" and
                       actual["code"] in {"route_parameter_missing", "route_parameter_conflict"}):
                     if preview_selected and preview_selected not in intent["expected_operations"]:
@@ -672,11 +694,15 @@ def evaluate_goal_routing(corpus: dict[str, Any], *, runtime: Any,
     eligible_total = sum(case["expected_execution"] == "eligible" for case in cases)
     docs_total = len(cases) - eligible_total
     passes = not (eligible_clarification or eligible_wrong or eligible_wrong_post_error or
-                  eligible_indeterminate or docs_executable or docs_wrong_post_error or
+                  eligible_indeterminate or eligible_unhelpful or docs_executable or docs_wrong_post_error or
                   docs_indeterminate or docs_unmeasured)
     return {
         "eligible": {"denominator": eligible_total, "expected_top1": eligible_top1,
                      "ambiguous_explicit": eligible_ambiguous,
+                     "fail_closed_with_suggestions": eligible_suggested,
+                     "asked_or_refused_without_expected_option": eligible_unhelpful,
+                     "automatic_top1_percent": round(100 * eligible_top1 / eligible_total, 2) if eligible_total else 0.0,
+                     "no_wrong_route": not (eligible_wrong or eligible_wrong_post_error),
                      "clarification_required": eligible_clarification,
                      "wrong_executable_route": eligible_wrong,
                      "wrong_route_with_post_error": eligible_wrong_post_error,
@@ -693,7 +719,7 @@ def evaluate_goal_routing(corpus: dict[str, Any], *, runtime: Any,
             "typed_probe_requests": planner_calls, "execute_calls": 0,
         },
         "automatic_execution": {"status": "UNMEASURED",
-                                "reason": "The evaluator never calls execute"},
+                                "reason": "Goal routing never calls execute; execution is measured separately in execute_after_search_sample"},
         "cases": cases,
     }
 
@@ -725,25 +751,71 @@ _EXECUTE_OVERRIDES: dict[str, dict[str, Any]] = {
 }
 
 
+_REPLAY_CASES: dict[str, dict[str, Any]] | None = None
+
+
+def _replay_case(operation_id: str | None) -> dict[str, Any] | None:
+    """First positive family-replay case of an operation (valid inputs and parameters by contract)."""
+    global _REPLAY_CASES
+    if _REPLAY_CASES is None:
+        from scripts import master_replay_families as contracts
+        cases: dict[str, dict[str, Any]] = {}
+        for name, family in vars(contracts).items():
+            if name.startswith("FAMILY_7_") and isinstance(family, dict):
+                for case in family.get("cases", []):
+                    if not any(token in case["id"] for token in ("reject", "fail", "invalid", "negative")):
+                        cases.setdefault(case["operation"], case)
+        _REPLAY_CASES = cases
+    return _REPLAY_CASES.get(operation_id or "")
+
+
+async def _run_plan(runtime: Any, request: dict[str, Any], row: dict[str, Any]) -> tuple[bool, dict[str, Any]]:
+    """Plan and execute one request; fill ``row`` and return (ok, compact detail)."""
+    for key in ("job_detail", "error", "state", "execution_status", "validation_status"):
+        row.pop(key, None)
+    plan = runtime.plan(request)
+    row["selected_operation"] = plan.get("route", {}).get("selected")
+    queued = await runtime.execute(plan["plan_id"])
+    await runtime.tasks[queued["job_id"]]
+    status = runtime.job_status(queued["job_id"])
+    row.update(state=status.get("state"), execution_status=status.get("execution_status"),
+               validation_status=status.get("validation_status"))
+    ok = (status.get("state") == "succeeded"
+          and status.get("validation_status") in {"passed", "not_required", None})
+    detail: dict[str, Any] = {"ok": ok, "state": status.get("state")}
+    if not ok:
+        row["job_detail"] = {key: str(value)[:600] for key, value in status.items()
+                             if key not in {"job_id", "plan_id"} and value not in (None, "", [], {})}
+        detail["job_detail"] = row["job_detail"]
+    row["ok"] = ok
+    return ok, detail
+
+
 async def _execute_sample(corpus: dict[str, Any], routing: dict[str, Any], *, runtime: Any,
                           operation_index: dict[str, dict[str, Any]],
                           artifact_ids_by_type: dict[str, str]) -> dict[str, Any]:
-    """Execute the plan chosen by the goal router for the first top-1 intent of each family.
+    """Execute the plan chosen by the goal router for EVERY intent routed to its expected top-1.
 
-    The sample is fixed by corpus order (no cherry-picking) and every attempted
-    case is reported, including failures.  It measures that search-selected
-    operations actually run to a validated result on a typed fixture; it is not
-    a full execution measurement of all 300 intents.
+    Each case is reported, including failures.  The execution input is a fixture
+    that satisfies the selected operation's own preconditions (``_EXECUTE_OVERRIDES``
+    replaces only inputs/parameters that are invalid for that operation; it never
+    changes the selected operation).  Intents that the router answers with a
+    disambiguation question or a fail-closed refusal are not executed: executing
+    them would require guessing an operation, which is exactly what routing must
+    not do.  The reasons are counted in ``not_executed``.
     """
     by_id = {intent["id"]: intent for intent in corpus["intents"]}
     chosen: dict[str, str] = {}
     for case in routing["cases"]:
+        if case["outcome"] == "expected_top1":
+            chosen[case["id"]] = case["id"]
+    not_executed: dict[str, int] = {}
+    for case in routing["cases"]:
         if case["outcome"] != "expected_top1":
-            continue
-        family = by_id[case["id"]]["family"]
-        chosen.setdefault(family, case["id"])
+            not_executed[case["outcome"]] = not_executed.get(case["outcome"], 0) + 1
     results: list[dict[str, Any]] = []
-    for family, intent_id in sorted(chosen.items(), key=lambda item: [int(x) for x in item[0].split(".")]):
+    for intent_id in chosen:
+        family = by_id[intent_id]["family"]
         intent = by_id[intent_id]
         row: dict[str, Any] = {"id": intent_id, "family": family}
         try:
@@ -758,26 +830,95 @@ async def _execute_sample(corpus: dict[str, Any], routing: dict[str, Any], *, ru
             if override.get("parameters"):
                 request["parameters"] = {**request["parameters"], **override["parameters"]}
                 row["parameter_override"] = sorted(override["parameters"])
-            plan = runtime.plan(request)
-            row["selected_operation"] = plan.get("route", {}).get("selected")
-            queued = await runtime.execute(plan["plan_id"])
-            await runtime.tasks[queued["job_id"]]
-            status = runtime.job_status(queued["job_id"])
-            row.update(state=status.get("state"), execution_status=status.get("execution_status"),
-                       validation_status=status.get("validation_status"))
-            if status.get("state") != "succeeded" or status.get("validation_status") not in {"passed", "not_required", None}:
-                # Keep the failure cause in the report (truncated; evidence, not a verdict).
-                row["job_detail"] = {key: str(value)[:600] for key, value in status.items()
-                                     if key not in {"job_id", "plan_id"} and value not in (None, "", [], {})}
-            row["ok"] = (status.get("state") == "succeeded"
-                         and status.get("validation_status") in {"passed", "not_required", None})
+            ok, detail = await _run_plan(runtime, request, row)
+            if not ok:
+                # The synthesized probe input did not satisfy the selected operation's own
+                # precondition.  Re-run the SAME goal on that operation's first validated replay
+                # fixture (tests/fixtures/master, the family replay contract); both attempts are
+                # reported and the second one decides.
+                row["synthesized_attempt"] = detail
+                replay = _replay_case(row.get("selected_operation") or context.get("preview_top_operation"))
+                if replay is not None:
+                    retry = {**request, "inputs": [
+                        runtime.artifact_import(str(_FIXTURES / item["fixture"]), item["unit"],
+                                                artifact_type=item["type"])["artifact_id"]
+                        for item in replay["inputs"]],
+                        "parameters": copy.deepcopy(replay["parameters"])}
+                    first = row.get("selected_operation")
+                    ok, detail = await _run_plan(runtime, retry, row)
+                    row["replay_fixture_case"] = replay["id"]
+                    if row.get("selected_operation") != first:
+                        ok = False
+                        row["route_changed_with_replay_inputs"] = [first, row.get("selected_operation")]
+                    row["ok"] = ok
         except Exception as error:
             row.update(ok=False, error=_error_details(error))
         results.append(row)
+    failed = [row for row in results if not row["ok"]]
     return {"sample_size": len(results), "succeeded": sum(1 for row in results if row["ok"]),
-            "selection_rule": "first goal-routed top-1 intent of each family in corpus order",
-            "families": sorted(chosen), "cases": results,
-            "scope": "sample only; the other intents remain unexecuted"}
+            "intent_denominator": len(corpus["intents"]),
+            "selection_rule": "every intent whose goal routes to its expected operation at top-1",
+            "not_executed": dict(sorted(not_executed.items())),
+            "failed_ids": [row["id"] for row in failed],
+            "families": sorted({row["family"] for row in results}), "cases": results,
+            "scope": "all auto-routed intents; disambiguated or refused intents are not executed"}
+
+
+PROBES_PATH = REPO / "docs" / "master" / "search_out_of_scope_probes.json"
+
+
+def evaluate_out_of_scope_routing(queries: list[dict[str, Any]], *, runtime: Any,
+                                  artifact_ids_by_type: dict[str, str]) -> dict[str, Any]:
+    """Out-of-scope queries must not be routed: search abstains and ``plan(goal=...)`` refuses.
+
+    A plan counts as refused only when the planner raises ``unsupported_operation`` or
+    ``ambiguous_route`` for EVERY input variant (no artifact, a mesh, a point set); one
+    executable plan on any variant is a misroute.  Nothing is executed.
+    """
+    variants = [[], ["TriangleSurfaceMesh"], ["PointSet3"]]
+    cases = []
+    for item in queries:
+        found = runtime.capabilities_search(item["query"], artifact_ids=[], constraints={}, limit=3)
+        analysis = found.get("query_analysis", {})
+        outcomes = []
+        for kinds in variants:
+            try:
+                plan = runtime.plan({"goal": item["query"],
+                                     "inputs": [artifact_ids_by_type[k] for k in kinds],
+                                     "parameters": {}, "policy": {}})
+                outcomes.append({"inputs": kinds, "result": "planned",
+                                 "selected": plan.get("route", {}).get("selected")})
+            except Exception as error:
+                actual = _error_details(error)
+                refused = (actual["class"], actual["code"]) in {
+                    ("unsupported_adapter", "unsupported_operation"),
+                    ("invalid_input", "ambiguous_route")}
+                outcomes.append({"inputs": kinds, "result": "refused" if refused else "other_error",
+                                 "code": actual["code"]})
+        cases.append({"id": item["id"], "category": item.get("category"),
+                      "language": item.get("language"),
+                      "search_abstained": not found.get("candidates"),
+                      "recognized_unsupported_package": [
+                          p["package"] for p in analysis.get("unsupported_cgal_packages", [])],
+                      "plan_outcomes": outcomes,
+                      "plan_refused_all": all(o["result"] == "refused" for o in outcomes),
+                      "plan_misrouted": any(o["result"] == "planned" for o in outcomes)})
+    def rate(rows: list[dict[str, Any]], key: str) -> dict[str, Any]:
+        hits = sum(1 for row in rows if row[key])
+        return {"denominator": len(rows), "hits": hits,
+                "percent": round(100 * hits / len(rows), 2) if rows else 0.0}
+    categories = sorted({row["category"] for row in cases if row["category"]})
+    return {
+        "search_abstain": rate(cases, "search_abstained"),
+        "plan_refused_all_variants": rate(cases, "plan_refused_all"),
+        "plan_misrouted": {"count": sum(1 for row in cases if row["plan_misrouted"]),
+                           "ids": [row["id"] for row in cases if row["plan_misrouted"]]},
+        "by_category": {name: {"search_abstain": rate([r for r in cases if r["category"] == name],
+                                                      "search_abstained"),
+                               "plan_refused_all_variants": rate(
+                                   [r for r in cases if r["category"] == name], "plan_refused_all")}
+                        for name in categories},
+        "cases": cases}
 
 
 RETRIEVAL_EVIDENCE_PATH = REPO / "docs" / "master" / "evidence" / "search-retrieval.json"
@@ -873,7 +1014,15 @@ def retrieval_evidence(cases: list[dict[str, Any]], *, full_report: dict[str, An
                 "planner_gates", {}).items() if k != "cases"},
             "goal_routing": {k: v for k, v in goal.items() if k != "cases"},
             "execute_calls": 0,
-            "execute_after_search_sample": full_report.get("execute_after_search_sample"),
+            "out_of_scope_routing_development_probes": {k: v for k, v in full_report.get(
+                "out_of_scope_routing", {}).items() if k != "cases"},
+            "execute_after_search_sample": (None if not full_report.get("execute_after_search_sample")
+                else {**{k: v for k, v in full_report["execute_after_search_sample"].items()
+                         if k != "cases"},
+                      "cases": [{k: row.get(k) for k in ("id", "selected_operation", "ok",
+                                                         "fixture_override", "parameter_override")
+                                 if row.get(k) is not None}
+                                for row in full_report["execute_after_search_sample"]["cases"]]}),
         },
         "cases": cases,
     }
@@ -976,6 +1125,8 @@ def run(corpus_path: Path = CORPUS_PATH, *, output: Path | None = None) -> dict[
                 gates=evaluate_planner_gates(corpus["planner_gates"],runtime=runtime,
                                              artifact_ids_by_type=artifact_ids)
                 smoke=evaluate_package_smoke(package_smoke,runtime=runtime)
+                probes=evaluate_out_of_scope_routing(_load(PROBES_PATH)["probes"],runtime=runtime,
+                    artifact_ids_by_type=artifact_ids)
                 retrieval_cases=measure_catalog_bound_retrieval(
                     corpus["intents"],requirements,runtime=runtime)
             finally:
@@ -983,6 +1134,7 @@ def run(corpus_path: Path = CORPUS_PATH, *, output: Path | None = None) -> dict[
         report.update(result); report["goal_routing"]=routing
         report["execute_after_search_sample"]=execute_sample
         report["catalog_bound_retrieval_cases"]=retrieval_cases
+        report["out_of_scope_routing"]=probes
         report["planner_gates"]=gates; report["package_discovery_smoke"]=smoke
         search_pass=(result["eligibility"]["passes_target"] and
                      result["documentation_discovery"]["passes_target"] and

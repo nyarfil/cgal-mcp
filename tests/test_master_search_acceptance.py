@@ -204,7 +204,9 @@ class MasterSearchAcceptanceTests(unittest.TestCase):
             "routing_probe":{"status":"measured"}}]
         runtime=_RoutingRuntime({
             "build hull":"hull.convex_3",
-            "ambiguous":InvalidInput("ambiguous_route","choose an operation"),
+            "ambiguous":InvalidInput("ambiguous_route","choose an operation",{
+                "reason":"tied_scores","tie_break":"none","question":"which?",
+                "options":[{"operation_id":"hull.convex_3"},{"operation_id":"hull.other"}]}),
             "docs":UnsupportedOperation("docs")})
         operation={"id":"hull.convex_3","status":"VALIDATED",
                    "io":{"inputs":[{"types":["PointSet3"]}]},
@@ -219,6 +221,33 @@ class MasterSearchAcceptanceTests(unittest.TestCase):
         self.assertEqual(report["documentation_only"]["explicitly_rejected"],1)
         self.assertEqual(runtime.plan_calls,3)
         self.assertEqual(runtime.execute_calls,0)
+
+    def test_goal_routing_rejects_ambiguity_without_a_useful_recorded_question(self):
+        intents=[{
+            "id":"bare","query":"bare","expected_execution":"eligible",
+            "expected_operations":["hull.convex_3"],"input_types":["PointSet3"],
+            "routing_probe":{"status":"measured"}}, {
+            "id":"offtarget","query":"offtarget","expected_execution":"eligible",
+            "expected_operations":["hull.convex_3"],"input_types":["PointSet3"],
+            "routing_probe":{"status":"measured"}}, {
+            "id":"suggested","query":"suggested","expected_execution":"eligible",
+            "expected_operations":["hull.convex_3"],"input_types":["PointSet3"],
+            "routing_probe":{"status":"measured"}}]
+        runtime=_RoutingRuntime({
+            "bare":InvalidInput("ambiguous_route","choose an operation"),
+            "offtarget":InvalidInput("ambiguous_route","choose",{"options":[{"operation_id":"hull.other"}]}),
+            "suggested":UnsupportedOperation("suggested",{"options":[{"operation_id":"hull.convex_3"}]})})
+        operation={"id":"hull.convex_3","status":"VALIDATED",
+                   "io":{"inputs":[{"types":["PointSet3"]}]},
+                   "parameters":{"type":"object","required":[],"properties":{}}}
+        report=acceptance.evaluate_goal_routing(
+            {"intents":intents},runtime=runtime,
+            operation_index={"hull.convex_3":operation},
+            artifact_ids_by_type={"PointSet3":"artifact-points"})
+        self.assertFalse(report["passes"])
+        self.assertEqual(report["eligible"]["asked_or_refused_without_expected_option"],2)
+        self.assertEqual(report["eligible"]["fail_closed_with_suggestions"],1)
+        self.assertTrue(report["eligible"]["no_wrong_route"])
 
     def test_goal_routing_rejects_wrong_plan_and_post_route_parameter_error(self):
         intents=[{

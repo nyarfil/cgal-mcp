@@ -19,6 +19,7 @@ from .registry import OperationRegistry
 from .package_terms import PACKAGE_REFERENCE_TERMS, package_reference_score
 from .search import QueryTerms, fts_expression, lexical_score, parse_query
 from .store import ArtifactStore
+from .unsupported import UnsupportedPackageIndex
 from .resources import ResourceConfig
 from .result_cache import ResultCache
 from .supervisor import PersistentPolicy, WorkerSupervisor, default_worker_path
@@ -129,6 +130,7 @@ class MasterRuntime:
                              if result_cache else None)
         self.catalog_root = _catalog_path(catalog_root)
         self.docs_index = _docs_index_path(docs_index, self.catalog_root)
+        self.registry.unsupported_index = UnsupportedPackageIndex.load(self.catalog_root)
         self.allowed_file_roots = (None if allowed_file_roots is None else
                                    tuple(path.resolve() for path in allowed_file_roots))
         self.semaphore = asyncio.Semaphore(resources.concurrency)
@@ -435,9 +437,12 @@ class MasterRuntime:
                 descriptor = produced.get((binding["step"], binding["slot"]))
                 if descriptor is None:
                     raise InvalidInput("missing_step_output", f"Missing output from {binding['step']}")
-                result.append({key: descriptor[key] for key in
-                               ("artifact_id", "type", "unit", "format", "path", "sha256",
-                                "size", "properties", "metadata")})
+                # A ValidationReport output is never inspected as geometry, so it has no
+                # properties/metadata; a validator consuming it must still be resolvable.
+                result.append({**{key: descriptor[key] for key in
+                                  ("artifact_id", "type", "unit", "format", "path", "sha256", "size")},
+                               "properties": descriptor.get("properties", {}),
+                               "metadata": descriptor.get("metadata", {})})
         return result
 
     @staticmethod

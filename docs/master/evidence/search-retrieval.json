@@ -8,8 +8,8 @@
     "operations_sha256": "78abd290a0bcdf4c04f9500ba0b329bf604b555d213f28b2ff7fe260fdb894b9",
     "search_vocabulary_sha256": "fd3a1b90ff8e2d135c5d00ed275b00a1568853acaefe43210ed36c55f26f9603",
     "search_data_sha256": "f50fc5294d0e436040d5045af1b629604489ad6b4048b9f965f7e4f11027e0fc",
-    "registry_ranker_sha256": "5030ac7b2efed28ea536148552f956bda6ad738386c31c0d4d91f0b4a8fed986",
-    "generator_sha256": "2512627337dd087563289dd55b969906cb99b0e8c79dcbf4ea2e9fe7586b319c"
+    "registry_ranker_sha256": "e737d2bef512bbd7c6d40353714a5fd961646f3fa90908b400e5e4eba33ee59b",
+    "generator_sha256": "925bccfadf51b9ef8f753a1007984ed9b0bd5ab040e5ae3387943ca4f6b5dd1a"
   },
   "split": {
     "rule": "sha256(requirement_id) mod 3 == 0 is held_out",
@@ -115,10 +115,14 @@
         "denominator": 300,
         "expected_top1": 240,
         "ambiguous_explicit": 51,
+        "fail_closed_with_suggestions": 6,
+        "asked_or_refused_without_expected_option": 1,
+        "automatic_top1_percent": 80.0,
+        "no_wrong_route": true,
         "clarification_required": 0,
         "wrong_executable_route": 0,
         "wrong_route_with_post_error": 0,
-        "indeterminate_error": 9
+        "indeterminate_error": 2
       },
       "documentation_only": {
         "denominator": 0,
@@ -137,14 +141,88 @@
       },
       "automatic_execution": {
         "status": "UNMEASURED",
-        "reason": "The evaluator never calls execute"
+        "reason": "Goal routing never calls execute; execution is measured separately in execute_after_search_sample"
       }
     },
     "execute_calls": 0,
+    "out_of_scope_routing_development_probes": {
+      "search_abstain": {
+        "denominator": 56,
+        "hits": 47,
+        "percent": 83.93
+      },
+      "plan_refused_all_variants": {
+        "denominator": 56,
+        "hits": 56,
+        "percent": 100.0
+      },
+      "plan_misrouted": {
+        "count": 0,
+        "ids": []
+      },
+      "by_category": {
+        "non_geometry": {
+          "search_abstain": {
+            "denominator": 16,
+            "hits": 16,
+            "percent": 100.0
+          },
+          "plan_refused_all_variants": {
+            "denominator": 16,
+            "hits": 16,
+            "percent": 100.0
+          }
+        },
+        "other_library": {
+          "search_abstain": {
+            "denominator": 16,
+            "hits": 13,
+            "percent": 81.25
+          },
+          "plan_refused_all_variants": {
+            "denominator": 16,
+            "hits": 16,
+            "percent": 100.0
+          }
+        },
+        "unsupported_cgal": {
+          "search_abstain": {
+            "denominator": 16,
+            "hits": 11,
+            "percent": 68.75
+          },
+          "plan_refused_all_variants": {
+            "denominator": 16,
+            "hits": 16,
+            "percent": 100.0
+          }
+        },
+        "vague_or_decorative": {
+          "search_abstain": {
+            "denominator": 8,
+            "hits": 7,
+            "percent": 87.5
+          },
+          "plan_refused_all_variants": {
+            "denominator": 8,
+            "hits": 8,
+            "percent": 100.0
+          }
+        }
+      }
+    },
     "execute_after_search_sample": {
-      "sample_size": 15,
-      "succeeded": 15,
-      "selection_rule": "first goal-routed top-1 intent of each family in corpus order",
+      "sample_size": 240,
+      "succeeded": 240,
+      "intent_denominator": 300,
+      "selection_rule": "every intent whose goal routes to its expected operation at top-1",
+      "not_executed": {
+        "ambiguous_explicit": 51,
+        "fail_closed_with_suggestions": 6,
+        "fail_closed_without_expected_option": 1,
+        "indeterminate_error": 2
+      },
+      "failed_ids": [],
       "families": [
         "7.1",
         "7.10",
@@ -162,80 +240,631 @@
         "7.8",
         "7.9"
       ],
+      "scope": "all auto-routed intents; disambiguated or refused intents are not executed",
       "cases": [
         {
           "id": "intent-ja-001",
-          "family": "7.1",
           "selected_operation": "kernel.predicates.evaluate",
-          "state": "succeeded",
-          "execution_status": "succeeded",
-          "validation_status": "passed",
+          "ok": true
+        },
+        {
+          "id": "intent-en-002",
+          "selected_operation": "kernel.predicates.evaluate",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-003",
+          "selected_operation": "kernel.primitives.construct",
+          "ok": true
+        },
+        {
+          "id": "intent-en-004",
+          "selected_operation": "kernel.primitives.construct",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-005",
+          "selected_operation": "kernel.predicates.evaluate",
+          "ok": true
+        },
+        {
+          "id": "intent-en-006",
+          "selected_operation": "kernel.predicates.evaluate",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-007",
+          "selected_operation": "kernel.intersections.compute",
+          "ok": true
+        },
+        {
+          "id": "intent-en-008",
+          "selected_operation": "kernel.intersections.compute",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-009",
+          "selected_operation": "kernel.distance.squared",
+          "ok": true
+        },
+        {
+          "id": "intent-en-010",
+          "selected_operation": "kernel.distance.squared",
           "ok": true
         },
         {
           "id": "intent-en-012",
-          "family": "7.2",
           "selected_operation": "spatial.aabb.ray_first_hits",
-          "state": "succeeded",
-          "execution_status": "succeeded",
-          "validation_status": "passed",
+          "ok": true
+        },
+        {
+          "id": "intent-en-016",
+          "selected_operation": "spatial.knn_3",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-017",
+          "selected_operation": "spatial.aabb.intersections",
+          "ok": true
+        },
+        {
+          "id": "intent-en-018",
+          "selected_operation": "spatial.aabb.intersections",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-019",
+          "selected_operation": "spatial.bbox_3",
+          "ok": true
+        },
+        {
+          "id": "intent-en-020",
+          "selected_operation": "spatial.bbox_3",
           "ok": true
         },
         {
           "id": "intent-ja-021",
-          "family": "7.3",
           "selected_operation": "mesh.inspect.pmp",
-          "state": "succeeded",
-          "execution_status": "succeeded",
-          "validation_status": "passed",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-022",
+          "selected_operation": "mesh.inspect.pmp",
+          "ok": true
+        },
+        {
+          "id": "intent-en-023",
+          "selected_operation": "mesh.inspect.pmp",
+          "ok": true
+        },
+        {
+          "id": "intent-en-024",
+          "selected_operation": "mesh.inspect.pmp",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-025",
+          "selected_operation": "mesh.analysis.connected_components",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-026",
+          "selected_operation": "mesh.analysis.connected_components",
+          "ok": true
+        },
+        {
+          "id": "intent-en-027",
+          "selected_operation": "mesh.components.label",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-029",
+          "selected_operation": "mesh.analysis.normals",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-030",
+          "selected_operation": "mesh.analysis.normals",
+          "ok": true
+        },
+        {
+          "id": "intent-en-031",
+          "selected_operation": "mesh.analysis.normals",
+          "ok": true
+        },
+        {
+          "id": "intent-en-032",
+          "selected_operation": "mesh.analysis.normals",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-037",
+          "selected_operation": "mesh.analysis.sharp_features",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-038",
+          "selected_operation": "mesh.analysis.sharp_features",
+          "ok": true
+        },
+        {
+          "id": "intent-en-039",
+          "selected_operation": "mesh.analysis.sharp_features",
+          "ok": true
+        },
+        {
+          "id": "intent-en-040",
+          "selected_operation": "mesh.analysis.sharp_features",
+          "ok": true
+        },
+        {
+          "id": "intent-en-043",
+          "selected_operation": "mesh.distance.symmetric_hausdorff",
+          "ok": true
+        },
+        {
+          "id": "intent-en-044",
+          "selected_operation": "mesh.distance.symmetric_hausdorff",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-045",
+          "selected_operation": "mesh.analysis.self_intersections",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-046",
+          "selected_operation": "mesh.analysis.self_intersections",
+          "ok": true
+        },
+        {
+          "id": "intent-en-047",
+          "selected_operation": "mesh.analysis.self_intersections",
+          "ok": true
+        },
+        {
+          "id": "intent-en-048",
+          "selected_operation": "mesh.analysis.self_intersections",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-049",
+          "selected_operation": "mesh.location.locate",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-050",
+          "selected_operation": "mesh.location.locate",
+          "ok": true
+        },
+        {
+          "id": "intent-en-051",
+          "selected_operation": "mesh.location.locate",
+          "ok": true
+        },
+        {
+          "id": "intent-en-052",
+          "selected_operation": "mesh.location.locate",
           "ok": true
         },
         {
           "id": "intent-ja-053",
-          "family": "7.4",
+          "selected_operation": "mesh.repair.orient",
+          "ok": true,
           "fixture_override": [
             "wave_a_repair/tetra_flipped_soup.off"
-          ],
+          ]
+        },
+        {
+          "id": "intent-ja-054",
           "selected_operation": "mesh.repair.orient",
-          "state": "succeeded",
-          "execution_status": "succeeded",
-          "validation_status": "passed",
+          "ok": true,
+          "fixture_override": [
+            "wave_a_repair/tetra_flipped_soup.off"
+          ]
+        },
+        {
+          "id": "intent-en-055",
+          "selected_operation": "mesh.repair.orient",
+          "ok": true,
+          "fixture_override": [
+            "wave_a_repair/tetra_flipped_soup.off"
+          ]
+        },
+        {
+          "id": "intent-en-056",
+          "selected_operation": "mesh.repair.orient",
+          "ok": true,
+          "fixture_override": [
+            "wave_a_repair/tetra_flipped_soup.off"
+          ]
+        },
+        {
+          "id": "intent-ja-057",
+          "selected_operation": "mesh.repair.stitch_borders",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-058",
+          "selected_operation": "mesh.repair.stitch_borders",
+          "ok": true
+        },
+        {
+          "id": "intent-en-059",
+          "selected_operation": "mesh.repair.stitch_borders",
+          "ok": true
+        },
+        {
+          "id": "intent-en-060",
+          "selected_operation": "mesh.repair.stitch_borders",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-061",
+          "selected_operation": "mesh.repair.remove_degenerate",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-062",
+          "selected_operation": "mesh.repair.remove_degenerate",
+          "ok": true
+        },
+        {
+          "id": "intent-en-063",
+          "selected_operation": "mesh.repair.remove_degenerate",
+          "ok": true
+        },
+        {
+          "id": "intent-en-064",
+          "selected_operation": "mesh.repair.remove_degenerate",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-065",
+          "selected_operation": "mesh.repair.fill_holes",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-066",
+          "selected_operation": "mesh.repair.fill_holes",
+          "ok": true
+        },
+        {
+          "id": "intent-en-067",
+          "selected_operation": "mesh.repair.fill_holes_refine_fair",
+          "ok": true
+        },
+        {
+          "id": "intent-en-068",
+          "selected_operation": "mesh.repair.fill_holes_refine_fair",
+          "ok": true
+        },
+        {
+          "id": "intent-en-071",
+          "selected_operation": "mesh.repair.orient",
+          "ok": true,
+          "fixture_override": [
+            "wave_a_repair/tetra_flipped_soup.off"
+          ]
+        },
+        {
+          "id": "intent-en-072",
+          "selected_operation": "mesh.repair.orient",
+          "ok": true,
+          "fixture_override": [
+            "wave_a_repair/tetra_flipped_soup.off"
+          ]
+        },
+        {
+          "id": "intent-ja-073",
+          "selected_operation": "mesh.repair.manifold_preprocess",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-074",
+          "selected_operation": "mesh.repair.manifold_preprocess",
+          "ok": true
+        },
+        {
+          "id": "intent-en-075",
+          "selected_operation": "mesh.repair.manifold_preprocess",
+          "ok": true
+        },
+        {
+          "id": "intent-en-076",
+          "selected_operation": "mesh.repair.manifold_preprocess",
           "ok": true
         },
         {
           "id": "intent-ja-077",
-          "family": "7.5",
+          "selected_operation": "mesh.corefine",
+          "ok": true,
           "fixture_override": [
             "query/tetra.off",
             "batch2/tetra_b.off"
-          ],
+          ]
+        },
+        {
+          "id": "intent-ja-078",
           "selected_operation": "mesh.corefine",
-          "state": "succeeded",
-          "execution_status": "succeeded",
-          "validation_status": "passed",
+          "ok": true,
+          "fixture_override": [
+            "query/tetra.off",
+            "batch2/tetra_b.off"
+          ]
+        },
+        {
+          "id": "intent-en-079",
+          "selected_operation": "mesh.corefine",
+          "ok": true,
+          "fixture_override": [
+            "query/tetra.off",
+            "batch2/tetra_b.off"
+          ]
+        },
+        {
+          "id": "intent-en-080",
+          "selected_operation": "mesh.corefine",
+          "ok": true,
+          "fixture_override": [
+            "query/tetra.off",
+            "batch2/tetra_b.off"
+          ]
+        },
+        {
+          "id": "intent-ja-085",
+          "selected_operation": "mesh.clip.plane",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-086",
+          "selected_operation": "mesh.clip.plane",
+          "ok": true
+        },
+        {
+          "id": "intent-en-087",
+          "selected_operation": "mesh.clip.plane",
+          "ok": true
+        },
+        {
+          "id": "intent-en-088",
+          "selected_operation": "mesh.clip.plane",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-093",
+          "selected_operation": "mesh.slice.compute",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-094",
+          "selected_operation": "mesh.slice.compute",
+          "ok": true
+        },
+        {
+          "id": "intent-en-095",
+          "selected_operation": "mesh.slice.compute",
+          "ok": true
+        },
+        {
+          "id": "intent-en-096",
+          "selected_operation": "mesh.slice.compute",
           "ok": true
         },
         {
           "id": "intent-ja-097",
-          "family": "7.6",
           "selected_operation": "mesh.triangulate.faces",
-          "state": "succeeded",
-          "execution_status": "succeeded",
-          "validation_status": "passed",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-098",
+          "selected_operation": "mesh.triangulate.faces",
+          "ok": true
+        },
+        {
+          "id": "intent-en-099",
+          "selected_operation": "mesh.triangulate.faces",
+          "ok": true
+        },
+        {
+          "id": "intent-en-100",
+          "selected_operation": "mesh.triangulate.faces",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-101",
+          "selected_operation": "mesh.refine.local",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-102",
+          "selected_operation": "mesh.refine.local",
+          "ok": true
+        },
+        {
+          "id": "intent-en-103",
+          "selected_operation": "mesh.refine.local",
+          "ok": true
+        },
+        {
+          "id": "intent-en-104",
+          "selected_operation": "mesh.refine.local",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-105",
+          "selected_operation": "mesh.remesh.isotropic",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-106",
+          "selected_operation": "mesh.remesh.isotropic",
+          "ok": true
+        },
+        {
+          "id": "intent-en-107",
+          "selected_operation": "mesh.remesh.isotropic",
+          "ok": true
+        },
+        {
+          "id": "intent-en-108",
+          "selected_operation": "mesh.remesh.isotropic",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-109",
+          "selected_operation": "mesh.smooth.tangential_relaxation",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-110",
+          "selected_operation": "mesh.smooth.tangential_relaxation",
+          "ok": true
+        },
+        {
+          "id": "intent-en-111",
+          "selected_operation": "mesh.smooth.tangential_relaxation",
+          "ok": true
+        },
+        {
+          "id": "intent-en-112",
+          "selected_operation": "mesh.smooth.tangential_relaxation",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-113",
+          "selected_operation": "mesh.remesh.adaptive",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-114",
+          "selected_operation": "mesh.remesh.adaptive",
+          "ok": true
+        },
+        {
+          "id": "intent-en-115",
+          "selected_operation": "mesh.remesh.adaptive",
+          "ok": true
+        },
+        {
+          "id": "intent-en-116",
+          "selected_operation": "mesh.remesh.adaptive",
           "ok": true
         },
         {
           "id": "intent-ja-117",
-          "family": "7.7",
           "selected_operation": "mesh.simplify.edge_collapse",
-          "state": "succeeded",
-          "execution_status": "succeeded",
-          "validation_status": "passed",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-118",
+          "selected_operation": "kernel.predicates.evaluate",
+          "ok": true
+        },
+        {
+          "id": "intent-en-119",
+          "selected_operation": "mesh.simplify.edge_collapse",
+          "ok": true
+        },
+        {
+          "id": "intent-en-120",
+          "selected_operation": "kernel.predicates.evaluate",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-121",
+          "selected_operation": "mesh.simplify.edge_collapse",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-122",
+          "selected_operation": "kernel.primitives.construct",
+          "ok": true
+        },
+        {
+          "id": "intent-en-123",
+          "selected_operation": "mesh.simplify.edge_collapse",
+          "ok": true
+        },
+        {
+          "id": "intent-en-124",
+          "selected_operation": "kernel.primitives.construct",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-125",
+          "selected_operation": "mesh.simplify.edge_collapse",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-126",
+          "selected_operation": "kernel.predicates.evaluate",
+          "ok": true
+        },
+        {
+          "id": "intent-en-127",
+          "selected_operation": "mesh.simplify.edge_collapse",
+          "ok": true
+        },
+        {
+          "id": "intent-en-128",
+          "selected_operation": "kernel.predicates.evaluate",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-129",
+          "selected_operation": "mesh.simplify.edge_collapse",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-130",
+          "selected_operation": "kernel.intersections.compute",
+          "ok": true
+        },
+        {
+          "id": "intent-en-131",
+          "selected_operation": "mesh.simplify.edge_collapse",
+          "ok": true
+        },
+        {
+          "id": "intent-en-132",
+          "selected_operation": "kernel.intersections.compute",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-134",
+          "selected_operation": "kernel.distance.squared",
+          "ok": true
+        },
+        {
+          "id": "intent-en-136",
+          "selected_operation": "kernel.distance.squared",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-137",
+          "selected_operation": "mesh.simplify.edge_collapse",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-138",
+          "selected_operation": "spatial.aabb.ray_first_hits",
+          "ok": true
+        },
+        {
+          "id": "intent-en-139",
+          "selected_operation": "mesh.simplify.edge_collapse",
+          "ok": true
+        },
+        {
+          "id": "intent-en-140",
+          "selected_operation": "spatial.aabb.ray_first_hits",
           "ok": true
         },
         {
           "id": "intent-ja-141",
-          "family": "7.8",
+          "selected_operation": "mesh.segment.sdf_values",
+          "ok": true,
           "fixture_override": [
             "query/cube12.off"
           ],
@@ -243,25 +872,216 @@
             "cone_angle",
             "number_of_rays",
             "thickness_tolerance"
-          ],
+          ]
+        },
+        {
+          "id": "intent-ja-142",
           "selected_operation": "mesh.segment.sdf_values",
-          "state": "succeeded",
-          "execution_status": "succeeded",
-          "validation_status": "passed",
+          "ok": true,
+          "fixture_override": [
+            "query/cube12.off"
+          ],
+          "parameter_override": [
+            "cone_angle",
+            "number_of_rays",
+            "thickness_tolerance"
+          ]
+        },
+        {
+          "id": "intent-en-143",
+          "selected_operation": "mesh.segment.sdf_values",
+          "ok": true,
+          "fixture_override": [
+            "query/cube12.off"
+          ],
+          "parameter_override": [
+            "cone_angle",
+            "number_of_rays",
+            "thickness_tolerance"
+          ]
+        },
+        {
+          "id": "intent-en-144",
+          "selected_operation": "mesh.segment.sdf_values",
+          "ok": true,
+          "fixture_override": [
+            "query/cube12.off"
+          ],
+          "parameter_override": [
+            "cone_angle",
+            "number_of_rays",
+            "thickness_tolerance"
+          ]
+        },
+        {
+          "id": "intent-ja-145",
+          "selected_operation": "mesh.decompose.approx_convex",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-146",
+          "selected_operation": "mesh.decompose.approx_convex",
+          "ok": true
+        },
+        {
+          "id": "intent-en-147",
+          "selected_operation": "mesh.decompose.approx_convex",
+          "ok": true
+        },
+        {
+          "id": "intent-en-148",
+          "selected_operation": "mesh.decompose.approx_convex",
+          "ok": true
+        },
+        {
+          "id": "intent-en-151",
+          "selected_operation": "mesh.skeletonize.mean_curvature",
+          "ok": true
+        },
+        {
+          "id": "intent-en-152",
+          "selected_operation": "mesh.skeletonize.mean_curvature",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-153",
+          "selected_operation": "mesh.path.shortest",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-154",
+          "selected_operation": "mesh.path.shortest",
+          "ok": true
+        },
+        {
+          "id": "intent-en-155",
+          "selected_operation": "mesh.path.shortest",
+          "ok": true
+        },
+        {
+          "id": "intent-en-156",
+          "selected_operation": "mesh.path.shortest",
+          "ok": true
+        },
+        {
+          "id": "intent-en-159",
+          "selected_operation": "mesh.parameterize",
+          "ok": true
+        },
+        {
+          "id": "intent-en-160",
+          "selected_operation": "mesh.parameterize",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-161",
+          "selected_operation": "mesh.subdivide.catmull_clark",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-162",
+          "selected_operation": "mesh.subdivide.catmull_clark",
+          "ok": true
+        },
+        {
+          "id": "intent-en-163",
+          "selected_operation": "mesh.subdivide.catmull_clark",
+          "ok": true
+        },
+        {
+          "id": "intent-en-164",
+          "selected_operation": "mesh.subdivide.catmull_clark",
           "ok": true
         },
         {
           "id": "intent-ja-165",
-          "family": "7.9",
           "selected_operation": "pointset.normals.estimate",
-          "state": "succeeded",
-          "execution_status": "succeeded",
-          "validation_status": "passed",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-166",
+          "selected_operation": "pointset.normals.estimate",
+          "ok": true
+        },
+        {
+          "id": "intent-en-167",
+          "selected_operation": "pointset.normals.estimate",
+          "ok": true
+        },
+        {
+          "id": "intent-en-168",
+          "selected_operation": "pointset.normals.estimate",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-169",
+          "selected_operation": "pointset.remove_outliers",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-170",
+          "selected_operation": "pointset.remove_outliers",
+          "ok": true
+        },
+        {
+          "id": "intent-en-171",
+          "selected_operation": "pointset.remove_outliers",
+          "ok": true
+        },
+        {
+          "id": "intent-en-172",
+          "selected_operation": "pointset.remove_outliers",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-173",
+          "selected_operation": "pointset.smooth.jet",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-174",
+          "selected_operation": "pointset.smooth.jet",
+          "ok": true
+        },
+        {
+          "id": "intent-en-175",
+          "selected_operation": "pointset.smooth.jet",
+          "ok": true
+        },
+        {
+          "id": "intent-en-176",
+          "selected_operation": "pointset.smooth.jet",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-178",
+          "selected_operation": "spatial.knn_3",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-181",
+          "selected_operation": "pointset.registration.register",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-182",
+          "selected_operation": "pointset.registration.register",
+          "ok": true
+        },
+        {
+          "id": "intent-en-183",
+          "selected_operation": "pointset.registration.register",
+          "ok": true
+        },
+        {
+          "id": "intent-en-184",
+          "selected_operation": "pointset.registration.register",
           "ok": true
         },
         {
           "id": "intent-en-191",
-          "family": "7.10",
+          "selected_operation": "reconstruction.poisson",
+          "ok": true,
           "fixture_override": [
             "reconstruction/sphere_dense_normals.ply"
           ],
@@ -270,63 +1090,455 @@
             "sm_angle",
             "sm_distance",
             "sm_radius"
-          ],
+          ]
+        },
+        {
+          "id": "intent-en-192",
           "selected_operation": "reconstruction.poisson",
-          "state": "succeeded",
-          "execution_status": "succeeded",
-          "validation_status": "passed",
+          "ok": true,
+          "fixture_override": [
+            "reconstruction/sphere_dense_normals.ply"
+          ],
+          "parameter_override": [
+            "max_deviation",
+            "sm_angle",
+            "sm_distance",
+            "sm_radius"
+          ]
+        },
+        {
+          "id": "intent-ja-193",
+          "selected_operation": "reconstruction.advancing_front",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-194",
+          "selected_operation": "reconstruction.advancing_front",
+          "ok": true
+        },
+        {
+          "id": "intent-en-195",
+          "selected_operation": "reconstruction.advancing_front",
+          "ok": true
+        },
+        {
+          "id": "intent-en-196",
+          "selected_operation": "reconstruction.advancing_front",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-197",
+          "selected_operation": "reconstruction.alpha_wrap",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-198",
+          "selected_operation": "reconstruction.alpha_wrap",
+          "ok": true
+        },
+        {
+          "id": "intent-en-199",
+          "selected_operation": "reconstruction.alpha_wrap",
+          "ok": true
+        },
+        {
+          "id": "intent-en-200",
+          "selected_operation": "reconstruction.alpha_wrap",
           "ok": true
         },
         {
           "id": "intent-en-203",
-          "family": "7.11",
           "selected_operation": "triangulation.delaunay_3",
-          "state": "succeeded",
-          "execution_status": "succeeded",
-          "validation_status": "passed",
+          "ok": true
+        },
+        {
+          "id": "intent-en-204",
+          "selected_operation": "triangulation.delaunay_3",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-205",
+          "selected_operation": "triangulation.constrained_2",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-206",
+          "selected_operation": "triangulation.constrained_2",
+          "ok": true
+        },
+        {
+          "id": "intent-en-207",
+          "selected_operation": "triangulation.constrained_2",
+          "ok": true
+        },
+        {
+          "id": "intent-en-208",
+          "selected_operation": "triangulation.constrained_2",
+          "ok": true
+        },
+        {
+          "id": "intent-en-211",
+          "selected_operation": "triangulation.regular_3",
+          "ok": true
+        },
+        {
+          "id": "intent-en-212",
+          "selected_operation": "triangulation.regular_3",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-217",
+          "selected_operation": "triangulation.voronoi_dual",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-218",
+          "selected_operation": "triangulation.voronoi_dual",
+          "ok": true
+        },
+        {
+          "id": "intent-en-219",
+          "selected_operation": "triangulation.voronoi_dual",
+          "ok": true
+        },
+        {
+          "id": "intent-en-220",
+          "selected_operation": "triangulation.voronoi_dual",
           "ok": true
         },
         {
           "id": "intent-ja-221",
-          "family": "7.12",
           "selected_operation": "polygon.analysis.properties",
-          "state": "succeeded",
-          "execution_status": "succeeded",
-          "validation_status": "passed",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-222",
+          "selected_operation": "polygon.analysis.properties",
+          "ok": true
+        },
+        {
+          "id": "intent-en-223",
+          "selected_operation": "polygon.analysis.properties",
+          "ok": true
+        },
+        {
+          "id": "intent-en-224",
+          "selected_operation": "polygon.analysis.properties",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-225",
+          "selected_operation": "arrangement.build",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-226",
+          "selected_operation": "arrangement.build",
+          "ok": true
+        },
+        {
+          "id": "intent-en-227",
+          "selected_operation": "arrangement.build",
+          "ok": true
+        },
+        {
+          "id": "intent-en-228",
+          "selected_operation": "arrangement.build",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-229",
+          "selected_operation": "arrangement.overlay",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-230",
+          "selected_operation": "arrangement.overlay",
+          "ok": true
+        },
+        {
+          "id": "intent-en-231",
+          "selected_operation": "arrangement.overlay",
+          "ok": true
+        },
+        {
+          "id": "intent-en-232",
+          "selected_operation": "arrangement.overlay",
+          "ok": true
+        },
+        {
+          "id": "intent-en-239",
+          "selected_operation": "polygon.straight_skeleton.interior",
+          "ok": true
+        },
+        {
+          "id": "intent-en-240",
+          "selected_operation": "polygon.straight_skeleton.interior",
+          "ok": true
+        },
+        {
+          "id": "intent-en-247",
+          "selected_operation": "polygon.minkowski_sum",
+          "ok": true
+        },
+        {
+          "id": "intent-en-248",
+          "selected_operation": "polygon.minkowski_sum",
           "ok": true
         },
         {
           "id": "intent-ja-249",
-          "family": "7.13",
           "selected_operation": "hull.convex_3",
-          "state": "succeeded",
-          "execution_status": "succeeded",
-          "validation_status": "passed",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-250",
+          "selected_operation": "hull.convex_3",
+          "ok": true
+        },
+        {
+          "id": "intent-en-251",
+          "selected_operation": "hull.convex_3",
+          "ok": true
+        },
+        {
+          "id": "intent-en-252",
+          "selected_operation": "hull.convex_3",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-257",
+          "selected_operation": "reconstruction.alpha_wrap",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-258",
+          "selected_operation": "reconstruction.alpha_wrap",
+          "ok": true
+        },
+        {
+          "id": "intent-en-259",
+          "selected_operation": "reconstruction.alpha_wrap",
+          "ok": true
+        },
+        {
+          "id": "intent-en-260",
+          "selected_operation": "reconstruction.alpha_wrap",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-261",
+          "selected_operation": "shape.bounding.sphere",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-262",
+          "selected_operation": "shape.bounding.sphere",
+          "ok": true
+        },
+        {
+          "id": "intent-en-263",
+          "selected_operation": "shape.bounding.sphere",
+          "ok": true
+        },
+        {
+          "id": "intent-en-264",
+          "selected_operation": "shape.bounding.sphere",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-265",
+          "selected_operation": "shape.barycentric",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-266",
+          "selected_operation": "shape.barycentric",
+          "ok": true
+        },
+        {
+          "id": "intent-en-267",
+          "selected_operation": "shape.barycentric",
+          "ok": true
+        },
+        {
+          "id": "intent-en-268",
+          "selected_operation": "shape.barycentric",
           "ok": true
         },
         {
           "id": "intent-ja-269",
-          "family": "7.14",
           "selected_operation": "mesh2.refine.delaunay",
-          "state": "succeeded",
-          "execution_status": "succeeded",
-          "validation_status": "passed",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-270",
+          "selected_operation": "mesh2.refine.delaunay",
+          "ok": true
+        },
+        {
+          "id": "intent-en-271",
+          "selected_operation": "mesh2.refine.delaunay",
+          "ok": true
+        },
+        {
+          "id": "intent-en-272",
+          "selected_operation": "mesh2.refine.delaunay",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-273",
+          "selected_operation": "mesh.surface.generate",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-274",
+          "selected_operation": "mesh.surface.generate",
+          "ok": true
+        },
+        {
+          "id": "intent-en-275",
+          "selected_operation": "mesh.surface.generate",
+          "ok": true
+        },
+        {
+          "id": "intent-en-276",
+          "selected_operation": "mesh.surface.generate",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-277",
+          "selected_operation": "mesh.volume.generate",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-278",
+          "selected_operation": "mesh.volume.generate",
+          "ok": true
+        },
+        {
+          "id": "intent-en-279",
+          "selected_operation": "mesh.volume.generate",
+          "ok": true
+        },
+        {
+          "id": "intent-en-280",
+          "selected_operation": "mesh.volume.generate",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-281",
+          "selected_operation": "mesh.volume.generate",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-282",
+          "selected_operation": "mesh.volume.generate",
+          "ok": true
+        },
+        {
+          "id": "intent-en-283",
+          "selected_operation": "mesh.volume.generate",
+          "ok": true
+        },
+        {
+          "id": "intent-en-284",
+          "selected_operation": "mesh.volume.generate",
           "ok": true
         },
         {
           "id": "intent-ja-285",
-          "family": "7.15",
+          "selected_operation": "optimization.quadratic_program",
+          "ok": true,
           "parameter_override": [
             "solver"
-          ],
+          ]
+        },
+        {
+          "id": "intent-ja-286",
           "selected_operation": "optimization.quadratic_program",
-          "state": "succeeded",
-          "execution_status": "succeeded",
-          "validation_status": "passed",
+          "ok": true,
+          "parameter_override": [
+            "solver"
+          ]
+        },
+        {
+          "id": "intent-en-287",
+          "selected_operation": "optimization.quadratic_program",
+          "ok": true,
+          "parameter_override": [
+            "solver"
+          ]
+        },
+        {
+          "id": "intent-en-288",
+          "selected_operation": "optimization.quadratic_program",
+          "ok": true,
+          "parameter_override": [
+            "solver"
+          ]
+        },
+        {
+          "id": "intent-ja-289",
+          "selected_operation": "optimization.interpolate",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-290",
+          "selected_operation": "optimization.interpolate",
+          "ok": true
+        },
+        {
+          "id": "intent-en-291",
+          "selected_operation": "optimization.interpolate",
+          "ok": true
+        },
+        {
+          "id": "intent-en-292",
+          "selected_operation": "optimization.interpolate",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-293",
+          "selected_operation": "optimization.approximate_mesh",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-294",
+          "selected_operation": "optimization.approximate_mesh",
+          "ok": true
+        },
+        {
+          "id": "intent-en-295",
+          "selected_operation": "optimization.approximate_mesh",
+          "ok": true
+        },
+        {
+          "id": "intent-en-296",
+          "selected_operation": "optimization.approximate_mesh",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-297",
+          "selected_operation": "optimization.matrix_search",
+          "ok": true
+        },
+        {
+          "id": "intent-ja-298",
+          "selected_operation": "optimization.matrix_search",
+          "ok": true
+        },
+        {
+          "id": "intent-en-299",
+          "selected_operation": "optimization.matrix_search",
+          "ok": true
+        },
+        {
+          "id": "intent-en-300",
+          "selected_operation": "optimization.matrix_search",
           "ok": true
         }
-      ],
-      "scope": "sample only; the other intents remain unexecuted"
+      ]
     }
   },
   "cases": [

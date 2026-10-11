@@ -203,7 +203,7 @@ class WorkerSupervisor:
 
     async def execute(self, request: dict[str, Any], output_dir: Path) -> tuple[dict[str, Any], dict[str, Any]]:
         if self.persistent is not None:
-            return await self._execute_persistent(request, output_dir)
+            return await self._execute_persistent_with_retry(request, output_dir)
         operation = request["operation"]
         manifest = await self.manifest(operation)
         wall_ms, memory_mb = self._limits(request)
@@ -347,6 +347,9 @@ class WorkerSupervisor:
             raise WorkerFailure("worker_session_unsupported",
                                 f"Worker did not answer the session health check: {exc}",
                                 "worker_protocol", False) from exc
+        except BaseException:  # incl. cancellation during the first health check: never leak
+            worker.kill_now()
+            raise
         return worker
 
     async def _acquire(self, memory_mb: int, stamp: str) -> "_SessionWorker":
@@ -429,6 +432,20 @@ class WorkerSupervisor:
                 "started": self.pool_stats["started"], "reused": self.pool_stats["reused"],
                 "recycled": dict(sorted(self.pool_stats["recycled"].items()))}
 
+    async def _execute_persistent_with_retry(self, request: dict[str, Any],
+                                             output_dir: Path) -> tuple[dict[str, Any], dict[str, Any]]:
+        """A memory_limit failure on a REUSED persistent worker may reflect heap fragmentation or
+        growth from earlier jobs, not this job.  Retry exactly once on a fresh process (the failed
+        one is already retired).  A first-job failure is genuine and is never retried, so a job that
+        really exceeds the limit fails exactly as in one-shot mode."""
+        try:
+            return await self._execute_persistent(request, output_dir)
+        except WorkerFailure as failure:
+            if failure.code != "memory_limit" or not getattr(failure, "worker_was_reused", False):
+                raise
+            self.pool_stats["memory_limit_retries"] = self.pool_stats.get("memory_limit_retries", 0) + 1
+            return await self._execute_persistent(request, output_dir)
+
     async def _execute_persistent(self, request: dict[str, Any],
                                   output_dir: Path) -> tuple[dict[str, Any], dict[str, Any]]:
         operation = request["operation"]
@@ -438,6 +455,7 @@ class WorkerSupervisor:
         worker = await self._acquire(memory_mb, stamp)
         self._busy.add(worker)
         worker.begin_job()
+        reused = worker.jobs > 1
         try:
             try:
                 line = await asyncio.wait_for(worker.roundtrip(canonical_json(request) + b"\n"),
@@ -458,9 +476,11 @@ class WorkerSupervisor:
                 memory_evidence = any(marker in stderr.lower() for marker in
                                       ("memoryerror", "bad_alloc", "cannot allocate memory", "not enough memory"))
                 limited = (os.name == "nt" and code in windows_memory_statuses) or memory_evidence
-                raise WorkerFailure("memory_limit" if limited else "worker_crash",
-                                    f"Worker exited {code}: {stderr[:4096]}",
-                                    "resource_limit" if limited else "worker_crash", True) from exc
+                failure = WorkerFailure("memory_limit" if limited else "worker_crash",
+                                        f"Worker exited {code}: {stderr[:4096]}",
+                                        "resource_limit" if limited else "worker_crash", True)
+                failure.worker_was_reused = reused
+                raise failure from exc
             diagnostics = {"returncode": None, "stderr": worker.stderr_text(),
                            "stderr_truncated": worker.stderr_truncated,
                            "resource_limit_mode": self.resource_limit_mode,
@@ -476,7 +496,8 @@ class WorkerSupervisor:
                 await self._retire(worker, "error_response")
             try:
                 self.check_response(request, response, output_dir)
-            except WorkerFailure:
+            except WorkerFailure as failure:
+                failure.worker_was_reused = reused
                 if worker in self._busy:
                     await self._retire(worker, "protocol_violation")
                 raise

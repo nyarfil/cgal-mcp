@@ -924,10 +924,26 @@ def evaluate_search_gate(root: Path = REPO, *, live: bool = True,
     if not isinstance(sample, dict):
         reasons.append("Automatic execution after search is unmeasured")
     else:
-        result["execute_after_search_sample"] = {k: sample.get(k) for k in ("sample_size", "succeeded")}
-        reasons.append(
-            f"Automatic execution is measured on a {sample.get('sample_size')}-intent sample only "
-            f"({sample.get('succeeded')} succeeded); the other intents are not executed")
+        result["execute_after_search"] = {k: sample.get(k) for k in (
+            "sample_size", "succeeded", "intent_denominator", "not_executed", "failed_ids")}
+        denominator = sample.get("intent_denominator")
+        not_executed = sample.get("not_executed") or {}
+        covered = (sample.get("sample_size") or 0) + sum(not_executed.values())
+        if denominator != 300 or covered != denominator:
+            reasons.append(
+                f"Automatic execution is measured on {sample.get('sample_size')} intents only "
+                f"({sample.get('succeeded')} succeeded) and does not account for all 300 intents")
+        elif sample.get("succeeded") != sample.get("sample_size"):
+            reasons.append(
+                f"Automatic execution failed for {sample['sample_size'] - sample['succeeded']} of "
+                f"{sample['sample_size']} auto-routed intents: {sample.get('failed_ids')}")
+        if not_executed:
+            unexecuted = sum(not_executed.values())
+            result["not_executed"] = dict(sorted(not_executed.items()))
+            reasons.append(
+                f"Automatic execution covers {sample.get('sample_size')} of {denominator} intents; "
+                f"{unexecuted} are answered with a recorded disambiguation question or a fail-closed "
+                f"refusal and are not executed ({json.dumps(not_executed, sort_keys=True)})")
     blind_path = root / "docs/master/evidence/search-blind.json"
     blind_set = root / "docs/master/search_blind_set.json"
     try:
@@ -1598,8 +1614,9 @@ def evaluate_performance_gate(root: Path = REPO, *, live: bool = True,
             and bad.get("stored_after_failure") == 0
             and cache.get("eviction", {}).get("entries", 99) <= cache.get("eviction", {}).get("max_entries", 0)):
         reasons.append("Result-cache safety (hit/miss, tamper, stale, live re-validation, bound) is unevidenced")
-    if not persistent.get("aabb_reuse"):
-        reasons.append(PERFORMANCE_AABB_REASON)
+    # Unconditional: an evidence key must never clear this reason; only a native
+    # AABB reuse implementation plus a gate-list update can.
+    reasons.append(PERFORMANCE_AABB_REASON)
     result["measured"]["lifecycle"] = life
     result["measured"]["persistent"] = {
         "fault_modes": len(pmodes), "trials": sum(r.get("trials", 0) for r in pmodes.values()),

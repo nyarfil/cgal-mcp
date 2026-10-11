@@ -439,18 +439,27 @@ class PlanBuilder:
             status=["IMPLEMENTED", "VALIDATED"], dependencies=policy.get("dependencies"),
             kernel=policy.get("kernel"), allowed_licenses=policy.get("allowed_licenses"), limit=5)
         candidates = result["candidates"]
-        if not candidates:
-            raise UnsupportedOperation(goal)
         analysis = result.get("query_analysis", {})
+        if not candidates:
+            if analysis.get("unsupported_cgal_packages"):
+                raise UnsupportedOperation(goal, {
+                    "reason": "recognized_unsupported_cgal_package",
+                    "unsupported_cgal_packages": analysis["unsupported_cgal_packages"],
+                    "closest_operations_not_executable": analysis.get(
+                        "closest_operations_not_executable", [])})
+            raise UnsupportedOperation(goal)
         if analysis.get("routing_confidence") == "ambiguous":
-            raise InvalidInput("ambiguous_route", "Goal matches multiple operations equally; provide operation_id")
+            raise InvalidInput("ambiguous_route",
+                               "Goal matches multiple operations equally; provide operation_id",
+                               self._disambiguation(goal, candidates, "tied_scores"))
         selected = analysis.get("recommended_operation")
         if not isinstance(selected, str) and any(
                 candidate.get("parameter_conflicts") for candidate in candidates[:3]):
             # The goal names several variants (for example union, intersection
             # and difference); one operation cannot be chosen safely.
             raise InvalidInput("ambiguous_route",
-                               "Goal names several method variants; provide operation_id")
+                               "Goal names several method variants; provide operation_id",
+                               self._disambiguation(goal, candidates, "method_variants"))
         if (analysis.get("automatic_route_supported") is not True
                 or analysis.get("routing_confidence") != "high"
                 or not isinstance(selected, str)
@@ -459,7 +468,22 @@ class PlanBuilder:
                            and candidate.get("confidence") == "high"
                            and not candidate.get("uncovered_primary_concepts")
                            for candidate in candidates)):
-            raise UnsupportedOperation(goal)
+            # No operation is confident enough to run unattended.  The refusal stays
+            # unsupported_operation; the closest registered operations are recorded so
+            # the caller can confirm one explicitly (they are never executed on this path).
+            if any(candidate.get("route_supported") is True for candidate in candidates):
+                details = self._disambiguation(goal, candidates, "no_confident_route")
+            else:
+                # The conservative planning search found nothing safe to suggest.  Offer the
+                # discovery ranking's closest operations as a question only (still a refusal;
+                # discovery abstains on out-of-scope goals and then nothing is suggested).
+                discovery = self.registry.search(
+                    goal, input_types=input_types, status=["IMPLEMENTED", "VALIDATED"],
+                    dependencies=policy.get("dependencies"), kernel=policy.get("kernel"),
+                    allowed_licenses=policy.get("allowed_licenses"), limit=3, discovery=True)
+                details = (self._disambiguation(goal, discovery["candidates"], "no_confident_route")
+                           if discovery["candidates"] else None)
+            raise UnsupportedOperation(goal, details)
         selected_candidate = next(candidate for candidate in candidates
                                   if candidate["operation_id"] == selected)
         required_parameters = analysis.get("required_parameters", {})
@@ -490,6 +514,37 @@ class PlanBuilder:
         return selected, {"mode": "registry_route", "selected": selected,
                           "why": selected_candidate["why"], "candidates": candidates,
                           "query_analysis": analysis}
+
+    def _disambiguation(self, goal: str, candidates: list[dict[str, Any]],
+                        reason: str) -> dict[str, Any]:
+        """Structured question recorded with a refusal to guess (never a silent tie-break).
+
+        tied_scores: every route-supported candidate within the ambiguity gap of the leader.
+        method_variants / no_confident_route: the three best candidates.  The planner applies
+        no tie-break because choosing among equally supported operations would be a guess,
+        and a wrong route is the failure the acceptance criteria forbid."""
+        supported = [c for c in candidates if c.get("route_supported") is True] or list(candidates)
+        if reason == "tied_scores":
+            leader = supported[0]["score"]
+            options = [c for c in supported if leader - c["score"] <= 2.0][:5]
+        else:
+            options = candidates[:3]
+        shared = set.intersection(*(set(c.get("covered_primary_concepts", [])) for c in options))             if options else set()
+        rows = []
+        for candidate in options:
+            operation = self.registry.get(candidate["operation_id"])
+            rows.append({
+                "operation_id": candidate["operation_id"], "summary": operation["summary"],
+                "distinguishing_concepts": sorted(set(candidate.get("covered_primary_concepts", []))
+                                                  - shared),
+                "required_parameters": candidate.get("required_parameters", {}),
+                "executable": candidate.get("status") in {"IMPLEMENTED", "VALIDATED"}})
+        names = ", ".join(row["operation_id"] for row in rows)
+        return {
+            "reason": reason, "goal": goal, "tie_break": "none",
+            "question": f"The goal does not determine one operation. Which do you want: {names}?",
+            "resolve_with": "plan(operation_id=<one of the options>, inputs, parameters)",
+            "options": rows}
 
     @staticmethod
     def _policy_gate(operation: dict[str, Any], policy: Any) -> None:

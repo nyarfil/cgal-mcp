@@ -210,3 +210,35 @@ reportはcorpus、package smoke、generator、test source、operation registry�
 - 注意: `b3-031`の期待Operation（`mesh.analysis.sharp_features`）は原本requirementの`operation_ids`に含まれない（要求単位の判定には効かない）。
 - `evaluate_search_gate`はこの証拠を追加記録として読む。検索再現率の基準（盲検3 top-3 95%以上）は満たしたが、検索ゲートは未達のまま: goal routingを含むfull search acceptanceが不合格、自動実行が15件サンプルのみ、盲検1（94.07%）が95%未満。基準は緩めていない。
 - この測定後、盲検セット3も参考値として扱い、以後の調整には使わない。
+
+## goal routing・自動実行・未対応package拒否の改善ラウンド（2026-10-11）
+
+盲検3の取りこぼしは閲覧せず、開発データ（300件コーパス、盲検1/2、範囲外プローブ）だけで調整した。
+
+### 基準の読み（緩和なし）
+
+- 計画（Phase 5）の基準は「top-1/top-3を測定し、unsupportedを無理に別toolへ誤ルートしない」。本書の既存規定どおり、eligibleは「誤operationと未分類エラーが0」であり、曖昧は別計上する。
+- 曖昧（`ambiguous_route`）は推測しない。同点の操作を決定的に選ぶ tie-break は誤routeを生みうるため**採用しない**（`tie_break: none`）。代わりにエラーへ`details`（理由、質問文、選択肢、区別する概念、`resolve_with`）を記録する。選択肢に期待operationが無い曖昧・拒否は「役に立たない質問」として失敗に数える。
+- 確信度不足の拒否は`unsupported_operation`のまま、発見ランキングの最近傍operationを提案として記録する（実行はしない）。
+- 検索再現率（top-3 95%）の判定対象は、調整に使っていない盲検セットである。盲検1/2は開発データなので数値は参考値だが、ゲート実装は従来どおり盲検1の94.07%を理由として残し、緩めていない。
+
+### goal routing（300件、本番`plan(goal=...)`、実行なし）
+
+- top-1自動ルーティング 240件 (80.0%)、期待operationを選択肢に含む曖昧質問 51件、期待operationを含む拒否+提案 6件、誤route 0件。
+- 未達: 提案なしの未分類拒否 2件、選択肢に期待operationを含まない拒否 1件。goal routingは**不合格のまま**。
+
+### 自動実行
+
+- 自動ルーティングされた240件すべてを実行: 240/240成功（従来は15件サンプル）。曖昧・拒否の57件は推測になるため実行しない（内訳は証拠の`not_executed`）。
+- 合成入力が選択operation自身の前提を満たさず失敗する場合、同じgoalのまま当該operationの最初のreplay正例fixtureで再実行する（両試行を記録）。86件がこの経路。
+- この測定で実バグを1件発見・修正: ValidationReportを入力にとる検証ステップが`properties`欠落で`internal_failure`になっていた（`runtime._resolve_inputs`）。
+
+### 未対応CGAL packageの拒否
+
+- `catalog/packages.json`でCATALOGED（`algorithm_adapter_not_implemented`）のchapterについて、章題の連続語句と、章題から作成した英日gloss（`cgal_mcp/master/unsupported_gloss.json`）で照会を認識し、候補を返さず`recognized_unsupported_cgal_package`と理由コードで拒否する。検索とplanの両方に適用。プローブ文は使っていない。
+- 開発プローブ56件: 検索abstain 47件 (83.93%)、planは全入力バリアントで拒否 56/56、誤route 0。CGAL未対応カテゴリのabstainは 11/16。開発データ558件での誤認識は0。
+- **盲検3の再測定（1回、調整なし）**: top-1 87.12%、top-3 95.71%（前回 88.96% / 97.55%）、範囲外abstain 27/34 (79.4%、前回 21/34)。top-3の低下は、gloss語が盲検3の範囲内3件（変形・多項式・形状検出の各package）を誤って拒否したことによる（件数のみ確認、文面は未閲覧）。調整は行わない。今後の修正案: gloss認識は、本番検索の先頭候補が高確信で被覆されている場合は拒否しない。これを入れた後の評価には新しい盲検セット4が必要。記録は[`evidence/search-blind-3-post-round.json`](evidence/search-blind-3-post-round.json)。
+
+### 判定
+
+検索ゲートは未達のまま（goal routing不合格、盲検1が95%未満、自動実行は全自動ルート分で成功だが曖昧・拒否57件は未実行）。

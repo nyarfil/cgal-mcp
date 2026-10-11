@@ -622,6 +622,19 @@ class OperationRegistry:
                 candidates = []
                 route_confidence, recommended = "none", None
                 recommended_parameters, recommended_features = {}, {}
+        recognized: list[dict[str, Any]] = []
+        index = getattr(self, "unsupported_index", None)
+        if index is not None and not explain:
+            # The request names a CGAL package the catalog records as known but not
+            # supported (reason code from the package harvest): fail closed with that
+            # reason in discovery and in planning, never answer with the nearest operation.
+            recognized = index.recognize(query)
+            if recognized:
+                abstained = True
+                closest = [{"operation_id": item[2]["id"], "score": item[1]} for item in candidates[:3]]
+                candidates = []
+                route_confidence, recommended = "none", None
+                recommended_parameters, recommended_features = {}, {}
         return {"query": query, "search_mode": self.search_mode, "candidates": [
             {"operation_id": operation["id"], "revision": operation["revision"],
              "status": operation["status"], "score": score, "why": reasons,
@@ -653,13 +666,17 @@ class OperationRegistry:
             "required_parameter_features": recommended_features,
             "automatic_route_supported": recommended is not None,
             "top_evidence": top_evidence,
+            **({"abstained": True,
+                "abstain_reason": "recognized_unsupported_cgal_package",
+                "unsupported_cgal_packages": recognized,
+                "closest_operations_not_executable": closest} if recognized else {}),
             **({"abstained": abstained,
                 "evidence_strength": None if strength in (None, -math.inf) else round(strength, 3),
                 "abstain_threshold": ABSTAIN["threshold"],
                 **({"abstain_reason": "query evidence is below the calibrated threshold; no operation "
                                       "is offered as executable",
                     "closest_operations_not_executable": closest} if abstained else {})}
-               if discovery and not explain else {}),
+               if discovery and not explain and not recognized else {}),
         }}
 
     def verify_manifest(self, manifest: dict[str, Any], required_operation: str) -> dict[str, Any]:

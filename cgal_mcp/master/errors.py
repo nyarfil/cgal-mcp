@@ -14,6 +14,7 @@ class MasterError(Exception):
     recoverable: bool = False
     suggested_operations: tuple[str, ...] = ()
     source_class: str | None = None
+    details: dict[str, Any] | None = None
 
     def __str__(self) -> str:
         return self.message
@@ -28,18 +29,20 @@ class MasterError(Exception):
         }
         if self.source_class:
             result["source_class"] = self.source_class
+        if self.details:
+            result["details"] = self.details
         return result
 
 
 class InvalidInput(MasterError):
-    def __init__(self, code: str, message: str):
-        super().__init__(code, message, "invalid_input", False)
+    def __init__(self, code: str, message: str, details: dict[str, Any] | None = None):
+        super().__init__(code, message, "invalid_input", False, details=details)
 
 
 class UnsupportedOperation(MasterError):
-    def __init__(self, operation: str):
+    def __init__(self, operation: str, details: dict[str, Any] | None = None):
         super().__init__("unsupported_operation", f"Unsupported operation: {operation}",
-                         "unsupported_adapter", False)
+                         "unsupported_adapter", False, details=details)
 
 
 class PreconditionFailure(MasterError):
