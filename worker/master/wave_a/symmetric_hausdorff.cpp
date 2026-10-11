@@ -15,18 +15,31 @@ namespace {
 namespace PMP = CGAL::Polygon_mesh_processing;
 
 void require_allowed_parameters(const Json& parameters) {
-  static const std::set<std::string> allowed = {"tolerance", "error_bound"};
-  if (parameters.size() != allowed.size()) {
-    throw WorkerError(
-        "INVALID_REQUEST", "MISSING_OR_UNSUPPORTED_PARAMETER",
-        "symmetric Hausdorff requires only tolerance and error_bound");
+  static const std::set<std::string> required = {"tolerance", "error_bound"};
+  for (const auto& name : required) {
+    if (!parameters.contains(name)) {
+      throw WorkerError(
+          "INVALID_REQUEST", "MISSING_OR_UNSUPPORTED_PARAMETER",
+          "symmetric Hausdorff requires only tolerance and error_bound");
+    }
   }
   for (auto iterator = parameters.begin(); iterator != parameters.end();
        ++iterator) {
-    if (allowed.find(iterator.key()) == allowed.end()) {
+    if (required.find(iterator.key()) == required.end() &&
+        iterator.key() != "validation_mode") {
       throw WorkerError("INVALID_REQUEST", "UNSUPPORTED_PARAMETER",
                         "Unsupported symmetric Hausdorff parameter: " +
                             iterator.key());
+    }
+  }
+  // validation_mode selects the validator tier (bruteforce: <= 400 faces;
+  // certified_bvh: scalable certified bracket). The CGAL computation is the same.
+  if (parameters.contains("validation_mode")) {
+    const auto& mode = parameters.at("validation_mode");
+    if (!mode.is_string() || (mode.get<std::string>() != "bruteforce" &&
+                              mode.get<std::string>() != "certified_bvh")) {
+      throw WorkerError("INVALID_REQUEST", "INVALID_PARAMETER",
+                        "validation_mode must be bruteforce or certified_bvh");
     }
   }
 }
@@ -134,11 +147,13 @@ OperationDefinition symmetric_hausdorff_operation() {
       {"method", "bounded_error_symmetric_Hausdorff_distance"},
       {"effective_concurrency", "sequential"},
       {"bound_parameters", Json::array({"tolerance", "error_bound"})},
+      {"validation_modes", Json::array({"bruteforce", "certified_bvh"})},
       {"verdicts", Json::array({"pass", "fail", "indeterminate"})},
       {"validators", Json::array({"mesh.validate.hausdorff_symmetric_report"})},
       {"validator_parameter_bindings",
        {{"mesh.validate.hausdorff_symmetric_report",
-         {{"tolerance", "tolerance"}, {"error_bound", "error_bound"}}}}}};
+         {{"tolerance", "tolerance"}, {"error_bound", "error_bound"},
+          {"validation_mode", "validation_mode"}}}}}};
   return definition;
 }
 

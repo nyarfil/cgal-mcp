@@ -139,9 +139,68 @@ replay: family 7.3（major.7.3.07に`mesh.simplify.edge_collapse`を追加）に
 （交差したcollapse結果をintegrity validatorが拒否、目標未達の拒否、再試行枯渇の拒否、
 policy無しの`max_retry_rounds`の拒否、未知policyの拒否）。simplificationのvalidatorはレポートを
 入力に取らないため「改竄レポート拒否」は該当せず、改竄相当として「交差した候補の拒否」で代えています。
-`standalone_accepted`は引き続きfalseです。項目1は未対応です。
+`standalone_accepted`は引き続きfalseです。項目1はこの時点で未対応でした（後述の項目1の節で対応）。
 
 parameter名を`self_intersection_policy`ではなく`foldover_policy`としたのは、Operation検索が
 parameter名も索引にするため、`self_intersection`の概念が`mesh.simplify.edge_collapse`にも一致して
 「自己交差の組を列挙する」という問い合わせが`mesh.analysis.self_intersections`へ一意に
 ルーティングされなくなる（既存の検索試験で検出）ためです。
+
+## 実クライアント制約 項目1: Hausdorffの400面上限（`validation_mode=certified_bvh`）
+
+400面上限の原因はCGALではなく独立validator（`mesh.validate.hausdorff_symmetric_report`）でした。
+全頂点×全三角形のGMP有理数距離と総当たりのLipschitz bracketなので、71k×35k面では外挿で20時間以上かかります。
+対策として、既存Operationに任意parameterを追加しました（新Operationなし、MCPのtool面は不変）:
+`mesh.distance.symmetric_hausdorff`と`mesh.validate.hausdorff_symmetric_report`の`validation_mode`
+（`bruteforce`、または省略で従来どおり／`certified_bvh`）、`mesh.simplify.edge_collapse`の
+`hausdorff_validation_mode`（必須のHausdorff検証stepへ`validation_mode`として渡す）。registryの
+`bounded_input`は`maximum_faces=400`のままで、新キー`relaxed_by_parameter`により
+`validation_mode=certified_bvh`のstepだけ2,000,000面・1 GiBまで許します（planner・runtimeとも
+実際のparameterで判定）。CGALの計算（`bounded_error_symmetric_Hausdorff_distance`）はどちらのモードでも同じで、
+変わるのはvalidatorだけです。省略時の経路（≤400面の総当たり厳密validator）は変更していません。
+`catalog_revision`は`-8`（Operation数228のまま）。
+
+`certified_bvh`のvalidatorが保証する内容（CGALヘッダなし、自前実装）:
+- 下限: 両メッシュの頂点と細分した部分三角形の中点について、相手メッシュへの実距離を、自前の三角形BVHの
+  最近傍branch-and-bound（箱の距離が現在の最良値以上のときだけ枝刈り）で求めた最大値。
+- 上限: 部分三角形Tと相手の任意の三角形Sについて、d(・,S)はT上で凸なので sup_T d(p,B) ≤ min_S max_i d(v_i,S)。
+  これをBVHのbranch-and-bound（箱の下界 max_i d(v_i,箱)）で全Sについて厳密に評価し、Lipschitz上界も併用します。
+  上界が「下限+幅」を超える三角形を4分割し続け、閉じた三角形の上界の最大値を上限とします。
+  幅は min(0.5%×対角線, error_bound/2)。すなわち 下限 ≤ 厳密な対称Hausdorff距離 ≤ 上限、上限−下限 ≤ 幅。
+- 丸め: 距離はbinary64で評価し、丸め誤差は宣言マージン ε=1e-9×(1+対角線)（120 mm級で約1.2e-7 mm）で覆います。
+  これは区間演算による形式的証明ではなく、数十演算分の丸め誤差（相対1e-15程度）に対する大きめの宣言値です。
+- 独立検査: BVH最近傍の結果を、証拠点2点と頂点の等間隔標本（計約68点）について全三角形の総当たりと照合し、
+  証拠点の距離は全三角形（浮動小数の最小値+ε以内のもの）でGMP有理数により再計算して一致を確認します。
+- 判定: 報告値がbracket±error_bound±εの外なら`DISTANCE_OUT_OF_BRACKET`で拒否。さらに独立の判定
+  `certified_verdict`（上限+ε ≤ tolerance ならpass、下限−ε > tolerance ならfail、それ以外indeterminate）を出し、
+  報告のverdictがこれと矛盾すれば`CERTIFICATE_CONTRADICTION`で拒否します（bracket検査を通る改竄では
+  到達しない多重防御）。validatorレポートに`certified_lower_bound`、`certified_upper_bound`、`certified_verdict`、
+  `certified_within_tolerance`、細分ノード数、距離評価回数、照合点数、GMP再計算値を出します。
+- 信頼の境界: 細分の原理（部分三角形での凸距離上界）は、CGALのbounded-error実装も使う標準的な上界です。
+  validatorは実装（BVH、距離計算、細分、照合）がCGALから独立していますが、数学的な手法まで別物ではありません。
+  手法の違う検査は、総当たりとの照合（標本のみ）とGMPでの証拠点再計算（2点のみ）に限られます。
+
+合成メッシュでの前後（個人データ不使用。半径60 mmのUV球、半径方向ノイズ±0.05%（±0.03 mm）、seed 11、
+LindstromTurk＋`foldover_policy=protect_and_retry`で半分の面数へ。tolerance 0.1 mm、error_bound 0.01 mm。
+時間はworker 1回分の実測で、他の負荷により変動します。情報用で、受入根拠ではありません）:
+
+| ペア | 変更前 | 変更後: CGAL producer | 変更後: certified validator | 保証されたbracket |
+|---|---|---|---|---|
+| 71,200面 vs 35,598面 | 400面上限で拒否（総当たりなら外挿20時間以上） | 15〜23 s、ピーク約0.5 GiB | 9〜10 s、ピーク35 MiB、細分6.8M節点 | [0.06688, 0.07186] mm → pass（≤0.1 mm） |
+| 139,440面 vs 69,718面 | 同上 | 27〜42 s、ピーク約0.75 GiB | 13〜16 s、ピーク63 MiB、細分10.0M節点 | [0.05362, 0.05862] mm → pass |
+
+CGALの推定値（0.0669 mm、0.0436 mm、いずれも±0.01 mm）はbracketと整合しています。
+`MasterRuntime`経由の71k面simplification（`hausdorff_validation_mode=certified_bvh`）は、2つの必須validatorを
+通って`succeeded/passed`になります。指定しない場合は従来どおりHausdorff stepで`requires faces<=400`により失敗します。
+厳密値そのものは求めていません（保証するのは幅≤min(0.5%対角線, error_bound/2)の区間と丸めマージンまで）。
+節点予算6,000万・深さ48を超えると`BRACKET_NOT_CONVERGED`で拒否します（例: error_boundを極端に小さくした場合）。
+validatorより時間がかかるのは現在CGAL側（error_bound 0.01 mm）です。
+
+replay: family 7.3（major.7.3.06）に、1,152面の平面グリッドと中心頂点を0.5 mm持ち上げたグリッド
+（厳密な距離0.5 mm）の陽性2件（tolerance 0.1 mmでfail、0.6 mmでpass。validatorはどちらも報告を確認）、
+陰性対照3件（スパイクを隠した改竄レポートを`DISTANCE_OUT_OF_BRACKET`で拒否、`validation_mode`なしの
+validatorは400面上限で拒否、未知の`validation_mode`の拒否）を追加しました。単体試験では、tolerance 0.49 mmで
+CGALの報告がindeterminate（0.5±0.01）のときに、より狭いcertified bracketがfailを保証することと、
+≤400面のペアで両モードのbracketがどちらも厳密値0.5 mmを含むことも確認しています。
+simplification計画の「達成偏差の報告」への連動は、必須validatorのレポート（上記bracket）で代え、
+追加実装はしていません。`standalone_accepted`は引き続きfalseです。

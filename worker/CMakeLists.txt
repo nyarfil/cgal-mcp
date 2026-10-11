@@ -100,6 +100,7 @@ add_executable(cgal-master-worker
   master/batch5/b5_intersect_validators.cpp
   master/batch5/b5_distance_ops.cpp
   master/batch5/b5_distance_validators.cpp
+  master/batch5/b5_certified_hausdorff.cpp
   master/batch5/b5_skeleton_ops.cpp
   master/batch5/b5_skeleton_validators.cpp
   master/batch6/b6_registry.cpp

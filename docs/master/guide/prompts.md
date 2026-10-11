@@ -30,7 +30,7 @@ Repair the mesh <<mesh_path>> (unit <<unit>>) and then simplify it to about <<ta
 2. Inspect first (mesh.inspect.pmp, mesh.repair.polygon_soup, mesh.repair.orient, mesh.repair.stitch_borders, mesh.analysis.boundary_cycles, mesh.repair.fill_holes, mesh.repair.remove_degenerate, mesh.simplify.edge_collapse, mesh.distance.symmetric_hausdorff: start with mesh.inspect.pmp) to learn what is wrong: open borders, flipped faces, degenerate faces, non-manifold parts.
 3. Repair only what the inspection shows. Holes are never filled blindly: list them first with mesh.analysis.boundary_cycles (hole_id, edge count, perimeter, area estimate, location), show that list to the user, ask which holes to close, and only then run mesh.repair.fill_holes with hole_ids (list first, ask the user, then fill by ids); unselected holes stay open. Verified recipes: wf05-dirtysoup-clean-orient-measure, wf02-fillholes-loop-measures, wf35-simplify-loop-inspect, wf06-remesh-simplify-hausdorff-join; read them with cgal_get_guide(topic="recipe:<id>").
 4. Simplify with mesh.simplify.edge_collapse: its card (topic "op:mesh.simplify.edge_collapse") lists the required stop rule, policy, max_symmetric_deviation and hausdorff_error_bound. Non-manifold input is refused; meshes above the card's face bound are refused. If a collapse result self-intersects the integrity validator refuses it (nothing is published): retry with foldover_policy protect_and_retry (max_retry_rounds, accept_target_shortfall), which protects the edges around each intersection and reports the achieved face count and attempts; an unreachable target is refused with the best achievable count.
-5. Compare the result with the original using the Hausdorff operations (at most 400 faces) or rely on the mandatory simplification validator; report only validated numbers.
+5. The mandatory Hausdorff validator accepts at most 400 faces per mesh by default; for larger meshes (scans) pass hausdorff_validation_mode certified_bvh, which certifies a [lower, upper] bracket of the exact symmetric Hausdorff distance against max_symmetric_deviation. Report only validated numbers.
 
 ### JA
 メッシュ <<mesh_path>>（単位 <<unit>>）を修復し、面数を約 <<target_ratio>> に軽量化する。
@@ -38,7 +38,7 @@ Repair the mesh <<mesh_path>> (unit <<unit>>) and then simplify it to about <<ta
 2. まず検査（mesh.inspect.pmp, mesh.repair.polygon_soup, mesh.repair.orient, mesh.repair.stitch_borders, mesh.analysis.boundary_cycles, mesh.repair.fill_holes, mesh.repair.remove_degenerate, mesh.simplify.edge_collapse, mesh.distance.symmetric_hausdorff: mesh.inspect.pmpから）で問題（開境界・反転・退化面・非多様体）を把握する。
 3. 検査で分かった問題だけを直す。穴は勝手に全部埋めない: まずmesh.analysis.boundary_cycles（hole_id・辺数・周長・面積目安・位置）で一覧し、一覧をユーザーに見せてどの穴を埋めるか確認し、そのあとでmesh.repair.fill_holesにhole_idsを渡して埋める（先に一覧、次に確認、最後にIDで指定）。選ばれなかった穴は開いたまま残る。検証済みレシピ: wf05-dirtysoup-clean-orient-measure, wf02-fillholes-loop-measures, wf35-simplify-loop-inspect, wf06-remesh-simplify-hausdorff-join。cgal_get_guide(topic="recipe:<id>")で読む。
 4. mesh.simplify.edge_collapseで軽量化。カード（topic "op:mesh.simplify.edge_collapse"）に停止条件・policy・max_symmetric_deviation・hausdorff_error_boundが載っている。非多様体や面数上限超過は拒否される。縮退結果が自己交差すると検証器が拒否し何も公開されない: その場合はfoldover_policy=protect_and_retry（max_retry_rounds、accept_target_shortfall）で交差箇所周辺の辺を保護して再試行できる（達成面数と試行回数を報告し、目標に届かない場合は達成可能な最良面数つきで拒否される）。
-5. 元との比較はHausdorff系（400面以下）または必須の軽量化検証器に任せ、検証済みの数値だけ報告する。
+5. 必須のHausdorff検証は既定で各メッシュ400面以下。それより大きい（スキャン等）ときはhausdorff_validation_mode=certified_bvhを指定する（厳密な対称Hausdorff距離の[下限,上限]をmax_symmetric_deviationに対して保証）。検証済みの数値だけ報告する。
 
 ## reconstruct_surface_from_points
 arguments: [{"description": "Path of the point file (xyz or ply with normals)", "name": "points_path", "required": true}, {"description": "mm, cm or m", "name": "unit", "required": true}]
@@ -82,14 +82,14 @@ arguments: [{"description": "Reference mesh file", "name": "reference_path", "re
 ### EN
 Compare <<candidate_path>> against <<reference_path>> (both in <<unit>>).
 1. Import both as TriangleSurfaceMesh with the same unit; different units fail with unit_mismatch.
-2. Use the distance operations (mesh.distance.hausdorff_bounded, mesh.distance.symmetric_hausdorff, mesh.distance.hausdorff_approximate, mesh.analysis.measures). The Hausdorff operations and their validators accept at most 400 faces each: simplify first if larger.
+2. Use the distance operations (mesh.distance.hausdorff_bounded, mesh.distance.symmetric_hausdorff, mesh.distance.hausdorff_approximate, mesh.analysis.measures). The Hausdorff operations and their validators accept at most 400 faces each, except mesh.distance.symmetric_hausdorff with validation_mode certified_bvh (up to 2,000,000 faces per mesh; its validator reports certified_lower_bound, certified_upper_bound and certified_verdict).
 3. mesh.distance.symmetric_hausdorff needs tolerance and error_bound (lengths with units) and answers pass, fail or indeterminate: report indeterminate honestly.
 4. Add mesh.analysis.measures to each mesh for area/volume context. Recipes: wf38-union-simplify-compare, wf06-remesh-simplify-hausdorff-join.
 
 ### JA
 <<candidate_path>>を<<reference_path>>と比較する（どちらも単位 <<unit>>）。
 1. 同じ単位のTriangleSurfaceMeshとして2つ取り込む。単位が違うとunit_mismatch。
-2. 距離系操作（mesh.distance.hausdorff_bounded, mesh.distance.symmetric_hausdorff, mesh.distance.hausdorff_approximate, mesh.analysis.measures）を使う。Hausdorff系と検証器はどちらも400面以下: 大きければ先に軽量化。
+2. 距離系操作（mesh.distance.hausdorff_bounded, mesh.distance.symmetric_hausdorff, mesh.distance.hausdorff_approximate, mesh.analysis.measures）を使う。Hausdorff系と検証器はどちらも400面以下。ただしmesh.distance.symmetric_hausdorffはvalidation_mode=certified_bvhで各メッシュ2,000,000面まで（検証器がcertified_lower_bound・certified_upper_bound・certified_verdictを報告）。
 3. mesh.distance.symmetric_hausdorffはtoleranceとerror_bound（単位付き長さ）が必要で、pass/fail/indeterminateを返す。indeterminateはそのまま正直に報告する。
 4. 面積・体積の文脈としてmesh.analysis.measuresも各メッシュに。レシピ: wf38-union-simplify-compare, wf06-remesh-simplify-hausdorff-join。
 

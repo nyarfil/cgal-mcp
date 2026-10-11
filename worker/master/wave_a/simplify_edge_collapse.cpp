@@ -149,7 +149,8 @@ void require_allowed_parameters(const Json& parameters) {
       "stop", "policy", "preserve_border", "constrained_edges",
       "bounded_distance", "polyhedral_envelope", "bounded_normal_change",
       "max_symmetric_deviation", "hausdorff_error_bound",
-      "foldover_policy", "max_retry_rounds", "accept_target_shortfall"};
+      "foldover_policy", "max_retry_rounds", "accept_target_shortfall",
+      "hausdorff_validation_mode"};
   for (auto iterator = parameters.begin(); iterator != parameters.end();
        ++iterator) {
     if (allowed.find(iterator.key()) == allowed.end()) {
@@ -466,6 +467,14 @@ Json run_simplify_edge_collapse(const Request& request) {
                "max_symmetric_deviation");
   typed_length(request.parameters.at("hausdorff_error_bound"), unit,
                "hausdorff_error_bound", true);
+  if (request.parameters.contains("hausdorff_validation_mode")) {
+    const auto& mode = request.parameters.at("hausdorff_validation_mode");
+    if (!mode.is_string() || (mode.get<std::string>() != "bruteforce" &&
+                              mode.get<std::string>() != "certified_bvh")) {
+      throw WorkerError("INVALID_REQUEST", "INVALID_PARAMETER",
+                        "hausdorff_validation_mode must be bruteforce or certified_bvh");
+    }
+  }
 
   bool bounded_distance = request.parameters.contains("bounded_distance");
   double maximum_distance = 0;
@@ -687,7 +696,8 @@ OperationDefinition simplify_edge_collapse_operation() {
           {"constrained_edges", "constrained_edges"}}},
         {"mesh.distance.symmetric_hausdorff",
          {{"tolerance", "max_symmetric_deviation"},
-          {"error_bound", "hausdorff_error_bound"}}}}}};
+          {"error_bound", "hausdorff_error_bound"},
+          {"validation_mode", "hausdorff_validation_mode"}}}}}};
   return definition;
 }
 

@@ -42,6 +42,7 @@ struct RayItem {
 
 // Strict OFF reader (own parser, no CGAL algorithm) for the accepted types.
 RawMesh read_raw_mesh(const ArtifactInput& input, std::initializer_list<const char*> types);
+RawMesh read_raw_mesh(const ArtifactInput& input, std::initializer_list<const char*> types, std::size_t maximum_faces);
 std::vector<V3> read_points3(const ArtifactInput& input);
 std::vector<RayItem> read_rays(const ArtifactInput& input);
 std::vector<V2> read_points2(const ArtifactInput& input);

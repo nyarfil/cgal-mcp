@@ -51,7 +51,7 @@ void require_shape(const ArtifactInput& input, std::initializer_list<const char*
 }
 
 // Strict OFF parser shared by the independent validators (no CGAL IO).
-RawMesh parse_off(const std::string& bytes) {
+RawMesh parse_off(const std::string& bytes, std::size_t maximum_faces = kMaximumOutputFaces) {
   std::vector<std::string> tokens;
   {
     std::istringstream stream(bytes);
@@ -78,7 +78,7 @@ RawMesh parse_off(const std::string& bytes) {
   if (vertex_count == 0 || face_count == 0) {
     input_error("MALFORMED_OFF", "OFF mesh must contain vertices and faces");
   }
-  if (face_count > kMaximumOutputFaces || vertex_count > 3 * kMaximumOutputFaces) {
+  if (face_count > maximum_faces || vertex_count > 3 * maximum_faces) {
     throw WorkerError("RESOURCE_LIMIT", "FACE_LIMIT_EXCEEDED",
                       "OFF mesh exceeds the Wave D validation size limit");
   }
@@ -411,6 +411,12 @@ RawMesh read_raw_mesh(const ArtifactInput& input,
                       std::initializer_list<const char*> accepted_types) {
   require_shape(input, accepted_types);
   return parse_off(read_verified_input_bytes(input));
+}
+
+RawMesh read_raw_mesh(const ArtifactInput& input, std::initializer_list<const char*> accepted_types,
+                      std::size_t maximum_faces) {
+  require_shape(input, accepted_types);
+  return parse_off(read_verified_input_bytes(input), maximum_faces);
 }
 
 double distance(const V3& a, const V3& b) { return norm(sub(a, b)); }

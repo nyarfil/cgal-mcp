@@ -20,7 +20,7 @@ cgal_get_guide（最初に呼ぶ: ガイド・カード・レシピ）、cgal_ca
 GeometryAnalysisReport, GeometryQueryReport, ImplicitSurfaceDomain, InterpolationData2, KernelQuerySet, KernelReport, OptimizationReport, PointSet1, PointSet2, PointSet3, PointSet3Normals, Polygon2, Polygon2AnalysisReport, PolygonSoup3, PolygonWithHoles2, QuadraticProgram, RayBatch3, SegmentGraph2, SpatialQueryReport, TetrahedralMesh, TriangleSurfaceMesh, Triangulation2, Triangulation3, ValidationReport。操作カードに各入力slotが受ける型と各出力slotが作る型を明記。JSONレポート型は読むもので取り込むものではない。
 
 fail-closed
-推測せず、コード付きで拒否・失敗する。rejected=検証器が結果を確認できず出力は非公開。unmet_precondition=宣言済みの上限・性質が計算前に不成立（例: 距離/Hausdorff系は400面以下。各カードに上限）。resource_limit/timeout=入力を小さくするか、cgal_system_healthの上限内でexecution={"wall_time_ms","memory_mb"}を指定。invalid_input・unmet_precondition・unsupported_operation・検証失敗の後に同じ要求を再試行しない。未知の操作は拒否され、C++をその場で生成しない。
+推測せず、コード付きで拒否・失敗する。rejected=検証器が結果を確認できず出力は非公開。unmet_precondition=宣言済みの上限・性質が計算前に不成立（例: 距離/Hausdorff系は400面以下。ただしmesh.distance.symmetric_hausdorffはvalidation_mode=certified_bvhで2,000,000面まで。各カードに上限）。resource_limit/timeout=入力を小さくするか、cgal_system_healthの上限内でexecution={"wall_time_ms","memory_mb"}を指定。invalid_input・unmet_precondition・unsupported_operation・検証失敗の後に同じ要求を再試行しない。未知の操作は拒否され、C++をその場で生成しない。
 
 曖昧さ
 cgal_plan(goal=...)は1つの操作が明確に当てはまるときだけ。ambiguous_route（またはdetails.optionsつきunsupported_operation）は記録済みの質問と選択肢を持つ。推測せずユーザーに尋ね、operation_idで再plan。検索でquery_analysis.abstained=trueは実行可能な該当なしの意味。

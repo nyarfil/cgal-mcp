@@ -102,14 +102,14 @@
   "unbound_requirements": {},
   "family_contract_sha256": "5930af268d34a2a9b903a048e8f47e133d591788d0044832b22048f66caa1999",
   "family_contract_source_path": "scripts/master_replay_families.py",
-  "family_contract_source_sha256": "6bccfc2626faad31c64998f8a016f7258118c71565787a92d0aa1dce05697c96",
+  "family_contract_source_sha256": "2cc38b1fe85944b0c2bb4e02f99121b312b9e7066d1585d57e815151404e52f8",
   "family_contract_source_hash_encoding": "utf8-lf",
   "catalog_baseline_sha256": "143ec18a5b64d506aad60dc24b0a1ea30940c715d1223b3465fa140aeb9d02a7",
-  "operation_registry_sha256": "b3d4be9bc93f415cec2b6f1614d166a5ee48f1a323d6a04d66cc89cfe4d74a32",
+  "operation_registry_sha256": "4bb886c9484254e09a5b8cc92d5a02a2d4d641f34ea4aad8e6595163b9453e83",
   "operation_registry_hash_encoding": "utf8-lf",
   "policy_catalog_sha256": "45f4be759288aaeb834a3ce97aa64ee7768048b15534618fc8c19512801f9a9f",
   "policy_catalog_hash_encoding": "utf8-lf",
-  "worker_sha256": "b1cb365381eb2d9a43c504f75e03d34d75964222bb5366016cd2e46d85bf3c10",
+  "worker_sha256": "350cee0b74b79939e367aa7d3fb3eb114159d0013114d01a4069ef66f5822c2d",
   "worker_binary_format": "pe",
   "worker_manifest": {
     "actual_cgal_version": "6.2.1",
@@ -210,7 +210,8 @@
           "validator_parameter_bindings": {
             "mesh.distance.symmetric_hausdorff": {
               "error_bound": "hausdorff_error_bound",
-              "tolerance": "max_symmetric_deviation"
+              "tolerance": "max_symmetric_deviation",
+              "validation_mode": "hausdorff_validation_mode"
             },
             "mesh.validate.simplification_integrity": {
               "constrained_edges": "constrained_edges",
@@ -291,10 +292,15 @@
           "method": "bounded_error_symmetric_Hausdorff_distance",
           "output_format": "json",
           "output_slot": "validation",
+          "validation_modes": [
+            "bruteforce",
+            "certified_bvh"
+          ],
           "validator_parameter_bindings": {
             "mesh.validate.hausdorff_symmetric_report": {
               "error_bound": "error_bound",
-              "tolerance": "tolerance"
+              "tolerance": "tolerance",
+              "validation_mode": "validation_mode"
             }
           },
           "validators": [
@@ -9723,7 +9729,7 @@
     ],
     "worker": "cgal-master-worker"
   },
-  "worker_manifest_sha256": "13e20cc1ab715b84431578c9ff490222dc7d46f1e8471d8e734a4975736a9a39",
+  "worker_manifest_sha256": "0b2ca72506debddc9f32c725b5adf85e24b743d61c84292a04681a76ffb50ca3",
   "tests": [
     {
       "id": "family-7.2-replay-cases",
@@ -10043,7 +10049,7 @@
       "case_id": "aabb-closest-cube",
       "operation_id": "spatial.aabb.closest_points",
       "revision": 1,
-      "worker_manifest_sha256": "13e20cc1ab715b84431578c9ff490222dc7d46f1e8471d8e734a4975736a9a39",
+      "worker_manifest_sha256": "0b2ca72506debddc9f32c725b5adf85e24b743d61c84292a04681a76ffb50ca3",
       "test_id": "family-7.2-replay-cases",
       "request": {
         "inputs": [
@@ -10210,7 +10216,7 @@
       "case_id": "aabb-rays-cube",
       "operation_id": "spatial.aabb.ray_first_hits",
       "revision": 1,
-      "worker_manifest_sha256": "13e20cc1ab715b84431578c9ff490222dc7d46f1e8471d8e734a4975736a9a39",
+      "worker_manifest_sha256": "0b2ca72506debddc9f32c725b5adf85e24b743d61c84292a04681a76ffb50ca3",
       "test_id": "family-7.2-replay-cases",
       "request": {
         "inputs": [
@@ -10379,7 +10385,7 @@
       "case_id": "knn-orthogonal",
       "operation_id": "spatial.knn_3",
       "revision": 1,
-      "worker_manifest_sha256": "13e20cc1ab715b84431578c9ff490222dc7d46f1e8471d8e734a4975736a9a39",
+      "worker_manifest_sha256": "0b2ca72506debddc9f32c725b5adf85e24b743d61c84292a04681a76ffb50ca3",
       "test_id": "family-7.2-replay-cases",
       "request": {
         "inputs": [
@@ -10558,7 +10564,7 @@
       "case_id": "knn-general",
       "operation_id": "spatial.knn_3",
       "revision": 1,
-      "worker_manifest_sha256": "13e20cc1ab715b84431578c9ff490222dc7d46f1e8471d8e734a4975736a9a39",
+      "worker_manifest_sha256": "0b2ca72506debddc9f32c725b5adf85e24b743d61c84292a04681a76ffb50ca3",
       "test_id": "family-7.2-replay-cases",
       "request": {
         "inputs": [
@@ -10734,7 +10740,7 @@
       "case_id": "knn-nearest-single",
       "operation_id": "spatial.knn_3",
       "revision": 1,
-      "worker_manifest_sha256": "13e20cc1ab715b84431578c9ff490222dc7d46f1e8471d8e734a4975736a9a39",
+      "worker_manifest_sha256": "0b2ca72506debddc9f32c725b5adf85e24b743d61c84292a04681a76ffb50ca3",
       "test_id": "family-7.2-replay-cases",
       "request": {
         "inputs": [
@@ -10913,7 +10919,7 @@
       "case_id": "range-zero-radius",
       "operation_id": "spatial.range_search_3",
       "revision": 1,
-      "worker_manifest_sha256": "13e20cc1ab715b84431578c9ff490222dc7d46f1e8471d8e734a4975736a9a39",
+      "worker_manifest_sha256": "0b2ca72506debddc9f32c725b5adf85e24b743d61c84292a04681a76ffb50ca3",
       "test_id": "family-7.2-replay-cases",
       "request": {
         "inputs": [
@@ -11092,7 +11098,7 @@
       "case_id": "range-half-radius",
       "operation_id": "spatial.range_search_3",
       "revision": 1,
-      "worker_manifest_sha256": "13e20cc1ab715b84431578c9ff490222dc7d46f1e8471d8e734a4975736a9a39",
+      "worker_manifest_sha256": "0b2ca72506debddc9f32c725b5adf85e24b743d61c84292a04681a76ffb50ca3",
       "test_id": "family-7.2-replay-cases",
       "request": {
         "inputs": [
@@ -11271,7 +11277,7 @@
       "case_id": "bbox-planar",
       "operation_id": "spatial.bbox_2",
       "revision": 1,
-      "worker_manifest_sha256": "13e20cc1ab715b84431578c9ff490222dc7d46f1e8471d8e734a4975736a9a39",
+      "worker_manifest_sha256": "0b2ca72506debddc9f32c725b5adf85e24b743d61c84292a04681a76ffb50ca3",
       "test_id": "family-7.2-replay-cases",
       "request": {
         "inputs": [
@@ -11415,7 +11421,7 @@
       "case_id": "bbox-cube-mesh",
       "operation_id": "spatial.bbox_3",
       "revision": 1,
-      "worker_manifest_sha256": "13e20cc1ab715b84431578c9ff490222dc7d46f1e8471d8e734a4975736a9a39",
+      "worker_manifest_sha256": "0b2ca72506debddc9f32c725b5adf85e24b743d61c84292a04681a76ffb50ca3",
       "test_id": "family-7.2-replay-cases",
       "request": {
         "inputs": [
@@ -11559,7 +11565,7 @@
       "case_id": "bbox-point-set",
       "operation_id": "spatial.bbox_3",
       "revision": 1,
-      "worker_manifest_sha256": "13e20cc1ab715b84431578c9ff490222dc7d46f1e8471d8e734a4975736a9a39",
+      "worker_manifest_sha256": "0b2ca72506debddc9f32c725b5adf85e24b743d61c84292a04681a76ffb50ca3",
       "test_id": "family-7.2-replay-cases",
       "request": {
         "inputs": [
@@ -11703,7 +11709,7 @@
       "case_id": "aabb-intersections-cube",
       "operation_id": "spatial.aabb.intersections",
       "revision": 1,
-      "worker_manifest_sha256": "13e20cc1ab715b84431578c9ff490222dc7d46f1e8471d8e734a4975736a9a39",
+      "worker_manifest_sha256": "0b2ca72506debddc9f32c725b5adf85e24b743d61c84292a04681a76ffb50ca3",
       "test_id": "family-7.2-replay-cases",
       "request": {
         "inputs": [
@@ -11876,7 +11882,7 @@
       "case_id": "knn-zero-k-rejected",
       "operation_id": "spatial.knn_3",
       "revision": 1,
-      "worker_manifest_sha256": "13e20cc1ab715b84431578c9ff490222dc7d46f1e8471d8e734a4975736a9a39",
+      "worker_manifest_sha256": "0b2ca72506debddc9f32c725b5adf85e24b743d61c84292a04681a76ffb50ca3",
       "test_id": "family-7.2-replay-cases",
       "request": {
         "inputs": [
@@ -11938,7 +11944,7 @@
       "case_id": "range-unit-mismatch-rejected",
       "operation_id": "spatial.range_search_3",
       "revision": 1,
-      "worker_manifest_sha256": "13e20cc1ab715b84431578c9ff490222dc7d46f1e8471d8e734a4975736a9a39",
+      "worker_manifest_sha256": "0b2ca72506debddc9f32c725b5adf85e24b743d61c84292a04681a76ffb50ca3",
       "test_id": "family-7.2-replay-cases",
       "request": {
         "inputs": [
@@ -12002,7 +12008,7 @@
       "case_id": "rays-unit-mismatch-rejected",
       "operation_id": "spatial.aabb.ray_first_hits",
       "revision": 1,
-      "worker_manifest_sha256": "13e20cc1ab715b84431578c9ff490222dc7d46f1e8471d8e734a4975736a9a39",
+      "worker_manifest_sha256": "0b2ca72506debddc9f32c725b5adf85e24b743d61c84292a04681a76ffb50ca3",
       "test_id": "family-7.2-replay-cases",
       "request": {
         "inputs": [
@@ -12061,7 +12067,7 @@
       "case_id": "bbox2-rejects-3d-points",
       "operation_id": "spatial.bbox_2",
       "revision": 1,
-      "worker_manifest_sha256": "13e20cc1ab715b84431578c9ff490222dc7d46f1e8471d8e734a4975736a9a39",
+      "worker_manifest_sha256": "0b2ca72506debddc9f32c725b5adf85e24b743d61c84292a04681a76ffb50ca3",
       "test_id": "family-7.2-replay-cases",
       "request": {
         "inputs": [
@@ -12111,7 +12117,7 @@
       "case_id": "aabb-intersections-tampered-flag-rejected",
       "operation_id": "spatial.validate.aabb_intersections",
       "revision": 1,
-      "worker_manifest_sha256": "13e20cc1ab715b84431578c9ff490222dc7d46f1e8471d8e734a4975736a9a39",
+      "worker_manifest_sha256": "0b2ca72506debddc9f32c725b5adf85e24b743d61c84292a04681a76ffb50ca3",
       "test_id": "family-7.2-replay-cases",
       "request": {
         "inputs": [

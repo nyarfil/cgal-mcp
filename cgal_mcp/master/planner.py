@@ -119,6 +119,20 @@ def _schema_alternative(schema: dict[str, Any], value: Any) -> dict[str, Any]:
     raise InvalidInput("parameter_one_of", "Parameter does not select an allowed shape")
 
 
+def bounded_input_limits(condition: dict[str, Any], parameters: dict[str, Any] | None) -> dict[str, int]:
+    """Effective maximum_* limits of a bounded_input precondition.
+
+    ``relaxed_by_parameter`` ({"parameter", "equals", maximum_*}) raises the limits only for steps
+    whose parameter equals the given value (e.g. a scalable certified validation mode). When the
+    parameters are not known yet the relaxed limits apply and the caller re-checks them later."""
+    limits = {key: value for key, value in condition.items() if key.startswith("maximum_")}
+    relaxed = condition.get("relaxed_by_parameter")
+    if isinstance(relaxed, dict) and (
+            parameters is None or parameters.get(relaxed.get("parameter")) == relaxed.get("equals")):
+        limits.update({key: value for key, value in relaxed.items() if key.startswith("maximum_")})
+    return limits
+
+
 def _apply_defaults(schema: dict[str, Any], value: Any) -> Any:
     if schema.get("oneOf"):
         return _apply_defaults(_schema_alternative(schema, value), value)
@@ -613,10 +627,12 @@ class PlanBuilder:
             raise InvalidInput("unit_mismatch", "Operation inputs must use one unit")
         return normalized
 
-    def _preconditions(self, operation: dict[str, Any], bindings: dict[str, dict[str, str]]) -> None:
+    def _preconditions(self, operation: dict[str, Any], bindings: dict[str, dict[str, str]],
+                       parameters: dict[str, Any] | None = None) -> None:
         artifacts = [self.store.inspect(value["artifact_id"]) for value in bindings.values()]
         for condition in operation.get("preconditions", []):
             if condition.get("id") == "bounded_input":
+                effective = bounded_input_limits(condition, parameters)
                 for artifact in artifacts:
                     metadata = artifact["metadata"]
                     # Point sets have no faces: face limits constrain only the
@@ -631,9 +647,9 @@ class PlanBuilder:
                                    ("max_face_degree", "maximum_face_degree",
                                     metadata.get("max_face_degree"))]
                     for label, key, actual in limits:
-                        if key in condition and (not isinstance(actual, int) or actual > condition[key]):
+                        if key in effective and (not isinstance(actual, int) or actual > effective[key]):
                             raise PreconditionFailure(
-                                f"{operation['id']} requires {label}<={condition[key]}")
+                                f"{operation['id']} requires {label}<={effective[key]}")
                 continue
             if "worker_check" in condition:
                 continue
@@ -666,6 +682,12 @@ class PlanBuilder:
     def _parameter_preconditions(self, operation: dict[str, Any],
                                  bindings: dict[str, dict[str, str]],
                                  parameters: dict[str, Any]) -> None:
+        relaxed = [condition for condition in operation.get("preconditions", [])
+                   if condition.get("id") == "bounded_input" and "relaxed_by_parameter" in condition]
+        if relaxed and all(isinstance(binding.get("artifact_id"), str) for binding in bindings.values()):
+            # Plan-time inputs were checked against the relaxed limits; apply the limits that hold
+            # for the actual parameters (the runtime repeats this for derived inputs).
+            self._preconditions({**operation, "preconditions": relaxed}, bindings, parameters)
         for condition in operation.get("parameter_preconditions", []):
             value: Any = parameters
             for component in condition["parameter"].split("."):

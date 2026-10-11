@@ -4852,6 +4852,65 @@ FAMILY_7_3["negative_controls"].extend([
      "expect_error_class": "INVALID_REQUEST", "expect_error_code": "INVALID_PARAMETER"},
 ])
 
+# Scalable certified symmetric Hausdorff (validation_mode certified_bvh; client limit: scans of ~71k faces
+# against ~35k-face simplifications). Synthesized fixtures: a flat 24x24 grid (1152 faces, 1 mm cells) and the
+# same grid with its centre vertex lifted by exactly 0.5 mm, so the exact symmetric Hausdorff distance is 0.5 mm
+# (the lifted vertex to the plane). Both meshes exceed the 400-face bruteforce validator bound.
+B5_FIXTURES.update({
+    "hausdorff_grid24.off": "6b1ed0f965005e0c96e11d3f922e9844746fa767f35cf9a87dd3ebb6dbc5bbf7",
+    "hausdorff_grid24_spike.off": "44627867c1a473f54d2038faae2e19ca322919fb2b992cbdb82f32217d8b3358",
+    "tampered_hausdorff_certified_spike_hidden.json":
+        "f7454d481b73bad4719bf1a75703738b6843aee4aa342f196cbd48452bb03954",
+})
+H_GRID = _b5mesh("hausdorff_grid24.off")
+H_SPIKE = _b5mesh("hausdorff_grid24_spike.off")
+
+
+def _certified(tolerance: float) -> dict:
+    return {"tolerance": _mm_length(tolerance), "error_bound": _mm_length(0.01), "validation_mode": "certified_bvh"}
+
+
+def _certified_case(case_id: str, tolerance: float, verdict: str) -> dict:
+    return _case(case_id, "mesh.distance.symmetric_hausdorff", [H_GRID, H_SPIKE], _certified(tolerance), [
+        ["output:validation:json:report_kind", "==", "hausdorff_bounded_symmetric"],
+        ["output:validation:json:verdict", "==", verdict],
+        ["output:validation:json:parameters.validation_mode", "==", "certified_bvh"],
+        ["output:validation:json:results.distance", "approx", [0.5, 0.01]],
+        ["output:validation:json:lower_bound.value", "approx", [0.49, 0.011]],
+        ["output:validation:json:upper_bound.value", "approx", [0.51, 0.011]],
+        ["output:validation:json:source.reference_sha256", "==", {"path": "input:reference:sha256"}],
+        ["output:validation:json:source.candidate_sha256", "==", {"path": "input:candidate:sha256"}],
+    ])
+
+
+FAMILY_7_3["requirements"]["major.7.3.06"]["case_ids"].extend([
+    "distance-symmetric-certified-spike-fail-verdict", "distance-symmetric-certified-spike-pass"])
+FAMILY_7_3["requirements"]["major.7.3.06"]["symbol_notes"] += (
+    " Scalable mode: with validation_mode certified_bvh (registry maximum_faces raised from 400 to 2,000,000 for "
+    "this mode only) the same CGAL report is checked by a CGAL-independent certified bracket (self-written "
+    "bounding-volume hierarchy, exact nearest-triangle branch-and-bound, midpoint subdivision with the convex bound "
+    "min_S max_i d(v_i,S), width min(0.5% diagonal, error_bound/2), exhaustive-scan cross-check on a subsample, GMP "
+    "witness recheck, binary64 rounding margin 1e-9*(1+diagonal)); it is replayed on a 1152-face grid against the "
+    "same grid with a 0.5 mm spike (exact distance 0.5 mm): the spike is found, tolerance 0.1 mm gives fail, 0.6 mm "
+    "gives pass, and a report hiding the spike is rejected.")
+FAMILY_7_3["cases"].extend([
+    _certified_case("distance-symmetric-certified-spike-fail-verdict", 0.1, "fail"),
+    _certified_case("distance-symmetric-certified-spike-pass", 0.6, "pass"),
+])
+FAMILY_7_3["negative_controls"].extend([
+    {"id": "distance-certified-tampered-spike-hidden-rejected", "operation": "mesh.validate.hausdorff_symmetric_report",
+     "inputs": [_b5vreport("tampered_hausdorff_certified_spike_hidden.json"), H_GRID, H_SPIKE],
+     "parameters": _certified(0.1),
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "DISTANCE_OUT_OF_BRACKET"},
+    {"id": "distance-bruteforce-validator-large-mesh-refused", "operation": "mesh.validate.hausdorff_symmetric_report",
+     "inputs": [_b5vreport("tampered_hausdorff_certified_spike_hidden.json"), H_GRID, H_SPIKE],
+     "parameters": {"tolerance": _mm_length(0.1), "error_bound": _mm_length(0.01)},
+     "expect_error_class": "RESOURCE_LIMIT", "expect_error_code": "FACE_LIMIT_EXCEEDED"},
+    {"id": "distance-symmetric-unknown-validation-mode-rejected", "operation": "mesh.distance.symmetric_hausdorff",
+     "inputs": [H_GRID, H_SPIKE], "parameters": {**_certified(0.1), "validation_mode": "sampled"},
+     "expect_error_class": "INVALID_REQUEST", "expect_error_code": "INVALID_PARAMETER"},
+])
+
 # <<< b5-73
 
 # >>> b5-712

@@ -310,10 +310,22 @@ class OperationRegistry:
             if item.get("id") == "bounded_input":
                 allowed = {"id", "maximum_bytes", "maximum_vertices",
                            "maximum_faces", "maximum_face_degree"}
-                return (not (set(item) - allowed)
+                relaxed = item.get("relaxed_by_parameter")
+                if relaxed is not None:
+                    # Larger limits only for steps whose parameter selects a scalable mode.
+                    limit_keys = allowed - {"id"}
+                    if (not isinstance(relaxed, dict) or not isinstance(relaxed.get("parameter"), str)
+                            or relaxed["parameter"] not in operation["parameters"].get("properties", {})
+                            or not isinstance(relaxed.get("equals"), str)
+                            or set(relaxed) - limit_keys - {"parameter", "equals"}
+                            or not any(key in relaxed for key in limit_keys)
+                            or any(type(relaxed[key]) is not int or relaxed[key] < item.get(key, 0)
+                                   for key in limit_keys if key in relaxed)):
+                        return False
+                return (not (set(item) - allowed - {"relaxed_by_parameter"})
                         and any(key in item for key in allowed - {"id"})
                         and all(type(value) is int and value > 0
-                                for key, value in item.items() if key != "id"))
+                                for key, value in item.items() if key not in {"id", "relaxed_by_parameter"}))
             if isinstance(item.get("property"), str) and ("equals" in item or "minimum" in item):
                 return True
             if isinstance(item.get("worker_check"), dict):

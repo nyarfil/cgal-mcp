@@ -18,6 +18,15 @@ RawMesh read_raw_mesh(const ArtifactInput& input, std::initializer_list<const ch
   return result;
 }
 
+RawMesh read_raw_mesh(const ArtifactInput& input, std::initializer_list<const char*> types, std::size_t maximum_faces) {
+  const auto raw = wave_d::read_raw_mesh(input, types, maximum_faces);
+  RawMesh result;
+  result.vertices.reserve(raw.vertices.size());
+  for (const auto& vertex : raw.vertices) result.vertices.push_back({vertex[0], vertex[1], vertex[2]});
+  result.faces = raw.faces;
+  return result;
+}
+
 std::vector<V3> read_points3(const ArtifactInput& input) {
   std::vector<V3> result;
   for (const auto& point : wave_c::read_point_set3(input)) result.push_back({point[0], point[1], point[2]});

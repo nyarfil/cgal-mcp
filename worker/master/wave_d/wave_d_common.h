@@ -90,6 +90,9 @@ double number_parameter(const Request& request, const char* name, double exclusi
 // ---- Validator side (independent) -------------------------------------------
 RawMesh read_raw_mesh(const ArtifactInput& input,
                       std::initializer_list<const char*> accepted_types);
+// Same parser with an explicit face limit (scalable certified validators).
+RawMesh read_raw_mesh(const ArtifactInput& input,
+                      std::initializer_list<const char*> accepted_types, std::size_t maximum_faces);
 MeshFacts analyze(const RawMesh& mesh);
 Json facts_json(const MeshFacts& facts);
 std::vector<std::array<std::size_t, 2>> boundary_edges(const RawMesh& mesh);

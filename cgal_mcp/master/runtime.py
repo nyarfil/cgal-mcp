@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import Any
 
 from .errors import InvalidInput, MasterError, PreconditionFailure, WorkerFailure
-from .planner import PlanBuilder
+from .planner import PlanBuilder, bounded_input_limits
 from .registry import OperationRegistry
 from .package_terms import PACKAGE_REFERENCE_TERMS, package_reference_score
 from .search import QueryTerms, fts_expression, lexical_score, parse_query
@@ -259,7 +259,7 @@ class MasterRuntime:
                     step_dir.mkdir()
                     inputs = self._resolve_inputs(step, produced)
                     self._recheck_inputs(inputs)
-                    self._runtime_preconditions(operation, inputs)
+                    self._runtime_preconditions(operation, inputs, step["parameters"])
                     self._runtime_parameter_preconditions(operation, inputs, step["parameters"])
                     request_id = uuid.uuid4().hex
                     request = {"protocol": 1, "request_id": request_id,
@@ -454,9 +454,12 @@ class MasterRuntime:
         return result
 
     @staticmethod
-    def _runtime_preconditions(operation: dict[str, Any], inputs: list[dict[str, Any]]) -> None:
+    def _runtime_preconditions(operation: dict[str, Any], inputs: list[dict[str, Any]],
+                               parameters: dict[str, Any] | None = None) -> None:
         for condition in operation.get("preconditions", []):
             if condition.get("id") == "bounded_input":
+                # Without parameters (direct callers) the registry's base limits apply.
+                effective = bounded_input_limits(condition, parameters if parameters is not None else {})
                 for item in inputs:
                     metadata = item.get("metadata", {})
                     # Mirror the plan-time rule: point sets have no faces, so face
@@ -471,9 +474,9 @@ class MasterRuntime:
                                    ("max_face_degree", "maximum_face_degree",
                                     metadata.get("max_face_degree"))]
                     for label, key, actual in limits:
-                        if key in condition and (not isinstance(actual, int) or actual > condition[key]):
+                        if key in effective and (not isinstance(actual, int) or actual > effective[key]):
                             raise PreconditionFailure(
-                                f"{operation['id']} requires {label}<={condition[key]}")
+                                f"{operation['id']} requires {label}<={effective[key]}")
                 continue
             if "worker_check" in condition:
                 continue

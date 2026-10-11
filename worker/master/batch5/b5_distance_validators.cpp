@@ -6,6 +6,7 @@
 // the triangles of A using the 1-Lipschitz bound dist(p) <= dist(c) + |p - c|; the bracket width is
 // kBracketWidth times the diagonal of A. Square roots force the declared tolerance kRelativeTolerance.
 
+#include "b5_certified_hausdorff.h"
 #include "b5_common.h"
 
 #include <algorithm>
@@ -307,15 +308,81 @@ LD report_length(const Json& report, const char* key, const std::string& unit) {
 
 bool close_to(LD a, LD b) { return std::fabs(a - b) <= 1e-12L * (1 + std::fabs(b)); }
 
+// validation_mode certified_bvh: scalable certified bracket (b5_certified_hausdorff.cpp) plus an independent
+// certificate of the verdict against the tolerance.
+Json certified_symmetric_report(const Request& request, const std::string& validator, const RawMesh& reference,
+                                const RawMesh& candidate, double reported, LD tolerance, LD error_bound,
+                                const std::string& reported_verdict, Json checks) {
+  const auto bracket = certified_symmetric_hausdorff(reference, candidate, static_cast<double>(error_bound),
+                                                     static_cast<double>(kRelativeTolerance),
+                                                     static_cast<double>(kBracketWidth), kCertifiedNodeBudget);
+  const LD eps = bracket.rounding_margin;
+  const LD lower = bracket.lower, upper = bracket.upper;
+  if (reported < lower - error_bound - eps || reported > upper + error_bound + eps) {
+    validation_failure("DISTANCE_OUT_OF_BRACKET",
+                       "The reported distance is farther than the error bound from the certified symmetric bracket");
+  }
+  checks["distance_within_error_bound_of_exact_symmetric_bracket"] = true;
+  // Independent certificate: pass when the certified upper bound is within the tolerance, fail when the
+  // certified lower bound exceeds it, otherwise indeterminate. The report must not contradict it.
+  const std::string certificate =
+      upper + eps <= tolerance ? "pass" : (lower - eps > tolerance ? "fail" : "indeterminate");
+  if ((reported_verdict == "pass" && certificate == "fail") || (reported_verdict == "fail" && certificate == "pass")) {
+    validation_failure("CERTIFICATE_CONTRADICTION",
+                       "The reported verdict contradicts the certified bracket against the tolerance");
+  }
+  checks["verdict_not_contradicted_by_certified_bracket"] = true;
+  return concluded(
+      request, validator, checks,
+      {{"verdict", reported_verdict},
+       {"validation_mode", "certified_bvh"},
+       {"certified_lower_bound", static_cast<double>(std::max<LD>(0, lower - eps))},
+       {"certified_upper_bound", static_cast<double>(upper + eps)},
+       {"certified_verdict", certificate},
+       {"certified_within_tolerance", certificate == "pass"},
+       {"recomputed_bracket_lower", static_cast<double>(lower)},
+       {"recomputed_bracket_upper", static_cast<double>(upper)},
+       {"recomputed_forward_bracket", {bracket.forward_lower, bracket.forward_upper}},
+       {"recomputed_backward_bracket", {bracket.backward_lower, bracket.backward_upper}},
+       {"recomputed_vertex_lower_bound", bracket.vertex_lower},
+       {"exact_rational_witness_distances", {bracket.exact_forward_witness, bracket.exact_backward_witness}},
+       {"bracket_width", bracket.width},
+       {"bracket_width_rule", "min(0.005 * diagonal, error_bound / 2)"},
+       {"rounding_margin", static_cast<double>(eps)},
+       {"length_tolerance_relative_to_diagonal", static_cast<double>(kRelativeTolerance)},
+       {"refinement_nodes", bracket.nodes},
+       {"root_triangles", {bracket.forward_roots, bracket.backward_roots}},
+       {"point_triangle_distance_evaluations", bracket.distance_evaluations},
+       {"exhaustive_crosscheck_points", bracket.crosscheck_points},
+       {"exhaustive_crosscheck_max_deviation", bracket.crosscheck_max_deviation},
+       {"maximum_faces_per_mesh", kMaximumCertifiedDistanceFaces},
+       {"independence",
+        "self-written triangle bounding-volume hierarchy (binary64) with exact nearest-triangle branch-and-bound; "
+        "certified bracket by midpoint subdivision with the convex bound min_S max_i d(v_i,S) and the Lipschitz "
+        "bound; hierarchy queries cross-checked against an exhaustive scan on a subsample; witness distances "
+        "recomputed in GMP rationals; rounding covered by the declared margin; no CGAL header"}});
+}
+
 Json run_symmetric_hausdorff_report(const Request& request) {
   const std::string validator = "mesh.validate.hausdorff_symmetric_report";
   require_inputs(request, 3, validator);
-  require_parameter_names(request, {"tolerance", "error_bound"});
+  require_parameter_names(request, {"tolerance", "error_bound"}, {"validation_mode"});
+  const std::string mode = request.parameters.contains("validation_mode")
+                               ? query_ops::enum_parameter(request, "validation_mode", {"bruteforce", "certified_bvh"})
+                               : std::string("bruteforce");
+  const bool certified = mode == "certified_bvh";
   const auto report = read_report(request.inputs[0], "ValidationReport", "report_kind", "hausdorff_bounded_symmetric");
-  const auto reference = read_raw_mesh(request.inputs[1], {"TriangleSurfaceMesh"});
-  const auto candidate = read_raw_mesh(request.inputs[2], {"TriangleSurfaceMesh"});
-  const auto tr = triangles_of(reference, "The reference mesh");
-  const auto tc = triangles_of(candidate, "The candidate mesh");
+  const auto reference = certified ? read_raw_mesh(request.inputs[1], {"TriangleSurfaceMesh"}, kMaximumCertifiedDistanceFaces)
+                                   : read_raw_mesh(request.inputs[1], {"TriangleSurfaceMesh"});
+  const auto candidate = certified ? read_raw_mesh(request.inputs[2], {"TriangleSurfaceMesh"}, kMaximumCertifiedDistanceFaces)
+                                   : read_raw_mesh(request.inputs[2], {"TriangleSurfaceMesh"});
+  std::vector<Tri> tr, tc;
+  if (!certified) {
+    tr = triangles_of(reference, "The reference mesh");
+    tc = triangles_of(candidate, "The candidate mesh");
+  } else if (reference.vertices.empty() || candidate.vertices.empty()) {
+    validation_failure("MESH_EMPTY", "A mesh has no vertices");
+  }
   const std::string unit = request.inputs[1].unit;
   if (unit != request.inputs[2].unit) validation_failure("UNIT_MISMATCH", "The meshes use different units");
   Json checks;
@@ -350,6 +417,10 @@ Json run_symmetric_hausdorff_report(const Request& request) {
     validation_failure("VERDICT_MISMATCH", "The reported verdict does not follow from the estimate, bound and tolerance");
   }
   checks["verdict_follows_bounds_and_tolerance"] = true;
+  if (certified) {
+    return certified_symmetric_report(request, validator, reference, candidate, reported, tolerance, error_bound,
+                                      expected_verdict, std::move(checks));
+  }
 
   const LD diagonal = std::max(diagonal_of(reference), diagonal_of(candidate));
   const LD eps = kRelativeTolerance * (1 + diagonal);
