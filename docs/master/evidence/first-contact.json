@@ -1,0 +1,1275 @@
+{
+ "bindings": {
+  "guide_bundle_sha256": "9cbaac6fdfbb5ee4ae05641e7a0517651a56ef20db985471e606f771fe19e443",
+  "harness_sha256": "075da0335eebfcd4f47fef3883f3b5c3dfa4ce82596fdeb082849b158e365115",
+  "instructions_sha256": "dc205df03648b23a2cc2aee4ed2e516957534c010d9f52367f8cab8f81c02ad9",
+  "operations_sha256": "78abd290a0bcdf4c04f9500ba0b329bf604b555d213f28b2ff7fe260fdb894b9",
+  "worker_sha256": "3bc1e3c514dc7a0ba558119dd1a20b2c4555c26ffca476d04cff036233d3cb92",
+  "workflows_sha256": "9e9369564b6d82960ad19d8a948b80eb2983092d77f17f28a42b7f2b44d93adc"
+ },
+ "cases": [
+  {
+   "executed_ok": true,
+   "expected_recipe": "wf01-soup-orient-loop-inspect",
+   "language": "en",
+   "operations": [
+    "mesh.subdivide.catmull_clark",
+    "mesh.triangulate.faces",
+    "mesh.analysis.measures"
+   ],
+   "outputs": [
+    {
+     "type": "PolygonSoup3",
+     "unit": "mm"
+    },
+    {
+     "type": "TriangleSurfaceMesh",
+     "unit": "mm"
+    },
+    {
+     "type": "GeometryAnalysisReport",
+     "unit": "none"
+    }
+   ],
+   "recipe_match": false,
+   "request": "My scan is a pile of loose triangles and some face the wrong way. Turn them the right way round, make it smoother with one subdivision pass and tell me whether the mesh is healthy.",
+   "search_hit": true,
+   "selected_recipe": "wf14-catmull-triangulate-measure",
+   "state": "succeeded",
+   "tool_calls": 13,
+   "validators": [
+    "pass",
+    "pass",
+    "pass"
+   ]
+  },
+  {
+   "executed_ok": true,
+   "expected_recipe": "wf02-fillholes-loop-measures",
+   "language": "en",
+   "operations": [
+    "mesh.repair.fill_holes",
+    "mesh.subdivide.loop",
+    "mesh.analysis.measures"
+   ],
+   "outputs": [
+    {
+     "type": "TriangleSurfaceMesh",
+     "unit": "mm"
+    },
+    {
+     "type": "TriangleSurfaceMesh",
+     "unit": "mm"
+    },
+    {
+     "type": "GeometryAnalysisReport",
+     "unit": "none"
+    }
+   ],
+   "recipe_match": true,
+   "request": "There is a small hole in my mesh. Close it, subdivide once and give me the area and volume.",
+   "search_hit": true,
+   "selected_recipe": "wf02-fillholes-loop-measures",
+   "state": "succeeded",
+   "tool_calls": 13,
+   "validators": [
+    "pass",
+    "pass",
+    "pass"
+   ]
+  },
+  {
+   "executed_ok": true,
+   "expected_recipe": "wf03-stitch-components",
+   "language": "en",
+   "operations": [
+    "mesh.repair.stitch_borders",
+    "mesh.analysis.connected_components"
+   ],
+   "outputs": [
+    {
+     "type": "TriangleSurfaceMesh",
+     "unit": "mm"
+    },
+    {
+     "type": "GeometryAnalysisReport",
+     "unit": "none"
+    }
+   ],
+   "recipe_match": true,
+   "request": "The seam of my model is duplicated. Stitch the borders together and count how many separate pieces there are.",
+   "search_hit": true,
+   "selected_recipe": "wf03-stitch-components",
+   "state": "succeeded",
+   "tool_calls": 11,
+   "validators": [
+    "pass",
+    "pass"
+   ]
+  },
+  {
+   "executed_ok": true,
+   "expected_recipe": "wf04-degenerate-remove-selfintersect",
+   "language": "en",
+   "operations": [
+    "mesh.repair.remove_degenerate",
+    "mesh.analysis.self_intersections"
+   ],
+   "outputs": [
+    {
+     "type": "TriangleSurfaceMesh",
+     "unit": "mm"
+    },
+    {
+     "type": "GeometryAnalysisReport",
+     "unit": "none"
+    }
+   ],
+   "recipe_match": true,
+   "request": "Remove zero-area degenerate triangles from my model and then check that it does not intersect itself.",
+   "search_hit": true,
+   "selected_recipe": "wf04-degenerate-remove-selfintersect",
+   "state": "succeeded",
+   "tool_calls": 11,
+   "validators": [
+    "pass",
+    "pass"
+   ]
+  },
+  {
+   "executed_ok": true,
+   "expected_recipe": "wf05-dirtysoup-clean-orient-measure",
+   "language": "en",
+   "operations": [
+    "mesh.repair.polygon_soup",
+    "mesh.repair.orient",
+    "mesh.analysis.measures"
+   ],
+   "outputs": [
+    {
+     "type": "PolygonSoup3",
+     "unit": "mm"
+    },
+    {
+     "type": "TriangleSurfaceMesh",
+     "unit": "mm"
+    },
+    {
+     "type": "GeometryAnalysisReport",
+     "unit": "none"
+    }
+   ],
+   "recipe_match": true,
+   "request": "I have a dirty polygon soup with duplicates. Clean it, orient it consistently and measure it.",
+   "search_hit": true,
+   "selected_recipe": "wf05-dirtysoup-clean-orient-measure",
+   "state": "succeeded",
+   "tool_calls": 13,
+   "validators": [
+    "pass",
+    "pass",
+    "pass"
+   ]
+  },
+  {
+   "executed_ok": true,
+   "expected_recipe": "wf06-remesh-simplify-hausdorff-join",
+   "language": "en",
+   "operations": [
+    "mesh.surface.generate",
+    "mesh.remesh.isotropic",
+    "mesh.analysis.measures"
+   ],
+   "outputs": [
+    {
+     "type": "TriangleSurfaceMesh",
+     "unit": "mm"
+    },
+    {
+     "type": "TriangleSurfaceMesh",
+     "unit": "mm"
+    },
+    {
+     "type": "GeometryAnalysisReport",
+     "unit": "none"
+    }
+   ],
+   "recipe_match": false,
+   "request": "Remesh my sphere to uniform edges, also make a lighter version, and compare them by Hausdorff distance.",
+   "search_hit": true,
+   "selected_recipe": "wf30-surface-generate-remesh-measures",
+   "state": "succeeded",
+   "tool_calls": 13,
+   "validators": [
+    "pass",
+    "pass",
+    "pass"
+   ]
+  },
+  {
+   "executed_ok": true,
+   "expected_recipe": "wf07-smooth-remesh-simplify",
+   "language": "en",
+   "operations": [
+    "mesh.smooth.shape",
+    "mesh.subdivide.loop",
+    "mesh.analysis.measures"
+   ],
+   "outputs": [
+    {
+     "type": "TriangleSurfaceMesh",
+     "unit": "mm"
+    },
+    {
+     "type": "TriangleSurfaceMesh",
+     "unit": "mm"
+    },
+    {
+     "type": "GeometryAnalysisReport",
+     "unit": "none"
+    }
+   ],
+   "recipe_match": false,
+   "request": "My sphere scan is noisy. Smooth it, remesh it evenly and then reduce the triangle count.",
+   "search_hit": true,
+   "selected_recipe": "wf41-noisy-smooth-loop-measures",
+   "state": "succeeded",
+   "tool_calls": 14,
+   "validators": [
+    "pass",
+    "pass",
+    "pass"
+   ]
+  },
+  {
+   "executed_ok": true,
+   "expected_recipe": "wf08-refine-measure",
+   "language": "en",
+   "operations": [
+    "mesh.refine.local",
+    "mesh.analysis.measures"
+   ],
+   "outputs": [
+    {
+     "type": "TriangleSurfaceMesh",
+     "unit": "mm"
+    },
+    {
+     "type": "GeometryAnalysisReport",
+     "unit": "none"
+    }
+   ],
+   "recipe_match": true,
+   "request": "Refine the triangles locally around part of my mesh and measure the result.",
+   "search_hit": true,
+   "selected_recipe": "wf08-refine-measure",
+   "state": "succeeded",
+   "tool_calls": 16,
+   "validators": [
+    "pass",
+    "pass"
+   ]
+  },
+  {
+   "executed_ok": true,
+   "expected_recipe": "wf09-union-keeplargest-loop",
+   "language": "en",
+   "operations": [
+    "mesh.boolean.union",
+    "mesh.components.keep_largest",
+    "mesh.subdivide.loop"
+   ],
+   "outputs": [
+    {
+     "type": "TriangleSurfaceMesh",
+     "unit": "mm"
+    },
+    {
+     "type": "TriangleSurfaceMesh",
+     "unit": "mm"
+    },
+    {
+     "type": "TriangleSurfaceMesh",
+     "unit": "mm"
+    }
+   ],
+   "recipe_match": true,
+   "request": "Merge two overlapping cubes into one solid, keep only the largest piece and subdivide it.",
+   "search_hit": true,
+   "selected_recipe": "wf09-union-keeplargest-loop",
+   "state": "succeeded",
+   "tool_calls": 14,
+   "validators": [
+    "pass",
+    "pass",
+    "pass"
+   ]
+  },
+  {
+   "executed_ok": true,
+   "expected_recipe": "wf10-difference-measures",
+   "language": "en",
+   "operations": [
+    "mesh.clip.plane",
+    "mesh.analysis.measures"
+   ],
+   "outputs": [
+    {
+     "type": "TriangleSurfaceMesh",
+     "unit": "mm"
+    },
+    {
+     "type": "GeometryAnalysisReport",
+     "unit": "none"
+    }
+   ],
+   "recipe_match": false,
+   "request": "Cut one cube out of another cube and tell me the volume that is left.",
+   "search_hit": true,
+   "selected_recipe": "wf12-clip-measures",
+   "state": "succeeded",
+   "tool_calls": 11,
+   "validators": [
+    "pass",
+    "pass"
+   ]
+  },
+  {
+   "executed_ok": true,
+   "expected_recipe": "wf12-clip-measures",
+   "language": "en",
+   "operations": [
+    "mesh.clip.plane",
+    "mesh.analysis.measures"
+   ],
+   "outputs": [
+    {
+     "type": "TriangleSurfaceMesh",
+     "unit": "mm"
+    },
+    {
+     "type": "GeometryAnalysisReport",
+     "unit": "none"
+    }
+   ],
+   "recipe_match": true,
+   "request": "Cut my cube with a plane and measure what remains.",
+   "search_hit": true,
+   "selected_recipe": "wf12-clip-measures",
+   "state": "succeeded",
+   "tool_calls": 11,
+   "validators": [
+    "pass",
+    "pass"
+   ]
+  },
+  {
+   "executed_ok": true,
+   "expected_recipe": "wf13-corefine-components",
+   "language": "en",
+   "operations": [
+    "mesh.corefine",
+    "mesh.analysis.connected_components"
+   ],
+   "outputs": [
+    {
+     "type": "TriangleSurfaceMesh",
+     "unit": "mm"
+    },
+    {
+     "type": "GeometryAnalysisReport",
+     "unit": "none"
+    }
+   ],
+   "recipe_match": true,
+   "request": "Corefine two tetrahedra so that they share their intersection curve, then analyse the components.",
+   "search_hit": true,
+   "selected_recipe": "wf13-corefine-components",
+   "state": "succeeded",
+   "tool_calls": 12,
+   "validators": [
+    "pass",
+    "pass"
+   ]
+  },
+  {
+   "executed_ok": true,
+   "expected_recipe": "wf14-catmull-triangulate-measure",
+   "language": "en",
+   "operations": [
+    "mesh.subdivide.catmull_clark",
+    "mesh.triangulate.faces",
+    "mesh.analysis.measures"
+   ],
+   "outputs": [
+    {
+     "type": "PolygonSoup3",
+     "unit": "mm"
+    },
+    {
+     "type": "TriangleSurfaceMesh",
+     "unit": "mm"
+    },
+    {
+     "type": "GeometryAnalysisReport",
+     "unit": "none"
+    }
+   ],
+   "recipe_match": true,
+   "request": "Apply Catmull-Clark subdivision, convert the quads back to triangles and measure.",
+   "search_hit": true,
+   "selected_recipe": "wf14-catmull-triangulate-measure",
+   "state": "succeeded",
+   "tool_calls": 17,
+   "validators": [
+    "pass",
+    "pass",
+    "pass"
+   ]
+  },
+  {
+   "executed_ok": true,
+   "expected_recipe": "wf15-points-alphawrap-remesh-measures",
+   "language": "en",
+   "operations": [
+    "reconstruction.alpha_wrap",
+    "pointset.simplify.random",
+    "spatial.aabb.closest_points"
+   ],
+   "outputs": [
+    {
+     "type": "TriangleSurfaceMesh",
+     "unit": "mm"
+    },
+    {
+     "type": "PointSet3",
+     "unit": "mm"
+    },
+    {
+     "type": "SpatialQueryReport",
+     "unit": "none"
+    }
+   ],
+   "recipe_match": false,
+   "request": "I have a point cloud. Wrap a watertight surface around it with alpha wrapping, remesh it and measure.",
+   "search_hit": true,
+   "selected_recipe": "wf22-wrap-and-thinned-cloud-join",
+   "state": "succeeded",
+   "tool_calls": 14,
+   "validators": [
+    "pass",
+    "pass",
+    "pass",
+    "pass"
+   ]
+  },
+  {
+   "executed_ok": true,
+   "expected_recipe": "wf16-poisson-remesh-inspect",
+   "language": "en",
+   "operations": [
+    "reconstruction.poisson",
+    "mesh.remesh.isotropic",
+    "mesh.inspect.pmp"
+   ],
+   "outputs": [
+    {
+     "type": "TriangleSurfaceMesh",
+     "unit": "mm"
+    },
+    {
+     "type": "TriangleSurfaceMesh",
+     "unit": "mm"
+    },
+    {
+     "type": "GeometryAnalysisReport",
+     "unit": "none"
+    }
+   ],
+   "recipe_match": true,
+   "request": "Build a surface from oriented points with Poisson reconstruction, remesh it and check its health.",
+   "search_hit": true,
+   "selected_recipe": "wf16-poisson-remesh-inspect",
+   "state": "succeeded",
+   "tool_calls": 14,
+   "validators": [
+    "pass",
+    "pass",
+    "pass"
+   ]
+  },
+  {
+   "executed_ok": true,
+   "expected_recipe": "wf17-outliers-grid-afsr-measures",
+   "language": "en",
+   "operations": [
+    "pointset.remove_outliers",
+    "pointset.simplify.grid",
+    "reconstruction.advancing_front",
+    "mesh.analysis.measures"
+   ],
+   "outputs": [
+    {
+     "type": "PointSet3",
+     "unit": "mm"
+    },
+    {
+     "type": "PointSet3",
+     "unit": "mm"
+    },
+    {
+     "type": "TriangleSurfaceMesh",
+     "unit": "mm"
+    },
+    {
+     "type": "GeometryAnalysisReport",
+     "unit": "none"
+    }
+   ],
+   "recipe_match": true,
+   "request": "Remove outliers from my scan points, thin them on a grid, reconstruct with advancing front and measure the mesh.",
+   "search_hit": true,
+   "selected_recipe": "wf17-outliers-grid-afsr-measures",
+   "state": "succeeded",
+   "tool_calls": 17,
+   "validators": [
+    "pass",
+    "pass",
+    "pass",
+    "pass",
+    "pass",
+    "pass",
+    "pass"
+   ]
+  },
+  {
+   "executed_ok": true,
+   "expected_recipe": "wf19-hull3-loop-measures",
+   "language": "en",
+   "operations": [
+    "hull.convex_3",
+    "mesh.subdivide.loop",
+    "mesh.analysis.measures"
+   ],
+   "outputs": [
+    {
+     "type": "TriangleSurfaceMesh",
+     "unit": "mm"
+    },
+    {
+     "type": "TriangleSurfaceMesh",
+     "unit": "mm"
+    },
+    {
+     "type": "GeometryAnalysisReport",
+     "unit": "none"
+    }
+   ],
+   "recipe_match": true,
+   "request": "Wrap a 3D convex hull around my points, subdivide it once and measure it.",
+   "search_hit": true,
+   "selected_recipe": "wf19-hull3-loop-measures",
+   "state": "succeeded",
+   "tool_calls": 13,
+   "validators": [
+    "pass",
+    "pass",
+    "pass"
+   ]
+  },
+  {
+   "executed_ok": true,
+   "expected_recipe": "wf20-outlier-normals-orient",
+   "language": "en",
+   "operations": [
+    "pointset.remove_outliers",
+    "pointset.normals.estimate",
+    "pointset.normals.orient_mst"
+   ],
+   "outputs": [
+    {
+     "type": "PointSet3",
+     "unit": "mm"
+    },
+    {
+     "type": "PointSet3Normals",
+     "unit": "mm"
+    },
+    {
+     "type": "PointSet3Normals",
+     "unit": "mm"
+    }
+   ],
+   "recipe_match": true,
+   "request": "Throw away outliers in a point set, estimate normals and orient them consistently.",
+   "search_hit": true,
+   "selected_recipe": "wf20-outlier-normals-orient",
+   "state": "succeeded",
+   "tool_calls": 15,
+   "validators": [
+    "pass",
+    "pass",
+    "pass",
+    "pass",
+    "pass",
+    "pass",
+    "pass"
+   ]
+  },
+  {
+   "executed_ok": true,
+   "expected_recipe": "wf21-random-delaunay3",
+   "language": "en",
+   "operations": [
+    "pointset.remove_outliers",
+    "pointset.simplify.grid",
+    "reconstruction.advancing_front",
+    "mesh.analysis.measures"
+   ],
+   "outputs": [
+    {
+     "type": "PointSet3",
+     "unit": "mm"
+    },
+    {
+     "type": "PointSet3",
+     "unit": "mm"
+    },
+    {
+     "type": "TriangleSurfaceMesh",
+     "unit": "mm"
+    },
+    {
+     "type": "GeometryAnalysisReport",
+     "unit": "none"
+    }
+   ],
+   "recipe_match": false,
+   "request": "Randomly thin my points and build a 3D Delaunay triangulation.",
+   "search_hit": true,
+   "selected_recipe": "wf17-outliers-grid-afsr-measures",
+   "state": "succeeded",
+   "tool_calls": 17,
+   "validators": [
+    "pass",
+    "pass",
+    "pass",
+    "pass",
+    "pass",
+    "pass",
+    "pass"
+   ]
+  },
+  {
+   "executed_ok": true,
+   "expected_recipe": "wf24-grid-maxdistance-join",
+   "language": "en",
+   "operations": [
+    "pointset.simplify.grid",
+    "mesh.distance.max_to_mesh"
+   ],
+   "outputs": [
+    {
+     "type": "PointSet3",
+     "unit": "mm"
+    },
+    {
+     "type": "GeometryQueryReport",
+     "unit": "none"
+    }
+   ],
+   "recipe_match": true,
+   "request": "Thin my point cloud on a grid and report the maximum distance to a reference mesh.",
+   "search_hit": true,
+   "selected_recipe": "wf24-grid-maxdistance-join",
+   "state": "succeeded",
+   "tool_calls": 13,
+   "validators": [
+    "pass",
+    "pass",
+    "pass"
+   ]
+  },
+  {
+   "executed_ok": true,
+   "expected_recipe": "wf25-random-bbox",
+   "language": "en",
+   "operations": [
+    "pointset.simplify.random",
+    "spatial.bbox_3"
+   ],
+   "outputs": [
+    {
+     "type": "PointSet3",
+     "unit": "mm"
+    },
+    {
+     "type": "SpatialQueryReport",
+     "unit": "none"
+    }
+   ],
+   "recipe_match": true,
+   "request": "Randomly thin a point cloud and compute its 3D bounding box.",
+   "search_hit": true,
+   "selected_recipe": "wf25-random-bbox",
+   "state": "succeeded",
+   "tool_calls": 12,
+   "validators": [
+    "pass",
+    "pass",
+    "pass"
+   ]
+  },
+  {
+   "executed_ok": true,
+   "expected_recipe": "wf26-remesh-slice",
+   "language": "en",
+   "operations": [
+    "mesh.remesh.isotropic",
+    "mesh.slice.compute"
+   ],
+   "outputs": [
+    {
+     "type": "TriangleSurfaceMesh",
+     "unit": "mm"
+    },
+    {
+     "type": "GeometryQueryReport",
+     "unit": "none"
+    }
+   ],
+   "recipe_match": true,
+   "request": "Remesh the model evenly, then slice it with a plane to get the cross-section.",
+   "search_hit": true,
+   "selected_recipe": "wf26-remesh-slice",
+   "state": "succeeded",
+   "tool_calls": 11,
+   "validators": [
+    "pass",
+    "pass"
+   ]
+  },
+  {
+   "executed_ok": true,
+   "expected_recipe": "wf27-hull2-polygon-boolean",
+   "language": "en",
+   "operations": [
+    "hull.convex_2",
+    "polygon.boolean"
+   ],
+   "outputs": [
+    {
+     "type": "Polygon2",
+     "unit": "mm"
+    },
+    {
+     "type": "GeometryQueryReport",
+     "unit": "none"
+    }
+   ],
+   "recipe_match": true,
+   "request": "Take the 2D convex hull of some points and combine it with a polygon by boolean union.",
+   "search_hit": true,
+   "selected_recipe": "wf27-hull2-polygon-boolean",
+   "state": "succeeded",
+   "tool_calls": 12,
+   "validators": [
+    "pass",
+    "pass"
+   ]
+  },
+  {
+   "executed_ok": true,
+   "expected_recipe": "wf28-hull2-minkowski",
+   "language": "en",
+   "operations": [
+    "hull.convex_2",
+    "polygon.minkowski_sum"
+   ],
+   "outputs": [
+    {
+     "type": "Polygon2",
+     "unit": "mm"
+    },
+    {
+     "type": "GeometryQueryReport",
+     "unit": "none"
+    }
+   ],
+   "recipe_match": true,
+   "request": "Make the 2D convex hull of my points and compute the Minkowski sum with another polygon.",
+   "search_hit": true,
+   "selected_recipe": "wf28-hull2-minkowski",
+   "state": "succeeded",
+   "tool_calls": 12,
+   "validators": [
+    "pass",
+    "pass"
+   ]
+  },
+  {
+   "executed_ok": true,
+   "expected_recipe": "wf29-hull2-barycentric",
+   "language": "en",
+   "operations": [
+    "hull.convex_2",
+    "shape.barycentric"
+   ],
+   "outputs": [
+    {
+     "type": "Polygon2",
+     "unit": "mm"
+    },
+    {
+     "type": "GeometryQueryReport",
+     "unit": "none"
+    }
+   ],
+   "recipe_match": true,
+   "request": "Compute the 2D hull of my points and the barycentric coordinates of query points inside it.",
+   "search_hit": true,
+   "selected_recipe": "wf29-hull2-barycentric",
+   "state": "succeeded",
+   "tool_calls": 12,
+   "validators": [
+    "pass",
+    "pass"
+   ]
+  },
+  {
+   "executed_ok": true,
+   "expected_recipe": "wf30-surface-generate-remesh-measures",
+   "language": "en",
+   "operations": [
+    "mesh.surface.generate",
+    "mesh.remesh.isotropic",
+    "mesh.analysis.measures"
+   ],
+   "outputs": [
+    {
+     "type": "TriangleSurfaceMesh",
+     "unit": "mm"
+    },
+    {
+     "type": "TriangleSurfaceMesh",
+     "unit": "mm"
+    },
+    {
+     "type": "GeometryAnalysisReport",
+     "unit": "none"
+    }
+   ],
+   "recipe_match": true,
+   "request": "Generate a surface mesh from an implicit function, remesh it and measure.",
+   "search_hit": true,
+   "selected_recipe": "wf30-surface-generate-remesh-measures",
+   "state": "succeeded",
+   "tool_calls": 13,
+   "validators": [
+    "pass",
+    "pass",
+    "pass"
+   ]
+  },
+  {
+   "executed_ok": true,
+   "expected_recipe": "wf34-clip-loop-inspect",
+   "language": "en",
+   "operations": [
+    "mesh.clip.plane",
+    "mesh.subdivide.loop",
+    "mesh.inspect.pmp"
+   ],
+   "outputs": [
+    {
+     "type": "TriangleSurfaceMesh",
+     "unit": "mm"
+    },
+    {
+     "type": "TriangleSurfaceMesh",
+     "unit": "mm"
+    },
+    {
+     "type": "GeometryAnalysisReport",
+     "unit": "none"
+    }
+   ],
+   "recipe_match": true,
+   "request": "Clip the cube with a plane, subdivide it and run a health inspection.",
+   "search_hit": true,
+   "selected_recipe": "wf34-clip-loop-inspect",
+   "state": "succeeded",
+   "tool_calls": 13,
+   "validators": [
+    "pass",
+    "pass",
+    "pass"
+   ]
+  },
+  {
+   "executed_ok": true,
+   "expected_recipe": "wf35-simplify-loop-inspect",
+   "language": "en",
+   "operations": [
+    "mesh.simplify.edge_collapse",
+    "mesh.subdivide.loop",
+    "mesh.inspect.pmp"
+   ],
+   "outputs": [
+    {
+     "type": "TriangleSurfaceMesh",
+     "unit": "mm"
+    },
+    {
+     "type": "TriangleSurfaceMesh",
+     "unit": "mm"
+    },
+    {
+     "type": "GeometryAnalysisReport",
+     "unit": "none"
+    }
+   ],
+   "recipe_match": true,
+   "request": "Simplify my mesh to fewer faces, then subdivide it and inspect it.",
+   "search_hit": true,
+   "selected_recipe": "wf35-simplify-loop-inspect",
+   "state": "succeeded",
+   "tool_calls": 14,
+   "validators": [
+    "pass",
+    "pass",
+    "pass",
+    "pass"
+   ]
+  },
+  {
+   "executed_ok": true,
+   "expected_recipe": "wf39-hull2-arrangement-overlay",
+   "language": "en",
+   "operations": [
+    "hull.convex_2",
+    "arrangement.overlay"
+   ],
+   "outputs": [
+    {
+     "type": "Polygon2",
+     "unit": "mm"
+    },
+    {
+     "type": "GeometryQueryReport",
+     "unit": "none"
+    }
+   ],
+   "recipe_match": true,
+   "request": "Overlay the 2D hull of my points with a polygon as an arrangement.",
+   "search_hit": true,
+   "selected_recipe": "wf39-hull2-arrangement-overlay",
+   "state": "succeeded",
+   "tool_calls": 12,
+   "validators": [
+    "pass",
+    "pass"
+   ]
+  },
+  {
+   "executed_ok": true,
+   "expected_recipe": "wf40-outliers-grid-delaunay3",
+   "language": "en",
+   "operations": [
+    "pointset.remove_outliers",
+    "pointset.simplify.grid",
+    "reconstruction.advancing_front",
+    "mesh.analysis.measures"
+   ],
+   "outputs": [
+    {
+     "type": "PointSet3",
+     "unit": "mm"
+    },
+    {
+     "type": "PointSet3",
+     "unit": "mm"
+    },
+    {
+     "type": "TriangleSurfaceMesh",
+     "unit": "mm"
+    },
+    {
+     "type": "GeometryAnalysisReport",
+     "unit": "none"
+    }
+   ],
+   "recipe_match": false,
+   "request": "Clean outliers, thin on a grid, then compute a 3D Delaunay triangulation.",
+   "search_hit": true,
+   "selected_recipe": "wf17-outliers-grid-afsr-measures",
+   "state": "succeeded",
+   "tool_calls": 17,
+   "validators": [
+    "pass",
+    "pass",
+    "pass",
+    "pass",
+    "pass",
+    "pass",
+    "pass"
+   ]
+  },
+  {
+   "executed_ok": true,
+   "expected_recipe": "wf18-jet-alphawrap-components",
+   "language": "ja",
+   "operations": [
+    "pointset.smooth.jet",
+    "reconstruction.alpha_wrap",
+    "mesh.analysis.connected_components"
+   ],
+   "outputs": [
+    {
+     "type": "PointSet3",
+     "unit": "mm"
+    },
+    {
+     "type": "TriangleSurfaceMesh",
+     "unit": "mm"
+    },
+    {
+     "type": "GeometryAnalysisReport",
+     "unit": "none"
+    }
+   ],
+   "recipe_match": true,
+   "request": "\u30ce\u30a4\u30ba\u306e\u3042\u308b\u70b9\u7fa4\u3092jet\u5e73\u6ed1\u5316\u3057\u3066\u3001alpha wrapping\u3067\u9762\u306b\u3057\u3001\u9023\u7d50\u6210\u5206\u3092\u8abf\u3079\u305f\u3044\u3002",
+   "search_hit": true,
+   "selected_recipe": "wf18-jet-alphawrap-components",
+   "state": "succeeded",
+   "tool_calls": 14,
+   "validators": [
+    "pass",
+    "pass",
+    "pass",
+    "pass",
+    "pass"
+   ]
+  },
+  {
+   "executed_ok": true,
+   "expected_recipe": "wf31-unit-propagation-cm",
+   "language": "ja",
+   "operations": [
+    "mesh.remesh.isotropic",
+    "mesh.simplify.edge_collapse",
+    "mesh.analysis.measures"
+   ],
+   "outputs": [
+    {
+     "type": "TriangleSurfaceMesh",
+     "unit": "cm"
+    },
+    {
+     "type": "TriangleSurfaceMesh",
+     "unit": "cm"
+    },
+    {
+     "type": "GeometryAnalysisReport",
+     "unit": "none"
+    }
+   ],
+   "recipe_match": true,
+   "request": "cm\u5358\u4f4d\u306e\u30e1\u30c3\u30b7\u30e5\u3092\u3001mm\u6307\u5b9a\u306e\u30d1\u30e9\u30e1\u30fc\u30bf\u3067\u30ea\u30e1\u30c3\u30b7\u30e5\u3057\u3066\u8efd\u91cf\u5316\u3057\u3001\u6e2c\u5b9a\u3057\u305f\u3044\u3002",
+   "search_hit": true,
+   "selected_recipe": "wf31-unit-propagation-cm",
+   "state": "succeeded",
+   "tool_calls": 14,
+   "validators": [
+    "pass",
+    "pass",
+    "pass",
+    "pass"
+   ]
+  }
+ ],
+ "examples": {
+  "arrangement.build": "succeeded",
+  "arrangement.overlay": "succeeded",
+  "arrangement.zone": "succeeded",
+  "hull.convex_2": "succeeded",
+  "hull.convex_3": "succeeded",
+  "kernel.distance.squared": "succeeded",
+  "kernel.intersections.compute": "succeeded",
+  "kernel.predicates.evaluate": "succeeded",
+  "kernel.primitives.construct": "succeeded",
+  "mesh.analysis.connected_components": "succeeded",
+  "mesh.analysis.measures": "succeeded",
+  "mesh.analysis.normals": "succeeded",
+  "mesh.analysis.self_intersections": "succeeded",
+  "mesh.analysis.sharp_features": "succeeded",
+  "mesh.autorefine": "succeeded",
+  "mesh.boolean.difference": "succeeded",
+  "mesh.boolean.intersection": "succeeded",
+  "mesh.boolean.union": "succeeded",
+  "mesh.clip.plane": "succeeded",
+  "mesh.components.component": "succeeded",
+  "mesh.components.keep_largest": "succeeded",
+  "mesh.components.label": "succeeded",
+  "mesh.corefine": "succeeded",
+  "mesh.decompose.approx_convex": "succeeded",
+  "mesh.distance.hausdorff_approximate": "succeeded",
+  "mesh.distance.hausdorff_approximate_symmetric": "succeeded",
+  "mesh.distance.hausdorff_bounded": "succeeded",
+  "mesh.distance.max_to_mesh": "succeeded",
+  "mesh.distance.max_to_points": "succeeded",
+  "mesh.distance.sample_points": "succeeded",
+  "mesh.features.detect": "succeeded",
+  "mesh.inspect.pmp": "succeeded",
+  "mesh.intersections.do_intersect": "succeeded",
+  "mesh.intersections.polylines": "succeeded",
+  "mesh.location.locate": "succeeded",
+  "mesh.parameterize": "succeeded",
+  "mesh.parameterize.discrete_conformal_map": "succeeded",
+  "mesh.path.shortest": "succeeded",
+  "mesh.refine.local": "succeeded",
+  "mesh.remesh.adaptive": "succeeded",
+  "mesh.remesh.isotropic": "succeeded",
+  "mesh.remesh.split_long_edges": "succeeded",
+  "mesh.repair.fill_holes": "succeeded",
+  "mesh.repair.fill_holes_refine_fair": "succeeded",
+  "mesh.repair.manifold_preprocess": "succeeded",
+  "mesh.repair.orient": "succeeded",
+  "mesh.repair.polygon_soup": "succeeded",
+  "mesh.repair.remove_degenerate": "succeeded",
+  "mesh.repair.stitch_borders": "succeeded",
+  "mesh.segment.sdf": "succeeded",
+  "mesh.segment.sdf_values": "succeeded",
+  "mesh.simplify.edge_collapse": "succeeded",
+  "mesh.skeletonize.mean_curvature": "succeeded",
+  "mesh.skeletonize.mean_curvature_flow": "succeeded",
+  "mesh.slice.compute": "succeeded",
+  "mesh.smooth.shape": "succeeded",
+  "mesh.smooth.tangential_relaxation": "succeeded",
+  "mesh.split.plane": "succeeded",
+  "mesh.subdivide.catmull_clark": "succeeded",
+  "mesh.subdivide.loop": "succeeded",
+  "mesh.surface.generate": "succeeded",
+  "mesh.triangulate.faces": "succeeded",
+  "mesh.volume.generate": "succeeded",
+  "mesh2.refine.delaunay": "succeeded",
+  "optimization.approximate_mesh": "succeeded",
+  "optimization.interpolate": "succeeded",
+  "optimization.matrix_search": "succeeded",
+  "optimization.quadratic_program": "succeeded",
+  "pointset.normals.estimate": "succeeded",
+  "pointset.normals.orient_mst": "succeeded",
+  "pointset.registration.compute_transformation": "succeeded",
+  "pointset.registration.register": "succeeded",
+  "pointset.remove_outliers": "succeeded",
+  "pointset.simplify.grid": "succeeded",
+  "pointset.simplify.hierarchy": "succeeded",
+  "pointset.simplify.random": "succeeded",
+  "pointset.smooth.bilateral": "succeeded",
+  "pointset.smooth.jet": "succeeded",
+  "pointset.spacing.average": "succeeded",
+  "polygon.analysis.properties": "succeeded",
+  "polygon.boolean": "succeeded",
+  "polygon.minkowski_sum": "succeeded",
+  "polygon.minkowski_sum_reduced_convolution": "succeeded",
+  "polygon.offset.exterior": "succeeded",
+  "polygon.offset.interior": "succeeded",
+  "polygon.query.containment": "succeeded",
+  "polygon.straight_skeleton.exterior": "succeeded",
+  "polygon.straight_skeleton.interior": "succeeded",
+  "reconstruction.advancing_front": "succeeded",
+  "reconstruction.alpha_wrap": "succeeded",
+  "reconstruction.kinetic_surface": "succeeded",
+  "reconstruction.poisson": "succeeded",
+  "reconstruction.poisson_delaunay": "succeeded",
+  "reconstruction.polygonal_surface": "succeeded",
+  "reconstruction.scale_space": "succeeded",
+  "shape.alpha_shape_2": "succeeded",
+  "shape.alpha_shape_3": "succeeded",
+  "shape.barycentric": "succeeded",
+  "shape.bounding.circle": "succeeded",
+  "shape.bounding.sphere": "succeeded",
+  "shape.fixed_alpha_shape_3": "succeeded",
+  "spatial.aabb.closest_points": "succeeded",
+  "spatial.aabb.intersections": "succeeded",
+  "spatial.aabb.ray_first_hits": "succeeded",
+  "spatial.bbox_2": "succeeded",
+  "spatial.bbox_3": "succeeded",
+  "spatial.knn_3": "succeeded",
+  "spatial.range_search_3": "succeeded",
+  "triangulation.constrained_2": "succeeded",
+  "triangulation.delaunay_2": "succeeded",
+  "triangulation.delaunay_3": "succeeded",
+  "triangulation.delaunay_on_sphere_2": "succeeded",
+  "triangulation.periodic_delaunay_2": "succeeded",
+  "triangulation.periodic_delaunay_3": "succeeded",
+  "triangulation.regular_2": "succeeded",
+  "triangulation.regular_3": "succeeded",
+  "triangulation.voronoi_dual": "succeeded"
+ },
+ "gating": false,
+ "generator": "master-first-contact",
+ "informational": true,
+ "note": "Deterministic scripted client, not a language model: it shows the guide is sufficient for a mechanical reader. This evidence is informational and is not a standalone acceptance gate.",
+ "schema_version": 1,
+ "summary": {
+  "examples_succeeded": 117,
+  "examples_total": 117,
+  "executed_ok": 32,
+  "operations_in_guide": 226,
+  "recipe_match": 25,
+  "requests": 32,
+  "search_hit": 32
+ },
+ "surface": {
+  "instructions_words": 669,
+  "prompt_renders": true,
+  "prompts": [
+   "2d_boolean_offset",
+   "choose_operation",
+   "compare_meshes",
+   "reconstruct_surface_from_points",
+   "repair_and_simplify_mesh",
+   "start_here",
+   "validate_geometry"
+  ],
+  "resource_templates": [
+   "cgal://guide/family/{family_id}",
+   "cgal://guide/ja/family/{family_id}",
+   "cgal://guide/ja/op/{operation_id}",
+   "cgal://guide/ja/recipe/{workflow_id}",
+   "cgal://guide/op/{operation_id}",
+   "cgal://guide/recipe/{workflow_id}"
+  ],
+  "resources": [
+   "cgal://guide/errors",
+   "cgal://guide/families",
+   "cgal://guide/glossary",
+   "cgal://guide/ja/errors",
+   "cgal://guide/ja/families",
+   "cgal://guide/ja/glossary",
+   "cgal://guide/ja/limits-and-status",
+   "cgal://guide/ja/recipes",
+   "cgal://guide/ja/start",
+   "cgal://guide/limits-and-status",
+   "cgal://guide/recipes",
+   "cgal://guide/start"
+  ],
+  "tools": [
+   "cgal_artifact_export",
+   "cgal_artifact_import",
+   "cgal_artifact_inspect",
+   "cgal_capabilities_describe",
+   "cgal_capabilities_search",
+   "cgal_docs_search",
+   "cgal_execute",
+   "cgal_get_guide",
+   "cgal_job_cancel",
+   "cgal_job_status",
+   "cgal_plan",
+   "cgal_system_health",
+   "cgal_validate"
+  ]
+ }
+}

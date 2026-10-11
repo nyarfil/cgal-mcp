@@ -48,7 +48,7 @@ async def main() -> None:
                         json.loads("".join(block.text for block in result.content
                                            if hasattr(block, "text"))))
 
-            assert len((await client.list_tools()).tools) == 12
+            assert len((await client.list_tools()).tools) == 13
             source = await call("cgal_artifact_import", {
                 "path": str(fixtures / "noisy_plane_with_outlier.xyz"),
                 "unit": "cm", "artifact_type": "PointSet3"})

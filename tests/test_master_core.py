@@ -1195,7 +1195,7 @@ class MasterCoreTest(unittest.TestCase):
                 "cgal_capabilities_search", "cgal_capabilities_describe", "cgal_plan",
                 "cgal_execute", "cgal_validate", "cgal_artifact_inspect", "cgal_docs_search",
                 "cgal_system_health", "cgal_artifact_import", "cgal_artifact_export",
-                "cgal_job_status", "cgal_job_cancel"})
+                "cgal_job_status", "cgal_job_cancel", "cgal_get_guide"})
         asyncio.run(scenario())
 
     def test_health_reports_configured_concurrency_without_absolute_roots(self):

@@ -1,0 +1,178 @@
+# Families and operations
+
+## 7.1 Geometry kernel (4 operations + 4 validators)
+Exact vs floating-point predicates, geometric primitives, intersections and squared distances.
+- kernel.distance.squared [analysis] KernelQuerySet -> KernelReport: Compute CGAL::squared_distance between 2D/3D point, line, segment, plane and triangle pairs and compare distances (compare_distance, compare_distance_to_point) in a selected kernel.
+- kernel.intersections.compute [analysis] KernelQuerySet -> KernelReport: Compute CGAL::intersection results and CGAL::do_intersect for 2D segment/line/triangle pairs and 3D line/segment/ray/plane/triangle pairs in an exact-predicate kernel.
+- kernel.predicates.evaluate [analysis] KernelQuerySet -> KernelReport: Evaluate Kernel_23 global predicates (orientation, collinear, coplanar, left_turn, right_turn) and constructions (midpoint, centroid, circumcenter) on points in a selected kernel.
+- kernel.primitives.construct [analysis] KernelQuerySet -> KernelReport: Construct the 20 Kernel_23 primitive kinds (2D/3D points, vectors, lines, rays, segments, planes, circles, spheres, triangles, tetrahedra, iso boxes, affine transformations) in a selected kernel and report their exact derived properties and transformed points/vectors.
+Validators (automatic): kernel.validate.distances_report, kernel.validate.intersections_report, kernel.validate.predicates_report, kernel.validate.primitives_report
+
+## 7.2 Spatial queries (7 operations + 6 validators)
+AABB tree, kd-tree, ray and nearest-neighbour style queries and point location on meshes.
+- spatial.aabb.closest_points [analysis] TriangleSurfaceMesh+PointSet3 -> SpatialQueryReport: Closest point and closest face on a triangle surface mesh for each query point via an AABB tree.
+- spatial.aabb.intersections [analysis] TriangleSurfaceMesh+RayBatch3 -> SpatialQueryReport: Ray versus triangle mesh intersection candidates through AABB_tree: do_intersect, any_intersected_primitive and the sorted set from all_intersected_primitives for every ray.
+- spatial.aabb.ray_first_hits [analysis] TriangleSurfaceMesh+RayBatch3 -> SpatialQueryReport: First intersection of each ray with a triangle surface mesh via an AABB tree.
+- spatial.bbox_2 [analysis] PointSet2 -> SpatialQueryReport: Compute the axis-aligned bounding box of a planar point set.
+- spatial.bbox_3 [analysis] PointSet3 -> SpatialQueryReport: Compute the axis-aligned bounding box of a 3D point set or triangle surface mesh.
+- spatial.knn_3 [analysis] PointSet3+PointSet3 -> SpatialQueryReport: Exact k-nearest-neighbor search of query points against a 3D point set using a kd-tree.
+- spatial.range_search_3 [analysis] PointSet3+PointSet3 -> SpatialQueryReport: Exact closed-ball range (radius) search of query points against a 3D point set using a kd-tree.
+Validators (automatic): spatial.validate.aabb_intersections, spatial.validate.bbox_report, spatial.validate.closest_points_report, spatial.validate.knn_report, spatial.validate.range_report, spatial.validate.ray_hits_report
+
+## 7.3 Mesh inspection and analysis (30 operations + 32 validators)
+Is it closed/manifold/self-intersecting, connected components, normals, area/volume, sharp edges, distances (Hausdorff).
+- mesh.analysis.connected_components [analysis] TriangleSurfaceMesh -> GeometryAnalysisReport: Partition all source faces into connected components.
+- mesh.analysis.measures [analysis] TriangleSurfaceMesh -> GeometryAnalysisReport: Compute typed surface area and conditionally available volume and volume centroid.
+- mesh.analysis.normals [analysis] TriangleSurfaceMesh -> GeometryAnalysisReport: Compute face, vertex, and flat per-corner unit normals.
+- mesh.analysis.self_intersections [analysis] TriangleSurfaceMesh -> GeometryAnalysisReport: Collect bounded source-face self-intersection pairs without mesh mutation.
+- mesh.analysis.sharp_features [analysis] TriangleSurfaceMesh -> GeometryAnalysisReport: Detect border and dihedral sharp-feature edges at a typed angle threshold.
+- mesh.boolean.difference [transform] TriangleSurfaceMesh+TriangleSurfaceMesh -> TriangleSurfaceMesh: Construct source A minus source B as an exact bounded volume Boolean.
+- mesh.boolean.intersection [transform] TriangleSurfaceMesh+TriangleSurfaceMesh -> TriangleSurfaceMesh: Construct the exact volumetric intersection of two closed outward-oriented triangle surface meshes.
+- mesh.boolean.union [transform] TriangleSurfaceMesh+TriangleSurfaceMesh -> TriangleSurfaceMesh: Construct the exact volume union of two closed outward-oriented triangle surface meshes.
+- mesh.components.component [transform] TriangleSurfaceMesh -> TriangleSurfaceMesh: Extract the connected component containing a seed face (Polygon_mesh_processing::connected_component) as a new triangle mesh.
+- mesh.components.keep_largest [transform] TriangleSurfaceMesh -> TriangleSurfaceMesh: Keep the N largest connected components (Polygon_mesh_processing::keep_largest_connected_components), rejecting ties at the cut.
+- mesh.components.label [analysis] TriangleSurfaceMesh -> GeometryQueryReport: Label every face with its connected component (Polygon_mesh_processing::connected_components) and report the component count and sizes.
+- mesh.distance.hausdorff_approximate [analysis] TriangleSurfaceMesh+TriangleSurfaceMesh -> GeometryQueryReport: Approximate Hausdorff distance from a first to a second triangle mesh (approximate_Hausdorff_distance): the largest distance of sample points of the first mesh to the second.
+- mesh.distance.hausdorff_approximate_symmetric [analysis] TriangleSurfaceMesh+TriangleSurfaceMesh -> GeometryQueryReport: Approximate symmetric Hausdorff distance between two triangle meshes (approximate_symmetric_Hausdorff_distance): the larger of the two sampled one-sided distances.
+- mesh.distance.hausdorff_bounded [analysis] TriangleSurfaceMesh+TriangleSurfaceMesh -> GeometryQueryReport: Hausdorff distance from a first to a second triangle mesh with a guaranteed error bound (bounded_error_Hausdorff_distance).
+- mesh.distance.max_to_mesh [analysis] PointSet3+TriangleSurfaceMesh -> GeometryQueryReport: Maximum distance from a point set to a triangle mesh (max_distance_to_triangle_mesh), the one-sided deviation of the points from the surface.
+- mesh.distance.max_to_points [analysis] TriangleSurfaceMesh+PointSet3 -> GeometryQueryReport: Approximate maximum distance from a triangle mesh to a point set (approximate_max_distance_to_point_set) within a precision bound.
+- mesh.distance.sample_points [analysis] TriangleSurfaceMesh -> GeometryQueryReport: Sample points on a triangle mesh surface (sample_triangle_mesh): a grid of given spacing or a seeded uniform random sample on faces and edges, optionally including the vertices.
+- mesh.features.detect [analysis] TriangleSurfaceMesh -> GeometryQueryReport: Detect sharp (feature) edges of a triangle mesh by dihedral angle and group the faces into smooth patches (PMP::detect_sharp_edges and its patch labelling).
+- mesh.inspect.pmp [analysis] TriangleSurfaceMesh -> GeometryAnalysisReport: Inspect raw OFF and constructible polygon-mesh health without repairing or mutating geometry.
+- mesh.intersections.do_intersect [analysis] TriangleSurfaceMesh+TriangleSurfaceMesh -> GeometryQueryReport: Intersection test between two triangle meshes (PMP::do_intersect), optionally also true when one closed mesh lies inside the other (bounded-side test).
+- mesh.intersections.polylines [analysis] TriangleSurfaceMesh+TriangleSurfaceMesh -> GeometryQueryReport: Intersection curves of two triangle meshes as exact-rational polylines (PMP::intersection_polylines, formerly surface_intersection); coplanar triangle pairs are rejected.
+- mesh.location.locate [analysis] TriangleSurfaceMesh+PointSet3 -> GeometryQueryReport: Locate query points on a triangle mesh (Polygon_mesh_processing::locate / locate_with_AABB_tree): face, exact barycentric coordinates in face vertex order, point and squared distance.
+- mesh.repair.fill_holes [transform] TriangleSurfaceMesh -> TriangleSurfaceMesh: Fill holes: triangulate every boundary hole cycle within an explicit edge-count bound, producing interpolating patches (補間).
+- mesh.repair.manifold_preprocess [transform] TriangleSurfaceMesh -> TriangleSurfaceMesh: Split non-manifold neighborhoods by duplicating non-manifold vertices into manifold-compatible components while preserving triangle geometry and face count.
+- mesh.repair.orient [transform] PolygonSoup3 -> TriangleSurfaceMesh: Orient a bounded triangle polygon soup into a constructible consistently oriented surface mesh (outward for closed meshes).
+- mesh.repair.polygon_soup [transform] PolygonSoup3 -> PolygonSoup3: Repair duplicate points, duplicate/degenerate polygons, and unused points in a triangle polygon soup.
+- mesh.repair.remove_degenerate [transform] PolygonSoup3 -> TriangleSurfaceMesh: Remove degenerate (zero-area, collapsed) combinatorial and geometric triangles and edges from repairable triangle OFF.
+- mesh.repair.stitch_borders [transform] TriangleSurfaceMesh -> TriangleSurfaceMesh: Stitch (weld) exactly coincident compatible border halfedges, such as duplicated seam vertices of a polygon soup imported as a triangle surface mesh.
+- pointset.normals.estimate [transform] PointSet3 -> PointSet3Normals: Estimate nonzero point normals using PCA or jet fitting.
+- pointset.normals.orient_mst [transform] PointSet3Normals -> PointSet3Normals: Orient point normals with CGAL MST propagation.
+Validators (automatic): mesh.distance.symmetric_hausdorff, mesh.validate.boolean_difference, mesh.validate.boolean_intersection, mesh.validate.boolean_union, mesh.validate.components_component, mesh.validate.components_keep_largest, mesh.validate.components_label, mesh.validate.connected_components_report, mesh.validate.distance_samples, mesh.validate.do_intersect, mesh.validate.features, mesh.validate.hausdorff_report, mesh.validate.hausdorff_symmetric_report, mesh.validate.intersection_polylines, mesh.validate.location, mesh.validate.max_distance_to_mesh, mesh.validate.max_distance_to_points, mesh.validate.measures_report, mesh.validate.normals_report, mesh.validate.pmp_inspection_report, mesh.validate.repair_fill_holes, mesh.validate.repair_manifold_preprocess, mesh.validate.repair_orientation, mesh.validate.repair_polygon_soup, mesh.validate.repair_remove_degenerate, mesh.validate.repair_stitch_borders, mesh.validate.self_intersections_report, mesh.validate.sharp_features_report, mesh.validate.tetrahedral_mesh, pointset.validate.basic, pointset.validate.normals_estimated, pointset.validate.normals_oriented
+
+## 7.4 Mesh repair (1 operations + 1 validators)
+Orient faces, stitch borders, fill holes, clean polygon soups, remove degenerate or self-intersecting parts.
+- mesh.repair.fill_holes_refine_fair [transform] TriangleSurfaceMesh -> TriangleSurfaceMesh: Fill every hole within an explicit edge-count bound with a refined and faired patch (PMP::triangulate_refine_and_fair_hole): new interior vertices at the requested density, positions solved for the requested fairing continuity; boundary vertices and source faces are kept.
+Validators (automatic): mesh.validate.repair_fill_holes_refine_fair
+
+## 7.5 Boolean operations (5 operations + 5 validators)
+Union, intersection, difference, clipping, splitting, corefinement and slicing of triangle meshes.
+- mesh.autorefine [transform] TriangleSurfaceMesh -> TriangleSurfaceMesh: Autorefine a triangle mesh (PMP::autorefine): self-intersecting faces are split along their intersection polylines so that the result has no self-intersection.
+- mesh.clip.plane [transform] TriangleSurfaceMesh -> TriangleSurfaceMesh: Clip a triangle mesh with a plane (PMP::clip), keeping the side with a*x+b*y+c*z <= d; optionally clip the volume of a closed mesh.
+- mesh.corefine [transform] TriangleSurfaceMesh+TriangleSurfaceMesh -> TriangleSurfaceMesh: Corefine a triangle mesh with another surface (PMP::corefine): the first mesh is refined along the intersection polylines, the second is left unchanged.
+- mesh.slice.compute [analysis] TriangleSurfaceMesh -> GeometryQueryReport: Slice a triangle mesh with a plane (CGAL::Polygon_mesh_slicer) and report the cross-section polylines with exact rational vertices.
+- mesh.split.plane [transform] TriangleSurfaceMesh -> TriangleSurfaceMesh: Split a triangle mesh along a plane (PMP::split): the faces are refined along the plane and the two sides are separated.
+Validators (automatic): mesh.validate.autorefine, mesh.validate.clip, mesh.validate.corefine, mesh.validate.slice, mesh.validate.split
+
+## 7.6 Remeshing and subdivision (7 operations + 7 validators)
+Triangulate faces, isotropic remeshing, subdivision (Loop, Catmull-Clark and others), smoothing.
+- mesh.refine.local [transform] TriangleSurfaceMesh -> TriangleSurfaceMesh: Refine a triangle mesh by inserting interior vertices (Polygon_mesh_processing::refine) with fixed boundary and source vertices.
+- mesh.remesh.adaptive [transform] TriangleSurfaceMesh -> TriangleSurfaceMesh: Curvature-adaptive remeshing with Adaptive_sizing_field driving isotropic_remeshing or split_long_edges.
+- mesh.remesh.isotropic [transform] TriangleSurfaceMesh -> TriangleSurfaceMesh: Uniform isotropic remeshing of a triangle mesh to a target edge length (Polygon_mesh_processing::isotropic_remeshing).
+- mesh.remesh.split_long_edges [transform] TriangleSurfaceMesh -> TriangleSurfaceMesh: Split every edge longer than a maximum length (Polygon_mesh_processing::split_long_edges); geometry is unchanged.
+- mesh.smooth.shape [transform] TriangleSurfaceMesh -> TriangleSurfaceMesh: Curvature-flow shape smoothing with constrained boundary and optional volume preservation (Polygon_mesh_processing::smooth_shape).
+- mesh.smooth.tangential_relaxation [transform] TriangleSurfaceMesh -> TriangleSurfaceMesh: Tangential relaxation of interior vertices with fixed boundary and connectivity (Polygon_mesh_processing::tangential_relaxation).
+- mesh.triangulate.faces [transform] PolygonSoup3 -> TriangleSurfaceMesh: Triangulate every polygon face of a polygon mesh (triangulate_faces or per-face triangulate_face).
+Validators (automatic): mesh.validate.adaptive_remesh, mesh.validate.isotropic_remesh, mesh.validate.refinement, mesh.validate.shape_smoothing, mesh.validate.split_long_edges, mesh.validate.tangential_relaxation, mesh.validate.triangulated_faces
+
+## 7.7 Simplification (1 operations + 1 validators)
+Reduce triangle count with edge collapse under a chosen cost/placement policy and a bounded deviation.
+- mesh.simplify.edge_collapse [transform] TriangleSurfaceMesh -> TriangleSurfaceMesh: Simplify a valid triangle surface mesh with CGAL edge collapse and an explicitly selected public policy.
+Validators (automatic): mesh.validate.simplification_integrity
+
+## 7.8 Mesh segmentation and decomposition (10 operations + 9 validators)
+Shape diameter, segmentation, parameterization, approximate convex decomposition, curvature flow, geodesics.
+- mesh.decompose.approx_convex [analysis] TriangleSurfaceMesh -> GeometryQueryReport: Approximate convex decomposition of a closed triangle mesh (CGAL::approximate_convex_decomposition, sequential): voxel-based hierarchical splitting and merging into at most N convex parts, certified by an exact convexity, covering and volume-accounting validator.
+- mesh.parameterize [analysis] TriangleSurfaceMesh -> GeometryQueryReport: As-rigid-as-possible (ARAP) parameterization of a triangle disc through CGAL::Surface_mesh_parameterization::parameterize; the exact validator certifies a bijective uv map (no flipped triangle, simple boundary) and a declared bound of the isometric distortion.
+- mesh.parameterize.discrete_conformal_map [analysis] TriangleSurfaceMesh -> GeometryQueryReport: Discrete conformal (cotangent harmonic) parameterization of a triangle disc with Discrete_conformal_map_parameterizer_3 onto an arc-length circle; the validator certifies a bijective uv map and the cotangent harmonic condition.
+- mesh.path.shortest [analysis] TriangleSurfaceMesh -> GeometryQueryReport: Exact geodesic shortest paths on a triangle surface mesh (Surface_mesh_shortest_path): from up to 8 source points to up to 32 target points (vertices or face barycentric points), reporting the nearest source, the distance and the unfolded path polyline.
+- mesh.segment.sdf [analysis] TriangleSurfaceMesh -> GeometryQueryReport: SDF-based segmentation of a closed outward triangle mesh: CGAL::sdf_values (raw and post-processed) followed by CGAL::segmentation_from_sdf_values for cluster ids and segment ids; the validator checks thickness, normalization, full facet coverage and that segments are exactly the connected components of the clusters.
+- mesh.segment.sdf_values [analysis] TriangleSurfaceMesh -> GeometryQueryReport: Raw shape diameter function (SDF) value of every facet of a closed outward triangle mesh through CGAL::sdf_values (no post-processing); the validator checks every value against its own cone-ray thickness range within a declared tolerance.
+- mesh.skeletonize.mean_curvature [analysis] TriangleSurfaceMesh -> GeometryQueryReport: Curve skeleton of a closed triangle mesh by mean curvature flow with CGAL's default parameters (CGAL::extract_mean_curvature_flow_skeleton), certified by an exact inside-the-mesh, connectivity and cycle-count (genus) validator.
+- mesh.skeletonize.mean_curvature_flow [analysis] TriangleSurfaceMesh -> GeometryQueryReport: Curve skeleton of a closed triangle mesh with the tunable Mean_curvature_flow_skeletonization class (quality and medial-centering trade-offs, iteration limit), certified by the same exact skeleton validator.
+- mesh.subdivide.catmull_clark [transform] TriangleSurfaceMesh -> PolygonSoup3: Catmull-Clark subdivision (Subdivision_method_3::CatmullClark_subdivision) of a triangle or polygon mesh into a quad polygon soup.
+- mesh.subdivide.loop [transform] TriangleSurfaceMesh -> TriangleSurfaceMesh: Loop subdivision (Subdivision_method_3::Loop_subdivision) of a triangle mesh.
+Validators (automatic): mesh.validate.approx_convex, mesh.validate.catmull_clark, mesh.validate.loop, mesh.validate.parameterization_harmonic, mesh.validate.parameterization_isometric, mesh.validate.sdf_segmentation, mesh.validate.sdf_values, mesh.validate.shortest_path, mesh.validate.skeleton
+
+## 7.9 Point-set processing (9 operations + 7 validators)
+Normal estimation and orientation, outlier removal, simplification, smoothing, neighbour structures.
+- pointset.registration.compute_transformation [analysis] PointSet3+PointSet3 -> GeometryQueryReport: Rigid registration of a moving point set onto a reference point set with OpenGR Super4PCS (CGAL::OpenGR::compute_registration_transformation): the 3x4 transformation, the matching score and the exact residual figures; optional dependency OpenGR.
+- pointset.registration.register [transform] PointSet3+PointSet3 -> PointSet3: Registers a moving point set onto a reference point set with OpenGR Super4PCS (CGAL::OpenGR::register_point_sets) and returns the transformed moving points; optional dependency OpenGR.
+- pointset.remove_outliers [transform] PointSet3 -> PointSet3: Remove spatial outliers from a finite point set.
+- pointset.simplify.grid [transform] PointSet3 -> PointSet3: Simplify a point set using a typed grid cell size.
+- pointset.simplify.hierarchy [transform] PointSet3 -> PointSet3: Simplify a point set with CGAL hierarchy clustering.
+- pointset.simplify.random [transform] PointSet3 -> PointSet3: Deterministically simplify a point set from a mandatory uint32 seed.
+- pointset.smooth.bilateral [transform] PointSet3Normals -> PointSet3Normals: Smooth an oriented point set with the bilateral filter, preserving sharp features.
+- pointset.smooth.jet [transform] PointSet3 -> PointSet3: Smooth point coordinates with local jet fitting.
+- pointset.spacing.average [analysis] PointSet3 -> GeometryQueryReport: Average spacing of a point set (CGAL::compute_average_spacing) over the k nearest neighbours of every point.
+Validators (automatic): pointset.validate.average_spacing, pointset.validate.outliers_removed, pointset.validate.registered_points, pointset.validate.registration_transformation, pointset.validate.smoothed, pointset.validate.smoothing_quality, pointset.validate.subset
+
+## 7.10 Surface reconstruction (7 operations + 5 validators)
+Turn point sets into surfaces (alpha wrapping, Poisson, advancing front, scale-space, polygonal fitting).
+- reconstruction.advancing_front [transform] PointSet3 -> TriangleSurfaceMesh: Interpolating surface reconstruction of an unoriented point set with the advancing front algorithm (advancing_front_surface_reconstruction); every output vertex is an input point.
+- reconstruction.alpha_wrap [transform] PointSet3 -> TriangleSurfaceMesh: 3D alpha wrapping of a point set (alpha_wrap_3): a watertight, orientable, 2-manifold triangle surface that strictly encloses the input at the given offset.
+- reconstruction.kinetic_surface [transform] PointSet3Normals -> PolygonSoup3: Kinetic surface reconstruction of an oriented point set with normals: planar shape detection with regularization, kinetic space partition and a graph-cut labelling into a closed polygon soup (Kinetic_surface_reconstruction_3).
+- reconstruction.poisson [transform] PointSet3Normals -> TriangleSurfaceMesh: Poisson surface reconstruction from an oriented point set: Poisson_reconstruction_function, Poisson_mesh_domain_3 and a surface-only Mesh_3 extraction (closed manifold option) into a triangle surface mesh.
+- reconstruction.poisson_delaunay [transform] PointSet3Normals -> TriangleSurfaceMesh: Poisson surface reconstruction through the one-call convenience function poisson_surface_reconstruction_delaunay: a triangle surface that is a manifold WITH boundary (CGAL 6.2.1 always requests the manifold_with_boundary option), so boundary edges are reported and a closed surface is never claimed.
+- reconstruction.polygonal_surface [transform] PointSet3Normals -> PolygonSoup3: Polygonal surface reconstruction (PolyFit) from an oriented point set with normals: region-growing plane detection, candidate faces from the plane arrangement and a SCIP mixed-integer selection into a closed manifold polygon soup; optional dependency SCIP.
+- reconstruction.scale_space [transform] PointSet3 -> TriangleSurfaceMesh: Scale-space surface reconstruction of a noisy point set: Jet_smoother increase_scale, then the Advancing_front_mesher; facets are published at the original input positions.
+Validators (automatic): reconstruction.validate.alpha_wrap, reconstruction.validate.interpolating, reconstruction.validate.poisson, reconstruction.validate.poisson_boundary, reconstruction.validate.polygonal_surface
+
+## 7.11 Triangulations (9 operations + 9 validators)
+2D/3D Delaunay, regular (weighted) triangulations, constrained triangulations, Voronoi duals.
+- triangulation.constrained_2 [transform] SegmentGraph2 -> Triangulation2: Build a constrained (Delaunay) triangulation preserving non-crossing constraint segments.
+- triangulation.delaunay_2 [transform] PointSet2 -> Triangulation2: Build the 2D Delaunay triangulation of a finite planar point set.
+- triangulation.delaunay_3 [transform] PointSet3 -> Triangulation3: Build the 3D Delaunay triangulation (tetrahedralization) of a finite point set.
+- triangulation.delaunay_on_sphere_2 [analysis] PointSet3 -> GeometryQueryReport: Delaunay triangulation of points on a sphere through CGAL::Delaunay_triangulation_on_sphere_2 (Delaunay_triangulation_on_sphere_traits_2); the points must cover the sphere (no ghost faces).
+- triangulation.periodic_delaunay_2 [analysis] PointSet2 -> GeometryQueryReport: Delaunay triangulation of the flat torus (square periodic domain) through CGAL::Periodic_2_Delaunay_triangulation_2; reported as triangles of (point index, lattice offset) in the 1-sheeted covering.
+- triangulation.periodic_delaunay_3 [analysis] PointSet3 -> GeometryQueryReport: Delaunay triangulation of the flat 3-torus (cubic periodic domain) through CGAL::Periodic_3_Delaunay_triangulation_3; reported as tetrahedra of (point index, lattice offset) in the 1-sheeted covering.
+- triangulation.regular_2 [analysis] PointSet2 -> GeometryQueryReport: Weighted (regular, power) Delaunay triangulation of a planar point set with one weight per point; reports vertices, hidden points and counter-clockwise triangles (CGAL::Regular_triangulation_2).
+- triangulation.regular_3 [analysis] PointSet3 -> GeometryQueryReport: Weighted (regular, power) Delaunay triangulation of a 3D point set with one weight per point; reports vertices, hidden points and positively oriented tetrahedra (CGAL::Regular_triangulation_3).
+- triangulation.voronoi_dual [analysis] PointSet2 -> GeometryQueryReport: Voronoi diagram of a planar site set as the dual of its Delaunay triangulation (CGAL::Voronoi_diagram_2): exact Voronoi vertices, bounded and unbounded edges per site pair, and cell counts.
+Validators (automatic): triangulation.validate.constrained_2, triangulation.validate.delaunay_2, triangulation.validate.delaunay_3, triangulation.validate.delaunay_on_sphere_2, triangulation.validate.periodic_delaunay_2, triangulation.validate.periodic_delaunay_3, triangulation.validate.regular_2, triangulation.validate.regular_3, triangulation.validate.voronoi_dual
+
+## 7.12 Polygons, arrangements and offsets (12 operations + 9 validators)
+Polygon properties and booleans, straight skeletons, offset polygons, Minkowski sums, arrangements and overlays.
+- arrangement.build [analysis] SegmentGraph2 -> GeometryQueryReport: Planar arrangement of line segments (CGAL::Arrangement_2 with CGAL::insert): exact vertices, undirected edges and faces with outer boundary and hole cycles.
+- arrangement.overlay [analysis] Polygon2+Polygon2 -> GeometryQueryReport: Face-count overlay of the boundary arrangements of two simple polygons (CGAL::overlay with CGAL::Arr_face_overlay_traits): every face of the common refinement carries the number of polygons containing it.
+- arrangement.zone [analysis] SegmentGraph2+SegmentGraph2 -> GeometryQueryReport: Zone of a query segment in the arrangement of line segments (CGAL::zone): the vertices, edges and faces the segment meets.
+- polygon.analysis.properties [analysis] PolygonWithHoles2 -> Polygon2AnalysisReport: Report exact per-ring orientation, simplicity, convexity, area, centroid, bounding box and overall validity of a polygon with holes.
+- polygon.boolean [analysis] Polygon2+Polygon2 -> GeometryQueryReport: Boolean join, intersection or difference of two simple polygons (CGAL::Polygon_set_2) in exact arithmetic.
+- polygon.minkowski_sum [analysis] Polygon2+Polygon2 -> GeometryQueryReport: Minkowski sum of two simple polygons (CGAL::minkowski_sum_2, convolution of decomposed parts): outer boundary and holes as exact counter-clockwise and clockwise rings.
+- polygon.minkowski_sum_reduced_convolution [analysis] Polygon2+Polygon2 -> GeometryQueryReport: Minkowski sum of two simple polygons by the reduced convolution method (CGAL::minkowski_sum_by_reduced_convolution_2): outer boundary and holes as exact rings.
+- polygon.offset.exterior [analysis] PolygonWithHoles2 -> GeometryQueryReport: Exterior mitered offset polygon of a simple polygon at a given distance (create_exterior_skeleton_and_offset_polygons_2); the outer frame ring CGAL adds is dropped.
+- polygon.offset.interior [analysis] PolygonWithHoles2 -> GeometryQueryReport: Interior mitered offset polygons of a polygon with holes at a given distance (create_interior_skeleton_and_offset_polygons_2); an empty result means the polygon is consumed by the offset.
+- polygon.query.containment [analysis] PolygonWithHoles2+PointSet2 -> Polygon2AnalysisReport: Classify query points as inside, outside or on the boundary of a polygon with holes.
+- polygon.straight_skeleton.exterior [analysis] PolygonWithHoles2 -> GeometryQueryReport: Exterior straight skeleton of a simple polygon (create_exterior_straight_skeleton_2) inside the axis-aligned frame CGAL adds around it; the frame is part of the reported contour.
+- polygon.straight_skeleton.interior [analysis] PolygonWithHoles2 -> GeometryQueryReport: Interior straight skeleton of a polygon with holes (create_interior_straight_skeleton_2): skeleton nodes with their event times, one face per contour edge and the bisectors.
+Validators (automatic): arrangement.validate.build, arrangement.validate.overlay, arrangement.validate.zone, polygon.validate.boolean, polygon.validate.containment_report, polygon.validate.minkowski_sum, polygon.validate.offset, polygon.validate.properties_report, polygon.validate.straight_skeleton
+
+## 7.13 Convex hulls and shapes (8 operations + 7 validators)
+2D/3D convex hulls, alpha shapes, bounding and extreme-point computations.
+- hull.convex_2 [transform] PointSet2 -> Polygon2: Construct the exact two-dimensional convex hull of a finite planar point set as a strictly convex counterclockwise polygon.
+- hull.convex_3 [transform] PointSet3 -> TriangleSurfaceMesh: Construct the three-dimensional convex hull of a finite point set.
+- shape.alpha_shape_2 [analysis] PointSet2 -> GeometryQueryReport: Alpha shape of a 2D point set (Alpha_shape_2, regularized): interior Delaunay triangles with squared circumradius at most alpha and the regular boundary edges.
+- shape.alpha_shape_3 [analysis] PointSet3 -> GeometryQueryReport: Alpha shape of a 3D point set (Alpha_shape_3, regularized): interior Delaunay cells with squared circumradius at most alpha and the regular boundary facets.
+- shape.barycentric [analysis] Polygon2+PointSet2 -> GeometryQueryReport: Compute Wachspress, mean value or discrete harmonic generalized barycentric coordinates of strictly interior query points with respect to a simple counterclockwise polygon (CGAL Barycentric_coordinates_2).
+- shape.bounding.circle [analysis] PointSet2 -> GeometryQueryReport: Smallest enclosing circle of a planar point set (CGAL::Min_circle_2).
+- shape.bounding.sphere [analysis] PointSet3 -> GeometryQueryReport: Smallest enclosing sphere of equal-radius balls in 3D (CGAL::Min_sphere_of_spheres_d with Min_sphere_of_spheres_d_traits_3).
+- shape.fixed_alpha_shape_3 [analysis] PointSet3 -> GeometryQueryReport: Fixed-alpha alpha shape of a 3D point set (Fixed_alpha_shape_3, regularized): interior Delaunay cells within the fixed alpha and the regular boundary facets.
+Validators (automatic): hull.validate.convex_enclosure, hull.validate.convex_enclosure_2, shape.validate.alpha_shape_2, shape.validate.alpha_shape_3, shape.validate.barycentric, shape.validate.min_circle, shape.validate.min_sphere
+
+## 7.14 Mesh generation (3 operations + 3 validators)
+2D constrained mesh refinement, 3D tetrahedral and surface meshes from implicit or polyhedral domains.
+- mesh.surface.generate [transform] ImplicitSurfaceDomain -> TriangleSurfaceMesh: Generate a closed, outward-oriented triangle surface mesh of a typed implicit domain (sphere, ellipsoid or torus; a fixed enumerated set, no free-form expressions) with CGAL Surface_mesher make_surface_mesh under angle, size (surface Delaunay ball radius) and distance criteria. Surface_mesher is a deprecated CGAL 6.2.1 package.
+- mesh.volume.generate [transform] ImplicitSurfaceDomain -> TetrahedralMesh: Generate a tetrahedral volume mesh (TetrahedralMesh, one subdomain) with CGAL Mesh_3 make_mesh_3 under the typed MeshCriteria3 criteria (facet angle/size/distance, cell radius-edge/size, plus optional cell_size_regions boxes, facet_topology and, for polyhedral domains, edge_size with sharp-edge protection), either of a typed implicit domain (sphere, ellipsoid or torus; a fixed enumerated set, no free-form expressions) through Labeled_mesh_domain_3, or of a validated closed, outward oriented, single-component, intersection-free TriangleSurfaceMesh (a polyhedral domain) through Polyhedral_mesh_domain_3 with sharp-edge protection only when edge_size is given. Open, non-manifold, self-intersecting, inconsistently oriented or inverted polyhedral input is rejected. Perturbation and exudation are disabled; image domains are unsupported.
+- mesh2.refine.delaunay [transform] PolygonWithHoles2 -> Triangulation2: Refine a polygon-with-holes domain into a constrained Delaunay triangle mesh meeting a shape (aspect) bound and a maximum edge length with refine_Delaunay_mesh_2.
+Validators (automatic): mesh.validate.delaunay_refinement_2, mesh.validate.surface_mesh, mesh.validate.volume_mesh
+
+## 7.15 Optimization and numerical geometry (4 operations + 4 validators)
+Linear and quadratic programming, interpolation, bounding volumes and related numerics.
+- optimization.approximate_mesh [analysis] TriangleSurfaceMesh -> OptimizationReport: Approximate a closed triangle surface mesh with Variational Shape Approximation (approximate_triangle_mesh, L21 metric) into planar proxies and an anchor-based output triangle mesh, reporting the face partition, proxies, squared L21 error and anchor deviation.
+- optimization.interpolate [analysis] InterpolationData2 -> OptimizationReport: Interpolate scattered 2D function data at query points with natural-neighbour (Sibson) coordinates: exact linear_interpolation on EPECK or Farin/Sibson C1 sibson_c1_interpolation with supplied gradients on EPICK, reporting coordinates, normalizer and value per query.
+- optimization.matrix_search [analysis] PointSet1 -> OptimizationReport: Solve the 1D interval p-center problem exactly with CGAL::sorted_matrix_search over the sorted Cartesian_matrix of pairwise gaps and a greedy cover feasibility test, reporting the optimal diameter, radius, centers and point assignment.
+- optimization.quadratic_program [analysis] QuadraticProgram -> OptimizationReport: Solve a linear or convex quadratic program (Ax rel b, l <= x <= u, minimize x^T D x + c^T x + c0) exactly with CGAL::solve_linear_program / solve_quadratic_program over CGAL::Gmpq and report the status, exact optimum and the solver's optimality, infeasibility or unboundedness certificate.
+Validators (automatic): optimization.validate.interpolation, optimization.validate.matrix_search, optimization.validate.mesh_approximation, optimization.validate.quadratic_program

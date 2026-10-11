@@ -106,7 +106,7 @@ async def main() -> None:
                     "TriangleSurfaceMesh", "off", source_a["unit"])
                 return plan, status, artifact
 
-            assert len((await client.list_tools()).tools) == 12
+            assert len((await client.list_tools()).tools) == 13
             source_a = await import_mesh("cube_a.off")
             overlap = await import_mesh("cube_overlap.off")
             disjoint = await import_mesh("cube_disjoint.off")

@@ -1375,6 +1375,19 @@ def row_axis_is_size_bound(rows: list[dict]) -> bool:
         {tuple(i["sha256"] for i in row["inputs"]) for row in rows}) == 1
 
 
+def summarize_first_contact(root: Path = REPO) -> dict:
+    """Informational only (never a gate): scripted fresh-agent usability evidence for the AI guide."""
+    path = root / "docs/master/evidence/first-contact.json"
+    if not path.exists():
+        return {"present": False, "gating": False}
+    data = json.loads(path.read_text(encoding="utf-8"))
+    bundle = root / "cgal_mcp/master/guide/guide.json"
+    current = hashlib.sha256(bundle.read_bytes()).hexdigest() if bundle.exists() else None
+    return {"present": True, "gating": False,
+            "bound_to_current_guide": data.get("bindings", {}).get("guide_bundle_sha256") == current,
+            "summary": data.get("summary")}
+
+
 def evaluate_performance_gate(root: Path = REPO, *, live: bool = True,
                               evidence: dict | None = None, worker: Path | None = None) -> dict:
     """Decide the performance/resource/robustness gate from recorded real-worker evidence.
@@ -1723,6 +1736,7 @@ def main() -> None:
                                       WORKFLOW_GATE: evaluate_workflow_gate(REPO),
                                       PERFORMANCE_GATE: evaluate_performance_gate(REPO),
                                       PACKAGE_GATE: evaluate_package_harvest_gate(REPO)}
+        report["informational_evidence"] = {"first_contact": summarize_first_contact(REPO)}
         report["standalone_acceptance_reason"] = "Additional package, routing, workflow, host and robustness gates required"
     content = json.dumps(report, ensure_ascii=False, indent=2) + "\n"
     if args.output:

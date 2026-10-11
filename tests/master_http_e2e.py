@@ -57,7 +57,7 @@ async def verify(mode: str) -> None:
                         return result.structured_content if result.structured_content is not None else json.loads(
                             "".join(block.text for block in result.content if hasattr(block, "text")))
 
-                    assert len((await client.list_tools()).tools) == 12
+                    assert len((await client.list_tools()).tools) == 13
                     source = await call("cgal_artifact_import", {"path": str(points), "unit": "mm"})
                     plan = await call("cgal_plan", {"request": {"operation_id": "hull.convex_3",
                                                               "inputs": [source["artifact_id"]]}})

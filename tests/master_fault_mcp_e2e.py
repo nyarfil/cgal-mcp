@@ -47,7 +47,7 @@ async def main(mode: str) -> None:
                 return response.structured_content or json.loads("".join(
                     item.text for item in response.content if hasattr(item, "text")))
 
-            assert len((await client.list_tools()).tools) == 12
+            assert len((await client.list_tools()).tools) == 13
             source = await call("cgal_artifact_import", {"path": str(points), "unit": "mm"})
             plan = await call("cgal_plan", {"request": {"operation_id": "hull.convex_3",
                                                       "inputs": [source["artifact_id"]]}})

@@ -82,7 +82,7 @@ async def main() -> None:
                     await asyncio.sleep(0.05)
                 raise AssertionError(f"job did not finish: {job_id}")
 
-            assert len((await client.list_tools()).tools) == 12
+            assert len((await client.list_tools()).tools) == 13
             source = await call("cgal_artifact_import", {
                 "path": str(mesh), "unit": "cm",
                 "artifact_type": "TriangleSurfaceMesh"})

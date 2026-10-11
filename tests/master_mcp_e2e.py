@@ -45,7 +45,7 @@ async def main() -> None:
                                           if hasattr(block, "text")))
 
             tools = await client.list_tools()
-            assert len(tools.tools) == 12, [tool.name for tool in tools.tools]
+            assert len(tools.tools) == 13, [tool.name for tool in tools.tools]
             source = await call("cgal_artifact_import", {"path": str(points), "unit": "mm"})
             plan = await call("cgal_plan", {"request": {
                 "operation_id": "hull.convex_3", "inputs": [source["artifact_id"]],
