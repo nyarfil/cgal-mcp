@@ -190,6 +190,79 @@ bool invariant(RepairKind kind, const Json& source_stats, const Json& candidate_
          integer(candidate_stats.at("mesh"), "non_manifold_vertex_count") == 0;
 }
 
+// Independent boundary-cycle recomputation (no CGAL): a face edge a->b is a boundary edge when
+// no face holds b->a; the border halfedge then runs b->a. Cycles start at their smallest vertex
+// and are ordered by it, so the sequence is rotation- and traversal-independent.
+bool soup_boundary_cycles(const Soup& soup, std::vector<std::vector<std::size_t>>& cycles) {
+  std::set<std::pair<std::size_t, std::size_t>> directed;
+  for (const auto& face : soup.faces) {
+    if (face.size() != 3) return false;
+    for (std::size_t k = 0; k < 3; ++k) directed.insert({face[k], face[(k + 1) % 3]});
+  }
+  std::map<std::size_t, std::size_t> next_border;
+  for (const auto& edge : directed) {
+    if (directed.count({edge.second, edge.first}) != 0) continue;
+    if (!next_border.emplace(edge.second, edge.first).second) return false;  // pinched border vertex
+  }
+  std::set<std::size_t> visited;
+  cycles.clear();
+  for (const auto& entry : next_border) {
+    if (visited.count(entry.first) != 0) continue;
+    std::vector<std::size_t> cycle;
+    std::size_t cursor = entry.first;
+    do {
+      if (!visited.insert(cursor).second) return false;
+      cycle.push_back(cursor);
+      const auto found = next_border.find(cursor);
+      if (found == next_border.end()) return false;
+      cursor = found->second;
+    } while (cursor != entry.first);
+    cycles.push_back(std::move(cycle));
+  }
+  return true;
+}
+
+struct SelectionCheck {
+  bool evaluated = false;
+  bool unselected_holes_untouched = true;
+  bool selected_holes_closed = true;
+};
+
+// Independent of the CGAL replay: re-derive the selected holes from the source boundary cycles
+// and the parameters, then require every other cycle to be unchanged and the selected ones closed.
+SelectionCheck check_hole_selection(RepairKind kind, const Soup& source, const Soup& candidate,
+                                    const Json& parameters) {
+  SelectionCheck check;
+  if (kind != RepairKind::kFillHoles && kind != RepairKind::kFillHolesRefineFair) return check;
+  check.evaluated = true;
+  const auto refine = kind == RepairKind::kFillHolesRefineFair;
+  const auto selection = parse_hole_selection(parameters, refine, source.unit);
+  const auto limit = hole_edge_limit(parameters);
+  std::vector<std::vector<std::size_t>> source_cycles, candidate_cycles;
+  if (!soup_boundary_cycles(source, source_cycles) || !soup_boundary_cycles(candidate, candidate_cycles)) {
+    check.unselected_holes_untouched = check.selected_holes_closed = false;
+    return check;
+  }
+  std::vector<std::vector<std::size_t>> expected_remaining;
+  std::set<std::size_t> known_ids;
+  for (const auto& cycle : source_cycles) {
+    const auto stats = hole_cycle_stats(cycle, source.points);
+    known_ids.insert(stats.hole_id);
+    const bool filled = selection.active ? hole_matches_selection(selection, stats, limit)
+                                         : stats.edge_count <= limit;
+    if (!filled) expected_remaining.push_back(cycle);
+  }
+  for (const auto id : selection.ids) {
+    if (known_ids.count(id) == 0) check.selected_holes_closed = false;  // stale/unknown id cannot validate
+  }
+  const std::set<std::vector<std::size_t>> candidate_set(candidate_cycles.begin(), candidate_cycles.end());
+  for (const auto& cycle : expected_remaining) {
+    if (candidate_set.count(cycle) == 0) check.unselected_holes_untouched = false;
+  }
+  if (candidate_cycles.size() != expected_remaining.size()) check.selected_holes_closed = false;
+  return check;
+}
+
 Json validate(const Request& request, RepairKind kind) {
   require_request(request, kind, true);
   const auto& candidate_input = request.inputs[0];
@@ -208,13 +281,18 @@ Json validate(const Request& request, RepairKind kind) {
   const auto source_stats = soup_statistics(source);
   const auto candidate_stats = soup_statistics(candidate);
   const bool replay_match = soup_equal(candidate, reference.soup);
-  const bool invariant_valid = replay_match && invariant(kind, source_stats, candidate_stats, reference,
-                                                  request.parameters, candidate) &&
+  const auto selection_check = check_hole_selection(kind, source, candidate, request.parameters);
+  const bool selection_valid = selection_check.unselected_holes_untouched && selection_check.selected_holes_closed;
+  const bool invariant_valid = replay_match && selection_valid &&
+      invariant(kind, source_stats, candidate_stats, reference, request.parameters, candidate) &&
       (kind != RepairKind::kFillHolesRefineFair || refined_patch_is_sane(source, candidate));
   const bool preserved = geometry_preserved(kind, source, candidate);
   if (!replay_match || !invariant_valid || !preserved) {
     throw WorkerError("VALIDATION_FAILED", "REPAIR_VALIDATION_FAILED",
-                      "Repair candidate failed official replay or operation invariants");
+                      selection_valid
+                          ? "Repair candidate failed official replay or operation invariants"
+                          : "Repair candidate failed the independent hole-selection check "
+                            "(an unselected hole changed or a selected hole is not closed)");
   }
   Json checks = {{"source_identity_matches", true},
                  {"candidate_matches_official_cgal_replay", true},
@@ -222,6 +300,10 @@ Json validate(const Request& request, RepairKind kind) {
                  {"repair_invariant_valid", true},
                  {"numeric_profile_valid", true},
                  {"source_geometry_preserved_as_required", true}};
+  if (selection_check.evaluated) {
+    checks["unselected_holes_untouched"] = true;
+    checks["selected_holes_closed"] = true;
+  }
   Json report = {{"schema_version", 1},
                  {"validator_id", validator_id(kind)},
                  {"validates", operation_id(kind)},

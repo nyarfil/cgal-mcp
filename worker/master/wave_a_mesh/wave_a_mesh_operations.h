@@ -10,10 +10,14 @@ OperationDefinition normals_operation();
 OperationDefinition measures_operation();
 OperationDefinition sharp_features_operation();
 OperationDefinition self_intersections_operation();
+OperationDefinition boundary_cycles_operation();
 
 // Deterministic official-CGAL replay used by separately registered validators.
 Json analysis_reference_report(const std::string& operation_id,
                                const Request& source_request);
+// Boundary-cycle results recomputed from the raw OFF faces with a plain directed-edge map
+// (no CGAL boundary-cycle extraction); used by the independent validator branch.
+Json independent_boundary_cycles_results(const Request& source_request);
 
 OperationDefinition validate_pmp_inspection_report_operation();
 OperationDefinition validate_connected_components_report_operation();
@@ -21,5 +25,6 @@ OperationDefinition validate_normals_report_operation();
 OperationDefinition validate_measures_report_operation();
 OperationDefinition validate_sharp_features_report_operation();
 OperationDefinition validate_self_intersections_report_operation();
+OperationDefinition validate_boundary_cycles_report_operation();
 
 }  // namespace cgal_master::wave_a_mesh

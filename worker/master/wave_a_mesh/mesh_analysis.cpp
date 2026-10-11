@@ -13,6 +13,7 @@
 #include <CGAL/Polygon_mesh_processing/self_intersections.h>
 #include <CGAL/Polygon_mesh_processing/shape_predicates.h>
 #include <CGAL/Surface_mesh.h>
+#include <CGAL/boost/graph/border.h>
 #include <CGAL/boost/graph/helpers.h>
 #include <CGAL/number_utils.h>
 
@@ -54,6 +55,7 @@ constexpr std::size_t kMaxVertices = 200000;
 constexpr std::size_t kMaxFaces = 200000;
 constexpr std::size_t kMaxFaceDegree = 100000;
 constexpr std::size_t kMaxIntersectionPairs = 10000;
+constexpr std::size_t kMaxBoundaryCycles = 10000;
 constexpr std::size_t kMaxReportBytes = 16ULL * 1024ULL * 1024ULL;
 constexpr double kPi = 3.141592653589793238462643383279502884;
 const std::set<std::string> kLengthUnits = {"mm", "cm", "m"};
@@ -933,6 +935,169 @@ Json run_self_intersections(const Request& request, bool publish) {
        {"does_self_intersect", results.value("does_self_intersect", false)}});
 }
 
+// ---- boundary cycles -------------------------------------------------------------------------
+// A boundary cycle is a hole (or the outer rim of an open patch). hole_id is the smallest source
+// OFF vertex index on the cycle, which is stable for an unchanged source and independent of the
+// traversal start. Vertex lists follow the border-halfedge direction and start at that vertex.
+
+std::vector<std::array<double, 3>> double_points(const RawOff& raw) {
+  std::vector<std::array<double, 3>> points;
+  points.reserve(raw.points.size());
+  for (const auto& point : raw.points)
+    points.push_back({CGAL::to_double(point.x()), CGAL::to_double(point.y()),
+                      CGAL::to_double(point.z())});
+  return points;
+}
+
+Json boundary_cycle_results(std::vector<std::vector<std::size_t>> cycles,
+                            const std::vector<std::array<double, 3>>& points,
+                            const std::string& unit) {
+  Json results = {{"count_unit", "count"}, {"length_unit", unit},
+                  {"area_unit", unit + "^2"}, {"cycle_limit", kMaxBoundaryCycles},
+                  {"hole_count", cycles.size()}};
+  if (cycles.size() > kMaxBoundaryCycles) {
+    results["available"] = false;
+    results["reason"] = "BOUNDARY_CYCLE_LIMIT_EXCEEDED";
+    return results;
+  }
+  struct Entry {
+    std::size_t id;
+    double perimeter;
+    Json value;
+  };
+  std::vector<Entry> entries;
+  entries.reserve(cycles.size());
+  for (auto& cycle : cycles) {
+    const auto count = cycle.size();
+    const auto minimum = static_cast<std::size_t>(
+        std::min_element(cycle.begin(), cycle.end()) - cycle.begin());
+    std::rotate(cycle.begin(), cycle.begin() + static_cast<std::ptrdiff_t>(minimum), cycle.end());
+    std::array<double, 3> centroid = {0, 0, 0};
+    std::array<double, 3> low = points[cycle[0]], high = points[cycle[0]];
+    for (const auto index : cycle)
+      for (int axis = 0; axis < 3; ++axis) {
+        centroid[axis] += points[index][axis];
+        low[axis] = std::min(low[axis], points[index][axis]);
+        high[axis] = std::max(high[axis], points[index][axis]);
+      }
+    for (int axis = 0; axis < 3; ++axis) centroid[axis] /= static_cast<double>(count);
+    double perimeter = 0;
+    std::array<double, 3> normal = {0, 0, 0};
+    for (std::size_t k = 0; k < count; ++k) {
+      const auto& p = points[cycle[k]];
+      const auto& q = points[cycle[(k + 1) % count]];
+      const double dx = q[0] - p[0], dy = q[1] - p[1], dz = q[2] - p[2];
+      perimeter += std::sqrt(dx * dx + dy * dy + dz * dz);
+      const double ax = p[0] - centroid[0], ay = p[1] - centroid[1], az = p[2] - centroid[2];
+      const double bx = q[0] - centroid[0], by = q[1] - centroid[1], bz = q[2] - centroid[2];
+      normal[0] += ay * bz - az * by;
+      normal[1] += az * bx - ax * bz;
+      normal[2] += ax * by - ay * bx;
+    }
+    const double area = 0.5 * std::sqrt(normal[0] * normal[0] + normal[1] * normal[1] +
+                                        normal[2] * normal[2]);
+    entries.push_back({cycle[0], perimeter,
+                       {{"hole_id", cycle[0]}, {"edge_count", count},
+                        {"boundary_length", perimeter}, {"patch_area_estimate", area},
+                        {"centroid", centroid}, {"bbox_min", low}, {"bbox_max", high},
+                        {"vertex_indices", cycle}}});
+  }
+  std::sort(entries.begin(), entries.end(),
+            [](const Entry& first, const Entry& second) { return first.id < second.id; });
+  Json holes = Json::array();
+  for (const auto& entry : entries) holes.push_back(entry.value);
+  auto by_length = entries;
+  std::stable_sort(by_length.begin(), by_length.end(), [](const Entry& first, const Entry& second) {
+    return first.perimeter > second.perimeter;
+  });
+  Json order = Json::array();
+  for (const auto& entry : by_length) order.push_back(entry.id);
+  results["available"] = true;
+  results["holes"] = std::move(holes);
+  results["order_by_boundary_length_desc"] = std::move(order);
+  results["id_rule"] = "hole_id = smallest source OFF vertex index on the boundary cycle";
+  results["area_rule"] = "patch_area_estimate = Newell polygon area of the boundary ring (planar fit estimate)";
+  return results;
+}
+
+Json run_boundary_cycles(const Request& request, bool publish) {
+  require_parameters(request.parameters, {});
+  auto input = load_mesh(request);
+  require_pmp_mesh(input, "boundary-cycle analysis");
+  std::vector<Halfedge> border;
+  CGAL::extract_boundary_cycles(input.mesh, std::back_inserter(border));
+  std::vector<std::vector<std::size_t>> cycles;
+  cycles.reserve(border.size());
+  std::size_t listed_edges = 0;
+  for (const auto start : border) {
+    std::vector<std::size_t> ring;
+    auto cursor = start;
+    do {
+      ring.push_back(input.mesh.source(cursor).idx());
+      cursor = input.mesh.next(cursor);
+    } while (cursor != start);
+    listed_edges += ring.size();
+    cycles.push_back(std::move(ring));
+  }
+  std::size_t border_edges = 0;
+  for (const auto halfedge : input.mesh.halfedges())
+    if (input.mesh.is_border(halfedge)) ++border_edges;
+  if (listed_edges != border_edges)
+    fail_report("Boundary cycles do not partition the border edges");
+  auto report = base_report(request, input, "boundary_cycles");
+  report["results"] = boundary_cycle_results(std::move(cycles), double_points(input.raw),
+                                             request.inputs.front().unit);
+  report["validation"]["passed"] = true;
+  report["validation"]["checks"] = {"cycles_partition_border_edges", "hole_id_is_minimum_vertex",
+                                    "bounded_cycle_listing", "typed_length_and_area_units"};
+  if (!publish) return report;
+  return finish_report(
+      request, std::move(report), "boundary_cycles",
+      {{"hole_count", report.at("results").value("hole_count", 0)},
+       {"available", report.at("results").value("available", false)}});
+}
+
+}  // namespace
+
+Json independent_boundary_cycles_results(const Request& source_request) {
+  require_parameters(source_request.parameters, {});
+  require_input(source_request);
+  const auto raw = parse_off(source_request.inputs.front());
+  std::set<std::pair<std::size_t, std::size_t>> directed;
+  for (const auto& face : raw.faces) {
+    if (face.size() != 3)
+      throw WorkerError("PRECONDITION_FAILED", "MESH_NOT_TRIANGULATED",
+                        "Boundary-cycle validation requires triangular faces");
+    for (std::size_t k = 0; k < 3; ++k) directed.insert({face[k], face[(k + 1) % 3]});
+  }
+  std::map<std::size_t, std::size_t> next_border;
+  for (const auto& edge : directed) {
+    if (directed.count({edge.second, edge.first}) != 0) continue;
+    if (!next_border.emplace(edge.second, edge.first).second)
+      throw WorkerError("PRECONDITION_FAILED", "NON_MANIFOLD_BORDER_VERTEX",
+                        "Boundary-cycle validation requires manifold border vertices");
+  }
+  std::set<std::size_t> visited;
+  std::vector<std::vector<std::size_t>> cycles;
+  for (const auto& entry : next_border) {
+    if (visited.count(entry.first) != 0) continue;
+    std::vector<std::size_t> cycle;
+    std::size_t cursor = entry.first;
+    do {
+      if (!visited.insert(cursor).second)
+        throw WorkerError("PRECONDITION_FAILED", "NON_MANIFOLD_BORDER_VERTEX",
+                          "Boundary cycle revisits a vertex");
+      cycle.push_back(cursor);
+      cursor = next_border.at(cursor);
+    } while (cursor != entry.first);
+    cycles.push_back(std::move(cycle));
+  }
+  return boundary_cycle_results(std::move(cycles), double_points(raw),
+                                source_request.inputs.front().unit);
+}
+
+namespace {
+
 OperationDefinition make_definition(std::string id,
                                     std::function<Json(const Request&)> execute,
                                     Json info,
@@ -966,7 +1131,9 @@ Json common_info(const std::string& kind, const std::string& header,
       {"CGAL/Polygon_mesh_processing/detect_features.h",
        "0fda63d13f171d8a107a1cb96db9545fa19802eacae419df0498c9838669724c"},
       {"CGAL/Polygon_mesh_processing/self_intersections.h",
-       "d459c0e6480a9e1c2cbef291340ae61a0bf4e79ceb182365c1b922dd7e38ae8f"}};
+       "d459c0e6480a9e1c2cbef291340ae61a0bf4e79ceb182365c1b922dd7e38ae8f"},
+      {"CGAL/boost/graph/border.h",
+       "65579259ece63d3c65ea005aefeda6f24d3f979967b75e69dc41cf84ef47f570"}};
   return {{"analysis_kind", kind},
           {"input_format", "off"},
           {"input_slot", "mesh"},
@@ -1011,6 +1178,8 @@ Json analysis_reference_report(const std::string& operation_id,
     return run_sharp_features(source_request, false);
   if (operation_id == "mesh.analysis.self_intersections")
     return run_self_intersections(source_request, false);
+  if (operation_id == "mesh.analysis.boundary_cycles")
+    return run_boundary_cycles(source_request, false);
   throw WorkerError("UNSUPPORTED_ADAPTER", "UNKNOWN_ANALYSIS_REFERENCE",
                     "No Wave A mesh reference implementation is registered");
 }
@@ -1126,6 +1295,19 @@ OperationDefinition self_intersections_operation() {
   return make_definition("mesh.analysis.self_intersections",
                          [](const Request& request) {
                            return run_self_intersections(request, true);
+                         },
+                         std::move(info));
+}
+
+OperationDefinition boundary_cycles_operation() {
+  auto info = common_info("boundary_cycles", "CGAL/boost/graph/border.h",
+                          "mesh.validate.boundary_cycles_report");
+  info["cycle_limit"] = kMaxBoundaryCycles;
+  info["checks"] = {"cycles_partition_border_edges", "hole_id_is_minimum_vertex",
+                    "bounded_cycle_listing", "typed_length_and_area_units"};
+  return make_definition("mesh.analysis.boundary_cycles",
+                         [](const Request& request) {
+                           return run_boundary_cycles(request, true);
                          },
                          std::move(info));
 }

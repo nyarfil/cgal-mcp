@@ -27,16 +27,16 @@ arguments: [{"description": "Path of the mesh file the server can read", "name":
 ### EN
 Repair the mesh <<mesh_path>> (unit <<unit>>) and then simplify it to about <<target_ratio>> of its faces.
 1. Import it (artifact_type PolygonSoup3 if it is a soup, otherwise TriangleSurfaceMesh) with the stated unit.
-2. Inspect first (mesh.inspect.pmp, mesh.repair.polygon_soup, mesh.repair.orient, mesh.repair.stitch_borders, mesh.repair.fill_holes, mesh.repair.remove_degenerate, mesh.simplify.edge_collapse, mesh.distance.symmetric_hausdorff: start with mesh.inspect.pmp) to learn what is wrong: open borders, flipped faces, degenerate faces, non-manifold parts.
-3. Repair only what the inspection shows. Verified recipes: wf05-dirtysoup-clean-orient-measure, wf02-fillholes-loop-measures, wf35-simplify-loop-inspect, wf06-remesh-simplify-hausdorff-join; read them with cgal_get_guide(topic="recipe:<id>").
+2. Inspect first (mesh.inspect.pmp, mesh.repair.polygon_soup, mesh.repair.orient, mesh.repair.stitch_borders, mesh.analysis.boundary_cycles, mesh.repair.fill_holes, mesh.repair.remove_degenerate, mesh.simplify.edge_collapse, mesh.distance.symmetric_hausdorff: start with mesh.inspect.pmp) to learn what is wrong: open borders, flipped faces, degenerate faces, non-manifold parts.
+3. Repair only what the inspection shows. Holes are never filled blindly: list them first with mesh.analysis.boundary_cycles (hole_id, edge count, perimeter, area estimate, location), show that list to the user, ask which holes to close, and only then run mesh.repair.fill_holes with hole_ids (list first, ask the user, then fill by ids); unselected holes stay open. Verified recipes: wf05-dirtysoup-clean-orient-measure, wf02-fillholes-loop-measures, wf35-simplify-loop-inspect, wf06-remesh-simplify-hausdorff-join; read them with cgal_get_guide(topic="recipe:<id>").
 4. Simplify with mesh.simplify.edge_collapse: its card (topic "op:mesh.simplify.edge_collapse") lists the required stop rule, policy, max_symmetric_deviation and hausdorff_error_bound. Non-manifold input is refused; meshes above the card's face bound are refused.
 5. Compare the result with the original using the Hausdorff operations (at most 400 faces) or rely on the mandatory simplification validator; report only validated numbers.
 
 ### JA
 メッシュ <<mesh_path>>（単位 <<unit>>）を修復し、面数を約 <<target_ratio>> に軽量化する。
 1. 指定単位で取り込む（ポリゴンスープならartifact_type PolygonSoup3、そうでなければTriangleSurfaceMesh）。
-2. まず検査（mesh.inspect.pmp, mesh.repair.polygon_soup, mesh.repair.orient, mesh.repair.stitch_borders, mesh.repair.fill_holes, mesh.repair.remove_degenerate, mesh.simplify.edge_collapse, mesh.distance.symmetric_hausdorff: mesh.inspect.pmpから）で問題（開境界・反転・退化面・非多様体）を把握する。
-3. 検査で分かった問題だけを直す。検証済みレシピ: wf05-dirtysoup-clean-orient-measure, wf02-fillholes-loop-measures, wf35-simplify-loop-inspect, wf06-remesh-simplify-hausdorff-join。cgal_get_guide(topic="recipe:<id>")で読む。
+2. まず検査（mesh.inspect.pmp, mesh.repair.polygon_soup, mesh.repair.orient, mesh.repair.stitch_borders, mesh.analysis.boundary_cycles, mesh.repair.fill_holes, mesh.repair.remove_degenerate, mesh.simplify.edge_collapse, mesh.distance.symmetric_hausdorff: mesh.inspect.pmpから）で問題（開境界・反転・退化面・非多様体）を把握する。
+3. 検査で分かった問題だけを直す。穴は勝手に全部埋めない: まずmesh.analysis.boundary_cycles（hole_id・辺数・周長・面積目安・位置）で一覧し、一覧をユーザーに見せてどの穴を埋めるか確認し、そのあとでmesh.repair.fill_holesにhole_idsを渡して埋める（先に一覧、次に確認、最後にIDで指定）。選ばれなかった穴は開いたまま残る。検証済みレシピ: wf05-dirtysoup-clean-orient-measure, wf02-fillholes-loop-measures, wf35-simplify-loop-inspect, wf06-remesh-simplify-hausdorff-join。cgal_get_guide(topic="recipe:<id>")で読む。
 4. mesh.simplify.edge_collapseで軽量化。カード（topic "op:mesh.simplify.edge_collapse"）に停止条件・policy・max_symmetric_deviation・hausdorff_error_boundが載っている。非多様体や面数上限超過は拒否される。
 5. 元との比較はHausdorff系（400面以下）または必須の軽量化検証器に任せ、検証済みの数値だけ報告する。
 

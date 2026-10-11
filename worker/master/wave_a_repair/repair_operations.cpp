@@ -59,20 +59,34 @@ Json source_record(RepairKind kind) {
   throw std::logic_error("Unknown repair kind");
 }
 
+Json hole_selection_properties() {
+  return {{"hole_ids", {{"type", "array"}, {"minItems", 1}, {"maxItems", 10000},
+                         {"items", {{"type", "integer"}, {"minimum", 0}}}}},
+          {"max_hole_perimeter", {{"type", "TypedLength"}, {"exclusiveMinimum", 0}}},
+          {"max_hole_area",
+           {{"type", "object"}, {"required", {"value", "unit"}}, {"additionalProperties", false},
+            {"properties", {{"value", {{"type", "number"}, {"exclusiveMinimum", 0}}},
+                            {"unit", {{"type", "string"}, {"enum", {"mm^2", "cm^2", "m^2"}}}}}}}}};
+}
+
 Json parameter_schema(RepairKind kind) {
   if (kind == RepairKind::kFillHoles) {
+    Json properties = hole_selection_properties();
+    properties["max_hole_edges"] = {{"type", "integer"}, {"minimum", 3}, {"maximum", 2000}};
     return {{"type", "object"},
             {"required", {"max_hole_edges"}},
             {"additionalProperties", false},
-            {"properties", {{"max_hole_edges", {{"type", "integer"}, {"minimum", 3}, {"maximum", 2000}}}}}};
+            {"properties", std::move(properties)}};
   }
   if (kind == RepairKind::kFillHolesRefineFair) {
+    Json properties = hole_selection_properties();
+    properties["max_hole_edges"] = {{"type", "integer"}, {"minimum", 3}, {"maximum", 2000}};
+    properties["density_control_factor"] = {{"type", "number"}, {"minimum", 1.0}, {"maximum", 4.0}};
+    properties["fairing_continuity"] = {{"type", "integer"}, {"minimum", 0}, {"maximum", 2}};
     return {{"type", "object"},
             {"required", {"max_hole_edges", "density_control_factor", "fairing_continuity"}},
             {"additionalProperties", false},
-            {"properties", {{"max_hole_edges", {{"type", "integer"}, {"minimum", 3}, {"maximum", 2000}}},
-                            {"density_control_factor", {{"type", "number"}, {"minimum", 1.0}, {"maximum", 4.0}}},
-                            {"fairing_continuity", {{"type", "integer"}, {"minimum", 0}, {"maximum", 2}}}}}};
+            {"properties", std::move(properties)}};
   }
   if (kind == RepairKind::kPolygonSoup) {
     return {{"type", "object"},
@@ -87,11 +101,14 @@ Json parameter_schema(RepairKind kind) {
 
 Json parameter_bindings(RepairKind kind) {
   if (kind == RepairKind::kFillHoles)
-    return {{validator_id(kind), {{"max_hole_edges", "max_hole_edges"}}}};
+    return {{validator_id(kind),
+             {{"max_hole_edges", "max_hole_edges"}, {"hole_ids", "hole_ids"},
+              {"max_hole_perimeter", "max_hole_perimeter"}, {"max_hole_area", "max_hole_area"}}}};
   if (kind == RepairKind::kFillHolesRefineFair)
     return {{validator_id(kind),
              {{"max_hole_edges", "max_hole_edges"}, {"density_control_factor", "density_control_factor"},
-              {"fairing_continuity", "fairing_continuity"}}}};
+              {"fairing_continuity", "fairing_continuity"}, {"hole_ids", "hole_ids"},
+              {"max_hole_perimeter", "max_hole_perimeter"}, {"max_hole_area", "max_hole_area"}}}};
   if (kind == RepairKind::kPolygonSoup)
     return {{validator_id(kind),
              {{"duplicate_polygon_policy", "duplicate_polygon_policy"},
@@ -155,6 +172,10 @@ Json operation_metadata(RepairKind kind, bool validator) {
         {"checks.repair_invariant_valid", true},
         {"checks.numeric_profile_valid", true},
         {"checks.source_geometry_preserved_as_required", true}};
+    if (kind == RepairKind::kFillHoles || kind == RepairKind::kFillHolesRefineFair) {
+      common["required_report_checks"]["checks.unselected_holes_untouched"] = true;
+      common["required_report_checks"]["checks.selected_holes_closed"] = true;
+    }
   }
   return common;
 }

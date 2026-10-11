@@ -14,13 +14,14 @@ std::vector<cgal_master::OperationDefinition> operations() {
   using namespace cgal_master::wave_a_mesh;
   return {inspect_pmp_operation(), connected_components_operation(),
           normals_operation(), measures_operation(), sharp_features_operation(),
-          self_intersections_operation(),
+          self_intersections_operation(), boundary_cycles_operation(),
           validate_pmp_inspection_report_operation(),
           validate_connected_components_report_operation(),
           validate_normals_report_operation(),
           validate_measures_report_operation(),
           validate_sharp_features_report_operation(),
-          validate_self_intersections_report_operation()};
+          validate_self_intersections_report_operation(),
+          validate_boundary_cycles_report_operation()};
 }
 
 cgal_master::Json manifest() {

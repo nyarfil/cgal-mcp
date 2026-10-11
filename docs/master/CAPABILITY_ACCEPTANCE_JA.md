@@ -75,3 +75,29 @@ source/candidate/error、解析値、parameter差分を`negative_control_proofs`
 
 全80要求、300 intent、30以上のworkflow、全host/build/protocol、故障・資源・性能の
 受入は未完了です。今回のreportも`standalone_accepted: false`を保持します。
+
+## 実クライアント制約（71k面スキャン）への対応
+
+StellaCADが使う約71k面のスキャンメッシュ（個人データのためrepositoryには含めない）で見つかった制約のうち、
+次を対応しました。確認には、約70.9k面・半径60 mmのノイズ付き球に28個の穴（1面欠け25、
+6/24/80面を欠いた穴3）を開けた合成メッシュを使い、合成メッシュ自体はコミットしていません。
+
+- 速度: `mesh_metrics`の非多様体頂点数を、頂点ごとの`is_non_manifold_vertex`走査から
+  一括の`PMP::non_manifold_vertices`へ置換しました。`fill_holes`は参考値（情報用、1回計測）で
+  6.1 s → 0.5 s。旧workerと新workerで、repair/inspect/analysis 9 Operation × 既存fixture 34件
+  （計306組）の出力とresponseが全て一致することを確認しました。
+- stack overflow: `mesh.validate.simplification_integrity`は約1万面超でCGAL内部の再帰が
+  Windows既定1 MiB stackを使い切り`0xC00000FD`で落ちていました。workerへ`/STACK:268435456`を
+  付けて解消し、39,600面の閉メッシュで旧workerは異常終了、新workerは0.4 sで`pass`となることを
+  確認しました。回帰試験は`tests/test_master_client_limits.py`（20,000面以上の閉球）です。
+- 選択的な穴埋め: 新Operation `mesh.analysis.boundary_cycles`（安定したhole_id、辺数、周長、
+  面積の目安、重心、bbox、周長順。合成メッシュで0.1 s）と、`mesh.repair.fill_holes`・
+  `fill_holes_refine_fair`の新parameter `hole_ids`・`max_hole_perimeter`・`max_hole_area`を追加しました。
+  指定なしの動作は従来通りです。選ばれなかった穴は変更されず、validatorがCGALと独立な辺写像で
+  「未選択の穴が不変」「選択した穴が閉じた」を検証します。古いidは`HOLE_ID_NOT_FOUND`で拒否します。
+  Registry説明とAI guideに「先に一覧、次にユーザーへ確認、最後にIDで指定して埋める」を記載しました。
+  registryは228 Operation、catalog_revisionは`-6`です。MCPのtool面は変えていません。
+
+未対応: 項目1（`mesh.distance.symmetric_hausdorff`の400面上限）と項目2（simplificationの
+自己交差に対する再試行）は今回も未対応です。上記の時間は情報用の1回計測で、受入根拠ではありません。
+`standalone_accepted`は引き続きfalseです。

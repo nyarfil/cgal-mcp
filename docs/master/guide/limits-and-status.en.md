@@ -1,7 +1,7 @@
 # Limits and honest coverage
 
 ## Operation status
-VALIDATED: 226 (CGAL 6.2.1)
+VALIDATED: 228 (CGAL 6.2.1)
 Only VALIDATED/IMPLEMENTED operations can execute. VALIDATED means replay-verified on bundled fixtures with an independent validator, not a proof for every input. Whole-system acceptance is tracked separately by the replay-bound evaluator (scripts/master_acceptance.py) and is not claimed by this guide.
 
 ## Package catalog
@@ -11,7 +11,7 @@ VALIDATED = has at least one executable validated operation. CATALOGED = documen
 ## Limits
 - import: at most 512 MiB per file; formats off, obj, ply (ASCII), stl, xyz and typed json; units mm, cm or m (reports: none)
 - execution defaults: concurrency 2, worker memory 4096 MiB, wall time 120 s, ceiling 86400 s; live values: cgal_system_health; per call: cgal_execute execution={"wall_time_ms":..., "memory_mb":...}
-- per-operation face bounds (cards list each one): 64 faces: 1 ops; 200 faces: 2 ops; 400 faces: 7 ops; 600 faces: 5 ops; 1500 faces: 2 ops; 2000 faces: 5 ops; 3000 faces: 2 ops; 20000 faces: 12 ops; 200000 faces: 6 ops; 400000 faces: 3 ops; 2000000 faces: 17 ops
+- per-operation face bounds (cards list each one): 64 faces: 1 ops; 200 faces: 2 ops; 400 faces: 7 ops; 600 faces: 5 ops; 1500 faces: 2 ops; 2000 faces: 5 ops; 3000 faces: 2 ops; 20000 faces: 12 ops; 200000 faces: 7 ops; 400000 faces: 3 ops; 2000000 faces: 17 ops
 - tightest common bound: 400 faces: mesh.distance.hausdorff_approximate, mesh.distance.hausdorff_approximate_symmetric, mesh.distance.hausdorff_bounded, mesh.distance.max_to_mesh, mesh.distance.max_to_points, mesh.distance.sample_points, mesh.distance.symmetric_hausdorff
 
 ## Not supported (cataloged or excluded packages)

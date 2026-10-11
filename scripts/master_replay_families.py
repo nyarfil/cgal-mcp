@@ -3939,7 +3939,8 @@ B4_CLOSED_SPHERE = [
     ["metrics.candidate.mesh.outward_oriented", "==", True],
 ]
 FAMILY_7_4["requirements"]["major.7.4.04"] = {
-    "operation_ids": ["mesh.repair.fill_holes", "mesh.repair.fill_holes_refine_fair"],
+    "operation_ids": ["mesh.repair.fill_holes", "mesh.repair.fill_holes_refine_fair",
+                      "mesh.analysis.boundary_cycles"],
     "symbols": ["triangulate_hole", "triangulate_refine_and_fair_hole"],
     "symbol_notes": "PMP::triangulate_hole closes the 3-edge hole of the open tetrahedron (1 face, volume 1/6) "
                     "and the 12-edge hole of the UV-dome (10 = n-2 faces, no new vertex, closed sphere of "
@@ -3953,7 +3954,10 @@ FAMILY_7_4["requirements"]["major.7.4.04"] = {
                     "independently; the independent checks are topology, source-face preservation, exact "
                     "non-degeneracy of every new face and a bounding-box sanity bound. Holes above "
                     "max_hole_edges are skipped and an all-skipped request is rejected.",
-    "case_ids": ["fill-plain-open-tetra", "fill-plain-dome", "fair-dome-c1", "fair-dome-c2", "fair-dome-plain"],
+    "case_ids": ["fill-plain-open-tetra", "fill-plain-dome", "fair-dome-c1", "fair-dome-c2", "fair-dome-plain",
+                 "boundary-cycles-dome-three-holes", "boundary-cycles-closed-tetra", "fill-default-three-holes",
+                 "fill-selected-by-id", "fill-selected-by-perimeter", "fill-selected-by-area",
+                 "fair-selected-by-id"],
 }
 FAMILY_7_4["cases"].extend([
     _case("fill-plain-open-tetra", "mesh.repair.fill_holes", [_mesh(OPEN_TETRA)], {"max_hole_edges": 8}, [
@@ -3992,6 +3996,96 @@ FAMILY_7_4["cases"].extend([
     ]),
 ])
 FAMILY_7_4["pairs"].append({"kind": "different_outputs", "cases": ["fair-dome-c1", "fair-dome-c2"]})
+
+# Selective hole filling (client limit: a scan must not be patched blindly). The three-hole dome is
+# dome_hole12.off without two non-adjacent south faces: hole 49 is the 12-edge ring of radius 0.5
+# (perimeter 12 chords = 12*sin(pi/12) = 3.1058285412302, regular 12-gon area 0.75, both derived by hand),
+# holes 0 and 4 are single removed faces (3 edges; perimeter/area recomputed by an independent
+# edge-map + Newell script over the fixture coordinates).
+B4_THREE = {"fixture": "wave_a_repair/dome_three_holes.off",
+            "sha256": "d3e97c2f35f18e2cc85fbffabf8ff481a1e3ae92f58768a79d4b2a43ac69d01e",
+            "type": "TriangleSurfaceMesh", "format": "off", "unit": "mm"}
+B4_THREE_ALL_FILLED = {"fixture": "wave_a_repair/dome_three_holes_all_filled.off",
+                       "sha256": "08a1618ee30e6cd4ceb771ac2f1703c0d0b2dec51d487c1ce6a02018781af21c",
+                       "type": "TriangleSurfaceMesh", "format": "off", "unit": "mm"}
+B4_TAMPERED_BC = {"fixture": "wave_a_repair/tampered_boundary_cycles_area.json",
+                  "sha256": "0bc9b76ec4f9ccd9730c665f122fb7c39b36b888a361e0bf33824a1ca5e3095d",
+                  "type": "GeometryAnalysisReport", "format": "json", "unit": "none"}
+FAMILY_7_4["cases"].extend([
+    _case("boundary-cycles-dome-three-holes", "mesh.analysis.boundary_cycles", [B4_THREE], {}, [
+        ["output:analysis:json:results.hole_count", "==", 3],
+        ["output:analysis:json:results.available", "==", True],
+        ["output:analysis:json:results.holes.0.hole_id", "==", 0],
+        ["output:analysis:json:results.holes.0.edge_count", "==", 3],
+        ["output:analysis:json:results.holes.0.boundary_length", "approx", [1.294095225512704, 1e-9]],
+        ["output:analysis:json:results.holes.0.patch_area_estimate", "approx", [0.06486017249473273, 1e-9]],
+        ["output:analysis:json:results.holes.1.hole_id", "==", 4],
+        ["output:analysis:json:results.holes.1.boundary_length", "approx", [1.585582663751448, 1e-9]],
+        ["output:analysis:json:results.holes.1.patch_area_estimate", "approx", [0.11406579837632373, 1e-9]],
+        ["output:analysis:json:results.holes.2.hole_id", "==", 49],
+        ["output:analysis:json:results.holes.2.edge_count", "==", 12],
+        ["output:analysis:json:results.holes.2.boundary_length", "approx", [3.105828541230249, 1e-9]],
+        ["output:analysis:json:results.holes.2.patch_area_estimate", "approx", [0.75, 1e-9]],
+        ["output:analysis:json:results.order_by_boundary_length_desc", "==", [49, 4, 0]],
+        ["output:analysis:json:results.length_unit", "==", "mm"],
+        ["output:analysis:json:results.area_unit", "==", "mm^2"],
+        ["input:mesh:measure:off.boundary_edge_count", "==", 18],
+    ]),
+    _case("boundary-cycles-closed-tetra", "mesh.analysis.boundary_cycles", [_mesh(TETRA)], {}, [
+        ["output:analysis:json:results.hole_count", "==", 0],
+        ["output:analysis:json:results.holes", "==", []],
+    ]),
+    _case("fill-default-three-holes", "mesh.repair.fill_holes", [B4_THREE], {"max_hole_edges": 20}, [
+        ["metrics.filled_hole_count", "==", 3], ["metrics.added_face_count", "==", 12],
+        ["output:geometry:measure:off.face_count", "==", 118],
+        ["output:geometry:measure:off.boundary_edge_count", "==", 0],
+    ]),
+    _case("fill-selected-by-id", "mesh.repair.fill_holes", [B4_THREE], {"max_hole_edges": 20, "hole_ids": [49]}, [
+        ["metrics.filled_hole_count", "==", 1], ["metrics.added_face_count", "==", 10],
+        ["metrics.filled_hole_ids", "==", [49]], ["metrics.skipped_hole_ids", "==", [0, 4]],
+        ["output:geometry:measure:off.face_count", "==", 116],
+        ["output:geometry:measure:off.boundary_edge_count", "==", 6],
+    ]),
+    _case("fill-selected-by-perimeter", "mesh.repair.fill_holes", [B4_THREE],
+          {"max_hole_edges": 20, "max_hole_perimeter": _mm(2.0)}, [
+        ["metrics.filled_hole_ids", "==", [0, 4]], ["metrics.skipped_hole_ids", "==", [49]],
+        ["metrics.added_face_count", "==", 2],
+        ["output:geometry:measure:off.face_count", "==", 108],
+        ["output:geometry:measure:off.boundary_edge_count", "==", 12],
+    ]),
+    _case("fill-selected-by-area", "mesh.repair.fill_holes", [B4_THREE],
+          {"max_hole_edges": 20, "max_hole_area": {"value": 0.1, "unit": "mm^2"}}, [
+        ["metrics.filled_hole_ids", "==", [0]], ["metrics.skipped_hole_ids", "==", [4, 49]],
+        ["output:geometry:measure:off.face_count", "==", 107],
+        ["output:geometry:measure:off.boundary_edge_count", "==", 15],
+    ]),
+    _case("fair-selected-by-id", "mesh.repair.fill_holes_refine_fair", [B4_THREE], {**B4_FAIR_C1, "hole_ids": [49]}, [
+        ["metrics.filled_hole_ids", "==", [49]], ["metrics.skipped_hole_ids", "==", [0, 4]],
+        ["metrics.added_vertex_count", "==", 1],
+        ["output:geometry:measure:off.boundary_edge_count", "==", 6],
+    ]),
+])
+FAMILY_7_4["pairs"].append({"kind": "different_outputs", "cases": ["fill-default-three-holes", "fill-selected-by-id"]})
+FAMILY_7_4["negative_controls"].extend([
+    {"id": "fill-stale-hole-id-rejected", "operation": "mesh.repair.fill_holes", "inputs": [B4_THREE],
+     "parameters": {"max_hole_edges": 20, "hole_ids": [999]}, "expect_error_class": "PRECONDITION_FAILED",
+     "expect_error_code": "HOLE_ID_NOT_FOUND"},
+    {"id": "fill-ids-and-filter-conflict-rejected", "operation": "mesh.repair.fill_holes", "inputs": [B4_THREE],
+     "parameters": {"max_hole_edges": 20, "hole_ids": [49], "max_hole_perimeter": _mm(5.0)},
+     "expect_error_class": "INVALID_INPUT", "expect_error_code": "HOLE_SELECTION_CONFLICT"},
+    {"id": "fill-area-unit-mismatch-rejected", "operation": "mesh.repair.fill_holes", "inputs": [B4_THREE],
+     "parameters": {"max_hole_edges": 20, "max_hole_area": {"value": 1.0, "unit": "cm^2"}},
+     "expect_error_class": "INVALID_INPUT", "expect_error_code": "HOLE_FILTER_UNIT_MISMATCH"},
+    {"id": "fill-selected-over-edge-bound-rejected", "operation": "mesh.repair.fill_holes", "inputs": [B4_THREE],
+     "parameters": {"max_hole_edges": 8, "hole_ids": [49]}, "expect_error_class": "PRECONDITION_FAILED",
+     "expect_error_code": "HOLE_EXCEEDS_MAX_HOLE_EDGES"},
+    {"id": "fill-overfilled-candidate-rejected", "operation": "mesh.validate.repair_fill_holes",
+     "inputs": [B4_THREE_ALL_FILLED, B4_THREE], "parameters": {"max_hole_edges": 20, "hole_ids": [49]},
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "REPAIR_VALIDATION_FAILED"},
+    {"id": "boundary-cycles-tampered-area-rejected", "operation": "mesh.validate.boundary_cycles_report",
+     "inputs": [B4_TAMPERED_BC, B4_THREE], "parameters": {},
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "REPORT_SEMANTICS_MISMATCH"},
+])
 FAMILY_7_4["negative_controls"].extend([
     {"id": "fill-plain-hole-too-large-rejected", "operation": "mesh.repair.fill_holes", "inputs": [B4_DOME],
      "parameters": {"max_hole_edges": 8}, "expect_error_class": "PRECONDITION_FAILED",

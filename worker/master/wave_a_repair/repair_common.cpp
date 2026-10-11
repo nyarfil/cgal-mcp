@@ -269,10 +269,13 @@ std::size_t unused_points(const Soup& soup) {
 Json mesh_metrics(const RepairMesh& mesh) {
   std::vector<RepairMesh::Halfedge_index> boundaries;
   CGAL::extract_boundary_cycles(mesh, std::back_inserter(boundaries));
-  std::size_t nonmanifold = 0;
-  for (const auto vertex : vertices(mesh)) {
-    if (PMP::is_non_manifold_vertex(vertex, mesh)) ++nonmanifold;
-  }
+  // One-shot scan; the per-vertex PMP::is_non_manifold_vertex loop cost ~2 s per 35k vertices.
+  // non_manifold_vertices reports one halfedge per pinched umbrella, so count distinct vertices.
+  std::vector<RepairMesh::Halfedge_index> pinched;
+  PMP::non_manifold_vertices(mesh, std::back_inserter(pinched));
+  std::unordered_set<std::size_t> pinched_vertices;
+  for (const auto halfedge : pinched) pinched_vertices.insert(target(halfedge, mesh).idx());
+  const std::size_t nonmanifold = pinched_vertices.size();
   Json result = {{"vertex_count", mesh.number_of_vertices()},
           {"face_count", mesh.number_of_faces()},
           {"boundary_cycle_count", boundaries.size()},
@@ -305,6 +308,71 @@ std::size_t required_hole_limit(const Json& parameters) {
   return static_cast<std::size_t>(value);
 }
 
+constexpr std::size_t kMaximumHoleIds = 10000;
+
+struct HolePlan {
+  std::vector<std::size_t> ids;  // hole_id per cycle (parallel to the cycle list)
+  std::vector<bool> fill;        // fill decision per cycle
+};
+
+// Explicit selections are honoured or refused, never silently reduced.
+HolePlan plan_hole_selection(const RepairMesh& mesh,
+                             const std::vector<RepairMesh::Halfedge_index>& cycles,
+                             const HoleSelection& selection, std::size_t limit) {
+  HolePlan plan;
+  if (!selection.active) return plan;
+  std::vector<RepairPoint> points(mesh.number_of_vertices());
+  for (const auto vertex : vertices(mesh)) points[vertex.idx()] = mesh.point(vertex);
+  std::vector<HoleCycleStats> stats;
+  stats.reserve(cycles.size());
+  for (const auto halfedge : cycles) {
+    std::vector<std::size_t> ring;
+    auto cursor = halfedge;
+    do {
+      ring.push_back(source(cursor, mesh).idx());
+      cursor = next(cursor, mesh);
+    } while (cursor != halfedge && ring.size() <= kMaximumFaces);
+    stats.push_back(hole_cycle_stats(ring, points));
+  }
+  std::set<std::size_t> known;
+  for (const auto& item : stats) known.insert(item.hole_id);
+  if (selection.by_ids) {
+    for (const auto id : selection.ids) {
+      if (known.count(id) == 0) {
+        throw WorkerError("PRECONDITION_FAILED", "HOLE_ID_NOT_FOUND",
+                          "hole_ids contains id " + std::to_string(id) +
+                              " which is not a current boundary cycle id; list the holes again");
+      }
+    }
+    for (const auto& item : stats) {
+      if (std::binary_search(selection.ids.begin(), selection.ids.end(), item.hole_id) &&
+          item.edge_count > limit) {
+        throw WorkerError("PRECONDITION_FAILED", "HOLE_EXCEEDS_MAX_HOLE_EDGES",
+                          "Selected hole " + std::to_string(item.hole_id) + " has " +
+                              std::to_string(item.edge_count) + " edges, above max_hole_edges");
+      }
+    }
+  }
+  for (const auto& item : stats) {
+    plan.ids.push_back(item.hole_id);
+    plan.fill.push_back(hole_matches_selection(selection, item, limit));
+  }
+  return plan;
+}
+
+void record_hole_selection(Json& metrics, const HoleSelection& selection,
+                           std::vector<std::size_t> filled_ids, std::vector<std::size_t> skipped_ids) {
+  std::sort(filled_ids.begin(), filled_ids.end());
+  std::sort(skipped_ids.begin(), skipped_ids.end());
+  metrics["filled_hole_ids"] = filled_ids;
+  metrics["skipped_hole_ids"] = skipped_ids;
+  Json description = {{"mode", selection.by_ids ? "hole_ids" : "filters"}};
+  if (selection.by_ids) description["hole_ids"] = selection.ids;
+  if (selection.has_max_perimeter) description["max_hole_perimeter"] = selection.max_perimeter;
+  if (selection.has_max_area) description["max_hole_area"] = selection.max_area;
+  metrics["hole_selection"] = std::move(description);
+}
+
 struct RefineFairParameters {
   std::size_t limit;
   double density_control_factor;
@@ -312,11 +380,12 @@ struct RefineFairParameters {
 };
 
 RefineFairParameters refine_fair_parameters(const Json& parameters) {
-  if (!parameters.is_object() || parameters.size() != 3 || !parameters.contains("max_hole_edges") ||
+  if (!parameters.is_object() || !parameters.contains("max_hole_edges") ||
       !parameters.contains("density_control_factor") || !parameters.contains("fairing_continuity")) {
     throw WorkerError("INVALID_INPUT", "INVALID_REFINE_FAIR_PARAMETERS",
-                      "Exactly max_hole_edges, density_control_factor and fairing_continuity are required");
+                      "max_hole_edges, density_control_factor and fairing_continuity are required");
   }
+  (void)parse_hole_selection(parameters, true);
   const auto& factor = parameters["density_control_factor"];
   const auto& continuity = parameters["fairing_continuity"];
   if (!factor.is_number() || !std::isfinite(factor.get<double>()) || factor.get<double>() < 1.0 ||
@@ -340,6 +409,117 @@ void require_empty_parameters(const Json& parameters) {
 }
 
 }  // namespace
+
+HoleSelection parse_hole_selection(const Json& parameters, bool refine_fair, const std::string& unit) {
+  HoleSelection selection;
+  if (!parameters.is_object()) {
+    throw WorkerError("INVALID_INPUT", "INVALID_HOLE_SELECTION", "Hole-fill parameters must be an object");
+  }
+  for (auto it = parameters.begin(); it != parameters.end(); ++it) {
+    const auto& key = it.key();
+    const bool known = key == "max_hole_edges" || key == "hole_ids" || key == "max_hole_perimeter" ||
+                       key == "max_hole_area" ||
+                       (refine_fair && (key == "density_control_factor" || key == "fairing_continuity"));
+    if (!known) {
+      throw WorkerError("INVALID_INPUT", "UNSUPPORTED_PARAMETER", "Unsupported hole-fill parameter: " + key);
+    }
+  }
+  if (parameters.contains("hole_ids")) {
+    const auto& ids = parameters["hole_ids"];
+    if (!ids.is_array() || ids.empty() || ids.size() > kMaximumHoleIds) {
+      throw WorkerError("INVALID_INPUT", "INVALID_HOLE_IDS",
+                        "hole_ids must be a non-empty array of at most 10000 unsigned integers");
+    }
+    for (const auto& item : ids) {
+      if (!item.is_number_unsigned()) {
+        throw WorkerError("INVALID_INPUT", "INVALID_HOLE_IDS", "hole_ids must contain unsigned integers");
+      }
+      selection.ids.push_back(static_cast<std::size_t>(item.get<std::uint64_t>()));
+    }
+    std::sort(selection.ids.begin(), selection.ids.end());
+    if (std::adjacent_find(selection.ids.begin(), selection.ids.end()) != selection.ids.end()) {
+      throw WorkerError("INVALID_INPUT", "INVALID_HOLE_IDS", "hole_ids must be unique");
+    }
+    selection.active = true;
+    selection.by_ids = true;
+  }
+  const auto positive = [&](const char* key, const std::string& expected_unit, bool& present, double& value) {
+    if (!parameters.contains(key)) return;
+    const auto& item = parameters[key];
+    if (!item.is_object() || item.size() != 2 || !item.contains("value") || !item.contains("unit") ||
+        !item["value"].is_number() || !item["unit"].is_string() ||
+        !std::isfinite(item["value"].get<double>()) || item["value"].get<double>() <= 0.0) {
+      throw WorkerError("INVALID_INPUT", "INVALID_HOLE_FILTER",
+                        std::string(key) + " must be {value > 0, unit}");
+    }
+    if (!unit.empty() && item["unit"].get<std::string>() != expected_unit) {
+      throw WorkerError("INVALID_INPUT", "HOLE_FILTER_UNIT_MISMATCH",
+                        std::string(key) + " must use unit " + expected_unit +
+                            " (the mesh unit); no implicit conversion");
+    }
+    present = true;
+    value = item["value"].get<double>();
+  };
+  positive("max_hole_perimeter", unit, selection.has_max_perimeter, selection.max_perimeter);
+  positive("max_hole_area", unit + "^2", selection.has_max_area, selection.max_area);
+  if (selection.has_max_perimeter || selection.has_max_area) {
+    if (selection.by_ids) {
+      throw WorkerError("INVALID_INPUT", "HOLE_SELECTION_CONFLICT",
+                        "Use either hole_ids or the max_hole_perimeter/max_hole_area filters, not both");
+    }
+    selection.active = true;
+  }
+  return selection;
+}
+
+HoleCycleStats hole_cycle_stats(const std::vector<std::size_t>& cycle,
+                                const std::vector<RepairPoint>& points) {
+  HoleCycleStats stats;
+  const auto count = cycle.size();
+  stats.edge_count = count;
+  if (count == 0) return stats;
+  const auto minimum = static_cast<std::size_t>(std::min_element(cycle.begin(), cycle.end()) - cycle.begin());
+  stats.hole_id = cycle[minimum];
+  // Rotate so the sum order is independent of the traversal start.
+  std::vector<std::array<double, 3>> ring;
+  ring.reserve(count);
+  for (std::size_t k = 0; k < count; ++k) {
+    const auto& p = points[cycle[(minimum + k) % count]];
+    ring.push_back({p.x(), p.y(), p.z()});
+  }
+  std::array<double, 3> centroid = {0, 0, 0};
+  for (const auto& p : ring) for (int a = 0; a < 3; ++a) centroid[a] += p[a];
+  for (int a = 0; a < 3; ++a) centroid[a] /= static_cast<double>(count);
+  double perimeter = 0;
+  std::array<double, 3> normal = {0, 0, 0};
+  for (std::size_t k = 0; k < count; ++k) {
+    const auto& p = ring[k];
+    const auto& q = ring[(k + 1) % count];
+    const double dx = q[0] - p[0], dy = q[1] - p[1], dz = q[2] - p[2];
+    perimeter += std::sqrt(dx * dx + dy * dy + dz * dz);
+    const double ax = p[0] - centroid[0], ay = p[1] - centroid[1], az = p[2] - centroid[2];
+    const double bx = q[0] - centroid[0], by = q[1] - centroid[1], bz = q[2] - centroid[2];
+    normal[0] += ay * bz - az * by;
+    normal[1] += az * bx - ax * bz;
+    normal[2] += ax * by - ay * bx;
+  }
+  stats.perimeter = perimeter;
+  stats.area = 0.5 * std::sqrt(normal[0] * normal[0] + normal[1] * normal[1] + normal[2] * normal[2]);
+  return stats;
+}
+
+bool hole_matches_selection(const HoleSelection& selection, const HoleCycleStats& stats,
+                            std::size_t max_hole_edges) {
+  if (stats.edge_count > max_hole_edges) return false;
+  if (selection.by_ids) {
+    return std::binary_search(selection.ids.begin(), selection.ids.end(), stats.hole_id);
+  }
+  if (selection.has_max_perimeter && stats.perimeter > selection.max_perimeter) return false;
+  if (selection.has_max_area && stats.area > selection.max_area) return false;
+  return true;
+}
+
+std::size_t hole_edge_limit(const Json& parameters) { return required_hole_limit(parameters); }
 
 std::string operation_id(RepairKind kind) {
   switch (kind) {
@@ -380,6 +560,7 @@ void require_request(const Request& request, RepairKind kind, bool validator) {
   if (!validator) {
     if (kind == RepairKind::kFillHoles) {
       (void)required_hole_limit(request.parameters);
+      (void)parse_hole_selection(request.parameters, false);
     } else if (kind == RepairKind::kFillHolesRefineFair) {
       (void)refine_fair_parameters(request.parameters);
     } else if (kind == RepairKind::kPolygonSoup) {
@@ -396,8 +577,10 @@ void require_request(const Request& request, RepairKind kind, bool validator) {
       require_empty_parameters(request.parameters);
     }
   } else {
-    if (kind == RepairKind::kFillHoles) (void)required_hole_limit(request.parameters);
-    else if (kind == RepairKind::kFillHolesRefineFair) (void)refine_fair_parameters(request.parameters);
+    if (kind == RepairKind::kFillHoles) {
+      (void)required_hole_limit(request.parameters);
+      (void)parse_hole_selection(request.parameters, false);
+    } else if (kind == RepairKind::kFillHolesRefineFair) (void)refine_fair_parameters(request.parameters);
     else if (kind == RepairKind::kPolygonSoup) (void)duplicate_policy(request.parameters);
     else require_empty_parameters(request.parameters);
   }
@@ -424,6 +607,7 @@ Soup read_soup(const ArtifactInput& input,
   }
   std::size_t cursor = 4;
   Soup soup;
+  soup.unit = input.unit;
   soup.points.reserve(vertices);
   for (std::size_t i = 0; i < vertices; ++i) {
     if (cursor + 3 > tokens.size()) throw WorkerError("INVALID_INPUT", "MALFORMED_OFF", "Truncated OFF vertices");
@@ -503,22 +687,32 @@ RepairResult compute_repair(RepairKind kind, const Soup& source,
   } else if (kind == RepairKind::kFillHoles) {
     auto mesh = mesh_from_soup(source, "Hole-fill source");
     const auto limit = required_hole_limit(parameters);
+    const auto selection = parse_hole_selection(parameters, false, source.unit);
     std::vector<RepairMesh::Halfedge_index> cycles;
     CGAL::extract_boundary_cycles(mesh, std::back_inserter(cycles));
+    const auto plan = plan_hole_selection(mesh, cycles, selection, limit);
     std::size_t filled = 0;
     std::size_t skipped = 0;
     std::size_t added_faces = 0;
-    for (const auto halfedge : cycles) {
+    std::vector<std::size_t> filled_ids, skipped_ids;
+    for (std::size_t cycle_index = 0; cycle_index < cycles.size(); ++cycle_index) {
+      const auto halfedge = cycles[cycle_index];
       std::size_t length = 0;
       auto cursor = halfedge;
       do { ++length; cursor = next(cursor, mesh); } while (cursor != halfedge && length <= kMaximumFaces);
-      if (length > limit) { ++skipped; continue; }
+      const bool fill = selection.active ? static_cast<bool>(plan.fill[cycle_index]) : length <= limit;
+      if (!fill) {
+        ++skipped;
+        if (selection.active) skipped_ids.push_back(plan.ids[cycle_index]);
+        continue;
+      }
       std::vector<RepairMesh::Face_index> patch;
       // Disable the cubic-time fallback so run time stays bounded by max_hole_edges.
       PMP::triangulate_hole(mesh, halfedge, CGAL::parameters::face_output_iterator(std::back_inserter(patch))
                                                  .do_not_use_cubic_algorithm(true));
       if (patch.empty()) throw WorkerError("PRECONDITION_FAILED", "HOLE_TRIANGULATION_FAILED", "CGAL did not create a hole patch");
       ++filled;
+      if (selection.active) filled_ids.push_back(plan.ids[cycle_index]);
       added_faces += patch.size();
     }
     if (filled == 0) throw WorkerError("PRECONDITION_FAILED", "NO_ELIGIBLE_HOLES", "No boundary cycle is eligible for bounded hole filling");
@@ -527,17 +721,27 @@ RepairResult compute_repair(RepairKind kind, const Soup& source,
     result.metrics["skipped_hole_count"] = skipped;
     result.metrics["added_face_count"] = added_faces;
     result.metrics["max_hole_edges"] = limit;
+    if (selection.active) record_hole_selection(result.metrics, selection, filled_ids, skipped_ids);
   } else if (kind == RepairKind::kFillHolesRefineFair) {
     auto mesh = mesh_from_soup(source, "Refine-and-fair source");
     const auto settings = refine_fair_parameters(parameters);
+    const auto selection = parse_hole_selection(parameters, true, source.unit);
     std::vector<RepairMesh::Halfedge_index> cycles;
     CGAL::extract_boundary_cycles(mesh, std::back_inserter(cycles));
+    const auto plan = plan_hole_selection(mesh, cycles, selection, settings.limit);
     std::size_t filled = 0, skipped = 0, added_faces = 0, added_vertices = 0, fairing_failures = 0;
-    for (const auto halfedge : cycles) {
+    std::vector<std::size_t> filled_ids, skipped_ids;
+    for (std::size_t cycle_index = 0; cycle_index < cycles.size(); ++cycle_index) {
+      const auto halfedge = cycles[cycle_index];
       std::size_t length = 0;
       auto cursor = halfedge;
       do { ++length; cursor = next(cursor, mesh); } while (cursor != halfedge && length <= kMaximumFaces);
-      if (length > settings.limit) { ++skipped; continue; }
+      const bool fill = selection.active ? static_cast<bool>(plan.fill[cycle_index]) : length <= settings.limit;
+      if (!fill) {
+        ++skipped;
+        if (selection.active) skipped_ids.push_back(plan.ids[cycle_index]);
+        continue;
+      }
       std::vector<RepairMesh::Face_index> patch_faces;
       std::vector<RepairMesh::Vertex_index> patch_vertices;
       const auto outcome = PMP::triangulate_refine_and_fair_hole(
@@ -547,6 +751,7 @@ RepairResult compute_repair(RepairKind kind, const Soup& source,
       if (patch_faces.empty()) throw WorkerError("PRECONDITION_FAILED", "HOLE_TRIANGULATION_FAILED", "CGAL did not create a hole patch");
       if (!std::get<0>(outcome)) ++fairing_failures;
       ++filled;
+      if (selection.active) filled_ids.push_back(plan.ids[cycle_index]);
       added_faces += patch_faces.size();
       added_vertices += patch_vertices.size();
     }
@@ -562,6 +767,7 @@ RepairResult compute_repair(RepairKind kind, const Soup& source,
     result.metrics["max_hole_edges"] = settings.limit;
     result.metrics["density_control_factor"] = settings.density_control_factor;
     result.metrics["fairing_continuity"] = settings.fairing_continuity;
+    if (selection.active) record_hole_selection(result.metrics, selection, filled_ids, skipped_ids);
   } else if (kind == RepairKind::kPolygonSoup) {
     result.soup = source;
     const auto policy = duplicate_policy(parameters);

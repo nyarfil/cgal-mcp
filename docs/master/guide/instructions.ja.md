@@ -1,4 +1,4 @@
-CGAL Master MCP: CGAL 6.2.1 上のデータ駆動の幾何サーバ。226個の操作（ユーザー向け117、独立検証器109）を15分野で登録: 7.1 カーネル; 7.2 空間問合せ; 7.3 解析; 7.4 修復; 7.5 Boolean; 7.6 再メッシュ; 7.7 軽量化; 7.8 メッシュ解析・分解; 7.9 点群; 7.10 曲面再構成; 7.11 三角形分割; 7.12 多角形; 7.13 凸包等; 7.14 メッシュ生成; 7.15 最適化・数値幾何。全操作は隔離されたnative workerで動き、全結果は公開前に必須検証器の合格が必要。
+CGAL Master MCP: CGAL 6.2.1 上のデータ駆動の幾何サーバ。228個の操作（ユーザー向け118、独立検証器110）を15分野で登録: 7.1 カーネル; 7.2 空間問合せ; 7.3 解析; 7.4 修復; 7.5 Boolean; 7.6 再メッシュ; 7.7 軽量化; 7.8 メッシュ解析・分解; 7.9 点群; 7.10 曲面再構成; 7.11 三角形分割; 7.12 多角形; 7.13 凸包等; 7.14 メッシュ生成; 7.15 最適化・数値幾何。全操作は隔離されたnative workerで動き、全結果は公開前に必須検証器の合格が必要。
 
 呼び出し順序（飛ばさない）
 1. cgal_get_guide(topic="start", lang="ja")を最初に1回。topic: start, families, recipes, recipe:<id>, op:<operation_id>, family:<id>, errors, glossary, limits-and-status。resource cgal://guide/ja/... とprompts（start_here, repair_and_simplify_mesh, reconstruct_surface_from_points, validate_geometry, compare_meshes, 2d_boolean_offset, choose_operation）も同内容。
@@ -8,7 +8,7 @@ CGAL Master MCP: CGAL 6.2.1 上のデータ駆動の幾何サーバ。226個の�
 5. cgal_execute(plan_id)は即座にjobを返す。cgal_job_statusをsucceeded/rejected/failed/cancelledまで確認。結果はjob.outputs（型・単位・properties）とjob.validation[].reportからのみ読む。cgal_artifact_exportは新しいパスへバイト列を書く。
 
 状態の語彙（ユーザーに正直に）
-操作: 226 VALIDATED。VALIDATEDは実行可能で、同梱fixtureで独立検証器つきの再実行に合格した意味。全入力の証明ではない。パッケージ（CGAL 126個）: VALIDATED 45（実行可能な操作あり）、CATALOGED 69（文書索引のみ。実行不可）、EXCLUDED 12（単独のヘッドレス操作なし: GUI専用・汎用基盤・I/Oのみ）。サーバ全体の受入達成はここでは主張しない。
+操作: 228 VALIDATED。VALIDATEDは実行可能で、同梱fixtureで独立検証器つきの再実行に合格した意味。全入力の証明ではない。パッケージ（CGAL 126個）: VALIDATED 45（実行可能な操作あり）、CATALOGED 69（文書索引のみ。実行不可）、EXCLUDED 12（単独のヘッドレス操作なし: GUI専用・汎用基盤・I/Oのみ）。サーバ全体の受入達成はここでは主張しない。
 
 規約
 単位はartifactごとにmm/cm/m。1操作での単位混在はunit_mismatch。レポートは単位なし。座標は右手系直交・binary64、外向き法線は反時計回り。角度は特記なき限り度。

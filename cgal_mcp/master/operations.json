@@ -1,7 +1,7 @@
 {
   "$schema": "operation.schema.json",
   "schema_version": 1,
-  "catalog_revision": "master-core-hull-wave-a-wave-b-mesh-boolean-repair-wave-c-wave-d-wave-e-validated-5",
+  "catalog_revision": "master-core-hull-wave-a-wave-b-mesh-boolean-repair-wave-c-wave-d-wave-e-validated-6",
   "cgal_version": "6.2.1",
   "build_requirements": {
     "source_kind": "official_release",
@@ -6314,6 +6314,429 @@
       }
     },
     {
+      "id": "mesh.analysis.boundary_cycles",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "analysis",
+      "summary": "List every boundary hole (boundary cycle) of a triangle mesh with a stable hole_id, edge count, boundary length, patch-area estimate, centroid and bounding box, without changing the mesh. Rule: list first, ask the user, then fill by ids. Call mesh.analysis.boundary_cycles to list every boundary hole with a stable hole_id, length, area estimate and location, show the list to the user, ask which holes to close, then pass those ids as hole_ids. Never fill every hole of a scan on your own.",
+      "package": "Polygon_mesh_processing",
+      "major_requirements": [
+        "major.7.4.04"
+      ],
+      "dependencies": [
+        "Polygon_mesh_processing",
+        "Surface_mesh"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "Polygon_mesh_processing"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::extract_boundary_cycles"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/boost/graph/border.h"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Polygon_mesh_processing",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/boost/graph/border.h",
+            "sha256": "65579259ece63d3c65ea005aefeda6f24d3f979967b75e69dc41cf84ef47f570"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "mesh",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "analysis",
+            "type": "GeometryAnalysisReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "maxProperties": 0
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 268435456,
+          "maximum_vertices": 200000,
+          "maximum_faces": 200000,
+          "maximum_face_degree": 100000
+        },
+        {
+          "id": "triangle_surface_mesh",
+          "property": "triangulated",
+          "equals": true
+        },
+        {
+          "id": "constructible_polygon_mesh",
+          "property": "surface_mesh_constructible",
+          "equals": true
+        }
+      ],
+      "kernel": {
+        "supported": [
+          "exact_constructions",
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "input_coordinate_storage": "IEEE-754 binary64 parsed into exact binary-rational EPECK coordinates",
+        "local_frame_normalization": "translation and uniform positive scale before dimensionless PMP calculations",
+        "report_numeric_storage": "IEEE-754 binary64 JSON numbers",
+        "unrepresentable_policy": "explicit unavailable reason or typed PRECONDITION_FAILED; never publish zero/infinity as a valid computed value",
+        "requested_policy": "exact_constructions or package_recommended"
+      },
+      "output_contract": {
+        "schema": "GeometryAnalysisReport/v1",
+        "analysis_kind": "boundary_cycles",
+        "result_fields": {
+          "available": "boolean",
+          "hole_count": "integer|null",
+          "cycle_limit": "10000",
+          "holes": "[{hole_id,edge_count,boundary_length,patch_area_estimate,centroid,bbox_min,bbox_max,vertex_indices}] sorted by hole_id",
+          "order_by_boundary_length_desc": "[hole_id] largest perimeter first",
+          "id_rule": "hole_id is the smallest vertex index on the cycle; it is stable for an unchanged mesh and is refused as stale by the fill operations once the mesh changed",
+          "area_rule": "patch_area_estimate is the area of the planar (Newell) polygon spanned by the cycle, an estimate of the patch, not an exact patch area",
+          "reason": "string?",
+          "count_unit": "count",
+          "length_unit": "input length unit",
+          "area_unit": "input length unit squared"
+        },
+        "geometry_mutation": false,
+        "source_sha256_preserved": true,
+        "max_report_bytes": 16777216,
+        "enumeration_policy": "atomic_report_or_resource_limit"
+      },
+      "validation": {
+        "required": true,
+        "validators": [
+          "mesh.validate.boundary_cycles_report"
+        ],
+        "bindings": {
+          "mesh.validate.boundary_cycles_report": {
+            "artifacts": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "source": {
+                "input": "mesh"
+              }
+            }
+          }
+        },
+        "producer_diagnostics_are_non_authoritative": true
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_family_replay_cases.py",
+          "tests/test_master_client_limits.py",
+          "tests/master_wave_a_mesh_mcp_e2e.py:auto",
+          "tests/master_wave_a_mesh_mcp_e2e.py:legacy"
+        ],
+        "worker_manifest_operation": "mesh.analysis.boundary_cycles",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1"
+      },
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "info": {
+          "analysis_kind": "boundary_cycles",
+          "checks": [
+            "cycles_partition_border_edges",
+            "hole_id_is_minimum_vertex",
+            "bounded_cycle_listing",
+            "typed_length_and_area_units"
+          ],
+          "cycle_limit": 10000,
+          "geometry_mutation": false,
+          "input_format": "off",
+          "input_slot": "mesh",
+          "input_units": [
+            "mm",
+            "cm",
+            "m"
+          ],
+          "license_expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+          "max_report_bytes": 16777216,
+          "output_format": "json",
+          "output_slot": "analysis",
+          "output_unit": "none",
+          "producer_diagnostic_id": "mesh.producer_check.boundary_cycles",
+          "report_schema": "GeometryAnalysisReport/v1",
+          "report_schema_version": 1,
+          "result_enumeration": {
+            "max_report_bytes": 16777216,
+            "policy": "atomic_report_or_resource_limit"
+          },
+          "source_header": "CGAL/boost/graph/border.h",
+          "source_kind": "official_release",
+          "source_sha256": "65579259ece63d3c65ea005aefeda6f24d3f979967b75e69dc41cf84ef47f570",
+          "source_version": "6.2.1",
+          "validator_artifact_bindings": {
+            "mesh.validate.boundary_cycles_report": {
+              "candidate": {
+                "output": "analysis"
+              },
+              "source": {
+                "input": "mesh"
+              }
+            }
+          },
+          "validators": [
+            "mesh.validate.boundary_cycles_report"
+          ]
+        }
+      },
+      "aliases": [
+        "boundary cycles",
+        "list holes",
+        "list the holes of a scan",
+        "hole inventory",
+        "\u7a74\u306e\u4e00\u89a7",
+        "\u958b\u3044\u305f\u5883\u754c\u306e\u4e00\u89a7",
+        "\u7a74\u306e\u6570\u3068\u5927\u304d\u3055"
+      ]
+    },
+    {
+      "id": "mesh.validate.boundary_cycles_report",
+      "revision": 1,
+      "status": "VALIDATED",
+      "role": "validator",
+      "summary": "Validate mesh.analysis.boundary_cycles output against source identity, an independent directed-edge-map recomputation of the boundary cycles and an official CGAL replay.",
+      "package": "Polygon_mesh_processing",
+      "major_requirements": [
+        "major.7.4.04"
+      ],
+      "dependencies": [
+        "Polygon_mesh_processing",
+        "Surface_mesh"
+      ],
+      "sources": [
+        {
+          "kind": "operation_reference",
+          "identifier": "mesh.analysis.boundary_cycles"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "Polygon_mesh_processing",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/boost/graph/border.h",
+            "sha256": "65579259ece63d3c65ea005aefeda6f24d3f979967b75e69dc41cf84ef47f570"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "GeometryAnalysisReport"
+            ],
+            "formats": [
+              "json"
+            ],
+            "unit": "none"
+          },
+          {
+            "slot": "source",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "maxProperties": 0
+      },
+      "preconditions": [],
+      "kernel": {
+        "supported": [
+          "exact_constructions",
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "input_coordinate_storage": "IEEE-754 binary64 parsed into exact binary-rational EPECK coordinates",
+        "local_frame_normalization": "translation and uniform positive scale before dimensionless PMP calculations",
+        "report_numeric_storage": "IEEE-754 binary64 JSON numbers",
+        "unrepresentable_policy": "explicit unavailable reason or typed PRECONDITION_FAILED; never publish zero/infinity as a valid computed value",
+        "requested_policy": "exact_constructions or package_recommended"
+      },
+      "output_contract": {
+        "schema": "ValidationReport/v1",
+        "required": [
+          "schema_version",
+          "validator_id",
+          "candidate_sha256",
+          "source_sha256",
+          "status",
+          "passed",
+          "checks"
+        ],
+        "required_true_checks": [
+          "schema_valid",
+          "source_identity_matches",
+          "analysis_kind_matches",
+          "dimension_units_valid",
+          "result_semantics_valid",
+          "producer_diagnostic_matches",
+          "official_cgal_reference_match"
+        ],
+        "status": "pass"
+      },
+      "validation": {
+        "required": false,
+        "validators": [],
+        "terminal_validator": true,
+        "validates": "mesh.analysis.boundary_cycles",
+        "required_report_checks": {
+          "checks.analysis_kind_matches": true,
+          "checks.dimension_units_valid": true,
+          "checks.official_cgal_reference_match": true,
+          "checks.producer_diagnostic_matches": true,
+          "checks.result_semantics_valid": true,
+          "checks.schema_valid": true,
+          "checks.source_identity_matches": true,
+          "passed": true,
+          "schema_version": 1,
+          "status": "pass",
+          "validator_id": "mesh.validate.boundary_cycles_report"
+        }
+      },
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "info": {
+          "artifact_bindings": {
+            "candidate": {
+              "output": "analysis"
+            },
+            "source": {
+              "input": "mesh"
+            }
+          },
+          "candidate_report_schema": "GeometryAnalysisReport/v1",
+          "independent_fixture_contract": "directed-edge-map boundary cycles recomputed without CGAL extraction",
+          "max_candidate_report_bytes": 16777216,
+          "report_schema": "ValidationReport/v1",
+          "required_checks": [
+            "schema_valid",
+            "source_identity_matches",
+            "analysis_kind_matches",
+            "dimension_units_valid",
+            "result_semantics_valid",
+            "producer_diagnostic_matches",
+            "official_cgal_reference_match"
+          ],
+          "required_report_checks": {
+            "checks.analysis_kind_matches": true,
+            "checks.dimension_units_valid": true,
+            "checks.official_cgal_reference_match": true,
+            "checks.producer_diagnostic_matches": true,
+            "checks.result_semantics_valid": true,
+            "checks.schema_valid": true,
+            "checks.source_identity_matches": true,
+            "passed": true,
+            "schema_version": 1,
+            "status": "pass",
+            "validator_id": "mesh.validate.boundary_cycles_report"
+          },
+          "validates": "mesh.analysis.boundary_cycles"
+        }
+      },
+      "evidence": {
+        "tests": [
+          "tests/master_family_replay_cases.py",
+          "tests/test_master_client_limits.py",
+          "tests/master_wave_a_mesh_mcp_e2e.py:auto",
+          "tests/master_wave_a_mesh_mcp_e2e.py:legacy"
+        ],
+        "worker_manifest_operation": "mesh.validate.boundary_cycles_report",
+        "build": "build-master/Release/cgal-master-worker.exe",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1"
+      },
+      "aliases": [
+        "verify the hole list",
+        "boundary cycles report check",
+        "\u7a74\u4e00\u89a7\u306e\u691c\u8a3c"
+      ],
+      "runtime_report_contract": {
+        "schema": "ValidationReport/v1",
+        "required_report_checks": {
+          "checks.analysis_kind_matches": true,
+          "checks.dimension_units_valid": true,
+          "checks.official_cgal_reference_match": true,
+          "checks.producer_diagnostic_matches": true,
+          "checks.result_semantics_valid": true,
+          "checks.schema_valid": true,
+          "checks.source_identity_matches": true,
+          "passed": true,
+          "schema_version": 1,
+          "status": "pass",
+          "validator_id": "mesh.validate.boundary_cycles_report"
+        }
+      }
+    },
+    {
       "id": "mesh.boolean.union",
       "revision": 1,
       "status": "VALIDATED",
@@ -9620,9 +10043,13 @@
       "revision": 1,
       "status": "VALIDATED",
       "role": "transform",
-      "summary": "Fill holes: triangulate every boundary hole cycle within an explicit edge-count bound, producing interpolating patches (\u88dc\u9593).",
+      "summary": "Fill holes: triangulate every boundary hole cycle within an explicit edge-count bound, producing interpolating patches (\u88dc\u9593). Optional selection: hole_ids (from mesh.analysis.boundary_cycles) or the max_hole_perimeter / max_hole_area filters; unselected holes stay open. Rule: list first, ask the user, then fill by ids. Call mesh.analysis.boundary_cycles to list every boundary hole with a stable hole_id, length, area estimate and location, show the list to the user, ask which holes to close, then pass those ids as hole_ids. Never fill every hole of a scan on your own.",
       "aliases": [
-        "mesh.repair.triangulate_holes"
+        "mesh.repair.triangulate_holes",
+        "fill selected holes",
+        "fill holes by id",
+        "\u9078\u3093\u3060\u7a74\u3060\u3051\u57cb\u3081\u308b",
+        "\u6307\u5b9a\u3057\u305f\u7a74\u3060\u3051\u57cb\u3081\u308b"
       ],
       "package": "PMP_Mesh_repair",
       "dependencies": [
@@ -9697,6 +10124,41 @@
             "type": "integer",
             "minimum": 3,
             "maximum": 2000
+          },
+          "hole_ids": {
+            "items": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "maxItems": 10000,
+            "minItems": 1,
+            "type": "array"
+          },
+          "max_hole_perimeter": {
+            "exclusiveMinimum": 0,
+            "type": "TypedLength"
+          },
+          "max_hole_area": {
+            "additionalProperties": false,
+            "properties": {
+              "unit": {
+                "enum": [
+                  "mm^2",
+                  "cm^2",
+                  "m^2"
+                ],
+                "type": "string"
+              },
+              "value": {
+                "exclusiveMinimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "value",
+              "unit"
+            ],
+            "type": "object"
           }
         },
         "required": [
@@ -9721,7 +10183,7 @@
         {
           "id": "bounded_holes",
           "parameter": "max_hole_edges",
-          "behavior": "fill every cycle at or below the bound; report every remaining cycle",
+          "behavior": "without hole_ids/max_hole_perimeter/max_hole_area: fill every cycle at or below max_hole_edges and report every remaining cycle; with a selection: fill only the selected cycles (all must satisfy max_hole_edges), leave every other cycle untouched and have the validator verify both",
           "worker_check": {
             "max_hole_edges": true
           }
@@ -9764,6 +10226,18 @@
             "parameters": {
               "max_hole_edges": {
                 "parameter": "max_hole_edges"
+              },
+              "hole_ids": {
+                "parameter": "hole_ids",
+                "optional": true
+              },
+              "max_hole_perimeter": {
+                "parameter": "max_hole_perimeter",
+                "optional": true
+              },
+              "max_hole_area": {
+                "parameter": "max_hole_area",
+                "optional": true
               }
             }
           }
@@ -9790,7 +10264,9 @@
           "checks.candidate_unit_matches_source": true,
           "checks.repair_invariant_valid": true,
           "checks.numeric_profile_valid": true,
-          "checks.source_geometry_preserved_as_required": true
+          "checks.source_geometry_preserved_as_required": true,
+          "checks.unselected_holes_untouched": true,
+          "checks.selected_holes_closed": true
         }
       },
       "worker_manifest": {
@@ -9825,10 +10301,45 @@
           "parameter_schema": {
             "additionalProperties": false,
             "properties": {
+              "hole_ids": {
+                "items": {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "maxItems": 10000,
+                "minItems": 1,
+                "type": "array"
+              },
+              "max_hole_area": {
+                "additionalProperties": false,
+                "properties": {
+                  "unit": {
+                    "enum": [
+                      "mm^2",
+                      "cm^2",
+                      "m^2"
+                    ],
+                    "type": "string"
+                  },
+                  "value": {
+                    "exclusiveMinimum": 0,
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "value",
+                  "unit"
+                ],
+                "type": "object"
+              },
               "max_hole_edges": {
                 "maximum": 2000,
                 "minimum": 3,
                 "type": "integer"
+              },
+              "max_hole_perimeter": {
+                "exclusiveMinimum": 0,
+                "type": "TypedLength"
               }
             },
             "required": [
@@ -9864,7 +10375,10 @@
           },
           "validator_parameter_bindings": {
             "mesh.validate.repair_fill_holes": {
-              "max_hole_edges": "max_hole_edges"
+              "hole_ids": "hole_ids",
+              "max_hole_area": "max_hole_area",
+              "max_hole_edges": "max_hole_edges",
+              "max_hole_perimeter": "max_hole_perimeter"
             }
           },
           "validators": [
@@ -9893,7 +10407,7 @@
       "revision": 1,
       "status": "VALIDATED",
       "role": "validator",
-      "summary": "Replay mesh.repair.fill_holes from the immutable source and validate operation-specific repair invariants.",
+      "summary": "Replay mesh.repair.fill_holes from the immutable source and validate operation-specific repair invariants. Also verifies independently that unselected hole cycles are unchanged and selected ones are closed.",
       "aliases": [],
       "package": "PMP_Mesh_repair",
       "dependencies": [
@@ -9983,6 +10497,41 @@
             "type": "integer",
             "minimum": 3,
             "maximum": 2000
+          },
+          "hole_ids": {
+            "items": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "maxItems": 10000,
+            "minItems": 1,
+            "type": "array"
+          },
+          "max_hole_perimeter": {
+            "exclusiveMinimum": 0,
+            "type": "TypedLength"
+          },
+          "max_hole_area": {
+            "additionalProperties": false,
+            "properties": {
+              "unit": {
+                "enum": [
+                  "mm^2",
+                  "cm^2",
+                  "m^2"
+                ],
+                "type": "string"
+              },
+              "value": {
+                "exclusiveMinimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "value",
+              "unit"
+            ],
+            "type": "object"
           }
         },
         "required": [
@@ -10063,7 +10612,9 @@
           "checks.candidate_unit_matches_source": true,
           "checks.repair_invariant_valid": true,
           "checks.numeric_profile_valid": true,
-          "checks.source_geometry_preserved_as_required": true
+          "checks.source_geometry_preserved_as_required": true,
+          "checks.unselected_holes_untouched": true,
+          "checks.selected_holes_closed": true
         }
       },
       "output_contract": {
@@ -10074,7 +10625,9 @@
           "candidate_unit_matches_source",
           "repair_invariant_valid",
           "numeric_profile_valid",
-          "source_geometry_preserved_as_required"
+          "source_geometry_preserved_as_required",
+          "unselected_holes_untouched",
+          "selected_holes_closed"
         ],
         "failure_or_indeterminate_publish": false
       },
@@ -10109,10 +10662,45 @@
           "parameter_schema": {
             "additionalProperties": false,
             "properties": {
+              "hole_ids": {
+                "items": {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "maxItems": 10000,
+                "minItems": 1,
+                "type": "array"
+              },
+              "max_hole_area": {
+                "additionalProperties": false,
+                "properties": {
+                  "unit": {
+                    "enum": [
+                      "mm^2",
+                      "cm^2",
+                      "m^2"
+                    ],
+                    "type": "string"
+                  },
+                  "value": {
+                    "exclusiveMinimum": 0,
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "value",
+                  "unit"
+                ],
+                "type": "object"
+              },
               "max_hole_edges": {
                 "maximum": 2000,
                 "minimum": 3,
                 "type": "integer"
+              },
+              "max_hole_perimeter": {
+                "exclusiveMinimum": 0,
+                "type": "TypedLength"
               }
             },
             "required": [
@@ -10131,8 +10719,10 @@
             "checks.candidate_unit_matches_source": true,
             "checks.numeric_profile_valid": true,
             "checks.repair_invariant_valid": true,
+            "checks.selected_holes_closed": true,
             "checks.source_geometry_preserved_as_required": true,
             "checks.source_identity_matches": true,
+            "checks.unselected_holes_untouched": true,
             "passed": true,
             "schema_version": 1,
             "status": "pass",
@@ -10182,7 +10772,9 @@
           "checks.candidate_unit_matches_source": true,
           "checks.repair_invariant_valid": true,
           "checks.numeric_profile_valid": true,
-          "checks.source_geometry_preserved_as_required": true
+          "checks.source_geometry_preserved_as_required": true,
+          "checks.unselected_holes_untouched": true,
+          "checks.selected_holes_closed": true
         }
       }
     },
@@ -33806,7 +34398,7 @@
       "revision": 1,
       "status": "VALIDATED",
       "role": "transform",
-      "summary": "Fill every hole within an explicit edge-count bound with a refined and faired patch (PMP::triangulate_refine_and_fair_hole): new interior vertices at the requested density, positions solved for the requested fairing continuity; boundary vertices and source faces are kept.",
+      "summary": "Fill every hole within an explicit edge-count bound with a refined and faired patch (PMP::triangulate_refine_and_fair_hole): new interior vertices at the requested density, positions solved for the requested fairing continuity; boundary vertices and source faces are kept. Optional selection: hole_ids (from mesh.analysis.boundary_cycles) or the max_hole_perimeter / max_hole_area filters; unselected holes stay open. Rule: list first, ask the user, then fill by ids. Call mesh.analysis.boundary_cycles to list every boundary hole with a stable hole_id, length, area estimate and location, show the list to the user, ask which holes to close, then pass those ids as hole_ids. Never fill every hole of a scan on your own.",
       "aliases": [
         "fill holes with refinement and fairing",
         "refine and fair hole",
@@ -33814,7 +34406,11 @@
         "smooth hole patch",
         "triangulate refine and fair hole",
         "\u7a74\u57cb\u3081 \u7d30\u5206\u5316 \u30d5\u30a7\u30a2\u30ea\u30f3\u30b0",
-        "\u6ed1\u3089\u304b\u306a\u7a74\u57cb\u3081"
+        "\u6ed1\u3089\u304b\u306a\u7a74\u57cb\u3081",
+        "fill selected holes",
+        "fill holes by id",
+        "\u9078\u3093\u3060\u7a74\u3060\u3051\u57cb\u3081\u308b",
+        "\u6307\u5b9a\u3057\u305f\u7a74\u3060\u3051\u57cb\u3081\u308b"
       ],
       "package": "PMP_Mesh_repair",
       "dependencies": [
@@ -33906,6 +34502,41 @@
             "minimum": 0,
             "maximum": 2,
             "description": "C0 (0), C1 (1) or C2 (2) continuity of the faired patch with the surrounding surface."
+          },
+          "hole_ids": {
+            "items": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "maxItems": 10000,
+            "minItems": 1,
+            "type": "array"
+          },
+          "max_hole_perimeter": {
+            "exclusiveMinimum": 0,
+            "type": "TypedLength"
+          },
+          "max_hole_area": {
+            "additionalProperties": false,
+            "properties": {
+              "unit": {
+                "enum": [
+                  "mm^2",
+                  "cm^2",
+                  "m^2"
+                ],
+                "type": "string"
+              },
+              "value": {
+                "exclusiveMinimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "value",
+              "unit"
+            ],
+            "type": "object"
           }
         }
       },
@@ -33927,7 +34558,7 @@
         {
           "id": "bounded_holes",
           "parameter": "max_hole_edges",
-          "behavior": "refine and fair every cycle at or below the bound; report every remaining cycle",
+          "behavior": "without hole_ids/max_hole_perimeter/max_hole_area: fill every cycle at or below max_hole_edges and report every remaining cycle; with a selection: fill only the selected cycles (all must satisfy max_hole_edges), leave every other cycle untouched and have the validator verify both",
           "worker_check": {
             "max_hole_edges": true
           }
@@ -33976,6 +34607,18 @@
               },
               "fairing_continuity": {
                 "parameter": "fairing_continuity"
+              },
+              "hole_ids": {
+                "parameter": "hole_ids",
+                "optional": true
+              },
+              "max_hole_perimeter": {
+                "parameter": "max_hole_perimeter",
+                "optional": true
+              },
+              "max_hole_area": {
+                "parameter": "max_hole_area",
+                "optional": true
               }
             }
           }
@@ -34002,7 +34645,9 @@
           "checks.candidate_unit_matches_source": true,
           "checks.repair_invariant_valid": true,
           "checks.numeric_profile_valid": true,
-          "checks.source_geometry_preserved_as_required": true
+          "checks.source_geometry_preserved_as_required": true,
+          "checks.unselected_holes_untouched": true,
+          "checks.selected_holes_closed": true
         }
       },
       "worker_manifest": {
@@ -34047,10 +34692,45 @@
                 "minimum": 0,
                 "type": "integer"
               },
+              "hole_ids": {
+                "items": {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "maxItems": 10000,
+                "minItems": 1,
+                "type": "array"
+              },
+              "max_hole_area": {
+                "additionalProperties": false,
+                "properties": {
+                  "unit": {
+                    "enum": [
+                      "mm^2",
+                      "cm^2",
+                      "m^2"
+                    ],
+                    "type": "string"
+                  },
+                  "value": {
+                    "exclusiveMinimum": 0,
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "value",
+                  "unit"
+                ],
+                "type": "object"
+              },
               "max_hole_edges": {
                 "maximum": 2000,
                 "minimum": 3,
                 "type": "integer"
+              },
+              "max_hole_perimeter": {
+                "exclusiveMinimum": 0,
+                "type": "TypedLength"
               }
             },
             "required": [
@@ -34090,7 +34770,10 @@
             "mesh.validate.repair_fill_holes_refine_fair": {
               "density_control_factor": "density_control_factor",
               "fairing_continuity": "fairing_continuity",
-              "max_hole_edges": "max_hole_edges"
+              "hole_ids": "hole_ids",
+              "max_hole_area": "max_hole_area",
+              "max_hole_edges": "max_hole_edges",
+              "max_hole_perimeter": "max_hole_perimeter"
             }
           },
           "validators": [
@@ -34117,7 +34800,7 @@
       "revision": 1,
       "status": "VALIDATED",
       "role": "validator",
-      "summary": "Replay mesh.repair.fill_holes_refine_fair from the immutable source and validate: source faces preserved, no new boundary cycle, closed results outward oriented, and every new face non-degenerate (exact collinearity predicate) inside the source bounding box inflated by its diagonal.",
+      "summary": "Replay mesh.repair.fill_holes_refine_fair from the immutable source and validate: source faces preserved, no new boundary cycle, closed results outward oriented, and every new face non-degenerate (exact collinearity predicate) inside the source bounding box inflated by its diagonal. Also verifies independently that unselected hole cycles are unchanged and selected ones are closed.",
       "aliases": [],
       "package": "PMP_Mesh_repair",
       "dependencies": [
@@ -34224,6 +34907,41 @@
             "minimum": 0,
             "maximum": 2,
             "description": "C0 (0), C1 (1) or C2 (2) continuity of the faired patch with the surrounding surface."
+          },
+          "hole_ids": {
+            "items": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "maxItems": 10000,
+            "minItems": 1,
+            "type": "array"
+          },
+          "max_hole_perimeter": {
+            "exclusiveMinimum": 0,
+            "type": "TypedLength"
+          },
+          "max_hole_area": {
+            "additionalProperties": false,
+            "properties": {
+              "unit": {
+                "enum": [
+                  "mm^2",
+                  "cm^2",
+                  "m^2"
+                ],
+                "type": "string"
+              },
+              "value": {
+                "exclusiveMinimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "value",
+              "unit"
+            ],
+            "type": "object"
           }
         }
       },
@@ -34301,7 +35019,9 @@
           "checks.candidate_unit_matches_source": true,
           "checks.repair_invariant_valid": true,
           "checks.numeric_profile_valid": true,
-          "checks.source_geometry_preserved_as_required": true
+          "checks.source_geometry_preserved_as_required": true,
+          "checks.unselected_holes_untouched": true,
+          "checks.selected_holes_closed": true
         }
       },
       "output_contract": {
@@ -34312,7 +35032,9 @@
           "candidate_unit_matches_source",
           "repair_invariant_valid",
           "numeric_profile_valid",
-          "source_geometry_preserved_as_required"
+          "source_geometry_preserved_as_required",
+          "unselected_holes_untouched",
+          "selected_holes_closed"
         ],
         "failure_or_indeterminate_publish": false
       },
@@ -34357,10 +35079,45 @@
                 "minimum": 0,
                 "type": "integer"
               },
+              "hole_ids": {
+                "items": {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "maxItems": 10000,
+                "minItems": 1,
+                "type": "array"
+              },
+              "max_hole_area": {
+                "additionalProperties": false,
+                "properties": {
+                  "unit": {
+                    "enum": [
+                      "mm^2",
+                      "cm^2",
+                      "m^2"
+                    ],
+                    "type": "string"
+                  },
+                  "value": {
+                    "exclusiveMinimum": 0,
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "value",
+                  "unit"
+                ],
+                "type": "object"
+              },
               "max_hole_edges": {
                 "maximum": 2000,
                 "minimum": 3,
                 "type": "integer"
+              },
+              "max_hole_perimeter": {
+                "exclusiveMinimum": 0,
+                "type": "TypedLength"
               }
             },
             "required": [
@@ -34381,8 +35138,10 @@
             "checks.candidate_unit_matches_source": true,
             "checks.numeric_profile_valid": true,
             "checks.repair_invariant_valid": true,
+            "checks.selected_holes_closed": true,
             "checks.source_geometry_preserved_as_required": true,
             "checks.source_identity_matches": true,
+            "checks.unselected_holes_untouched": true,
             "passed": true,
             "schema_version": 1,
             "status": "pass",
@@ -34427,7 +35186,9 @@
           "checks.candidate_unit_matches_source": true,
           "checks.repair_invariant_valid": true,
           "checks.numeric_profile_valid": true,
-          "checks.source_geometry_preserved_as_required": true
+          "checks.source_geometry_preserved_as_required": true,
+          "checks.unselected_holes_untouched": true,
+          "checks.selected_holes_closed": true
         }
       }
     },

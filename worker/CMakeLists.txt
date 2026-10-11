@@ -183,4 +183,7 @@ if(MSVC)
   target_compile_options(cgal-worker PRIVATE /bigobj)
   target_compile_options(cgal-distance PRIVATE /bigobj)
   target_compile_options(cgal-master-worker PRIVATE /bigobj)
+  # PMP::volume_connected_components (simplification-integrity validator) recurses once per face on
+  # large closed meshes; the 1 MiB default Windows stack overflowed above ~10k faces.
+  target_link_options(cgal-master-worker PRIVATE /STACK:268435456)
 endif()

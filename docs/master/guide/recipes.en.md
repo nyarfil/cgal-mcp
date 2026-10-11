@@ -10,7 +10,7 @@ Each recipe is a verified workflow (run by the acceptance suite against the real
 - wf02-fillholes-loop-measures: If the user wants: Fill hole, subdivide, measure
   JA: 穴を埋めて細分割し、面積・体積を測る
   ops: mesh.repair.fill_holes -> mesh.subdivide.loop -> mesh.analysis.measures
-  keywords: mesh.repair.triangulate_holes; loop subdivision; triangle subdivision; ループ細分割; mesh area volume centroid; geometric measures; メッシュ計量
+  keywords: mesh.repair.triangulate_holes; fill selected holes; fill holes by id; 選んだ穴だけ埋める; 指定した穴だけ埋める; loop subdivision; triangle subdivision; ループ細分割; mesh area volume centroid; geometric measures; メッシュ計量
 - wf03-stitch-components: If the user wants: Stitch seam then connected components
   JA: 割れた境界を縫合して連結成分を調べる
   ops: mesh.repair.stitch_borders -> mesh.analysis.connected_components

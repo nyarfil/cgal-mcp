@@ -4,10 +4,10 @@
   "protocol": "Each of the 300 corpus intents is submitted to the production capabilities_search (limit 3, no artifact filter). A hit requires an Operation ID bound to the intent's major requirement in catalog/major_requirements.json to be returned (top-1: first).",
   "bindings": {
     "corpus_sha256": "54646cb2eec0884aab1ec51b14a5c7fcaf3b458dda0f25720598de10daf8dd7b",
-    "major_requirements_sha256": "196ce383d463e76a6306498cf510629f2536f5bfbf1ba67d33d474679ac942fd",
-    "operations_sha256": "78abd290a0bcdf4c04f9500ba0b329bf604b555d213f28b2ff7fe260fdb894b9",
+    "major_requirements_sha256": "7883b5c0f51bdee666615480890e2e867936f68ce65a570809e18158fa4846d6",
+    "operations_sha256": "4ad11b13a4147d9c6f01e92374875f39dc38d3d0e45be6e7b1cae7d5c52ad0bc",
     "search_vocabulary_sha256": "fd3a1b90ff8e2d135c5d00ed275b00a1568853acaefe43210ed36c55f26f9603",
-    "search_data_sha256": "f50fc5294d0e436040d5045af1b629604489ad6b4048b9f965f7e4f11027e0fc",
+    "search_data_sha256": "223ed1623726b9d401e475786ca7f4c021a6216bf9e57d1ce4a3e7181b9f4620",
     "registry_ranker_sha256": "e737d2bef512bbd7c6d40353714a5fd961646f3fa90908b400e5e4eba33ee59b",
     "generator_sha256": "925bccfadf51b9ef8f753a1007984ed9b0bd5ab040e5ae3387943ca4f6b5dd1a"
   },
@@ -1672,7 +1672,7 @@
       "returned": [
         "kernel.distance.squared",
         "mesh.volume.generate",
-        "mesh.distance.max_to_points"
+        "spatial.range_search_3"
       ],
       "top1": true,
       "top3": true
@@ -2049,8 +2049,8 @@
       ],
       "returned": [
         "mesh.analysis.measures",
-        "polygon.analysis.properties",
-        "mesh.decompose.approx_convex"
+        "mesh.repair.fill_holes",
+        "mesh.analysis.boundary_cycles"
       ],
       "top1": true,
       "top3": true
@@ -2064,8 +2064,8 @@
       ],
       "returned": [
         "mesh.analysis.measures",
-        "polygon.analysis.properties",
-        "mesh.decompose.approx_convex"
+        "mesh.repair.fill_holes",
+        "mesh.analysis.boundary_cycles"
       ],
       "top1": true,
       "top3": true
@@ -2079,8 +2079,8 @@
       ],
       "returned": [
         "mesh.analysis.measures",
-        "mesh.boolean.union",
-        "polygon.analysis.properties"
+        "mesh.analysis.boundary_cycles",
+        "mesh.boolean.union"
       ],
       "top1": true,
       "top3": true
@@ -2094,8 +2094,8 @@
       ],
       "returned": [
         "mesh.analysis.measures",
-        "mesh.boolean.union",
-        "polygon.analysis.properties"
+        "mesh.analysis.boundary_cycles",
+        "mesh.boolean.union"
       ],
       "top1": true,
       "top3": true
@@ -2557,6 +2557,7 @@
       "requirement": "major.7.4.04",
       "split": "development",
       "expected": [
+        "mesh.analysis.boundary_cycles",
         "mesh.repair.fill_holes",
         "mesh.repair.fill_holes_refine_fair"
       ],
@@ -2573,6 +2574,7 @@
       "requirement": "major.7.4.04",
       "split": "development",
       "expected": [
+        "mesh.analysis.boundary_cycles",
         "mesh.repair.fill_holes",
         "mesh.repair.fill_holes_refine_fair"
       ],
@@ -2589,13 +2591,14 @@
       "requirement": "major.7.4.04",
       "split": "development",
       "expected": [
+        "mesh.analysis.boundary_cycles",
         "mesh.repair.fill_holes",
         "mesh.repair.fill_holes_refine_fair"
       ],
       "returned": [
-        "mesh.repair.fill_holes",
         "mesh.repair.fill_holes_refine_fair",
-        "mesh2.refine.delaunay"
+        "mesh.repair.fill_holes",
+        "mesh.analysis.boundary_cycles"
       ],
       "top1": true,
       "top3": true
@@ -2605,13 +2608,14 @@
       "requirement": "major.7.4.04",
       "split": "development",
       "expected": [
+        "mesh.analysis.boundary_cycles",
         "mesh.repair.fill_holes",
         "mesh.repair.fill_holes_refine_fair"
       ],
       "returned": [
         "mesh.repair.fill_holes",
         "mesh.repair.fill_holes_refine_fair",
-        "mesh2.refine.delaunay"
+        "mesh.analysis.boundary_cycles"
       ],
       "top1": true,
       "top3": true
@@ -3096,7 +3100,7 @@
       "returned": [
         "mesh.triangulate.faces",
         "mesh.simplify.edge_collapse",
-        "mesh.repair.manifold_preprocess"
+        "mesh.repair.fill_holes"
       ],
       "top1": true,
       "top3": true
@@ -3110,8 +3114,8 @@
       ],
       "returned": [
         "mesh.triangulate.faces",
-        "mesh.simplify.edge_collapse",
-        "mesh.repair.fill_holes"
+        "mesh.repair.fill_holes",
+        "mesh.simplify.edge_collapse"
       ],
       "top1": true,
       "top3": true
@@ -3643,8 +3647,8 @@
       ],
       "returned": [
         "mesh.simplify.edge_collapse",
-        "mesh.distance.symmetric_hausdorff",
-        "mesh.validate.simplification_integrity"
+        "mesh.repair.fill_holes",
+        "mesh.distance.symmetric_hausdorff"
       ],
       "top1": true,
       "top3": true
@@ -6100,7 +6104,7 @@
       "returned": [
         "optimization.interpolate",
         "shape.barycentric",
-        "mesh.distance.hausdorff_approximate"
+        "mesh.repair.fill_holes"
       ],
       "top1": true,
       "top3": true
@@ -6204,8 +6208,8 @@
       ],
       "returned": [
         "optimization.matrix_search",
-        "mesh.remesh.isotropic",
-        "spatial.knn_3"
+        "mesh.repair.fill_holes_refine_fair",
+        "mesh.remesh.isotropic"
       ],
       "top1": true,
       "top3": true

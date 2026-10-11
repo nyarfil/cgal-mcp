@@ -433,7 +433,8 @@ def parse_json_geometry(content: bytes, requested_type: str | None) -> Inspectio
         if not isinstance(value, dict) or not required.issubset(value):
             raise InvalidInput("analysis_report", "GeometryAnalysisReport lacks required v1 fields")
         analysis_kinds = {"pmp_inspection", "connected_components", "normals",
-                          "measures", "sharp_features", "self_intersections"}
+                          "measures", "sharp_features", "self_intersections",
+                          "boundary_cycles"}
         if value["schema_version"] != 1 or value["analysis_kind"] not in analysis_kinds:
             raise InvalidInput("analysis_report", "GeometryAnalysisReport version/kind is invalid")
         source = value["source"]
@@ -473,6 +474,8 @@ def parse_json_geometry(content: bytes, requested_type: str | None) -> Inspectio
                          "volume_centroid"},
             "sharp_features": {"angle", "count_unit", "features"},
             "self_intersections": {"available", "count_unit"},
+            "boundary_cycles": {"count_unit", "length_unit", "area_unit", "cycle_limit",
+                                "hole_count", "available"},
         }
         missing_results = required_results[value["analysis_kind"]] - results.keys()
         if missing_results:

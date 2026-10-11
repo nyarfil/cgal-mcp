@@ -204,6 +204,10 @@ bool dimensions_valid(const Json& candidate, const ValidatorProfile& profile,
       return results.at("angle").is_object() &&
              results.at("angle").value("unit", "") == "deg" &&
              results.value("count_unit", "") == "count";
+    if (profile.analysis_kind == "boundary_cycles")
+      return results.value("count_unit", "") == "count" &&
+             results.value("length_unit", "") == unit &&
+             results.value("area_unit", "") == unit + "^2";
     if (profile.analysis_kind == "pmp_inspection" ||
         profile.analysis_kind == "connected_components" ||
         profile.analysis_kind == "normals" ||
@@ -284,9 +288,13 @@ Json validate_report(const Request& request, const ValidatorProfile& profile) {
   const bool dimensions = dimensions_valid(candidate, profile, source.unit);
   const bool producer_diagnostic_matches =
       candidate.at("validation") == reference.at("validation");
-  const bool semantics =
+  bool semantics =
       candidate.at("mesh_summary") == reference.at("mesh_summary") &&
       candidate.at("results") == reference.at("results");
+  if (semantics && profile.analysis_kind == "boundary_cycles") {
+    // Independent branch: the hole list must also equal a plain directed-edge-map recomputation.
+    semantics = candidate.at("results") == independent_boundary_cycles_results(replay);
+  }
   if (!dimensions) {
     throw WorkerError("VALIDATION_FAILED", "REPORT_DIMENSION_MISMATCH",
                       "Candidate report contains invalid dimensional units");
@@ -403,6 +411,14 @@ OperationDefinition validate_self_intersections_report_operation() {
   return validator_definition({"mesh.validate.self_intersections_report",
                                "mesh.analysis.self_intersections",
                                "self_intersections"});
+}
+
+OperationDefinition validate_boundary_cycles_report_operation() {
+  return validator_definition({"mesh.validate.boundary_cycles_report",
+                               "mesh.analysis.boundary_cycles",
+                               "boundary_cycles"},
+                              {{"independent_fixture_contract",
+                                "directed-edge-map boundary cycles recomputed without CGAL extraction"}});
 }
 
 }  // namespace cgal_master::wave_a_mesh

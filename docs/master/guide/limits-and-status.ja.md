@@ -1,7 +1,7 @@
 # 上限と正直な対応範囲
 
 ## 操作の状態
-VALIDATED: 226 (CGAL 6.2.1)
+VALIDATED: 228 (CGAL 6.2.1)
 実行できるのはVALIDATED/IMPLEMENTEDの操作だけ。VALIDATEDは同梱fixtureで独立検証器つきの再実行に合格した意味で、全入力の証明ではない。システム全体の受入は再実行束縛の評価器（scripts/master_acceptance.py）が別に管理し、このガイドは達成を主張しない。
 
 ## パッケージ目録
@@ -11,7 +11,7 @@ VALIDATED=実行可能な検証済み操作が1つ以上ある。CATALOGED=文�
 ## 上限
 - import: at most 512 MiB per file; formats off, obj, ply (ASCII), stl, xyz and typed json; units mm, cm or m (reports: none)
 - execution defaults: concurrency 2, worker memory 4096 MiB, wall time 120 s, ceiling 86400 s; live values: cgal_system_health; per call: cgal_execute execution={"wall_time_ms":..., "memory_mb":...}
-- 操作ごとの面数上限（各カードに明記）: 64 faces: 1 ops; 200 faces: 2 ops; 400 faces: 7 ops; 600 faces: 5 ops; 1500 faces: 2 ops; 2000 faces: 5 ops; 3000 faces: 2 ops; 20000 faces: 12 ops; 200000 faces: 6 ops; 400000 faces: 3 ops; 2000000 faces: 17 ops
+- 操作ごとの面数上限（各カードに明記）: 64 faces: 1 ops; 200 faces: 2 ops; 400 faces: 7 ops; 600 faces: 5 ops; 1500 faces: 2 ops; 2000 faces: 5 ops; 3000 faces: 2 ops; 20000 faces: 12 ops; 200000 faces: 7 ops; 400000 faces: 3 ops; 2000000 faces: 17 ops
 - 厳しい上限の例: 400 faces: mesh.distance.hausdorff_approximate, mesh.distance.hausdorff_approximate_symmetric, mesh.distance.hausdorff_bounded, mesh.distance.max_to_mesh, mesh.distance.max_to_points, mesh.distance.sample_points, mesh.distance.symmetric_hausdorff
 
 ## 未対応（CATALOGEDまたはEXCLUDEDのパッケージ）
