@@ -3,6 +3,8 @@
 // with an independent brute-force validator.
 #include "wave_c_common.h"
 
+#include "../session_cache.h"
+
 #include <CGAL/AABB_face_graph_triangle_primitive.h>
 #include <CGAL/AABB_traits_3.h>
 #include <CGAL/AABB_tree.h>
@@ -22,6 +24,8 @@
 #include <iterator>
 #include <limits>
 #include <map>
+#include <memory>
+#include <optional>
 #include <set>
 #include <string>
 #include <variant>
@@ -482,6 +486,30 @@ EMesh build_mesh(const TriangleMeshData& data) {
   return mesh;
 }
 
+// Immutable parsed mesh + AABB tree shared across requests in a persistent worker (see
+// session_cache.h). The tree references `mesh` by address, so the entry is never moved.
+struct MeshTreeEntry : SessionCacheEntry {
+  EMesh mesh;
+  std::unique_ptr<AabbTree> tree;
+  std::size_t face_count = 0;
+};
+
+std::shared_ptr<MeshTreeEntry> build_mesh_tree(const TriangleMeshData& data, bool accelerate) {
+  auto entry = std::make_shared<MeshTreeEntry>();
+  entry->mesh = build_mesh(data);
+  entry->tree = std::make_unique<AabbTree>(faces(entry->mesh).first, faces(entry->mesh).second,
+                                           entry->mesh);
+  if (accelerate) {
+    entry->tree->accelerate_distance_queries();
+  } else {
+    entry->tree->build();
+  }
+  entry->face_count = data.faces.size();
+  // Conservative estimate: Surface_mesh connectivity + points + AABB nodes (+ kd-tree).
+  entry->bytes = data.faces.size() * (accelerate ? 1400 : 900) + data.vertices.size() * 200 + 4096;
+  return entry;
+}
+
 double scene_scale(const TriangleMeshData& mesh, const std::vector<XYZ>& extra) {
   double scale = 0;
   for (const auto& vertex : mesh.vertices) {
@@ -497,15 +525,23 @@ Json run_closest_points(const Request& request) {
   require_input_count(request, 2, "spatial.aabb.closest_points");
   require_parameters(request, {});
   require_same_unit(request.inputs[0], request.inputs[1]);
-  const auto mesh_data = read_triangle_mesh(request.inputs[0]);
+  auto& cache = SessionCache::instance();
+  const auto cache_key = SessionCache::key("spatial.aabb.closest_points",
+                                           "Epick/AABB_traits_3/face_graph_triangle/accelerated",
+                                           request.inputs[0]);
+  auto entry = cache.find<MeshTreeEntry>(cache_key, request.inputs[0]);
+  std::optional<TriangleMeshData> mesh_data;
+  if (!entry) mesh_data = read_triangle_mesh(request.inputs[0]);
   const auto queries = read_point_set3(request.inputs[1]);
   if (queries.size() > kMaximumQueryCount) {
     throw WorkerError("RESOURCE_LIMIT", "QUERY_LIMIT_EXCEEDED", "Too many closest-point queries");
   }
-  require_budget(queries.size(), mesh_data.faces.size(), "Closest-point validation");
-  const auto mesh = build_mesh(mesh_data);
-  AabbTree tree(faces(mesh).first, faces(mesh).second, mesh);
-  tree.accelerate_distance_queries();
+  const std::size_t face_count = entry ? entry->face_count : mesh_data->faces.size();
+  require_budget(queries.size(), face_count, "Closest-point validation");
+  if (!entry) {
+    entry = cache.build<MeshTreeEntry>(cache_key, [&] { return build_mesh_tree(*mesh_data, true); });
+  }
+  const AabbTree& tree = *entry->tree;
   Json results = Json::array();
   for (std::size_t q = 0; q < queries.size(); ++q) {
     const auto found = tree.closest_point_and_primitive(p3(queries[q]));
@@ -520,10 +556,10 @@ Json run_closest_points(const Request& request) {
       request, "aabb_closest_points", "spatial.aabb.closest_points",
       {{"mesh_sha256", request.inputs[0].sha256}, {"queries_sha256", request.inputs[1].sha256}},
       Json::object(),
-      {{"query_count", queries.size()}, {"face_count", mesh_data.faces.size()}}, results, unit);
+      {{"query_count", queries.size()}, {"face_count", face_count}}, results, unit);
   return emit_report(request, std::move(report),
                      {{"query_count", queries.size()},
-                      {"face_count", mesh_data.faces.size()},
+                      {"face_count", face_count},
                       {"algorithm", "CGAL::AABB_tree::closest_point_and_primitive"}});
 }
 
@@ -624,11 +660,20 @@ Json run_ray_hits(const Request& request) {
   require_input_count(request, 2, "spatial.aabb.ray_first_hits");
   require_parameters(request, {});
   require_same_unit(request.inputs[0], request.inputs[1]);
-  const auto mesh_data = read_triangle_mesh(request.inputs[0]);
+  auto& cache = SessionCache::instance();
+  const auto cache_key = SessionCache::key("spatial.aabb.ray_first_hits",
+                                           "Epick/AABB_traits_3/face_graph_triangle/built",
+                                           request.inputs[0]);
+  auto entry = cache.find<MeshTreeEntry>(cache_key, request.inputs[0]);
+  std::optional<TriangleMeshData> mesh_data;
+  if (!entry) mesh_data = read_triangle_mesh(request.inputs[0]);
   const auto rays = read_ray_batch3(request.inputs[1]);
-  require_budget(rays.size(), mesh_data.faces.size(), "Ray-hit validation");
-  const auto mesh = build_mesh(mesh_data);
-  AabbTree tree(faces(mesh).first, faces(mesh).second, mesh);
+  const std::size_t face_count = entry ? entry->face_count : mesh_data->faces.size();
+  require_budget(rays.size(), face_count, "Ray-hit validation");
+  if (!entry) {
+    entry = cache.build<MeshTreeEntry>(cache_key, [&] { return build_mesh_tree(*mesh_data, false); });
+  }
+  const AabbTree& tree = *entry->tree;
   Json results = Json::array();
   std::size_t hits = 0;
   for (std::size_t r = 0; r < rays.size(); ++r) {
@@ -665,12 +710,12 @@ Json run_ray_hits(const Request& request) {
       request, "aabb_ray_first_hits", "spatial.aabb.ray_first_hits",
       {{"mesh_sha256", request.inputs[0].sha256}, {"rays_sha256", request.inputs[1].sha256}},
       Json::object(),
-      {{"ray_count", rays.size()}, {"hit_count", hits}, {"face_count", mesh_data.faces.size()}},
+      {{"ray_count", rays.size()}, {"hit_count", hits}, {"face_count", face_count}},
       results, unit);
   return emit_report(request, std::move(report),
                      {{"ray_count", rays.size()},
                       {"hit_count", hits},
-                      {"face_count", mesh_data.faces.size()},
+                      {"face_count", face_count},
                       {"algorithm", "CGAL::AABB_tree::first_intersection"}});
 }
 

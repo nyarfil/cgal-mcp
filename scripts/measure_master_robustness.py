@@ -1000,6 +1000,7 @@ async def _persistent_fault_mode(mode: str, spec: dict, worker: Path) -> tuple[d
                     # warm a pooled worker with the SAME memory cap so the faulted job reuses it
                     await _run_plan(runtime, plan["plan_id"], memory_mb=64)
                 base_artifacts = runtime.store.counts()["artifacts"]
+                retries_before = runtime.supervisor.pool_stats.get("memory_limit_retries", 0)
                 idle_before = {w.process.pid for w in runtime.supervisor._idle}
                 began = time.perf_counter()
                 with SpawnRecorder() as recorder:
@@ -1022,7 +1023,13 @@ async def _persistent_fault_mode(mode: str, spec: dict, worker: Path) -> tuple[d
                 if tuple(observed[1:]) != spec["expect"] or detail["state"] not in {"failed", "rejected"}:
                     problems.append(f"unexpected outcome {observed}")
                 used = idle_before - {w.process.pid for w in runtime.supervisor._idle}
-                if not spawned_in_fault and len(used) == 1:
+                retried = runtime.supervisor.pool_stats.get("memory_limit_retries", 0) - retries_before
+                # A memory_limit on a REUSED worker is retried exactly once on a fresh process by
+                # design (the reused one is retired); that single retry process is the only spawn.
+                first_attempt_on_reused = (len(used) == 1 and
+                                           ((not spawned_in_fault and retried == 0) if mode != "native_memory_cap"
+                                            else (len(spawned_in_fault) == 1 and retried == 1)))
+                if first_attempt_on_reused:
                     reused_into_fault += 1
                 else:
                     problems.append("faulted job did not run on a reused persistent worker")
@@ -1151,6 +1158,261 @@ async def _persistent_isolation(worker: Path) -> tuple[dict, dict]:
     return deterministic, {"per_operation": speed, "totals_s": total,
                            "note": "informational; never gated (includes validator time; cache hits "
                                    "still run every mandatory validator live)"}
+
+
+# ---------------------------------------------------------------- geometry cache (AABB / parsed mesh reuse)
+
+GEOMETRY_CACHE_SCALES = {"small": 10, "medium": 40, "large": 100}   # grid side; faces = 2 * n * n
+HAUSDORFF_CACHE_SCALES = {"small": 6, "medium": 9, "large": 14}      # registry bound: 400 faces
+GEOMETRY_CACHE_OPS = {
+    "spatial.aabb.closest_points": {"queries": "points", "count": 40, "parameters": {}},
+    "spatial.aabb.ray_first_hits": {"queries": "rays", "count": 40, "parameters": {}},
+    "spatial.aabb.intersections": {"queries": "rays", "count": 40, "parameters": {}},
+    "mesh.location.locate": {"queries": "points", "count": 16,
+                             "parameters": {"strategy": "locate_with_AABB_tree"}},
+}
+
+
+def _box_points(count: int, seed: int, side: int) -> bytes:
+    rng = random.Random(seed)
+    rows = [f"{rng.uniform(0, side):.9f} {rng.uniform(0, side):.9f} {rng.uniform(-0.6, 0.6):.9f}"
+            for _ in range(count)]
+    return ("\n".join(rows) + "\n").encode("ascii")
+
+
+def _box_rays(count: int, seed: int, side: int) -> bytes:
+    rng = random.Random(seed)
+    rays = [{"origin": [round(rng.uniform(0, side), 6), round(rng.uniform(0, side), 6), 3.0],
+             "direction": [round(rng.uniform(-0.2, 0.2), 6), round(rng.uniform(-0.2, 0.2), 6), -1.0]}
+            for _ in range(count)]
+    return json.dumps({"rays": rays}).encode("ascii")
+
+
+def _cache_stats(detail: dict, operation: str) -> dict:
+    for item in detail.get("session_cache", []):
+        if item.get("operation") == operation:
+            return {key: item[key] for key in ("hits", "misses", "stored", "evictions",
+                                                "pressure_evictions", "oversize_skipped", "entries",
+                                                "bytes", "budget_bytes") if key in item}
+    return {}
+
+
+def _outputs_of(detail: dict) -> list[str]:
+    if detail["state"] != "succeeded" or detail["validation_status"] != "passed":
+        return [f"failed:{_error_of(detail)}"]
+    if detail["outputs"]:
+        return [o["sha256"] for o in detail["outputs"]]
+    # report-only operations (symmetric Hausdorff) publish no artifact: compare the live report
+    return [canonical_sha(item["report"]) for item in detail["validation"]]
+
+
+def _all_validators_passed(detail: dict, expected: int) -> bool:
+    reports = detail.get("validation", [])
+    return (len(reports) >= max(1, expected)
+            and all(item.get("report", {}).get("status") == "pass" for item in reports))
+
+
+async def _geometry_cache(worker: Path) -> tuple[dict, dict]:
+    """Persistent worker + CGAL_MASTER_SESSION_CACHE: parsed meshes and AABB trees are reused for
+    requests that reference the SAME content hash. Every cached answer must be bit-identical to the
+    one-shot (cold) answer with every mandatory validator run live; speed is informational only."""
+    from cgal_mcp.master.supervisor import PersistentPolicy
+
+    def policy(**extra) -> PersistentPolicy:
+        return PersistentPolicy(max_jobs_per_worker=100_000, max_lifetime_s=86_400, idle_timeout_s=3_600,
+                                recycle_private_fraction=0.25, session_cache=True, **extra)
+
+    cases: list[dict] = []
+    timings: dict[str, Any] = {"cases": []}
+    safety: dict[str, Any] = {}
+    memory: dict[str, Any] = {}
+    with tempfile.TemporaryDirectory(prefix="master-gcache-") as directory:
+        root = Path(directory)
+        runtime = MasterRuntime(root / "store", worker=worker)
+        try:
+            for operation, spec in GEOMETRY_CACHE_OPS.items():
+                validators = len(runtime.registry.get(operation)["validation"]["validators"])
+                for scale, side in GEOMETRY_CACHE_SCALES.items():
+                    work = _newdir(root / f"{operation.replace('.', '_')}-{scale}")
+                    mesh = _import_inputs(runtime, work, [_mesh_input(side, side)[0]])
+                    plans = []
+                    for seed in (1, 2, 3):
+                        maker = _box_points if spec["queries"] == "points" else _box_rays
+                        content = maker(spec["count"], seed, side)
+                        queries = _import_inputs(
+                            runtime, _newdir(work / f"q{seed}"),
+                            [(content, "xyz" if spec["queries"] == "points" else "json",
+                              "PointSet3" if spec["queries"] == "points" else "RayBatch3", "mm")])
+                        plans.append(_plan(runtime, operation, mesh + queries, spec["parameters"])["plan_id"])
+                    cold: list[list[str]] = []
+                    cold_seconds = []
+                    for plan_id in plans:
+                        began = time.perf_counter()
+                        cold.append(_outputs_of(await _run_plan(runtime, plan_id)))
+                        cold_seconds.append(time.perf_counter() - began)
+                    runtime.supervisor.persistent = policy()
+                    sequence, stats, hashes, seconds, live = [], [], [], [], True
+                    for index in (0, 1, 2, 0):
+                        began = time.perf_counter()
+                        detail = await _run_plan(runtime, plans[index])
+                        seconds.append(time.perf_counter() - began)
+                        hashes.append(_outputs_of(detail))
+                        info = _cache_stats(detail, operation)
+                        stats.append(info)
+                        sequence.append("hit" if info.get("hits") == 1 and not info.get("misses")
+                                        else "miss" if info.get("misses") == 1 and not info.get("hits")
+                                        else "other")
+                        live = live and _all_validators_passed(detail, validators)
+                    await runtime.supervisor.shutdown()
+                    runtime.supervisor.persistent = None
+                    expected = [cold[0], cold[1], cold[2], cold[0]]
+                    cases.append({
+                        "operation": operation, "scale": scale, "faces": 2 * side * side,
+                        "queries": spec["count"], "sequence": sequence,
+                        "bit_identical_to_one_shot": hashes == expected
+                                                      and all(not h[0].startswith("failed") for h in hashes),
+                        "validators_run_live": live,
+                        "distinct_query_results": len({tuple(h) for h in cold}) == 3,
+                        "stored_bytes_within_budget": 0 < stats[0].get("bytes", 0) <= stats[0].get("budget_bytes", 0),
+                    })
+                    timings["cases"].append({
+                        "operation": operation, "scale": scale, "faces": 2 * side * side,
+                        "one_shot_seconds": [round(v, 4) for v in cold_seconds],
+                        "cold_miss_seconds": round(seconds[0], 4),
+                        "warm_hit_seconds": [round(v, 4) for v in seconds[1:]]})
+            # symmetric Hausdorff: parsed + health-checked meshes reused (CGAL builds its own trees)
+            for scale, side in HAUSDORFF_CACHE_SCALES.items():
+                operation = "mesh.distance.symmetric_hausdorff"
+                validators = len(runtime.registry.get(operation)["validation"]["validators"])
+                work = _newdir(root / f"hausdorff-{scale}")
+                meshes = [_import_inputs(runtime, _newdir(work / name), [_mesh_input(side, side, bump)[0]])[0]
+                          for name, bump in (("a", 0.30), ("b", 0.33), ("c", 0.36))]
+                params = {"tolerance": _mm(2.0), "error_bound": _mm(0.05)}
+                pairs = [(0, 1), (0, 2), (1, 2), (0, 1)]
+                plans = {pair: _plan(runtime, operation, [meshes[pair[0]], meshes[pair[1]]], params)["plan_id"]
+                         for pair in set(pairs)}
+                cold = {pair: _outputs_of(await _run_plan(runtime, plan_id)) for pair, plan_id in plans.items()}
+                runtime.supervisor.persistent = policy()
+                sequence, hashes, live, seconds = [], [], True, []
+                for pair in pairs:
+                    began = time.perf_counter()
+                    detail = await _run_plan(runtime, plans[pair])
+                    seconds.append(time.perf_counter() - began)
+                    hashes.append(_outputs_of(detail))
+                    info = _cache_stats(detail, operation)
+                    sequence.append(f"hits={info.get('hits')},misses={info.get('misses')}")
+                    live = live and _all_validators_passed(detail, validators)
+                await runtime.supervisor.shutdown()
+                runtime.supervisor.persistent = None
+                cases.append({"operation": operation, "scale": scale, "faces": 2 * side * side, "queries": 0,
+                              "sequence": sequence,
+                              "bit_identical_to_one_shot": hashes == [cold[pair] for pair in pairs]
+                                                            and all(not h[0].startswith("failed") for h in hashes),
+                              "validators_run_live": live,
+                              "distinct_query_results": len({tuple(v) for v in cold.values()}) == 3,
+                              "stored_bytes_within_budget": True})
+                timings["cases"].append({"operation": operation, "scale": scale, "faces": 2 * side * side,
+                                         "cold_miss_seconds": round(seconds[0], 4),
+                                         "warm_hit_seconds": [round(v, 4) for v in seconds[1:]]})
+
+            # ---- safety: never shared across hashes; a different mesh is always a miss
+            operation = "spatial.aabb.closest_points"
+            work = _newdir(root / "safety")
+            mesh_a = _import_inputs(runtime, _newdir(work / "a"), [_mesh_input(20, 20, 0.30)[0]])
+            mesh_b = _import_inputs(runtime, _newdir(work / "b"), [_mesh_input(20, 20, 0.31)[0]])
+            points = _import_inputs(runtime, _newdir(work / "q"), [(_box_points(30, 9, 20), "xyz", "PointSet3", "mm")])
+            plan_a = _plan(runtime, operation, mesh_a + points, {})["plan_id"]
+            plan_b = _plan(runtime, operation, mesh_b + points, {})["plan_id"]
+            one_a = _outputs_of(await _run_plan(runtime, plan_a))
+            one_b = _outputs_of(await _run_plan(runtime, plan_b))
+            runtime.supervisor.persistent = policy()
+            order = []
+            for plan_id in (plan_a, plan_b, plan_a, plan_b, plan_a):
+                detail = await _run_plan(runtime, plan_id)
+                info = _cache_stats(detail, operation)
+                order.append(("hit" if info.get("hits") else "miss", _outputs_of(detail)))
+            safety["different_hash_not_shared"] = {
+                "sequence": [item[0] for item in order],
+                "results_match_one_shot": [item[1] for item in order] == [one_a, one_b, one_a, one_b, one_a],
+                "results_differ_between_meshes": one_a != one_b,
+                "distinct_entries": _cache_stats(detail, operation).get("entries")}
+            await runtime.supervisor.shutdown()
+            runtime.supervisor.persistent = None
+
+            # ---- memory budget: eviction under pressure, oversize entries skipped, residue accounted
+            memory_cap = 128
+            work = _newdir(root / "memory")
+            plans = []
+            for index, bump in enumerate((0.30, 0.31, 0.32)):
+                inputs = _import_inputs(runtime, _newdir(work / f"m{index}"), [_mesh_input(40, 40, bump)[0]])
+                qs = _import_inputs(runtime, _newdir(work / f"mq{index}"),
+                                    [(_box_points(30, 5, 40), "xyz", "PointSet3", "mm")])
+                plans.append(_plan(runtime, operation, inputs + qs, {})["plan_id"])
+            huge = _import_inputs(runtime, _newdir(work / "huge"), [_mesh_input(100, 100, 0.30)[0]])
+            huge_q = _import_inputs(runtime, _newdir(work / "hq"), [(_box_points(30, 5, 100), "xyz", "PointSet3", "mm")])
+            huge_plan = _plan(runtime, operation, huge + huge_q, {})["plan_id"]
+            cold_memory = [_outputs_of(await _run_plan(runtime, plan_id, memory_mb=memory_cap))
+                           for plan_id in plans + [huge_plan]]
+            active = policy()
+            runtime.supervisor.persistent = active
+            pool_before = dict(runtime.supervisor.pool_status())
+            infos, got = [], []
+            for plan_id in plans + [huge_plan, plans[2], plans[0]]:
+                detail = await _run_plan(runtime, plan_id, memory_mb=memory_cap)
+                got.append(_outputs_of(detail))
+                infos.append(_cache_stats(detail, operation))
+            workers = list(runtime.supervisor._idle)
+            limit = (active.recycle_private_fraction * memory_cap * 1024 * 1024
+                     + active.cache_budget_bytes(memory_cap))
+            private_ok = all(w.private_bytes is not None and w.private_bytes <= limit for w in workers)
+            pool = runtime.supervisor.pool_status()
+            memory["eviction_and_budget"] = {
+                "results_match_one_shot": got == cold_memory + [cold_memory[2], cold_memory[0]],
+                "evicted_under_budget": any(i.get("evictions", 0) > 0 for i in infos),
+                "oversize_entry_skipped": infos[3].get("oversize_skipped") == 1,
+                "bytes_never_above_budget": all(i.get("bytes", 0) <= i.get("budget_bytes", 0) for i in infos),
+                "budget_is_fraction_of_cap": infos[0].get("budget_bytes") == active.cache_budget_bytes(memory_cap),
+                "worker_private_within_accounted_limit": private_ok and len(workers) == 1,
+                "no_memory_residue_recycle": pool["recycled"].get("memory_residue", 0) == 0,
+                "one_process_served_all_jobs": pool["started"] - pool_before["started"] == 1
+                                               and pool["reused"] - pool_before["reused"] >= len(infos) - 1}
+            await runtime.supervisor.shutdown()
+            runtime.supervisor.persistent = None
+            # ---- bad_alloc with a populated cache: structured MEMORY_LIMIT, retire, empty cache after
+            big = _import_inputs(runtime, _newdir(work / "hull"),
+                                 [(_random_xyz(1000000, 20261005, cube=True), "xyz", "PointSet3", "mm")])
+            hull_plan = _plan(runtime, "hull.convex_3", big, {})["plan_id"]
+            small_inputs = _import_inputs(runtime, _newdir(work / "s"), [_mesh_input(10, 10)[0]])
+            small_q = _import_inputs(runtime, _newdir(work / "sq"), [(_box_points(20, 4, 10), "xyz", "PointSet3", "mm")])
+            small_plan = _plan(runtime, operation, small_inputs + small_q, {})["plan_id"]
+            expected_small = _outputs_of(await _run_plan(runtime, small_plan, memory_mb=64))
+            runtime.supervisor.persistent = policy()
+            first = await _run_plan(runtime, small_plan, memory_mb=64)
+            primed = _cache_stats(first, operation)
+            second = await _run_plan(runtime, small_plan, memory_mb=64)
+            hit = _cache_stats(second, operation)
+            killed = await _run_plan(runtime, hull_plan, memory_mb=64)
+            with SpawnRecorder() as recorder:
+                after = await _run_plan(runtime, small_plan, memory_mb=64)
+                replaced = len(recorder.processes)
+            after_stats = _cache_stats(after, operation)
+            memory["bad_alloc_with_populated_cache"] = {
+                "cache_was_populated": primed.get("misses") == 1 and hit.get("hits") == 1,
+                "failure": [killed["state"], *_error_of(killed).values()],
+                "worker_replaced": replaced == 1,
+                "cache_empty_in_replacement": after_stats.get("misses") == 1 and not after_stats.get("hits"),
+                "result_matches_one_shot": _outputs_of(after) == expected_small}
+            await runtime.supervisor.shutdown()
+            runtime.supervisor.persistent = None
+        finally:
+            runtime.close()
+    deterministic = {
+        "scales": GEOMETRY_CACHE_SCALES, "hausdorff_scales": HAUSDORFF_CACHE_SCALES, "cases": cases,
+        "all_bit_identical": all(c["bit_identical_to_one_shot"] for c in cases) and len(cases) > 0,
+        "safety": safety, "memory": memory}
+    print(f"geometry cache: {len(cases)} cases, bit-identical={deterministic['all_bit_identical']} "
+          f"safety={safety} memory={memory}", flush=True)
+    return deterministic, timings
 
 
 async def _persistent_lifecycle(worker: Path) -> dict:
@@ -1386,6 +1648,7 @@ def run_persistent(worker: Path, only: list[str] | None = None) -> tuple[dict, d
         deterministic["isolation"], timings["speed"] = asyncio.run(_persistent_isolation(worker))
         deterministic["lifecycle"] = asyncio.run(_persistent_lifecycle(worker))
         deterministic["cache"] = asyncio.run(_cache_cases(worker))
+        deterministic["geometry_cache"], timings["geometry_cache"] = asyncio.run(_geometry_cache(worker))
     from cgal_mcp.master.supervisor import PersistentPolicy
     deterministic["default_policy"] = PersistentPolicy().as_dict()
     return deterministic, timings

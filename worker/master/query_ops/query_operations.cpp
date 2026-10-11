@@ -7,6 +7,7 @@
 #include "query_common.h"
 
 #include "../wave_c/wave_c_common.h"
+#include "../session_cache.h"
 
 #include <CGAL/AABB_face_graph_triangle_primitive.h>
 #include <CGAL/AABB_traits_3.h>
@@ -24,6 +25,8 @@
 #include <CGAL/Surface_mesh.h>
 
 #include <algorithm>
+#include <memory>
+#include <optional>
 #include <cmath>
 #include <iterator>
 #include <map>
@@ -177,17 +180,41 @@ Json aabb_intersections(const Request& request) {
   require_inputs(request, 2, "spatial.aabb.intersections");
   require_parameter_names(request, {});
   require_same_unit(request.inputs[0], request.inputs[1]);
-  const auto raw = read_raw_mesh(request.inputs[0], {"TriangleSurfaceMesh"});
-  require_triangles(raw);
+  using Primitive = CGAL::AABB_face_graph_triangle_primitive<EpickMesh>;
+  using Tree = CGAL::AABB_tree<CGAL::AABB_traits_3<Epick, Primitive>>;
+  struct Entry : SessionCacheEntry {
+    EpickMesh mesh;
+    std::unique_ptr<Tree> tree;
+    std::size_t face_count = 0;
+  };
+  auto& cache = SessionCache::instance();
+  const auto cache_key = SessionCache::key("spatial.aabb.intersections",
+                                           "Epick/AABB_traits_3/face_graph_triangle/built",
+                                           request.inputs[0]);
+  auto entry = cache.find<Entry>(cache_key, request.inputs[0]);
+  std::optional<RawMesh> raw;
+  if (!entry) {
+    raw = read_raw_mesh(request.inputs[0], {"TriangleSurfaceMesh"});
+    require_triangles(*raw);
+  }
   const auto rays = read_rays(request.inputs[1]);
   if (rays.size() > kMaximumQueries) {
     throw WorkerError("RESOURCE_LIMIT", "QUERY_LIMIT_EXCEEDED", "Ray batch exceeds the query limit");
   }
-  const auto mesh = epick_mesh(raw);
-  using Primitive = CGAL::AABB_face_graph_triangle_primitive<EpickMesh>;
-  using Tree = CGAL::AABB_tree<CGAL::AABB_traits_3<Epick, Primitive>>;
-  Tree tree(faces(mesh).first, faces(mesh).second, mesh);
-  tree.build();
+  if (!entry) {
+    entry = cache.build<Entry>(cache_key, [&] {
+      auto built = std::make_shared<Entry>();
+      built->mesh = epick_mesh(*raw);
+      built->tree = std::make_unique<Tree>(faces(built->mesh).first, faces(built->mesh).second,
+                                           built->mesh);
+      built->tree->build();
+      built->face_count = raw->faces.size();
+      built->bytes = raw->faces.size() * 900 + raw->vertices.size() * 200 + 4096;
+      return built;
+    });
+  }
+  const std::size_t face_count = entry->face_count;
+  const Tree& tree = *entry->tree;
   Json results = Json::array();
   std::size_t intersecting = 0;
   for (std::size_t r = 0; r < rays.size(); ++r) {
@@ -213,11 +240,11 @@ Json aabb_intersections(const Request& request) {
               {"source", {{"mesh_sha256", request.inputs[0].sha256}, {"rays_sha256", request.inputs[1].sha256}}},
               {"parameters", Json::object()},
               {"summary", {{"ray_count", rays.size()}, {"intersecting_ray_count", intersecting},
-                           {"face_count", raw.faces.size()}}},
+                           {"face_count", face_count}}},
               {"results", results}};
   auto output = write_report(request, "SpatialQueryReport", report);
   Json metrics{{"ray_count", rays.size()}, {"intersecting_ray_count", intersecting},
-               {"face_count", raw.faces.size()},
+               {"face_count", face_count},
                {"algorithm", "CGAL::AABB_tree::do_intersect / any_intersected_primitive / all_intersected_primitives"}};
   return success_result(request, Json::array({std::move(output)}), std::move(metrics));
 }
@@ -326,25 +353,51 @@ Json locate_points(const Request& request) {
   require_parameter_names(request, {"strategy"});
   require_same_unit(request.inputs[0], request.inputs[1]);
   const auto strategy = enum_parameter(request, "strategy", {"locate", "locate_with_AABB_tree"});
-  const auto raw = read_raw_mesh(request.inputs[0], {"TriangleSurfaceMesh"});
-  require_triangles(raw);
+  using Primitive = CGAL::AABB_face_graph_triangle_primitive<EpeckMesh>;
+  using Tree = CGAL::AABB_tree<CGAL::AABB_traits_3<Epeck, Primitive>>;
+  struct Entry : SessionCacheEntry {
+    EpeckMesh mesh;
+    Tree tree;
+    std::vector<std::vector<std::size_t>> faces_in_file_order;
+  };
+  const bool use_tree = strategy == "locate_with_AABB_tree";
+  auto& cache = SessionCache::instance();
+  const auto cache_key = SessionCache::key("mesh.location.locate", "Epeck/AABB_traits_3/PMP::build_AABB_tree",
+                                           request.inputs[0]);
+  std::shared_ptr<const Entry> cached;
+  if (use_tree) cached = cache.find<Entry>(cache_key, request.inputs[0]);
+  std::optional<RawMesh> raw_mesh;
+  if (!cached) {
+    raw_mesh = read_raw_mesh(request.inputs[0], {"TriangleSurfaceMesh"});
+    require_triangles(*raw_mesh);
+  }
   const auto queries = read_points3(request.inputs[1]);
-  if (queries.size() > kMaximumQueries || queries.size() * raw.faces.size() > 400000) {
+  const std::size_t face_count = cached ? cached->faces_in_file_order.size() : raw_mesh->faces.size();
+  if (queries.size() > kMaximumQueries || queries.size() * face_count > 400000) {
     throw WorkerError("RESOURCE_LIMIT", "VALIDATION_BUDGET_EXCEEDED",
                       "Mesh and query counts exceed the mandatory validation budget");
   }
-  const auto mesh = epeck_mesh(raw);
-  for (const auto face : mesh.faces()) {
-    auto h = mesh.halfedge(face);
-    if (CGAL::collinear(mesh.point(mesh.source(h)), mesh.point(mesh.target(h)),
-                        mesh.point(mesh.target(mesh.next(h))))) {
-      precondition("DEGENERATE_FACE", "Mesh contains a zero-area face");
-    }
+  if (!cached) {
+    cached = cache.build<Entry>(cache_key, [&] {
+      auto built = std::make_shared<Entry>();
+      built->mesh = epeck_mesh(*raw_mesh);
+      for (const auto face : built->mesh.faces()) {
+        auto h = built->mesh.halfedge(face);
+        if (CGAL::collinear(built->mesh.point(built->mesh.source(h)),
+                            built->mesh.point(built->mesh.target(h)),
+                            built->mesh.point(built->mesh.target(built->mesh.next(h))))) {
+          precondition("DEGENERATE_FACE", "Mesh contains a zero-area face");
+        }
+      }
+      if (use_tree) PMP::build_AABB_tree(built->mesh, built->tree);
+      built->faces_in_file_order = raw_mesh->faces;
+      built->bytes = raw_mesh->faces.size() * 3500 + raw_mesh->vertices.size() * 600 + 8192;
+      return built;
+    });
   }
-  using Primitive = CGAL::AABB_face_graph_triangle_primitive<EpeckMesh>;
-  using Tree = CGAL::AABB_tree<CGAL::AABB_traits_3<Epeck, Primitive>>;
-  Tree tree;
-  if (strategy == "locate_with_AABB_tree") PMP::build_AABB_tree(mesh, tree);
+  const EpeckMesh& mesh = cached->mesh;
+  const Tree& tree = cached->tree;
+  const auto& raw_faces = cached->faces_in_file_order;
   Json results = Json::array();
   for (std::size_t q = 0; q < queries.size(); ++q) {
     const Epeck::Point_3 query(queries[q][0], queries[q][1], queries[q][2]);
@@ -364,7 +417,7 @@ Json locate_points(const Request& request) {
       by_vertex.emplace_back(static_cast<std::size_t>(order[position].idx()), epeck_text(location.second[position]));
     }
     Json ordered = Json::array();
-    for (const auto corner : raw.faces[face_index]) {
+    for (const auto corner : raw_faces[face_index]) {
       for (const auto& entry : by_vertex) {
         if (entry.first == corner) ordered.push_back(entry.second);
       }
@@ -377,11 +430,11 @@ Json locate_points(const Request& request) {
   }
   Json report = geometry_report(request, "mesh_location", {{"strategy", strategy}},
                                 {{"mesh_sha256", request.inputs[0].sha256}, {"queries_sha256", request.inputs[1].sha256}},
-                                {{"face_count", raw.faces.size()}, {"query_count", queries.size()},
+                                {{"face_count", face_count}, {"query_count", queries.size()},
                                  {"squared_distance_unit", request.inputs[0].unit + "2"}},
                                 results);
   auto output = write_report(request, "GeometryQueryReport", report);
-  Json metrics{{"face_count", raw.faces.size()}, {"query_count", queries.size()}, {"strategy", strategy},
+  Json metrics{{"face_count", face_count}, {"query_count", queries.size()}, {"strategy", strategy},
                {"algorithm", strategy == "locate" ? "CGAL::Polygon_mesh_processing::locate"
                                                   : "CGAL::Polygon_mesh_processing::locate_with_AABB_tree"}};
   return success_result(request, Json::array({std::move(output)}), std::move(metrics));

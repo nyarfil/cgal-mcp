@@ -344,6 +344,14 @@ class MasterRuntime:
                              **({"result_cache": transform["result_cache"]}
                                 if transform["result_cache"] is not None else {})})
                         artifacts.append(artifact)
+                cache_stats = [{"operation": item["step"]["operation"], **item["metrics"]["session_cache"]}
+                               for item in transforms
+                               if isinstance(item["metrics"].get("session_cache"), dict)]
+                cache_stats += [{"operation": item["operation"], **item["metrics"]["session_cache"]}
+                                for item in validation_reports
+                                if isinstance(item.get("metrics", {}).get("session_cache"), dict)]
+                if cache_stats:  # only with CGAL_MASTER_SESSION_CACHE=1 on persistent workers
+                    self.store.update_job(job_id, detail={"session_cache": cache_stats})
                 self.store.complete_job_success(job_id, artifacts, validation_reports)
         except asyncio.CancelledError:
             self.store.update_job(job_id, state="cancelled", execution_status="cancelled",

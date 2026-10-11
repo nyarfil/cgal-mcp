@@ -323,9 +323,15 @@ class WorkerSupervisor:
         kwargs: dict[str, Any] = {}
         if os.name != "nt":
             kwargs["preexec_fn"] = _posix_limit(memory_mb)
+        environment = {key: value for key, value in os.environ.items()
+                       if not key.startswith("CGAL_MASTER_SESSION_CACHE")}
+        if self.persistent is not None and self.persistent.session_cache:
+            environment["CGAL_MASTER_SESSION_CACHE_MB"] = str(
+                self.persistent.cache_budget_bytes(memory_mb) // (1024 * 1024))
+            environment["CGAL_MASTER_SESSION_CACHE_ENTRIES"] = str(self.persistent.session_cache_entries)
         try:
             process = await asyncio.create_subprocess_exec(*_command(self.executable, "--serve"),
-                stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE,
+                env=environment, stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE, limit=MAX_PROTOCOL_BYTES + 2, **kwargs)
         except OSError as exc:
             raise WorkerFailure("worker_start", str(exc), "worker_crash", True) from exc
@@ -539,11 +545,20 @@ class PersistentPolicy:
 
     def __init__(self, *, max_jobs_per_worker: int = 64, max_lifetime_s: float = 600.0,
                  idle_timeout_s: float = 30.0, max_idle_workers: int = 2,
-                 recycle_private_fraction: float = 0.25):
+                 recycle_private_fraction: float = 0.25, session_cache: bool = False,
+                 session_cache_fraction: float = 0.10, session_cache_entries: int = 8):
         if not (1 <= max_jobs_per_worker <= 100_000 and 0 < max_lifetime_s <= 86_400
                 and 0 < idle_timeout_s <= 3_600 and 1 <= max_idle_workers <= 64
-                and 0 < recycle_private_fraction <= 1):
+                and 0 < recycle_private_fraction <= 1 and type(session_cache) is bool
+                and 0 < session_cache_fraction <= 0.5 and 1 <= session_cache_entries <= 64):
             raise ValueError("Persistent worker policy is invalid")
+        # Parsed-mesh / AABB-tree reuse inside one persistent worker (opt-in, default off): the
+        # worker holds at most `session_cache_fraction` of its memory cap in cache, and that
+        # budget is added to the private-memory recycle threshold so cache residency is accounted
+        # for instead of tripping the per-job residue isolation guarantee.
+        self.session_cache = session_cache
+        self.session_cache_fraction = session_cache_fraction
+        self.session_cache_entries = session_cache_entries
         self.max_jobs_per_worker = max_jobs_per_worker
         self.max_lifetime_s = max_lifetime_s
         self.idle_timeout_s = idle_timeout_s
@@ -554,14 +569,28 @@ class PersistentPolicy:
         return {"session_protocol": 1, "max_jobs_per_worker": self.max_jobs_per_worker,
                 "max_lifetime_s": self.max_lifetime_s, "idle_timeout_s": self.idle_timeout_s,
                 "max_idle_workers": self.max_idle_workers,
-                "recycle_private_fraction": self.recycle_private_fraction}
+                "recycle_private_fraction": self.recycle_private_fraction,
+                "session_cache": self.session_cache,
+                "session_cache_fraction": self.session_cache_fraction,
+                "session_cache_entries": self.session_cache_entries}
+
+    def cache_budget_bytes(self, memory_mb: int) -> int:
+        """Per-worker parsed-geometry cache budget in bytes (0 when the cache is off)."""
+        if not self.session_cache:
+            return 0
+        return max(1, int(memory_mb * self.session_cache_fraction)) * 1024 * 1024
 
     @classmethod
     def from_environment(cls, concurrency: int) -> "PersistentPolicy | None":
         raw = os.environ.get("CGAL_MASTER_PERSISTENT_WORKERS", "0").strip()
         if raw not in {"0", "1"}:
             raise ValueError("CGAL_MASTER_PERSISTENT_WORKERS must be 0 or 1")
-        return cls(max_idle_workers=concurrency) if raw == "1" else None
+        if raw != "1":
+            return None  # the session cache is meaningless (and ignored) without persistent workers
+        cache = os.environ.get("CGAL_MASTER_SESSION_CACHE", "0").strip()
+        if cache not in {"0", "1"}:
+            raise ValueError("CGAL_MASTER_SESSION_CACHE must be 0 or 1")
+        return cls(max_idle_workers=concurrency, session_cache=cache == "1")
 
 
 def _private_bytes(pid: int) -> int | None:
@@ -644,7 +673,8 @@ class _SessionWorker:
         if asyncio.get_running_loop().time() - self.started >= policy.max_lifetime_s:
             return "lifetime"
         if (self.private_bytes is None or
-                self.private_bytes > policy.recycle_private_fraction * self.memory_mb * 1024 * 1024):
+                self.private_bytes > policy.recycle_private_fraction * self.memory_mb * 1024 * 1024
+                + policy.cache_budget_bytes(self.memory_mb)):
             return "memory_residue"
         return None
 

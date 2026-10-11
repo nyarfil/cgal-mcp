@@ -824,6 +824,7 @@ class PerformanceGateEvidenceTests(unittest.TestCase):
         self.assertNotEqual(result["status"], "met")
         self.assertFalse([r for r in result["reasons"] if "bindings" in r or "hash" in r or "different native" in r])
         self.assertEqual(len(result["measured"]["families_with_baselines"]), 15)
+        self.assertFalse([r for r in result["reasons"] if "AABB" in r or "Geometry-cache" in r])
         containment = result["measured"]["containment"]
         self.assertEqual(containment["contained"], containment["trials"])
         self.assertFalse([r for r in result["reasons"] if "contained" in r and "Fault mode" in r])
@@ -867,8 +868,9 @@ class PerformanceGateEvidenceTests(unittest.TestCase):
 
     def test_phase10_work_items_are_never_silently_dropped(self):
         evidence = copy.deepcopy(self.evidence)
+        evidence["deterministic"]["persistent"].pop("geometry_cache", None)
         reasons = self.gate(evidence)["reasons"]
-        self.assertTrue([r for r in reasons if "AABB-tree and parsed-geometry reuse" in r])
+        self.assertTrue([r for r in reasons if "AABB-tree and parsed-geometry reuse evidence is missing" in r])
         evidence = copy.deepcopy(self.evidence)
         evidence["deterministic"].pop("persistent", None)
         reasons = self.gate(evidence)["reasons"]
@@ -890,6 +892,29 @@ class PerformanceGateEvidenceTests(unittest.TestCase):
         self.assertTrue([r for r in reasons if "cross-job isolation" in r])
         self.assertTrue([r for r in reasons if "Result-cache safety" in r])
         self.assertTrue([r for r in reasons if "reaped when idle" in r])
+
+    def test_geometry_cache_evidence_is_enforced(self):
+        evidence = copy.deepcopy(self.evidence)
+        geometry = evidence["deterministic"]["persistent"]["geometry_cache"]
+        clean = self.gate(evidence)
+        self.assertEqual([r for r in clean["reasons"] if "standalone gate list" not in r], [])
+        self.assertEqual(clean["status"], "met_pending_gate_list_update")
+        case = geometry["cases"][0]
+        case["bit_identical_to_one_shot"] = False
+        geometry["cases"][1]["validators_run_live"] = False
+        geometry["cases"][2]["sequence"] = ["miss", "miss", "miss", "miss"]
+        geometry["cases"] = [c for c in geometry["cases"] if not (
+            c["operation"] == "mesh.location.locate" and c["scale"] == "large")]
+        geometry["safety"]["different_hash_not_shared"]["sequence"] = ["miss", "hit", "hit", "hit", "hit"]
+        geometry["memory"]["eviction_and_budget"]["evicted_under_budget"] = False
+        geometry["memory"]["bad_alloc_with_populated_cache"]["worker_replaced"] = False
+        evidence["deterministic"]["persistent"]["default_policy"]["session_cache"] = True
+        reasons = self.gate(evidence)["reasons"]
+        for fragment in ("not shown bit-identical to the cold one-shot", "did not run every mandatory validator live",
+                         "did not show the expected hit/miss counters", "mesh.location.locate large is unevidenced",
+                         "unshared across different content hashes", "memory budget", "bad_alloc containment",
+                         "not off by default"):
+            self.assertTrue([r for r in reasons if fragment in r], fragment)
 
     def test_fault_proxy_is_selected_only_by_environment_not_protocol_input(self):
         import subprocess, sys, os

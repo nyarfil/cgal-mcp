@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- Opt-in AABB-tree and parsed-mesh reuse inside persistent workers
+  (`CGAL_MASTER_SESSION_CACHE=1`, requires `CGAL_MASTER_PERSISTENT_WORKERS=1`; default off, one-shot
+  path unchanged): per-worker LRU keyed by verified content hash, bounded by count and a memory
+  budget accounted in the recycle threshold, results bit-identical to the cold path, hit/miss
+  counters in `metrics.session_cache` and job detail. Covers `spatial.aabb.*`,
+  `mesh.location.locate` (AABB strategy) and `mesh.distance.symmetric_hausdorff` (parsed mesh).
+
 ## 1.0.0 - 2026-10-11
 
 - The Master MCP (`cgal_mcp.master`) is now the primary and only supported server.

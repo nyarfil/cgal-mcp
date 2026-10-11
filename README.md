@@ -30,7 +30,7 @@ Japanese: [docs/master/SCOPE_CORRECTION_JA.md](docs/master/SCOPE_CORRECTION_JA.m
 | Standalone acceptance (`standalone_accepted`) | **false** |
 | Search acceptance gate | unmet |
 | Host matrix gate (desktop UI tool selection, Cursor live calls) | unmet |
-| Performance / AABB gate | unmet |
+| Performance / AABB gate | evidenced (opt-in AABB/parsed-mesh reuse bit-identical to cold; `met_pending_gate_list_update`, not yet moved off the unmet list) |
 | Package harvest license review | unmet (some packages need human review) |
 
 Passing 80 requirements does not mean "all of CGAL" is available. Many packages are

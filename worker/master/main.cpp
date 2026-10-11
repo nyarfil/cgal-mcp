@@ -1,5 +1,6 @@
 #include "operation.h"
 #include "protocol.h"
+#include "session_cache.h"
 
 #include <CGAL/Random.h>
 
@@ -21,6 +22,7 @@ constexpr int kSessionProtocol = 1;
 int serve() {
   using namespace cgal_master;
   std::uint64_t served = 0;
+  SessionCache::instance().configure_from_environment();
   std::string line;
   while (std::getline(std::cin, line)) {
     if (line.find_first_not_of(" \t\r") == std::string::npos) continue;
@@ -46,7 +48,12 @@ int serve() {
       std::srand(1);
       const auto request = parse_request(parsed);
       request_id = request.request_id;
+      SessionCache::instance().begin_request();
       response = dispatch(request);
+      if (SessionCache::instance().enabled() && response.is_object() &&
+          response.contains("metrics") && response["metrics"].is_object()) {
+        response["metrics"]["session_cache"] = SessionCache::instance().request_stats();
+      }
     } catch (const WorkerError& error) {
       response = error_result(request_id, error);
     } catch (const nlohmann::json::exception& error) {

@@ -1358,13 +1358,22 @@ PERFORMANCE_REQUIRED_PERSISTENT_MODES = {
 PERFORMANCE_REQUIRED_RECYCLE_CASES = ("job_count", "lifetime", "memory_residue", "executable_change")
 PERFORMANCE_CACHE_CASES = ("tampered_entry", "tampered_blob", "stale_worker")
 # Plan Phase 10 lists "AABB reuse"; Spec 32.2/32.3 add "AABB trees where safe" and "parsed mesh
-# representation in persistent worker" / no duplicate PLY->Surface_mesh conversion. Not built.
-PERFORMANCE_AABB_REASON = (
-    "AABB-tree and parsed-geometry reuse inside persistent workers (Plan Phase 10 'AABB reuse'; "
-    "Spec 32.2 'AABB trees where safe', 'parsed mesh representation in persistent worker'; Spec 32.3) "
-    "is not implemented: input parsing is per-operation (no shared native artifact reader) and a "
-    "cross-job native cache would hold memory against the per-job cap that persistent recycling "
-    "currently guarantees; see docs/master/PERSISTENT_WORKER_CACHE_JA.md")
+# representation in persistent worker". Implemented as an opt-in (persistent workers +
+# CGAL_MASTER_SESSION_CACHE=1) per-worker LRU keyed by verified content hash, for the operations
+# below; each must be evidenced at three scales, bit-identical to the cold one-shot answer.
+PERFORMANCE_GEOMETRY_CACHE_OPERATIONS = (
+    "spatial.aabb.closest_points", "spatial.aabb.ray_first_hits", "spatial.aabb.intersections",
+    "mesh.location.locate", "mesh.distance.symmetric_hausdorff")
+PERFORMANCE_GEOMETRY_CACHE_SEQUENCE = ["miss", "hit", "hit", "hit"]
+PERFORMANCE_GEOMETRY_CACHE_HAUSDORFF_SEQUENCE = [
+    "hits=0,misses=2", "hits=1,misses=1", "hits=2,misses=0", "hits=2,misses=0"]
+PERFORMANCE_GEOMETRY_CACHE_MEMORY_FLAGS = (
+    "results_match_one_shot", "evicted_under_budget", "oversize_entry_skipped", "bytes_never_above_budget",
+    "budget_is_fraction_of_cap", "worker_private_within_accounted_limit", "no_memory_residue_recycle",
+    "one_process_served_all_jobs")
+PERFORMANCE_GEOMETRY_CACHE_SOURCES = (
+    "worker/master/session_cache.h", "worker/master/wave_c/spatial.cpp",
+    "worker/master/query_ops/query_operations.cpp", "worker/master/wave_a/symmetric_hausdorff.cpp")
 PERFORMANCE_REQUIRED_LIMIT_KINDS = {"bounded_input": 3, "import_limit": 1, "execution_limits": 9,
                                     "configuration": 8, "native_resource_cap": 2}
 
@@ -1398,8 +1407,9 @@ def evaluate_performance_gate(root: Path = REPO, *, live: bool = True,
     declared trial floor for every fault kind, and the Phase 10 work items (persistent workers,
     artifact/result cache, AABB reuse) each evidenced: persistent fault containment on reused
     processes with replacement, cross-job isolation against one-shot results for every family,
-    recycling, idle reaping and cache safety. AABB reuse has no implementation, so it stays a
-    reason. Timings are never gated on speed.
+    recycling, idle reaping and cache safety. AABB / parsed-mesh reuse is evidenced per operation
+    and scale as bit-identical to the cold one-shot answer, unshared across content hashes, within
+    the memory budget and contained on bad_alloc. Timings are never gated on speed.
     """
     reasons: list[str] = []
     result: dict = {"gate": PERFORMANCE_GATE, "status": "unmet", "evidence": PERFORMANCE_EVIDENCE,
@@ -1627,16 +1637,70 @@ def evaluate_performance_gate(root: Path = REPO, *, live: bool = True,
             and bad.get("stored_after_failure") == 0
             and cache.get("eviction", {}).get("entries", 99) <= cache.get("eviction", {}).get("max_entries", 0)):
         reasons.append("Result-cache safety (hit/miss, tamper, stale, live re-validation, bound) is unevidenced")
-    # Unconditional: an evidence key must never clear this reason; only a native
-    # AABB reuse implementation plus a gate-list update can.
-    reasons.append(PERFORMANCE_AABB_REASON)
+    # AABB / parsed-geometry reuse (Plan Phase 10 "AABB reuse"): the implementation must exist in the
+    # checked-in worker sources, be OFF by default, and every cached answer must be evidenced
+    # bit-identical to the cold one-shot answer with live validators, per operation and scale.
+    for source in PERFORMANCE_GEOMETRY_CACHE_SOURCES:
+        try:
+            text = (root / source).read_text(encoding="utf-8")
+        except OSError:
+            text = ""
+        if "SessionCache" not in text and not source.endswith("session_cache.h"):
+            reasons.append(f"AABB/parsed-geometry reuse is not wired into {source}")
+        elif source.endswith("session_cache.h") and "class SessionCache" not in text:
+            reasons.append("AABB/parsed-geometry reuse implementation is missing")
+    default_policy = persistent.get("default_policy", {})
+    if default_policy.get("session_cache") is not False:
+        reasons.append("AABB/parsed-geometry reuse is not off by default")
+    geometry = persistent.get("geometry_cache")
+    if not isinstance(geometry, dict):
+        reasons.append("AABB-tree and parsed-geometry reuse evidence is missing "
+                       "(Plan Phase 10 'AABB reuse')")
+        geometry = {}
+    rows = {(c.get("operation"), c.get("scale")): c for c in geometry.get("cases", [])}
+    for operation in PERFORMANCE_GEOMETRY_CACHE_OPERATIONS:
+        for scale in ("small", "medium", "large"):
+            case = rows.get((operation, scale))
+            label = f"Geometry-cache case {operation} {scale}"
+            if case is None:
+                reasons.append(f"{label} is unevidenced")
+                continue
+            expected = (PERFORMANCE_GEOMETRY_CACHE_HAUSDORFF_SEQUENCE
+                        if operation == "mesh.distance.symmetric_hausdorff"
+                        else PERFORMANCE_GEOMETRY_CACHE_SEQUENCE)
+            if case.get("sequence") != expected:
+                reasons.append(f"{label} did not show the expected hit/miss counters")
+            if not (case.get("bit_identical_to_one_shot") and case.get("distinct_query_results")):
+                reasons.append(f"{label} is not shown bit-identical to the cold one-shot results")
+            if not case.get("validators_run_live"):
+                reasons.append(f"{label} did not run every mandatory validator live")
+            if not case.get("stored_bytes_within_budget"):
+                reasons.append(f"{label} stored more than the cache budget")
+    shared = geometry.get("safety", {}).get("different_hash_not_shared", {})
+    if not (shared.get("sequence") == ["miss", "miss", "hit", "hit", "hit"]
+            and shared.get("results_match_one_shot") and shared.get("results_differ_between_meshes")
+            and shared.get("distinct_entries") == 2):
+        reasons.append("Geometry-cache entries are not shown unshared across different content hashes")
+    gmemory = geometry.get("memory", {})
+    budget = gmemory.get("eviction_and_budget", {})
+    if not all(budget.get(flag) is True for flag in PERFORMANCE_GEOMETRY_CACHE_MEMORY_FLAGS):
+        reasons.append("Geometry-cache memory budget (eviction, oversize skip, residue accounting) is unevidenced")
+    pressure = gmemory.get("bad_alloc_with_populated_cache", {})
+    if not (pressure.get("failure") == ["failed", "resource_limit", "memory_limit"]
+            and all(pressure.get(flag) is True for flag in (
+                "cache_was_populated", "worker_replaced", "cache_empty_in_replacement",
+                "result_matches_one_shot"))):
+        reasons.append("Geometry-cache bad_alloc containment (MEMORY_LIMIT, retire, empty replacement) "
+                       "is unevidenced")
     result["measured"]["lifecycle"] = life
     result["measured"]["persistent"] = {
         "fault_modes": len(pmodes), "trials": sum(r.get("trials", 0) for r in pmodes.values()),
         "contained": sum(r.get("contained", 0) for r in pmodes.values()),
         "isolation": isolation, "recycling": sorted(k for k, v in recycle.items()
                                                     if v.get("recycled_for_reason")),
-        "cache_all_passed": cache.get("all_passed")}
+        "cache_all_passed": cache.get("all_passed"),
+        "geometry_cache_cases": len(geometry.get("cases", [])),
+        "geometry_cache_bit_identical": geometry.get("all_bit_identical")}
 
     if live:
         try:

@@ -56,7 +56,7 @@ WindowsではJob Object、POSIXではprocessの資源制限を使用します。
 メモリ上限4GiB・壁時間上限だけで判定）を分けています。故障注入は試験専用の
 `scripts/robustness_fault_proxy.py`で行い、環境変数でのみ選択されます。
 
-結果（`evaluate_performance_gate`、`standalone_gates`に出力。判定は未達）:
+結果（`evaluate_performance_gate`、`standalone_gates`に出力。判定は`met_pending_gate_list_update`: 証拠は揃ったが未達gate一覧はまだ更新していない）:
 
 - 規模測定: 15 family全てで3規模が成功し検証済み。最大RSSは最大約519MiB（7.4 500k面）。
 - 封じ込め: 27種類・518試行で100%（kill、abort、アクセス違反、timeout、孫process、不正/巨大出力、
@@ -70,8 +70,10 @@ WindowsではJob Object、POSIXではprocessの資源制限を使用します。
   （job間汚染なし）。cache hitも15件一致。job数・寿命・残留メモリ・実行ファイル変更での退役、idle 30秒後の
   process 0、memory上限ごとのpool分離、cacheの改ざん・stale→miss、正しく署名された誤候補をlive validatorが拒否、
   件数上限での削除を確認。速度は参考値のみ（`timings.persistent`）。
-- 未達の理由（残り1件）: AABB木／parsed geometryのjob間再利用（計画Phase 10「AABB reuse」、設計書32.2/32.3）は
-  未実装です。理由は[`PERSISTENT_WORKER_CACHE_JA.md`](PERSISTENT_WORKER_CACHE_JA.md)に記載。
+- AABB／parsed geometry再利用（計画Phase 10「AABB reuse」、opt-in）: 永続worker内で検証済みcontent hash単位に
+  parsed meshとAABB木を再利用（5 Operation×3規模でcold one-shotとbit一致・validator live・別hash非共有・
+  memory予算内・bad_alloc封じ込め）。詳細は[`PERSISTENT_WORKER_CACHE_JA.md`](PERSISTENT_WORKER_CACHE_JA.md)。
+  速度は参考値のみ（`timings.geometry_cache`）。
 - 修正: 孫processがpipeを保持するとtimeoutが効かない不具合を`supervisor.py`で修正（job closeを先に実行）。
 - 多くのOperationはworker内部上限がregistryの宣言値より小さく、上限超過は構造化エラーで拒否される
   （例: `pointset.remove_outliers`は400点、simplify検証は400面）。上限超過probeは証拠の`ceiling_probes`に記録。

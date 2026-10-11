@@ -1,5 +1,6 @@
 #include "mesh_io.h"
 #include "wave_a_operations.h"
+#include "../session_cache.h"
 
 #include <CGAL/Polygon_mesh_processing/distance.h>
 
@@ -39,10 +40,29 @@ Json run_symmetric_hausdorff(const Request& request) {
   }
   require_allowed_parameters(request.parameters);
   require_same_unit(request.inputs[0], request.inputs[1]);
-  auto reference = read_triangle_off(request.inputs[0]);
-  auto candidate = read_triangle_off(request.inputs[1]);
-  require_healthy_triangle_mesh(reference, "Hausdorff reference");
-  require_healthy_triangle_mesh(candidate, "Hausdorff candidate");
+  // Parsed + health-checked meshes are reused across requests in a persistent worker only when
+  // the session cache is enabled; the Hausdorff computation itself (its internal AABB trees,
+  // which CGAL does not let callers supply) always runs.
+  struct Parsed : SessionCacheEntry {
+    Mesh mesh;
+  };
+  auto load = [&](const ArtifactInput& input, const char* label) {
+    auto& cache = SessionCache::instance();
+    const auto key = SessionCache::key("mesh.distance.parsed_off", "Epick/Surface_mesh", input);
+    auto cached = cache.find<Parsed>(key, input);
+    if (cached) return cached;
+    return cache.build<Parsed>(key, [&] {
+      auto parsed = std::make_shared<Parsed>();
+      parsed->mesh = read_triangle_off(input);
+      require_healthy_triangle_mesh(parsed->mesh, label);
+      parsed->bytes = parsed->mesh.number_of_faces() * 400 + parsed->mesh.number_of_vertices() * 150 + 4096;
+      return parsed;
+    });
+  };
+  const auto reference_entry = load(request.inputs[0], "Hausdorff reference");
+  const auto candidate_entry = load(request.inputs[1], "Hausdorff candidate");
+  const Mesh& reference = reference_entry->mesh;
+  const Mesh& candidate = candidate_entry->mesh;
 
   const auto& unit = request.inputs[0].unit;
   const double tolerance =
