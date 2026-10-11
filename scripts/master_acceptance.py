@@ -1367,6 +1367,10 @@ PERFORMANCE_GEOMETRY_CACHE_OPERATIONS = (
 PERFORMANCE_GEOMETRY_CACHE_SEQUENCE = ["miss", "hit", "hit", "hit"]
 PERFORMANCE_GEOMETRY_CACHE_HAUSDORFF_SEQUENCE = [
     "hits=0,misses=2", "hits=1,misses=1", "hits=2,misses=0", "hits=2,misses=0"]
+# locate (brute force, never cached), locate_with_AABB_tree miss/hit, brute force again, tree hit;
+# closest miss, ray miss, intersections miss, closest hit, tree hit; then the reversed order.
+PERFORMANCE_GEOMETRY_CACHE_KEY_SEQUENCE = [
+    "none", "miss", "none", "hit", "miss", "miss", "miss", "hit", "hit", "hit", "none", "hit", "none"]
 PERFORMANCE_GEOMETRY_CACHE_MEMORY_FLAGS = (
     "results_match_one_shot", "evicted_under_budget", "oversize_entry_skipped", "bytes_never_above_budget",
     "budget_is_fraction_of_cap", "worker_private_within_accounted_limit", "no_memory_residue_recycle",
@@ -1681,6 +1685,11 @@ def evaluate_performance_gate(root: Path = REPO, *, live: bool = True,
             and shared.get("results_match_one_shot") and shared.get("results_differ_between_meshes")
             and shared.get("distinct_entries") == 2):
         reasons.append("Geometry-cache entries are not shown unshared across different content hashes")
+    keyed = geometry.get("safety", {}).get("parameterization_keys", {})
+    if not (keyed.get("bit_identical_to_one_shot") is True
+            and keyed.get("sequence") == PERFORMANCE_GEOMETRY_CACHE_KEY_SEQUENCE):
+        reasons.append("Geometry-cache keys are not shown to separate parameterizations "
+                       "(locate vs locate_with_AABB_tree in both orders, several operations on one mesh)")
     gmemory = geometry.get("memory", {})
     budget = gmemory.get("eviction_and_budget", {})
     if not all(budget.get(flag) is True for flag in PERFORMANCE_GEOMETRY_CACHE_MEMORY_FLAGS):

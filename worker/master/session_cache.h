@@ -135,6 +135,12 @@ class SessionCache {
       ++request_.oversize;
       return;
     }
+    const auto existing = index_.find(k);
+    if (existing != index_.end()) {
+      bytes_ -= existing->second->entry->bytes;
+      order_.erase(existing->second);
+      index_.erase(existing);
+    }
     while (!order_.empty() && (bytes_ + entry->bytes > budget_ || order_.size() >= max_entries_)) {
       bytes_ -= order_.back().entry->bytes;
       index_.erase(order_.back().key);

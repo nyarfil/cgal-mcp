@@ -362,7 +362,7 @@ Json locate_points(const Request& request) {
   };
   const bool use_tree = strategy == "locate_with_AABB_tree";
   auto& cache = SessionCache::instance();
-  const auto cache_key = SessionCache::key("mesh.location.locate", "Epeck/AABB_traits_3/PMP::build_AABB_tree",
+  const auto cache_key = SessionCache::key("mesh.location.locate", "Epeck/AABB_traits_3/PMP::build_AABB_tree/tree_built",
                                            request.inputs[0]);
   std::shared_ptr<const Entry> cached;
   if (use_tree) cached = cache.find<Entry>(cache_key, request.inputs[0]);
@@ -378,7 +378,9 @@ Json locate_points(const Request& request) {
                       "Mesh and query counts exceed the mandatory validation budget");
   }
   if (!cached) {
-    cached = cache.build<Entry>(cache_key, [&] {
+    // Only entries that actually hold a built AABB tree are ever cached (use_tree); the brute-force
+    // `locate` strategy builds a tree-less entry that must neither be stored nor replace a good one.
+    auto build_entry = [&] {
       auto built = std::make_shared<Entry>();
       built->mesh = epeck_mesh(*raw_mesh);
       for (const auto face : built->mesh.faces()) {
@@ -393,7 +395,8 @@ Json locate_points(const Request& request) {
       built->faces_in_file_order = raw_mesh->faces;
       built->bytes = raw_mesh->faces.size() * 3500 + raw_mesh->vertices.size() * 600 + 8192;
       return built;
-    });
+    };
+    cached = use_tree ? cache.build<Entry>(cache_key, build_entry) : std::shared_ptr<const Entry>(build_entry());
   }
   const EpeckMesh& mesh = cached->mesh;
   const Tree& tree = cached->tree;

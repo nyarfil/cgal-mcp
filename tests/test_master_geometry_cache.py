@@ -185,6 +185,40 @@ class GeometryCacheNativeTests(unittest.TestCase):
         self.assertEqual(self.stats(response)["oversize_skipped"], 1)
         self.assertEqual(self.stats(response)["entries"], 0)
 
+    def test_locate_strategies_and_operations_never_share_an_entry(self):
+        cold = self.session()
+        pts = points(10, 4, 10)
+        rays = json.dumps({"rays": [{"origin": [3.5, 4.5, 3], "direction": [0.01, 0.02, -1]}]}).encode()
+        locate = ("mesh.location.locate", "p.xyz", pts, "PointSet3", "xyz")
+        for first, second in (("locate", "locate_with_AABB_tree"), ("locate_with_AABB_tree", "locate")):
+            warm = self.session(env={"CGAL_MASTER_SESSION_CACHE_MB": "64"})
+            order = [first, second, first, second, "locate_with_AABB_tree"]
+            hits = []
+            for strategy in order:
+                for session in (warm, cold):
+                    mesh = session.artifact("m.off", grid(10, 0.3), "TriangleSurfaceMesh", "off")
+                    q = session.artifact(locate[1], locate[2], locate[3], locate[4])
+                    answer = session.request(locate[0], [mesh, q], {"strategy": strategy})
+                    self.assertEqual(answer["status"], "ok", answer)
+                    if session is warm:
+                        warm_answer = answer
+                self.assertEqual(warm_answer["_hashes"], answer["_hashes"], strategy)
+                info = self.stats(warm_answer)
+                hits.append("hit" if info.get("hits") else "miss" if info.get("misses") else "none")
+            expected = ["none", "miss", "none", "hit", "hit"] if first == "locate" else                 ["miss", "none", "hit", "none", "hit"]
+            self.assertEqual(hits, expected)
+        # a second operation on the same mesh is a miss and still equals the cold answer
+        warm = self.session(env={"CGAL_MASTER_SESSION_CACHE_MB": "64"})
+        for operation, query in (("spatial.aabb.closest_points", ("q.xyz", pts, "PointSet3", "xyz")),
+                                 ("spatial.aabb.ray_first_hits", ("r.json", rays, "RayBatch3", "json")),
+                                 ("spatial.aabb.intersections", ("r.json", rays, "RayBatch3", "json"))):
+            answers = []
+            for session in (warm, cold):
+                mesh = session.artifact("m.off", grid(10, 0.3), "TriangleSurfaceMesh", "off")
+                answers.append(session.request(operation, [mesh, session.artifact(*query)]))
+            self.assertEqual(self.stats(answers[0])["misses"], 1, operation)
+            self.assertEqual(answers[0]["_hashes"], answers[1]["_hashes"], operation)
+
     def test_intersections_locate_and_hausdorff_hits_match_cold(self):
         warm = self.session(env={"CGAL_MASTER_SESSION_CACHE_MB": "64"})
         cold = self.session()

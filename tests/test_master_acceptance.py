@@ -906,13 +906,14 @@ class PerformanceGateEvidenceTests(unittest.TestCase):
         geometry["cases"] = [c for c in geometry["cases"] if not (
             c["operation"] == "mesh.location.locate" and c["scale"] == "large")]
         geometry["safety"]["different_hash_not_shared"]["sequence"] = ["miss", "hit", "hit", "hit", "hit"]
+        geometry["safety"]["parameterization_keys"]["sequence"][1] = "hit"
         geometry["memory"]["eviction_and_budget"]["evicted_under_budget"] = False
         geometry["memory"]["bad_alloc_with_populated_cache"]["worker_replaced"] = False
         evidence["deterministic"]["persistent"]["default_policy"]["session_cache"] = True
         reasons = self.gate(evidence)["reasons"]
         for fragment in ("not shown bit-identical to the cold one-shot", "did not run every mandatory validator live",
                          "did not show the expected hit/miss counters", "mesh.location.locate large is unevidenced",
-                         "unshared across different content hashes", "memory budget", "bad_alloc containment",
+                         "unshared across different content hashes", "keys are not shown to separate", "memory budget", "bad_alloc containment",
                          "not off by default"):
             self.assertTrue([r for r in reasons if fragment in r], fragment)
 

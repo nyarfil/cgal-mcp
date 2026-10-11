@@ -1339,6 +1339,36 @@ async def _geometry_cache(worker: Path) -> tuple[dict, dict]:
             await runtime.supervisor.shutdown()
             runtime.supervisor.persistent = None
 
+            # ---- key coverage: an entry built under one parameterization is never reused under another
+            work = _newdir(root / "keys")
+            kmesh = _import_inputs(runtime, _newdir(work / "m"), [_mesh_input(12, 12, 0.3)[0]])
+            kpts = _import_inputs(runtime, _newdir(work / "p"), [(_box_points(16, 3, 12), "xyz", "PointSet3", "mm")])
+            krays = _import_inputs(runtime, _newdir(work / "r"), [(_box_rays(16, 3, 12), "json", "RayBatch3", "mm")])
+            steps = [("mesh.location.locate", kpts, {"strategy": "locate"}),
+                     ("mesh.location.locate", kpts, {"strategy": "locate_with_AABB_tree"}),
+                     ("mesh.location.locate", kpts, {"strategy": "locate"}),
+                     ("mesh.location.locate", kpts, {"strategy": "locate_with_AABB_tree"}),
+                     ("spatial.aabb.closest_points", kpts, {}),
+                     ("spatial.aabb.ray_first_hits", krays, {}),
+                     ("spatial.aabb.intersections", krays, {}),
+                     ("spatial.aabb.closest_points", kpts, {}),
+                     ("mesh.location.locate", kpts, {"strategy": "locate_with_AABB_tree"})]
+            reverse = [steps[i] for i in (1, 0, 1, 0)]
+            kplans = [_plan(runtime, op, kmesh + extra, params)["plan_id"] for op, extra, params in steps + reverse]
+            kcold = [_outputs_of(await _run_plan(runtime, plan_id)) for plan_id in kplans]
+            runtime.supervisor.persistent = policy()
+            khot, kseq = [], []
+            for (op, _, params), plan_id in zip(steps + reverse, kplans):
+                detail = await _run_plan(runtime, plan_id)
+                khot.append(_outputs_of(detail))
+                info = _cache_stats(detail, op)
+                kseq.append("hit" if info.get("hits") else "miss" if info.get("misses") else "none")
+            safety["parameterization_keys"] = {
+                "sequence": kseq,
+                "bit_identical_to_one_shot": khot == kcold and all(not h[0].startswith("failed") for h in khot)}
+            await runtime.supervisor.shutdown()
+            runtime.supervisor.persistent = None
+
             # ---- memory budget: eviction under pressure, oversize entries skipped, residue accounted
             memory_cap = 128
             work = _newdir(root / "memory")
