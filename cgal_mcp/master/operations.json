@@ -1,7 +1,7 @@
 {
   "$schema": "operation.schema.json",
   "schema_version": 1,
-  "catalog_revision": "master-core-hull-wave-a-wave-b-mesh-boolean-repair-wave-c-wave-d-wave-e-validated-6",
+  "catalog_revision": "master-core-hull-wave-a-wave-b-mesh-boolean-repair-wave-c-wave-d-wave-e-validated-7",
   "cgal_version": "6.2.1",
   "build_requirements": {
     "source_kind": "official_release",
@@ -296,6 +296,7 @@
       ],
       "package": "Surface_mesh_simplification",
       "major_requirements": [
+        "major.7.3.07",
         "major.7.7.01",
         "major.7.7.02",
         "major.7.7.03",
@@ -564,6 +565,24 @@
           "hausdorff_error_bound": {
             "type": "TypedLength",
             "exclusiveMinimum": 0
+          },
+          "foldover_policy": {
+            "enum": [
+              "reject",
+              "protect_and_retry"
+            ],
+            "default": "reject",
+            "description": "reject (default) keeps today's behavior: a collapse result that self-intersects is refused by the mandatory integrity validator. protect_and_retry scans each collapse result with PMP::self_intersections, protects the source edges around the intersecting faces (radius 3 x mean source edge length, defect centres accumulate over the rounds) and retries from the source; the independent validators still decide and no invalid mesh is ever published."
+          },
+          "max_retry_rounds": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 8,
+            "description": "Retry rounds after the first attempt (only with protect_and_retry; 4 when omitted). When intersections remain the operation is refused (SELF_INTERSECTION_UNRESOLVED) and nothing is published."
+          },
+          "accept_target_shortfall": {
+            "type": "boolean",
+            "description": "Only with protect_and_retry (false when omitted). By default, if the intersection-free result is larger than the requested face/edge target although the plain collapse reached it, the operation is refused (TARGET_NOT_REACHABLE_WITHOUT_SELF_INTERSECTION, best achievable counts in the message). true publishes that validated larger result instead; metrics.target_reached reports false."
           }
         }
       },
@@ -655,6 +674,10 @@
             "bounded_distance",
             "bounded_normal_change",
             "polyhedral_envelope"
+          ],
+          "foldover_policies": [
+            "reject",
+            "protect_and_retry"
           ]
         }
       }

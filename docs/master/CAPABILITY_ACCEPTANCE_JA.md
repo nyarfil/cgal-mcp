@@ -101,3 +101,47 @@ StellaCADが使う約71k面のスキャンメッシュ（個人データのた�
 未対応: 項目1（`mesh.distance.symmetric_hausdorff`の400面上限）と項目2（simplificationの
 自己交差に対する再試行）は今回も未対応です。上記の時間は情報用の1回計測で、受入根拠ではありません。
 `standalone_accepted`は引き続きfalseです。
+
+## 実クライアント制約 項目2: simplificationの自己交差（`foldover_policy`）
+
+`mesh.simplify.edge_collapse`の新parameter `foldover_policy`（`reject`が既定で従来動作、
+`protect_and_retry`）、`max_retry_rounds`（1〜8、既定4）、`accept_target_shortfall`（既定false）を追加しました。
+MCPのtool面は変えていません（既存Operationのparameterのみ）。`protect_and_retry`はworker内で
+collapse結果を`PMP::self_intersections`で走査し、交差面の重心の周囲（元メッシュの平均辺長の3倍）にある
+元の辺をconstrainedにして元メッシュから再実行します（中心は試行をまたいで蓄積）。独立validator
+（integrity、Hausdorff）は必須のままで、検証に落ちた結果は公開されません。目標面数に届かない場合は、
+達成できた最良の面数・辺数を載せた型付き拒否（`TARGET_NOT_REACHABLE_WITHOUT_SELF_INTERSECTION`）、
+試行を使い切っても交差が残る場合は`SELF_INTERSECTION_UNRESOLVED`で拒否します。
+`accept_target_shortfall=true`なら、検証済みの交差なし結果を目標未達（`metrics.target_reached=false`）として公開します。
+metricsに`retry_attempts`、`protected_edge_count`、`attempt_log`（試行ごとの面数と交差ペア数）を出します。
+registryの`catalog_revision`は`-7`（Operation数は228のまま）です。
+
+合成メッシュでの前後（71,060面、半径20 mmのUV球、半径方向ノイズ±2%、seed 3、LindstromTurk、
+目標35,600面。個人データは使っていません。欠陥は球の極付近に出るので、実スキャンの欠陥分布とは異なります）:
+
+| | 面数 | 交差ペア | integrity validator |
+|---|---|---|---|
+| 変更前（`reject`） | 35,598 | 9 | `SELF_INTERSECTION`で拒否（結果なし） |
+| 変更後（`protect_and_retry`） | 35,598 | 0 | pass（2試行、保護辺505、約3 s、情報用1回計測） |
+
+ノイズ±0.4%は3試行・保護辺4,147、±1%は5試行・保護辺4,282でいずれも35,598面・交差0でした。
+試行の途中で交差ペアが9→28→0や9→3→4→…→0と一時的に増えることがあります（保護で貪欲な順序が変わるため）。
+保護半径を試行ごとに広げる案は、7試行目以降に全辺を保護して71,060面のまま目標に届かなくなったため
+採用せず、固定半径＋中心の蓄積にしました。
+
+Hausdorff: 71k面・35k面は`mesh.distance.*`の面数上限（400面の厳密validator、Wave Dの標本化measureも
+面数上限あり）に当たり、35k面の結果の偏差は今回も測れていません（項目1は未対応のまま、上限は触っていません）。
+replay用の小さい合成メッシュ（352面、ノイズ±10%、半径60 mm）では、plainのcollapse（198面）が
+3ペア交差してvalidatorに拒否され、`protect_and_retry`は2試行・保護辺185で198面・交差0となり、
+必須のHausdorff validatorが6.24 mm（許容15 mm）でpassしました。目標が厳しすぎると保護後の結果が
+大きく歪む例も確認しています（別の合成球で134面、Hausdorff 79 mm。許容を大きくしない限りvalidatorが落とします）。
+replay: family 7.3（major.7.3.07に`mesh.simplify.edge_collapse`を追加）に陽性1件、陰性対照5件
+（交差したcollapse結果をintegrity validatorが拒否、目標未達の拒否、再試行枯渇の拒否、
+policy無しの`max_retry_rounds`の拒否、未知policyの拒否）。simplificationのvalidatorはレポートを
+入力に取らないため「改竄レポート拒否」は該当せず、改竄相当として「交差した候補の拒否」で代えています。
+`standalone_accepted`は引き続きfalseです。項目1は未対応です。
+
+parameter名を`self_intersection_policy`ではなく`foldover_policy`としたのは、Operation検索が
+parameter名も索引にするため、`self_intersection`の概念が`mesh.simplify.edge_collapse`にも一致して
+「自己交差の組を列挙する」という問い合わせが`mesh.analysis.self_intersections`へ一意に
+ルーティングされなくなる（既存の検索試験で検出）ためです。

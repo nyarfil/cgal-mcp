@@ -8,6 +8,7 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import random
 import subprocess
 import tempfile
 import unittest
@@ -38,6 +39,17 @@ def uv_sphere(latitudes: int, longitudes: int) -> tuple[list[tuple[float, float,
             faces += [(a, d, c), (a, c, b)]
     faces += [(south, ring(latitudes - 1, j + 1), ring(latitudes - 1, j)) for j in range(longitudes)]
     return vertices, faces
+
+
+def noisy_sphere(latitudes: int, longitudes: int, amplitude: float, seed: int, radius: float = 60.0):
+    """UV sphere with seeded radial noise (the synthesized stand-in for a scan with fold-overs)."""
+    rnd = random.Random(seed)
+    vertices, faces = uv_sphere(latitudes, longitudes)
+    out = []
+    for index, (x, y, z) in enumerate(vertices):
+        r = radius * (1.0 + amplitude * (rnd.random() * 2 - 1)) if 0 < index < len(vertices) - 1 else radius
+        out.append((x * r, y * r, z * r))
+    return out, faces
 
 
 def write_off(path: Path, vertices, faces) -> None:
@@ -141,6 +153,113 @@ class ClientLimitTests(unittest.TestCase):
             {"max_hole_edges": 20, "hole_ids": [49]}, "overfilled")
         self.assertEqual(response["status"], "error")
         self.assertEqual(response["error"]["code"], "REPAIR_VALIDATION_FAILED")
+
+    # --- simplification self-intersection control (foldover_policy) -------------------
+    SIC_FIXTURES = REPO / "tests/fixtures/master/wave_a"
+
+    def sic_params(self, target: int, **extra) -> dict:
+        return {"stop": {"kind": "face_count", "value": target}, "policy": "lindstrom_turk",
+                "max_symmetric_deviation": {"value": 15.0, "unit": "mm"},
+                "hausdorff_error_bound": {"value": 1.0, "unit": "mm"}, **extra}
+
+    def intersection_pairs(self, path: Path, name: str) -> int:
+        response = self.run_worker("mesh.analysis.self_intersections", [artifact(path, "input-0")], {}, name)
+        self.assertEqual(response["status"], "ok", response)
+        report = json.loads(Path(response["outputs"][0]["path"]).read_text(encoding="utf-8"))
+        return report["results"]["intersection_pair_count"]
+
+    def test_synthesized_fixtures_match_their_generator(self):
+        for name, (amplitude, seed) in {"noisy_sphere_fold.off": (0.1, 1), "noisy_sphere_shortfall.off": (0.06, 2),
+                                         "noisy_sphere_unresolved.off": (0.2, 13)}.items():
+            vertices, faces = noisy_sphere(12, 16, amplitude, seed)
+            regenerated = self.root / name
+            write_off(regenerated, vertices, faces)
+            self.assertEqual(regenerated.read_bytes(), (self.SIC_FIXTURES / name).read_bytes(), name)
+
+    def test_default_collapse_self_intersects_and_is_unchanged(self):
+        source = artifact(self.SIC_FIXTURES / "noisy_sphere_fold.off", "input-0")
+        response = self.run_worker("mesh.simplify.edge_collapse", [source], self.sic_params(200), "sic-default")
+        self.assertEqual(response["status"], "ok", response)
+        self.assertNotIn("retry_attempts", response["metrics"])
+        candidate = Path(response["outputs"][0]["path"])
+        self.assertEqual(self.intersection_pairs(candidate, "sic-default-pairs"), 3)
+        verdict = self.run_worker("mesh.validate.simplification_integrity",
+                                  [artifact(candidate, "candidate"), source],
+                                  {"preserve_border": True, "constrained_edges": []}, "sic-default-integrity")
+        self.assertEqual(verdict["status"], "error")
+        self.assertEqual(verdict["error"]["code"], "SELF_INTERSECTION")
+
+    def test_protect_and_retry_yields_an_intersection_free_validated_mesh(self):
+        source = artifact(self.SIC_FIXTURES / "noisy_sphere_fold.off", "input-0")
+        response = self.run_worker("mesh.simplify.edge_collapse", [source],
+                                   self.sic_params(200, foldover_policy="protect_and_retry"), "sic-retry")
+        self.assertEqual(response["status"], "ok", response)
+        metrics = response["metrics"]
+        self.assertEqual((metrics["faces_after"], metrics["retry_attempts"], metrics["final_self_intersecting_pairs"]),
+                         (198, 2, 0))
+        self.assertEqual([item["intersecting_pairs"] for item in metrics["attempt_log"]], [3, 0])
+        candidate = Path(response["outputs"][0]["path"])
+        self.assertEqual(self.intersection_pairs(candidate, "sic-retry-pairs"), 0)
+        verdict = self.run_worker("mesh.validate.simplification_integrity",
+                                  [artifact(candidate, "candidate"), source],
+                                  {"preserve_border": True, "constrained_edges": []}, "sic-retry-integrity")
+        self.assertEqual(verdict["status"], "ok", verdict)
+
+    def test_unreachable_target_is_refused_with_the_best_achievable_count(self):
+        source = artifact(self.SIC_FIXTURES / "noisy_sphere_shortfall.off", "input-0")
+        params = self.sic_params(120, foldover_policy="protect_and_retry")
+        refused = self.run_worker("mesh.simplify.edge_collapse", [source], params, "sic-short")
+        self.assertEqual(refused["status"], "error")
+        self.assertEqual(refused["error"]["code"], "TARGET_NOT_REACHABLE_WITHOUT_SELF_INTERSECTION")
+        self.assertIn("134 faces", refused["error"]["message"])
+        accepted = self.run_worker("mesh.simplify.edge_collapse", [source],
+                                   {**params, "accept_target_shortfall": True}, "sic-short-ok")
+        self.assertEqual(accepted["status"], "ok", accepted)
+        self.assertEqual((accepted["metrics"]["faces_after"], accepted["metrics"]["target_reached"]), (134, False))
+        self.assertEqual(self.intersection_pairs(Path(accepted["outputs"][0]["path"]), "sic-short-pairs"), 0)
+
+    def test_exhausted_retry_rounds_publish_nothing(self):
+        source = artifact(self.SIC_FIXTURES / "noisy_sphere_unresolved.off", "input-0")
+        refused = self.run_worker("mesh.simplify.edge_collapse", [source],
+                                  self.sic_params(150, foldover_policy="protect_and_retry",
+                                                  max_retry_rounds=1), "sic-unresolved")
+        self.assertEqual(refused["status"], "error")
+        self.assertEqual(refused["error"]["code"], "SELF_INTERSECTION_UNRESOLVED")
+        self.assertEqual(refused.get("outputs", []), [])
+
+    def test_retry_options_require_the_policy(self):
+        source = artifact(self.SIC_FIXTURES / "noisy_sphere_fold.off", "input-0")
+        for extra, code in (({"max_retry_rounds": 2}, "RETRY_ROUNDS_WITHOUT_POLICY"),
+                            ({"accept_target_shortfall": True}, "SHORTFALL_WITHOUT_POLICY"),
+                            ({"foldover_policy": "ignore"}, "INVALID_PARAMETER")):
+            response = self.run_worker("mesh.simplify.edge_collapse", [source], self.sic_params(200, **extra),
+                                       "sic-bad-" + code)
+            self.assertEqual(response["error"]["code"], code, response)
+
+    def test_protect_and_retry_on_a_71k_face_noisy_sphere(self):
+        vertices, faces = noisy_sphere(188, 190, 0.02, 3, radius=20.0)
+        self.assertGreaterEqual(len(faces), 71000)
+        mesh = self.root / "noisy_71k.off"
+        write_off(mesh, vertices, faces)
+        source = artifact(mesh, "input-0")
+        plain = self.run_worker("mesh.simplify.edge_collapse", [source], self.sic_params(35600), "sic-71k-plain")
+        self.assertGreater(self.intersection_pairs(Path(plain["outputs"][0]["path"]), "sic-71k-plain-pairs"), 0)
+        retried = self.run_worker("mesh.simplify.edge_collapse", [source],
+                                  self.sic_params(35600, foldover_policy="protect_and_retry"), "sic-71k")
+        self.assertEqual(retried["status"], "ok", retried)
+        self.assertEqual(retried["metrics"]["faces_after"], 35598)
+        candidate = artifact(Path(retried["outputs"][0]["path"]), "candidate")
+        verdict = self.run_worker("mesh.validate.simplification_integrity", [candidate, source],
+                                  {"preserve_border": True, "constrained_edges": []}, "sic-71k-integrity")
+        self.assertEqual(verdict["status"], "ok", verdict)
+
+    def test_registry_and_guide_describe_the_retry_policy(self):
+        from cgal_mcp.master.registry import OperationRegistry
+        operation = OperationRegistry().operations["mesh.simplify.edge_collapse"]
+        for name in ("foldover_policy", "max_retry_rounds", "accept_target_shortfall"):
+            self.assertIn(name, operation["parameters"]["properties"])
+        self.assertEqual(operation["parameters"]["properties"]["foldover_policy"]["default"], "reject")
+        self.assertIn("protect_and_retry", (REPO / "cgal_mcp/master/guide/guide.json").read_text(encoding="utf-8"))
 
 
 class RegistryGuideTests(unittest.TestCase):

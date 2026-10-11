@@ -19,7 +19,7 @@ AABB木・Kd木・光線や近傍の問合せ、メッシュ上の点位置特�
 - spatial.range_search_3 [analysis] PointSet3+PointSet3 -> SpatialQueryReport: Exact closed-ball range (radius) search of query points against a 3D point set using a kd-tree.
 検証器（自動）: spatial.validate.aabb_intersections, spatial.validate.bbox_report, spatial.validate.closest_points_report, spatial.validate.knn_report, spatial.validate.range_report, spatial.validate.ray_hits_report
 
-## 7.3 解析 (30 操作 + 32 検証器)
+## 7.3 解析 (31 操作 + 33 検証器)
 閉・多様体・自己交差の検査、連結成分、法線、面積・体積、鋭い辺、距離（Hausdorff）。
 - mesh.analysis.connected_components [analysis] TriangleSurfaceMesh -> GeometryAnalysisReport: Partition all source faces into connected components.
 - mesh.analysis.measures [analysis] TriangleSurfaceMesh -> GeometryAnalysisReport: Compute typed surface area and conditionally available volume and volume centroid.
@@ -49,9 +49,10 @@ AABB木・Kd木・光線や近傍の問合せ、メッシュ上の点位置特�
 - mesh.repair.polygon_soup [transform] PolygonSoup3 -> PolygonSoup3: Repair duplicate points, duplicate/degenerate polygons, and unused points in a triangle polygon soup.
 - mesh.repair.remove_degenerate [transform] PolygonSoup3 -> TriangleSurfaceMesh: Remove degenerate (zero-area, collapsed) combinatorial and geometric triangles and edges from repairable triangle OFF.
 - mesh.repair.stitch_borders [transform] TriangleSurfaceMesh -> TriangleSurfaceMesh: Stitch (weld) exactly coincident compatible border halfedges, such as duplicated seam vertices of a polygon soup imported as a triangle surface mesh.
+- mesh.simplify.edge_collapse [transform] TriangleSurfaceMesh -> TriangleSurfaceMesh: Simplify a valid triangle surface mesh with CGAL edge collapse and an explicitly selected public policy.
 - pointset.normals.estimate [transform] PointSet3 -> PointSet3Normals: Estimate nonzero point normals using PCA or jet fitting.
 - pointset.normals.orient_mst [transform] PointSet3Normals -> PointSet3Normals: Orient point normals with CGAL MST propagation.
-検証器（自動）: mesh.distance.symmetric_hausdorff, mesh.validate.boolean_difference, mesh.validate.boolean_intersection, mesh.validate.boolean_union, mesh.validate.components_component, mesh.validate.components_keep_largest, mesh.validate.components_label, mesh.validate.connected_components_report, mesh.validate.distance_samples, mesh.validate.do_intersect, mesh.validate.features, mesh.validate.hausdorff_report, mesh.validate.hausdorff_symmetric_report, mesh.validate.intersection_polylines, mesh.validate.location, mesh.validate.max_distance_to_mesh, mesh.validate.max_distance_to_points, mesh.validate.measures_report, mesh.validate.normals_report, mesh.validate.pmp_inspection_report, mesh.validate.repair_fill_holes, mesh.validate.repair_manifold_preprocess, mesh.validate.repair_orientation, mesh.validate.repair_polygon_soup, mesh.validate.repair_remove_degenerate, mesh.validate.repair_stitch_borders, mesh.validate.self_intersections_report, mesh.validate.sharp_features_report, mesh.validate.tetrahedral_mesh, pointset.validate.basic, pointset.validate.normals_estimated, pointset.validate.normals_oriented
+検証器（自動）: mesh.distance.symmetric_hausdorff, mesh.validate.boolean_difference, mesh.validate.boolean_intersection, mesh.validate.boolean_union, mesh.validate.components_component, mesh.validate.components_keep_largest, mesh.validate.components_label, mesh.validate.connected_components_report, mesh.validate.distance_samples, mesh.validate.do_intersect, mesh.validate.features, mesh.validate.hausdorff_report, mesh.validate.hausdorff_symmetric_report, mesh.validate.intersection_polylines, mesh.validate.location, mesh.validate.max_distance_to_mesh, mesh.validate.max_distance_to_points, mesh.validate.measures_report, mesh.validate.normals_report, mesh.validate.pmp_inspection_report, mesh.validate.repair_fill_holes, mesh.validate.repair_manifold_preprocess, mesh.validate.repair_orientation, mesh.validate.repair_polygon_soup, mesh.validate.repair_remove_degenerate, mesh.validate.repair_stitch_borders, mesh.validate.self_intersections_report, mesh.validate.sharp_features_report, mesh.validate.simplification_integrity, mesh.validate.tetrahedral_mesh, pointset.validate.basic, pointset.validate.normals_estimated, pointset.validate.normals_oriented
 
 ## 7.4 修復 (2 操作 + 2 検証器)
 向きの修正、境界の縫合、穴埋め、ポリゴンスープの整理、退化・自己交差部の除去。
@@ -79,10 +80,8 @@ AABB木・Kd木・光線や近傍の問合せ、メッシュ上の点位置特�
 - mesh.triangulate.faces [transform] PolygonSoup3 -> TriangleSurfaceMesh: Triangulate every polygon face of a polygon mesh (triangulate_faces or per-face triangulate_face).
 検証器（自動）: mesh.validate.adaptive_remesh, mesh.validate.isotropic_remesh, mesh.validate.refinement, mesh.validate.shape_smoothing, mesh.validate.split_long_edges, mesh.validate.tangential_relaxation, mesh.validate.triangulated_faces
 
-## 7.7 軽量化 (1 操作 + 1 検証器)
+## 7.7 軽量化 (0 操作 + 0 検証器)
 コスト・配置方針を選んだ辺縮約で三角形数を減らす（偏差の上限付き）。
-- mesh.simplify.edge_collapse [transform] TriangleSurfaceMesh -> TriangleSurfaceMesh: Simplify a valid triangle surface mesh with CGAL edge collapse and an explicitly selected public policy.
-検証器（自動）: mesh.validate.simplification_integrity
 
 ## 7.8 メッシュ解析・分解 (10 操作 + 9 検証器)
 形状直径、セグメンテーション、パラメータ化、近似凸分解、曲率流、測地線。

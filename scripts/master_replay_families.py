@@ -4530,6 +4530,68 @@ FAMILY_7_3["requirements"]["major.7.3.07"] = {
                  "intersect-cubes-far", "intersect-contained-surfaces-only", "intersect-contained-bounded-sides",
                  "intersect-polylines-shifted-cubes"],
 }
+# Self-intersection control of mesh.simplify.edge_collapse (client limit: CGAL edge collapse has no
+# self-intersection guard, so the validated candidate used to be refused wholesale). All meshes are
+# synthesized: a 12x16 UV sphere (radius 60 mm, 352 faces, 178 vertices) with seeded radial noise of
+# +-10 % (fold), +-6 % (shortfall) and +-20 % (unresolved). The fold fixture collapsed with the plain policy to
+# 198 faces self-intersects in 3 face pairs (fixture noisy_sphere_fold_collapsed_intersecting.off, found
+# independently with mesh.analysis.self_intersections).
+SIC_FOLD = _mesh({"fixture": "wave_a/noisy_sphere_fold.off",
+                  "sha256": "8ad8d849d2e71614830f51fd7cbee6652550677b3bdacd1a94d63ea56809744c"})
+SIC_FOLD_BAD = _mesh({"fixture": "wave_a/noisy_sphere_fold_collapsed_intersecting.off",
+                      "sha256": "79d46f215e9342509b7fc18b5c8d0ffb5838626b2daccad281f07afb94ac4e66"})
+SIC_SHORTFALL = _mesh({"fixture": "wave_a/noisy_sphere_shortfall.off",
+                       "sha256": "3b48dd1dd0b14da24d3803a12c5f148330349deceed5d51b58f201fc9e4e22da"})
+SIC_UNRESOLVED = _mesh({"fixture": "wave_a/noisy_sphere_unresolved.off",
+                        "sha256": "9c2e0c884e260e652a504d2ab42448dcec5c8f06f606a33c3b895b141e081dd5"})
+
+
+def _sic_params(target: int, **extra) -> dict:
+    return {"stop": {"kind": "face_count", "value": target}, "policy": "lindstrom_turk",
+            "preserve_border": True, "constrained_edges": [],
+            "max_symmetric_deviation": _mm(15.0), "hausdorff_error_bound": _mm(1.0), **extra}
+
+
+SIC_RETRY = {"foldover_policy": "protect_and_retry"}
+FAMILY_7_3["requirements"]["major.7.3.07"]["operation_ids"].append("mesh.simplify.edge_collapse")
+FAMILY_7_3["requirements"]["major.7.3.07"]["case_ids"].extend([
+    "simplify-protect-retry-fold-200"])
+FAMILY_7_3["requirements"]["major.7.3.07"]["symbol_notes"] += (
+    " mesh.simplify.edge_collapse with foldover_policy protect_and_retry runs PMP::self_intersections on "
+    "every collapse candidate, protects the source edges around the intersecting faces and retries from the source; "
+    "the mandatory independent integrity validator (does_self_intersect, manifoldness, volume, orientation) and the "
+    "Hausdorff validator still decide, so an invalid mesh is never published. Plain collapse of the synthesized "
+    "noisy sphere to 198 faces self-intersects in 3 face pairs; protect_and_retry needs 2 attempts and protects "
+    "185 of 528 source edges. Refusals are typed: TARGET_NOT_REACHABLE_WITHOUT_SELF_INTERSECTION (best achievable "
+    "count in the message) and SELF_INTERSECTION_UNRESOLVED.")
+FAMILY_7_3["cases"].extend([
+    _case("simplify-protect-retry-fold-200", "mesh.simplify.edge_collapse", [SIC_FOLD], _sic_params(200, **SIC_RETRY), [
+        ["metrics.foldover_policy", "==", "protect_and_retry"],
+        ["metrics.retry_attempts", "==", 2], ["metrics.protected_edge_count", "==", 185],
+        ["metrics.final_self_intersecting_pairs", "==", 0], ["metrics.target_reached", "==", True],
+        ["metrics.attempt_log.0.intersecting_pairs", "==", 3], ["metrics.attempt_log.1.intersecting_pairs", "==", 0],
+        ["metrics.faces_before", "==", 352], ["metrics.faces_after", "==", 198],
+        ["output:geometry:measure:off.face_count", "==", 198],
+        ["output:geometry:measure:off.boundary_edge_count", "==", 0],
+    ]),
+])
+FAMILY_7_3["negative_controls"].extend([
+    {"id": "simplify-plain-collapse-fold-integrity-rejected", "operation": "mesh.validate.simplification_integrity",
+     "inputs": [SIC_FOLD_BAD, SIC_FOLD], "parameters": {"preserve_border": True, "constrained_edges": []},
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "SELF_INTERSECTION"},
+    {"id": "simplify-shortfall-refused-without-accept", "operation": "mesh.simplify.edge_collapse",
+     "inputs": [SIC_SHORTFALL], "parameters": _sic_params(120, **SIC_RETRY),
+     "expect_error_class": "PRECONDITION_FAILED", "expect_error_code": "TARGET_NOT_REACHABLE_WITHOUT_SELF_INTERSECTION"},
+    {"id": "simplify-retry-unresolved-refused", "operation": "mesh.simplify.edge_collapse",
+     "inputs": [SIC_UNRESOLVED], "parameters": _sic_params(150, **SIC_RETRY, max_retry_rounds=1),
+     "expect_error_class": "PRECONDITION_FAILED", "expect_error_code": "SELF_INTERSECTION_UNRESOLVED"},
+    {"id": "simplify-retry-rounds-without-policy-rejected", "operation": "mesh.simplify.edge_collapse",
+     "inputs": [SIC_FOLD], "parameters": _sic_params(200, max_retry_rounds=2),
+     "expect_error_class": "INVALID_REQUEST", "expect_error_code": "RETRY_ROUNDS_WITHOUT_POLICY"},
+    {"id": "simplify-unknown-intersection-policy-rejected", "operation": "mesh.simplify.edge_collapse",
+     "inputs": [SIC_FOLD], "parameters": _sic_params(200, foldover_policy="ignore"),
+     "expect_error_class": "INVALID_REQUEST", "expect_error_code": "INVALID_PARAMETER"},
+])
 FAMILY_7_3["cases"].extend([
     _case("intersect-cubes-overlap", "mesh.intersections.do_intersect", [_mesh(CUBE_A), B5_SHIFT], B5_SURFACES_ONLY, [
         ["output:analysis:json:report_kind", "==", "mesh_do_intersect"],

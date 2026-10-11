@@ -16,8 +16,11 @@
 #include <CGAL/Surface_mesh_simplification/Policies/Edge_collapse/Midpoint_placement.h>
 #include <CGAL/Surface_mesh_simplification/Policies/Edge_collapse/Polyhedral_envelope_filter.h>
 #include <CGAL/Surface_mesh_simplification/edge_collapse.h>
+#include <CGAL/Polygon_mesh_processing/self_intersections.h>
+#include <CGAL/Polygon_mesh_processing/shape_predicates.h>
 #include <CGAL/boost/graph/helpers.h>
 
+#include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <memory>
@@ -145,7 +148,8 @@ void require_allowed_parameters(const Json& parameters) {
   static const std::set<std::string> allowed = {
       "stop", "policy", "preserve_border", "constrained_edges",
       "bounded_distance", "polyhedral_envelope", "bounded_normal_change",
-      "max_symmetric_deviation", "hausdorff_error_bound"};
+      "max_symmetric_deviation", "hausdorff_error_bound",
+      "foldover_policy", "max_retry_rounds", "accept_target_shortfall"};
   for (auto iterator = parameters.begin(); iterator != parameters.end();
        ++iterator) {
     if (allowed.find(iterator.key()) == allowed.end()) {
@@ -277,6 +281,86 @@ ConstraintMap configure_constraints(Mesh& mesh, const Json& parameters,
   return constraints;
 }
 
+
+// Self-intersection control (foldover_policy = protect_and_retry).
+struct DefectScan {
+  std::size_t intersecting_pairs = 0;
+  std::size_t degenerate_faces = 0;
+  std::vector<Point> centers;  // centroids of every defective candidate face
+};
+
+Point face_centroid(const Mesh& mesh, Mesh::Face_index face) {
+  double x = 0, y = 0, z = 0;
+  for (const auto vertex : mesh.vertices_around_face(mesh.halfedge(face))) {
+    const auto& point = mesh.point(vertex);
+    x += point.x();
+    y += point.y();
+    z += point.z();
+  }
+  return Point(x / 3.0, y / 3.0, z / 3.0);
+}
+
+DefectScan scan_defects(const Mesh& mesh) {
+  namespace PMP = CGAL::Polygon_mesh_processing;
+  DefectScan scan;
+  std::set<Mesh::Face_index> bad;
+  for (const auto face : mesh.faces()) {
+    if (PMP::is_degenerate_triangle_face(face, mesh)) {
+      bad.insert(face);
+      ++scan.degenerate_faces;
+    }
+  }
+  if (scan.degenerate_faces == 0) {
+    std::vector<std::pair<Mesh::Face_index, Mesh::Face_index>> pairs;
+    PMP::self_intersections(mesh, std::back_inserter(pairs));
+    scan.intersecting_pairs = pairs.size();
+    for (const auto& pair : pairs) {
+      bad.insert(pair.first);
+      bad.insert(pair.second);
+    }
+  }
+  for (const auto face : bad) scan.centers.push_back(face_centroid(mesh, face));
+  return scan;
+}
+
+double mean_edge_length(const Mesh& mesh) {
+  double total = 0;
+  std::size_t count = 0;
+  for (const auto edge : mesh.edges()) {
+    const auto halfedge = mesh.halfedge(edge);
+    total += std::sqrt(CGAL::to_double(CGAL::squared_distance(
+        mesh.point(mesh.source(halfedge)), mesh.point(mesh.target(halfedge)))));
+    ++count;
+  }
+  return count == 0 ? 0.0 : total / static_cast<double>(count);
+}
+
+// Marks every not yet constrained edge whose midpoint lies within `radius`
+// of a defect centre as constrained (it can no longer be collapsed).
+std::size_t protect_near(const Mesh& mesh, ConstraintMap& constraints,
+                         const std::vector<Point>& centers, double radius) {
+  std::size_t added = 0;
+  const double squared_radius = radius * radius;
+  for (const auto edge : mesh.edges()) {
+    if (constraints[edge]) continue;
+    const auto halfedge = mesh.halfedge(edge);
+    const auto& a = mesh.point(mesh.source(halfedge));
+    const auto& b = mesh.point(mesh.target(halfedge));
+    const double mx = (a.x() + b.x()) * 0.5, my = (a.y() + b.y()) * 0.5,
+                 mz = (a.z() + b.z()) * 0.5;
+    for (const auto& center : centers) {
+      const double dx = mx - center.x(), dy = my - center.y(),
+                   dz = mz - center.z();
+      if (dx * dx + dy * dy + dz * dz <= squared_radius) {
+        constraints[edge] = true;
+        ++added;
+        break;
+      }
+    }
+  }
+  return added;
+}
+
 template <typename Cost, typename Placement>
 int collapse_with(Mesh& mesh, const ConfiguredStopPredicate& stop,
                   const Cost& cost, const Placement& placement,
@@ -397,21 +481,142 @@ Json run_simplify_edge_collapse(const Request& request) {
                             "polyhedral_envelope", true);
   }
 
-  std::size_t constrained_count = 0;
-  auto constraints = configure_constraints(mesh, request.parameters,
-                                           preserve_border,
-                                           constrained_count);
-  const auto vertices_before = mesh.number_of_vertices();
-  const auto edges_before = mesh.number_of_edges();
-  const auto faces_before = mesh.number_of_faces();
+  std::string intersection_policy = "reject";
+  if (request.parameters.contains("foldover_policy")) {
+    const auto& value = request.parameters.at("foldover_policy");
+    if (!value.is_string() ||
+        (value.get<std::string>() != "reject" &&
+         value.get<std::string>() != "protect_and_retry")) {
+      throw WorkerError("INVALID_REQUEST", "INVALID_PARAMETER",
+                        "foldover_policy must be reject or "
+                        "protect_and_retry");
+    }
+    intersection_policy = value.get<std::string>();
+  }
+  const bool retrying = intersection_policy == "protect_and_retry";
+  std::size_t max_rounds = 4;
+  if (request.parameters.contains("max_retry_rounds")) {
+    const auto& value = request.parameters.at("max_retry_rounds");
+    if (!retrying) {
+      throw WorkerError("INVALID_REQUEST", "RETRY_ROUNDS_WITHOUT_POLICY",
+                        "max_retry_rounds requires foldover_policy "
+                        "protect_and_retry");
+    }
+    if (!value.is_number_unsigned() || value.get<std::size_t>() < 1 ||
+        value.get<std::size_t>() > 8) {
+      throw WorkerError("INVALID_REQUEST", "INVALID_PARAMETER",
+                        "max_retry_rounds must be an integer in [1, 8]");
+    }
+    max_rounds = value.get<std::size_t>();
+  }
+  const bool accept_shortfall =
+      boolean_parameter(request.parameters, "accept_target_shortfall", false);
+  if (accept_shortfall && !retrying) {
+    throw WorkerError("INVALID_REQUEST", "SHORTFALL_WITHOUT_POLICY",
+                      "accept_target_shortfall requires "
+                      "foldover_policy protect_and_retry");
+  }
 
+  const Mesh source = mesh;
+  const auto vertices_before = source.number_of_vertices();
+  const auto edges_before = source.number_of_edges();
+  const auto faces_before = source.number_of_faces();
   ConfiguredFilter filter(bounded_normal_change, use_envelope, envelope);
-  const int removed = dispatch_policy(policy, mesh, stop, constraints, filter,
-                                      bounded_distance, maximum_distance);
-  if (!CGAL::is_valid_polygon_mesh(mesh) || !CGAL::is_triangle_mesh(mesh) ||
-      mesh.number_of_faces() == 0) {
-    throw WorkerError("INTERNAL", "INVALID_SIMPLIFICATION_OUTPUT",
-                      "Edge collapse produced an invalid triangle mesh");
+
+  // Count target of the stop rule (for the honest shortfall report).
+  const auto& stop_json = request.parameters.at("stop");
+  std::optional<double> target_faces, target_edges;
+  if (stop_kind == "face_count") {
+    target_faces = static_cast<double>(stop_json.at("value").get<std::size_t>());
+  } else if (stop_kind == "face_ratio") {
+    target_faces = stop_json.at("value").get<double>() *
+                   static_cast<double>(faces_before);
+  } else if (stop_kind == "edge_count") {
+    target_edges = static_cast<double>(stop_json.at("value").get<std::size_t>());
+  } else if (stop_kind == "edge_ratio") {
+    target_edges = stop_json.at("value").get<double>() *
+                   static_cast<double>(edges_before);
+  }
+  const auto target_reached = [&](const Mesh& candidate) {
+    if (target_faces) {
+      return static_cast<double>(candidate.number_of_faces()) <= *target_faces;
+    }
+    if (target_edges) {
+      return static_cast<double>(candidate.number_of_edges()) <= *target_edges;
+    }
+    return true;
+  };
+
+  std::size_t constrained_count = 0;
+  std::size_t protected_count = 0;
+  int removed = 0;
+  Json attempts = Json::array();
+  std::vector<Point> centers;
+  const double base_radius = 3.0 * mean_edge_length(source);
+  bool first_round_reached_target = true;
+  std::size_t rounds = 0;
+  std::size_t final_pairs = 0;
+  bool resolved = !retrying;
+  const std::size_t round_limit = retrying ? max_rounds + 1 : 1;
+  for (std::size_t round = 1; round <= round_limit; ++round) {
+    Mesh candidate = source;
+    std::size_t user_constrained = 0;
+    auto constraints = configure_constraints(candidate, request.parameters,
+                                             preserve_border, user_constrained);
+    protected_count = 0;
+    if (!centers.empty()) {
+      protected_count = protect_near(candidate, constraints, centers, base_radius);
+    }
+    constrained_count = user_constrained + protected_count;
+    removed = dispatch_policy(policy, candidate, stop, constraints, filter,
+                              bounded_distance, maximum_distance);
+    if (!CGAL::is_valid_polygon_mesh(candidate) ||
+        !CGAL::is_triangle_mesh(candidate) || candidate.number_of_faces() == 0) {
+      throw WorkerError("INTERNAL", "INVALID_SIMPLIFICATION_OUTPUT",
+                        "Edge collapse produced an invalid triangle mesh");
+    }
+    rounds = round;
+    if (!retrying) {
+      mesh = std::move(candidate);
+      break;
+    }
+    auto scan = scan_defects(candidate);
+    final_pairs = scan.intersecting_pairs + scan.degenerate_faces;
+    if (round == 1) first_round_reached_target = target_reached(candidate);
+    attempts.push_back({{"attempt", round},
+                        {"protected_edge_count", protected_count},
+                        {"faces_after", candidate.number_of_faces()},
+                        {"intersecting_pairs", scan.intersecting_pairs},
+                        {"degenerate_faces", scan.degenerate_faces}});
+    if (final_pairs == 0) {
+      resolved = true;
+      mesh = std::move(candidate);
+      break;
+    }
+    centers.insert(centers.end(), scan.centers.begin(), scan.centers.end());
+    if (round == round_limit) mesh = std::move(candidate);
+  }
+  if (!resolved) {
+    throw WorkerError(
+        "PRECONDITION_FAILED", "SELF_INTERSECTION_UNRESOLVED",
+        "protect_and_retry could not remove all self-intersections within " +
+            std::to_string(max_rounds) + " retry rounds; the last attempt kept " +
+            std::to_string(mesh.number_of_faces()) + " faces with " +
+            std::to_string(final_pairs) +
+            " defective face pairs (no result is published; use a larger "
+            "face target or more retry rounds)");
+  }
+  const bool reached = target_reached(mesh);
+  if (retrying && first_round_reached_target && !reached &&
+      !accept_shortfall) {
+    throw WorkerError(
+        "PRECONDITION_FAILED", "TARGET_NOT_REACHABLE_WITHOUT_SELF_INTERSECTION",
+        "The requested size is not reachable without self-intersection: the "
+        "best intersection-free result has " +
+            std::to_string(mesh.number_of_faces()) + " faces and " +
+            std::to_string(mesh.number_of_edges()) +
+            " edges (raise the target to this value, or set "
+            "accept_target_shortfall to publish it)");
   }
 
   const auto path = write_mesh_output(request, mesh);
@@ -433,6 +638,14 @@ Json run_simplify_edge_collapse(const Request& request) {
       {"polyhedral_envelope_enabled", use_envelope},
       {"effective_kernel",
        "CGAL::Exact_predicates_inexact_constructions_kernel"}};
+  if (retrying) {
+    metrics["foldover_policy"] = intersection_policy;
+    metrics["retry_attempts"] = rounds;
+    metrics["protected_edge_count"] = protected_count;
+    metrics["final_self_intersecting_pairs"] = 0;
+    metrics["target_reached"] = reached;
+    metrics["attempt_log"] = attempts;
+  }
   return success_result(request, std::move(outputs), std::move(metrics));
 }
 
@@ -466,6 +679,8 @@ OperationDefinition simplify_edge_collapse_operation() {
        Json::array({"preserve_border", "constrained_edges",
                     "bounded_distance", "bounded_normal_change",
                     "polyhedral_envelope"})},
+      {"foldover_policies",
+       Json::array({"reject", "protect_and_retry"})},
       {"validator_parameter_bindings",
        {{"mesh.validate.simplification_integrity",
          {{"preserve_border", "preserve_border"},
