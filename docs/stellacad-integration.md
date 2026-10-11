@@ -35,3 +35,5 @@ Plugin/IPC形式は本体リポジトリで確認後に確定する。
 同梱CGALのライセンス、OS別worker配布、アップデート方式を確定する。
 派生メッシュのsidecarは実PCへ配置・接続試験済み。
 正確な固体正本を保持し、native apply_mesh_atomic/Undoは別の本体実装として残る。
+2026-10-11: StellaCADの`.mcp.json`等へ`cgal-master`（本Master server、`cgal_get_guide`先行）を追加し、v0.1 `cgal-mcp`は互換フォールバックとして維持。
+派生ファイル橋`integration/cgal/master_derive.py`のみ実装、native CADHost/Undoは未実装のまま。

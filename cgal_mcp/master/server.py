@@ -4,12 +4,17 @@ from __future__ import annotations
 
 import argparse
 from contextlib import asynccontextmanager
+import functools
+import inspect
+import json
 import os
 from pathlib import Path
 from typing import Any
 
 from mcp.server import MCPServer
+from mcp.server.mcpserver.exceptions import ToolError
 
+from .errors import MasterError
 from .guide import Guide, STATIC_TOPICS
 from .runtime import MasterRuntime, default_runtime
 
@@ -92,9 +97,39 @@ def _register_prompts(server: MCPServer, guide: Guide) -> None:
         return text("choose_operation", lang, goal=goal)
 
 
+def _structured_errors(function):
+    """Return typed refusals ({class, code, message, ...}) to the client.
+
+    Without this the SDK reduces every MasterError to the opaque text
+    "Error executing tool <name>", so an agent cannot read the code or remedy.
+    """
+    def refuse(error: MasterError):
+        return ToolError(json.dumps(error.as_dict(), ensure_ascii=False))
+
+    if inspect.iscoroutinefunction(function):
+        @functools.wraps(function)
+        async def wrapper(*args, **kwargs):
+            try:
+                return await function(*args, **kwargs)
+            except MasterError as error:
+                raise refuse(error) from error
+    else:
+        @functools.wraps(function)
+        def wrapper(*args, **kwargs):
+            try:
+                return function(*args, **kwargs)
+            except MasterError as error:
+                raise refuse(error) from error
+    return wrapper
+
+
 def create_server(runtime: MasterRuntime | None = None) -> MCPServer:
     active = runtime or default_runtime()
     guide = Guide()
+
+    def tool(name: str):
+        register = server.tool(name=name)
+        return lambda function: register(_structured_errors(function))
 
     @asynccontextmanager
     async def lifespan(_: MCPServer):
@@ -110,76 +145,76 @@ def create_server(runtime: MasterRuntime | None = None) -> MCPServer:
                        instructions=guide.instructions("en"),
                        lifespan=lifespan)
 
-    @server.tool(name="cgal_get_guide")
+    @tool(name="cgal_get_guide")
     def get_guide(topic: str = "start", lang: str = "en") -> dict[str, Any]:
         """CALL THIS FIRST. Built-in guide (markdown, generated from the live registry). topic: 'start' quickstart; 'recipes' verified if-the-user-wants-X workflows ('recipe:<id>' for one); 'op:<operation_id>' complete card with parameters, units, limits and a runnable example; 'families', 'errors', 'glossary', 'limits-and-status', 'index'. lang: 'en' or 'ja'. Same content as resources cgal://guide/..."""
         return guide.get_tool_result(topic, lang)
 
     # search/plan use the registry's in-memory SQLite index, created on the main thread;
     # these two tools run on the event-loop thread (async) instead of a worker thread.
-    @server.tool(name="cgal_capabilities_search")
+    @tool(name="cgal_capabilities_search")
     async def capabilities_search(query: str, artifact_ids: list[str] | None = None,
                             constraints: dict[str, Any] | None = None,
                             limit: int = 8) -> dict[str, Any]:
         """Step 1 of discovery: rank registered operations for a goal in plain words (English or Japanese). Read candidates (operation_id, status, why, input_types, output_types) and query_analysis; abstained=true or unsupported_cgal_packages means nothing executable fits, so say so. Then read cgal_get_guide topic 'op:<operation_id>'. artifact_ids narrows by input types; constraints may hold status, dependencies, kernel, allowed_licenses."""
         return active.capabilities_search(query, artifact_ids, constraints, limit)
 
-    @server.tool(name="cgal_capabilities_describe")
+    @tool(name="cgal_capabilities_describe")
     def capabilities_describe(operation_id: str) -> dict[str, Any]:
         """Raw registry definition of one operation (schemas, preconditions, validators, sources) and whether it is executable. For a readable card with an example use cgal_get_guide topic 'op:<operation_id>'."""
         return active.capabilities_describe(operation_id)
 
-    @server.tool(name="cgal_plan")
+    @tool(name="cgal_plan")
     async def plan(request: dict[str, Any]) -> dict[str, Any]:
         """Build an immutable typed plan; nothing runs yet. Single operation: {"operation_id", "inputs": {<slot>: <artifact_id>}, "parameters": {...}}. Pipeline: {"steps": [{"id", "operation", "inputs", "parameters"}]} where an input may be {"step", "slot"}; optional "rules", "policy", "alternatives" (declared fallbacks). A "goal" string routes only when exactly one operation clearly fits; otherwise ambiguous_route returns options to put to the user. Mandatory validators are inserted automatically. Returns plan_id and an estimate."""
         return active.plan(request)
 
-    @server.tool(name="cgal_execute")
+    @tool(name="cgal_execute")
     async def execute(plan_id: str, execution: dict[str, Any] | None = None) -> dict[str, Any]:
         """Run a plan asynchronously and return job_id at once; then poll cgal_job_status. Optional execution={"wall_time_ms", "memory_mb"} must stay within the limits cgal_system_health reports."""
         options = execution or {}
         return await active.execute(plan_id, wall_time_ms=options.get("wall_time_ms"),
                                     memory_mb=options.get("memory_mb"))
 
-    @server.tool(name="cgal_validate")
+    @tool(name="cgal_validate")
     def validate(artifact_id: str, against: str,
                  operation_id: str = "hull.validate.convex_enclosure",
                  parameters: dict[str, Any] | None = None) -> dict[str, Any]:
         """Plan a standalone re-check of an existing candidate artifact against its source artifact (default validator hull.validate.convex_enclosure; pass operation_id for another validator). Run the returned plan_id with cgal_execute."""
         return active.validate(artifact_id, against, operation_id, parameters)
 
-    @server.tool(name="cgal_artifact_inspect")
+    @tool(name="cgal_artifact_inspect")
     def artifact_inspect(artifact_id: str) -> dict[str, Any]:
         """Read an artifact's immutable type, unit, size, sha256, geometry properties (counts, health) and provenance. Use it to check an import before planning."""
         return active.artifact_inspect(artifact_id)
 
-    @server.tool(name="cgal_docs_search")
+    @tool(name="cgal_docs_search")
     def docs_search(query: str, limit: int = 10) -> dict[str, Any]:
         """Search the pinned CGAL 6.2.1 documentation/header index. Hits are information only, never executable operations; use cgal_capabilities_search to find something to run."""
         return active.docs_search(query, limit)
 
-    @server.tool(name="cgal_system_health")
+    @tool(name="cgal_system_health")
     async def system_health() -> dict[str, Any]:
         """Report registry revision, artifact-store state, native worker build and the enforced resource limits (concurrency, memory, wall time). Call it on worker_* or manifest_* errors and before choosing execution limits."""
         return await active.system_health()
 
-    @server.tool(name="cgal_artifact_import")
+    @tool(name="cgal_artifact_import")
     def artifact_import(path: str, unit: str, format: str | None = None,
                         artifact_type: str | None = None) -> dict[str, Any]:
         """Import a file readable by the server (off, obj, ply, stl, xyz, json; at most 512 MiB) as an immutable artifact. unit is mandatory: mm, cm or m ('none' for reports and unitless types). Pass artifact_type (for example TriangleSurfaceMesh, PointSet3, Polygon2) when the extension is ambiguous. Parsed only, never repaired. Returns artifact_id."""
         return active.artifact_import(path, unit, format, artifact_type)
 
-    @server.tool(name="cgal_artifact_export")
+    @tool(name="cgal_artifact_export")
     def artifact_export(artifact_id: str, path: str) -> dict[str, Any]:
         """Write an artifact's exact bytes to a NEW path on the server host; existing files are refused and HTTP deployments restrict the allowed roots."""
         return active.artifact_export(artifact_id, path)
 
-    @server.tool(name="cgal_job_status")
+    @tool(name="cgal_job_status")
     def job_status(job_id: str) -> dict[str, Any]:
         """Poll a job. state: queued, running, succeeded, rejected (a validator refused the result), failed or cancelled. On succeeded read outputs (artifact_id, type, unit, properties) and validation[].report; on rejected or failed read error {class, code, message}."""
         return active.job_status(job_id)
 
-    @server.tool(name="cgal_job_cancel")
+    @tool(name="cgal_job_cancel")
     async def job_cancel(job_id: str) -> dict[str, Any]:
         """Cancel a queued or running job. Unverified output is never published."""
         return await active.job_cancel(job_id)
