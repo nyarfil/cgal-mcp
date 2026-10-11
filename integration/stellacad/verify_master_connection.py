@@ -1,11 +1,11 @@
-"""Exercise the project-registered `cgal-master` (and the v0.1 `cgal-mcp` fallback) as an MCP client.
+"""Exercise the project-registered `cgal-mcp` (CGAL Master; the v0.1 sidecar is retired) as an MCP client.
 
   E:/aiwork/cgal-mcp/.venv/Scripts/python.exe integration/cgal/verify_master_connection.py --output-dir <NEW dir>
 
-Reads `.mcp.json` exactly as a host would, starts each server over stdio, then:
+Reads `.mcp.json` exactly as a host would, starts the server over stdio, then:
 initialize -> list tools/resources/prompts -> read cgal://guide/start -> cgal_get_guide ->
 real simplification of the StellaCAD fixture (explicit unit, mandatory validators, provenance) ->
-an over-bound input is refused with a typed error -> v0.1 sidecar still simplifies a file.
+an over-bound input is refused with a typed error.
 """
 import argparse
 import asyncio
@@ -64,31 +64,9 @@ async def master(out: Path) -> dict:
     return report
 
 
-async def fallback(out: Path) -> dict:
-    async with Client(md.server_parameters(name="cgal-mcp"), mode="auto") as client:
-        names = [t.name for t in (await client.list_tools()).tools]
-        assert "stella_cgal_simplify_file" in names, names
-        source = out / "v01_source.stl"
-        import trimesh
-        n = 10
-        pts = [(x, y, 0) for y in range(n + 1) for x in range(n + 1)]
-        faces = []
-        for y in range(n):
-            for x in range(n):
-                a = y * (n + 1) + x
-                faces.extend([(a, a + 1, a + n + 2), (a, a + n + 2, a + n + 1)])
-        source.write_bytes(trimesh.Trimesh(vertices=pts, faces=faces, process=False).export(file_type="stl"))
-        data = await md.call(client, "stella_cgal_simplify_file", {
-            "input_path": str(source), "output_path": str(out / "v01_simplified.stl"), "unit": "mm",
-            "parameters": {"edge_ratio": 0.5, "tolerance": 0.1, "error_bound": 0.001, "envelope": 0.01,
-                           "preserve_border": True}})
-        assert data["verification"]["verdict"] == "pass" and data["export_verification"]["verdict"] == "pass"
-        return {"tools": names, "faces": [data["source"]["faces"], data["output"]["faces"]]}
-
-
 async def main(out: Path) -> dict:
     out.mkdir(parents=True, exist_ok=False)
-    report = {"config": str(md.DEFAULT_CONFIG), "master": await master(out), "v01_fallback": await fallback(out)}
+    report = {"config": str(md.DEFAULT_CONFIG), "master": await master(out)}
     (out / "report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     return report
 
@@ -102,4 +80,4 @@ if __name__ == "__main__":
           len(result["master"]["handshake"]["resources"]), "prompts:", len(result["master"]["handshake"]["prompts"]))
     print("derived faces", d["output"]["source_faces"], "->", d["output"]["faces"], d["validation_status"],
           [v["verdict"] for v in d["validators"]])
-    print("refusals:", len(result["master"]["refusals"]), "| v0.1 fallback faces:", result["v01_fallback"]["faces"])
+    print("refusals:", len(result["master"]["refusals"]))

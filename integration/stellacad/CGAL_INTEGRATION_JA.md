@@ -1,11 +1,12 @@
 # CGAL-MCP接続（Master / v0.1 sidecar）
 
-StellaCADには2つのCGAL MCPを登録している。**AIエージェントは `cgal-master` を使い、`cgal-mcp` は互換フォールバック**とする。
+StellaCADに登録するCGAL MCPは**`cgal-mcp`の1つだけ**で、実体はCGAL Master MCP（1.0.0）。旧v0.1 sidecarの登録は削除した（`integration/cgal/stella_cgal_mcp.py`は非推奨として保存）。
 
 | 登録名 | 実体 | 位置付け |
 |---|---|---|
-| `cgal-master` | `python -m cgal_mcp.master.server stdio`（`E:/aiwork/cgal-mcp`、branch `codex/master-v1`） | 汎用CGAL Master MCP。13工具・12 resources・7 prompts。登録は`.mcp.json`/`.codex/config.toml`/`.claude/settings.json` |
-| `cgal-mcp` | `integration/cgal/stella_cgal_mcp.py`（v0.1 sidecar） | 先行の軽量化専用。互換のため無変更で維持 |
+| `cgal-mcp` | `python -m cgal_mcp.master.server stdio`（`E:/aiwork/cgal-mcp`、branch `codex/master-v1`） | 汎用CGAL Master MCP。13工具・12 resources・7 prompts。登録は`.mcp.json`/`.codex/config.toml`/`.claude/settings.json` |
+
+ユーザー設定（`~/.claude.json`、`~/.codex/config.toml`）に旧v0.1の`cgal-mcp`（`stella_cgal_mcp.py`）が残っている場合は、上記Masterの登録に置換する。
 
 ## Masterの状態（2026-10-11、正直な範囲）
 
@@ -15,7 +16,7 @@ StellaCADには2つのCGAL MCPを登録している。**AIエージェントは 
 - host証拠はCodex app-serverのin-memory試験とSDK stdio/HTTPのみ。Cursor自身からの実呼出し、デスクトップUI操作は未確認。
 - 本統合は「StellaCAD側の接続と派生ファイル橋」であり、**Master完成宣言ではない**。ネイティブ`CADHost.apply_mesh_atomic`/Undoは未実装。
 
-## AIエージェントの開始手順（cgal-master）
+## AIエージェントの開始手順（cgal-mcp）
 
 1. 最初に `cgal_get_guide`（topic=`start`）か resource `cgal://guide/start` を読む。日本語は `lang="ja"`（resource は `cgal://guide/ja/...`）。
 2. 目的が決まっていれば `cgal_get_guide(topic="recipes")`、未定なら `cgal_capabilities_search(query=目的)`。`abstained=true`/`unsupported_cgal_packages` は「できない」と報告する。
@@ -42,7 +43,7 @@ Hausdorff検証の対象は400面以下で、超える入力は`unmet_preconditi
 E:\aiwork\cgal-mcp\.venv\Scripts\python.exe integration\cgal\master_derive.py simplify SRC.stl OUT.off --unit mm --face-ratio 0.5 --error-bound 0.05 --max-deviation 1.0
 ```
 
-- `.mcp.json`の`cgal-master`をそのまま起動（stdio）。`mesh.simplify.edge_collapse` + 必須validator（simplification_integrity、symmetric_hausdorff）。
+- `.mcp.json`の`cgal-mcp`をそのまま起動（stdio）。`mesh.simplify.edge_collapse` + 必須validator（simplification_integrity、symmetric_hausdorff）。
 - 出力は新規`.off`と`<出力>.provenance.json`（op id、パラメータ、validator判定と数値、registry revision、CGAL版、plan/job id、元/出力のSHA-256、単位）。
 - succeeded かつ全validator passのときだけ公開。既存ファイル・元ファイルは上書き拒否、実行後に元のSHA-256を再確認。
 - 試験: `integration/cgal/test_master_derive.py`（実サーバー起動を含む5件）。接続試験: `integration/cgal/verify_master_connection.py`。
@@ -56,10 +57,10 @@ E:\aiwork\cgal-mcp\.venv\Scripts\python.exe integration\cgal\master_derive.py si
 
 ### 接続証拠（2026-10-11）
 
-`docs/evidence/cgal-master-connection-20261011.json`（`verify_master_connection.py`の出力）。要約:
+`docs/evidence/cgal-master-connection-20261011.json`（登録名`cgal-master`時点の`verify_master_connection.py`出力）。要約:
 stdio初期化→tools 13 / resources 12 / prompts 7 → `cgal://guide/start`読取 → `cgal_get_guide`のop card → health（worker利用可、persistent worker one_shot、結果cache無効）→
 StellaCAD fixture `stella_icosphere_r10mm_320f.stl`（半径10 mm、320面）を単位mm明示で簡略化 320→158面、validator 2件pass（Hausdorff距離0.468 mm、許容1.0 mm内）、provenance生成、元ファイル不変 →
-500面の`shaft/model.stl`は`unmet_precondition`（faces<=400）で拒否され出力なし → v0.1 `cgal-mcp`フォールバックも200→92面で成功。
+500面の`shaft/model.stl`は`unmet_precondition`（faces<=400）で拒否され出力なし （旧v0.1 sidecarのフォールバック確認は2026-10-11時点の記録で、現在は登録していない）。
 
 ## パス表記（integration/cgal と integration/stellacad）
 
@@ -68,9 +69,9 @@ StellaCAD fixture `stella_icosphere_r10mm_320f.stl`（半径10 mm、320面）を
 
 ---
 
-# v0.1 sidecar（2026-10-04、互換フォールバック）
+# 旧v0.1 sidecar（2026-10-04、非推奨・登録削除済みの履歴）
 
-**位置付け修正:** この接続は軽量化v0.1の先行sidecarです。
+**位置付け修正（以降は履歴）:** この接続は軽量化v0.1の先行sidecarです。
 ユーザーの最終目標は独立CGAL Master MCPの完成後の正式統合です。
 この接続成功をMaster完成や正式統合の受入と扱いません。
 開発基準: `E:/aiwork/cgal-mcp/docs/master/SCOPE_CORRECTION_JA.md`。
@@ -82,7 +83,7 @@ CGALはStellaCADの補助メッシュ計算MCPとして接続する。CAD生成�
 - CGAL 6.2.1: `V:/Program-files/CGAL/vcpkg_installed/x64-windows`。
 - 実計算: `E:/aiwork/cgal-mcp/build/Release/cgal-worker.exe` と `cgal-distance.exe`。
 - StellaCAD入口: `integration/cgal/stella_cgal_mcp.py`。
-- MCP登録名: `cgal-mcp`。Codex共通設定、本体 `.codex/config.toml`、日本語のStellaCADチャット作業場所に登録。
+- MCP登録名: 当時は`cgal-mcp`（現在はMasterが同名を使用し、このsidecarは未登録）。
 - 監査/派生データ: `cadmcp-workspace/cgal-mcp`。正式CAD正本とは別に置く。
 
 常時公開するのは独立MCPの11工具と `stella_cgal_simplify_file` の計12工具。

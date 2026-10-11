@@ -1,5 +1,8 @@
 # 実装状況
 
+> 2026-10-11 追記: 1.0.0よりMaster MCP（`cgal-mcp`）が唯一の正式版。下記のv0.1記述は履歴で、
+> v0.1は非推奨（`cgal-mcp-legacy`）。80/80要求は再生検証済みだがStandalone受入（`standalone_accepted`）は未達。
+
 プロジェクト全体の目標はCGAL Master MCP。現在の軽量化v0.1では未達。
 実装対象と順序は [目的修正と差分](master/SCOPE_CORRECTION_JA.md) に従う。
 以下の「作成済み」「成功」はv0.1の局所結果であり、Master完成を意味しない。

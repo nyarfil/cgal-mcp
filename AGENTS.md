@@ -28,11 +28,13 @@ technical reconciliation separately.
   for mutation. Unknown operations must not execute generated C++ on demand.
 - Evaluate mesh, point set, spatial, 2D, triangulation, meshing and advanced families.
   Simplification-only fixtures cannot establish Master acceptance.
-- Reuse existing v0.1 simplification/distance workers as bounded adapters; preserve
-  tested behavior while introducing a generic core. Adding isolated functions to
-  the current simplification runtime is not a substitute for the generic core.
+- Master (`cgal_mcp.master`, console script `cgal-mcp`, version 1.0.0) is the primary and
+  only supported server. The v0.1 simplification server (`cgal_mcp.server`,
+  `cgal-mcp-legacy`) is deprecated/superseded and kept only for compatibility tests.
+  Adding isolated functions to the legacy runtime is not a substitute for the generic core.
 - Standalone acceptance precedes formal native StellaCAD integration. The installed
-  v0.1 sidecar is a provisional useful capability, not proof of Master completion.
+  v0.1 sidecar is deprecated; Master 1.0.0 is the official server, but its release does
+  not mean standalone acceptance: `standalone_accepted` remains false until the gates pass.
 
 ## Current verification
 
@@ -41,7 +43,7 @@ Python: `.venv/Scripts/python.exe -m unittest discover -s tests -v`.
 Core CGAL: `tests/worker_smoke.py`, `tests/distance_smoke.py`, `tests/worker_cases.py`.
 MCP: `.venv/Scripts/python.exe -m tests.mcp_e2e auto` and `legacy`.
 Install file bridge dependencies with `pip install -e '.[mesh]'`.
-These checks verify v0.1 functionality; Master requires the broader acceptance suite
+The checks above that use `cgal_mcp.server` verify deprecated v0.1 functionality; Master requires the broader acceptance suite
 in the reference plan and explicit per-phase evidence.
 
 ## GitHub publication

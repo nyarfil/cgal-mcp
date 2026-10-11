@@ -1,4 +1,8 @@
-"""StellaCAD's CGAL sidecar: core MCP plus immutable derived-file export."""
+"""DEPRECATED (2026-10-11): v0.1 StellaCAD sidecar, no longer registered.
+
+The official `cgal-mcp` registration is the CGAL Master server (cgal_mcp.master.server).
+Kept for history only; do not register this file.
+"""
 from typing import Any
 from cgal_mcp import server
 from cgal_mcp.file_bridge import simplify_file

@@ -1,7 +1,8 @@
-# Provisional StellaCAD sidecar
+# StellaCAD integration files
 
-This directory preserves the installed v0.1 sidecar source and connection test.
-It is a provisional integration of one mesh capability, not CGAL Master acceptance.
+Since 1.0.0 StellaCAD registers the Master server as `cgal-mcp`. `stella_cgal_mcp.py` and
+`verify_connection.py` are the DEPRECATED v0.1 sidecar, preserved for history only; do not register them.
+The Master adapter below is a derived-file bridge, not CGAL Master acceptance.
 The Master development sequence is defined in `docs/master/SCOPE_CORRECTION_JA.md`.
 
 Copy `stella_cgal_mcp.py` and `verify_connection.py` into the selected StellaCAD

@@ -1,132 +1,135 @@
-# CGAL Master MCP（開発中）
+# CGAL Master MCP
 
-目標は、CGAL全体の能力を発見・選択・組合せ・実行・検証できる独立MCP。
-**汎用Masterの基盤を実装中です。全主要能力のStandalone受入は未達です。**
-ユーザー提供の設計書と現状差分、修正した開発順序は
-[開発基準](docs/master/SCOPE_CORRECTION_JA.md) を参照してください。
-StellaCADはStandalone受入後に正式統合する利用側です。
+A standalone MCP server that discovers, plans, executes and validates
+[CGAL](https://www.cgal.org/) geometry operations. Version 1.0.0 makes the Master
+server the only supported product (`cgal-mcp`). The earlier v0.1 mesh-simplification
+server is deprecated and superseded; it remains in the tree only for compatibility
+tests (`cgal-mcp-legacy`).
 
-## 新しいMasterの基盤
+Japanese: [docs/master/SCOPE_CORRECTION_JA.md](docs/master/SCOPE_CORRECTION_JA.md)
+(scope and development order) and the `*_JA.md` files in [docs/master](docs/master).
 
-- 公式CGAL 6.2.1の配布物・SHA-256から全126パッケージを収録。
-- Package・Operation・validatorを分離し、出典・ライセンス根拠・未対応理由を記録。
-- 固定12工具、型付き不変DAG、必須validator、SQLiteによるArtifact・Plan・job・履歴の永続化。
-- 点群から3D凸包を生成し、閉鎖性・向き・正体積・凸性・入力点包含を検証する汎用経路。
-- 同じ汎用経路で軽量化の7 cost/placement・5 stop predicateと各constraint/filterを実行。
-- 軽量化の必須検証は、形状・位相・向きの検査と双方向bounded-error Hausdorffの両方。
-- 外れ値除去・3方式の間引き・Jet平滑化・PCA/Jet法線・MST向き統一を専用validator付きで実行。
-- 法線付き点群のASCII PLYと、出力点数を実行時に確認する点群処理DAG。
-- メッシュの健全性・成分・法線・計測・sharp feature・自己交差を専用validator付きで検査。
-- 閉鎖三角形メッシュのBoolean和・積・差を専用validator付きで実行し、精度損失を拒否。
-- workerの資源制限、失敗した候補の隔離、原本保持、stdioとStreamable HTTP。
-- 版固定のHTML・header・exampleを検索する任意のローカル全文索引。
+## What it is
 
-凸包は最初の基盤受入です。原本7.1〜7.15の15分野・80要求を完了した意味ではありません。
-既存v0.1とStellaCAD用sidecarの互換経路を維持して拡張します。
-操作・ビルド・区切りの証拠は [Master基盤](docs/master/FOUNDATION_JA.md)、
-完成判定は [実装決定](docs/master/IMPLEMENTATION_DECISIONS_JA.md) を参照してください。
-軽量化の移行範囲と再試験手順は [軽量化マイルストーン](docs/master/WAVE_A_JA.md) に記録しています。
-メッシュの三角形分割・細分・再メッシュ・平滑化の対応範囲は [Wave D](docs/master/WAVE_D_JA.md)、
-2D・三角形分割・空間問合せの対応範囲は [Wave C](docs/master/WAVE_C_JA.md)、
-点群の対応範囲は [点群処理](docs/master/WAVE_B_JA.md)、
-メッシュ検査の対応範囲は [検査・計測](docs/master/WAVE_A_MESH_JA.md)、
-Booleanの対応範囲は [Boolean](docs/master/WAVE_A_BOOLEAN_JA.md)、
-メッシュ修復の対応範囲は [修復](docs/master/WAVE_A_REPAIR_JA.md)、
-原本要求に対する実計算の判定方法は [主要能力の受入](docs/master/CAPABILITY_ACCEPTANCE_JA.md) を参照してください。
-実PCの凸包測定と資源設定は [性能・資源設定](docs/master/PERFORMANCE_JA.md) に記録しています。
-実PCの接続確認範囲は [ホスト接続](docs/master/HOST_CONNECTION_JA.md) を参照してください。
+- A small fixed control surface (12 tools) over a data-driven Operation registry.
+- Typed, immutable artifacts and plans (DAG), persisted in SQLite.
+- Router hard gates, operation-specific validators that are mandatory for mutation,
+  worker resource limits, fault isolation (a failed candidate never replaces the input).
+- A C++17 worker built against official CGAL 6.2.1.
+- Package catalog of all 126 CGAL 6.2.1 packages with source, license evidence and
+  status (cataloged / implemented / validated / blocked / excluded kept distinct).
+- Optional local full-text index of the version-pinned CGAL docs/headers/examples
+  (reference only, never executable).
+- Transports: stdio and Streamable HTTP.
 
-## 現在実装済みのv0.1
-Python MCP/Router/PlannerとC++17 CGAL 6.2.1 workerによる、検証付きメッシュ簡略化。
+## Status (honest)
 
-## 提供する機能
-- 常時11ツールだけ提示。日英能力検索、個別Schema取得、Router、型付き計画。単独比較はplan_hausdorffで計画。
-- 102件の版固定CGALヘッダー索引をオンデマンド検索。102件の実行機能ではありません。
-- plane+line簡略化、任意Envelope、境界/明示辺拘束、Constrained placement。
-- 双方向bounded-error Hausdorff検証。合格した成果物のみ公開。
-- 資産ハッシュ、非同期job、timeout、cancel、監査記録。
-- StellaCADのrevision/undo付きホスト境界と統合設計。
+| Item | State |
+|---|---|
+| Per-requirement replay validation (reference plan 7.1-7.15) | 80/80 passed (with OpenGR and SCIP built in) |
+| Standalone acceptance (`standalone_accepted`) | **false** |
+| Search acceptance gate | unmet |
+| Host matrix gate (desktop UI tool selection, Cursor live calls) | unmet |
+| Performance / AABB gate | unmet |
+| Package harvest license review | unmet (some packages need human review) |
 
-## 導入（Linux）
-Python 3.10+、C++17、CMake 3.22+。CIはUbuntu/Python3.12で検証します。
+Passing 80 requirements does not mean "all of CGAL" is available. Many packages are
+cataloged only; see [docs/master/PACKAGE_HARVEST_JA.md](docs/master/PACKAGE_HARVEST_JA.md)
+and [docs/master/CAPABILITY_ACCEPTANCE_JA.md](docs/master/CAPABILITY_ACCEPTANCE_JA.md).
+
+Limits worth knowing: `mesh.distance.symmetric_hausdorff` and other operations with an
+independent validator accept at most 400 faces (larger inputs are refused before
+computing with `PRECONDITION_FAILED`); input meshes are triangle meshes; materials, UVs,
+B-rep and face IDs are not preserved; the server is for a trusted local host (no
+multi-user auth).
+
+## Install
+
+Requires Python 3.10+, a C++17 compiler, CMake 3.22+.
 
 ```sh
 git clone https://github.com/nyarfil/cgal-mcp.git
 cd cgal-mcp
 python -m venv .venv
-. .venv/bin/activate
-python -m pip install -e .
-sudo apt-get update
+. .venv/bin/activate          # Windows: .venv\Scripts\activate
+python -m pip install -e '.[mesh]'
+```
+
+Build the worker (CGAL 6.2.1 source; Linux example):
+
+```sh
 sudo apt-get install -y libboost-all-dev libgmp-dev libmpfr-dev libeigen3-dev nlohmann-json3-dev
 mkdir -p work
 curl -fL https://github.com/CGAL/cgal/releases/download/v6.2.1/CGAL-6.2.1.tar.xz -o work/cgal.tar.xz
 echo 'b6be77c60765a8456335de991eeaf6ffec55256984e4a9ecc6a97c37bbfe85bf  work/cgal.tar.xz' | sha256sum -c -
 tar -xf work/cgal.tar.xz -C work
-cmake -S worker -B build -DCGAL_DIR="$PWD/work/CGAL-6.2.1" -DCMAKE_BUILD_TYPE=Release
-cmake --build build -j1
-python -m unittest discover -s tests -v
-python tests/worker_smoke.py build/cgal-worker
-python tests/distance_smoke.py build/cgal-distance
-python tests/worker_cases.py build/cgal-worker
-PYTHONPATH=. python tests/mcp_e2e.py
+cmake -S worker -B build-master -DCGAL_DIR="$PWD/work/CGAL-6.2.1" -DCMAKE_BUILD_TYPE=Release
+cmake --build build-master --target cgal-master-worker --parallel 1
 ```
 
-CGALを含む配布では対象パッケージのGPL/commercial条件を確認してください。
-Windowsの導入・実計算手順は [Windows導入](docs/windows.md) を参照してください。
-macOSとネイティブCADの置換/Undo統合は未検証です。
+Windows (Visual Studio, vcpkg): see [docs/windows.md](docs/windows.md); the local build is
+`cmake --build build-master --config Release --target cgal-master-worker --parallel 1`.
 
-## MCP接続
-MCPホストのstdio設定に、以下のcommand/args/envを登録します。
-ホストによって設定ファイル形式は異なるため、絶対パスを実環境に置き換えてください。
+Optional dependencies (OpenGR v2023.11, SoPlex 8.0.3 + SCIP 10.0.3; all Apache-2.0):
+without them the worker still builds, but `CGAL::OpenGR` registration (7.9.05) and
+Polygonal surface reconstruction / PolyFit (7.10.02) return
+`UNSUPPORTED` / `OPTIONAL_DEPENDENCY_NOT_BUILT`, and the 80/80 figure applies only to
+a worker built with both. Details and hashes:
+[docs/master/THIRD_PARTY_DEPENDENCIES_JA.md](docs/master/THIRD_PARTY_DEPENDENCIES_JA.md).
+
+## Register in an MCP host (stdio)
+
+Command `cgal-mcp` (or `python -m cgal_mcp.master.server stdio`). Replace absolute paths.
 
 ```json
 {
   "command": "/absolute/path/cgal-mcp/.venv/bin/python",
-  "args": ["-m", "cgal_mcp.server"],
+  "args": ["-m", "cgal_mcp.master.server", "stdio"],
   "env": {
-    "CGAL_MCP_WORKER": "/absolute/path/cgal-mcp/build/cgal-worker",
-    "CGAL_MCP_DISTANCE": "/absolute/path/cgal-mcp/build/cgal-distance",
-    "CGAL_MCP_DATA": "/absolute/path/cgal-mcp/work/data"
+    "CGAL_MASTER_WORKER": "/absolute/path/cgal-mcp/build-master/cgal-master-worker",
+    "CGAL_MASTER_DATA": "/absolute/path/cgal-mcp/work/master-data",
+    "CGAL_MASTER_CATALOG": "/absolute/path/cgal-mcp/catalog",
+    "CGAL_MASTER_DOCS_INDEX": "/absolute/path/cgal-mcp/work/master-docs-index.sqlite"
   }
 }
 ```
 
-## 操作例
-1. discover_capabilities(query="軽量化") または route_goal。
-2. describe_capability(capability_id="mesh.simplify")で入力Schema取得。
-3. register_mesh(off=<ASCII三角形OFF>, unit="mm")でasset_idを取得。
-4. plan_simplification(asset_id, parameters)でplan_idを取得。
-5. execute_plan(plan_id)でjob_idを取得。
-6. job_status(job_id)でsucceededまで確認。取消はcancel_job。
-7. get_artifact(asset_id=<結果artifactのID>)でOFF/単位/ハッシュを取得。
+- Claude Code: put the object under `mcpServers.cgal-mcp` in `.mcp.json` (add `"type": "stdio"`),
+  or `claude mcp add`.
+- Codex: `[mcp_servers.cgal-mcp]` with `command`, `args` and `[mcp_servers.cgal-mcp.env]` in `~/.codex/config.toml`.
+- Cursor: same object under `mcpServers` in `.cursor/mcp.json`.
 
-parameters例:
-```json
-{
-  "edge_ratio": 0.5,
-  "tolerance": 0.1,
-  "error_bound": 0.001,
-  "envelope": 0.01,
-  "preserve_border": true,
-  "constrained_edges": [[0, 1]]
-}
+Optional env: `CGAL_MASTER_PERSISTENT_WORKERS`, `CGAL_MASTER_RESULT_CACHE` (both opt-in),
+`CGAL_MASTER_FILE_ROOTS`, `CGAL_MASTER_MAX_MEMORY_MB`, `CGAL_MASTER_MAX_WALL_TIME_MS`.
+Streamable HTTP: `cgal-mcp streamable-http --host 127.0.0.1 --port 8000`.
+Connection evidence and what is not yet confirmed: [docs/master/HOST_CONNECTION_JA.md](docs/master/HOST_CONNECTION_JA.md).
+
+## First contact
+
+Read the resource `cgal://guide/start` or call `cgal_get_guide` first. The guide lists
+the tools, resources, templates and prompts, and the recommended flow:
+search capabilities -> describe -> import artifact -> plan -> validate -> execute ->
+inspect result -> export. Unknown operations never execute generated C++.
+
+## Verify
+
+```sh
+python -m unittest discover -s tests -v
+python tests/master_worker_smoke.py build-master/Release/cgal-master-worker.exe   # path per platform
+python -m tests.master_mcp_e2e auto
 ```
 
-残す辺の割合50%、mm入力なら許容誤差0.1mm。指定辺は入力頂点番号で実在する必要があります。
-拘束により割合に届かない場合も実測値とtarget_metを返します。
-検証fail/indeterminateはrejectedで、成果物を公開しません。
-stdio出力はMCP通信専用。診断はworker結果かjobのerrorで確認します。
+## Deprecated: v0.1 server
 
-## 制限
-入力OFFは4MiB以下の三角形メッシュ。材質・UV・B-rep・面IDの自動維持は対象外。
-plan/job索引はセッション内。再起動で復旧しませんが監査ファイルと資産は残ります。
-ローカルの信頼されたホスト向けで、HTTP公開・複数利用者認証・分散処理は対象外。
-全CGAL APIを実行する完成品という意味ではなく、重点機能を接続したv0.1です。
-StellaCAD本体への接続には本体リポジトリのホスト実装が必要です。
+`cgal_mcp.server` (`cgal-mcp-legacy`) is the former 11-tool mesh-simplification server.
+Do not register it for new use. Its tests (`tests.mcp_e2e auto|legacy`,
+`tests/worker_smoke.py`) still run to keep the code honest. History:
+[docs/status.md](docs/status.md), [docs/validation.md](docs/validation.md).
 
-## 設計と検証
-- [設計仕様](docs/specification.md)
-- [設計書](docs/architecture.md)
-- [StellaCAD統合設計](docs/stellacad-integration.md)
-- [調査記録](docs/research.md)
-- [検証記録](docs/validation.md)
+## License and provenance
+
+CGAL is GPL/commercial per package (this repository has no separate license file yet), so check
+the package terms before redistributing a build that bundles CGAL. Per-package license
+evidence and review state: [docs/master/PACKAGE_HARVEST_JA.md](docs/master/PACKAGE_HARVEST_JA.md).
+Reference documents are preserved unchanged in `docs/master/CGAL_Master_MCP_*.md`.
+StellaCAD integration: [docs/stellacad-integration.md](docs/stellacad-integration.md).

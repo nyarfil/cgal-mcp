@@ -3,7 +3,7 @@
 Run it with the CGAL repository's venv (it needs `mcp`, `trimesh` and `cgal_mcp`):
   E:/aiwork/cgal-mcp/.venv/Scripts/python.exe integration/cgal/master_derive.py simplify SRC.stl OUT.off --unit mm
 
-The server is started exactly as registered in the project `.mcp.json` entry `cgal-master`.
+The server is started exactly as registered in the project `.mcp.json` entry `cgal-mcp`.
 Guarantees (enforced here, not by convention):
   * the source file is never written; its SHA-256 is re-checked after the run;
   * the output and its `<output>.provenance.json` are NEW files (existing paths are refused);
@@ -42,7 +42,7 @@ def sha256_file(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def server_parameters(config: Path = DEFAULT_CONFIG, name: str = "cgal-master",
+def server_parameters(config: Path = DEFAULT_CONFIG, name: str = "cgal-mcp",
                       data_dir: Path | None = None):
     from mcp import StdioServerParameters
     entry = json.loads(config.read_text(encoding="utf-8-sig"))["mcpServers"][name]
@@ -105,7 +105,7 @@ def build_provenance(*, source: Path, source_sha: str, unit: str, conversion: di
                    "artifact_sha256": input_artifact["sha256"]},
         "operations": [SIMPLIFY_OPERATION] + [item["operation"] for item in job["validation"]],
         "parameters": parameters,
-        "server": {"name": "cgal-master", "registry_revision": plan.get("registry_revision"),
+        "server": {"name": "cgal-mcp", "registry_revision": plan.get("registry_revision"),
                    "cgal_version": job["validation"][0].get("build", {}).get("actual_cgal_version"),
                    "plan_id": plan["plan_id"], "job_id": job["job_id"]},
         "validation_status": job["validation_status"], "validators": validators,
@@ -177,7 +177,7 @@ async def derive_simplified(client, source: Path, output: Path, unit: str, *, fa
 
 async def derive_via_config(source: Path, output: Path, unit: str, *, config: Path = DEFAULT_CONFIG,
                             data_dir: Path | None = None, **options) -> dict[str, Any]:
-    """Start the registered cgal-master server over stdio and derive one mesh."""
+    """Start the registered cgal-mcp (CGAL Master) server over stdio and derive one mesh."""
     from mcp import Client
     try:
         async with Client(server_parameters(config, data_dir=data_dir), mode="auto") as client:

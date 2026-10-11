@@ -1,6 +1,6 @@
 """Tests for master_derive. Run with the CGAL venv:
 E:/aiwork/cgal-mcp/.venv/Scripts/python.exe -m unittest integration/cgal/test_master_derive.py -v
-Live tests start the real cgal-master server from .mcp.json and are skipped if its worker is missing.
+Live tests start the real cgal-mcp (CGAL Master) server from .mcp.json and are skipped if its worker is missing.
 """
 import asyncio
 import hashlib
@@ -15,7 +15,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import master_derive as md  # noqa: E402
 
 FIXTURE = Path(__file__).resolve().parent / "fixtures" / "stella_icosphere_r10mm_320f.stl"
-ENTRY = json.loads(md.DEFAULT_CONFIG.read_text(encoding="utf-8-sig"))["mcpServers"]["cgal-master"]
+ENTRY = json.loads(md.DEFAULT_CONFIG.read_text(encoding="utf-8-sig"))["mcpServers"]["cgal-mcp"]
 WORKER = Path(ENTRY["env"]["CGAL_MASTER_WORKER"])
 
 
@@ -60,7 +60,7 @@ class Offline(unittest.TestCase):
                                              error_bound=0.05, max_deviation=1.0))
 
 
-@unittest.skipUnless(WORKER.is_file(), "cgal-master worker not built")
+@unittest.skipUnless(WORKER.is_file(), "cgal-mcp (Master) worker not built")
 class Live(unittest.TestCase):
     def run_derive(self, root: Path, source: Path, output: Path, **overrides):
         arguments = dict(face_ratio=0.5, error_bound=0.05, max_deviation=1.0)

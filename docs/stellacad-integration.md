@@ -1,7 +1,7 @@
 # StellaCAD統合設計 v0.1
 初版ではStellaCAD本体ソース未提供のためホスト境界を定義した。
 2026-10-04に実PCの本体を調査し、補助MCP接続を追加した。
-現在の接続手順は [Windows導入](windows.md) および
+現在の正式な接続はMaster（`cgal-mcp`）。現在の接続手順は [Windows導入](windows.md) および
 StellaCADの `docs/CGAL_INTEGRATION_JA.md`。下記のatomic apply契約はネイティブ統合の設計であり、
 派生ファイルsidecarの実装済み機能と区別する。
 
@@ -35,5 +35,5 @@ Plugin/IPC形式は本体リポジトリで確認後に確定する。
 同梱CGALのライセンス、OS別worker配布、アップデート方式を確定する。
 派生メッシュのsidecarは実PCへ配置・接続試験済み。
 正確な固体正本を保持し、native apply_mesh_atomic/Undoは別の本体実装として残る。
-2026-10-11: StellaCADの`.mcp.json`等へ`cgal-master`（本Master server、`cgal_get_guide`先行）を追加し、v0.1 `cgal-mcp`は互換フォールバックとして維持。
+2026-10-11: StellaCADの`.mcp.json`等へ`cgal-master`を追加した後、1.0.0でMaster serverを`cgal-mcp`の名前に一本化し、v0.1 sidecar登録は削除した（`stella_cgal_mcp.py`は非推奨として保存）。
 派生ファイル橋`integration/cgal/master_derive.py`のみ実装、native CADHost/Undoは未実装のまま。

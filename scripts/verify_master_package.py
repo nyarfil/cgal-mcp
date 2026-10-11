@@ -33,7 +33,7 @@ try:
     assert all(r["executable"] is False and r["scope"] == "reference" for r in result["results"])
     assert runtime.registry.get("hull.convex_3")["id"] == "hull.convex_3"
     entrypoints = importlib.metadata.distribution("cgal-mcp").entry_points
-    assert any(e.name == "cgal-master-mcp" and e.value == "cgal_mcp.master.server:main" for e in entrypoints)
+    assert any(e.name == "cgal-mcp" and e.value == "cgal_mcp.master.server:main" for e in entrypoints)
 finally:
     runtime.close()
 print("Installed wheel outside checkout + bundled 126 packages: PASS")

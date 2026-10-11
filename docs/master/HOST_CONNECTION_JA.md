@@ -1,3 +1,5 @@
+> 2026-10-11: 1.0.0でMasterは`cgal-mcp`として登録名を一本化した。下記の`cgal-master`と旧sidecarの記述は当時の記録。
+
 # 実PCへの導入と接続確認
 
 開発中のMasterはPython仮想環境と公式CGAL 6.2.1のC++ workerを使います。
