@@ -277,6 +277,15 @@ Json validate(const Request& request, RepairKind kind) {
   }
   const auto source = read_soup(source_input, source_types(kind));
   const auto candidate = read_soup(candidate_input, {output_type(kind)});
+  const bool fill_kind = kind == RepairKind::kFillHoles || kind == RepairKind::kFillHolesRefineFair;
+  bool ids_bound = false;
+  if (fill_kind) {
+    const auto selection =
+        parse_hole_selection(request.parameters, kind == RepairKind::kFillHolesRefineFair, source.unit);
+    // Checked before the replay so a cross-mesh id list is a validation failure, not a replay error.
+    require_hole_ids_source(selection, source_input.sha256, "VALIDATION_FAILED");
+    ids_bound = selection.by_ids;
+  }
   const auto reference = compute_repair(kind, source, request.parameters);
   const auto source_stats = soup_statistics(source);
   const auto candidate_stats = soup_statistics(candidate);
@@ -304,6 +313,7 @@ Json validate(const Request& request, RepairKind kind) {
     checks["unselected_holes_untouched"] = true;
     checks["selected_holes_closed"] = true;
   }
+  if (ids_bound) checks["hole_ids_bound_to_source_sha256"] = true;
   Json report = {{"schema_version", 1},
                  {"validator_id", validator_id(kind)},
                  {"validates", operation_id(kind)},

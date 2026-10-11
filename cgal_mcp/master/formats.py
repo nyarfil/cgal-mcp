@@ -475,7 +475,7 @@ def parse_json_geometry(content: bytes, requested_type: str | None) -> Inspectio
             "sharp_features": {"angle", "count_unit", "features"},
             "self_intersections": {"available", "count_unit"},
             "boundary_cycles": {"count_unit", "length_unit", "area_unit", "cycle_limit",
-                                "hole_count", "available"},
+                                "hole_count", "available", "source_mesh_sha256"},
         }
         missing_results = required_results[value["analysis_kind"]] - results.keys()
         if missing_results:

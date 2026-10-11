@@ -94,7 +94,9 @@ StellaCADが使う約71k面のスキャンメッシュ（個人データのた�
   面積の目安、重心、bbox、周長順。合成メッシュで0.1 s）と、`mesh.repair.fill_holes`・
   `fill_holes_refine_fair`の新parameter `hole_ids`・`max_hole_perimeter`・`max_hole_area`を追加しました。
   指定なしの動作は従来通りです。選ばれなかった穴は変更されず、validatorがCGALと独立な辺写像で
-  「未選択の穴が不変」「選択した穴が閉じた」を検証します。古いidは`HOLE_ID_NOT_FOUND`で拒否します。
+  「未選択の穴が不変」「選択した穴が閉じた」を検証します。存在しないidは`HOLE_ID_NOT_FOUND`で拒否します。
+  訂正: この時点の版は、別のメッシュで一覧したidでも同じ頂点番号の境界があれば別の穴を黙って埋め得ました
+  （「古いidは拒否」は過大な記述でした）。後述の「追補: hole_idのメッシュ束縛」で修正しています。
   Registry説明とAI guideに「先に一覧、次にユーザーへ確認、最後にIDで指定して埋める」を記載しました。
   registryは228 Operation、catalog_revisionは`-6`です。MCPのtool面は変えていません。
 
@@ -169,6 +171,8 @@ parameter名も索引にするため、`self_intersection`の概念が`mesh.simp
   幅は min(0.5%×対角線, error_bound/2)。すなわち 下限 ≤ 厳密な対称Hausdorff距離 ≤ 上限、上限−下限 ≤ 幅。
 - 丸め: 距離はbinary64で評価し、丸め誤差は宣言マージン ε=1e-9×(1+対角線)（120 mm級で約1.2e-7 mm）で覆います。
   これは区間演算による形式的証明ではなく、数十演算分の丸め誤差（相対1e-15程度）に対する大きめの宣言値です。
+  制約: εは座標の大きさに比例しないため、原点から対角線の約1e6倍より遠くへ平行移動したメッシュでは
+  丸め誤差を覆う保証がありません（その場合は先に原点付近へ移動してください）。
 - 独立検査: BVH最近傍の結果を、証拠点2点と頂点の等間隔標本（計約68点）について全三角形の総当たりと照合し、
   証拠点の距離は全三角形（浮動小数の最小値+ε以内のもの）でGMP有理数により再計算して一致を確認します。
 - 判定: 報告値がbracket±error_bound±εの外なら`DISTANCE_OUT_OF_BRACKET`で拒否。さらに独立の判定
@@ -176,6 +180,9 @@ parameter名も索引にするため、`self_intersection`の概念が`mesh.simp
   報告のverdictがこれと矛盾すれば`CERTIFICATE_CONTRADICTION`で拒否します（bracket検査を通る改竄では
   到達しない多重防御）。validatorレポートに`certified_lower_bound`、`certified_upper_bound`、`certified_verdict`、
   `certified_within_tolerance`、細分ノード数、距離評価回数、照合点数、GMP再計算値を出します。
+  制約: producerの`pass`はbracketが`fail`を示さない限り受理されます。`certified_verdict`が
+  `indeterminate`のとき、厳密な距離はtoleranceを最大でerror_bound/2（＋ε）上回り得ます。合格を保証として
+  扱う場合は、validatorレポートの`certified_within_tolerance=true`を確認してください。
 - 信頼の境界: 細分の原理（部分三角形での凸距離上界）は、CGALのbounded-error実装も使う標準的な上界です。
   validatorは実装（BVH、距離計算、細分、照合）がCGALから独立していますが、数学的な手法まで別物ではありません。
   手法の違う検査は、総当たりとの照合（標本のみ）とGMPでの証拠点再計算（2点のみ）に限られます。
@@ -204,3 +211,24 @@ CGALの報告がindeterminate（0.5±0.01）のときに、より狭いcertified
 ≤400面のペアで両モードのbracketがどちらも厳密値0.5 mmを含むことも確認しています。
 simplification計画の「達成偏差の報告」への連動は、必須validatorのレポート（上記bracket）で代え、
 追加実装はしていません。`standalone_accepted`は引き続きfalseです。
+
+## 追補: hole_idのメッシュ束縛（レビュー指摘への修正）
+
+hole_idは「境界上の最小の頂点番号」なので、メッシュXで一覧したidをメッシュYに渡すと、Yに同じ番号の境界が
+あれば別の穴を黙って埋め得ました。修正内容:
+
+- `mesh.analysis.boundary_cycles`の`results.source_mesh_sha256`に入力メッシュの内容SHA-256を載せ、
+  `id_rule`にもidがそのメッシュに限り有効であることを明記しました。独立validatorも同じ値を再計算するため、
+  この値を書き換えたレポートは`REPORT_SEMANTICS_MISMATCH`で拒否されます。
+- `fill_holes`・`fill_holes_refine_fair`は`hole_ids`を使うとき`source_mesh_sha256`が必須です
+  （なければ`HOLE_IDS_SOURCE_REQUIRED`、`hole_ids`なしで指定すると`HOLE_SELECTION_CONFLICT`）。
+  入力メッシュの検証済みSHA-256と違えば`HOLE_IDS_SOURCE_MISMATCH`（PRECONDITION_FAILED）で拒否し、何も公開しません。
+- validatorにも束縛し、別メッシュのSHA-256が渡された場合は`HOLE_IDS_SOURCE_MISMATCH`（VALIDATION_FAILED）で
+  拒否します。合格時はchecksに`hole_ids_bound_to_source_sha256`が付きます。
+- 穴ごとの指紋（縁の頂点座標のハッシュ）は追加していません。メッシュ全体のSHA-256が一致すれば頂点番号と
+  境界はバイト単位で同じなので、穴ごとの指紋は追加の保証になりません。
+- replay（family 7.4）: 既存のid指定ケースに`source_mesh_sha256`を追加し、負の対照として
+  別メッシュのid（穴を全部閉じた同じ頂点番号のメッシュに番号49を指定、fill/fairの2件）、SHA-256なしのid、
+  validatorへの別メッシュSHA-256、`source_mesh_sha256`を書き換えたboundary_cyclesレポートの拒否を追加しました。
+- guideとregistry説明に「一覧レポートの`source_mesh_sha256`と一緒にidを渡す」ことを追記しました。
+  MCPのtool面は変えていません。

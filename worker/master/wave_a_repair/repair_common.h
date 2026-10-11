@@ -20,6 +20,7 @@ struct Soup {
   std::vector<RepairPoint> points;
   std::vector<std::vector<std::size_t>> faces;
   std::string unit;  // length unit of the source artifact (set by read_soup)
+  std::string sha256;  // verified content digest of the source artifact (set by read_soup)
 };
 
 struct RepairResult {
@@ -33,6 +34,9 @@ struct HoleSelection {
   bool active = false;
   bool by_ids = false;
   std::vector<std::size_t> ids;  // sorted, unique
+  // hole_ids are only meaningful for the mesh they were listed on: required with hole_ids and
+  // compared with the verified input digest (mesh.analysis.boundary_cycles results.source_mesh_sha256).
+  std::string source_sha256;
   bool has_max_perimeter = false;
   double max_perimeter = 0;
   bool has_max_area = false;
@@ -54,6 +58,10 @@ HoleCycleStats hole_cycle_stats(const std::vector<std::size_t>& cycle,
 bool hole_matches_selection(const HoleSelection& selection, const HoleCycleStats& stats,
                             std::size_t max_hole_edges);
 std::size_t hole_edge_limit(const Json& parameters);
+// Refuses hole_ids listed on another mesh. `error_class` is PRECONDITION_FAILED for producers and
+// VALIDATION_FAILED for validators.
+void require_hole_ids_source(const HoleSelection& selection, const std::string& actual_sha256,
+                             const std::string& error_class);
 
 void require_request(const Request& request, RepairKind kind, bool validator);
 Soup read_soup(const ArtifactInput& input,

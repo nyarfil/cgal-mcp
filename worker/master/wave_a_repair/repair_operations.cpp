@@ -62,6 +62,7 @@ Json source_record(RepairKind kind) {
 Json hole_selection_properties() {
   return {{"hole_ids", {{"type", "array"}, {"minItems", 1}, {"maxItems", 10000},
                          {"items", {{"type", "integer"}, {"minimum", 0}}}}},
+          {"source_mesh_sha256", {{"type", "string"}}},
           {"max_hole_perimeter", {{"type", "TypedLength"}, {"exclusiveMinimum", 0}}},
           {"max_hole_area",
            {{"type", "object"}, {"required", {"value", "unit"}}, {"additionalProperties", false},
@@ -102,12 +103,12 @@ Json parameter_schema(RepairKind kind) {
 Json parameter_bindings(RepairKind kind) {
   if (kind == RepairKind::kFillHoles)
     return {{validator_id(kind),
-             {{"max_hole_edges", "max_hole_edges"}, {"hole_ids", "hole_ids"},
+             {{"max_hole_edges", "max_hole_edges"}, {"hole_ids", "hole_ids"}, {"source_mesh_sha256", "source_mesh_sha256"},
               {"max_hole_perimeter", "max_hole_perimeter"}, {"max_hole_area", "max_hole_area"}}}};
   if (kind == RepairKind::kFillHolesRefineFair)
     return {{validator_id(kind),
              {{"max_hole_edges", "max_hole_edges"}, {"density_control_factor", "density_control_factor"},
-              {"fairing_continuity", "fairing_continuity"}, {"hole_ids", "hole_ids"},
+              {"fairing_continuity", "fairing_continuity"}, {"hole_ids", "hole_ids"}, {"source_mesh_sha256", "source_mesh_sha256"},
               {"max_hole_perimeter", "max_hole_perimeter"}, {"max_hole_area", "max_hole_area"}}}};
   if (kind == RepairKind::kPolygonSoup)
     return {{validator_id(kind),

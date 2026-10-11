@@ -117,9 +117,62 @@ class ClientLimitTests(unittest.TestCase):
         self.assertAlmostEqual(results["holes"][2]["boundary_length"], 12 * math.sin(math.pi / 12), places=9)
         self.assertEqual(results["area_unit"], "mm^2")
 
+    def hole_sha(self) -> str:
+        return hashlib.sha256(self.hole_mesh().read_bytes()).hexdigest()
+
+    def by_ids(self, ids: list[int], **extra) -> dict:
+        return {"max_hole_edges": 20, "hole_ids": ids, "source_mesh_sha256": self.hole_sha(), **extra}
+
+    def test_boundary_cycles_report_binds_ids_to_the_source_mesh(self):
+        response = self.run_worker("mesh.analysis.boundary_cycles", [artifact(self.hole_mesh(), "input-0")],
+                                   {}, "cycles-sha")
+        report = json.loads(Path(response["outputs"][0]["path"]).read_text(encoding="utf-8"))
+        self.assertEqual(report["results"]["source_mesh_sha256"], self.hole_sha())
+        self.assertIn("source_mesh_sha256", report["results"]["id_rule"])
+
+    def test_ids_listed_on_another_mesh_are_refused(self):
+        # Mesh Y = X with every hole closed, so the vertex indices (and id 49) still exist on Y.
+        other = artifact(FIXTURES / "dome_three_holes_all_filled.off", "input-0")
+        refused = self.run_worker("mesh.repair.fill_holes", [other], self.by_ids([49]), "cross-mesh")
+        self.assertEqual(refused["status"], "error")
+        self.assertEqual(refused["error"]["class"], "PRECONDITION_FAILED")
+        self.assertEqual(refused["error"]["code"], "HOLE_IDS_SOURCE_MISMATCH")
+        missing = self.run_worker("mesh.repair.fill_holes", [artifact(self.hole_mesh(), "input-0")],
+                                  {"max_hole_edges": 20, "hole_ids": [49]}, "no-sha")
+        self.assertEqual(missing["error"]["code"], "HOLE_IDS_SOURCE_REQUIRED")
+        lone = self.run_worker("mesh.repair.fill_holes", [artifact(self.hole_mesh(), "input-0")],
+                               {"max_hole_edges": 20, "source_mesh_sha256": self.hole_sha()}, "lone-sha")
+        self.assertEqual(lone["error"]["code"], "HOLE_SELECTION_CONFLICT")
+        fair = self.run_worker("mesh.repair.fill_holes_refine_fair", [other],
+                               self.by_ids([49], density_control_factor=1.41, fairing_continuity=1), "cross-fair")
+        self.assertEqual(fair["error"]["code"], "HOLE_IDS_SOURCE_MISMATCH")
+
+    def test_validator_refuses_ids_bound_to_another_mesh(self):
+        good = self.run_worker("mesh.repair.fill_holes", [artifact(self.hole_mesh(), "input-0")],
+                               self.by_ids([49]), "bound-fill")
+        candidate = artifact(Path(good["outputs"][0]["path"]), "candidate")
+        ok = self.run_worker("mesh.validate.repair_fill_holes", [candidate, artifact(self.hole_mesh(), "source")],
+                             self.by_ids([49]), "bound-ok")
+        self.assertEqual(ok["status"], "ok", ok)
+        report = json.loads(Path(ok["outputs"][0]["path"]).read_text(encoding="utf-8"))
+        self.assertTrue(report["checks"]["hole_ids_bound_to_source_sha256"])
+        wrong = dict(self.by_ids([49]), source_mesh_sha256="0" * 64)
+        bad = self.run_worker("mesh.validate.repair_fill_holes", [candidate, artifact(self.hole_mesh(), "source")],
+                              wrong, "bound-bad")
+        self.assertEqual(bad["error"]["class"], "VALIDATION_FAILED")
+        self.assertEqual(bad["error"]["code"], "HOLE_IDS_SOURCE_MISMATCH")
+
+    def test_tampered_source_digest_in_cycles_report_is_rejected(self):
+        tampered = artifact(FIXTURES / "tampered_boundary_cycles_source_sha.json", "candidate")
+        tampered["type"], tampered["format"], tampered["unit"] = "GeometryAnalysisReport", "json", "none"
+        response = self.run_worker("mesh.validate.boundary_cycles_report",
+                                   [tampered, artifact(self.hole_mesh(), "input-1")], {}, "tampered-sha")
+        self.assertEqual(response["status"], "error")
+        self.assertEqual(response["error"]["code"], "REPORT_SEMANTICS_MISMATCH")
+
     def test_selective_fill_leaves_unselected_holes_open(self):
         mesh = artifact(self.hole_mesh(), "input-0")
-        response = self.run_worker("mesh.repair.fill_holes", [mesh], {"max_hole_edges": 20, "hole_ids": [49]},
+        response = self.run_worker("mesh.repair.fill_holes", [mesh], self.by_ids([49]),
                                    "fill-by-id")
         self.assertEqual(response["status"], "ok", response)
         self.assertEqual(response["metrics"]["filled_hole_ids"], [49])
@@ -138,19 +191,18 @@ class ClientLimitTests(unittest.TestCase):
 
     def test_stale_ids_and_ambiguous_selection_are_refused(self):
         mesh = artifact(self.hole_mesh(), "input-0")
-        stale = self.run_worker("mesh.repair.fill_holes", [mesh], {"max_hole_edges": 20, "hole_ids": [7]}, "stale")
+        stale = self.run_worker("mesh.repair.fill_holes", [mesh], self.by_ids([7]), "stale")
         self.assertEqual(stale["status"], "error")
         self.assertEqual(stale["error"]["code"], "HOLE_ID_NOT_FOUND")
         both = self.run_worker("mesh.repair.fill_holes", [mesh],
-                               {"max_hole_edges": 20, "hole_ids": [49],
-                                "max_hole_perimeter": {"value": 5.0, "unit": "mm"}}, "both")
+                               self.by_ids([49], max_hole_perimeter={"value": 5.0, "unit": "mm"}), "both")
         self.assertEqual(both["error"]["code"], "HOLE_SELECTION_CONFLICT")
 
     def test_validator_rejects_a_candidate_that_filled_an_unselected_hole(self):
         response = self.run_worker(
             "mesh.validate.repair_fill_holes",
             [artifact(FIXTURES / "dome_three_holes_all_filled.off", "candidate"), artifact(self.hole_mesh(), "source")],
-            {"max_hole_edges": 20, "hole_ids": [49]}, "overfilled")
+            self.by_ids([49]), "overfilled")
         self.assertEqual(response["status"], "error")
         self.assertEqual(response["error"]["code"], "REPAIR_VALIDATION_FAILED")
 

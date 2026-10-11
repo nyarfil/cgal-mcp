@@ -589,7 +589,7 @@
               "bruteforce",
               "certified_bvh"
             ],
-            "description": "Passed to the mandatory mesh.distance.symmetric_hausdorff validator step as validation_mode. Omitted: bruteforce (that validator accepts at most 400 faces per mesh). certified_bvh validates large simplifications (up to 2,000,000 faces per mesh) with the scalable certified Hausdorff bracket; the deviation verdict against max_symmetric_deviation is still mandatory."
+            "description": "Passed to the mandatory mesh.distance.symmetric_hausdorff validator step as validation_mode. Omitted: bruteforce (that validator accepts at most 400 faces per mesh). certified_bvh validates large simplifications (up to 2,000,000 faces per mesh) with the scalable certified Hausdorff bracket; the deviation verdict against max_symmetric_deviation is still mandatory. Limitations: the declared rounding margin 1e-9*(1+diagonal) is calibrated for coordinates within about 1e6 times the bounding-box diagonal of the origin; farther-translated meshes are outside the certificate (translate them first). A producer verdict 'pass' is accepted unless the bracket certifies 'fail', so with certified_verdict 'indeterminate' the exact distance can exceed the tolerance by up to error_bound/2; require certified_within_tolerance=true in the validator report when a guaranteed pass is needed."
           }
         }
       },
@@ -1093,7 +1093,7 @@
               "bruteforce",
               "certified_bvh"
             ],
-            "description": "Validator tier. Omitted or bruteforce (default behaviour): the independent validator mesh.validate.hausdorff_symmetric_report brute-forces exact rational vertex distances and a Lipschitz bracket, so both meshes are limited to 400 faces. certified_bvh: scalable certified bracket for meshes up to 2,000,000 faces each (the registry raises maximum_faces only for this mode). The CGAL computation is identical in both modes; certified_bvh changes only the validator: a self-written triangle bounding-volume hierarchy, exact nearest-triangle branch-and-bound, midpoint subdivision of every triangle with the convex bound min_S max_i d(v_i,S) until the certified bracket [lower, upper] of the exact symmetric Hausdorff distance is at most min(0.5% diagonal, error_bound/2) wide, an exhaustive-scan cross-check on a subsample and GMP rechecks of the witness distances. Binary64 rounding is covered by the declared margin 1e-9*(1+diagonal). The validator report adds certified_lower_bound, certified_upper_bound and certified_verdict (pass when the certified upper bound is within tolerance) and rejects a report whose verdict contradicts it."
+            "description": "Validator tier. Omitted or bruteforce (default behaviour): the independent validator mesh.validate.hausdorff_symmetric_report brute-forces exact rational vertex distances and a Lipschitz bracket, so both meshes are limited to 400 faces. certified_bvh: scalable certified bracket for meshes up to 2,000,000 faces each (the registry raises maximum_faces only for this mode). The CGAL computation is identical in both modes; certified_bvh changes only the validator: a self-written triangle bounding-volume hierarchy, exact nearest-triangle branch-and-bound, midpoint subdivision of every triangle with the convex bound min_S max_i d(v_i,S) until the certified bracket [lower, upper] of the exact symmetric Hausdorff distance is at most min(0.5% diagonal, error_bound/2) wide, an exhaustive-scan cross-check on a subsample and GMP rechecks of the witness distances. Binary64 rounding is covered by the declared margin 1e-9*(1+diagonal). The validator report adds certified_lower_bound, certified_upper_bound and certified_verdict (pass when the certified upper bound is within tolerance) and rejects a report whose verdict contradicts it. Limitations: the declared rounding margin 1e-9*(1+diagonal) is calibrated for coordinates within about 1e6 times the bounding-box diagonal of the origin; farther-translated meshes are outside the certificate (translate them first). A producer verdict 'pass' is accepted unless the bracket certifies 'fail', so with certified_verdict 'indeterminate' the exact distance can exceed the tolerance by up to error_bound/2; require certified_within_tolerance=true in the validator report when a guaranteed pass is needed."
           }
         }
       },
@@ -6374,7 +6374,7 @@
       "revision": 1,
       "status": "VALIDATED",
       "role": "analysis",
-      "summary": "List every boundary hole (boundary cycle) of a triangle mesh with a stable hole_id, edge count, boundary length, patch-area estimate, centroid and bounding box, without changing the mesh. Rule: list first, ask the user, then fill by ids. Call mesh.analysis.boundary_cycles to list every boundary hole with a stable hole_id, length, area estimate and location, show the list to the user, ask which holes to close, then pass those ids as hole_ids. Never fill every hole of a scan on your own.",
+      "summary": "List every boundary hole (boundary cycle) of a triangle mesh with a stable hole_id, edge count, boundary length, patch-area estimate, centroid and bounding box, without changing the mesh. Rule: list first, ask the user, then fill by ids. Call mesh.analysis.boundary_cycles to list every boundary hole with a stable hole_id, length, area estimate and location, show the list to the user, ask which holes to close, then pass those ids as hole_ids together with results.source_mesh_sha256 (ids are valid only for the listed mesh). Never fill every hole of a scan on your own.",
       "package": "Polygon_mesh_processing",
       "major_requirements": [
         "major.7.4.04"
@@ -6534,6 +6534,7 @@
           "checks": [
             "cycles_partition_border_edges",
             "hole_id_is_minimum_vertex",
+            "ids_bound_to_source_mesh_sha256",
             "bounded_cycle_listing",
             "typed_length_and_area_units"
           ],
@@ -10099,7 +10100,7 @@
       "revision": 1,
       "status": "VALIDATED",
       "role": "transform",
-      "summary": "Fill holes: triangulate every boundary hole cycle within an explicit edge-count bound, producing interpolating patches (\u88dc\u9593). Optional selection: hole_ids (from mesh.analysis.boundary_cycles) or the max_hole_perimeter / max_hole_area filters; unselected holes stay open. Rule: list first, ask the user, then fill by ids. Call mesh.analysis.boundary_cycles to list every boundary hole with a stable hole_id, length, area estimate and location, show the list to the user, ask which holes to close, then pass those ids as hole_ids. Never fill every hole of a scan on your own.",
+      "summary": "Fill holes: triangulate every boundary hole cycle within an explicit edge-count bound, producing interpolating patches (\u88dc\u9593). Optional selection: hole_ids (from mesh.analysis.boundary_cycles) or the max_hole_perimeter / max_hole_area filters; unselected holes stay open. Rule: list first, ask the user, then fill by ids. Call mesh.analysis.boundary_cycles to list every boundary hole with a stable hole_id, length, area estimate and location, show the list to the user, ask which holes to close, then pass those ids as hole_ids together with the report's results.source_mesh_sha256 (ids listed on another mesh are refused). Never fill every hole of a scan on your own.",
       "aliases": [
         "mesh.repair.triangulate_holes",
         "fill selected holes",
@@ -10215,6 +10216,10 @@
               "unit"
             ],
             "type": "object"
+          },
+          "source_mesh_sha256": {
+            "type": "string",
+            "description": "Required together with hole_ids (and only then): results.source_mesh_sha256 of the mesh.analysis.boundary_cycles report that listed the ids. hole_ids are not portable between meshes; a digest that differs from the input mesh is refused with HOLE_IDS_SOURCE_MISMATCH."
           }
         },
         "required": [
@@ -10293,6 +10298,10 @@
               },
               "max_hole_area": {
                 "parameter": "max_hole_area",
+                "optional": true
+              },
+              "source_mesh_sha256": {
+                "parameter": "source_mesh_sha256",
                 "optional": true
               }
             }
@@ -10396,6 +10405,9 @@
               "max_hole_perimeter": {
                 "exclusiveMinimum": 0,
                 "type": "TypedLength"
+              },
+              "source_mesh_sha256": {
+                "type": "string"
               }
             },
             "required": [
@@ -10434,7 +10446,8 @@
               "hole_ids": "hole_ids",
               "max_hole_area": "max_hole_area",
               "max_hole_edges": "max_hole_edges",
-              "max_hole_perimeter": "max_hole_perimeter"
+              "max_hole_perimeter": "max_hole_perimeter",
+              "source_mesh_sha256": "source_mesh_sha256"
             }
           },
           "validators": [
@@ -10588,6 +10601,10 @@
               "unit"
             ],
             "type": "object"
+          },
+          "source_mesh_sha256": {
+            "type": "string",
+            "description": "Required together with hole_ids (and only then): results.source_mesh_sha256 of the mesh.analysis.boundary_cycles report that listed the ids. hole_ids are not portable between meshes; a digest that differs from the input mesh is refused with HOLE_IDS_SOURCE_MISMATCH."
           }
         },
         "required": [
@@ -10757,6 +10774,9 @@
               "max_hole_perimeter": {
                 "exclusiveMinimum": 0,
                 "type": "TypedLength"
+              },
+              "source_mesh_sha256": {
+                "type": "string"
               }
             },
             "required": [
@@ -34454,7 +34474,7 @@
       "revision": 1,
       "status": "VALIDATED",
       "role": "transform",
-      "summary": "Fill every hole within an explicit edge-count bound with a refined and faired patch (PMP::triangulate_refine_and_fair_hole): new interior vertices at the requested density, positions solved for the requested fairing continuity; boundary vertices and source faces are kept. Optional selection: hole_ids (from mesh.analysis.boundary_cycles) or the max_hole_perimeter / max_hole_area filters; unselected holes stay open. Rule: list first, ask the user, then fill by ids. Call mesh.analysis.boundary_cycles to list every boundary hole with a stable hole_id, length, area estimate and location, show the list to the user, ask which holes to close, then pass those ids as hole_ids. Never fill every hole of a scan on your own.",
+      "summary": "Fill every hole within an explicit edge-count bound with a refined and faired patch (PMP::triangulate_refine_and_fair_hole): new interior vertices at the requested density, positions solved for the requested fairing continuity; boundary vertices and source faces are kept. Optional selection: hole_ids (from mesh.analysis.boundary_cycles) or the max_hole_perimeter / max_hole_area filters; unselected holes stay open. Rule: list first, ask the user, then fill by ids. Call mesh.analysis.boundary_cycles to list every boundary hole with a stable hole_id, length, area estimate and location, show the list to the user, ask which holes to close, then pass those ids as hole_ids together with the report's results.source_mesh_sha256 (ids listed on another mesh are refused). Never fill every hole of a scan on your own.",
       "aliases": [
         "fill holes with refinement and fairing",
         "refine and fair hole",
@@ -34593,6 +34613,10 @@
               "unit"
             ],
             "type": "object"
+          },
+          "source_mesh_sha256": {
+            "type": "string",
+            "description": "Required together with hole_ids (and only then): results.source_mesh_sha256 of the mesh.analysis.boundary_cycles report that listed the ids. hole_ids are not portable between meshes; a digest that differs from the input mesh is refused with HOLE_IDS_SOURCE_MISMATCH."
           }
         }
       },
@@ -34674,6 +34698,10 @@
               },
               "max_hole_area": {
                 "parameter": "max_hole_area",
+                "optional": true
+              },
+              "source_mesh_sha256": {
+                "parameter": "source_mesh_sha256",
                 "optional": true
               }
             }
@@ -34787,6 +34815,9 @@
               "max_hole_perimeter": {
                 "exclusiveMinimum": 0,
                 "type": "TypedLength"
+              },
+              "source_mesh_sha256": {
+                "type": "string"
               }
             },
             "required": [
@@ -34829,7 +34860,8 @@
               "hole_ids": "hole_ids",
               "max_hole_area": "max_hole_area",
               "max_hole_edges": "max_hole_edges",
-              "max_hole_perimeter": "max_hole_perimeter"
+              "max_hole_perimeter": "max_hole_perimeter",
+              "source_mesh_sha256": "source_mesh_sha256"
             }
           },
           "validators": [
@@ -34998,6 +35030,10 @@
               "unit"
             ],
             "type": "object"
+          },
+          "source_mesh_sha256": {
+            "type": "string",
+            "description": "Required together with hole_ids (and only then): results.source_mesh_sha256 of the mesh.analysis.boundary_cycles report that listed the ids. hole_ids are not portable between meshes; a digest that differs from the input mesh is refused with HOLE_IDS_SOURCE_MISMATCH."
           }
         }
       },
@@ -35174,6 +35210,9 @@
               "max_hole_perimeter": {
                 "exclusiveMinimum": 0,
                 "type": "TypedLength"
+              },
+              "source_mesh_sha256": {
+                "type": "string"
               }
             },
             "required": [

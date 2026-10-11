@@ -951,8 +951,9 @@ std::vector<std::array<double, 3>> double_points(const RawOff& raw) {
 
 Json boundary_cycle_results(std::vector<std::vector<std::size_t>> cycles,
                             const std::vector<std::array<double, 3>>& points,
-                            const std::string& unit) {
+                            const std::string& unit, const std::string& source_sha256) {
   Json results = {{"count_unit", "count"}, {"length_unit", unit},
+                  {"source_mesh_sha256", source_sha256},
                   {"area_unit", unit + "^2"}, {"cycle_limit", kMaxBoundaryCycles},
                   {"hole_count", cycles.size()}};
   if (cycles.size() > kMaxBoundaryCycles) {
@@ -1015,7 +1016,9 @@ Json boundary_cycle_results(std::vector<std::vector<std::size_t>> cycles,
   results["available"] = true;
   results["holes"] = std::move(holes);
   results["order_by_boundary_length_desc"] = std::move(order);
-  results["id_rule"] = "hole_id = smallest source OFF vertex index on the boundary cycle";
+  results["id_rule"] =
+      "hole_id = smallest source OFF vertex index on the boundary cycle; ids are only meaningful for the "
+      "mesh whose content digest is source_mesh_sha256 (fill operations require it with hole_ids)";
   results["area_rule"] = "patch_area_estimate = Newell polygon area of the boundary ring (planar fit estimate)";
   return results;
 }
@@ -1046,9 +1049,11 @@ Json run_boundary_cycles(const Request& request, bool publish) {
     fail_report("Boundary cycles do not partition the border edges");
   auto report = base_report(request, input, "boundary_cycles");
   report["results"] = boundary_cycle_results(std::move(cycles), double_points(input.raw),
-                                             request.inputs.front().unit);
+                                             request.inputs.front().unit,
+                                             request.inputs.front().sha256);
   report["validation"]["passed"] = true;
   report["validation"]["checks"] = {"cycles_partition_border_edges", "hole_id_is_minimum_vertex",
+                                    "ids_bound_to_source_mesh_sha256",
                                     "bounded_cycle_listing", "typed_length_and_area_units"};
   if (!publish) return report;
   return finish_report(
@@ -1093,7 +1098,8 @@ Json independent_boundary_cycles_results(const Request& source_request) {
     cycles.push_back(std::move(cycle));
   }
   return boundary_cycle_results(std::move(cycles), double_points(raw),
-                                source_request.inputs.front().unit);
+                                source_request.inputs.front().unit,
+                                source_request.inputs.front().sha256);
 }
 
 namespace {
@@ -1304,6 +1310,7 @@ OperationDefinition boundary_cycles_operation() {
                           "mesh.validate.boundary_cycles_report");
   info["cycle_limit"] = kMaxBoundaryCycles;
   info["checks"] = {"cycles_partition_border_edges", "hole_id_is_minimum_vertex",
+                                    "ids_bound_to_source_mesh_sha256",
                     "bounded_cycle_listing", "typed_length_and_area_units"};
   return make_definition("mesh.analysis.boundary_cycles",
                          [](const Request& request) {

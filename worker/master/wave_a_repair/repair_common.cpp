@@ -367,7 +367,10 @@ void record_hole_selection(Json& metrics, const HoleSelection& selection,
   metrics["filled_hole_ids"] = filled_ids;
   metrics["skipped_hole_ids"] = skipped_ids;
   Json description = {{"mode", selection.by_ids ? "hole_ids" : "filters"}};
-  if (selection.by_ids) description["hole_ids"] = selection.ids;
+  if (selection.by_ids) {
+    description["hole_ids"] = selection.ids;
+    description["source_mesh_sha256"] = selection.source_sha256;
+  }
   if (selection.has_max_perimeter) description["max_hole_perimeter"] = selection.max_perimeter;
   if (selection.has_max_area) description["max_hole_area"] = selection.max_area;
   metrics["hole_selection"] = std::move(description);
@@ -417,7 +420,8 @@ HoleSelection parse_hole_selection(const Json& parameters, bool refine_fair, con
   }
   for (auto it = parameters.begin(); it != parameters.end(); ++it) {
     const auto& key = it.key();
-    const bool known = key == "max_hole_edges" || key == "hole_ids" || key == "max_hole_perimeter" ||
+    const bool known = key == "max_hole_edges" || key == "hole_ids" || key == "source_mesh_sha256" ||
+                       key == "max_hole_perimeter" ||
                        key == "max_hole_area" ||
                        (refine_fair && (key == "density_control_factor" || key == "fairing_continuity"));
     if (!known) {
@@ -442,6 +446,27 @@ HoleSelection parse_hole_selection(const Json& parameters, bool refine_fair, con
     }
     selection.active = true;
     selection.by_ids = true;
+  }
+  if (parameters.contains("source_mesh_sha256")) {
+    const auto& digest = parameters["source_mesh_sha256"];
+    bool hex = digest.is_string() && digest.get<std::string>().size() == 64;
+    if (hex) {
+      for (const char c : digest.get<std::string>())
+        if (!((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f'))) hex = false;
+    }
+    if (!hex) {
+      throw WorkerError("INVALID_INPUT", "INVALID_SOURCE_MESH_SHA256",
+                        "source_mesh_sha256 must be 64 lowercase hex characters");
+    }
+    if (!selection.by_ids) {
+      throw WorkerError("INVALID_INPUT", "HOLE_SELECTION_CONFLICT",
+                        "source_mesh_sha256 binds hole_ids and is only accepted together with hole_ids");
+    }
+    selection.source_sha256 = digest.get<std::string>();
+  } else if (selection.by_ids) {
+    throw WorkerError("INVALID_INPUT", "HOLE_IDS_SOURCE_REQUIRED",
+                      "hole_ids require source_mesh_sha256 (results.source_mesh_sha256 of the "
+                      "mesh.analysis.boundary_cycles report that listed them)");
   }
   const auto positive = [&](const char* key, const std::string& expected_unit, bool& present, double& value) {
     if (!parameters.contains(key)) return;
@@ -470,6 +495,15 @@ HoleSelection parse_hole_selection(const Json& parameters, bool refine_fair, con
     selection.active = true;
   }
   return selection;
+}
+
+void require_hole_ids_source(const HoleSelection& selection, const std::string& actual_sha256,
+                             const std::string& error_class) {
+  if (!selection.by_ids || selection.source_sha256 == actual_sha256) return;
+  throw WorkerError(error_class, "HOLE_IDS_SOURCE_MISMATCH",
+                    "hole_ids were listed on mesh " + selection.source_sha256 +
+                        " but the input mesh is " + actual_sha256 +
+                        "; hole ids are not portable between meshes, list the holes of this mesh again");
 }
 
 HoleCycleStats hole_cycle_stats(const std::vector<std::size_t>& cycle,
@@ -608,6 +642,7 @@ Soup read_soup(const ArtifactInput& input,
   std::size_t cursor = 4;
   Soup soup;
   soup.unit = input.unit;
+  soup.sha256 = input.sha256;
   soup.points.reserve(vertices);
   for (std::size_t i = 0; i < vertices; ++i) {
     if (cursor + 3 > tokens.size()) throw WorkerError("INVALID_INPUT", "MALFORMED_OFF", "Truncated OFF vertices");
@@ -688,6 +723,7 @@ RepairResult compute_repair(RepairKind kind, const Soup& source,
     auto mesh = mesh_from_soup(source, "Hole-fill source");
     const auto limit = required_hole_limit(parameters);
     const auto selection = parse_hole_selection(parameters, false, source.unit);
+    require_hole_ids_source(selection, source.sha256, "PRECONDITION_FAILED");
     std::vector<RepairMesh::Halfedge_index> cycles;
     CGAL::extract_boundary_cycles(mesh, std::back_inserter(cycles));
     const auto plan = plan_hole_selection(mesh, cycles, selection, limit);
@@ -726,6 +762,7 @@ RepairResult compute_repair(RepairKind kind, const Soup& source,
     auto mesh = mesh_from_soup(source, "Refine-and-fair source");
     const auto settings = refine_fair_parameters(parameters);
     const auto selection = parse_hole_selection(parameters, true, source.unit);
+    require_hole_ids_source(selection, source.sha256, "PRECONDITION_FAILED");
     std::vector<RepairMesh::Halfedge_index> cycles;
     CGAL::extract_boundary_cycles(mesh, std::back_inserter(cycles));
     const auto plan = plan_hole_selection(mesh, cycles, selection, settings.limit);
