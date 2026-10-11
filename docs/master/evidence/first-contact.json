@@ -1,7 +1,7 @@
 {
  "bindings": {
   "guide_bundle_sha256": "9cbaac6fdfbb5ee4ae05641e7a0517651a56ef20db985471e606f771fe19e443",
-  "harness_sha256": "075da0335eebfcd4f47fef3883f3b5c3dfa4ce82596fdeb082849b158e365115",
+  "harness_sha256": "5ba6f2513ac0a7b4d41aa009fcd291f6c7c38728a34f6927eea37a90e7a5a7fc",
   "instructions_sha256": "dc205df03648b23a2cc2aee4ed2e516957534c010d9f52367f8cab8f81c02ad9",
   "operations_sha256": "78abd290a0bcdf4c04f9500ba0b329bf604b555d213f28b2ff7fe260fdb894b9",
   "worker_sha256": "3bc1e3c514dc7a0ba558119dd1a20b2c4555c26ffca476d04cff036233d3cb92",
@@ -264,7 +264,7 @@
    "search_hit": true,
    "selected_recipe": "wf08-refine-measure",
    "state": "succeeded",
-   "tool_calls": 16,
+   "tool_calls": 13,
    "validators": [
     "pass",
     "pass"
@@ -420,7 +420,7 @@
    "search_hit": true,
    "selected_recipe": "wf14-catmull-triangulate-measure",
    "state": "succeeded",
-   "tool_calls": 17,
+   "tool_calls": 13,
    "validators": [
     "pass",
     "pass",
@@ -455,7 +455,7 @@
    "search_hit": true,
    "selected_recipe": "wf22-wrap-and-thinned-cloud-join",
    "state": "succeeded",
-   "tool_calls": 14,
+   "tool_calls": 13,
    "validators": [
     "pass",
     "pass",
@@ -605,7 +605,7 @@
    "search_hit": true,
    "selected_recipe": "wf20-outlier-normals-orient",
    "state": "succeeded",
-   "tool_calls": 15,
+   "tool_calls": 14,
    "validators": [
     "pass",
     "pass",
@@ -683,7 +683,7 @@
    "search_hit": true,
    "selected_recipe": "wf24-grid-maxdistance-join",
    "state": "succeeded",
-   "tool_calls": 13,
+   "tool_calls": 16,
    "validators": [
     "pass",
     "pass",
@@ -713,7 +713,7 @@
    "search_hit": true,
    "selected_recipe": "wf25-random-bbox",
    "state": "succeeded",
-   "tool_calls": 12,
+   "tool_calls": 15,
    "validators": [
     "pass",
     "pass",
@@ -1004,7 +1004,7 @@
    "search_hit": true,
    "selected_recipe": "wf17-outliers-grid-afsr-measures",
    "state": "succeeded",
-   "tool_calls": 17,
+   "tool_calls": 18,
    "validators": [
     "pass",
     "pass",
@@ -1211,7 +1211,51 @@
  "gating": false,
  "generator": "master-first-contact",
  "informational": true,
- "note": "Deterministic scripted client, not a language model: it shows the guide is sufficient for a mechanical reader. This evidence is informational and is not a standalone acceptance gate.",
+ "note": "Deterministic scripted client, not a language model: it shows the guide is sufficient for a mechanical reader. This evidence is informational and is not a standalone acceptance gate. recipe_mismatches lists every request where the lexical matcher chose a different recipe than the one the request was written for; executed_ok then measures the chosen recipe, not the intended one.",
+ "recipe_mismatches": [
+  {
+   "expected": "wf01-soup-orient-loop-inspect",
+   "request": "My scan is a pile of loose triangles and some face the wrong way. Turn them the right way round, make it smoother with one subdivision pass and tell me whether the mesh is healthy.",
+   "selected": "wf14-catmull-triangulate-measure",
+   "selected_executed_ok": true
+  },
+  {
+   "expected": "wf06-remesh-simplify-hausdorff-join",
+   "request": "Remesh my sphere to uniform edges, also make a lighter version, and compare them by Hausdorff distance.",
+   "selected": "wf30-surface-generate-remesh-measures",
+   "selected_executed_ok": true
+  },
+  {
+   "expected": "wf07-smooth-remesh-simplify",
+   "request": "My sphere scan is noisy. Smooth it, remesh it evenly and then reduce the triangle count.",
+   "selected": "wf41-noisy-smooth-loop-measures",
+   "selected_executed_ok": true
+  },
+  {
+   "expected": "wf10-difference-measures",
+   "request": "Cut one cube out of another cube and tell me the volume that is left.",
+   "selected": "wf12-clip-measures",
+   "selected_executed_ok": true
+  },
+  {
+   "expected": "wf15-points-alphawrap-remesh-measures",
+   "request": "I have a point cloud. Wrap a watertight surface around it with alpha wrapping, remesh it and measure.",
+   "selected": "wf22-wrap-and-thinned-cloud-join",
+   "selected_executed_ok": true
+  },
+  {
+   "expected": "wf21-random-delaunay3",
+   "request": "Randomly thin my points and build a 3D Delaunay triangulation.",
+   "selected": "wf17-outliers-grid-afsr-measures",
+   "selected_executed_ok": true
+  },
+  {
+   "expected": "wf40-outliers-grid-delaunay3",
+   "request": "Clean outliers, thin on a grid, then compute a 3D Delaunay triangulation.",
+   "selected": "wf17-outliers-grid-afsr-measures",
+   "selected_executed_ok": true
+  }
+ ],
  "schema_version": 1,
  "summary": {
   "examples_succeeded": 117,

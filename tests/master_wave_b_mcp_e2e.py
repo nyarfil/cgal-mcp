@@ -15,14 +15,16 @@ from mcp import Client, StdioServerParameters
 from tests.master_mcp_e2e import worker_path
 
 
+# Validators inserted after pointset.validate.basic; remove_outliers and smooth.jet gained a second
+# specific validator in commit 1cd1249 (the e2e expectation was not updated then).
 SPECIFIC_VALIDATOR = {
-    "pointset.remove_outliers": "pointset.validate.subset",
-    "pointset.simplify.grid": "pointset.validate.subset",
-    "pointset.simplify.random": "pointset.validate.subset",
-    "pointset.simplify.hierarchy": "pointset.validate.subset",
-    "pointset.smooth.jet": "pointset.validate.smoothed",
-    "pointset.normals.estimate": "pointset.validate.normals_estimated",
-    "pointset.normals.orient_mst": "pointset.validate.normals_oriented",
+    "pointset.remove_outliers": ("pointset.validate.subset", "pointset.validate.outliers_removed"),
+    "pointset.simplify.grid": ("pointset.validate.subset",),
+    "pointset.simplify.random": ("pointset.validate.subset",),
+    "pointset.simplify.hierarchy": ("pointset.validate.subset",),
+    "pointset.smooth.jet": ("pointset.validate.smoothed", "pointset.validate.smoothing_quality"),
+    "pointset.normals.estimate": ("pointset.validate.normals_estimated",),
+    "pointset.normals.orient_mst": ("pointset.validate.normals_oriented",),
 }
 
 
@@ -57,7 +59,7 @@ async def main() -> None:
                 plan = await call("cgal_plan", {"request": {
                     "operation_id": operation, "inputs": [artifact_id], "parameters": parameters}})
                 assert [step["operation"] for step in plan["steps"]] == [
-                    operation, "pointset.validate.basic", SPECIFIC_VALIDATOR[operation]], plan
+                    operation, "pointset.validate.basic", *SPECIFIC_VALIDATOR[operation]], plan
                 queued = await call("cgal_execute", {"plan_id": plan["plan_id"]})
                 for _ in range(1200):
                     status = await call("cgal_job_status", {"job_id": queued["job_id"]})
@@ -67,7 +69,7 @@ async def main() -> None:
                 assert status["state"] == "succeeded", status
                 assert status["validation_status"] == "passed", status
                 assert {item["operation"] for item in status["validation"]} == {
-                    "pointset.validate.basic", SPECIFIC_VALIDATOR[operation]}, status
+                    "pointset.validate.basic", *SPECIFIC_VALIDATOR[operation]}, status
                 return plan, status
 
             async def wait_job(job_id: str) -> dict:
@@ -129,14 +131,14 @@ async def main() -> None:
                  "parameters": {"neighbors": 8, "drop_unoriented": False}},
             ]}
             workflow_plan = await call("cgal_plan", {"request": workflow_request})
-            assert len(workflow_plan["steps"]) == 9, workflow_plan
-            assert workflow_plan["steps"][3]["deferred_preconditions"]["parameters"], workflow_plan
-            assert workflow_plan["steps"][6]["deferred_preconditions"]["artifact_properties"], workflow_plan
+            assert len(workflow_plan["steps"]) == 10, workflow_plan
+            assert workflow_plan["steps"][4]["deferred_preconditions"]["parameters"], workflow_plan
+            assert workflow_plan["steps"][7]["deferred_preconditions"]["artifact_properties"], workflow_plan
             workflow_job = await call("cgal_execute", {"plan_id": workflow_plan["plan_id"]})
             workflow_status = await wait_job(workflow_job["job_id"])
             assert workflow_status["state"] == "succeeded", workflow_status
             assert len(workflow_status["outputs"]) == 3, workflow_status
-            assert len(workflow_status["validation"]) == 6, workflow_status
+            assert len(workflow_status["validation"]) == 7, workflow_status
 
             too_many_neighbors = json.loads(json.dumps(workflow_request))
             too_many_neighbors["steps"][1]["parameters"]["neighbors"] = 25

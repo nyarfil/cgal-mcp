@@ -284,17 +284,19 @@ def measure(worker: Path, skip_a: bool = False, skip_b: bool = False, only_b: li
         "examples_succeeded": sum(1 for v in examples.values() if v == "succeeded"),
         "operations_in_guide": bundle["counts"]["operations"],
     }
+    mismatches = [{"request": c["request"], "expected": c["expected_recipe"], "selected": c["selected_recipe"],
+                   "selected_executed_ok": c["executed_ok"]} for c in cases if not c["recipe_match"]]
     return {"generator": GENERATOR, "schema_version": 1,
             "informational": True, "gating": False,
             "note": ("Deterministic scripted client, not a language model: it shows the guide is sufficient for a mechanical "
-                     "reader. This evidence is informational and is not a standalone acceptance gate."),
+                     "reader. This evidence is informational and is not a standalone acceptance gate. recipe_mismatches lists every request where the lexical matcher chose a different recipe than the one the request was written for; executed_ok then measures the chosen recipe, not the intended one."),
             "bindings": {"guide_bundle_sha256": bundle_sha,
                          "instructions_sha256": hashlib.sha256(bundle["topics"]["en"]["instructions"].encode("utf-8")).hexdigest(),
                          "operations_sha256": sha256_file(REPO / "cgal_mcp/master/operations.json"),
                          "workflows_sha256": sha256_file(REPO / "docs/master/workflows.json"),
                          "harness_sha256": sha256_file(Path(__file__)),
                          "worker_sha256": sha256_file(worker)},
-            "summary": summary, "surface": {k: a.get(k) for k in (
+            "recipe_mismatches": mismatches, "summary": summary, "surface": {k: a.get(k) for k in (
                 "instructions_words", "tools", "resources", "resource_templates", "prompts", "prompt_renders")},
             "cases": cases, "examples": examples}
 
