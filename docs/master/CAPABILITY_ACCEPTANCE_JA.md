@@ -332,3 +332,31 @@ hole_idは「境界上の最小の頂点番号」なので、メッシュXで一
   `tests.test_master_search_*`・`test_master_goal_routing`・`test_master_package_harvest`、
   workerケースのbatch 2〜6、Wave A（simplify・mesh・Boolean・repair）、Wave C・D・E、query、kernel、
   optimization、reconstruction、worker cases。
+
+### 追補: Linuxでの証拠再生成の準備（2026-11-13、未完了）
+
+ユーザーの判断により、証拠の再生成をこのLinux環境で行う準備を進めました。再生成そのものは未完了で、
+`docs/master/evidence/`はまだ更新していません。
+
+- OpenGR `abfe0f4d`（v2023.11）、SoPlex `13e2ab24`（v8.0.3）、SCIP `d409edf9`（v10.0.3）をtag指定のgit cloneで取得し、
+  `THIRD_PARTY_DEPENDENCIES_JA.md`に記録されたcommitと一致することを確認しました（tarballのsha256は、
+  この環境からsource archiveを取得できないため照合していません）。SCIPの構成には、文書に記載のflagに加えて
+  `-DPAPILO=OFF -DREADLINE=OFF -DZLIB=OFF -DAMPL=OFF`が必要でした。workerのmanifestは
+  `optional_dependencies: OpenGR,SCIP`、`source_kind: official_release`です。
+- replay契約の修正（`scripts/master_replay_families.py`）:
+  - 閉じたpolylineの開始点と向きはbuildで変わるため、順序に依存しない比較演算子を追加しました
+    （`contains`、`same_closed_cycle`）。`intersect-polylines-shifted-cubes`（7.3）、`slice-cube-mid`・
+    `slice-cube-diagonal`（7.5）に適用。Linuxでは同じ閉曲線が別の開始点で出力されます。
+  - batch 3の改竄fixture 6件（regular2/regular3/voronoi）のsha256が、CRLFのworking copyで計算された値でした。
+    repositoryの内容は`.gitattributes`の`eol=lf`でLFなので、新しいcheckout（CIを含む）では必ず不一致になります。
+    LFの内容のsha256へ直しました。
+- この修正後、Linux workerでfamily 7.1・7.2・7.3・7.4・7.5・7.6・7.9・7.11・7.12・7.13・7.14・7.15の
+  固定harnessが合格します。
+- 残り（判断待ち）: 7.8と7.10は、数値計算の結果そのものがWindows（MSVC）とLinux（gcc）で違い、
+  Windowsの値に固定されたassertionが失敗します。必須validatorはどちらの結果も合格としています。
+  - `skeleton-tube-function`・`skeleton-tube-class`: 頂点0のx座標が1.0583（期待）に対し1.3471。
+  - `skeleton-torus-class`: 骨格の頂点・辺が25（期待）に対し24、頂点0のx座標が2.87712に対し2.87646。
+  - `poisson-delaunay-sphere`: 最大頂点半径が上限2.05に対し2.0512。
+  - `poisson-delaunay-sphere-fine`: 面数1518（期待）に対し1542、最大頂点半径2.0534。
+  これらを通すにはassertionを環境に依存しない形（範囲など）へ変える必要があり、受入基準の変更になるため
+  未実施です。

@@ -928,12 +928,12 @@ B3_FIXTURES = {
     "tampered_minkowski_hole_dropped_report.json": "f27890a4f94998cab474a28a42f04ae2d0a0016d2a4975b5226e4ff18871aad5",
     "tampered_minkowski_vertex_moved_report.json": "6d1912484de152e1a617ca21e816da384e82f6dc7b58ba57dae3fd52bcc97825",
     "tampered_overlay_label_report.json": "5989b8becabbb9d326db0d2dc379922650f216b4818f363a392420dbcbbd046e",
-    "tampered_regular2_hidden_report.json": "bfaa7e3fe01102caa8f287efe1fc61b6aaf232cae37180e6e1e48e9c6dc35488",
-    "tampered_regular2_nonregular_report.json": "ed18b90810ffcaef347cb30978ebfe43e0350397fa7fae4d467761dd93254e9a",
-    "tampered_regular3_hidden_report.json": "1815f9e028b1d285c0d5b64e1a929351dc38317f68c0982174439f3a38fff6d4",
-    "tampered_regular3_missing_cell_report.json": "2bc90fdc2ccbb82e364a9fb44b608b5547dd583172a25cff0cdd99b74df97629",
-    "tampered_voronoi_edge_report.json": "b200d38aa6f2b2857c84f3114741533b130adfcaf69e2477b6a27902f25e4fc2",
-    "tampered_voronoi_vertex_report.json": "5a0f853561d34e73acad75e39b88f42060d973500135cf5ed7d28263a9df66ed",
+    "tampered_regular2_hidden_report.json": "559a6cb4cf1c019ea7a8cbeb45551e4fae48f971eef58fa884577a0ae6cb8a0d",
+    "tampered_regular2_nonregular_report.json": "d585815e6e9032c52072f7aa72d9610183a45e7e0bf4ffecda39964447b99b40",
+    "tampered_regular3_hidden_report.json": "74e74635aa3e31d2fe9c57f5a079b86d493a1e125a6267600d6e50aafa55a06a",
+    "tampered_regular3_missing_cell_report.json": "1ae1d45afc4c48eea8e2345997523588f45af9abc96be5392b8ec463cda51447",
+    "tampered_voronoi_edge_report.json": "c86bc08232542d78c6093330239443909b5f7e5fa3b0f7dfb04171ee90d32dfb",
+    "tampered_voronoi_vertex_report.json": "e6827c6a5fe366a841194b7137f59a86117ff5c658a17a45557d3ef5ba3a89c0",
     "tampered_zone_vertex_dropped_report.json": "24b0ef8343e497d9c12868c00986f241b3abc6d207ff64114989f86ceccca4d7",
     "triangle_a.json": "caa42122c3456b7b903003cb0df40c95c39dc34d90b8a719ef4e1cfef5d91e8b",
     "voronoi_scatter.json": "e796215dced20c143fbb39e930768783140122769ac94de476e4c3bc235ff569",
@@ -1256,7 +1256,7 @@ FAMILY_7_5 = {
             ["metrics.algorithm", "==", "CGAL::Polygon_mesh_slicer"],
             ["output:analysis:json:report_kind", "==", "mesh_slice"],
             ["output:analysis:json:results.polylines[*].closed", "==", [True]],
-            ["output:analysis:json:results.polylines.0.points", "==", [
+            ["output:analysis:json:results.polylines.0.points", "same_closed_cycle", [
                 ["0", "0", "1"], ["1", "0", "1"], ["2", "0", "1"], ["2", "1", "1"], ["2", "2", "1"],
                 ["1", "2", "1"], ["0", "2", "1"], ["0", "1", "1"], ["0", "0", "1"]]],
         ]),
@@ -1264,7 +1264,7 @@ FAMILY_7_5 = {
             ["metrics.polyline_count", "==", 1],
             ["metrics.closed_polyline_count", "==", 1],
             ["output:analysis:json:results.polylines[*].closed", "==", [True]],
-            ["output:analysis:json:results.polylines.0.points", "==", [
+            ["output:analysis:json:results.polylines.0.points", "same_closed_cycle", [
                 ["0", "1", "2"], ["1/2", "1/2", "2"], ["1", "0", "2"], ["3/2", "0", "3/2"], ["2", "0", "1"],
                 ["2", "1/2", "1/2"], ["2", "1", "0"], ["3/2", "3/2", "0"], ["1", "2", "0"], ["1/2", "2", "1/2"],
                 ["0", "2", "1"], ["0", "3/2", "3/2"], ["0", "1", "2"]]],
@@ -4635,8 +4635,9 @@ FAMILY_7_3["cases"].extend([
     _case("intersect-polylines-shifted-cubes", "mesh.intersections.polylines", [_mesh(CUBE_A), B5_SHIFT], {}, [
         ["output:analysis:json:report_kind", "==", "mesh_intersection_polylines"],
         ["output:analysis:json:summary.polyline_count", "==", 1],
-        ["output:analysis:json:results.polylines.0.points.3", "==", ["1", "2", "1/4"]],
-        ["output:analysis:json:results.polylines.0.points.7", "==", ["2", "1/2", "1/4"]],
+        ["output:analysis:json:results.polylines.0.points", "contains", ["1", "2", "1/4"]],
+        ["output:analysis:json:results.polylines.0.points", "contains", ["2", "1/2", "1/4"]],
+        ["output:analysis:json:summary.segment_count", "==", 14],
         ["output:analysis:json:results.polylines.0.points.0", "==",
          {"path": "output:analysis:json:results.polylines.0.points.14"}],
     ]),
@@ -6465,6 +6466,18 @@ def _compare(actual: object, operator: str, expected: object) -> bool:
             else (not isinstance(actual, bool) and actual == expected)
     if operator == "!=":
         return actual != expected
+    if operator == "same_closed_cycle":
+        # A closed polyline (first point repeated at the end) equal to the expected one up to its
+        # start point and direction, which are not part of the contract and differ between builds.
+        if not (isinstance(actual, list) and isinstance(expected, list) and len(actual) == len(expected)
+                and len(actual) >= 2 and actual[0] == actual[-1] and expected[0] == expected[-1]):
+            return False
+        ring, target = actual[:-1], expected[:-1]
+        return any(ring[shift:] + ring[:shift] in (target, target[::-1]) for shift in range(len(ring)))
+    if operator == "contains":
+        # Membership in a list whose order is not part of the contract (for example the start
+        # point of a closed intersection polyline, which differs between builds).
+        return isinstance(actual, list) and expected in actual
     if operator == "approx":
         value, tolerance = expected
         return _approx(actual, value, tolerance)
@@ -6476,7 +6489,7 @@ def _compare(actual: object, operator: str, expected: object) -> bool:
             ">": actual > expected, ">=": actual >= expected}[operator]
 
 
-_OPERATORS = {"==", "!=", "<", "<=", ">", ">=", "approx"}
+_OPERATORS = {"==", "!=", "<", "<=", ">", ">=", "approx", "contains", "same_closed_cycle"}
 
 
 class CaseView:
