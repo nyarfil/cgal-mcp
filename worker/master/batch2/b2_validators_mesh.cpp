@@ -5,7 +5,12 @@
 // producer report with GMP rational arithmetic; the only floating-point decision (the
 // dihedral-angle bound of the feature detector, whose cosine is irrational) is rejected
 // when it falls inside a stated relative margin instead of being guessed.
+//
+// Pairs of triangles reach the exact tests through the conservative box hierarchy of
+// b2_broadphase.h: a pair is skipped only when the closed binary64 boxes are disjoint, so the
+// verdict equals that of the all-pairs loop.
 
+#include "b2_broadphase.h"
 #include "b2_geometry.h"
 
 #include <algorithm>
@@ -36,7 +41,7 @@ struct Mesh {
 Mesh load_mesh(const ArtifactInput& input, std::initializer_list<const char*> types, const std::string& context,
                std::size_t maximum) {
   Mesh mesh;
-  mesh.raw = read_raw_mesh(input, types);
+  mesh.raw = read_raw_mesh(input, types, maximum);
   require_triangle_faces(mesh.raw, context, maximum);
   for (const auto& face : mesh.raw.faces) {
     mesh.tris.push_back(make_tri(mesh.raw, face));
@@ -267,10 +272,14 @@ void reject_coplanar_faces(const Mesh& source, const Vec& n, const Q& d) {
 void check_tiling(const Mesh& source, const Mesh& candidate, const std::vector<std::size_t>& subset,
                   const std::function<Q(std::size_t)>& reference) {
   std::vector<std::vector<std::size_t>> by_parent(source.tris.size());
+  const BoxTree source_tree = tree_of(source.tris);
   for (const auto c : subset) {
     const Tri& sub = candidate.tris[c];
     bool placed = false;
-    for (std::size_t p = 0; p < source.tris.size() && !placed; ++p) {
+    // Source faces in index order whose box meets the box of the candidate triangle; a face
+    // whose box contains the three vertices is among them.
+    for (const auto p : source_tree.overlapping(box_of(sub))) {
+      if (placed) break;
       const Tri& parent = source.tris[p];
       bool inside = true;
       for (int i = 0; i < 3 && inside; ++i) {
@@ -303,13 +312,11 @@ void check_tiling(const Mesh& source, const Mesh& candidate, const std::vector<s
       validation_failure("REGION_NOT_COVERED_EXACTLY",
                          "The candidate triangles of a source face do not cover its reference region exactly");
     }
-    for (std::size_t i = 0; i < by_parent[p].size(); ++i) {
-      for (std::size_t j = i + 1; j < by_parent[p].size(); ++j) {
-        if (!interiors_disjoint(candidate.tris[by_parent[p][i]], candidate.tris[by_parent[p][j]], n)) {
-          validation_failure("SUB_TRIANGLES_OVERLAP", "Two candidate triangles of a source face overlap");
-        }
+    overlapping_pairs(candidate.tris, by_parent[p], [&](std::size_t i, std::size_t j) {
+      if (!interiors_disjoint(candidate.tris[i], candidate.tris[j], n)) {
+        validation_failure("SUB_TRIANGLES_OVERLAP", "Two candidate triangles of a source face overlap");
       }
-    }
+    });
   }
 }
 
@@ -366,13 +373,11 @@ Json run_clip_validator(const Request& request) {
         validation_failure("CAP_ORIENTATION", "A cap triangle is not oriented outward (along the plane normal)");
       }
     }
-    for (std::size_t i = 0; i < cap.size(); ++i) {
-      for (std::size_t j = i + 1; j < cap.size(); ++j) {
-        if (!interiors_disjoint(candidate.tris[cap[i]], candidate.tris[cap[j]], n)) {
-          validation_failure("CAP_OVERLAP", "Two cap triangles overlap");
-        }
+    overlapping_pairs(candidate.tris, cap, [&](std::size_t i, std::size_t j) {
+      if (!interiors_disjoint(candidate.tris[i], candidate.tris[j], n)) {
+        validation_failure("CAP_OVERLAP", "Two cap triangles overlap");
       }
-    }
+    });
     if (!closed_oriented_manifold(candidate)) {
       validation_failure("CANDIDATE_NOT_CLOSED", "Volume clipping must give a closed, consistently oriented mesh");
     }
@@ -483,9 +488,10 @@ Json run_corefine_validator(const Request& request) {
   checks["surface_covered_exactly"] = true;
 
   std::size_t touching_pairs = 0;
+  const BoxTree other_tree = tree_of(other.tris);
   for (const auto& t : candidate.tris) {
-    for (const auto& u : other.tris) {
-      if (!boxes_overlap(t, u)) continue;
+    for (const auto other_index : other_tree.overlapping(box_of(t))) {
+      const auto& u = other.tris[other_index];
       const auto points = intersection_points(t, u);
       if (points.empty()) continue;
       ++touching_pairs;
@@ -538,10 +544,12 @@ Json run_autorefine_validator(const Request& request) {
   // Autorefinement removes every proper intersection: two distinct candidate triangles may touch only
   // along a part of one edge of each (a shared edge or vertex).
   std::size_t touching_pairs = 0;
+  const BoxTree candidate_tree = tree_of(candidate.tris);
   for (std::size_t i = 0; i < candidate.tris.size(); ++i) {
-    for (std::size_t j = i + 1; j < candidate.tris.size(); ++j) {
-      const Tri &t = candidate.tris[i], &u = candidate.tris[j];
-      if (!boxes_overlap(t, u)) continue;
+    const Tri& t = candidate.tris[i];
+    for (const auto j : candidate_tree.overlapping(candidate_tree.box(i))) {
+      if (j <= i) continue;
+      const Tri& u = candidate.tris[j];
       const auto points = intersection_points(t, u);
       if (points.empty()) continue;
       ++touching_pairs;

@@ -94,7 +94,9 @@ const std::vector<OperationDefinition>& operation_registry() {
       wave_a_boolean::boolean_difference_operation(),
       wave_a_boolean::validate_boolean_union_operation(),
       wave_a_boolean::validate_boolean_intersection_operation(),
-      wave_a_boolean::validate_boolean_difference_operation()};
+      wave_a_boolean::validate_boolean_difference_operation(),
+      wave_a_boolean::boolean_rounded_operation(),
+      wave_a_boolean::validate_boolean_rounded_operation()};
   for (auto& operation : wave_a_repair::repair_operations()) {
     operations.push_back(std::move(operation));
   }

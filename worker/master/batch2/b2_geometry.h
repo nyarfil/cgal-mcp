@@ -80,7 +80,7 @@ Json geometry_frame(const Request& request, const std::string& kind, Json parame
 Json check_report_frame(const Json& report, const std::string& operation, const Json& parameters,
                         const std::vector<std::pair<const char*, const ArtifactInput*>>& sources, Json& checks);
 
-inline constexpr std::size_t kMaximumFaces = 600;
-inline constexpr std::size_t kMaximumOutputFaces = 4000;
+inline constexpr std::size_t kMaximumFaces = 200000;
+inline constexpr std::size_t kMaximumOutputFaces = 1000000;
 
 }  // namespace cgal_master::batch2

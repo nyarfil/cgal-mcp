@@ -49,6 +49,7 @@ add_executable(cgal-master-worker
   master/wave_a_mesh/report_validators.cpp
   master/wave_a_boolean/boolean_common.cpp
   master/wave_a_boolean/pmp_boolean.cpp
+  master/wave_a_boolean/boolean_rounded.cpp
   master/wave_a_boolean/validate_boolean.cpp
   master/wave_a_repair/repair_common.cpp
   master/wave_a_repair/repair_operations.cpp

@@ -48,7 +48,7 @@ using query_ops::write_off_output;
 using query_ops::write_report;
 
 RawMesh load_input(const ArtifactInput& input) {
-  auto raw = read_raw_mesh(input, {"TriangleSurfaceMesh"});
+  auto raw = read_raw_mesh(input, {"TriangleSurfaceMesh"}, kMaximumFaces);
   if (raw.faces.size() > kMaximumFaces) {
     throw WorkerError("RESOURCE_LIMIT", "FACE_LIMIT_EXCEEDED", "Input mesh exceeds the face limit");
   }

@@ -560,6 +560,13 @@ class OperationRegistry:
                 else:
                     route_supported = False
                     reasons.append("validator requires explicit validation intent")
+            fallback_for = operation.get("fallback_for")
+            if fallback_for and not evidence.alias_matches and not id_bonus:
+                # A declared fallback (for example the rounded Boolean) never wins a goal that its
+                # primary operations answer; it is listed after them and chosen by operation_id.
+                route_supported = False
+                reasons.append("fallback for " + ", ".join(fallback_for)
+                               + ": select it by operation_id when the primary operation refuses")
             required_parameters: dict[str, Any] = {}
             parameter_conflicts: dict[str, list[Any]] = {}
             for parameter, values in requested_parameter_values(parsed.concepts).items():
