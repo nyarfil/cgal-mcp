@@ -360,3 +360,68 @@ hole_idは「境界上の最小の頂点番号」なので、メッシュXで一
   - `poisson-delaunay-sphere-fine`: 面数1518（期待）に対し1542、最大頂点半径2.0534。
   これらを通すにはassertionを環境に依存しない形（範囲など）へ変える必要があり、受入基準の変更になるため
   未実施です。
+
+### 追補2: Linuxでの証拠再生成（2026-11-13、実施済み）
+
+上の「証拠の再生成が必要（未実施）」と「追補: 準備（未完了）」の記述は、この節で置き換わります。
+`docs/master/evidence/`のfamily 15件・`wave-a-capabilities.json`・`search-retrieval.json`・`workflows.json`・
+`first-contact.json`・`performance-robustness.json`を、このLinux環境で再生成しました。
+`*-windows-vs2026.json`・`codex-host-windows.json`・`hull-performance-windows.json`・blind set関連は
+再生成していません（Windowsでの記録のまま）。`standalone_accepted`は引き続きfalseです。
+
+- 生成環境: Linux、gcc 13.3、公式CGAL 6.2.1（sha256照合済み）、OpenGR・SCIP・SoPlexを組み込んだworker
+  （manifestの`optional_dependencies`は`OpenGR,SCIP`、`source_kind`は`official_release`）。
+  **これまでの証拠はWindows（MSVC）で生成されており、生成環境が変わっています。**
+- 結果: 全family再試験は80/80（除外なし）。検索は実行サンプル240/240、文書検索298/300（再生成前と同じ）。
+  workflowは67件。first-contactは例119/119、依頼32件中32件が実行成功（recipe一致25、再生成前と同じ傾向）。
+  障害封じ込めは全27 modeで全試行を封じ込め。
+- 残る失敗（1件、今回の変更と無関係）: `tests.test_master_acceptance`の
+  `test_gate_cannot_be_met_without_the_target_and_full_acceptance`は、mainでも失敗しています。
+  blind set 1のtop-3が目標95%未満であることを前提にしたassertionで、記録値は目標以上のため成立しません（未修正）。
+
+#### 受入基準の変更（ユーザー承認: 期待値を環境に依存しない範囲にする）
+
+数値計算の結果がWindows（MSVC）とLinux（gcc）で違うため、Windowsの値に固定されていたassertionを変更しました。
+必須validatorの検査は変えていません。
+
+| ケース | 変更前 | 変更後 | 実測（MSVC／gcc 13） |
+|---|---|---|---|
+| `skeleton-tube-function`・`skeleton-tube-class` | 頂点11・辺10、頂点0のx=1.0583（±1e-6） | 頂点9〜13、辺8〜12（x座標の固定を削除） | 11・10／11・10（頂点順が違う） |
+| `skeleton-torus-class` | 頂点25・辺25、頂点0のx=2.87712 | 頂点23〜27、辺23〜27 | 25・25／24・24 |
+| `poisson-delaunay-sphere`（2件） | 面数が560・1518と一致、頂点半径1.95〜2.05 | 面数が基準の±5%かつ出力メッシュと一致、頂点半径1.94〜2.06 | 560・1518／560・1542、最大半径2.0512・2.0534 |
+| `param-arap-lambda-1000` | 頂点40のUV=(0.645, 1.191)（±1e-6） | UV座標の固定を削除 | (0.645, 1.191)／(-0.124, 0.292) |
+
+`param-arap-lambda-1000`は、ほぼ等長な写像で平面内の位置と回転が自由なため座標が変わります。
+骨格の位相（連結成分、閉路数が種数に一致）、写像の全単射性と歪みの上限はvalidatorが検査します。
+
+#### Linuxで見つかった不具合の修正
+
+- `reconstruction.poisson`: 陰関数が非有限値になる入力で、CGALのMesh_3内部からGMPが`SIGFPE`を出し
+  workerが異常終了していました（Windowsではシグナルが出ず空の結果になり`EMPTY_RECONSTRUCTION`で拒否）。
+  POSIXでは`make_mesh_3`の間だけ`SIGFPE`を捕捉し、同じ`EMPTY_RECONSTRUCTION`で拒否するようにしました
+  （`worker/master/reconstruction/reconstruction_operations.cpp`）。workflow `neg08`・`wf44`・`neg20`が
+  Windowsと同じ結果になります。
+- `mesh.validate.hausdorff_symmetric_report`: 報告された上下限と判定の整合性検査をlong doubleで行っていたため、
+  long doubleがdoubleより広い環境（Linux x86-64）では、ちょうど境界の入力（推定0.5、誤差0.01、許容0.49）で
+  producer（binary64）と結論が食い違い、正しい報告を`VERDICT_MISMATCH`で拒否していました（安全側の誤り）。
+  producerと同じbinary64で判定するようにしました。`tests.test_master_certified_hausdorff`で確認。
+- supervisor（`cgal_mcp/master/supervisor.py`、POSIX）:
+  - workerを独立sessionで起動し、timeout・cancel・終了後にsession全体をkillします。以前はworker本体だけを
+    killしていたため、pipeを引き継いだ孫processが残るとsupervisorが待ち続け、timeoutが効きませんでした
+    （WindowsはJob objectで一括終了）。
+  - Linuxでは`PR_SET_PDEATHSIG`を設定し、host processが死んだらworkerも終了します。以前はworkerが残りました
+    （`host_process_killed`が0/5 → 5/5）。
+- 計測script（`scripts/measure_master_robustness.py`）: zombie processを生存扱いしない、Linuxでworkerの
+  ピークRSSを`/proc`のVmHWMから約1 msごとに標本化して記録（真のピークの下限。上限そのものは`RLIMIT_AS`で
+  kernelが強制）、worker実行ファイルのコピーで実行権限を保持、`faces-over-limit`のケースを上限を引き上げた
+  `mesh.clip.plane`から`mesh.subdivide.loop`（2,000面上限に対し2,048面）へ変更。
+- `tests/master_wave_b_cases.py`: 後のwaveで追加された必須validatorを許容するよう修正（CIのLinux worker jobが
+  ここで止まっていました）。
+
+#### 再生成の手順（Linux）
+
+`scripts/replay_master_capabilities.py --work-dir`で全familyを再試験し、各reportを公開位置へコピーして
+`catalog/major_requirements.json`のevidence sha256を更新（公開位置へ直接書く経路は、承認済みhashと一致しない
+reportを書き込む前に失敗するため）。続けて`evaluate_master_search.py --publish-retrieval-evidence`、
+`run_master_workflows.py --output`、`evaluate_first_contact.py --output`、`measure_master_robustness.py --output`。
+検索の実行サンプルには`work/master-docs-index.sqlite`（`build_master_docs_index.py build`）が必要です。

@@ -3,13 +3,13 @@
   "generator": "master-search-retrieval-evidence",
   "protocol": "Each of the 300 corpus intents is submitted to the production capabilities_search (limit 3, no artifact filter). A hit requires an Operation ID bound to the intent's major requirement in catalog/major_requirements.json to be returned (top-1: first).",
   "bindings": {
-    "corpus_sha256": "54646cb2eec0884aab1ec51b14a5c7fcaf3b458dda0f25720598de10daf8dd7b",
-    "major_requirements_sha256": "06db763bd5603606297d54c7e933bf6668b9627498a99b07a5185bde994d90ee",
-    "operations_sha256": "36550cdcac9bb548d26b2c19dbeb4a74900ad2479ab95b873b90cff737f9b07b",
-    "search_vocabulary_sha256": "fd3a1b90ff8e2d135c5d00ed275b00a1568853acaefe43210ed36c55f26f9603",
-    "search_data_sha256": "89de4d52de76c1296ad05b4ce4e0d61b848b5f157f625539cb3ddd9815c48e57",
-    "registry_ranker_sha256": "5659986cb3749580ea020dc0a59a6e22eb72533e660d4395d80314bbb7aedd3d",
-    "generator_sha256": "925bccfadf51b9ef8f753a1007984ed9b0bd5ab040e5ae3387943ca4f6b5dd1a"
+    "corpus_sha256": "96ade8b7c6170b09214bf10ca9797ddf11fa92f6df5fbc2d73e5baf64cac4c4c",
+    "major_requirements_sha256": "3f2b9dbfd619464c1c2620589aa38bbf39b14b685e11c05b61660b5ddaadd240",
+    "operations_sha256": "bd06cb2e428d49b646932d6ec700cbbbca591f083a0fe552cfa8e3a39bcaae38",
+    "search_vocabulary_sha256": "f9751f928b879b0dde168de4665ea4eaf66d16b39a22ae836b17a9768f11ee94",
+    "search_data_sha256": "d8ce8c9910d767f6ba43224924c8041fd28e33333dc309f56ea694046ecf876d",
+    "registry_ranker_sha256": "5eecb7c9dcc316920cf5afe9081d0b2072093b8a7fb3a7189eab5db42e5ef7d5",
+    "generator_sha256": "79e724fee6b7c044bf1d66fcfb8d6bab745f334b662844146a29b1a1334ce7e8"
   },
   "split": {
     "rule": "sha256(requirement_id) mod 3 == 0 is held_out",
@@ -2819,8 +2819,8 @@
       ],
       "returned": [
         "mesh.volume.generate",
-        "mesh.boolean.union",
-        "mesh.clip.plane"
+        "mesh.boolean.rounded",
+        "mesh.boolean.union"
       ],
       "top1": false,
       "top3": true
@@ -2836,8 +2836,8 @@
       ],
       "returned": [
         "mesh.volume.generate",
-        "mesh.boolean.union",
-        "mesh.clip.plane"
+        "mesh.boolean.rounded",
+        "mesh.boolean.union"
       ],
       "top1": false,
       "top3": true
@@ -4185,7 +4185,7 @@
       "returned": [
         "pointset.remove_outliers",
         "mesh.repair.polygon_soup",
-        "mesh.smooth.shape"
+        "reconstruction.poisson"
       ],
       "top1": true,
       "top3": true
@@ -5223,9 +5223,9 @@
         "polygon.boolean"
       ],
       "returned": [
+        "mesh.boolean.rounded",
         "polygon.minkowski_sum",
-        "polygon.validate.offset",
-        "kernel.intersections.compute"
+        "polygon.validate.offset"
       ],
       "top1": false,
       "top3": false
@@ -5238,9 +5238,9 @@
         "polygon.boolean"
       ],
       "returned": [
+        "mesh.boolean.rounded",
         "polygon.minkowski_sum",
-        "polygon.validate.offset",
-        "kernel.intersections.compute"
+        "polygon.validate.offset"
       ],
       "top1": false,
       "top3": false
@@ -5733,7 +5733,7 @@
       "returned": [
         "shape.barycentric",
         "mesh.location.locate",
-        "shape.validate.barycentric"
+        "mesh.boolean.rounded"
       ],
       "top1": true,
       "top3": true
@@ -5748,7 +5748,7 @@
       "returned": [
         "shape.barycentric",
         "mesh.location.locate",
-        "shape.validate.barycentric"
+        "polygon.query.containment"
       ],
       "top1": true,
       "top3": true
@@ -6197,8 +6197,8 @@
       ],
       "returned": [
         "optimization.matrix_search",
-        "spatial.validate.bbox_report",
-        "mesh.skeletonize.mean_curvature_flow"
+        "mesh.boolean.rounded",
+        "spatial.validate.bbox_report"
       ],
       "top1": true,
       "top3": true

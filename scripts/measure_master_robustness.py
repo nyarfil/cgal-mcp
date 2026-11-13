@@ -93,7 +93,8 @@ TIMING_POLICY = {
     "wall_clock_tolerance": "informational; reruns on the same machine are expected within "
                             "a factor of 3 of the recorded value, a slower machine may exceed it",
     "memory_scope": "peak RSS of every compute and validator worker process of the job "
-                    "(Windows GetProcessMemoryInfo); excludes the Python host and parsers",
+                    "(Windows GetProcessMemoryInfo; Linux VmHWM sampled from /proc about every "
+                    "millisecond, a lower bound of the true peak); excludes the Python host and parsers",
 }
 
 
@@ -266,7 +267,13 @@ class _Win:
                 os.kill(pid, 0)
             except OSError:
                 return True
-            return False
+            # A killed process stays a zombie until its (re)parent reaps it; os.kill(pid, 0) still
+            # succeeds for it. A zombie runs no code and holds no pipe, so it counts as exited.
+            try:
+                stat = Path(f"/proc/{pid}/stat").read_text()
+                return stat.rsplit(")", 1)[1].split()[0] == "Z"
+            except (OSError, IndexError):
+                return False
         k = cls.k32
         k.OpenProcess.argtypes = [ctypes.c_uint32, ctypes.c_int, ctypes.c_uint32]
         k.OpenProcess.restype = ctypes.c_void_p
@@ -362,6 +369,43 @@ def _meter():
     return WindowsMemoryMeter()
 
 
+class ProcMemoryMeter:
+    """Peak resident set of the workers of one job on Linux, sampled from /proc.
+
+    VmHWM (the kernel's high-water mark of the resident set) of every recorded worker is read
+    about every millisecond until the process is gone; the largest value is reported. It is a
+    sample: memory touched after the last read is not seen, so the value is a lower bound of the
+    true peak. The hard ceiling itself is enforced by the kernel (RLIMIT_AS), not by this meter.
+    """
+
+    def __init__(self) -> None:
+        self.peak = 0
+        self.samples = 0
+        self._tasks: list[asyncio.Task] = []
+
+    def watch(self, process: Any) -> None:
+        self._tasks.append(asyncio.get_running_loop().create_task(self._follow(process)))
+
+    async def _follow(self, process: Any) -> None:
+        status = Path(f"/proc/{process.pid}/status")
+        while process.returncode is None:
+            try:
+                for line in status.read_text().splitlines():
+                    if line.startswith("VmHWM:"):
+                        self.peak = max(self.peak, int(line.split()[1]) * 1024)
+                        self.samples += 1
+                        break
+            except (OSError, ValueError, IndexError):
+                return
+            await asyncio.sleep(0.001)
+
+    async def finish(self) -> dict[str, Any]:
+        if self._tasks:
+            await asyncio.gather(*self._tasks, return_exceptions=True)
+        return {"peak_worker_rss_bytes": self.peak, "peak_worker_rss_method": "linux_proc_vmhwm_sampled",
+                "peak_worker_rss_samples": self.samples} if self.samples else {}
+
+
 # ---------------------------------------------------------------- stage: scale
 
 def _input_record(imported: list[dict]) -> list[dict]:
@@ -400,6 +444,11 @@ async def _scale_case(case: dict, scale: Any, label: str, worker: Path) -> tuple
                     with patch.object(supervisor_module, "_assign_windows_job", meter.assign):
                         detail = await _run_plan(runtime, plan["plan_id"])
                     memory = meter.finish()
+                elif os.path.isdir("/proc/self"):
+                    proc_meter = ProcMemoryMeter()
+                    recorder.on_spawn = proc_meter.watch
+                    detail = await _run_plan(runtime, plan["plan_id"])
+                    memory = await proc_meter.finish()
                 else:
                     detail = await _run_plan(runtime, plan["plan_id"])
                     memory = {}
@@ -469,8 +518,9 @@ async def _limit_cases(worker: Path) -> tuple[list[dict], dict]:
             with SpawnRecorder() as recorder:
                 # bounded_input refusals: faces, vertices, bytes
                 for case_id, operation, inputs, params in (
-                    ("faces-over-limit", "mesh.clip.plane", _mesh_input(18, 18),
-                     {"normal": [1, 0, 0], "offset": _mm(9), "clip_volume": False}),
+                    # 2,048 faces against the 2,000-face bound of the subdivision operations
+                    # (mesh.clip.plane was used here while its bound was 600 faces).
+                    ("faces-over-limit", "mesh.subdivide.loop", _mesh_input(33, 33), {"steps": 1}),
                     ("vertices-over-limit", "shape.bounding.sphere",
                      [(_random_xyz(33, 5), "xyz", "PointSet3", "mm")], {}),
                     ("bytes-over-limit", "reconstruction.advancing_front",
@@ -1452,7 +1502,7 @@ async def _persistent_lifecycle(worker: Path) -> dict:
         copy_dir = _newdir(root / "worker-copy")
         for item in worker.parent.iterdir():  # the binary with its runtime DLLs
             if item.is_file() and (item == worker or item.suffix.lower() == ".dll"):
-                shutil.copyfile(item, copy_dir / item.name)
+                shutil.copy2(item, copy_dir / item.name)  # keeps the POSIX executable bit
         exe = copy_dir / worker.name
 
         async def golden_and(runtime: MasterRuntime, action) -> tuple[bool, dict, list]:
@@ -1509,6 +1559,7 @@ async def _persistent_lifecycle(worker: Path) -> dict:
             exe.write_bytes(previous.read_bytes())
             with open(exe, "ab") as handle:
                 handle.write(b"\0")  # PE overlay byte: still runs, digest differs
+            os.chmod(exe, previous.stat().st_mode)  # POSIX: the rewritten file must stay executable
         try:
             ok, pool, processes = await golden_and(runtime, change_exe)
             await runtime.supervisor.shutdown()
