@@ -464,3 +464,7 @@ reportを書き込む前に失敗するため）。続けて`evaluate_master_sea
 - commit `7337c79`の時点のCI: `snapshot`、Python test 4種（Linux・Windows、3.12・3.13）、Windowsのworker jobが成功。
   Windowsでのpath長対策とLF固定はCIで確認できました。残りはLinuxのworker job（上記の7.15）です。
   旧v0.1 workerの`build` jobはmainと同じく途中でcancelになります（未調査）。
+- commit `7d5e513`の時点のCI: Linux・Windowsのworker job、Python test 4種、`snapshot`が成功しました。
+  `snapshot`は同じcommitに対して2回実行され、一方は18分で成功、もう一方は20分の制限時間でcancelになりました。
+  mainでは手前のtestで失敗していたため最後まで実行されたことがなく、制限時間が足りていませんでした。45分へ延長しました。
+  旧v0.1 workerの`build` jobも20分でcancelになります（mainと同じ。v0.1は非推奨で、今回は変更していません）。
