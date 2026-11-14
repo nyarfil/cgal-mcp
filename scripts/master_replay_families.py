@@ -20,6 +20,7 @@ runner.
 """
 from __future__ import annotations
 
+import fractions
 import base64
 import copy
 import hashlib
@@ -3353,7 +3354,8 @@ FAMILY_7_1 = {
               ]),
         _case("kernel-intersections-epick", "kernel.intersections.compute", [_kq(K_INTERSECTIONS)],
               {"kernel": "epick"}, _kernel_checks("epick", 40) + [
-                  ["output:analysis:json:results.queries[*].result", "==", INTERSECTION_RESULTS],
+                  ["output:analysis:json:results.queries[*].result", "rational_approx",
+                   [INTERSECTION_RESULTS, 1e-9]],
               ]),
         _case("kernel-distances-epeck", "kernel.distance.squared", [_kq(K_DISTANCES)], {"kernel": "epeck"},
               _kernel_checks("epeck", 20) + [
@@ -6474,12 +6476,34 @@ def _approx(actual: object, expected: object, tolerance: float) -> bool:
             math.isfinite(float(actual)) and abs(float(actual) - float(expected)) <= tolerance)
 
 
+def _rational_close(actual: object, expected: object, tolerance: float) -> bool:
+    """Same structure; rational strings ("p/q") agree within `tolerance`; everything else is equal."""
+    if isinstance(expected, dict):
+        return (isinstance(actual, dict) and actual.keys() == expected.keys() and
+                all(_rational_close(actual[key], value, tolerance) for key, value in expected.items()))
+    if isinstance(expected, list):
+        return (isinstance(actual, list) and len(actual) == len(expected) and
+                all(_rational_close(a, e, tolerance) for a, e in zip(actual, expected)))
+    if isinstance(expected, str) and isinstance(actual, str):
+        try:
+            return abs(fractions.Fraction(actual) - fractions.Fraction(expected)) <= tolerance
+        except (ValueError, ZeroDivisionError):
+            return actual == expected
+    return type(actual) is type(expected) and actual == expected
+
+
 def _compare(actual: object, operator: str, expected: object) -> bool:
     if operator == "==":
         return type(actual) is type(expected) and actual == expected if isinstance(expected, bool) \
             else (not isinstance(actual, bool) and actual == expected)
     if operator == "!=":
         return actual != expected
+    if operator == "rational_approx":
+        # Results of an inexact-construction kernel: the last bit depends on the build and the CPU
+        # (a Linux CI runner returned -2^-52 where this value is 0). Types, structure and booleans
+        # must match exactly; coordinates within the tolerance.
+        value, tolerance = expected
+        return _rational_close(actual, value, tolerance)
     if operator == "same_closed_cycle":
         # A closed polyline (first point repeated at the end) equal to the expected one up to its
         # start point and direction, which are not part of the contract and differ between builds.
@@ -6503,7 +6527,7 @@ def _compare(actual: object, operator: str, expected: object) -> bool:
             ">": actual > expected, ">=": actual >= expected}[operator]
 
 
-_OPERATORS = {"==", "!=", "<", "<=", ">", ">=", "approx", "contains", "same_closed_cycle"}
+_OPERATORS = {"==", "!=", "<", "<=", ">", ">=", "approx", "contains", "same_closed_cycle", "rational_approx"}
 
 
 class CaseView:

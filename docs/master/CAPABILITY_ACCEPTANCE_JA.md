@@ -445,8 +445,14 @@ reportを書き込む前に失敗するため）。続けて`evaluate_master_sea
   `OUTPUT_WRITE_FAILED`になっていました。harnessが出力directoryを「case id--validator id」と名付け、
   workerがその中に「.slot.request id.tmp.ext」を作るため、長いcase idではpathがWindowsの260文字上限を
   超えます。harnessの出力directoryを短いhash名にしました（traceには含まれません）。Windowsでの確認はCI待ちです。
-- Linuxのworker job: family 7.1の`kernel-intersections-epick`がCIで失敗します。このLinux環境では合格しており、
-  CIのlogには期待値しか出ないため原因は未特定です。失敗messageに実測値を含めるようにしました（次のCIで判明）。
+- Linuxのworker job: family 7.1の`kernel-intersections-epick`がCIで失敗していました（このLinux環境では合格）。
+  失敗messageに実測値を含めるようにしたところ、40件の結果のうち1件の線分の端点が、0ではなく
+  `-1/4503599627370496`（-2^-52）でした。EPICK（非厳密な構成）の丸め誤差で、buildとCPUで変わります。
+  EPECKの結果との完全一致を求めていたassertionを、型・構造・真偽値は完全一致、座標は1e-9以内の比較
+  （`rational_approx`）へ変更しました（EPICKのケースのみ。EPECKのケースは完全一致のまま）。
+  これも「期待値を環境に依存しない形にする」受入基準の変更です。
+- CIの`snapshot` job: 受入testの後の「能力台帳の再現」が`ModuleNotFoundError: scripts`で失敗していました
+  （mainでは手前のtestが失敗していたため未到達）。workflowでrepository rootをimport pathへ渡すようにしました。
 - 計測script: `native_memory_cap`は64 MiB上限で温めたworkerに障害を起こす試験ですが、常駐workerの
   「専有memoryが上限の25%（ここでは16 MiB）を超えたら退役」規則にLinux workerの待機時の専有memoryが
   かかり、障害の前に退役することがありました（20試行中3回。障害の結果と代替workerの起動は20回とも正しい）。
