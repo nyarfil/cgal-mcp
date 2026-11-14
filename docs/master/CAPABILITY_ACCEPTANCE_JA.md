@@ -457,3 +457,10 @@ reportを書き込む前に失敗するため）。続けて`evaluate_master_sea
   「専有memoryが上限の25%（ここでは16 MiB）を超えたら退役」規則にLinux workerの待機時の専有memoryが
   かかり、障害の前に退役することがありました（20試行中3回。障害の結果と代替workerの起動は20回とも正しい）。
   この試験に限り残留量による退役を無効にしました（残留量による退役は別のlifecycle caseで検証）。
+- Linuxのworker job（続き）: 7.1の修正後、family 7.15の`optimization-interpolation-sibson-c1`で同じ種類の差が
+  出ました。`sibson_c1`はbinary64で計算され、5件中3件の値がCIで約1e-16違います。`rational_approx`（1e-9）へ変更
+  しました（厳密kernelで計算する`linear`のケースは完全一致のまま）。binary64の値を完全一致で固定している
+  assertionを全familyで洗い出した結果、他は7.1の述語3件だけで、それらはCIで合格しています。
+- commit `7337c79`の時点のCI: `snapshot`、Python test 4種（Linux・Windows、3.12・3.13）、Windowsのworker jobが成功。
+  Windowsでのpath長対策とLF固定はCIで確認できました。残りはLinuxのworker job（上記の7.15）です。
+  旧v0.1 workerの`build` jobはmainと同じく途中でcancelになります（未調査）。

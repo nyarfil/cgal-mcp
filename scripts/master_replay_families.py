@@ -3468,7 +3468,11 @@ def _interpolation_case(case_id: str, fixture: dict, method: str, values: list[s
                      ["metrics.query_count", "==", 5],
                      ["output:analysis:json:results.input_representation", "==",
                       "exact_rational" if method == "linear" else "binary64_round_to_nearest"],
-                     ["output:analysis:json:results.queries[*].value", "==", values],
+                     # linear runs in the exact kernel and is compared exactly; sibson_c1 runs in
+                     # binary64 and its last bits depend on the build and CPU (a Linux CI runner
+                     # differed from the reference in three of five values by about 1e-16).
+                     (["output:analysis:json:results.queries[*].value", "==", values] if method == "linear" else
+                      ["output:analysis:json:results.queries[*].value", "rational_approx", [values, 1e-9]]),
                      ["output:analysis:json:results.queries.4.neighbors", "==", [{"coordinate": "1", "site": 10}]],
                  ])
 
