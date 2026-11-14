@@ -5,6 +5,7 @@
 
 #include "b5_common.h"
 
+#include "../batch2/b2_broadphase.h"
 #include "../batch2/b2_registry.h"
 #include "../wave_c/wave_c_common.h"
 
@@ -39,9 +40,9 @@ using query_ops::require_same_unit;
 using query_ops::write_report;
 
 RawMesh load(const ArtifactInput& input) {
-  auto raw = read_raw_mesh(input, {"TriangleSurfaceMesh"});
+  auto raw = read_raw_mesh(input, {"TriangleSurfaceMesh"}, kMaximumIntersectionFaces);
   if (raw.faces.empty() || raw.faces.size() > kMaximumIntersectionFaces) {
-    throw WorkerError("RESOURCE_LIMIT", "FACE_LIMIT_EXCEEDED", "Between 1 and 200 triangles per mesh are supported");
+    throw WorkerError("RESOURCE_LIMIT", "FACE_LIMIT_EXCEEDED", "Each mesh needs between 1 and " + std::to_string(kMaximumIntersectionFaces) + " triangles");
   }
   for (const auto& face : raw.faces) {
     if (face.size() != 3) precondition("MESH_NOT_TRIANGULATED", "Input meshes must be triangulated");
@@ -108,20 +109,41 @@ Json polylines_op(const Request& request) {
   auto b = build<EpeckMesh, Epeck::Point_3>(second);
   // Coplanar overlapping triangles make the intersection two-dimensional; the report format and the
   // independent validator describe one-dimensional intersection curves only.
-  for (const auto fa : a.faces()) {
-    std::array<Epeck::Point_3, 3> pa;
-    std::size_t i = 0;
-    for (const auto v : CGAL::vertices_around_face(a.halfedge(fa), a)) pa[i++] = a.point(v);
-    for (const auto fb : b.faces()) {
-      std::array<Epeck::Point_3, 3> pb;
-      std::size_t j = 0;
-      for (const auto v : CGAL::vertices_around_face(b.halfedge(fb), b)) pb[j++] = b.point(v);
+  // Only face pairs whose closed binary64 boxes meet can intersect (b2_broadphase.h); faces are
+  // indexed in file order, so the raw coordinates are those of the mesh faces.
+  const auto triangle_of = [](const RawMesh& raw, std::size_t face) {
+    std::array<Epeck::Point_3, 3> points;
+    for (std::size_t k = 0; k < 3; ++k) {
+      const auto& v = raw.vertices[raw.faces[face][k]];
+      points[k] = Epeck::Point_3(v[0], v[1], v[2]);
+    }
+    return points;
+  };
+  const auto box_of_face = [](const RawMesh& raw, std::size_t face) {
+    batch2::Box box = batch2::empty_box();
+    for (std::size_t k = 0; k < 3; ++k) {
+      const auto& v = raw.vertices[raw.faces[face][k]];
+      for (int axis = 0; axis < 3; ++axis) {
+        box.lo[axis] = std::min(box.lo[axis], v[axis]);
+        box.hi[axis] = std::max(box.hi[axis], v[axis]);
+      }
+    }
+    return box;
+  };
+  std::vector<batch2::Box> second_boxes;
+  second_boxes.reserve(second.faces.size());
+  for (std::size_t j = 0; j < second.faces.size(); ++j) second_boxes.push_back(box_of_face(second, j));
+  const batch2::BoxTree second_tree(std::move(second_boxes));
+  for (std::size_t i = 0; i < first.faces.size(); ++i) {
+    const auto pa = triangle_of(first, i);
+    second_tree.query(box_of_face(first, i), [&](std::size_t j) {
+      const auto pb = triangle_of(second, j);
       if (CGAL::coplanar(pa[0], pa[1], pa[2], pb[0]) && CGAL::coplanar(pa[0], pa[1], pa[2], pb[1]) &&
           CGAL::coplanar(pa[0], pa[1], pa[2], pb[2]) &&
           CGAL::do_intersect(Epeck::Triangle_3(pa[0], pa[1], pa[2]), Epeck::Triangle_3(pb[0], pb[1], pb[2]))) {
         precondition("COPLANAR_TRIANGLES", "Two coplanar triangles of the meshes intersect; the intersection is not a curve");
       }
-    }
+    });
   }
   std::vector<std::vector<Epeck::Point_3>> polylines;
   PMP::intersection_polylines(a, b, std::back_inserter(polylines));

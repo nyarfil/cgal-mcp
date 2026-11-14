@@ -42,6 +42,11 @@
 #include <utility>
 #include <vector>
 
+#ifndef _WIN32
+#include <csetjmp>
+#include <csignal>
+#endif
+
 namespace cgal_master::reconstruction_ops {
 namespace {
 
@@ -299,6 +304,40 @@ Json poisson_result(const Request& request, Mesh& mesh, const PoissonInput& inpu
   return success_result(request, Json::array({std::move(output)}), std::move(metrics));
 }
 
+#ifndef _WIN32
+// GMP reports a conversion of NaN or infinity with raise(SIGFPE) followed by abort(). CGAL's
+// Mesh_3 reaches that conversion when the Poisson implicit function is not finite (normals that do
+// not describe a surface). The MSVC/vcpkg build does not signal there and ends with an empty mesh,
+// which is refused as EMPTY_RECONSTRUCTION; this guard gives the POSIX build the same typed
+// refusal instead of a killed worker. The signal is synchronous (raise), the abandoned mesher
+// state is never touched again, and nothing is published on this path.
+sigjmp_buf g_poisson_fpe_jump;
+volatile std::sig_atomic_t g_poisson_fpe_armed = 0;
+
+extern "C" void poisson_fpe_handler(int) {
+  if (g_poisson_fpe_armed) siglongjmp(g_poisson_fpe_jump, 1);
+  std::_Exit(128 + SIGFPE);
+}
+
+class PoissonArithmeticGuard {
+ public:
+  PoissonArithmeticGuard() {
+    struct sigaction action {};
+    action.sa_handler = poisson_fpe_handler;
+    sigemptyset(&action.sa_mask);
+    sigaction(SIGFPE, &action, &previous_);
+    g_poisson_fpe_armed = 1;
+  }
+  ~PoissonArithmeticGuard() {
+    g_poisson_fpe_armed = 0;
+    sigaction(SIGFPE, &previous_, nullptr);
+  }
+
+ private:
+  struct sigaction previous_ {};
+};
+#endif
+
 Json run_poisson(const Request& request) {
   const auto input = prepare_poisson(request, "reconstruction.poisson");
   const auto& points = input.points;
@@ -333,6 +372,13 @@ Json run_poisson(const Request& request) {
       CGAL::parameters::relative_error_bound(dichotomy_error / sphere_radius));
   Criteria criteria(CGAL::parameters::facet_angle = angle, CGAL::parameters::facet_size = radius * spacing,
                     CGAL::parameters::facet_distance = distance * spacing);
+#ifndef _WIN32
+  const PoissonArithmeticGuard arithmetic_guard;
+  if (sigsetjmp(g_poisson_fpe_jump, 1) != 0) {
+    precondition("EMPTY_RECONSTRUCTION",
+                 "The Poisson surface mesher met non-finite arithmetic; the reconstruction produced no facets");
+  }
+#endif
   const C3t3 c3t3 = CGAL::make_mesh_3<C3t3>(domain, criteria, CGAL::parameters::surface_only().manifold());
   if (c3t3.triangulation().number_of_vertices() == 0) {
     precondition("RECONSTRUCTION_FAILED", "Poisson surface meshing produced no vertices");

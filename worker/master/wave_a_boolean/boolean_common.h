@@ -41,4 +41,18 @@ Json validate_boolean_semantics(const Mesh& source_a, const Mesh& source_b,
                                 const Mesh& candidate, BooleanKind kind,
                                 const BooleanResult& reference);
 
+// Rounded output (mesh.boolean.rounded). The exact result keeps its combinatorics and every
+// coordinate is replaced by a binary64 value next to the exact one; the rounded mesh must
+// still be a healthy volume boundary or NUMERIC_FAILURE/ROUNDING_INVALIDATED_RESULT is thrown.
+Mesh round_boolean_mesh(const Mesh& exact);
+// Absolute tolerance of the rounded contract: 2^-40 times the power of two above the largest
+// absolute source coordinate (a binary64 value, so the comparison is exact).
+double rounded_tolerance(const Mesh& source_a, const Mesh& source_b);
+// Tolerance-based comparison of a binary64 candidate with the exact replay: same status and
+// element counts, volume within tolerance * reference area, and every vertex of either mesh
+// within the tolerance of the other surface (exact distance to a witness triangle).
+Json validate_boolean_rounded(const Mesh& source_a, const Mesh& source_b,
+                              const Mesh& candidate, BooleanKind kind,
+                              const BooleanResult& reference);
+
 }  // namespace cgal_master::wave_a_boolean

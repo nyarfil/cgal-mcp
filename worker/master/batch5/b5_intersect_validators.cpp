@@ -1,9 +1,12 @@
 // Independent validators for mesh.intersections.do_intersect and mesh.intersections.polylines
-// (7.3.07). No CGAL header: a brute-force exact (GMP rational) triangle-triangle test over all face
-// pairs decides the intersection predicate, the intersection curve is rebuilt as the union of the
-// exact triangle-pair intersection segments and compared with the candidate polylines.
+// (7.3.07). No CGAL header: an exact (GMP rational) triangle-triangle test decides the intersection
+// predicate for every face pair whose closed binary64 boxes meet (pairs with disjoint boxes cannot
+// intersect, see b2_broadphase.h), the intersection curve is rebuilt as the union of the exact
+// triangle-pair intersection segments and compared with the candidate polylines.
 
 #include "b5_common.h"
+
+#include "../batch2/b2_broadphase.h"
 
 #include <algorithm>
 #include <map>
@@ -11,7 +14,9 @@
 namespace cgal_master::batch5 {
 namespace {
 
-using batch2::boxes_overlap;
+using batch2::box_of;
+using batch2::BoxTree;
+using batch2::tree_of;
 using batch2::concluded;
 using batch2::cross;
 using batch2::dot;
@@ -94,8 +99,8 @@ Json run_do_intersect(const Request& request) {
   require_inputs(request, 3, validator);
   require_parameter_names(request, {"overlap_test"});
   const auto report = read_report(request.inputs[0], "GeometryQueryReport", "report_kind", "mesh_do_intersect");
-  const auto first_raw = read_raw_mesh(request.inputs[1], {"TriangleSurfaceMesh"});
-  const auto second_raw = read_raw_mesh(request.inputs[2], {"TriangleSurfaceMesh"});
+  const auto first_raw = read_raw_mesh(request.inputs[1], {"TriangleSurfaceMesh"}, kMaximumIntersectionFaces);
+  const auto second_raw = read_raw_mesh(request.inputs[2], {"TriangleSurfaceMesh"}, kMaximumIntersectionFaces);
   const auto first = triangles_of(first_raw, "The first mesh");
   const auto second = triangles_of(second_raw, "The second mesh");
   if (request.inputs[1].unit != request.inputs[2].unit) validation_failure("UNIT_MISMATCH", "The meshes use different units");
@@ -107,9 +112,13 @@ Json run_do_intersect(const Request& request) {
   if (!reported.is_boolean()) validation_failure("REPORT_VALUE_INVALID", "intersect must be boolean");
   const bool overlap = request.parameters.at("overlap_test").get<bool>();
   bool surfaces = false;
-  for (const Tri& a : first) {
-    for (const Tri& b : second) {
-      if (boxes_overlap(a, b) && !intersection_points(a, b).empty()) surfaces = true;
+  const BoxTree second_tree = tree_of(second);
+  for (std::size_t i = 0; i < first.size() && !surfaces; ++i) {
+    for (const auto j : second_tree.overlapping(box_of(first[i]))) {
+      if (!intersection_points(first[i], second[j]).empty()) {
+        surfaces = true;
+        break;
+      }
     }
   }
   bool expected = surfaces;
@@ -138,6 +147,29 @@ struct Segment {
 };
 
 // True when [0,1] along (p,q) is covered by the union of the collinear parts of `others`.
+bool covered(const Vec& p, const Vec& q, const std::vector<Segment>& others);
+
+// Same decision, restricted to the segments whose box meets the box of (p,q): a segment that
+// contributes an interval shares a point with (p,q).
+bool covered(const Vec& p, const Vec& q, const std::vector<Segment>& others, const BoxTree& tree) {
+  std::vector<Segment> near;
+  for (const auto index : tree.overlapping(box_of(p, q))) near.push_back(others[index]);
+  return covered(p, q, near);
+}
+
+BoxTree tree_of_segments(const std::vector<Segment>& segments) {
+  std::vector<batch2::Box> boxes;
+  boxes.reserve(segments.size());
+  for (const Segment& s : segments) boxes.push_back(box_of(s.a, s.b));
+  return BoxTree(std::move(boxes));
+}
+
+bool point_on_surface(const Vec& p, const std::vector<Tri>& tris, const BoxTree& tree) {
+  bool found = false;
+  tree.query(box_of(p), [&](std::size_t index) { found = found || point_in_triangle(tris[index], p); });
+  return found;
+}
+
 bool covered(const Vec& p, const Vec& q, const std::vector<Segment>& others) {
   const Vec d = q - p;
   const Q length2 = dot(d, d);
@@ -169,8 +201,8 @@ Json run_polylines(const Request& request) {
   require_inputs(request, 3, validator);
   require_parameter_names(request, {});
   const auto report = read_report(request.inputs[0], "GeometryQueryReport", "report_kind", "mesh_intersection_polylines");
-  const auto first_raw = read_raw_mesh(request.inputs[1], {"TriangleSurfaceMesh"});
-  const auto second_raw = read_raw_mesh(request.inputs[2], {"TriangleSurfaceMesh"});
+  const auto first_raw = read_raw_mesh(request.inputs[1], {"TriangleSurfaceMesh"}, kMaximumIntersectionFaces);
+  const auto second_raw = read_raw_mesh(request.inputs[2], {"TriangleSurfaceMesh"}, kMaximumIntersectionFaces);
   const auto first = triangles_of(first_raw, "The first mesh");
   const auto second = triangles_of(second_raw, "The second mesh");
   if (request.inputs[1].unit != request.inputs[2].unit) validation_failure("UNIT_MISMATCH", "The meshes use different units");
@@ -182,9 +214,11 @@ Json run_polylines(const Request& request) {
   if (!lines.is_array()) validation_failure("REPORT_VALUE_INVALID", "polylines must be an array");
 
   std::vector<Segment> reference;
+  const BoxTree first_tree = tree_of(first);
+  const BoxTree second_tree = tree_of(second);
   for (const Tri& a : first) {
-    for (const Tri& b : second) {
-      if (!boxes_overlap(a, b)) continue;
+    for (const auto second_index : second_tree.overlapping(box_of(a))) {
+      const Tri& b = second[second_index];
       const auto points = intersection_points(a, b);
       if (points.empty()) continue;
       const Vec n = tri_normal(a);
@@ -204,9 +238,8 @@ Json run_polylines(const Request& request) {
     for (const auto& item : points) parsed.push_back(parse_point(item));
     for (const Vec& p : parsed) {
       ++point_count;
-      bool on_first = false, on_second = false;
-      for (const Tri& t : first) on_first = on_first || point_in_triangle(t, p);
-      for (const Tri& t : second) on_second = on_second || point_in_triangle(t, p);
+      const bool on_first = point_on_surface(p, first, first_tree);
+      const bool on_second = point_on_surface(p, second, second_tree);
       if (!on_first || !on_second) {
         validation_failure("POINT_NOT_ON_BOTH_MESHES", "A polyline point does not lie on both mesh surfaces");
       }
@@ -216,14 +249,16 @@ Json run_polylines(const Request& request) {
     }
   }
   checks["points_lie_on_both_meshes"] = true;
+  const BoxTree reference_tree = tree_of_segments(reference);
+  const BoxTree candidate_segment_tree = tree_of_segments(candidate);
   for (const Segment& s : candidate) {
-    if (!covered(s.a, s.b, reference)) {
+    if (!covered(s.a, s.b, reference, reference_tree)) {
       validation_failure("SEGMENT_NOT_ON_INTERSECTION", "A polyline segment is not part of the exact intersection of the meshes");
     }
   }
   checks["candidate_covered_by_exact_intersection"] = true;
   for (const Segment& s : reference) {
-    if (!covered(s.a, s.b, candidate)) {
+    if (!covered(s.a, s.b, candidate, candidate_segment_tree)) {
       validation_failure("INTERSECTION_MISSING", "A part of the exact intersection of the meshes is missing from the polylines");
     }
   }

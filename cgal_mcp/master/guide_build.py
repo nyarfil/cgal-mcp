@@ -240,9 +240,28 @@ MANUAL_CASES = {
 }
 
 
+# Operations with several inputs and no replay/workflow case: (name, path, unit, type) per slot.
+MANUAL_MULTI_CASES = {
+    "mesh.boolean.rounded": (
+        [("sphere_general_a", f"{FIXTURE_ROOT}/wave_a_boolean/sphere_general_a.off", "mm", "TriangleSurfaceMesh"),
+         ("sphere_general_b", f"{FIXTURE_ROOT}/wave_a_boolean/sphere_general_b.off", "mm", "TriangleSurfaceMesh")],
+        {"operation": "union"}),
+}
+
+
 def MANUAL_EXAMPLES(src: Sources, found: dict[str, dict]) -> dict[str, dict]:
     """Examples for executable operations no replay/workflow case covers on its own."""
     manual = {}
+    for oid, (items, parameters) in sorted(MANUAL_MULTI_CASES.items()):
+        if oid in found or oid not in src.ops:
+            continue
+        slots = [slot["slot"] for slot in src.ops[oid]["io"]["inputs"]]
+        manual[oid] = {
+            "source": "manual (fixtures " + ", ".join(name for name, *_ in items) + ")",
+            "imports": [{"name": name, "path": path, "unit": unit, "artifact_type": kind}
+                        for name, path, unit, kind in items],
+            "plan_request": {"operation_id": oid, "parameters": parameters,
+                             "inputs": {slot: "$" + item[0] for slot, item in zip(slots, items)}}}
     for oid, (fixture, parameters) in sorted(MANUAL_CASES.items()):
         if oid in found or oid not in src.ops:
             continue
@@ -345,7 +364,11 @@ def op_card(src: Sources, oid: str, lang: str, examples: dict[str, dict], users:
     fam = src.family_of[oid]
     fam_name = T.FAMILIES[fam][lang]
     lines = [f"# {oid}", "",
-             f"- {L['status']}: {op['status']} " + ("(executable; replay-verified on bundled fixtures)" if en else "（実行可能。同梱fixtureで再実行検証済み）"),
+             f"- {L['status']}: {op['status']} " + (
+                 ("(executable; replay-verified on bundled fixtures)" if en else "（実行可能。同梱fixtureで再実行検証済み）")
+                 if op["status"] == "VALIDATED" else
+                 ("(executable; implemented and tested, not yet replay-bound to a requirement or independently reviewed)"
+                  if en else "（実行可能。実装・試験済みだが、原本要求へのreplay束縛と独立レビューは未実施）")),
              f"- {L['family']}: {fam} {fam_name}",
              f"- {L['role']}: {ROLE_TEXT[op['role']][0 if en else 1]}",
              f"- CGAL package: {op['package']} (CGAL {src.cgal_version})", ""]
@@ -822,7 +845,7 @@ ARTIFACT TYPES
 {types_line}. Operation cards name the exact type each input slot accepts and each output slot produces; a JSON report type is read, not imported.
 
 FAIL-CLOSED BEHAVIOUR
-The server refuses or fails with a coded error instead of guessing. rejected = a validator did not confirm the result (output unpublished). unmet_precondition = a documented bound or property failed before compute (for example the distance/Hausdorff operations accept at most 400 faces, except mesh.distance.symmetric_hausdorff with validation_mode certified_bvh: up to 2,000,000 faces; every card lists its bounds). resource_limit/timeout = shrink the input or raise execution={{"wall_time_ms","memory_mb"}} within cgal_system_health maxima. Never retry an unchanged request after invalid_input, unmet_precondition, unsupported_operation or validation failure. Unknown operations are refused; the server never generates C++ on demand.
+The server refuses or fails with a coded error instead of guessing. rejected = a validator did not confirm the result (output unpublished). unmet_precondition = a documented bound or property failed before compute (for example the distance/Hausdorff operations accept at most 400 faces, except mesh.distance.symmetric_hausdorff with validation_mode certified_bvh: up to 2,000,000 faces; every card lists its bounds). resource_limit/timeout = shrink the input or raise execution={{"wall_time_ms","memory_mb"}} within cgal_system_health maxima. Never retry an unchanged request after invalid_input, unmet_precondition, unsupported_operation or validation failure. The exact Booleans (mesh.boolean.union/intersection/difference) and mesh.clip.plane, mesh.split.plane, mesh.corefine, mesh.autorefine publish only results whose coordinates are exact binary64 values; meshes in general position fail with OUTPUT_BINARY64_LOSS or OUTPUT_NOT_REPRESENTABLE. For Booleans use mesh.boolean.rounded then (rounded coordinates, checked within a stated tolerance). Unknown operations are refused; the server never generates C++ on demand.
 
 AMBIGUITY
 cgal_plan(goal=...) works only when one operation clearly fits. ambiguous_route (or unsupported_operation with details.options) carries a recorded question and options (operation_id, summary, distinguishing_concepts). Do not guess: ask the user which one, then re-plan with operation_id. Search with query_analysis.abstained=true means nothing executable fits.
@@ -852,7 +875,7 @@ cgal_get_guide（最初に呼ぶ: ガイド・カード・レシピ）、cgal_ca
 {types_line}。操作カードに各入力slotが受ける型と各出力slotが作る型を明記。JSONレポート型は読むもので取り込むものではない。
 
 fail-closed
-推測せず、コード付きで拒否・失敗する。rejected=検証器が結果を確認できず出力は非公開。unmet_precondition=宣言済みの上限・性質が計算前に不成立（例: 距離/Hausdorff系は400面以下。ただしmesh.distance.symmetric_hausdorffはvalidation_mode=certified_bvhで2,000,000面まで。各カードに上限）。resource_limit/timeout=入力を小さくするか、cgal_system_healthの上限内でexecution={{"wall_time_ms","memory_mb"}}を指定。invalid_input・unmet_precondition・unsupported_operation・検証失敗の後に同じ要求を再試行しない。未知の操作は拒否され、C++をその場で生成しない。
+推測せず、コード付きで拒否・失敗する。rejected=検証器が結果を確認できず出力は非公開。unmet_precondition=宣言済みの上限・性質が計算前に不成立（例: 距離/Hausdorff系は400面以下。ただしmesh.distance.symmetric_hausdorffはvalidation_mode=certified_bvhで2,000,000面まで。各カードに上限）。resource_limit/timeout=入力を小さくするか、cgal_system_healthの上限内でexecution={{"wall_time_ms","memory_mb"}}を指定。invalid_input・unmet_precondition・unsupported_operation・検証失敗の後に同じ要求を再試行しない。厳密ブーリアン（mesh.boolean.union/intersection/difference）とmesh.clip.plane・mesh.split.plane・mesh.corefine・mesh.autorefineは、結果の座標が厳密にbinary64で表せる場合だけ公開する。一般的な位置のメッシュはOUTPUT_BINARY64_LOSSまたはOUTPUT_NOT_REPRESENTABLEで失敗する。ブーリアンはその場合mesh.boolean.rounded（座標を丸め、明示した許容誤差内で検証）を使う。未知の操作は拒否され、C++をその場で生成しない。
 
 曖昧さ
 cgal_plan(goal=...)は1つの操作が明確に当てはまるときだけ。ambiguous_route（またはdetails.optionsつきunsupported_operation）は記録済みの質問と選択肢を持つ。推測せずユーザーに尋ね、operation_idで再plan。検索でquery_analysis.abstained=trueは実行可能な該当なしの意味。

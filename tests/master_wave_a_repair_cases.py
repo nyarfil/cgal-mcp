@@ -112,7 +112,7 @@ def validate(worker: str, root: pathlib.Path, validator: str,
     assert report["schema_version"] == 1 and report["status"] == "pass"
     assert report["passed"] is True and report["validator_id"] == validator
     assert report["parameters"] == parameters
-    assert required == report["checks"].keys()
+    assert required <= report["checks"].keys()  # hole-selection checks are added when a selection is used
     assert all(report["checks"].values())
     return report
 

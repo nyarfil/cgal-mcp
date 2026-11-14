@@ -3,6 +3,10 @@
 #include "../artifact_io.h"
 #include "../sha256.h"
 
+#include <CGAL/AABB_traits_3.h>
+#include <CGAL/AABB_tree.h>
+#include <CGAL/AABB_triangle_primitive_3.h>
+#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Polygon_mesh_processing/corefinement.h>
 #include <CGAL/Polygon_mesh_processing/intersection.h>
 #include <CGAL/Polygon_mesh_processing/manifoldness.h>
@@ -536,7 +540,8 @@ std::filesystem::path write_boolean_mesh(const Request& request,
       std::filesystem::remove(temporary);
       throw WorkerError(
           "NUMERIC_FAILURE", "OUTPUT_BINARY64_LOSS",
-          "Exact Boolean coordinates are not representable in standard binary64 OFF");
+          "Exact Boolean coordinates are not representable in standard binary64 OFF",
+          false, {"mesh.boolean.rounded"});
     }
     indices[vertex.idx()] = next_index++;
     output << x << ' ' << y << ' ' << z << '\n';
@@ -641,6 +646,213 @@ Json validate_boolean_semantics(const Mesh& source_a, const Mesh& source_b,
           {"empty_reason", candidate_empty ? reference.empty_reason : ""},
           {"candidate_exact_volume", exact_number(candidate_volume)},
           {"reference_exact_volume", exact_number(reference.volume)}};
+}
+
+
+// ---- rounded output ---------------------------------------------------------------------
+
+namespace {
+
+using Epick = CGAL::Exact_predicates_inexact_constructions_kernel;
+
+std::array<Point, 3> face_points(const Mesh& mesh, Face face) {
+  const auto h = mesh.halfedge(face);
+  return {mesh.point(mesh.source(h)), mesh.point(mesh.target(h)),
+          mesh.point(mesh.target(mesh.next(h)))};
+}
+
+// Finds, for a query point, a triangle of `mesh` close to it with a binary64 search structure and
+// certifies the distance to that witness exactly. The search only chooses the witness; the bound is
+// an exact rational comparison, so an accepted point is provably within the tolerance of the surface.
+class SurfaceProximity {
+ public:
+  explicit SurfaceProximity(const Mesh& mesh) {
+    for (const auto face : mesh.faces()) {
+      const auto points = face_points(mesh, face);
+      const Epick::Triangle_3 triangle(approximate(points[0]), approximate(points[1]),
+                                       approximate(points[2]));
+      if (triangle.is_degenerate()) continue;  // cannot be a search primitive; never a certificate
+      approximate_.push_back(triangle);
+      exact_.emplace_back(points[0], points[1], points[2]);
+    }
+    if (approximate_.empty()) {
+      throw WorkerError("VALIDATION_FAILED", "BOOLEAN_ROUNDED_NO_SEARCH_TRIANGLE",
+                        "No triangle of the surface is usable for the proximity search");
+    }
+    tree_.insert(approximate_.begin(), approximate_.end());
+    tree_.build();
+    tree_.accelerate_distance_queries();
+  }
+
+  // Exact squared distance from `point` to the witness triangle chosen for it.
+  Kernel::FT witness_squared_distance(const Point& point) const {
+    const auto closest = tree_.closest_point_and_primitive(approximate(point));
+    const auto index = static_cast<std::size_t>(closest.second - approximate_.begin());
+    return CGAL::squared_distance(point, exact_[index]);
+  }
+
+ private:
+  static Epick::Point_3 approximate(const Point& point) {
+    return Epick::Point_3(CGAL::to_double(point.x()), CGAL::to_double(point.y()),
+                          CGAL::to_double(point.z()));
+  }
+  using Iterator = std::vector<Epick::Triangle_3>::const_iterator;
+  using Primitive = CGAL::AABB_triangle_primitive_3<Epick, Iterator>;
+  using Tree = CGAL::AABB_tree<CGAL::AABB_traits_3<Epick, Primitive>>;
+  std::vector<Epick::Triangle_3> approximate_;
+  std::vector<Kernel::Triangle_3> exact_;
+  Tree tree_;
+};
+
+// Largest exact squared distance from a vertex of `samples` to its witness on `surface`.
+Kernel::FT max_vertex_squared_distance(const Mesh& samples, const SurfaceProximity& surface) {
+  Kernel::FT maximum(0);
+  for (const auto vertex : samples.vertices()) {
+    const auto distance = surface.witness_squared_distance(samples.point(vertex));
+    if (distance > maximum) maximum = distance;
+  }
+  return maximum;
+}
+
+double approximate_area(const Mesh& mesh) {
+  double area = 0;
+  for (const auto face : mesh.faces()) {
+    const auto points = face_points(mesh, face);
+    area += std::sqrt((std::max)(
+        0.0, CGAL::to_double(CGAL::squared_area(points[0], points[1], points[2]))));
+  }
+  return area;
+}
+
+[[noreturn]] void rounded_mismatch(const std::string& code, const std::string& message) {
+  throw WorkerError("VALIDATION_FAILED", code, message);
+}
+
+}  // namespace
+
+Mesh round_boolean_mesh(const Mesh& exact) {
+  Mesh rounded;
+  std::vector<Vertex> map(exact.number_of_vertices() + exact.number_of_removed_vertices());
+  for (const auto vertex : exact.vertices()) {
+    const auto& point = exact.point(vertex);
+    const double x = CGAL::to_double(CGAL::exact(point.x()));
+    const double y = CGAL::to_double(CGAL::exact(point.y()));
+    const double z = CGAL::to_double(CGAL::exact(point.z()));
+    if (!std::isfinite(x) || !std::isfinite(y) || !std::isfinite(z)) {
+      throw WorkerError("NUMERIC_FAILURE", "ROUNDING_INVALIDATED_RESULT",
+                        "A Boolean coordinate has no finite binary64 value");
+    }
+    map[vertex.idx()] = rounded.add_vertex(Point(x, y, z));
+  }
+  for (const auto face : exact.faces()) {
+    const auto h = exact.halfedge(face);
+    const auto added = rounded.add_face(map[exact.source(h).idx()], map[exact.target(h).idx()],
+                                        map[exact.target(exact.next(h)).idx()]);
+    if (added == Mesh::null_face()) {
+      throw WorkerError("NUMERIC_FAILURE", "ROUNDING_INVALIDATED_RESULT",
+                        "The rounded Boolean result is not a manifold mesh");
+    }
+  }
+  if (rounded.number_of_faces() == 0) return rounded;
+  try {
+    require_numeric_scale(rounded, "Rounded Boolean result");
+    require_healthy_volume_mesh(rounded, "Rounded Boolean result", false);
+  } catch (const WorkerError& error) {
+    if (error.error_class == "PRECONDITION_FAILED") {
+      throw WorkerError(
+          "NUMERIC_FAILURE", "ROUNDING_INVALIDATED_RESULT",
+          std::string("Rounding the exact Boolean result to binary64 broke it (") + error.code +
+              "); nothing is published");
+    }
+    throw;
+  }
+  return rounded;
+}
+
+double rounded_tolerance(const Mesh& source_a, const Mesh& source_b) {
+  double largest = 0;
+  for (const Mesh* mesh : {&source_a, &source_b}) {
+    for (const auto vertex : mesh->vertices()) {
+      const auto& point = mesh->point(vertex);
+      largest = (std::max)({largest, std::abs(CGAL::to_double(point.x())),
+                            std::abs(CGAL::to_double(point.y())),
+                            std::abs(CGAL::to_double(point.z()))});
+    }
+  }
+  if (!(largest > 0) || !std::isfinite(largest)) {
+    throw WorkerError("PRECONDITION_FAILED", "UNSUPPORTED_NUMERIC_SCALE",
+                      "The sources have no positive finite coordinate scale");
+  }
+  return std::ldexp(1.0, std::ilogb(largest) + 1 - 40);
+}
+
+Json validate_boolean_rounded(const Mesh& source_a, const Mesh& source_b,
+                              const Mesh& candidate, BooleanKind kind,
+                              const BooleanResult& reference) {
+  const bool candidate_empty = candidate.number_of_faces() == 0;
+  if (candidate_empty != reference.empty) {
+    rounded_mismatch("BOOLEAN_ROUNDED_STATUS_MISMATCH",
+                     "Candidate and exact replay disagree on whether the result is empty");
+  }
+  const double tolerance = rounded_tolerance(source_a, source_b);
+  Json checks = {{"topology_valid", true},
+                 {"closed_or_canonical_empty", true},
+                 {"volume_boundary_orientation_valid", true},
+                 {"self_intersection_free", true},
+                 {"operation_parameter_bound", true},
+                 {"result_status_matches_reference", true},
+                 {"element_counts_match_reference", true},
+                 {"volume_within_tolerance_of_reference", true},
+                 {"candidate_vertices_within_tolerance_of_reference_surface", true},
+                 {"reference_vertices_within_tolerance_of_candidate_surface", true},
+                 {"result_status", candidate_empty ? "empty" : "volume"},
+                 {"empty_reason", candidate_empty ? reference.empty_reason : ""},
+                 {"operation", operation_name(kind)},
+                 {"tolerance", tolerance},
+                 {"tolerance_rule",
+                  "2^-40 times the power of two above the largest absolute source coordinate"},
+                 {"reference_exact_volume", exact_number(reference.volume)}};
+  if (candidate_empty) {
+    checks["candidate_exact_volume"] = "0";
+    return checks;
+  }
+  if (candidate.number_of_vertices() != reference.mesh.number_of_vertices() ||
+      candidate.number_of_faces() != reference.mesh.number_of_faces()) {
+    rounded_mismatch("BOOLEAN_ROUNDED_COUNT_MISMATCH",
+                     "Candidate vertex or face count differs from the exact replay");
+  }
+  const Kernel::FT epsilon(tolerance);
+  const Kernel::FT epsilon_squared = epsilon * epsilon;
+  const auto candidate_volume = mesh_volume(candidate);
+  const double area = approximate_area(reference.mesh);
+  if (!std::isfinite(area) || !(area > 0)) {
+    rounded_mismatch("BOOLEAN_ROUNDED_AREA_INVALID", "The exact replay has no positive finite area");
+  }
+  // Moving every vertex by at most the tolerance changes the volume by at most tolerance * area to
+  // first order; 1.01 covers the binary64 evaluation of the area.
+  const Kernel::FT volume_bound = epsilon * Kernel::FT(1.01 * area);
+  if (CGAL::abs(candidate_volume - reference.volume) > volume_bound) {
+    rounded_mismatch("BOOLEAN_ROUNDED_VOLUME_MISMATCH",
+                     "Candidate volume differs from the exact replay by more than tolerance * area");
+  }
+  const SurfaceProximity reference_surface(reference.mesh);
+  const SurfaceProximity candidate_surface(candidate);
+  const auto candidate_to_reference = max_vertex_squared_distance(candidate, reference_surface);
+  if (candidate_to_reference > epsilon_squared) {
+    rounded_mismatch("BOOLEAN_ROUNDED_CANDIDATE_OFF_REFERENCE",
+                     "A candidate vertex is farther than the tolerance from the exact result surface");
+  }
+  const auto reference_to_candidate = max_vertex_squared_distance(reference.mesh, candidate_surface);
+  if (reference_to_candidate > epsilon_squared) {
+    rounded_mismatch("BOOLEAN_ROUNDED_REFERENCE_OFF_CANDIDATE",
+                     "A vertex of the exact result is farther than the tolerance from the candidate surface");
+  }
+  checks["candidate_exact_volume"] = exact_number(candidate_volume);
+  checks["volume_bound"] = CGAL::to_double(volume_bound);
+  checks["max_candidate_vertex_distance"] = std::sqrt(CGAL::to_double(candidate_to_reference));
+  checks["max_reference_vertex_distance"] = std::sqrt(CGAL::to_double(reference_to_candidate));
+  checks["compared_vertices"] = candidate.number_of_vertices() + reference.mesh.number_of_vertices();
+  return checks;
 }
 
 }  // namespace cgal_master::wave_a_boolean

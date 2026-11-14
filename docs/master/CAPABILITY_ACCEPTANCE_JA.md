@@ -232,3 +232,239 @@ hole_idは「境界上の最小の頂点番号」なので、メッシュXで一
   validatorへの別メッシュSHA-256、`source_mesh_sha256`を書き換えたboundary_cyclesレポートの拒否を追加しました。
 - guideとregistry説明に「一覧レポートの`source_mesh_sha256`と一緒にidを渡す」ことを追記しました。
   MCPのtool面は変えていません。
+
+## プロ用途の制約 第1区切り: 一般形状のBooleanと厳密validatorの面数上限（2026-11-13）
+
+この節の作業はLinux（gcc 13.3、公式CGAL 6.2.1、OpenGR・SCIPなし）で行いました。時間は情報用の1回計測で、
+受入根拠ではありません。`docs/master/evidence/`の各レポートは今回再生成していません（後述）。
+`standalone_accepted`は引き続きfalseです。
+
+### 見つかった制約
+
+- `mesh.boolean.union`・`intersection`・`difference`、`mesh.clip.plane`、`mesh.split.plane`、`mesh.corefine`、
+  `mesh.autorefine`は、結果の全座標が厳密にbinary64で表せる場合だけ結果を公開します。軸に揃った2進有理数の
+  入力（既存fixtureの立方体）では成り立ちますが、一般的な位置のメッシュではほぼ成り立ちません。
+  半径10 mmのUV球（360面）と(7.3, 1.1, 0.4) mmずらした同じ球の和は`OUTPUT_BINARY64_LOSS`、
+  同じ球の平面クリップは`OUTPUT_NOT_REPRESENTABLE`で拒否されます。面数上限より前にある制約です。
+- 厳密validator（batch 2のclip/split/corefine/autorefine/features、batch 5のdo_intersect/polylines）は
+  全三角形ペアの総当たりで、上限が600面・200面でした。
+
+### 対応1: `mesh.boolean.rounded`（新Operation、status `IMPLEMENTED`）
+
+- parameter `operation`: `union`・`intersection`・`difference`。入力条件は厳密Booleanと同じ
+  （閉じた外向きの三角形メッシュ、自己交差なし、最大200,000頂点・400,000面）。
+- producerは厳密Booleanと同じEPECKのcorefinementを実行し、各座標を隣接するbinary64値へ丸めます。
+  丸めた結果が健全な体積境界でなくなった場合（退化面、自己交差など）は
+  `NUMERIC_FAILURE/ROUNDING_INVALIDATED_RESULT`で拒否し、何も公開しません。
+- 必須validator `mesh.validate.boolean_rounded`は、厳密Booleanを再計算し、候補を許容誤差つきで比較します:
+  候補の位相・閉性・向き・自己交差なし、空/非空の一致、頂点数・面数の一致、
+  体積差が「許容誤差×参照面積×1.01」以内、候補の全頂点が参照曲面から許容誤差以内、
+  参照の全頂点が候補曲面から許容誤差以内。距離は、binary64の探索木で選んだ証人三角形への
+  厳密な有理数距離で判定します（探索は証人の選択だけに使い、合否は厳密比較）。
+- 許容誤差は「両入力の最大絶対座標を超える最小の2の冪 × 2^-40」です（上の球の例で2.9e-11 mm）。
+  validatorが保証するのは厳密な結果への近さで、集合としての厳密一致ではありません。
+  CGALを使わない独立オラクルではなく、同じcorefinementの再計算との比較です（厳密Booleanのvalidatorと同じ方式）。
+- 厳密Booleanの`OUTPUT_BINARY64_LOSS`は`suggested_operations`に`mesh.boolean.rounded`を返します。
+- 確認（`tests/test_master_boolean_rounded.py`）: 一般位置の球2つで3演算がvalidatorに合格、
+  CGALと独立な包除原理（|A∪B|+|A∩B|=|A|+|B|、|A−B|=|A|−|A∩B|、差1e-8 mm³以内）、
+  演算の取り違え・入力をそのまま候補にした場合・1頂点を1e-3/1e-6/1e-9 mm動かした改竄の拒否、
+  厳密に表せる立方体では厳密体積12と一致、交わらない入力の積が空、開いた入力の拒否。
+  1e-13 mmの移動は許容誤差未満なので合格します（契約どおり）。
+- 情報用の計測（1回）: 球2つ（各101,760面）の和が14.8 s、validatorが18.6 s。最大頂点偏差は2e-15 mm。
+- statusを`VALIDATED`にしていない理由: 原本要求へのreplay束縛と独立レビューが未実施のためです。
+
+### 対応2: 厳密validatorの面数上限（600面・200面 → 200,000面）
+
+- 対象: `mesh.features.detect`、`mesh.clip.plane`、`mesh.split.plane`、`mesh.corefine`、`mesh.autorefine`
+  （600 → 200,000面、出力4,000 → 1,000,000面）、`mesh.intersections.do_intersect`、
+  `mesh.intersections.polylines`（200 → 200,000面）。
+- validatorの判定（GMP有理数の厳密計算）は変えていません。厳密判定へ渡すペアの選択を、総当たりから
+  保守的な箱階層（`worker/master/batch2/b2_broadphase.h`、CGALヘッダなし）へ替えました。箱はbinary64入力座標の
+  厳密なmin/max（有理数の点は2 ulp外側へ拡張）で、閉じた箱が交わらないペアだけを省きます。
+  交わらない箱の図形は点を共有しないので、判定結果は総当たりと同じです。
+- `mesh.intersections.polylines`のproducerにあった全ペアの共面チェックも同じ箱階層で絞っています。
+- 確認: 既存の`tests/master_batch2_cases.py`と`tests/master_batch5_cases.py`（陽性と改竄の陰性対照）が
+  変更後のworkerで全て合格。6,912面の格子立方体で6 Operationとvalidatorが合格し、
+  切っていない立方体をsplit結果とした場合と、clip結果から1面を除いた場合はvalidatorが拒否、
+  202,800面は`FACE_LIMIT_EXCEEDED`で拒否。
+- 情報用の計測（1回、199,692面の格子立方体）: validatorはclip 4.7 s、split 6.0 s、corefine 7.1 s、
+  features 1.7 s、do_intersect 1.9 s、polylines 2.1 s。切断帯の小さい入力なので、交差の多い入力では長くなります。
+- `tests/master_batch2_cases.py`の1件（138行目）は、変更前のworkerでも`INPUT_TYPE_MISMATCH`で失敗していました
+  （validatorの入力型が`TriangleSurfaceMesh`になった後もテストが`PolygonSoup3`を渡していた）。型を合わせました。
+
+### 未対応・注意
+
+- `mesh.clip.plane`・`mesh.split.plane`・`mesh.corefine`・`mesh.autorefine`は、面数上限を上げましたが、
+  厳密に表せる出力だけを公開する契約のままです。一般位置の入力では今も拒否されます（丸め版は未実装）。
+- 距離系（400面）、細分（2,000面）、骨格（3,000面）、パラメータ化（2,000面）、SDF（1,500面）、
+  凸分解（2,000面）、最短経路（64面）、点群間隔（400点）、最小円・球（64点・32点）の上限は変えていません。
+- registryは230 Operation（VALIDATED 228、IMPLEMENTED 2）、`catalog_revision`は`-9`です。
+  `docs/master/evidence/`の各レポートは旧revision（`-8`）と別のworker（Windows）に束縛されたままで、
+  今回は再生成していません。registryに束縛する受入gateの判定は、再生成するまで古い証拠を指します。
+- 検索: `mesh.boolean.rounded`はregistryで`fallback_for`（厳密Boolean 3件）を宣言します。検索は、別名かidが
+  一致しない限りこのOperationを自動ルートの候補にせず、厳密Booleanの後ろに並べます
+  （「重なる体積だけ残す」などの一般の問い合わせが曖昧にならないようにするため）。
+  `search_data.json`に2 Operationの語句を追加し、package台帳の`Polygon_mesh_processing`の
+  Operation数（total 50、implemented 2）を更新しました。
+- 既存テストの不整合（今回の変更と無関係）: `tests/master_wave_a_repair_cases.py`は、穴の選択を使うと
+  validatorが追加するchecks（`selected_holes_closed`・`unselected_holes_untouched`）を想定しておらず失敗していたため、
+  必須checksを含むことの確認に直しました。`tests/master_wave_b_cases.py`は
+  `validator_parameter_bindings`の期待値が古く、171行目で失敗します（未修正）。
+- 証拠の再生成が必要（未実施、merge前の残作業）: `docs/master/evidence/`の各レポートはregistry全体に
+  束縛されているため、registryを変更した今回のcommitの時点で古くなっています。
+  `tests.test_master_acceptance`は76件中、失敗81（subTestを含む）・エラー1です。内訳:
+  `test_published_family_reports_fail_only_for_missing_replay`の74要求（registry変更が原因。変更前は合格）、
+  変更前のHEADでもこのLinux環境で失敗していた4件（検索証拠の束縛3件、workflow gate 1件）、
+  workerが必要で変更前はskipされていた証拠束縛の試験3件とエラー1件
+  （性能証拠の束縛、geometry cache証拠、runtimeでの証拠再現、障害封じ込めの再実行。
+  Windowsで生成した証拠とLinux workerの差か今回の変更かは、ここでは切り分けていません）。
+  全分野の再生成にはOpenGR・SCIPを組み込んだworkerが必要で（7.9・7.10）、このLinux環境にはありません。
+  再生成は基準環境（Windows、OpenGR・SCIPあり）で行ってください。
+- `docs/master/evidence/first-contact.json`もguideのhashに束縛されており、guideを再生成した今回の時点で古く
+  なっています（`tests.test_master_guide`の`test_evidence_bound_to_current_guide_and_informational`が失敗）。
+  同じ理由で再生成していません。同テストの`test_sample_examples_execute_and_validate`は、このLinux workerに
+  OpenGRがないため`pointset.registration.compute_transformation`の例で失敗します（環境要因）。
+- family 7.3のreplayケース`intersect-polylines-shifted-cubes`は、このLinux/gcc 13.3のworkerでは
+  polylineの点の並び順が期待値と違い失敗します（points.3とpoints.7）。`b5_intersect_ops.cpp`を
+  変更前に戻したworkerでも同じ失敗になることを確認しました（今回の変更が原因ではなく、
+  `intersection_polylines`の出力順の環境差）。期待値を順序に依存しない形へ直す必要があります（未修正）。
+- 今回の変更後に合格を確認したもの（Linux worker）: `tests.test_master_boolean_rounded`（12件）、
+  `tests.test_master_search_*`・`test_master_goal_routing`・`test_master_package_harvest`、
+  workerケースのbatch 2〜6、Wave A（simplify・mesh・Boolean・repair）、Wave C・D・E、query、kernel、
+  optimization、reconstruction、worker cases。
+
+### 追補: Linuxでの証拠再生成の準備（2026-11-13、未完了）
+
+ユーザーの判断により、証拠の再生成をこのLinux環境で行う準備を進めました。再生成そのものは未完了で、
+`docs/master/evidence/`はまだ更新していません。
+
+- OpenGR `abfe0f4d`（v2023.11）、SoPlex `13e2ab24`（v8.0.3）、SCIP `d409edf9`（v10.0.3）をtag指定のgit cloneで取得し、
+  `THIRD_PARTY_DEPENDENCIES_JA.md`に記録されたcommitと一致することを確認しました（tarballのsha256は、
+  この環境からsource archiveを取得できないため照合していません）。SCIPの構成には、文書に記載のflagに加えて
+  `-DPAPILO=OFF -DREADLINE=OFF -DZLIB=OFF -DAMPL=OFF`が必要でした。workerのmanifestは
+  `optional_dependencies: OpenGR,SCIP`、`source_kind: official_release`です。
+- replay契約の修正（`scripts/master_replay_families.py`）:
+  - 閉じたpolylineの開始点と向きはbuildで変わるため、順序に依存しない比較演算子を追加しました
+    （`contains`、`same_closed_cycle`）。`intersect-polylines-shifted-cubes`（7.3）、`slice-cube-mid`・
+    `slice-cube-diagonal`（7.5）に適用。Linuxでは同じ閉曲線が別の開始点で出力されます。
+  - batch 3の改竄fixture 6件（regular2/regular3/voronoi）のsha256が、CRLFのworking copyで計算された値でした。
+    repositoryの内容は`.gitattributes`の`eol=lf`でLFなので、新しいcheckout（CIを含む）では必ず不一致になります。
+    LFの内容のsha256へ直しました。
+- この修正後、Linux workerでfamily 7.1・7.2・7.3・7.4・7.5・7.6・7.9・7.11・7.12・7.13・7.14・7.15の
+  固定harnessが合格します。
+- 残り（判断待ち）: 7.8と7.10は、数値計算の結果そのものがWindows（MSVC）とLinux（gcc）で違い、
+  Windowsの値に固定されたassertionが失敗します。必須validatorはどちらの結果も合格としています。
+  - `skeleton-tube-function`・`skeleton-tube-class`: 頂点0のx座標が1.0583（期待）に対し1.3471。
+  - `skeleton-torus-class`: 骨格の頂点・辺が25（期待）に対し24、頂点0のx座標が2.87712に対し2.87646。
+  - `poisson-delaunay-sphere`: 最大頂点半径が上限2.05に対し2.0512。
+  - `poisson-delaunay-sphere-fine`: 面数1518（期待）に対し1542、最大頂点半径2.0534。
+  これらを通すにはassertionを環境に依存しない形（範囲など）へ変える必要があり、受入基準の変更になるため
+  未実施です。
+
+### 追補2: Linuxでの証拠再生成（2026-11-13、実施済み）
+
+上の「証拠の再生成が必要（未実施）」と「追補: 準備（未完了）」の記述は、この節で置き換わります。
+`docs/master/evidence/`のfamily 15件・`wave-a-capabilities.json`・`search-retrieval.json`・`workflows.json`・
+`first-contact.json`・`performance-robustness.json`を、このLinux環境で再生成しました。
+`*-windows-vs2026.json`・`codex-host-windows.json`・`hull-performance-windows.json`・blind set関連は
+再生成していません（Windowsでの記録のまま）。`standalone_accepted`は引き続きfalseです。
+
+- 生成環境: Linux、gcc 13.3、公式CGAL 6.2.1（sha256照合済み）、OpenGR・SCIP・SoPlexを組み込んだworker
+  （manifestの`optional_dependencies`は`OpenGR,SCIP`、`source_kind`は`official_release`）。
+  **これまでの証拠はWindows（MSVC）で生成されており、生成環境が変わっています。**
+- 結果: 全family再試験は80/80（除外なし）。検索は実行サンプル240/240、文書検索298/300（再生成前と同じ）。
+  workflowは67件。first-contactは例119/119、依頼32件中32件が実行成功（recipe一致25、再生成前と同じ傾向）。
+  障害封じ込めは全27 modeで全試行を封じ込め。
+- mainで失敗していた`test_gate_cannot_be_met_without_the_target_and_full_acceptance`の原因も改行コードでした。
+  blind set 1・2の証拠（`search-blind.json`・`search-blind-2.json`）の`blind_set_sha256`がCRLFのcheckoutの
+  hashで、LFの内容と一致せず、gateが「top-3が目標未満」ではなく「証拠が現在のblind setと一致しない」と
+  判定していました。両セットを現在のregistryで再計測して記録しました（測定履歴に追記）。
+  top-3はblind-1 94.07%、blind-2 97.14%で再計測前と同じ、top-1は86.44→84.75%、86.43→85.71%です。
+  top-1の差は、前回の記録後に追加された`mesh.analysis.boundary_cycles`と穴埋めの語句によるもので、
+  `mesh.boolean.rounded`はどのケースの上位3件にも現れていません。両セットは開発用データです。
+
+#### 受入基準の変更（ユーザー承認: 期待値を環境に依存しない範囲にする）
+
+数値計算の結果がWindows（MSVC）とLinux（gcc）で違うため、Windowsの値に固定されていたassertionを変更しました。
+必須validatorの検査は変えていません。
+
+| ケース | 変更前 | 変更後 | 実測（MSVC／gcc 13） |
+|---|---|---|---|
+| `skeleton-tube-function`・`skeleton-tube-class` | 頂点11・辺10、頂点0のx=1.0583（±1e-6） | 頂点9〜13、辺8〜12（x座標の固定を削除） | 11・10／11・10（頂点順が違う） |
+| `skeleton-torus-class` | 頂点25・辺25、頂点0のx=2.87712 | 頂点23〜27、辺23〜27 | 25・25／24・24 |
+| `poisson-delaunay-sphere`（2件） | 面数が560・1518と一致、頂点半径1.95〜2.05 | 面数が基準の±5%かつ出力メッシュと一致、頂点半径1.94〜2.06 | 560・1518／560・1542、最大半径2.0512・2.0534 |
+| `param-arap-lambda-1000` | 頂点40のUV=(0.645, 1.191)（±1e-6） | UV座標の固定を削除 | (0.645, 1.191)／(-0.124, 0.292) |
+
+`param-arap-lambda-1000`は、ほぼ等長な写像で平面内の位置と回転が自由なため座標が変わります。
+骨格の位相（連結成分、閉路数が種数に一致）、写像の全単射性と歪みの上限はvalidatorが検査します。
+
+#### Linuxで見つかった不具合の修正
+
+- `reconstruction.poisson`: 陰関数が非有限値になる入力で、CGALのMesh_3内部からGMPが`SIGFPE`を出し
+  workerが異常終了していました（Windowsではシグナルが出ず空の結果になり`EMPTY_RECONSTRUCTION`で拒否）。
+  POSIXでは`make_mesh_3`の間だけ`SIGFPE`を捕捉し、同じ`EMPTY_RECONSTRUCTION`で拒否するようにしました
+  （`worker/master/reconstruction/reconstruction_operations.cpp`）。workflow `neg08`・`wf44`・`neg20`が
+  Windowsと同じ結果になります。
+- `mesh.validate.hausdorff_symmetric_report`: 報告された上下限と判定の整合性検査をlong doubleで行っていたため、
+  long doubleがdoubleより広い環境（Linux x86-64）では、ちょうど境界の入力（推定0.5、誤差0.01、許容0.49）で
+  producer（binary64）と結論が食い違い、正しい報告を`VERDICT_MISMATCH`で拒否していました（安全側の誤り）。
+  producerと同じbinary64で判定するようにしました。`tests.test_master_certified_hausdorff`で確認。
+- supervisor（`cgal_mcp/master/supervisor.py`、POSIX）:
+  - workerを独立sessionで起動し、timeout・cancel・終了後にsession全体をkillします。以前はworker本体だけを
+    killしていたため、pipeを引き継いだ孫processが残るとsupervisorが待ち続け、timeoutが効きませんでした
+    （WindowsはJob objectで一括終了）。
+  - Linuxでは`PR_SET_PDEATHSIG`を設定し、host processが死んだらworkerも終了します。以前はworkerが残りました
+    （`host_process_killed`が0/5 → 5/5）。
+- 計測script（`scripts/measure_master_robustness.py`）: zombie processを生存扱いしない、Linuxでworkerの
+  ピークRSSを`/proc`のVmHWMから約1 msごとに標本化して記録（真のピークの下限。上限そのものは`RLIMIT_AS`で
+  kernelが強制）、worker実行ファイルのコピーで実行権限を保持、`faces-over-limit`のケースを上限を引き上げた
+  `mesh.clip.plane`から`mesh.subdivide.loop`（2,000面上限に対し2,048面）へ変更。
+- `tests/master_wave_b_cases.py`: 後のwaveで追加された必須validatorを許容するよう修正（CIのLinux worker jobが
+  ここで止まっていました）。
+
+#### 再生成の手順（Linux）
+
+`scripts/replay_master_capabilities.py --work-dir`で全familyを再試験し、各reportを公開位置へコピーして
+`catalog/major_requirements.json`のevidence sha256を更新（公開位置へ直接書く経路は、承認済みhashと一致しない
+reportを書き込む前に失敗するため）。続けて`evaluate_master_search.py --publish-retrieval-evidence`、
+`run_master_workflows.py --output`、`evaluate_first_contact.py --output`、`measure_master_robustness.py --output`。
+検索の実行サンプルには`work/master-docs-index.sqlite`（`build_master_docs_index.py build`）が必要です。
+
+#### 改行コードと証拠のhash
+
+証拠はsource・catalog・guideの**ファイルのbyte列**のSHA-256に束縛されています。Windowsのcheckoutで改行がCRLFへ
+変換されると、同じcommitでもhashが変わり、Linuxで生成した証拠はWindowsで（Windowsで生成した証拠はLinuxで）
+「bindingsが違う」と判定されます。mainの時点でLinux CIの検索・workflowの証拠testが失敗していたのはこのためです。
+`.gitattributes`に`* text=auto eol=lf`を追加し、全text fileをどの環境でもLFでcheckoutするようにしました
+（原本2文書は`-text`のまま、byte単位で保存）。**既存のWindowsのworking copyは、pull後に
+`git add --renormalize .`（または取り直し）でLFへ揃える必要があります。**
+
+#### 追記（同日）: CIで見つかった点
+
+- Windowsのworker job: family 7.3の`distance-symmetric-certified-spike-fail-verdict`で、validatorが
+  `OUTPUT_WRITE_FAILED`になっていました。harnessが出力directoryを「case id--validator id」と名付け、
+  workerがその中に「.slot.request id.tmp.ext」を作るため、長いcase idではpathがWindowsの260文字上限を
+  超えます。harnessの出力directoryを短いhash名にしました（traceには含まれません）。Windowsでの確認はCI待ちです。
+- Linuxのworker job: family 7.1の`kernel-intersections-epick`がCIで失敗していました（このLinux環境では合格）。
+  失敗messageに実測値を含めるようにしたところ、40件の結果のうち1件の線分の端点が、0ではなく
+  `-1/4503599627370496`（-2^-52）でした。EPICK（非厳密な構成）の丸め誤差で、buildとCPUで変わります。
+  EPECKの結果との完全一致を求めていたassertionを、型・構造・真偽値は完全一致、座標は1e-9以内の比較
+  （`rational_approx`）へ変更しました（EPICKのケースのみ。EPECKのケースは完全一致のまま）。
+  これも「期待値を環境に依存しない形にする」受入基準の変更です。
+- CIの`snapshot` job: 受入testの後の「能力台帳の再現」が`ModuleNotFoundError: scripts`で失敗していました
+  （mainでは手前のtestが失敗していたため未到達）。workflowでrepository rootをimport pathへ渡すようにしました。
+- 計測script: `native_memory_cap`は64 MiB上限で温めたworkerに障害を起こす試験ですが、常駐workerの
+  「専有memoryが上限の25%（ここでは16 MiB）を超えたら退役」規則にLinux workerの待機時の専有memoryが
+  かかり、障害の前に退役することがありました（20試行中3回。障害の結果と代替workerの起動は20回とも正しい）。
+  この試験に限り残留量による退役を無効にしました（残留量による退役は別のlifecycle caseで検証）。
+- Linuxのworker job（続き）: 7.1の修正後、family 7.15の`optimization-interpolation-sibson-c1`で同じ種類の差が
+  出ました。`sibson_c1`はbinary64で計算され、5件中3件の値がCIで約1e-16違います。`rational_approx`（1e-9）へ変更
+  しました（厳密kernelで計算する`linear`のケースは完全一致のまま）。binary64の値を完全一致で固定している
+  assertionを全familyで洗い出した結果、他は7.1の述語3件だけで、それらはCIで合格しています。
+- commit `7337c79`の時点のCI: `snapshot`、Python test 4種（Linux・Windows、3.12・3.13）、Windowsのworker jobが成功。
+  Windowsでのpath長対策とLF固定はCIで確認できました。残りはLinuxのworker job（上記の7.15）です。
+  旧v0.1 workerの`build` jobはmainと同じく途中でcancelになります（未調査）。
+- commit `7d5e513`の時点のCI: Linux・Windowsのworker job、Python test 4種、`snapshot`が成功しました。
+  `snapshot`は同じcommitに対して2回実行され、一方は18分で成功、もう一方は20分の制限時間でcancelになりました。
+  mainでは手前のtestで失敗していたため最後まで実行されたことがなく、制限時間が足りていませんでした。45分へ延長しました。
+  旧v0.1 workerの`build` jobも20分でcancelになります（mainと同じ。v0.1は非推奨で、今回は変更していません）。

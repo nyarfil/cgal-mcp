@@ -395,8 +395,13 @@ Json run_symmetric_hausdorff_report(const Request& request) {
   const LD error_bound = typed_in_unit(request.parameters.at("error_bound"), "error_bound", unit, true);
 
   // The report frame must be self-consistent with the declared bounds and verdict.
-  const LD reported_lower = std::max<LD>(0, reported - error_bound);
-  const LD reported_upper = reported + error_bound;
+  // The producer derives its bounds and verdict in binary64. Evaluating them here in long double
+  // would decide differently at an exact boundary (0.5 - 0.01 against a tolerance of 0.49) on
+  // platforms where long double is wider than double, so the same binary64 arithmetic is used.
+  const double tolerance64 = static_cast<double>(tolerance);
+  const double error_bound64 = static_cast<double>(error_bound);
+  const double reported_lower = std::max(0.0, reported - error_bound64);
+  const double reported_upper = reported + error_bound64;
   if (!close_to(report_length(report, "distance_estimate", unit), reported) ||
       !close_to(report_length(report, "tolerance", unit), tolerance) ||
       !close_to(report_length(report, "error_bound", unit), error_bound) ||
@@ -406,7 +411,7 @@ Json run_symmetric_hausdorff_report(const Request& request) {
                        "The reported estimate, bounds, tolerance or error bound disagree with the parameters");
   }
   const std::string expected_verdict =
-      reported_upper <= tolerance ? "pass" : (reported_lower > tolerance ? "fail" : "indeterminate");
+      reported_upper <= tolerance64 ? "pass" : (reported_lower > tolerance64 ? "fail" : "indeterminate");
   const auto verdict = require_member(report, "verdict", "report");
   const auto status = require_member(report, "status", "report");
   const auto valid = require_member(report, "valid", "report");

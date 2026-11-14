@@ -22,6 +22,15 @@ manifestに載り、`info.optional_dependency_built` で有無を報告します
   `-DGMP=OFF -DBOOST=OFF -DZLIB=OFF -DPAPILO=OFF`、SCIPは`-DSHARED=OFF -DLPS=spx -DEXPRINT=none
   -DIPOPT=OFF -DZIMPL=OFF`。詳細は上記PROVENANCE.mdにあります。
 
+## Linuxでのビルド記録（2026-11-13）
+
+gcc 13.3・Ninja・Releaseで、tag指定のgit clone（OpenGR `abfe0f4d`、SoPlex `13e2ab24`、SCIP `d409edf9`。
+上表のcommitと一致）からビルドしました。この環境ではsource archiveを取得できなかったため、
+配布物sha256は照合していません。SCIP 10.0.3は、上記のflagに加えて
+`-DPAPILO=OFF -DREADLINE=OFF -DZLIB=OFF -DAMPL=OFF`を指定しないと構成に失敗します
+（PAPILOが既定で必須扱い）。`cmake --install`は`scip`実行ファイルも要求するため、
+`libscip`に加えて`scip` targetもビルドします。3つとも`-DCMAKE_POSITION_INDEPENDENT_CODE=ON`です。
+
 ## worker側の有効化
 
 ```

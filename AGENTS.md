@@ -26,6 +26,14 @@ technical reconciliation separately.
   dispatch, worker supervision, and operation-specific validators.
 - Require source/license/version provenance, typed units and mandatory validation
   for mutation. Unknown operations must not execute generated C++ on demand.
+  User decision 2026-11-13: an isolated "free execution" mode (AI-written CGAL code run in a
+  separate resource-limited process, every result labelled unverified) is approved as a planned
+  addition. It is not implemented. Until it exists with that isolation and labelling, the rule
+  above stands; when it is added, registered operations and their mandatory validators stay as they are.
+- Order agreed with the user on 2026-11-13 for "professional use": (1) remove practical input
+  limits (face bounds, exact-representability refusals), (2) expose expert parameters,
+  (3) add adapters for cataloged packages. See the dated section in
+  `docs/master/CAPABILITY_ACCEPTANCE_JA.md` for what is done.
 - Evaluate mesh, point set, spatial, 2D, triangulation, meshing and advanced families.
   Simplification-only fixtures cannot establish Master acceptance.
 - Master (`cgal_mcp.master`, console script `cgal-mcp`, version 1.0.0) is the primary and
