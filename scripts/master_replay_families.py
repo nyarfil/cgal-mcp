@@ -6545,6 +6545,7 @@ class CaseView:
 def assertion_failures(case: dict, view: CaseView) -> list[str]:
     failures = []
     for selector, operator, expected in case["assertions"]:
+        actual: object = "<unresolved>"
         try:
             actual = view.resolve(selector)
             if isinstance(expected, dict):
@@ -6553,7 +6554,9 @@ def assertion_failures(case: dict, view: CaseView) -> list[str]:
         except (KeyError, ValueError, TypeError, IndexError, UnicodeError, ZeroDivisionError):
             passed = False
         if not passed:
-            failures.append(f"{case['id']}: {selector} {operator} {expected!r}")
+            # The observed value is part of the message: a failure seen only on another build
+            # (CI) cannot be diagnosed from the expectation alone.
+            failures.append(f"{case['id']}: {selector} {operator} {expected!r}; observed {actual!r}"[:6000])
     return failures
 
 

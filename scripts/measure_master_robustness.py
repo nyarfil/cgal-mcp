@@ -1021,7 +1021,13 @@ async def _persistent_fault_mode(mode: str, spec: dict, worker: Path) -> tuple[d
         os.environ["CGAL_ROBUST_FAULT_FILE"] = str(fault_file)
         os.environ["CGAL_ROBUST_FAULT"] = "none"
         native = mode in PERSISTENT_NATIVE_MODES
-        runtime = _persistent_runtime(root / "store", worker if native else REPO / PROXY)
+        # native_memory_cap warms a worker under a 64 MiB cap and then faults that same process. The
+        # default residue rule retires a worker above 25 % of its cap (16 MiB here), which is about
+        # the idle private memory of a Linux worker, so the warmed process was sometimes retired
+        # before the fault. Residue recycling has its own lifecycle case; it is switched off here
+        # so that the fault always meets a reused worker.
+        policy = {"recycle_private_fraction": 1.0} if mode == "native_memory_cap" else {}
+        runtime = _persistent_runtime(root / "store", worker if native else REPO / PROXY, **policy)
         all_spawned: list[Any] = []
         failures: list[str] = []
         outcomes: dict[str, int] = {}

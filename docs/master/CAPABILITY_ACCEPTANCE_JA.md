@@ -375,9 +375,13 @@ hole_idは「境界上の最小の頂点番号」なので、メッシュXで一
 - 結果: 全family再試験は80/80（除外なし）。検索は実行サンプル240/240、文書検索298/300（再生成前と同じ）。
   workflowは67件。first-contactは例119/119、依頼32件中32件が実行成功（recipe一致25、再生成前と同じ傾向）。
   障害封じ込めは全27 modeで全試行を封じ込め。
-- 残る失敗（1件、今回の変更と無関係）: `tests.test_master_acceptance`の
-  `test_gate_cannot_be_met_without_the_target_and_full_acceptance`は、mainでも失敗しています。
-  blind set 1のtop-3が目標95%未満であることを前提にしたassertionで、記録値は目標以上のため成立しません（未修正）。
+- mainで失敗していた`test_gate_cannot_be_met_without_the_target_and_full_acceptance`の原因も改行コードでした。
+  blind set 1・2の証拠（`search-blind.json`・`search-blind-2.json`）の`blind_set_sha256`がCRLFのcheckoutの
+  hashで、LFの内容と一致せず、gateが「top-3が目標未満」ではなく「証拠が現在のblind setと一致しない」と
+  判定していました。両セットを現在のregistryで再計測して記録しました（測定履歴に追記）。
+  top-3はblind-1 94.07%、blind-2 97.14%で再計測前と同じ、top-1は86.44→84.75%、86.43→85.71%です。
+  top-1の差は、前回の記録後に追加された`mesh.analysis.boundary_cycles`と穴埋めの語句によるもので、
+  `mesh.boolean.rounded`はどのケースの上位3件にも現れていません。両セットは開発用データです。
 
 #### 受入基準の変更（ユーザー承認: 期待値を環境に依存しない範囲にする）
 
@@ -425,3 +429,25 @@ hole_idは「境界上の最小の頂点番号」なので、メッシュXで一
 reportを書き込む前に失敗するため）。続けて`evaluate_master_search.py --publish-retrieval-evidence`、
 `run_master_workflows.py --output`、`evaluate_first_contact.py --output`、`measure_master_robustness.py --output`。
 検索の実行サンプルには`work/master-docs-index.sqlite`（`build_master_docs_index.py build`）が必要です。
+
+#### 改行コードと証拠のhash
+
+証拠はsource・catalog・guideの**ファイルのbyte列**のSHA-256に束縛されています。Windowsのcheckoutで改行がCRLFへ
+変換されると、同じcommitでもhashが変わり、Linuxで生成した証拠はWindowsで（Windowsで生成した証拠はLinuxで）
+「bindingsが違う」と判定されます。mainの時点でLinux CIの検索・workflowの証拠testが失敗していたのはこのためです。
+`.gitattributes`に`* text=auto eol=lf`を追加し、全text fileをどの環境でもLFでcheckoutするようにしました
+（原本2文書は`-text`のまま、byte単位で保存）。**既存のWindowsのworking copyは、pull後に
+`git add --renormalize .`（または取り直し）でLFへ揃える必要があります。**
+
+#### 追記（同日）: CIで見つかった点
+
+- Windowsのworker job: family 7.3の`distance-symmetric-certified-spike-fail-verdict`で、validatorが
+  `OUTPUT_WRITE_FAILED`になっていました。harnessが出力directoryを「case id--validator id」と名付け、
+  workerがその中に「.slot.request id.tmp.ext」を作るため、長いcase idではpathがWindowsの260文字上限を
+  超えます。harnessの出力directoryを短いhash名にしました（traceには含まれません）。Windowsでの確認はCI待ちです。
+- Linuxのworker job: family 7.1の`kernel-intersections-epick`がCIで失敗します。このLinux環境では合格しており、
+  CIのlogには期待値しか出ないため原因は未特定です。失敗messageに実測値を含めるようにしました（次のCIで判明）。
+- 計測script: `native_memory_cap`は64 MiB上限で温めたworkerに障害を起こす試験ですが、常駐workerの
+  「専有memoryが上限の25%（ここでは16 MiB）を超えたら退役」規則にLinux workerの待機時の専有memoryが
+  かかり、障害の前に退役することがありました（20試行中3回。障害の結果と代替workerの起動は20回とも正しい）。
+  この試験に限り残留量による退役を無効にしました（残留量による退役は別のlifecycle caseで検証）。

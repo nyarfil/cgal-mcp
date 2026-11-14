@@ -27,6 +27,10 @@
   fixture digests corrected to the LF repository content; five numeric expectations that differ
   between MSVC and gcc are now ranges (skeleton vertex counts, Poisson facet counts and radius band,
   one ARAP UV pin removed). Mandatory validators are unchanged.
+- `.gitattributes`: every text file is checked out with LF. Evidence binds file digests, so
+  CRLF checkouts made Windows-generated evidence fail on Linux and the reverse (the search and
+  workflow evidence tests on main failed on Linux for this reason). Existing Windows working
+  copies need `git add --renormalize .` after pulling.
 - Evidence under `docs/master/evidence/` regenerated on Linux (gcc 13.3, OpenGR and SCIP built in):
   80/80 requirements replayed. Earlier evidence was generated on Windows.
 - Opt-in AABB-tree and parsed-mesh reuse inside persistent workers
