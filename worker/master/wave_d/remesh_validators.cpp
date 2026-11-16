@@ -18,6 +18,8 @@
 #include <set>
 #include <string>
 #include <unordered_map>
+
+#include "../batch2/b2_broadphase.h"
 #include <vector>
 
 namespace cgal_master::wave_d {
@@ -38,6 +40,7 @@ constexpr double kIsotropicMeanLow = 0.8;        // mean edge / target lower bou
 constexpr double kIsotropicMeanHigh = 4.0 / 3.0; // mean edge / target upper bound
 constexpr double kIsotropicMaxRatio = 2.0;       // longest edge / target
 constexpr double kIsotropicMinRatio = 0.2;       // shortest edge / target
+constexpr double kFeatureToleranceRatio = 0.05;  // sharp-edge gap / target (feature protection)
 constexpr double kAdaptiveMaxRatio = 2.0;        // longest edge / max_edge_length
 constexpr double kAdaptiveMinRatio = 0.2;        // shortest edge / min_edge_length
 // Curvature-following band (adaptive remeshing). Each candidate edge is compared with the
@@ -155,6 +158,68 @@ double boundary_distance(const RawMesh& from, const RawMesh& to) {
                                                    to.vertices[edge[1]]));
     }
     result = std::max(result, best);
+  }
+  return result;
+}
+
+// Sharp edges of the source (angle between the normals of the two adjacent faces above the
+// bound plus one degree, so that an edge at the bound itself is not required) must still be
+// edges of the candidate: five points of each such edge are compared with the candidate edges.
+// Returns the largest distance found, capped at 2 * reach when no candidate edge is near.
+struct FeatureGap {
+  std::size_t sharp_edges = 0;
+  double gap = 0;
+};
+
+FeatureGap feature_gap(const RawMesh& source, const RawMesh& candidate, double angle_degrees, double reach) {
+  constexpr double kPi = 3.14159265358979323846;
+  std::map<std::pair<std::size_t, std::size_t>, std::vector<std::size_t>> adjacency;
+  for (std::size_t f = 0; f < source.faces.size(); ++f) {
+    const auto& face = source.faces[f];
+    for (std::size_t k = 0; k < face.size(); ++k) {
+      adjacency[std::minmax(face[k], face[(k + 1) % face.size()])].push_back(f);
+    }
+  }
+  std::set<std::pair<std::size_t, std::size_t>> edge_set;
+  for (const auto& face : candidate.faces) {
+    for (std::size_t k = 0; k < face.size(); ++k) edge_set.insert(std::minmax(face[k], face[(k + 1) % face.size()]));
+  }
+  const std::vector<std::pair<std::size_t, std::size_t>> edges(edge_set.begin(), edge_set.end());
+  std::vector<batch2::Box> boxes;
+  boxes.reserve(edges.size());
+  for (const auto& [a, b] : edges) {
+    batch2::Box box = batch2::empty_box();
+    for (const auto vertex : {a, b}) {
+      for (int axis = 0; axis < 3; ++axis) {
+        box.lo[axis] = std::min(box.lo[axis], candidate.vertices[vertex][axis]);
+        box.hi[axis] = std::max(box.hi[axis], candidate.vertices[vertex][axis]);
+      }
+    }
+    boxes.push_back(box);
+  }
+  const batch2::BoxTree tree(std::move(boxes));
+  const double pad = reach * (1 + 1e-6);
+  FeatureGap result;
+  for (const auto& [edge, faces] : adjacency) {
+    if (faces.size() != 2) continue;
+    const V3 n1 = face_normal(source, faces[0]), n2 = face_normal(source, faces[1]);
+    const double l1 = std::sqrt(n1[0] * n1[0] + n1[1] * n1[1] + n1[2] * n1[2]);
+    const double l2 = std::sqrt(n2[0] * n2[0] + n2[1] * n2[1] + n2[2] * n2[2]);
+    if (!(l1 > 0) || !(l2 > 0)) continue;
+    const double cosine = std::clamp((n1[0] * n2[0] + n1[1] * n2[1] + n1[2] * n2[2]) / (l1 * l2), -1.0, 1.0);
+    if (std::acos(cosine) * 180.0 / kPi <= angle_degrees + 1.0) continue;
+    ++result.sharp_edges;
+    const V3& a = source.vertices[edge.first];
+    const V3& b = source.vertices[edge.second];
+    for (const double t : {0.0, 0.25, 0.5, 0.75, 1.0}) {
+      const V3 p{a[0] + t * (b[0] - a[0]), a[1] + t * (b[1] - a[1]), a[2] + t * (b[2] - a[2])};
+      double best = 2 * reach;
+      tree.query({{p[0] - pad, p[1] - pad, p[2] - pad}, {p[0] + pad, p[1] + pad, p[2] + pad}}, [&](std::size_t index) {
+        best = std::min(best, point_segment_distance(p, candidate.vertices[edges[index].first],
+                                                     candidate.vertices[edges[index].second]));
+      });
+      result.gap = std::max(result.gap, best);
+    }
   }
   return result;
 }
@@ -312,7 +377,7 @@ Json run_refinement_validator(const Request& request) {
 
 Json run_isotropic_validator(const Request& request) {
   const std::string validator = "mesh.validate.isotropic_remesh";
-  require_parameters(request, {"target_edge_length", "max_deviation"});
+  require_parameters(request, {"target_edge_length", "max_deviation"}, {"protect_feature_angle_degrees"});
   const auto inputs = read_inputs(request, validator, {"TriangleSurfaceMesh"});
   const double target = positive_length(request, "target_edge_length", request.inputs[0].unit);
   const double max_deviation = positive_length(request, "max_deviation", request.inputs[0].unit);
@@ -345,6 +410,19 @@ Json run_isotropic_validator(const Request& request) {
                  {"min_ratio_observed", c.min_edge_length / target}}},
                {"boundary_gap", boundary_gap},
                {"deviation", deviation.json(max_deviation)}};
+  if (request.parameters.contains("protect_feature_angle_degrees")) {
+    const double angle = number_parameter(request, "protect_feature_angle_degrees", 0.0, 180.0);
+    // Constrained edges are only split or collapsed along the feature line, so a straight feature is
+    // reproduced exactly; a curved one sags by about (edge length)^2 / (8 * radius). The surface bound
+    // alone would accept rounded corners, so the feature bound is tied to the target edge length.
+    const double feature_tolerance = std::min(max_deviation, kFeatureToleranceRatio * target);
+    const auto features = feature_gap(inputs.source, inputs.candidate, angle, feature_tolerance);
+    checks["source_sharp_edges_on_candidate_edges"] = features.gap <= feature_tolerance;
+    details["feature_protection"] = {{"angle_degrees", angle},
+                                     {"required_source_sharp_edges", features.sharp_edges},
+                                     {"feature_tolerance", feature_tolerance},
+                                     {"largest_gap_capped_at_twice_the_tolerance", features.gap}};
+  }
   return conclude(request, validator, "mesh.remesh.isotropic", std::move(checks), std::move(details));
 }
 

@@ -5,6 +5,7 @@
 #include "../wave_c/wave_c_common.h"
 
 #include <CGAL/Polygon_mesh_processing/Adaptive_sizing_field.h>
+#include <CGAL/Polygon_mesh_processing/detect_features.h>
 #include <CGAL/Polygon_mesh_processing/measure.h>
 #include <CGAL/Polygon_mesh_processing/refine.h>
 #include <CGAL/Polygon_mesh_processing/remesh.h>
@@ -157,9 +158,13 @@ Json run_isotropic(const Request& request) {
   require_kernel(request);
   require_input_count(request, 1, "mesh.remesh.isotropic");
   require_parameters(request, {"target_edge_length", "number_of_iterations",
-                               "number_of_relaxation_steps", "max_deviation"});
+                               "number_of_relaxation_steps", "max_deviation"},
+                     {"protect_feature_angle_degrees"});
   const auto& source = request.inputs[0];
   const double target = positive_length(request, "target_edge_length", source.unit);
+  const bool protect_features = request.parameters.contains("protect_feature_angle_degrees");
+  const double feature_angle =
+      protect_features ? number_parameter(request, "protect_feature_angle_degrees", 0.0, 180.0) : 0.0;
   const double max_deviation = positive_length(request, "max_deviation", source.unit);
   const auto iterations = integer_parameter(request, "number_of_iterations", 1, kMaximumIterations);
   const auto relaxation = integer_parameter(request, "number_of_relaxation_steps", 0, 10);
@@ -169,15 +174,28 @@ Json run_isotropic(const Request& request) {
   require_estimated_faces(2.0 * total_area(mesh) / (std::sqrt(3.0) / 4 * minimum_edge * minimum_edge),
                           "mesh.remesh.isotropic");
   const Json input = counts(mesh);
+  // Sharp edges (dihedral angle above the bound) are constrained: they are split or collapsed
+  // along the feature line but never flipped, and their vertices are not relaxed off the line.
+  auto constrained = mesh.add_property_map<Edge, bool>("e:master_feature", false).first;
+  std::size_t feature_edges = 0;
+  if (protect_features) {
+    PMP::detect_sharp_edges(mesh, feature_angle, constrained);
+    for (const auto edge : mesh.edges()) feature_edges += get(constrained, edge) ? 1 : 0;
+  }
   PMP::isotropic_remeshing(mesh.faces(), target, mesh,
                            CGAL::parameters::number_of_iterations(static_cast<unsigned int>(iterations))
-                               .number_of_relaxation_steps(static_cast<unsigned int>(relaxation)));
+                               .number_of_relaxation_steps(static_cast<unsigned int>(relaxation))
+                               .edge_is_constrained_map(constrained));
+  mesh.remove_property_map(constrained);
   if (mesh.has_garbage()) mesh.collect_garbage();
   require_output_budget(mesh, "mesh.remesh.isotropic");
   require_sampling_budget(original, mesh, max_deviation);
   return finish(request, mesh, source,
                 Json{{"algorithm", "CGAL::Polygon_mesh_processing::isotropic_remeshing"},
                      {"sizing", "uniform"},
+                     {"feature_protection", protect_features ? Json{{"angle_degrees", feature_angle},
+                                                                    {"constrained_input_edges", feature_edges}}
+                                                             : Json(nullptr)},
                      {"target_edge_length", target},
                      {"number_of_iterations", iterations},
                      {"number_of_relaxation_steps", relaxation},
@@ -341,14 +359,17 @@ std::vector<OperationDefinition> remesh_operations() {
       "mesh.remesh.isotropic", {"TriangleSurfaceMesh"}, "TriangleSurfaceMesh", "transform",
       run_isotropic, {"PMP_Remeshing"},
       {{"source_header", "CGAL/Polygon_mesh_processing/remesh.h"},
-       {"symbols", {"isotropic_remeshing"}},
+       {"symbols", {"isotropic_remeshing", "detect_sharp_edges"}},
        {"input_slots", {"source"}},
        {"required_parameters",
         {"target_edge_length", "number_of_iterations", "number_of_relaxation_steps", "max_deviation"}},
+       {"optional_parameters", {"protect_feature_angle_degrees"}},
        {"validators", {"mesh.validate.isotropic_remesh"}},
        {"validator_parameter_bindings",
         {{"mesh.validate.isotropic_remesh",
-          {{"target_edge_length", "target_edge_length"}, {"max_deviation", "max_deviation"}}}}},
+          {{"target_edge_length", "target_edge_length"},
+           {"max_deviation", "max_deviation"},
+           {"protect_feature_angle_degrees", "protect_feature_angle_degrees"}}}}},
        {"maximum_input_faces", kMaximumInputFaces},
        {"maximum_output_faces", kMaximumOutputFaces}}));
   result.push_back(make_definition(

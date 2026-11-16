@@ -25,8 +25,8 @@ using V3 = std::array<double, 3>;
 
 inline constexpr std::size_t kMaximumQueryFaces = 20000;
 inline constexpr std::size_t kMaximumQueries = 2000;
-inline constexpr std::size_t kMaximumSubdivisionInputFaces = 2000;
-inline constexpr std::size_t kMaximumSubdivisionOutputFaces = 60000;
+inline constexpr std::size_t kMaximumSubdivisionInputFaces = 250000;
+inline constexpr std::size_t kMaximumSubdivisionOutputFaces = 1000000;
 inline constexpr std::size_t kMaximumSubdivisionSteps = 3;
 inline constexpr std::size_t kMaximumPolygonVertices = 200;
 

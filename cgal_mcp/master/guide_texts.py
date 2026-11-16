@@ -147,7 +147,7 @@ RECIPE_JA: dict[str, str] = {
     "neg08-empty-reconstruction-fails-closed": "空の再構成結果は失敗として閉じる",
     "neg09-face-limit-refused-at-plan": "面数上限超過は計画段階で拒否される",
     "neg10-face-limit-refused-at-runtime": "面数上限超過は実行時にも拒否される",
-    "neg10b-torus-simplify-limit": "トーラスの軽量化も面数上限で拒否される",
+    "neg10b-torus-subdivide-limit": "細分で面数が増えたメッシュは下流操作の面数上限で拒否される",
     "neg11-wall-time-limit-out-of-range": "範囲外の壁時間指定は拒否される",
     "neg12-memory-limit-out-of-range": "範囲外のメモリ指定は拒否される",
     "neg13-missing-required-parameter": "必須パラメータの欠落は計画段階で拒否される",

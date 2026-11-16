@@ -18,8 +18,8 @@ using query_ops::RawMesh;
 using query_ops::V3;
 
 inline constexpr std::size_t kMaximumDecompositionFaces = 2000;
-inline constexpr std::size_t kMaximumSkeletonFaces = 3000;
-inline constexpr std::size_t kMaximumParameterizationFaces = 2000;
+inline constexpr std::size_t kMaximumSkeletonFaces = 10000;
+inline constexpr std::size_t kMaximumParameterizationFaces = 20000;
 
 std::vector<OperationDefinition> producer_operations();
 std::vector<OperationDefinition> validator_operations();

@@ -4,10 +4,10 @@
   "protocol": "Each of the 300 corpus intents is submitted to the production capabilities_search (limit 3, no artifact filter). A hit requires an Operation ID bound to the intent's major requirement in catalog/major_requirements.json to be returned (top-1: first).",
   "bindings": {
     "corpus_sha256": "96ade8b7c6170b09214bf10ca9797ddf11fa92f6df5fbc2d73e5baf64cac4c4c",
-    "major_requirements_sha256": "24ef938254d35428c44bbd42ecf859e3d7883f37427d475d0f1a95e0fa1efe1a",
-    "operations_sha256": "e8894651732934f2b97bc16e58fc46906ccea8d94bceec43e694ff7ed6bfc6eb",
+    "major_requirements_sha256": "6238a024bc637f4f676ce549a13de0dfab3d12b79962b702557044e967b335e5",
+    "operations_sha256": "6df8cc809f14a7651fde0a8252913ae8e11f7c382bbead7eb75b576fbaa416dc",
     "search_vocabulary_sha256": "f9751f928b879b0dde168de4665ea4eaf66d16b39a22ae836b17a9768f11ee94",
-    "search_data_sha256": "8d86b8b750feb76be68c738ae47c560d2431f2b1af3815b0fa0fb4477988d822",
+    "search_data_sha256": "78ec522ad0a16fe221d18396942b8f42d10b53a14a8e68b7a88455cb82879ab0",
     "registry_ranker_sha256": "eb2db24a5a4c7180aaba984856e838fabe331520b8c20a1eff9ea97b862fbe88",
     "generator_sha256": "79e724fee6b7c044bf1d66fcfb8d6bab745f334b662844146a29b1a1334ce7e8"
   },
@@ -59,16 +59,16 @@
   "summary": {
     "overall": {
       "denominator": 300,
-      "top1_hits": 275,
+      "top1_hits": 273,
       "top3_hits": 294,
-      "top1_percent": 91.67,
+      "top1_percent": 91.0,
       "top3_percent": 98.0
     },
     "development": {
       "denominator": 175,
-      "top1_hits": 164,
+      "top1_hits": 162,
       "top3_hits": 171,
-      "top1_percent": 93.71,
+      "top1_percent": 92.57,
       "top3_percent": 97.71
     },
     "held_out": {
@@ -113,11 +113,11 @@
     "goal_routing": {
       "eligible": {
         "denominator": 300,
-        "expected_top1": 240,
+        "expected_top1": 239,
         "ambiguous_explicit": 51,
         "fail_closed_with_suggestions": 6,
-        "asked_or_refused_without_expected_option": 1,
-        "automatic_top1_percent": 80.0,
+        "asked_or_refused_without_expected_option": 2,
+        "automatic_top1_percent": 79.67,
         "no_wrong_route": true,
         "clarification_required": 0,
         "wrong_executable_route": 0,
@@ -212,12 +212,13 @@
       }
     },
     "execute_after_search_sample": {
-      "sample_size": 240,
-      "succeeded": 240,
+      "sample_size": 239,
+      "succeeded": 239,
       "intent_denominator": 300,
       "selection_rule": "every intent whose goal routes to its expected operation at top-1",
       "not_executed": {
         "ambiguous_explicit": 51,
+        "ambiguous_without_expected_option": 1,
         "fail_closed_with_suggestions": 6,
         "fail_closed_without_expected_option": 1,
         "indeterminate_error": 2
@@ -310,11 +311,6 @@
         {
           "id": "intent-en-018",
           "selected_operation": "spatial.aabb.intersections",
-          "ok": true
-        },
-        {
-          "id": "intent-ja-019",
-          "selected_operation": "spatial.bbox_3",
           "ok": true
         },
         {
@@ -1567,7 +1563,7 @@
       "returned": [
         "kernel.predicates.evaluate",
         "pointset.normals.orient_mst",
-        "triangulation.validate.delaunay_3"
+        "shape.bounding.oriented_box"
       ],
       "top1": true,
       "top3": true
@@ -1825,11 +1821,11 @@
         "spatial.bbox_3"
       ],
       "returned": [
+        "shape.bounding.oriented_box",
         "spatial.bbox_3",
-        "reconstruction.poisson",
-        "spatial.bbox_2"
+        "reconstruction.poisson"
       ],
-      "top1": true,
+      "top1": false,
       "top3": true
     },
     {
@@ -1841,11 +1837,11 @@
         "spatial.bbox_3"
       ],
       "returned": [
+        "shape.bounding.oriented_box",
         "spatial.bbox_3",
-        "spatial.bbox_2",
-        "polygon.straight_skeleton.exterior"
+        "spatial.bbox_2"
       ],
-      "top1": true,
+      "top1": false,
       "top3": true
     },
     {
@@ -3426,7 +3422,7 @@
       ],
       "returned": [
         "kernel.predicates.evaluate",
-        "triangulation.validate.delaunay_3",
+        "shape.bounding.oriented_box",
         "kernel.intersections.compute"
       ],
       "top1": true,
@@ -4185,7 +4181,7 @@
       "returned": [
         "pointset.remove_outliers",
         "mesh.repair.polygon_soup",
-        "reconstruction.poisson"
+        "mesh.smooth.shape"
       ],
       "top1": true,
       "top3": true
@@ -5640,7 +5636,7 @@
       "returned": [
         "shape.bounding.sphere",
         "shape.alpha_shape_3",
-        "spatial.bbox_3"
+        "shape.bounding.oriented_box"
       ],
       "top1": true,
       "top3": true
@@ -5656,7 +5652,7 @@
       "returned": [
         "shape.bounding.sphere",
         "shape.alpha_shape_3",
-        "spatial.bbox_3"
+        "shape.bounding.oriented_box"
       ],
       "top1": true,
       "top3": true
@@ -5671,8 +5667,8 @@
       ],
       "returned": [
         "shape.bounding.sphere",
-        "spatial.bbox_3",
-        "mesh.surface.generate"
+        "shape.bounding.oriented_box",
+        "spatial.bbox_3"
       ],
       "top1": true,
       "top3": true
@@ -5687,8 +5683,8 @@
       ],
       "returned": [
         "shape.bounding.sphere",
-        "spatial.bbox_3",
-        "mesh.volume.generate"
+        "shape.bounding.oriented_box",
+        "spatial.bbox_3"
       ],
       "top1": true,
       "top3": true
@@ -6003,7 +5999,7 @@
       "returned": [
         "optimization.quadratic_program",
         "optimization.matrix_search",
-        "optimization.interpolate"
+        "shape.bounding.oriented_box"
       ],
       "top1": true,
       "top3": true
@@ -6018,7 +6014,7 @@
       "returned": [
         "optimization.quadratic_program",
         "optimization.matrix_search",
-        "optimization.interpolate"
+        "shape.bounding.oriented_box"
       ],
       "top1": true,
       "top3": true
@@ -6183,7 +6179,7 @@
       "returned": [
         "optimization.matrix_search",
         "mesh.volume.generate",
-        "spatial.validate.bbox_report"
+        "mesh.skeletonize.mean_curvature_flow"
       ],
       "top1": true,
       "top3": true
@@ -6197,8 +6193,8 @@
       ],
       "returned": [
         "optimization.matrix_search",
-        "spatial.validate.bbox_report",
-        "mesh.skeletonize.mean_curvature_flow"
+        "mesh.skeletonize.mean_curvature_flow",
+        "spatial.validate.bbox_report"
       ],
       "top1": true,
       "top3": true

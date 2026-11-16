@@ -155,7 +155,7 @@ Polygon properties and booleans, straight skeletons, offset polygons, Minkowski 
 - polygon.straight_skeleton.interior [analysis] PolygonWithHoles2 -> GeometryQueryReport: Interior straight skeleton of a polygon with holes (create_interior_straight_skeleton_2): skeleton nodes with their event times, one face per contour edge and the bisectors.
 Validators (automatic): arrangement.validate.build, arrangement.validate.overlay, arrangement.validate.zone, polygon.validate.boolean, polygon.validate.containment_report, polygon.validate.minkowski_sum, polygon.validate.offset, polygon.validate.properties_report, polygon.validate.straight_skeleton
 
-## 7.13 Convex hulls and shapes (8 operations + 7 validators)
+## 7.13 Convex hulls and shapes (9 operations + 8 validators)
 2D/3D convex hulls, alpha shapes, bounding and extreme-point computations.
 - hull.convex_2 [transform] PointSet2 -> Polygon2: Construct the exact two-dimensional convex hull of a finite planar point set as a strictly convex counterclockwise polygon.
 - hull.convex_3 [transform] PointSet3 -> TriangleSurfaceMesh: Construct the three-dimensional convex hull of a finite point set.
@@ -163,9 +163,10 @@ Validators (automatic): arrangement.validate.build, arrangement.validate.overlay
 - shape.alpha_shape_3 [analysis] PointSet3 -> GeometryQueryReport: Alpha shape of a 3D point set (Alpha_shape_3, regularized): interior Delaunay cells with squared circumradius at most alpha and the regular boundary facets.
 - shape.barycentric [analysis] Polygon2+PointSet2 -> GeometryQueryReport: Compute Wachspress, mean value or discrete harmonic generalized barycentric coordinates of strictly interior query points with respect to a simple counterclockwise polygon (CGAL Barycentric_coordinates_2).
 - shape.bounding.circle [analysis] PointSet2 -> GeometryQueryReport: Smallest enclosing circle of a planar point set (CGAL::Min_circle_2).
+- shape.bounding.oriented_box [analysis] PointSet3 -> GeometryQueryReport: Oriented bounding box of a 3D point set (CGAL::oriented_bounding_box, Optimal_bounding_box): eight corners, three extents and the volume. The orientation comes from a randomized optimization, so the box is tight for the orientation found but is not a certified minimum-volume box.
 - shape.bounding.sphere [analysis] PointSet3 -> GeometryQueryReport: Smallest enclosing sphere of equal-radius balls in 3D (CGAL::Min_sphere_of_spheres_d with Min_sphere_of_spheres_d_traits_3).
 - shape.fixed_alpha_shape_3 [analysis] PointSet3 -> GeometryQueryReport: Fixed-alpha alpha shape of a 3D point set (Fixed_alpha_shape_3, regularized): interior Delaunay cells within the fixed alpha and the regular boundary facets.
-Validators (automatic): hull.validate.convex_enclosure, hull.validate.convex_enclosure_2, shape.validate.alpha_shape_2, shape.validate.alpha_shape_3, shape.validate.barycentric, shape.validate.min_circle, shape.validate.min_sphere
+Validators (automatic): hull.validate.convex_enclosure, hull.validate.convex_enclosure_2, shape.validate.alpha_shape_2, shape.validate.alpha_shape_3, shape.validate.barycentric, shape.validate.min_circle, shape.validate.min_sphere, shape.validate.oriented_box
 
 ## 7.14 Mesh generation (3 operations + 3 validators)
 2D constrained mesh refinement, 3D tetrahedral and surface meshes from implicit or polyhedral domains.

@@ -2812,27 +2812,28 @@
     "mesh",
     "resource_limit"
    ],
-   "description": "a mesh over the Hausdorff face limit is refused when planning",
+   "description": "a mesh over the shortest-path face limit is refused when planning",
    "fixtures": [
     "torus_mesh"
    ],
    "steps": [
     {
-     "id": "compare",
-     "operation": "mesh.distance.hausdorff_approximate",
+     "id": "path",
+     "operation": "mesh.path.shortest",
      "inputs": {
-      "first": "fixture:torus_mesh",
-      "second": "fixture:torus_mesh"
+      "mesh": "fixture:torus_mesh"
      },
      "parameters": {
-      "sampling": {
-       "method": "grid",
-       "grid_spacing": {
-        "value": 0.5,
-        "unit": "mm"
-       },
-       "include_vertices": true
-      }
+      "sources": [
+       {
+        "vertex": 6
+       }
+      ],
+      "targets": [
+       {
+        "vertex": 3
+       }
+      ]
      }
     }
    ],
@@ -2874,24 +2875,25 @@
      }
     },
     {
-     "id": "compare",
-     "operation": "mesh.distance.hausdorff_approximate",
+     "id": "path",
+     "operation": "mesh.path.shortest",
      "inputs": {
-      "first": {
+      "mesh": {
        "step": "remesh",
        "slot": "geometry"
-      },
-      "second": "fixture:icosphere"
+      }
      },
      "parameters": {
-      "sampling": {
-       "method": "grid",
-       "grid_spacing": {
-        "value": 0.5,
-        "unit": "mm"
-       },
-       "include_vertices": true
-      }
+      "sources": [
+       {
+        "vertex": 6
+       }
+      ],
+      "targets": [
+       {
+        "vertex": 3
+       }
+      ]
      }
     }
    ],
@@ -2902,37 +2904,40 @@
    }
   },
   {
-   "id": "neg10b-torus-simplify-limit",
+   "id": "neg10b-torus-subdivide-limit",
    "category": "negative",
    "families": [
     "mesh",
     "resource_limit"
    ],
-   "description": "a large mesh is simplified but its Hausdorff validator is refused over the face limit",
+   "description": "a mesh is subdivided past the face limit of the SDF operation, which is refused before dispatch",
    "fixtures": [
     "torus_mesh"
    ],
    "steps": [
     {
-     "id": "simplify",
-     "operation": "mesh.simplify.edge_collapse",
+     "id": "loop",
+     "operation": "mesh.subdivide.loop",
      "inputs": {
-      "geometry": "fixture:torus_mesh"
+      "source": "fixture:torus_mesh"
      },
      "parameters": {
-      "stop": {
-       "kind": "face_ratio",
-       "value": 0.5
-      },
-      "policy": "lindstrom_turk",
-      "max_symmetric_deviation": {
-       "value": 1.0,
-       "unit": "mm"
-      },
-      "hausdorff_error_bound": {
-       "value": 0.05,
-       "unit": "mm"
+      "steps": 2
+     }
+    },
+    {
+     "id": "sdf",
+     "operation": "mesh.segment.sdf_values",
+     "inputs": {
+      "mesh": {
+       "step": "loop",
+       "slot": "geometry"
       }
+     },
+     "parameters": {
+      "cone_angle": 2.0943951023931953,
+      "number_of_rays": 25,
+      "thickness_tolerance": 0.05
      }
     }
    ],
@@ -3661,21 +3666,22 @@
    ],
    "steps": [
     {
-     "id": "compare",
-     "operation": "mesh.distance.hausdorff_approximate",
+     "id": "path",
+     "operation": "mesh.path.shortest",
      "inputs": {
-      "first": "fixture:torus_mesh",
-      "second": "fixture:torus_mesh"
+      "mesh": "fixture:torus_mesh"
      },
      "parameters": {
-      "sampling": {
-       "method": "grid",
-       "grid_spacing": {
-        "value": 0.5,
-        "unit": "mm"
-       },
-       "include_vertices": true
-      }
+      "sources": [
+       {
+        "vertex": 6
+       }
+      ],
+      "targets": [
+       {
+        "vertex": 3
+       }
+      ]
      }
     }
    ],
@@ -3688,21 +3694,22 @@
     {
      "steps": [
       {
-       "id": "compare",
-       "operation": "mesh.distance.hausdorff_approximate",
+       "id": "path",
+       "operation": "mesh.path.shortest",
        "inputs": {
-        "first": "fixture:torus_mesh",
-        "second": "fixture:torus_mesh"
+        "mesh": "fixture:torus_mesh"
        },
        "parameters": {
-        "sampling": {
-         "method": "grid",
-         "grid_spacing": {
-          "value": 0.5,
-          "unit": "mm"
-         },
-         "include_vertices": true
-        }
+        "sources": [
+         {
+          "vertex": 6
+         }
+        ],
+        "targets": [
+         {
+          "vertex": 3
+         }
+        ]
        }
       }
      ]

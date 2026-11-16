@@ -39,7 +39,9 @@ and [docs/master/CAPABILITY_ACCEPTANCE_JA.md](docs/master/CAPABILITY_ACCEPTANCE_
 
 Limits worth knowing: every operation card lists its face bound, from 64 faces up to
 2,000,000 (larger inputs are refused before computing with `PRECONDITION_FAILED`); the distance
-operations accept 400 faces unless `validation_mode=certified_bvh` is used. The exact Booleans
+operations accept 200,000 faces (2,000,000 with `validation_mode=certified_bvh`), remeshing and
+smoothing 200,000, subdivision 250,000; a few stay small because their validators are not
+near-linear (shortest paths 64 faces, convex decomposition 2,000, SDF segmentation 3,000). The exact Booleans
 (`mesh.boolean.union/intersection/difference`) and `mesh.clip.plane`, `mesh.split.plane`,
 `mesh.corefine`, `mesh.autorefine` publish only results whose coordinates are exact binary64
 values, so meshes in general position are refused; use the rounded variants

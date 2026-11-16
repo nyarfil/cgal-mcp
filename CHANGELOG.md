@@ -2,6 +2,28 @@
 
 ## Unreleased
 
+- Validator bounds raised. The independent validators still take the minimum over every triangle or
+  point; a conservative bounding-box hierarchy now selects the candidates (reports are identical to
+  the former all-pairs loops on inputs both accept). New bounds: distance family
+  (`mesh.distance.*`, default mode of `mesh.distance.symmetric_hausdorff`) 200,000 faces (was 400),
+  50,000 points (was 2,000), 200,000 samples (was 20,000); `shape.bounding.circle` / `.sphere`
+  200,000 points (was 64 / 32; exact Welzl construction instead of support-set enumeration,
+  cross-checked by enumeration up to 24 points); `pointset.spacing.average` and the outlier validator
+  200,000 points (was 400); `mesh.subdivide.*` 250,000 input / 1,000,000 output faces (was 2,000 /
+  60,000); remeshing and smoothing (`mesh.remesh.*`, `mesh.smooth.*`, `mesh.refine.local`,
+  `mesh.triangulate.faces`) 200,000 input / 1,000,000 output faces (was 20,000 / 60,000);
+  `mesh.parameterize*` 20,000 faces (was 2,000); `mesh.skeletonize.*` 10,000 (was 3,000);
+  `mesh.segment.sdf*` 3,000 (was 1,500); periodic Delaunay 5,000 points (was 400).
+  Unchanged: `mesh.decompose.approx_convex` (2,000), `mesh.path.shortest` (64), regular
+  triangulations / Minkowski sums / arrangements, straight skeletons, registration.
+- `mesh.remesh.isotropic`: optional `protect_feature_angle_degrees` (CGAL `detect_sharp_edges` +
+  `edge_is_constrained_map`). The validator then also requires the source sharp edges to lie on
+  candidate edges within min(max_deviation, 0.05 x target edge length).
+- New operation `shape.bounding.oriented_box` (CGAL Optimal_bounding_box, status IMPLEMENTED) with the
+  mandatory validator `shape.validate.oriented_box` (rectangular, contains every point, touches the
+  point set on all six faces; minimality is not decided). The package catalog gains the status
+  IMPLEMENTED (reason code `has_implemented_unvalidated_operations`) for that package.
+- Registry: 240 operations (228 VALIDATED, 12 IMPLEMENTED), `catalog_revision` `-11`.
 - Rounded variants for meshes in general position (status IMPLEMENTED, not independently reviewed):
   `mesh.clip.plane_rounded`, `mesh.split.plane_rounded`, `mesh.corefine_rounded`,
   `mesh.autorefine_rounded`, each with a mandatory validator `mesh.validate.*_rounded` using the same

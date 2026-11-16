@@ -771,18 +771,14 @@ class MasterCoreTest(unittest.TestCase):
         self.assertTrue(any("bounds" in item for item in
                             orient_step["deferred_preconditions"]["artifact_properties"]))
 
-    def test_symmetric_hausdorff_refuses_over_face_limit_up_front(self):
+    def test_face_limit_is_refused_up_front(self):
         runtime = self.runtime()
-        small = runtime.artifact_import("tests/fixtures/master/wave_a_boolean/cube_a.off", "mm",
-                                        artifact_type="TriangleSurfaceMesh")
         big = runtime.artifact_import("tests/fixtures/master/batch8/torus.off", "mm",
                                       artifact_type="TriangleSurfaceMesh")
-        self.assertGreater(big["metadata"]["faces"], 400)
-        with self.assertRaisesRegex(PreconditionFailure, "requires faces<=400"):
-            runtime.plan({"operation_id": "mesh.distance.symmetric_hausdorff",
-                "inputs": [small["artifact_id"], big["artifact_id"]],
-                "parameters": {"tolerance": {"value": 1, "unit": "mm"},
-                               "error_bound": {"value": 0.01, "unit": "mm"}}})
+        self.assertGreater(big["metadata"]["faces"], 64)
+        with self.assertRaisesRegex(PreconditionFailure, "requires faces<=64"):
+            runtime.plan({"operation_id": "mesh.path.shortest", "inputs": {"mesh": big["artifact_id"]},
+                          "parameters": {"sources": [{"vertex": 6}], "targets": [{"vertex": 3}]}})
 
     def test_wave_b_zero_normals_and_manifest_union_fail_closed(self):
         source = Path("tests/fixtures/master/wave_b/plane_normals_alternating.ply").read_text(encoding="ascii")
@@ -1358,10 +1354,8 @@ class PlannerFeatureTests(unittest.TestCase):
         self.assertEqual(first["total_cost_units"], sum(e["cost_units"] for e in first["steps"]))
 
     def test_fallback_chain_skips_blocked_candidate_and_records_the_reason(self):
-        blocked = {"id": "cmp", "operation": "mesh.distance.hausdorff_approximate",
-                   "inputs": {"first": self.torus, "second": self.torus},
-                   "parameters": {"sampling": {"method": "grid", "grid_spacing": {"value": 0.5, "unit": "mm"},
-                                               "include_vertices": True}}}
+        blocked = {"id": "cmp", "operation": "mesh.path.shortest", "inputs": {"mesh": self.torus},
+                   "parameters": {"sources": [{"vertex": 6}], "targets": [{"vertex": 3}]}}
         plan = self.runtime.plan({"steps": [blocked], "alternatives": [{"steps": [
             {"id": "m", "operation": "mesh.analysis.measures", "inputs": {"mesh": self.torus},
              "parameters": {}}]}]})

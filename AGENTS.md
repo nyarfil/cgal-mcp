@@ -36,8 +36,10 @@ technical reconciliation separately.
   their mandatory validators stay as they are, and an unverified artifact never counts as validated.
 - Order agreed with the user on 2026-11-13 for "professional use": (1) remove practical input
   limits (face bounds, exact-representability refusals), (2) expose expert parameters,
-  (3) add adapters for cataloged packages. See the dated section in
-  `docs/master/CAPABILITY_ACCEPTANCE_JA.md` for what is done.
+  (3) add adapters for cataloged packages. See the dated sections in
+  `docs/master/CAPABILITY_ACCEPTANCE_JA.md` for what is done and what is not (as of 2026-11-16:
+  most validator bounds raised, one expert parameter, one new package adapter; 68 packages remain
+  cataloged only).
 - Evaluate mesh, point set, spatial, 2D, triangulation, meshing and advanced families.
   Simplification-only fixtures cannot establish Master acceptance.
 - Master (`cgal_mcp.master`, console script `cgal-mcp`, version 1.0.0) is the primary and

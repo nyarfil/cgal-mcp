@@ -518,3 +518,77 @@ Master受入（`standalone_accepted`）は**falseのまま**です。追加し�
 - 距離系・細分・骨格・パラメータ化・SDF・凸分解・最短経路・点群間隔・最小円/球の面数・点数上限。
 - 専門家向けparameterの公開、台帳のみのpackageへのadapter追加。
 
+## プロ用途の制約 第3区切り: 残りの上限・専門家向けparameter・adapter追加（2026-11-16）
+
+Master受入（`standalone_accepted`）は**falseのまま**です。registryは240 Operation
+（VALIDATED 228、IMPLEMENTED 12）、`catalog_revision`は`-11`です。
+
+### 対応1: validatorの上限（順序①の残り）
+
+validatorは今も「全ての三角形・点についての最小値」を求めます。総当たりのloopを、最小値になり得ない要素だけを
+飛ばす保守的なbox階層に置き換えました（飛ばす条件には丸め誤差より十分大きい余裕を持たせています）。
+旧validatorが受け付ける大きさの入力では、新旧のvalidation reportが一致することを確認しました
+（距離系7通り、点群間隔・外れ値・最小球を3種類の乱数seedで。自動試験には含めていません）。
+
+| 対象 | 旧上限 | 新上限 | 実測（このLinux環境、validator） |
+|---|---|---|---|
+| 距離系（`mesh.distance.*`、対称Hausdorffの既定mode） | 400面 | 200,000面 | 20万面どうしで19〜37秒（旧: 3,480面で115秒） |
+| 点→mesh・mesh→点群の点数 | 2,000点 | 50,000点 | 20万面×20万点で283秒のため5万点に設定 |
+| 表面sample数 | 20,000 | 200,000 | 1.4万sampleで0.1秒（旧8.6秒） |
+| 最小包含円・球 | 64点・32点 | 200,000点 | 10万点で14秒（厳密なWelzl法。24点以下は全列挙とも照合） |
+| 点群間隔・外れ値除去のvalidator | 400点 | 200,000点 | 10万点で7秒・19秒 |
+| 細分（Loop・Catmull-Clark） | 入力2,000面・出力60,000面 | 入力250,000面・出力1,000,000面 | 20万面→80万面で4.4秒 |
+| 再mesh・平滑化・局所細分・面の三角形化 | 入力20,000面・出力60,000面 | 入力200,000面・出力1,000,000面 | 9万面で5〜17秒 |
+| パラメータ化 | 2,000面 | 20,000面 | 9,800面で0.2秒 |
+| 骨格 | 3,000面 | 10,000面 | 8,800面で3.4秒 |
+| SDF区分 | 1,500面 | 3,000面 | 2,880面で19秒（面数の2乗で増えるため控えめ） |
+| 周期Delaunay（2D・3D） | 400点 | 5,000点 | 5,000点で1.3秒・8.8秒 |
+
+変えていないもの（validatorの計算量が本質的に大きい、または未計測）:
+
+| 対象 | 上限 | 理由 |
+|---|---|---|
+| 最短経路 `mesh.path.shortest` | 64面 | validatorが面列の全探索（指数的）。別のalgorithmが必要 |
+| 凸分解 `mesh.decompose.approx_convex` | 2,000面 | 9,310面でvalidatorが335秒 |
+| 重み付き・Voronoi三角形分割 | 400点 | validatorがO(n²)〜O(n³)の厳密計算 |
+| Minkowski和・arrangement | 16頂点・60線分 | validatorがO((mn)⁴)まで増える |
+| 直線骨格・offset | 64頂点 | validatorがO(n⁴) |
+| 点群位置合わせ | 400点 | 全対の剛体性検査が判定の定義そのもの |
+| 重心座標の多角形 | 200頂点 | 2,000頂点で生成側が非有限値を返した（原因未調査） |
+| 球面Delaunay | 2,000点 | 2,000点で10.6秒（O(n²)） |
+
+- 受入基準に関わる変更: 対称Hausdorffの既定validatorが1,152面のmeshを受け付けるようになったため、
+  replayのnegative control `distance-bruteforce-validator-large-mesh-refused`（「400面超を拒否」）を
+  `distance-certified-report-rejected-in-default-mode`（certified modeのreportは既定modeでは
+  `PARAMETER_MISMATCH`で拒否）へ置き換えました。71k面の簡略化は既定modeでも検証に合格します。
+- 同じ理由で、「上限超過は拒否される」ことを示す証拠のケースを、上限が小さいままのOperationへ差し替えました
+  （拒否の仕組み自体は変えていません）。workflow: `neg09`・`neg21`（計画時の拒否）は`mesh.path.shortest`（64面）、
+  `neg10`（実行時の拒否）は再mesh後の`mesh.path.shortest`、`neg10b`は「簡略化のvalidatorが面数で拒否」から
+  「細分後のmeshがSDF（3,000面）で拒否」（id `neg10b-torus-subdivide-limit`）へ。簡略化の例は今は成功します。
+  堅牢性計測: `faces-over-limit`は`mesh.path.shortest`、`vertices-over-limit`は200,001点の`shape.bounding.sphere`。
+- 確認: `tests/test_master_raised_limits.py`（旧上限を超える入力での合格と、改ざんreportの拒否）。
+
+### 対応2: 専門家向けparameter（順序②）
+
+| Operation | 追加 | 効果と検証 |
+|---|---|---|
+| `mesh.remesh.isotropic` | `protect_feature_angle_degrees`（任意） | 指定角より鋭い稜線を拘束して再meshします。一辺10mmの立方体を目標辺長1mmで再meshすると、指定なしでは角が約0.3mm丸まり（`max_deviation` 0.05mmのvalidatorで不合格）、指定ありでは稜線のずれ0で合格。validatorは元の鋭い稜線が候補のedge上にあること（許容 = min(max_deviation, 0.05×目標辺長)）も確認します |
+
+- 目標辺長の約5倍より小さい曲率半径で曲がる鋭い稜線は、この追加検査で不合格になることがあります（安全側）。
+- 体積mesh生成の最適化（Lloyd・ODT・perturb・exude）、簡略化・平滑化の追加parameterは未対応です。
+
+### 対応3: 台帳のみだったpackageへのadapter（順序③）
+
+| Package | 追加Operation | 状態 | validatorが判定すること／しないこと |
+|---|---|---|---|
+| Optimal_bounding_box | `shape.bounding.oriented_box`（3D点群の有向境界box） | `IMPLEMENTED` | 判定: 直方体であること、全点を含むこと、6面すべてが点に接すること、寸法・体積の整合。判定しない: 他の向きでより小さいboxがあるか（CGALの最適化は発見的手法） |
+
+- package台帳に状態`IMPLEMENTED`（理由code `has_implemented_unvalidated_operations`）を使い始めました。
+  `VALIDATED`のpackage数（45）は変わりません。`CATALOGED`は69→68です。
+- 残り68 packageにはadapterがありません。これらは`cgal_experimental_run`（未検証の結果）でのみ試せます。
+
+### 未確認
+
+- Windows worker（CI待ち）。上の実測はすべてこのLinux環境の値です。
+- 独立review。新旧validatorの一致確認は手動で、常設の自動試験ではありません。
+

@@ -18,8 +18,8 @@ using query_ops::RawMesh;
 using query_ops::V2;
 using query_ops::V3;
 
-inline constexpr std::size_t kMaximumSegmentationFaces = 1500;
-inline constexpr std::size_t kMaximumPeriodicPoints = 400;
+inline constexpr std::size_t kMaximumSegmentationFaces = 3000;
+inline constexpr std::size_t kMaximumPeriodicPoints = 5000;
 inline constexpr std::size_t kMaximumSpherePoints = 2000;
 inline constexpr long long kMaximumReportedOffset = 3;
 

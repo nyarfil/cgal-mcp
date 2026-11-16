@@ -518,11 +518,13 @@ async def _limit_cases(worker: Path) -> tuple[list[dict], dict]:
             with SpawnRecorder() as recorder:
                 # bounded_input refusals: faces, vertices, bytes
                 for case_id, operation, inputs, params in (
-                    # 2,048 faces against the 2,000-face bound of the subdivision operations
-                    # (mesh.clip.plane was used here while its bound was 600 faces).
-                    ("faces-over-limit", "mesh.subdivide.loop", _mesh_input(33, 33), {"steps": 1}),
+                    # 2,048 faces against the 64-face bound of the shortest-path operation (its validator
+                    # enumerates face sequences); 200,001 points against the 200,000-point bound of the
+                    # minimum sphere. Earlier revisions used operations whose bounds have since been raised.
+                    ("faces-over-limit", "mesh.path.shortest", _mesh_input(33, 33),
+                     {"sources": [{"vertex": 6}], "targets": [{"vertex": 3}]}),
                     ("vertices-over-limit", "shape.bounding.sphere",
-                     [(_random_xyz(33, 5), "xyz", "PointSet3", "mm")], {}),
+                     [(_random_xyz(200001, 5), "xyz", "PointSet3", "mm")], {}),
                     ("bytes-over-limit", "reconstruction.advancing_front",
                      [(_sphere_xyz(480000), "xyz", "PointSet3", "mm")],
                      {"radius_ratio_bound": 5, "beta": 0.52, "max_deviation": _mm(2.0)}),
@@ -1219,7 +1221,7 @@ async def _persistent_isolation(worker: Path) -> tuple[dict, dict]:
 # ---------------------------------------------------------------- geometry cache (AABB / parsed mesh reuse)
 
 GEOMETRY_CACHE_SCALES = {"small": 10, "medium": 40, "large": 100}   # grid side; faces = 2 * n * n
-HAUSDORFF_CACHE_SCALES = {"small": 6, "medium": 9, "large": 14}      # registry bound: 400 faces
+HAUSDORFF_CACHE_SCALES = {"small": 6, "medium": 9, "large": 14}      # small pairs keep the measurement short
 GEOMETRY_CACHE_OPS = {
     "spatial.aabb.closest_points": {"queries": "points", "count": 40, "parameters": {}},
     "spatial.aabb.ray_first_hits": {"queries": "rays", "count": 40, "parameters": {}},

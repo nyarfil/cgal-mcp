@@ -114,14 +114,14 @@
   "unbound_requirements": {},
   "family_contract_sha256": "b0ed0effc3e9b7850d179098ee0e1c549f99b11be20bce9d671e563eaf788911",
   "family_contract_source_path": "scripts/master_replay_families.py",
-  "family_contract_source_sha256": "2f58502980ed6b3cdb283a92873888e4be900449e7252fc2f15cf4627964129d",
+  "family_contract_source_sha256": "c370958bf42af9ebd8019ae82bcba3ddaab98ca67bc03f7b5360d25af8efbcc4",
   "family_contract_source_hash_encoding": "utf8-lf",
   "catalog_baseline_sha256": "143ec18a5b64d506aad60dc24b0a1ea30940c715d1223b3465fa140aeb9d02a7",
-  "operation_registry_sha256": "e8894651732934f2b97bc16e58fc46906ccea8d94bceec43e694ff7ed6bfc6eb",
+  "operation_registry_sha256": "6df8cc809f14a7651fde0a8252913ae8e11f7c382bbead7eb75b576fbaa416dc",
   "operation_registry_hash_encoding": "utf8-lf",
   "policy_catalog_sha256": "45f4be759288aaeb834a3ce97aa64ee7768048b15534618fc8c19512801f9a9f",
   "policy_catalog_hash_encoding": "utf8-lf",
-  "worker_sha256": "f6b8259a3d98a7afb0f9d21c8f09f98de11dc611c2a14c6c12fd69eec5cca0c5",
+  "worker_sha256": "efb5d66ec6da519133b8527da27e7b55d6ba4202de28f16c70d0ba4b59226ce2",
   "worker_binary_format": "elf",
   "worker_manifest": {
     "actual_cgal_version": "6.2.1",
@@ -4526,7 +4526,7 @@
           "input_slots": [
             "source"
           ],
-          "maximum_input_faces": 20000,
+          "maximum_input_faces": 200000,
           "required_parameters": [
             "method"
           ],
@@ -4559,7 +4559,7 @@
           "input_slots": [
             "source"
           ],
-          "maximum_input_faces": 20000,
+          "maximum_input_faces": 200000,
           "required_parameters": [
             "density_control_factor",
             "max_deviation"
@@ -4597,8 +4597,11 @@
           "input_slots": [
             "source"
           ],
-          "maximum_input_faces": 20000,
-          "maximum_output_faces": 60000,
+          "maximum_input_faces": 200000,
+          "maximum_output_faces": 1000000,
+          "optional_parameters": [
+            "protect_feature_angle_degrees"
+          ],
           "required_parameters": [
             "target_edge_length",
             "number_of_iterations",
@@ -4607,11 +4610,13 @@
           ],
           "source_header": "CGAL/Polygon_mesh_processing/remesh.h",
           "symbols": [
-            "isotropic_remeshing"
+            "isotropic_remeshing",
+            "detect_sharp_edges"
           ],
           "validator_parameter_bindings": {
             "mesh.validate.isotropic_remesh": {
               "max_deviation": "max_deviation",
+              "protect_feature_angle_degrees": "protect_feature_angle_degrees",
               "target_edge_length": "target_edge_length"
             }
           },
@@ -4639,8 +4644,8 @@
           "input_slots": [
             "source"
           ],
-          "maximum_input_faces": 20000,
-          "maximum_output_faces": 60000,
+          "maximum_input_faces": 200000,
+          "maximum_output_faces": 1000000,
           "required_parameters": [
             "max_length"
           ],
@@ -4677,7 +4682,7 @@
           "input_slots": [
             "source"
           ],
-          "maximum_input_faces": 20000,
+          "maximum_input_faces": 200000,
           "required_parameters": [
             "number_of_iterations",
             "max_deviation"
@@ -4717,7 +4722,7 @@
           "input_slots": [
             "source"
           ],
-          "maximum_input_faces": 20000,
+          "maximum_input_faces": 200000,
           "required_parameters": [
             "time_step",
             "number_of_iterations",
@@ -4759,8 +4764,8 @@
           "input_slots": [
             "source"
           ],
-          "maximum_input_faces": 20000,
-          "maximum_output_faces": 60000,
+          "maximum_input_faces": 200000,
+          "maximum_output_faces": 1000000,
           "required_parameters": [
             "tolerance",
             "min_edge_length",
@@ -6181,8 +6186,8 @@
           "input_slots": [
             "source"
           ],
-          "maximum_input_faces": 2000,
-          "maximum_output_faces": 60000,
+          "maximum_input_faces": 250000,
+          "maximum_output_faces": 1000000,
           "source_header": "CGAL/Subdivision_method_3/subdivision_methods_3.h",
           "validator_parameter_bindings": {
             "mesh.validate.catmull_clark": {
@@ -6214,8 +6219,8 @@
           "input_slots": [
             "source"
           ],
-          "maximum_input_faces": 2000,
-          "maximum_output_faces": 60000,
+          "maximum_input_faces": 250000,
+          "maximum_output_faces": 1000000,
           "source_header": "CGAL/Subdivision_method_3/subdivision_methods_3.h",
           "validator_parameter_bindings": {
             "mesh.validate.loop": {
@@ -6921,7 +6926,7 @@
           "input_slots": [
             "points"
           ],
-          "maximum_input_points": 400,
+          "maximum_input_points": 200000,
           "source_header": "CGAL/compute_average_spacing.h",
           "validator_parameter_bindings": {
             "pointset.validate.average_spacing": {
@@ -6952,7 +6957,7 @@
           "input_slots": [
             "points"
           ],
-          "maximum_input_points": 64,
+          "maximum_input_points": 200000,
           "source_header": "CGAL/Min_circle_2.h",
           "validators": [
             "shape.validate.min_circle"
@@ -6978,7 +6983,7 @@
           "input_slots": [
             "points"
           ],
-          "maximum_input_points": 32,
+          "maximum_input_points": 200000,
           "source_header": "CGAL/Min_sphere_of_spheres_d.h",
           "validator_parameter_bindings": {
             "shape.validate.min_sphere": {
@@ -6987,6 +6992,37 @@
           },
           "validators": [
             "shape.validate.min_sphere"
+          ]
+        },
+        "input_types": [
+          "PointSet3"
+        ],
+        "output_type": "GeometryQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Optimal_bounding_box"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "shape.bounding.oriented_box",
+        "info": {
+          "input_slots": [
+            "points"
+          ],
+          "maximum_input_points": 200000,
+          "source_header": "CGAL/optimal_bounding_box.h",
+          "validator_parameter_bindings": {
+            "shape.validate.oriented_box": {
+              "random_seed": "random_seed"
+            }
+          },
+          "validators": [
+            "shape.validate.oriented_box"
           ]
         },
         "input_types": [
@@ -7486,7 +7522,7 @@
             "source_matches",
             "average_spacing_matches_bruteforce"
           ],
-          "independence": "brute-force k+1 nearest distances in long double (self included, as the CGAL neighbour query); no CGAL header",
+          "independence": "k+1 nearest distances in long double (self included, as the CGAL neighbour query), the smallest of all distances selected through a conservative box query; no CGAL header",
           "input_slots": [
             "candidate",
             "points"
@@ -7516,7 +7552,7 @@
             "kept_count_matches_thresholds",
             "kept_points_have_lowest_measures"
           ],
-          "independence": "brute-force average squared distance to the k+1 nearest points (self included) in long double; no CGAL header",
+          "independence": "average squared distance to the k+1 nearest points (self included) in long double, the smallest of all distances selected through a conservative box query; no CGAL header",
           "input_slots": [
             "candidate",
             "source"
@@ -7548,7 +7584,7 @@
             "radius_matches_exact_minimum",
             "all_balls_enclosed"
           ],
-          "independence": "exact rational enumeration of every support set of 1..d+1 points (center in the affine hull); no CGAL header",
+          "independence": "exact rational minimum enclosing ball by incremental construction over support sets of 1..d+1 points (center in the affine hull), cross-checked by full enumeration up to 24 points; no CGAL header",
           "input_slots": [
             "candidate",
             "points"
@@ -7580,7 +7616,41 @@
             "radius_matches_exact_minimum",
             "all_balls_enclosed"
           ],
-          "independence": "exact rational enumeration of every support set of 1..d+1 points (center in the affine hull); no CGAL header",
+          "independence": "exact rational minimum enclosing ball by incremental construction over support sets of 1..d+1 points (center in the affine hull), cross-checked by full enumeration up to 24 points; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "points"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "GeometryQueryReport",
+          "PointSet3"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Optimal_bounding_box"
+        ],
+        "effective_kernel": "float:long_double",
+        "id": "shape.validate.oriented_box",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "edges_orthogonal",
+            "corners_form_a_box",
+            "all_points_inside",
+            "every_face_touches_a_point",
+            "extents_and_volume_match_corners"
+          ],
+          "independence": "orthogonality, corner consistency, containment of every point and contact on all six faces in long double; no CGAL header",
           "input_slots": [
             "candidate",
             "points"
@@ -8505,7 +8575,7 @@
           "input_slots": [
             "mesh"
           ],
-          "maximum_input_faces": 400,
+          "maximum_input_faces": 200000,
           "source_header": "CGAL/Polygon_mesh_processing/distance.h",
           "validator_parameter_bindings": {
             "mesh.validate.distance_samples": {
@@ -8538,7 +8608,7 @@
             "points",
             "mesh"
           ],
-          "maximum_input_faces": 400,
+          "maximum_input_faces": 200000,
           "source_header": "CGAL/Polygon_mesh_processing/distance.h",
           "validators": [
             "mesh.validate.max_distance_to_mesh"
@@ -8567,7 +8637,7 @@
             "first",
             "second"
           ],
-          "maximum_input_faces": 400,
+          "maximum_input_faces": 200000,
           "source_header": "CGAL/Polygon_mesh_processing/distance.h",
           "validator_parameter_bindings": {
             "mesh.validate.hausdorff_report": {
@@ -8601,7 +8671,7 @@
             "first",
             "second"
           ],
-          "maximum_input_faces": 400,
+          "maximum_input_faces": 200000,
           "source_header": "CGAL/Polygon_mesh_processing/distance.h",
           "validator_parameter_bindings": {
             "mesh.validate.hausdorff_report": {
@@ -8635,7 +8705,7 @@
             "mesh",
             "points"
           ],
-          "maximum_input_faces": 400,
+          "maximum_input_faces": 200000,
           "source_header": "CGAL/Polygon_mesh_processing/distance.h",
           "validator_parameter_bindings": {
             "mesh.validate.max_distance_to_points": {
@@ -8669,7 +8739,7 @@
             "first",
             "second"
           ],
-          "maximum_input_faces": 400,
+          "maximum_input_faces": 200000,
           "source_header": "CGAL/Polygon_mesh_processing/distance.h",
           "validator_parameter_bindings": {
             "mesh.validate.hausdorff_report": {
@@ -8887,7 +8957,7 @@
             "samples_lie_on_mesh_surface",
             "vertices_sampled_as_requested"
           ],
-          "independence": "brute-force point-triangle and point-edge distances over all samples; sample positions of a seeded random stream are not re-derived; no CGAL header",
+          "independence": "point-triangle and point-edge distances of every sample against all triangles near it (conservative box hierarchy); sample positions of a seeded random stream are not re-derived; no CGAL header",
           "input_slots": [
             "candidate",
             "mesh"
@@ -8951,7 +9021,7 @@
             "distance_unit_matches_mesh",
             "distance_within_precision_of_exact_bracket"
           ],
-          "independence": "best-first Lipschitz subdivision bracket over brute-force point distances; no CGAL header",
+          "independence": "best-first Lipschitz subdivision bracket over nearest-point distances (minimum over all points through a conservative box hierarchy); no CGAL header",
           "input_slots": [
             "candidate",
             "mesh",
@@ -8984,7 +9054,7 @@
             "distance_unit_matches_mesh",
             "distance_consistent_with_exact_hausdorff_bracket"
           ],
-          "independence": "exact rational vertex distances plus best-first Lipschitz subdivision bracket over brute-force point-triangle distances; no CGAL header",
+          "independence": "exact rational vertex distances plus best-first Lipschitz subdivision bracket over nearest point-triangle distances (minimum over all triangles through a conservative box hierarchy); no CGAL header",
           "input_slots": [
             "candidate",
             "first",
@@ -9018,7 +9088,7 @@
             "verdict_follows_bounds_and_tolerance",
             "distance_within_error_bound_of_exact_symmetric_bracket"
           ],
-          "independence": "exact rational vertex distances plus best-first Lipschitz subdivision bracket over brute-force point-triangle distances in both directions; no CGAL header",
+          "independence": "exact rational vertex distances plus best-first Lipschitz subdivision bracket over nearest point-triangle distances (minimum over all triangles through a conservative box hierarchy) in both directions; no CGAL header",
           "input_slots": [
             "report",
             "reference",
@@ -9580,7 +9650,7 @@
           "input_slots": [
             "mesh"
           ],
-          "maximum_input_faces": 3000,
+          "maximum_input_faces": 10000,
           "source_header": "CGAL/extract_mean_curvature_flow_skeleton.h",
           "validators": [
             "mesh.validate.skeleton"
@@ -9606,7 +9676,7 @@
           "input_slots": [
             "mesh"
           ],
-          "maximum_input_faces": 3000,
+          "maximum_input_faces": 10000,
           "source_header": "CGAL/Mean_curvature_flow_skeletonization.h",
           "validator_parameter_bindings": {
             "mesh.validate.skeleton": {
@@ -9640,7 +9710,7 @@
           "input_slots": [
             "mesh"
           ],
-          "maximum_input_faces": 2000,
+          "maximum_input_faces": 20000,
           "source_header": "CGAL/Surface_mesh_parameterization/ARAP_parameterizer_3.h",
           "validator_parameter_bindings": {
             "mesh.validate.parameterization_isometric": {
@@ -9673,7 +9743,7 @@
           "input_slots": [
             "mesh"
           ],
-          "maximum_input_faces": 2000,
+          "maximum_input_faces": 20000,
           "source_header": "CGAL/Surface_mesh_parameterization/Discrete_conformal_map_parameterizer_3.h",
           "validators": [
             "mesh.validate.parameterization_harmonic"
@@ -9841,7 +9911,7 @@
           "input_slots": [
             "mesh"
           ],
-          "maximum_input_faces": 1500,
+          "maximum_input_faces": 3000,
           "source_header": "CGAL/mesh_segmentation.h",
           "validator_parameter_bindings": {
             "mesh.validate.sdf_values": {
@@ -9874,7 +9944,7 @@
           "input_slots": [
             "mesh"
           ],
-          "maximum_input_faces": 1500,
+          "maximum_input_faces": 3000,
           "source_header": "CGAL/mesh_segmentation.h",
           "validator_parameter_bindings": {
             "mesh.validate.sdf_segmentation": {
@@ -9909,7 +9979,7 @@
           "input_slots": [
             "points"
           ],
-          "maximum_input_points": 400,
+          "maximum_input_points": 5000,
           "source_header": "CGAL/Periodic_2_Delaunay_triangulation_2.h",
           "validator_parameter_bindings": {
             "triangulation.validate.periodic_delaunay_2": {
@@ -9941,7 +10011,7 @@
           "input_slots": [
             "points"
           ],
-          "maximum_input_points": 400,
+          "maximum_input_points": 5000,
           "source_header": "CGAL/Periodic_3_Delaunay_triangulation_3.h",
           "validator_parameter_bindings": {
             "triangulation.validate.periodic_delaunay_3": {
@@ -10188,7 +10258,7 @@
     ],
     "worker": "cgal-master-worker"
   },
-  "worker_manifest_sha256": "25b655d57a0d2f8f74fa75d896c1ac2712942d76d2c127729d1130366ff5041e",
+  "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
   "tests": [
     {
       "id": "family-7.13-replay-cases",
@@ -10205,11 +10275,6 @@
       "encoding": "base64",
       "byte_size": 525,
       "content": "eyJjaGVja3MiOnsiYWxwaGFfdW5pdF9pc19zcXVhcmVkX2FydGlmYWN0X3VuaXQiOnRydWUsImludGVyaW9yX3RyaWFuZ2xlc19lcXVhbF9leGFjdF9kZWxhdW5heV90cmlhbmdsZXNfd2l0aGluX2FscGhhIjp0cnVlLCJwYXJhbWV0ZXJzX21hdGNoIjp0cnVlLCJyZWd1bGFyX2VkZ2VzX2VxdWFsX2V4YWN0X2JvdW5kYXJ5X29mX2ludGVyaW9yX3RyaWFuZ2xlcyI6dHJ1ZSwic291cmNlX21hdGNoZXMiOnRydWV9LCJkZWxhdW5heV90cmlhbmdsZV9jb3VudCI6MiwiaW5kZXBlbmRlbmNlIjoiZXhhY3QgcmF0aW9uYWwgZW1wdHktY2lyY2xlIHNlYXJjaCBhbmQgY2lyY3VtcmFkaXVzOyBubyBDR0FMIGhlYWRlciIsImludGVyaW9yX3RyaWFuZ2xlX2NvdW50IjoxLCJwYXNzZWQiOnRydWUsInJlZ3VsYXJfZWRnZV9jb3VudCI6MywicmVwb3J0X3R5cGUiOiJWYWxpZGF0aW9uUmVwb3J0Iiwic2NoZW1hX3ZlcnNpb24iOjEsInN0YXR1cyI6InBhc3MiLCJ2YWxpZGF0b3IiOiJzaGFwZS52YWxpZGF0ZS5hbHBoYV9zaGFwZV8yIn0K"
-    },
-    "015e54bf09cb5a30d4e4346b20d4a6fc7b961995549270b5ea89e5081aa3e76f": {
-      "encoding": "base64",
-      "byte_size": 524,
-      "content": "eyJjaGVja3MiOnsiYWxsX2JhbGxzX2VuY2xvc2VkIjp0cnVlLCJjZW50ZXJfbWF0Y2hlc19leGFjdF9taW5pbXVtIjp0cnVlLCJwYXJhbWV0ZXJzX21hdGNoIjp0cnVlLCJyYWRpdXNfbWF0Y2hlc19leGFjdF9taW5pbXVtIjp0cnVlLCJzb3VyY2VfbWF0Y2hlcyI6dHJ1ZX0sImNvbW1vbl9iYWxsX3JhZGl1cyI6MC4wLCJkaW1lbnNpb24iOjMsImV4YWN0X3NxdWFyZWRfcmFkaXVzX29mX3BvaW50cyI6IjMiLCJpbmRlcGVuZGVuY2UiOiJleGFjdCByYXRpb25hbCBlbnVtZXJhdGlvbiBvZiBldmVyeSBzdXBwb3J0IHNldCBvZiAxLi5kKzEgcG9pbnRzIChjZW50ZXIgaW4gdGhlIGFmZmluZSBodWxsKTsgbm8gQ0dBTCBoZWFkZXIiLCJwYXNzZWQiOnRydWUsInBvaW50X2NvdW50Ijo4LCJyZWxhdGl2ZV90b2xlcmFuY2UiOjFlLTA5LCJyZXBvcnRfdHlwZSI6IlZhbGlkYXRpb25SZXBvcnQiLCJzY2hlbWFfdmVyc2lvbiI6MSwic3RhdHVzIjoicGFzcyIsInZhbGlkYXRvciI6InNoYXBlLnZhbGlkYXRlLm1pbl9zcGhlcmUifQo="
     },
     "028c836bb79b2f2a63d54ae43e6b187e67de34bad58d78e4ec6b3d16ed24ab83": {
       "encoding": "base64",
@@ -10246,15 +10311,15 @@
       "byte_size": 354,
       "content": "eyJsZW5ndGhfdW5pdCI6Im1tIiwib3BlcmF0aW9uIjoic2hhcGUuYm91bmRpbmcuY2lyY2xlIiwicGFyYW1ldGVycyI6e30sInJlcG9ydF9raW5kIjoibWluaW11bV9ib3VuZGluZ19iYWxsIiwicmVwb3J0X3R5cGUiOiJHZW9tZXRyeVF1ZXJ5UmVwb3J0IiwicmVzdWx0cyI6eyJjZW50ZXIiOlsyLjAsMS41XSwicmFkaXVzIjp7InVuaXQiOiJtbSIsInZhbHVlIjoyLjV9fSwic2NoZW1hX3ZlcnNpb24iOjEsInNvdXJjZSI6eyJwb2ludHNfc2hhMjU2IjoiMTZkM2QxYzUxOWY3MzM1Mzg3NzE2NjQxN2Q4MWMxOTZmNjQzOWY2MTIyMTJmNDc3YjQ3YWRjODllZWQ0ZTkyZSJ9LCJzdW1tYXJ5Ijp7InBvaW50X2NvdW50Ijo0fX0K"
     },
+    "07d89e0ac0cf3d9e99e7f0244b31eae969bed655dff664dbf303a5a9817817ea": {
+      "encoding": "base64",
+      "byte_size": 612,
+      "content": "eyJjaGVja3MiOnsiYWxsX2JhbGxzX2VuY2xvc2VkIjp0cnVlLCJjZW50ZXJfbWF0Y2hlc19leGFjdF9taW5pbXVtIjp0cnVlLCJwYXJhbWV0ZXJzX21hdGNoIjp0cnVlLCJyYWRpdXNfbWF0Y2hlc19leGFjdF9taW5pbXVtIjp0cnVlLCJzb3VyY2VfbWF0Y2hlcyI6dHJ1ZX0sImNvbW1vbl9iYWxsX3JhZGl1cyI6MC4wLCJkaW1lbnNpb24iOjIsImV4YWN0X3NxdWFyZWRfcmFkaXVzX29mX3BvaW50cyI6IjI1IiwiaW5kZXBlbmRlbmNlIjoiZXhhY3QgcmF0aW9uYWwgbWluaW11bSBlbmNsb3NpbmcgYmFsbCBieSBpbmNyZW1lbnRhbCBjb25zdHJ1Y3Rpb24gb3ZlciBzdXBwb3J0IHNldHMgb2YgMS4uZCsxIHBvaW50cyAoY2VudGVyIGluIHRoZSBhZmZpbmUgaHVsbCksIGNyb3NzLWNoZWNrZWQgYnkgZnVsbCBlbnVtZXJhdGlvbiB1cCB0byAyNCBwb2ludHM7IG5vIENHQUwgaGVhZGVyIiwicGFzc2VkIjp0cnVlLCJwb2ludF9jb3VudCI6MiwicmVsYXRpdmVfdG9sZXJhbmNlIjoxZS0wOSwicmVwb3J0X3R5cGUiOiJWYWxpZGF0aW9uUmVwb3J0Iiwic2NoZW1hX3ZlcnNpb24iOjEsInN0YXR1cyI6InBhc3MiLCJ2YWxpZGF0b3IiOiJzaGFwZS52YWxpZGF0ZS5taW5fY2lyY2xlIn0K"
+    },
     "087f7019a38d090185c7819a8218e88b0d5be18c4636bf558534818186ae14f5": {
       "encoding": "base64",
       "byte_size": 37,
       "content": "eyJwb2ludHMiOltbMCwwXSxbMSwxXSxbMiwyXSxbMywzXV19Cg=="
-    },
-    "08f12e862b1cca9b5a39af042bcc055e7a96ca026112cc77fae4a400f2d23b56": {
-      "encoding": "base64",
-      "byte_size": 525,
-      "content": "eyJjaGVja3MiOnsiYWxsX2JhbGxzX2VuY2xvc2VkIjp0cnVlLCJjZW50ZXJfbWF0Y2hlc19leGFjdF9taW5pbXVtIjp0cnVlLCJwYXJhbWV0ZXJzX21hdGNoIjp0cnVlLCJyYWRpdXNfbWF0Y2hlc19leGFjdF9taW5pbXVtIjp0cnVlLCJzb3VyY2VfbWF0Y2hlcyI6dHJ1ZX0sImNvbW1vbl9iYWxsX3JhZGl1cyI6MC4wLCJkaW1lbnNpb24iOjIsImV4YWN0X3NxdWFyZWRfcmFkaXVzX29mX3BvaW50cyI6IjI1IiwiaW5kZXBlbmRlbmNlIjoiZXhhY3QgcmF0aW9uYWwgZW51bWVyYXRpb24gb2YgZXZlcnkgc3VwcG9ydCBzZXQgb2YgMS4uZCsxIHBvaW50cyAoY2VudGVyIGluIHRoZSBhZmZpbmUgaHVsbCk7IG5vIENHQUwgaGVhZGVyIiwicGFzc2VkIjp0cnVlLCJwb2ludF9jb3VudCI6MiwicmVsYXRpdmVfdG9sZXJhbmNlIjoxZS0wOSwicmVwb3J0X3R5cGUiOiJWYWxpZGF0aW9uUmVwb3J0Iiwic2NoZW1hX3ZlcnNpb24iOjEsInN0YXR1cyI6InBhc3MiLCJ2YWxpZGF0b3IiOiJzaGFwZS52YWxpZGF0ZS5taW5fY2lyY2xlIn0K"
     },
     "08fa11a39cb6b606e363bda59f8afd0b47a78f22707f935409a475c019e40ff7": {
       "encoding": "base64",
@@ -10311,11 +10376,6 @@
       "byte_size": 66,
       "content": "LTEgLTEgLTEKMSAtMSAtMQotMSAxIC0xCjEgMSAtMQotMSAtMSAxCjEgLTEgMQotMSAxIDEKMSAxIDEKMCAwIDAK"
     },
-    "2a4f68de0028be59fb2c048d966d0d0dd9a97a67fc93b50762269b44239877dd": {
-      "encoding": "base64",
-      "byte_size": 527,
-      "content": "eyJjaGVja3MiOnsiYWxsX2JhbGxzX2VuY2xvc2VkIjp0cnVlLCJjZW50ZXJfbWF0Y2hlc19leGFjdF9taW5pbXVtIjp0cnVlLCJwYXJhbWV0ZXJzX21hdGNoIjp0cnVlLCJyYWRpdXNfbWF0Y2hlc19leGFjdF9taW5pbXVtIjp0cnVlLCJzb3VyY2VfbWF0Y2hlcyI6dHJ1ZX0sImNvbW1vbl9iYWxsX3JhZGl1cyI6MC4wLCJkaW1lbnNpb24iOjIsImV4YWN0X3NxdWFyZWRfcmFkaXVzX29mX3BvaW50cyI6IjI1LzQiLCJpbmRlcGVuZGVuY2UiOiJleGFjdCByYXRpb25hbCBlbnVtZXJhdGlvbiBvZiBldmVyeSBzdXBwb3J0IHNldCBvZiAxLi5kKzEgcG9pbnRzIChjZW50ZXIgaW4gdGhlIGFmZmluZSBodWxsKTsgbm8gQ0dBTCBoZWFkZXIiLCJwYXNzZWQiOnRydWUsInBvaW50X2NvdW50Ijo0LCJyZWxhdGl2ZV90b2xlcmFuY2UiOjFlLTA5LCJyZXBvcnRfdHlwZSI6IlZhbGlkYXRpb25SZXBvcnQiLCJzY2hlbWFfdmVyc2lvbiI6MSwic3RhdHVzIjoicGFzcyIsInZhbGlkYXRvciI6InNoYXBlLnZhbGlkYXRlLm1pbl9jaXJjbGUifQo="
-    },
     "2a71cbe76f2ab94766500168f571a5bd664a4e9a8fc5050e5d620addeef271bf": {
       "encoding": "base64",
       "byte_size": 48,
@@ -10355,6 +10415,11 @@
       "encoding": "base64",
       "byte_size": 49,
       "content": "eyJwb2ludHMiOltbMCwwXSxbNCwwXSxbNCwxXSxbMSwxXSxbMSw0XSxbMCw0XV19Cg=="
+    },
+    "3664abaa5460285981d0036aaef22c42e6e6255cce1014fad75df52b1d7caa3c": {
+      "encoding": "base64",
+      "byte_size": 611,
+      "content": "eyJjaGVja3MiOnsiYWxsX2JhbGxzX2VuY2xvc2VkIjp0cnVlLCJjZW50ZXJfbWF0Y2hlc19leGFjdF9taW5pbXVtIjp0cnVlLCJwYXJhbWV0ZXJzX21hdGNoIjp0cnVlLCJyYWRpdXNfbWF0Y2hlc19leGFjdF9taW5pbXVtIjp0cnVlLCJzb3VyY2VfbWF0Y2hlcyI6dHJ1ZX0sImNvbW1vbl9iYWxsX3JhZGl1cyI6MC4wLCJkaW1lbnNpb24iOjMsImV4YWN0X3NxdWFyZWRfcmFkaXVzX29mX3BvaW50cyI6IjMiLCJpbmRlcGVuZGVuY2UiOiJleGFjdCByYXRpb25hbCBtaW5pbXVtIGVuY2xvc2luZyBiYWxsIGJ5IGluY3JlbWVudGFsIGNvbnN0cnVjdGlvbiBvdmVyIHN1cHBvcnQgc2V0cyBvZiAxLi5kKzEgcG9pbnRzIChjZW50ZXIgaW4gdGhlIGFmZmluZSBodWxsKSwgY3Jvc3MtY2hlY2tlZCBieSBmdWxsIGVudW1lcmF0aW9uIHVwIHRvIDI0IHBvaW50czsgbm8gQ0dBTCBoZWFkZXIiLCJwYXNzZWQiOnRydWUsInBvaW50X2NvdW50Ijo4LCJyZWxhdGl2ZV90b2xlcmFuY2UiOjFlLTA5LCJyZXBvcnRfdHlwZSI6IlZhbGlkYXRpb25SZXBvcnQiLCJzY2hlbWFfdmVyc2lvbiI6MSwic3RhdHVzIjoicGFzcyIsInZhbGlkYXRvciI6InNoYXBlLnZhbGlkYXRlLm1pbl9zcGhlcmUifQo="
     },
     "3e411f8b94cb768277fc6ade0557c0aacea48e680f9aa3f6cdb7fb5606402e46": {
       "encoding": "base64",
@@ -10405,6 +10470,11 @@
       "encoding": "base64",
       "byte_size": 433,
       "content": "eyJsZW5ndGhfdW5pdCI6Im1tIiwib3BlcmF0aW9uIjoic2hhcGUuYWxwaGFfc2hhcGVfMyIsInBhcmFtZXRlcnMiOnsiYWxwaGEiOjMuNX0sInJlcG9ydF9raW5kIjoiYWxwaGFfc2hhcGVfMyIsInJlcG9ydF90eXBlIjoiR2VvbWV0cnlRdWVyeVJlcG9ydCIsInJlc3VsdHMiOnsiYWxwaGFfdW5pdCI6Im1tXjIiLCJpbnRlcmlvcl9jZWxscyI6W1swLDEsMiwzXV0sInJlZ3VsYXJfZmFjZXRzIjpbWzAsMSwyXSxbMCwxLDNdLFswLDIsM10sWzEsMiwzXV19LCJzY2hlbWFfdmVyc2lvbiI6MSwic291cmNlIjp7InBvaW50c19zaGEyNTYiOiJiY2QxZDIwZjkzYzExZTgxMjIxZTNlZDMwYmFiNDVkMTU2YmM0YjFjNTZkYzUyMTNhMzAxODhjODU2MDM1ZDk3In0sInN1bW1hcnkiOnsiaW50ZXJpb3JfY2VsbF9jb3VudCI6MSwicmVndWxhcl9mYWNldF9jb3VudCI6NH19Cg=="
+    },
+    "67c39916c0202b9542b63b1f3e24da2d968a628b034ef8ee73bb9fb6bfd85eca": {
+      "encoding": "base64",
+      "byte_size": 614,
+      "content": "eyJjaGVja3MiOnsiYWxsX2JhbGxzX2VuY2xvc2VkIjp0cnVlLCJjZW50ZXJfbWF0Y2hlc19leGFjdF9taW5pbXVtIjp0cnVlLCJwYXJhbWV0ZXJzX21hdGNoIjp0cnVlLCJyYWRpdXNfbWF0Y2hlc19leGFjdF9taW5pbXVtIjp0cnVlLCJzb3VyY2VfbWF0Y2hlcyI6dHJ1ZX0sImNvbW1vbl9iYWxsX3JhZGl1cyI6MC4wLCJkaW1lbnNpb24iOjIsImV4YWN0X3NxdWFyZWRfcmFkaXVzX29mX3BvaW50cyI6IjI1LzQiLCJpbmRlcGVuZGVuY2UiOiJleGFjdCByYXRpb25hbCBtaW5pbXVtIGVuY2xvc2luZyBiYWxsIGJ5IGluY3JlbWVudGFsIGNvbnN0cnVjdGlvbiBvdmVyIHN1cHBvcnQgc2V0cyBvZiAxLi5kKzEgcG9pbnRzIChjZW50ZXIgaW4gdGhlIGFmZmluZSBodWxsKSwgY3Jvc3MtY2hlY2tlZCBieSBmdWxsIGVudW1lcmF0aW9uIHVwIHRvIDI0IHBvaW50czsgbm8gQ0dBTCBoZWFkZXIiLCJwYXNzZWQiOnRydWUsInBvaW50X2NvdW50Ijo0LCJyZWxhdGl2ZV90b2xlcmFuY2UiOjFlLTA5LCJyZXBvcnRfdHlwZSI6IlZhbGlkYXRpb25SZXBvcnQiLCJzY2hlbWFfdmVyc2lvbiI6MSwic3RhdHVzIjoicGFzcyIsInZhbGlkYXRvciI6InNoYXBlLnZhbGlkYXRlLm1pbl9jaXJjbGUifQo="
     },
     "6b4dd51c0dc755182ad00542dae4788a2b64433e6d507153808506f8e3384750": {
       "encoding": "base64",
@@ -10586,10 +10656,10 @@
       "byte_size": 463,
       "content": "eyJsZW5ndGhfdW5pdCI6Im1tIiwib3BlcmF0aW9uIjoic2hhcGUuZml4ZWRfYWxwaGFfc2hhcGVfMyIsInBhcmFtZXRlcnMiOnsiYWxwaGEiOjZ9LCJyZXBvcnRfa2luZCI6ImFscGhhX3NoYXBlXzMiLCJyZXBvcnRfdHlwZSI6Ikdlb21ldHJ5UXVlcnlSZXBvcnQiLCJyZXN1bHRzIjp7ImFscGhhX3VuaXQiOiJtbV4yIiwiaW50ZXJpb3JfY2VsbHMiOltbMCwxLDIsM10sWzEsMiwzLDRdXSwicmVndWxhcl9mYWNldHMiOltbMCwxLDJdLFswLDEsM10sWzAsMiwzXSxbMSwyLDRdLFsxLDMsNF0sWzIsMyw0XV19LCJzY2hlbWFfdmVyc2lvbiI6MSwic291cmNlIjp7InBvaW50c19zaGEyNTYiOiJiY2QxZDIwZjkzYzExZTgxMjIxZTNlZDMwYmFiNDVkMTU2YmM0YjFjNTZkYzUyMTNhMzAxODhjODU2MDM1ZDk3In0sInN1bW1hcnkiOnsiaW50ZXJpb3JfY2VsbF9jb3VudCI6MiwicmVndWxhcl9mYWNldF9jb3VudCI6Nn19Cg=="
     },
-    "f9c4b438a8c56b6c786b1e044ad4d1690c35bf2164d6f8ea99ee12893bef4187": {
+    "f85468f9617a208c59c46a30bab8ffbd77de95b47c7f98ac369130928fe65ebd": {
       "encoding": "base64",
-      "byte_size": 524,
-      "content": "eyJjaGVja3MiOnsiYWxsX2JhbGxzX2VuY2xvc2VkIjp0cnVlLCJjZW50ZXJfbWF0Y2hlc19leGFjdF9taW5pbXVtIjp0cnVlLCJwYXJhbWV0ZXJzX21hdGNoIjp0cnVlLCJyYWRpdXNfbWF0Y2hlc19leGFjdF9taW5pbXVtIjp0cnVlLCJzb3VyY2VfbWF0Y2hlcyI6dHJ1ZX0sImNvbW1vbl9iYWxsX3JhZGl1cyI6MC41LCJkaW1lbnNpb24iOjMsImV4YWN0X3NxdWFyZWRfcmFkaXVzX29mX3BvaW50cyI6IjMiLCJpbmRlcGVuZGVuY2UiOiJleGFjdCByYXRpb25hbCBlbnVtZXJhdGlvbiBvZiBldmVyeSBzdXBwb3J0IHNldCBvZiAxLi5kKzEgcG9pbnRzIChjZW50ZXIgaW4gdGhlIGFmZmluZSBodWxsKTsgbm8gQ0dBTCBoZWFkZXIiLCJwYXNzZWQiOnRydWUsInBvaW50X2NvdW50Ijo4LCJyZWxhdGl2ZV90b2xlcmFuY2UiOjFlLTA5LCJyZXBvcnRfdHlwZSI6IlZhbGlkYXRpb25SZXBvcnQiLCJzY2hlbWFfdmVyc2lvbiI6MSwic3RhdHVzIjoicGFzcyIsInZhbGlkYXRvciI6InNoYXBlLnZhbGlkYXRlLm1pbl9zcGhlcmUifQo="
+      "byte_size": 611,
+      "content": "eyJjaGVja3MiOnsiYWxsX2JhbGxzX2VuY2xvc2VkIjp0cnVlLCJjZW50ZXJfbWF0Y2hlc19leGFjdF9taW5pbXVtIjp0cnVlLCJwYXJhbWV0ZXJzX21hdGNoIjp0cnVlLCJyYWRpdXNfbWF0Y2hlc19leGFjdF9taW5pbXVtIjp0cnVlLCJzb3VyY2VfbWF0Y2hlcyI6dHJ1ZX0sImNvbW1vbl9iYWxsX3JhZGl1cyI6MC41LCJkaW1lbnNpb24iOjMsImV4YWN0X3NxdWFyZWRfcmFkaXVzX29mX3BvaW50cyI6IjMiLCJpbmRlcGVuZGVuY2UiOiJleGFjdCByYXRpb25hbCBtaW5pbXVtIGVuY2xvc2luZyBiYWxsIGJ5IGluY3JlbWVudGFsIGNvbnN0cnVjdGlvbiBvdmVyIHN1cHBvcnQgc2V0cyBvZiAxLi5kKzEgcG9pbnRzIChjZW50ZXIgaW4gdGhlIGFmZmluZSBodWxsKSwgY3Jvc3MtY2hlY2tlZCBieSBmdWxsIGVudW1lcmF0aW9uIHVwIHRvIDI0IHBvaW50czsgbm8gQ0dBTCBoZWFkZXIiLCJwYXNzZWQiOnRydWUsInBvaW50X2NvdW50Ijo4LCJyZWxhdGl2ZV90b2xlcmFuY2UiOjFlLTA5LCJyZXBvcnRfdHlwZSI6IlZhbGlkYXRpb25SZXBvcnQiLCJzY2hlbWFfdmVyc2lvbiI6MSwic3RhdHVzIjoicGFzcyIsInZhbGlkYXRvciI6InNoYXBlLnZhbGlkYXRlLm1pbl9zcGhlcmUifQo="
     },
     "fd31f6875678721023b6ced9967c52c5ff2b48c18d131fe9262841e2f2f7f9c7": {
       "encoding": "base64",
@@ -10598,7 +10668,7 @@
     }
   },
   "reports": {
-    "4abc8e44449cd455b41e68019e6caa37d9b0f4e522243a5e826583b07500ff8d": {
+    "aa1c71ddae8570e2c1b37283da2657420adfa203c5dac6de92253179de06915f": {
       "checks": {
         "all_balls_enclosed": true,
         "center_matches_exact_minimum": true,
@@ -10609,7 +10679,7 @@
       "common_ball_radius": 0.0,
       "dimension": 2,
       "exact_squared_radius_of_points": "25/4",
-      "independence": "exact rational enumeration of every support set of 1..d+1 points (center in the affine hull); no CGAL header",
+      "independence": "exact rational minimum enclosing ball by incremental construction over support sets of 1..d+1 points (center in the affine hull), cross-checked by full enumeration up to 24 points; no CGAL header",
       "passed": true,
       "point_count": 4,
       "relative_tolerance": 1e-09,
@@ -10618,7 +10688,7 @@
       "status": "pass",
       "validator": "shape.validate.min_circle"
     },
-    "4a906af4323f2ffe9245b10e7db235080fe70f71e5f3c2249deab8b7bc71872b": {
+    "b5dc05813dda1c65f92469f6fd0eca2ca297b36ec0ed9553fa762ba320929099": {
       "checks": {
         "all_balls_enclosed": true,
         "center_matches_exact_minimum": true,
@@ -10629,7 +10699,7 @@
       "common_ball_radius": 0.0,
       "dimension": 2,
       "exact_squared_radius_of_points": "25",
-      "independence": "exact rational enumeration of every support set of 1..d+1 points (center in the affine hull); no CGAL header",
+      "independence": "exact rational minimum enclosing ball by incremental construction over support sets of 1..d+1 points (center in the affine hull), cross-checked by full enumeration up to 24 points; no CGAL header",
       "passed": true,
       "point_count": 2,
       "relative_tolerance": 1e-09,
@@ -10638,7 +10708,7 @@
       "status": "pass",
       "validator": "shape.validate.min_circle"
     },
-    "260bcdb23558012ac74378ca43900c01d2c94337cb1d40d13c846c4816ca5515": {
+    "32bf88b28d4d12162be50b2a0fe2c4446e7f73157d2cfb60cd096d7aa672dbb2": {
       "checks": {
         "all_balls_enclosed": true,
         "center_matches_exact_minimum": true,
@@ -10649,7 +10719,7 @@
       "common_ball_radius": 0.0,
       "dimension": 3,
       "exact_squared_radius_of_points": "3",
-      "independence": "exact rational enumeration of every support set of 1..d+1 points (center in the affine hull); no CGAL header",
+      "independence": "exact rational minimum enclosing ball by incremental construction over support sets of 1..d+1 points (center in the affine hull), cross-checked by full enumeration up to 24 points; no CGAL header",
       "passed": true,
       "point_count": 8,
       "relative_tolerance": 1e-09,
@@ -10658,7 +10728,7 @@
       "status": "pass",
       "validator": "shape.validate.min_sphere"
     },
-    "7630169adf669552f7a298746ff04455a7d9dd21b9c376efab1383ed409b1549": {
+    "9105f5aa8d4561b2f86355b6e72baebfe0f7c645c644782c6c86d3e1982fd611": {
       "checks": {
         "all_balls_enclosed": true,
         "center_matches_exact_minimum": true,
@@ -10669,7 +10739,7 @@
       "common_ball_radius": 0.5,
       "dimension": 3,
       "exact_squared_radius_of_points": "3",
-      "independence": "exact rational enumeration of every support set of 1..d+1 points (center in the affine hull); no CGAL header",
+      "independence": "exact rational minimum enclosing ball by incremental construction over support sets of 1..d+1 points (center in the affine hull), cross-checked by full enumeration up to 24 points; no CGAL header",
       "passed": true,
       "point_count": 8,
       "relative_tolerance": 1e-09,
@@ -11145,7 +11215,7 @@
       "case_id": "circle-right-triangle",
       "operation_id": "shape.bounding.circle",
       "revision": 1,
-      "worker_manifest_sha256": "25b655d57a0d2f8f74fa75d896c1ac2712942d76d2c127729d1130366ff5041e",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -11241,7 +11311,7 @@
               "common_ball_radius": 0.0,
               "dimension": 2,
               "exact_squared_radius_of_points": "25/4",
-              "independence": "exact rational enumeration of every support set of 1..d+1 points (center in the affine hull); no CGAL header",
+              "independence": "exact rational minimum enclosing ball by incremental construction over support sets of 1..d+1 points (center in the affine hull), cross-checked by full enumeration up to 24 points; no CGAL header",
               "passed": true,
               "point_count": 4,
               "relative_tolerance": 1e-09,
@@ -11252,7 +11322,7 @@
             },
             "outputs": [
               {
-                "blob_sha256": "2a4f68de0028be59fb2c048d966d0d0dd9a97a67fc93b50762269b44239877dd",
+                "blob_sha256": "67c39916c0202b9542b63b1f3e24da2d968a628b034ef8ee73bb9fb6bfd85eca",
                 "format": "json",
                 "slot": "validation",
                 "type": "ValidationReport",
@@ -11263,16 +11333,16 @@
             "request_id": "circle-right-triangle--shape.validate.min_circle",
             "status": "ok"
           },
-          "response_sha256": "78ad2d245eb7030447936d89bdff5ecc0ef8cb8950fc22d8eb14feea06a46504",
+          "response_sha256": "ba554964e2d7623d5e4d37fee14c91c4bd1573c587ad7b0ff8e511e50bfa6825",
           "input_hashes": [
             "07c1e0071f660e0252626c3f3216d9d34230172605fc28caa04d070109468733",
             "16d3d1c519f73353877166417d81c196f6439f612212f477b47adc89eed4e92e"
           ],
           "output_hashes": [
-            "2a4f68de0028be59fb2c048d966d0d0dd9a97a67fc93b50762269b44239877dd"
+            "67c39916c0202b9542b63b1f3e24da2d968a628b034ef8ee73bb9fb6bfd85eca"
           ],
-          "report_blob_sha256": "2a4f68de0028be59fb2c048d966d0d0dd9a97a67fc93b50762269b44239877dd",
-          "report_sha256": "4abc8e44449cd455b41e68019e6caa37d9b0f4e522243a5e826583b07500ff8d",
+          "report_blob_sha256": "67c39916c0202b9542b63b1f3e24da2d968a628b034ef8ee73bb9fb6bfd85eca",
+          "report_sha256": "aa1c71ddae8570e2c1b37283da2657420adfa203c5dac6de92253179de06915f",
           "status": "pass"
         }
       ],
@@ -11288,7 +11358,7 @@
           },
           "validator:shape.validate.min_circle": {
             "pass": true,
-            "report_sha256": "4abc8e44449cd455b41e68019e6caa37d9b0f4e522243a5e826583b07500ff8d"
+            "report_sha256": "aa1c71ddae8570e2c1b37283da2657420adfa203c5dac6de92253179de06915f"
           }
         }
       }
@@ -11297,7 +11367,7 @@
       "case_id": "circle-two-points",
       "operation_id": "shape.bounding.circle",
       "revision": 1,
-      "worker_manifest_sha256": "25b655d57a0d2f8f74fa75d896c1ac2712942d76d2c127729d1130366ff5041e",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -11393,7 +11463,7 @@
               "common_ball_radius": 0.0,
               "dimension": 2,
               "exact_squared_radius_of_points": "25",
-              "independence": "exact rational enumeration of every support set of 1..d+1 points (center in the affine hull); no CGAL header",
+              "independence": "exact rational minimum enclosing ball by incremental construction over support sets of 1..d+1 points (center in the affine hull), cross-checked by full enumeration up to 24 points; no CGAL header",
               "passed": true,
               "point_count": 2,
               "relative_tolerance": 1e-09,
@@ -11404,7 +11474,7 @@
             },
             "outputs": [
               {
-                "blob_sha256": "08f12e862b1cca9b5a39af042bcc055e7a96ca026112cc77fae4a400f2d23b56",
+                "blob_sha256": "07d89e0ac0cf3d9e99e7f0244b31eae969bed655dff664dbf303a5a9817817ea",
                 "format": "json",
                 "slot": "validation",
                 "type": "ValidationReport",
@@ -11415,16 +11485,16 @@
             "request_id": "circle-two-points--shape.validate.min_circle",
             "status": "ok"
           },
-          "response_sha256": "dcd590ce41e85a1a4687e0419ced1c2d1e640394ccc5c69100590882673d6ead",
+          "response_sha256": "03d7e8a252ce1a5a2c2ebad3b6298cb2d8e6fe86c5cb953fc96710a950277ee4",
           "input_hashes": [
             "20c9abcdd4b841c70c8887f495a698455db2ef964108e0f88ab27912eb62c9fe",
             "6b4dd51c0dc755182ad00542dae4788a2b64433e6d507153808506f8e3384750"
           ],
           "output_hashes": [
-            "08f12e862b1cca9b5a39af042bcc055e7a96ca026112cc77fae4a400f2d23b56"
+            "07d89e0ac0cf3d9e99e7f0244b31eae969bed655dff664dbf303a5a9817817ea"
           ],
-          "report_blob_sha256": "08f12e862b1cca9b5a39af042bcc055e7a96ca026112cc77fae4a400f2d23b56",
-          "report_sha256": "4a906af4323f2ffe9245b10e7db235080fe70f71e5f3c2249deab8b7bc71872b",
+          "report_blob_sha256": "07d89e0ac0cf3d9e99e7f0244b31eae969bed655dff664dbf303a5a9817817ea",
+          "report_sha256": "b5dc05813dda1c65f92469f6fd0eca2ca297b36ec0ed9553fa762ba320929099",
           "status": "pass"
         }
       ],
@@ -11440,7 +11510,7 @@
           },
           "validator:shape.validate.min_circle": {
             "pass": true,
-            "report_sha256": "4a906af4323f2ffe9245b10e7db235080fe70f71e5f3c2249deab8b7bc71872b"
+            "report_sha256": "b5dc05813dda1c65f92469f6fd0eca2ca297b36ec0ed9553fa762ba320929099"
           }
         }
       }
@@ -11449,7 +11519,7 @@
       "case_id": "sphere-cube-corners",
       "operation_id": "shape.bounding.sphere",
       "revision": 1,
-      "worker_manifest_sha256": "25b655d57a0d2f8f74fa75d896c1ac2712942d76d2c127729d1130366ff5041e",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -11555,7 +11625,7 @@
               "common_ball_radius": 0.0,
               "dimension": 3,
               "exact_squared_radius_of_points": "3",
-              "independence": "exact rational enumeration of every support set of 1..d+1 points (center in the affine hull); no CGAL header",
+              "independence": "exact rational minimum enclosing ball by incremental construction over support sets of 1..d+1 points (center in the affine hull), cross-checked by full enumeration up to 24 points; no CGAL header",
               "passed": true,
               "point_count": 8,
               "relative_tolerance": 1e-09,
@@ -11566,7 +11636,7 @@
             },
             "outputs": [
               {
-                "blob_sha256": "015e54bf09cb5a30d4e4346b20d4a6fc7b961995549270b5ea89e5081aa3e76f",
+                "blob_sha256": "3664abaa5460285981d0036aaef22c42e6e6255cce1014fad75df52b1d7caa3c",
                 "format": "json",
                 "slot": "validation",
                 "type": "ValidationReport",
@@ -11577,16 +11647,16 @@
             "request_id": "sphere-cube-corners--shape.validate.min_sphere",
             "status": "ok"
           },
-          "response_sha256": "0f6283e1c5e098abb273271a0dd67d0ce5909c34396c1efe6748f29b49e084e2",
+          "response_sha256": "d0ef149e5af9ea9e2bc129bc74561870367fee2ed96c3ce9735db3070dd0a31a",
           "input_hashes": [
             "3e411f8b94cb768277fc6ade0557c0aacea48e680f9aa3f6cdb7fb5606402e46",
             "2a71cbe76f2ab94766500168f571a5bd664a4e9a8fc5050e5d620addeef271bf"
           ],
           "output_hashes": [
-            "015e54bf09cb5a30d4e4346b20d4a6fc7b961995549270b5ea89e5081aa3e76f"
+            "3664abaa5460285981d0036aaef22c42e6e6255cce1014fad75df52b1d7caa3c"
           ],
-          "report_blob_sha256": "015e54bf09cb5a30d4e4346b20d4a6fc7b961995549270b5ea89e5081aa3e76f",
-          "report_sha256": "260bcdb23558012ac74378ca43900c01d2c94337cb1d40d13c846c4816ca5515",
+          "report_blob_sha256": "3664abaa5460285981d0036aaef22c42e6e6255cce1014fad75df52b1d7caa3c",
+          "report_sha256": "32bf88b28d4d12162be50b2a0fe2c4446e7f73157d2cfb60cd096d7aa672dbb2",
           "status": "pass"
         }
       ],
@@ -11602,7 +11672,7 @@
           },
           "validator:shape.validate.min_sphere": {
             "pass": true,
-            "report_sha256": "260bcdb23558012ac74378ca43900c01d2c94337cb1d40d13c846c4816ca5515"
+            "report_sha256": "32bf88b28d4d12162be50b2a0fe2c4446e7f73157d2cfb60cd096d7aa672dbb2"
           }
         }
       }
@@ -11611,7 +11681,7 @@
       "case_id": "sphere-cube-corners-radius-half",
       "operation_id": "shape.bounding.sphere",
       "revision": 1,
-      "worker_manifest_sha256": "25b655d57a0d2f8f74fa75d896c1ac2712942d76d2c127729d1130366ff5041e",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -11717,7 +11787,7 @@
               "common_ball_radius": 0.5,
               "dimension": 3,
               "exact_squared_radius_of_points": "3",
-              "independence": "exact rational enumeration of every support set of 1..d+1 points (center in the affine hull); no CGAL header",
+              "independence": "exact rational minimum enclosing ball by incremental construction over support sets of 1..d+1 points (center in the affine hull), cross-checked by full enumeration up to 24 points; no CGAL header",
               "passed": true,
               "point_count": 8,
               "relative_tolerance": 1e-09,
@@ -11728,7 +11798,7 @@
             },
             "outputs": [
               {
-                "blob_sha256": "f9c4b438a8c56b6c786b1e044ad4d1690c35bf2164d6f8ea99ee12893bef4187",
+                "blob_sha256": "f85468f9617a208c59c46a30bab8ffbd77de95b47c7f98ac369130928fe65ebd",
                 "format": "json",
                 "slot": "validation",
                 "type": "ValidationReport",
@@ -11739,16 +11809,16 @@
             "request_id": "sphere-cube-corners-radius-half--shape.validate.min_sphere",
             "status": "ok"
           },
-          "response_sha256": "bc2ed3f6e93cb031419fd35ffd96b2474d2b6ecadae80751f55c258b91fcc6a7",
+          "response_sha256": "0723a83ad5a5c8198cbbc58279ea6641ee2a79feac4f744dd74109ed79926441",
           "input_hashes": [
             "ec88ae9cde0c772b2f2958c135d252b85a9e63ce8c913e457308e0132cbb7e64",
             "2a71cbe76f2ab94766500168f571a5bd664a4e9a8fc5050e5d620addeef271bf"
           ],
           "output_hashes": [
-            "f9c4b438a8c56b6c786b1e044ad4d1690c35bf2164d6f8ea99ee12893bef4187"
+            "f85468f9617a208c59c46a30bab8ffbd77de95b47c7f98ac369130928fe65ebd"
           ],
-          "report_blob_sha256": "f9c4b438a8c56b6c786b1e044ad4d1690c35bf2164d6f8ea99ee12893bef4187",
-          "report_sha256": "7630169adf669552f7a298746ff04455a7d9dd21b9c376efab1383ed409b1549",
+          "report_blob_sha256": "f85468f9617a208c59c46a30bab8ffbd77de95b47c7f98ac369130928fe65ebd",
+          "report_sha256": "9105f5aa8d4561b2f86355b6e72baebfe0f7c645c644782c6c86d3e1982fd611",
           "status": "pass"
         }
       ],
@@ -11764,7 +11834,7 @@
           },
           "validator:shape.validate.min_sphere": {
             "pass": true,
-            "report_sha256": "7630169adf669552f7a298746ff04455a7d9dd21b9c376efab1383ed409b1549"
+            "report_sha256": "9105f5aa8d4561b2f86355b6e72baebfe0f7c645c644782c6c86d3e1982fd611"
           }
         }
       }
@@ -11773,7 +11843,7 @@
       "case_id": "hull2-grid",
       "operation_id": "hull.convex_2",
       "revision": 1,
-      "worker_manifest_sha256": "25b655d57a0d2f8f74fa75d896c1ac2712942d76d2c127729d1130366ff5041e",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -11934,7 +12004,7 @@
       "case_id": "hull3-cube",
       "operation_id": "hull.convex_3",
       "revision": 1,
-      "worker_manifest_sha256": "25b655d57a0d2f8f74fa75d896c1ac2712942d76d2c127729d1130366ff5041e",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -12090,7 +12160,7 @@
       "case_id": "bary-square-wachspress",
       "operation_id": "shape.barycentric",
       "revision": 1,
-      "worker_manifest_sha256": "25b655d57a0d2f8f74fa75d896c1ac2712942d76d2c127729d1130366ff5041e",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -12270,7 +12340,7 @@
       "case_id": "bary-square-mean-value",
       "operation_id": "shape.barycentric",
       "revision": 1,
-      "worker_manifest_sha256": "25b655d57a0d2f8f74fa75d896c1ac2712942d76d2c127729d1130366ff5041e",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -12450,7 +12520,7 @@
       "case_id": "bary-square-discrete-harmonic",
       "operation_id": "shape.barycentric",
       "revision": 1,
-      "worker_manifest_sha256": "25b655d57a0d2f8f74fa75d896c1ac2712942d76d2c127729d1130366ff5041e",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -12630,7 +12700,7 @@
       "case_id": "bary-l-mean-value",
       "operation_id": "shape.barycentric",
       "revision": 1,
-      "worker_manifest_sha256": "25b655d57a0d2f8f74fa75d896c1ac2712942d76d2c127729d1130366ff5041e",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -12810,7 +12880,7 @@
       "case_id": "alphawrap-sphere",
       "operation_id": "reconstruction.alpha_wrap",
       "revision": 1,
-      "worker_manifest_sha256": "25b655d57a0d2f8f74fa75d896c1ac2712942d76d2c127729d1130366ff5041e",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -13027,7 +13097,7 @@
       "case_id": "alphawrap-torus-open",
       "operation_id": "reconstruction.alpha_wrap",
       "revision": 1,
-      "worker_manifest_sha256": "25b655d57a0d2f8f74fa75d896c1ac2712942d76d2c127729d1130366ff5041e",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -13247,7 +13317,7 @@
       "case_id": "alphawrap-torus-filled",
       "operation_id": "reconstruction.alpha_wrap",
       "revision": 1,
-      "worker_manifest_sha256": "25b655d57a0d2f8f74fa75d896c1ac2712942d76d2c127729d1130366ff5041e",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -13467,7 +13537,7 @@
       "case_id": "alpha2-quad-below",
       "operation_id": "shape.alpha_shape_2",
       "revision": 1,
-      "worker_manifest_sha256": "25b655d57a0d2f8f74fa75d896c1ac2712942d76d2c127729d1130366ff5041e",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -13622,7 +13692,7 @@
       "case_id": "alpha2-quad-tie",
       "operation_id": "shape.alpha_shape_2",
       "revision": 1,
-      "worker_manifest_sha256": "25b655d57a0d2f8f74fa75d896c1ac2712942d76d2c127729d1130366ff5041e",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -13777,7 +13847,7 @@
       "case_id": "alpha2-quad-one-triangle",
       "operation_id": "shape.alpha_shape_2",
       "revision": 1,
-      "worker_manifest_sha256": "25b655d57a0d2f8f74fa75d896c1ac2712942d76d2c127729d1130366ff5041e",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -13935,7 +14005,7 @@
       "case_id": "alpha2-quad-both",
       "operation_id": "shape.alpha_shape_2",
       "revision": 1,
-      "worker_manifest_sha256": "25b655d57a0d2f8f74fa75d896c1ac2712942d76d2c127729d1130366ff5041e",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -14093,7 +14163,7 @@
       "case_id": "alpha2-scatter-large",
       "operation_id": "shape.alpha_shape_2",
       "revision": 1,
-      "worker_manifest_sha256": "25b655d57a0d2f8f74fa75d896c1ac2712942d76d2c127729d1130366ff5041e",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -14248,7 +14318,7 @@
       "case_id": "alpha3-tetra-below",
       "operation_id": "shape.alpha_shape_3",
       "revision": 1,
-      "worker_manifest_sha256": "25b655d57a0d2f8f74fa75d896c1ac2712942d76d2c127729d1130366ff5041e",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -14403,7 +14473,7 @@
       "case_id": "alpha3-tetra-tie",
       "operation_id": "shape.alpha_shape_3",
       "revision": 1,
-      "worker_manifest_sha256": "25b655d57a0d2f8f74fa75d896c1ac2712942d76d2c127729d1130366ff5041e",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -14558,7 +14628,7 @@
       "case_id": "alpha3-bipyramid-one-cell",
       "operation_id": "shape.alpha_shape_3",
       "revision": 1,
-      "worker_manifest_sha256": "25b655d57a0d2f8f74fa75d896c1ac2712942d76d2c127729d1130366ff5041e",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -14716,7 +14786,7 @@
       "case_id": "alpha3-bipyramid-both",
       "operation_id": "shape.alpha_shape_3",
       "revision": 1,
-      "worker_manifest_sha256": "25b655d57a0d2f8f74fa75d896c1ac2712942d76d2c127729d1130366ff5041e",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -14874,7 +14944,7 @@
       "case_id": "fixed3-tetra-below",
       "operation_id": "shape.fixed_alpha_shape_3",
       "revision": 1,
-      "worker_manifest_sha256": "25b655d57a0d2f8f74fa75d896c1ac2712942d76d2c127729d1130366ff5041e",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -15029,7 +15099,7 @@
       "case_id": "fixed3-tetra-tie",
       "operation_id": "shape.fixed_alpha_shape_3",
       "revision": 1,
-      "worker_manifest_sha256": "25b655d57a0d2f8f74fa75d896c1ac2712942d76d2c127729d1130366ff5041e",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -15184,7 +15254,7 @@
       "case_id": "fixed3-bipyramid-one-cell",
       "operation_id": "shape.fixed_alpha_shape_3",
       "revision": 1,
-      "worker_manifest_sha256": "25b655d57a0d2f8f74fa75d896c1ac2712942d76d2c127729d1130366ff5041e",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -15339,7 +15409,7 @@
       "case_id": "fixed3-bipyramid-both",
       "operation_id": "shape.fixed_alpha_shape_3",
       "revision": 1,
-      "worker_manifest_sha256": "25b655d57a0d2f8f74fa75d896c1ac2712942d76d2c127729d1130366ff5041e",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -15496,7 +15566,7 @@
       "case_id": "sphere-negative-radius-rejected",
       "operation_id": "shape.bounding.sphere",
       "revision": 1,
-      "worker_manifest_sha256": "25b655d57a0d2f8f74fa75d896c1ac2712942d76d2c127729d1130366ff5041e",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -15551,7 +15621,7 @@
       "case_id": "circle-tampered-radius-rejected",
       "operation_id": "shape.validate.min_circle",
       "revision": 1,
-      "worker_manifest_sha256": "25b655d57a0d2f8f74fa75d896c1ac2712942d76d2c127729d1130366ff5041e",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -15610,7 +15680,7 @@
       "case_id": "sphere-tampered-radius-rejected",
       "operation_id": "shape.validate.min_sphere",
       "revision": 1,
-      "worker_manifest_sha256": "25b655d57a0d2f8f74fa75d896c1ac2712942d76d2c127729d1130366ff5041e",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -15674,7 +15744,7 @@
       "case_id": "hull2-collinear-rejected",
       "operation_id": "hull.convex_2",
       "revision": 1,
-      "worker_manifest_sha256": "25b655d57a0d2f8f74fa75d896c1ac2712942d76d2c127729d1130366ff5041e",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -15724,7 +15794,7 @@
       "case_id": "hull3-oversized-shell-rejected",
       "operation_id": "hull.validate.convex_enclosure",
       "revision": 1,
-      "worker_manifest_sha256": "25b655d57a0d2f8f74fa75d896c1ac2712942d76d2c127729d1130366ff5041e",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -15783,7 +15853,7 @@
       "case_id": "bary-clockwise-polygon-rejected",
       "operation_id": "shape.barycentric",
       "revision": 1,
-      "worker_manifest_sha256": "25b655d57a0d2f8f74fa75d896c1ac2712942d76d2c127729d1130366ff5041e",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -15844,7 +15914,7 @@
       "case_id": "bary-bowtie-polygon-rejected",
       "operation_id": "shape.barycentric",
       "revision": 1,
-      "worker_manifest_sha256": "25b655d57a0d2f8f74fa75d896c1ac2712942d76d2c127729d1130366ff5041e",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -15905,7 +15975,7 @@
       "case_id": "bary-nonconvex-wachspress-rejected",
       "operation_id": "shape.barycentric",
       "revision": 1,
-      "worker_manifest_sha256": "25b655d57a0d2f8f74fa75d896c1ac2712942d76d2c127729d1130366ff5041e",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -15966,7 +16036,7 @@
       "case_id": "bary-query-outside-rejected",
       "operation_id": "shape.barycentric",
       "revision": 1,
-      "worker_manifest_sha256": "25b655d57a0d2f8f74fa75d896c1ac2712942d76d2c127729d1130366ff5041e",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -16027,7 +16097,7 @@
       "case_id": "bary-query-on-boundary-rejected",
       "operation_id": "shape.barycentric",
       "revision": 1,
-      "worker_manifest_sha256": "25b655d57a0d2f8f74fa75d896c1ac2712942d76d2c127729d1130366ff5041e",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -16088,7 +16158,7 @@
       "case_id": "bary-tampered-coordinates-rejected",
       "operation_id": "shape.validate.barycentric",
       "revision": 1,
-      "worker_manifest_sha256": "25b655d57a0d2f8f74fa75d896c1ac2712942d76d2c127729d1130366ff5041e",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -16158,7 +16228,7 @@
       "case_id": "alphawrap-too-fine-rejected",
       "operation_id": "reconstruction.alpha_wrap",
       "revision": 1,
-      "worker_manifest_sha256": "25b655d57a0d2f8f74fa75d896c1ac2712942d76d2c127729d1130366ff5041e",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -16217,7 +16287,7 @@
       "case_id": "alphawrap-tampered-shrunk-rejected",
       "operation_id": "reconstruction.validate.alpha_wrap",
       "revision": 1,
-      "worker_manifest_sha256": "25b655d57a0d2f8f74fa75d896c1ac2712942d76d2c127729d1130366ff5041e",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -16285,7 +16355,7 @@
       "case_id": "alpha2-cocircular-rejected",
       "operation_id": "shape.alpha_shape_2",
       "revision": 1,
-      "worker_manifest_sha256": "25b655d57a0d2f8f74fa75d896c1ac2712942d76d2c127729d1130366ff5041e",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -16337,7 +16407,7 @@
       "case_id": "alpha3-cospherical-rejected",
       "operation_id": "shape.alpha_shape_3",
       "revision": 1,
-      "worker_manifest_sha256": "25b655d57a0d2f8f74fa75d896c1ac2712942d76d2c127729d1130366ff5041e",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -16389,7 +16459,7 @@
       "case_id": "alpha2-negative-alpha-rejected",
       "operation_id": "shape.alpha_shape_2",
       "revision": 1,
-      "worker_manifest_sha256": "25b655d57a0d2f8f74fa75d896c1ac2712942d76d2c127729d1130366ff5041e",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -16441,7 +16511,7 @@
       "case_id": "alpha2-tampered-triangle-dropped-rejected",
       "operation_id": "shape.validate.alpha_shape_2",
       "revision": 1,
-      "worker_manifest_sha256": "25b655d57a0d2f8f74fa75d896c1ac2712942d76d2c127729d1130366ff5041e",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [
@@ -16502,7 +16572,7 @@
       "case_id": "alpha3-tampered-facet-added-rejected",
       "operation_id": "shape.validate.alpha_shape_3",
       "revision": 1,
-      "worker_manifest_sha256": "25b655d57a0d2f8f74fa75d896c1ac2712942d76d2c127729d1130366ff5041e",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.13-replay-cases",
       "request": {
         "inputs": [

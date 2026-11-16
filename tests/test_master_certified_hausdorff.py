@@ -111,10 +111,11 @@ class CertifiedHausdorffWorkerTests(unittest.TestCase):
         rejected = self.run_worker("mesh.validate.hausdorff_symmetric_report", [tampered, *meshes], parameters)
         self.assertEqual(rejected["status"], "error")
         self.assertEqual(rejected["error"]["code"], "DISTANCE_OUT_OF_BRACKET")
-        # Without the scalable mode the bruteforce validator keeps its 400-face bound.
+        # The default validator now accepts this size too, but a report made in the certified mode is
+        # bound to its parameters and is not accepted in the default mode.
         default = self.run_worker("mesh.validate.hausdorff_symmetric_report", [tampered, *meshes],
                                   {"tolerance": mm(0.1), "error_bound": mm(0.01)})
-        self.assertEqual(default["error"]["code"], "FACE_LIMIT_EXCEEDED")
+        self.assertEqual(default["error"]["code"], "PARAMETER_MISMATCH")
 
     def test_both_tiers_agree_on_a_small_pair(self):
         reference, candidate = self.root / "g12.off", self.root / "g12s.off"
@@ -169,7 +170,7 @@ class CertifiedHausdorffRuntimeTests(unittest.TestCase):
         from cgal_mcp.master.errors import PreconditionFailure
         operation = self.runtime.registry.get("mesh.distance.symmetric_hausdorff")
         bound = next(c for c in operation["preconditions"] if c["id"] == "bounded_input")
-        self.assertEqual(bound["maximum_faces"], 400)
+        self.assertEqual(bound["maximum_faces"], 200000)
         self.assertEqual(bound["relaxed_by_parameter"],
                          {"parameter": "validation_mode", "equals": "certified_bvh",
                           "maximum_faces": 2000000, "maximum_bytes": 1073741824})
@@ -178,11 +179,17 @@ class CertifiedHausdorffRuntimeTests(unittest.TestCase):
         request = {"operation_id": "mesh.distance.symmetric_hausdorff",
                    "inputs": [reference["artifact_id"], candidate["artifact_id"]],
                    "parameters": {"tolerance": mm(0.1), "error_bound": mm(0.01)}}
+        # 1152 faces are inside the default bound (200,000 since the validator uses a box hierarchy).
         for mode in (None, "bruteforce"):
             if mode:
                 request["parameters"]["validation_mode"] = mode
-            with self.assertRaisesRegex(PreconditionFailure, "faces<=400"):
-                self.runtime.plan(request)
+            default_plan = self.runtime.plan(request)
+            self.assertNotEqual(default_plan["steps"][1]["parameters"].get("validation_mode"), "certified_bvh")
+        # The relaxation itself: a bound of 400 would refuse this pair unless the mode raises it.
+        from cgal_mcp.master import planner
+        tight = dict(bound, maximum_faces=400)
+        self.assertEqual(planner.bounded_input_limits(tight, {"validation_mode": "certified_bvh"})["maximum_faces"], 2000000)
+        self.assertEqual(planner.bounded_input_limits(tight, {})["maximum_faces"], 400)
         request["parameters"]["validation_mode"] = "certified_bvh"
         plan = self.runtime.plan(request)
         self.assertEqual(plan["steps"][1]["operation"], "mesh.validate.hausdorff_symmetric_report")
@@ -207,9 +214,9 @@ class CertifiedHausdorffRuntimeTests(unittest.TestCase):
                       "max_symmetric_deviation": mm(0.1), "hausdorff_error_bound": mm(0.01)}
         plain = self.runtime.plan({"operation_id": "mesh.simplify.edge_collapse",
                                    "inputs": [source["artifact_id"]], "parameters": parameters})
-        refused = self.execute(plain)
-        self.assertNotEqual(refused["state"], "succeeded")
-        self.assertIn("faces<=400", json.dumps(refused))
+        # The default validator (exact minimum through a box hierarchy) accepts this size as well.
+        default = self.execute(plain)
+        self.assertEqual((default["state"], default["validation_status"]), ("succeeded", "passed"), default)
         plan = self.runtime.plan({"operation_id": "mesh.simplify.edge_collapse", "inputs": [source["artifact_id"]],
                                   "parameters": {**parameters, "hausdorff_validation_mode": "certified_bvh"}})
         hausdorff = plan["steps"][-1]

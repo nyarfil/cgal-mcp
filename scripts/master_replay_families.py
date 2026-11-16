@@ -4747,8 +4747,8 @@ FAMILY_7_3["requirements"]["major.7.3.06"] = {
                     "mesh.validate.hausdorff_symmetric_report; that validator recomputes the bracket in both "
                     "directions, checks the bounds and the pass/fail/indeterminate verdict against the "
                     "tolerance and requires the estimate within the error bound of the exact bracket (a "
-                    "verdict of fail is replayed as well and is not hidden). Only meshes of at most 400 faces "
-                    "are validated; the validators do not certify the sampled estimate beyond the bracket.",
+                    "verdict of fail is replayed as well and is not hidden). Meshes of at most 200,000 faces "
+                    "are validated (2,000,000 in the certified mode); the validators do not certify the sampled estimate beyond the bracket.",
     "case_ids": ["distance-samples-grid", "distance-samples-random", "distance-max-to-mesh",
                  "distance-hausdorff-approximate", "distance-hausdorff-approximate-symmetric",
                  "distance-max-to-points", "distance-hausdorff-bounded", "distance-symmetric-shifted-pass",
@@ -4895,7 +4895,7 @@ FAMILY_7_3["negative_controls"].extend([
 # Scalable certified symmetric Hausdorff (validation_mode certified_bvh; client limit: scans of ~71k faces
 # against ~35k-face simplifications). Synthesized fixtures: a flat 24x24 grid (1152 faces, 1 mm cells) and the
 # same grid with its centre vertex lifted by exactly 0.5 mm, so the exact symmetric Hausdorff distance is 0.5 mm
-# (the lifted vertex to the plane). Both meshes exceed the 400-face bruteforce validator bound.
+# (the lifted vertex to the plane). Both meshes exceeded the former 400-face bound of the default validator (now 200,000).
 B5_FIXTURES.update({
     "hausdorff_grid24.off": "6b1ed0f965005e0c96e11d3f922e9844746fa767f35cf9a87dd3ebb6dbc5bbf7",
     "hausdorff_grid24_spike.off": "44627867c1a473f54d2038faae2e19ca322919fb2b992cbdb82f32217d8b3358",
@@ -4926,7 +4926,7 @@ def _certified_case(case_id: str, tolerance: float, verdict: str) -> dict:
 FAMILY_7_3["requirements"]["major.7.3.06"]["case_ids"].extend([
     "distance-symmetric-certified-spike-fail-verdict", "distance-symmetric-certified-spike-pass"])
 FAMILY_7_3["requirements"]["major.7.3.06"]["symbol_notes"] += (
-    " Scalable mode: with validation_mode certified_bvh (registry maximum_faces raised from 400 to 2,000,000 for "
+    " Scalable mode: with validation_mode certified_bvh (registry maximum_faces raised from 200,000 to 2,000,000 for "
     "this mode only) the same CGAL report is checked by a CGAL-independent certified bracket (self-written "
     "bounding-volume hierarchy, exact nearest-triangle branch-and-bound, midpoint subdivision with the convex bound "
     "min_S max_i d(v_i,S), width min(0.5% diagonal, error_bound/2), exhaustive-scan cross-check on a subsample, GMP "
@@ -4942,10 +4942,10 @@ FAMILY_7_3["negative_controls"].extend([
      "inputs": [_b5vreport("tampered_hausdorff_certified_spike_hidden.json"), H_GRID, H_SPIKE],
      "parameters": _certified(0.1),
      "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "DISTANCE_OUT_OF_BRACKET"},
-    {"id": "distance-bruteforce-validator-large-mesh-refused", "operation": "mesh.validate.hausdorff_symmetric_report",
+    {"id": "distance-certified-report-rejected-in-default-mode", "operation": "mesh.validate.hausdorff_symmetric_report",
      "inputs": [_b5vreport("tampered_hausdorff_certified_spike_hidden.json"), H_GRID, H_SPIKE],
      "parameters": {"tolerance": _mm_length(0.1), "error_bound": _mm_length(0.01)},
-     "expect_error_class": "RESOURCE_LIMIT", "expect_error_code": "FACE_LIMIT_EXCEEDED"},
+     "expect_error_class": "VALIDATION_FAILED", "expect_error_code": "PARAMETER_MISMATCH"},
     {"id": "distance-symmetric-unknown-validation-mode-rejected", "operation": "mesh.distance.symmetric_hausdorff",
      "inputs": [H_GRID, H_SPIKE], "parameters": {**_certified(0.1), "validation_mode": "sampled"},
      "expect_error_class": "INVALID_REQUEST", "expect_error_code": "INVALID_PARAMETER"},
