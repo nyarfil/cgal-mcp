@@ -138,6 +138,18 @@
 - `search_limit`
 - `search_query`
 
+### 実験的実行（cgal_experimental_run）が拒否された
+意味: experimental_disabled: サーバーの所有者が呼び出し側C++の実行を有効にしていない。experimental_source / experimental_inputs / experimental_outputs / experimental_limits / experimental_note: 要求の形式が不正。experimental_compiler / experimental_memory_limit: 設定されたコンパイラを起動できない、またはメモリ上限を適用できない。コンパイルや実行の失敗はエラーではなく、status（compile_failed・run_failed・run_timeout）とコンパイラ出力・stderrが返る。
+対処: まず登録済みの操作（cgal_capabilities_search）を使う。該当がなく無効な場合は、サーバーの所有者が有効にする必要があること（CGAL_MASTER_EXPERIMENTAL=1とコンパイルコマンド）を伝える。このツールの結果は未検証なので、提示するたびにそう伝える。
+- `experimental_compiler`
+- `experimental_disabled`
+- `experimental_inputs`
+- `experimental_limits`
+- `experimental_memory_limit`
+- `experimental_note`
+- `experimental_outputs`
+- `experimental_source`
+
 ### 方針（コスト/配置/ライセンス）を選べない
 意味: 必須の方針選択が欠けている・未登録、またはプランのライセンス/依存/kernel方針が操作を除外している。
 対処: カードに載っている方針から選ぶ。allowed_licenses/dependenciesの緩和はユーザーの同意がある場合のみ。

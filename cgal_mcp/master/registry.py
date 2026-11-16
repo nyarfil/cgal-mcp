@@ -20,6 +20,9 @@ from .util import ID_RE, canonical_json
 
 
 EXECUTABLE_STATUSES = {"IMPLEMENTED", "VALIDATED"}
+# Words that make a request about a rounded fallback operation rather than its exact primary.
+FALLBACK_QUERY_TERMS = ("round", "\u4e38\u3081", "binary64", "representable", "\u8868\u305b\u306a\u3044",
+                        "general position", "\u4e00\u822c\u7684\u306a\u4f4d\u7f6e", "output_binary64_loss")
 # Discovery-only score penalty per uncovered query concept (see search()).
 ALL_STATUSES = {"DISCOVERED", "CATALOGED", "ADAPTER_PLANNED", "IMPLEMENTED",
                 "VALIDATED", "DEPRECATED", "BLOCKED", "EXCLUDED"}
@@ -457,6 +460,7 @@ class OperationRegistry:
         if type(limit) is not int or not 1 <= limit <= 100:
             raise InvalidInput("search_limit", "Search limit must be between 1 and 100")
         parsed = parse_query(query)
+        lowered_query = query.lower()
         candidates: list[tuple[bool, float, dict[str, Any], list[str], Any,
                                dict[str, Any], dict[str, list[Any]],
                                dict[str, str]]] = []
@@ -561,9 +565,11 @@ class OperationRegistry:
                     route_supported = False
                     reasons.append("validator requires explicit validation intent")
             fallback_for = operation.get("fallback_for")
-            if fallback_for and not evidence.alias_matches and not id_bonus:
-                # A declared fallback (for example the rounded Boolean) never wins a goal that its
-                # primary operations answer; it is listed after them and chosen by operation_id.
+            if fallback_for and not any(term in lowered_query for term in FALLBACK_QUERY_TERMS):
+                # A declared fallback (the rounded variants) never wins a goal that its primary
+                # operations answer: it shares their words and even their id tokens. It is routed
+                # only when the request itself asks for rounding or quotes the refusal of the
+                # primary; otherwise it is listed after the routable candidates and chosen by id.
                 route_supported = False
                 reasons.append("fallback for " + ", ".join(fallback_for)
                                + ": select it by operation_id when the primary operation refuses")

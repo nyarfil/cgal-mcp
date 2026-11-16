@@ -11,7 +11,7 @@ Japanese: [docs/master/SCOPE_CORRECTION_JA.md](docs/master/SCOPE_CORRECTION_JA.m
 
 ## What it is
 
-- A small fixed control surface (13 tools) over a data-driven Operation registry.
+- A small fixed control surface (14 tools; the 14th, `cgal_experimental_run`, is off by default) over a data-driven Operation registry.
 - Typed, immutable artifacts and plans (DAG), persisted in SQLite.
 - Router hard gates, operation-specific validators that are mandatory for mutation,
   worker resource limits, fault isolation (a failed candidate never replaces the input).
@@ -42,10 +42,28 @@ Limits worth knowing: every operation card lists its face bound, from 64 faces u
 operations accept 400 faces unless `validation_mode=certified_bvh` is used. The exact Booleans
 (`mesh.boolean.union/intersection/difference`) and `mesh.clip.plane`, `mesh.split.plane`,
 `mesh.corefine`, `mesh.autorefine` publish only results whose coordinates are exact binary64
-values, so meshes in general position are refused; for Booleans use `mesh.boolean.rounded`
-(IMPLEMENTED, tolerance-checked, not independently reviewed). Input meshes are triangle meshes; materials, UVs,
+values, so meshes in general position are refused; use the rounded variants
+(`mesh.boolean.rounded`, `mesh.clip.plane_rounded`, `mesh.split.plane_rounded`,
+`mesh.corefine_rounded`, `mesh.autorefine_rounded`: IMPLEMENTED, tolerance-checked, not
+independently reviewed). Input meshes are triangle meshes; materials, UVs,
 B-rep and face IDs are not preserved; the server is for a trusted local host (no
 multi-user auth).
+
+## Experimental execution (off by default)
+
+`cgal_experimental_run` compiles and runs C++ written by the caller against the CGAL headers, for
+algorithms that have no registered operation. It is enabled only when the host sets
+`CGAL_MASTER_EXPERIMENTAL=1` and either `CGAL_MASTER_EXPERIMENTAL_INCLUDE` (POSIX: CGAL include
+directory, optional `CGAL_MASTER_EXPERIMENTAL_CXX`) or `CGAL_MASTER_EXPERIMENTAL_COMPILE` (a JSON
+array with `{source}` and `{output}`, any platform). The program reads its inputs from the
+directory in `CGAL_IN` and writes the declared files to `CGAL_OUT`.
+
+- Runs in a separate process with a wall-time and (POSIX) memory limit; a failure publishes nothing.
+- Every output is stored as `verification: unverified`: no validator has checked it. Registered
+  operations and their mandatory validators are unchanged.
+- **Not a security sandbox**: the program has the server's filesystem and network access. Enable
+  it only on a trusted local machine. Verified on Linux; the Windows path (explicit compile
+  command, wall-time limit only) is not verified.
 
 ## Install
 

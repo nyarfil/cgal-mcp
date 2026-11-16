@@ -468,3 +468,53 @@ reportを書き込む前に失敗するため）。続けて`evaluate_master_sea
   `snapshot`は同じcommitに対して2回実行され、一方は18分で成功、もう一方は20分の制限時間でcancelになりました。
   mainでは手前のtestで失敗していたため最後まで実行されたことがなく、制限時間が足りていませんでした。45分へ延長しました。
   旧v0.1 workerの`build` jobも20分でcancelになります（mainと同じ。v0.1は非推奨で、今回は変更していません）。
+
+## プロ用途の制約 第2区切り: 丸め出力版4件と実験的実行（2026-11-15）
+
+Master受入（`standalone_accepted`）は**falseのまま**です。追加したOperationはすべて`IMPLEMENTED`
+（独立reviewなし）で、`VALIDATED`の件数（228）は変わりません。
+
+### 対応1: 一般位置のclip・split・corefine・autorefine（丸め出力版）
+
+| 厳密版（拒否: `OUTPUT_NOT_REPRESENTABLE`） | 丸め出力版（新規、`IMPLEMENTED`） | 必須validator |
+|---|---|---|
+| `mesh.clip.plane` | `mesh.clip.plane_rounded` | `mesh.validate.clip_rounded` |
+| `mesh.split.plane` | `mesh.split.plane_rounded` | `mesh.validate.split_rounded` |
+| `mesh.corefine` | `mesh.corefine_rounded` | `mesh.validate.corefine_rounded` |
+| `mesh.autorefine` | `mesh.autorefine_rounded` | `mesh.validate.autorefine_rounded` |
+
+- 契約は`mesh.boolean.rounded`と同じです。EPECKで厳密に計算し、座標をbinary64へ丸め、丸めでmeshが壊れた
+  場合は`ROUNDING_INVALIDATED_RESULT`で拒否します。validatorは厳密計算をやり直し、要素数・境界・退化面・
+  自己交差・双方向の頂点距離（許容差 = 2^-40 × 入力最大座標より大きい2の冪）・閉じている場合の体積を比べます。
+  「厳密な集合として等しい」ではなく「許容差内で近い」ことの確認です。
+- 厳密版の拒否は`suggested_operations`で丸め出力版を示します。検索は、問い合わせに丸め・表現可能性の語が
+  ある場合だけ丸め出力版を自動ルートの候補にします（`FALLBACK_QUERY_TERMS`）。
+- 確認: `tests/test_master_rounded_mesh.py`（workerプロトコル: 5通りの実行とvalidator合格、厳密版の拒否と案内、
+  頂点を1e-3・1e-6・1e-9動かした候補と面を欠いた候補の拒否、入力そのものや別parameterの拒否、registryと検索）。
+  手動で101,760面の球でも実行・検証しました（自動試験には含めていません）。
+- 未確認: Windows worker（CI待ち）、独立review。
+
+### 対応2: 実験的実行 `cgal_experimental_run`
+
+登録Operationがないアルゴリズムを、呼び出し側（AI）が書いたC++で試すための経路です。
+
+| 項目 | 内容 |
+|---|---|
+| 有効化 | 既定で無効。hostが`CGAL_MASTER_EXPERIMENTAL=1`とcompile設定を与えた場合だけ |
+| 実行 | 別process。時間制限と（POSIX）memory制限。失敗・timeoutでは何も公開しない |
+| 結果の扱い | `verification: unverified`、producerは`experimental_unverified`。validatorは通っていない |
+| 既存Operation | 変更なし。登録Operationが生成codeを実行することはなく、必須validatorもそのまま |
+| 隔離の限界 | **security sandboxではありません**。fileとnetworkはserverと同じ権限。信頼できるlocal host専用 |
+
+- 確認: `tests/test_master_experimental.py`（既定で拒否、成功時の未検証label、compile失敗・異常終了・timeout・
+  memory超過・出力欠落・不正なmeshで何も公開されないこと、不正な要求の拒否）。Linuxのみ。
+- 未確認: Windows（compile commandを明示する経路、時間制限のみ）、CGALをincludeした大きなprogramの
+  compile時間（手動の試行では約30〜60秒）。
+- これは「台帳にあるが実行経路がないpackage」を**検証済みとして**提供するものではありません。
+  package台帳の`cataloged`は変わりません。
+
+### この区切りで未対応
+
+- 距離系・細分・骨格・パラメータ化・SDF・凸分解・最短経路・点群間隔・最小円/球の面数・点数上限。
+- 専門家向けparameterの公開、台帳のみのpackageへのadapter追加。
+

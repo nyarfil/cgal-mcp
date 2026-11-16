@@ -12,6 +12,8 @@ namespace cgal_master::batch2 {
 
 std::vector<OperationDefinition> points_producer_operations();
 std::vector<OperationDefinition> mesh_producer_operations();
+// Rounded clip / split / corefine / autorefine and their replay validators.
+std::vector<OperationDefinition> mesh_rounded_operations();
 std::vector<OperationDefinition> polygon_producer_operations();
 std::vector<OperationDefinition> points_validator_operations();
 std::vector<OperationDefinition> mesh_validator_operations();

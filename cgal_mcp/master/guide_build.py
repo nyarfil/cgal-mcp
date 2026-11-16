@@ -26,7 +26,8 @@ PROMPT_NAMES = ("start_here", "repair_and_simplify_mesh", "reconstruct_surface_f
                 "validate_geometry", "compare_meshes", "2d_boolean_offset", "choose_operation")
 TOOL_NAMES = ("cgal_get_guide", "cgal_capabilities_search", "cgal_capabilities_describe", "cgal_plan",
               "cgal_execute", "cgal_job_status", "cgal_job_cancel", "cgal_validate", "cgal_artifact_import",
-              "cgal_artifact_inspect", "cgal_artifact_export", "cgal_docs_search", "cgal_system_health")
+              "cgal_artifact_inspect", "cgal_artifact_export", "cgal_docs_search", "cgal_system_health",
+              "cgal_experimental_run")
 
 
 def jdump(value: Any) -> str:
@@ -246,6 +247,20 @@ MANUAL_MULTI_CASES = {
         [("sphere_general_a", f"{FIXTURE_ROOT}/wave_a_boolean/sphere_general_a.off", "mm", "TriangleSurfaceMesh"),
          ("sphere_general_b", f"{FIXTURE_ROOT}/wave_a_boolean/sphere_general_b.off", "mm", "TriangleSurfaceMesh")],
         {"operation": "union"}),
+    "mesh.clip.plane_rounded": (
+        [("sphere_general_a", f"{FIXTURE_ROOT}/wave_a_boolean/sphere_general_a.off", "mm", "TriangleSurfaceMesh")],
+        {"normal": [0.3, 0.2, 1.0], "offset": {"value": 1.25, "unit": "mm"}, "clip_volume": True}),
+    "mesh.split.plane_rounded": (
+        [("sphere_general_a", f"{FIXTURE_ROOT}/wave_a_boolean/sphere_general_a.off", "mm", "TriangleSurfaceMesh")],
+        {"normal": [0.3, 0.2, 1.0], "offset": {"value": 1.25, "unit": "mm"}}),
+    "mesh.corefine_rounded": (
+        [("sphere_general_a", f"{FIXTURE_ROOT}/wave_a_boolean/sphere_general_a.off", "mm", "TriangleSurfaceMesh"),
+         ("sphere_general_b", f"{FIXTURE_ROOT}/wave_a_boolean/sphere_general_b.off", "mm", "TriangleSurfaceMesh")],
+        {}),
+    "mesh.autorefine_rounded": (
+        [("spheres_general_intersecting", f"{FIXTURE_ROOT}/wave_a_boolean/spheres_general_intersecting.off", "mm",
+          "TriangleSurfaceMesh")],
+        {}),
 }
 
 
@@ -839,13 +854,13 @@ CONVENTIONS
 Units mm/cm/m per artifact; mixing units in one operation fails with unit_mismatch. Reports are unitless. Coordinates are right-handed Cartesian binary64; outward normals are counter-clockwise. Angles are degrees unless the card says otherwise.
 
 TOOLS ({len(TOOL_NAMES)})
-cgal_get_guide (CALL FIRST: guides, cards, recipes), cgal_capabilities_search (rank operations for a goal), cgal_capabilities_describe (raw registry definition), cgal_artifact_import / cgal_artifact_inspect / cgal_artifact_export (move data in and out), cgal_plan (typed immutable plan), cgal_execute / cgal_job_status / cgal_job_cancel (run, poll, stop), cgal_validate (re-check an artifact against its source), cgal_docs_search (pinned CGAL documentation index; documentation is not execution), cgal_system_health (limits, worker build, registry revision).
+cgal_get_guide (CALL FIRST: guides, cards, recipes), cgal_capabilities_search (rank operations for a goal), cgal_capabilities_describe (raw registry definition), cgal_artifact_import / cgal_artifact_inspect / cgal_artifact_export (move data in and out), cgal_plan (typed immutable plan), cgal_execute / cgal_job_status / cgal_job_cancel (run, poll, stop), cgal_validate (re-check an artifact against its source), cgal_docs_search (pinned CGAL documentation index; documentation is not execution), cgal_system_health (limits, worker build, registry revision, whether experimental execution is enabled), cgal_experimental_run (experimental and unverified: compile and run C++ you write; off by default).
 
 ARTIFACT TYPES
 {types_line}. Operation cards name the exact type each input slot accepts and each output slot produces; a JSON report type is read, not imported.
 
 FAIL-CLOSED BEHAVIOUR
-The server refuses or fails with a coded error instead of guessing. rejected = a validator did not confirm the result (output unpublished). unmet_precondition = a documented bound or property failed before compute (for example the distance/Hausdorff operations accept at most 400 faces, except mesh.distance.symmetric_hausdorff with validation_mode certified_bvh: up to 2,000,000 faces; every card lists its bounds). resource_limit/timeout = shrink the input or raise execution={{"wall_time_ms","memory_mb"}} within cgal_system_health maxima. Never retry an unchanged request after invalid_input, unmet_precondition, unsupported_operation or validation failure. The exact Booleans (mesh.boolean.union/intersection/difference) and mesh.clip.plane, mesh.split.plane, mesh.corefine, mesh.autorefine publish only results whose coordinates are exact binary64 values; meshes in general position fail with OUTPUT_BINARY64_LOSS or OUTPUT_NOT_REPRESENTABLE. For Booleans use mesh.boolean.rounded then (rounded coordinates, checked within a stated tolerance). Unknown operations are refused; the server never generates C++ on demand.
+The server refuses or fails with a coded error instead of guessing. rejected = a validator did not confirm the result (output unpublished). unmet_precondition = a documented bound or property failed before compute (for example the distance/Hausdorff operations accept at most 400 faces, except mesh.distance.symmetric_hausdorff with validation_mode certified_bvh: up to 2,000,000 faces; every card lists its bounds). resource_limit/timeout = shrink the input or raise execution={{"wall_time_ms","memory_mb"}} within cgal_system_health maxima. Never retry an unchanged request after invalid_input, unmet_precondition, unsupported_operation or validation failure. The exact Booleans (mesh.boolean.union/intersection/difference) and mesh.clip.plane, mesh.split.plane, mesh.corefine, mesh.autorefine publish only results whose coordinates are exact binary64 values; meshes in general position fail with OUTPUT_BINARY64_LOSS or OUTPUT_NOT_REPRESENTABLE. For Booleans use mesh.boolean.rounded then (rounded coordinates, checked within a stated tolerance). Unknown operations are refused and the server never writes C++ itself. cgal_experimental_run (off unless the server owner enabled it) compiles and runs C++ that YOU write against CGAL when no registered operation fits; nothing validates its result, every artifact it creates has verification 'unverified', and you must say so when you present it.
 
 AMBIGUITY
 cgal_plan(goal=...) works only when one operation clearly fits. ambiguous_route (or unsupported_operation with details.options) carries a recorded question and options (operation_id, summary, distinguishing_concepts). Do not guess: ask the user which one, then re-plan with operation_id. Search with query_analysis.abstained=true means nothing executable fits.
@@ -869,13 +884,13 @@ CATALOGED and EXCLUDED packages (topic "limits-and-status" lists them with reaso
 単位はartifactごとにmm/cm/m。1操作での単位混在はunit_mismatch。レポートは単位なし。座標は右手系直交・binary64、外向き法線は反時計回り。角度は特記なき限り度。
 
 ツール（{len(TOOL_NAMES)}個）
-cgal_get_guide（最初に呼ぶ: ガイド・カード・レシピ）、cgal_capabilities_search（goalに合う操作の順位付け）、cgal_capabilities_describe（レジストリ定義の原本）、cgal_artifact_import / cgal_artifact_inspect / cgal_artifact_export（データの出し入れ）、cgal_plan（型付き不変プラン）、cgal_execute / cgal_job_status / cgal_job_cancel（実行・確認・中止）、cgal_validate（既存artifactをsourceと再照合）、cgal_docs_search（固定されたCGAL文書索引。文書は実行ではない）、cgal_system_health（上限・workerビルド・レジストリrev）。
+cgal_get_guide（最初に呼ぶ: ガイド・カード・レシピ）、cgal_capabilities_search（goalに合う操作の順位付け）、cgal_capabilities_describe（レジストリ定義の原本）、cgal_artifact_import / cgal_artifact_inspect / cgal_artifact_export（データの出し入れ）、cgal_plan（型付き不変プラン）、cgal_execute / cgal_job_status / cgal_job_cancel（実行・確認・中止）、cgal_validate（既存artifactをsourceと再照合）、cgal_docs_search（固定されたCGAL文書索引。文書は実行ではない）、cgal_system_health（上限・workerビルド・レジストリrev・実験的実行が有効か）、cgal_experimental_run（実験的・未検証: あなたが書いたC++をコンパイルして実行。既定では無効）。
 
 アーティファクトの型
 {types_line}。操作カードに各入力slotが受ける型と各出力slotが作る型を明記。JSONレポート型は読むもので取り込むものではない。
 
 fail-closed
-推測せず、コード付きで拒否・失敗する。rejected=検証器が結果を確認できず出力は非公開。unmet_precondition=宣言済みの上限・性質が計算前に不成立（例: 距離/Hausdorff系は400面以下。ただしmesh.distance.symmetric_hausdorffはvalidation_mode=certified_bvhで2,000,000面まで。各カードに上限）。resource_limit/timeout=入力を小さくするか、cgal_system_healthの上限内でexecution={{"wall_time_ms","memory_mb"}}を指定。invalid_input・unmet_precondition・unsupported_operation・検証失敗の後に同じ要求を再試行しない。厳密ブーリアン（mesh.boolean.union/intersection/difference）とmesh.clip.plane・mesh.split.plane・mesh.corefine・mesh.autorefineは、結果の座標が厳密にbinary64で表せる場合だけ公開する。一般的な位置のメッシュはOUTPUT_BINARY64_LOSSまたはOUTPUT_NOT_REPRESENTABLEで失敗する。ブーリアンはその場合mesh.boolean.rounded（座標を丸め、明示した許容誤差内で検証）を使う。未知の操作は拒否され、C++をその場で生成しない。
+推測せず、コード付きで拒否・失敗する。rejected=検証器が結果を確認できず出力は非公開。unmet_precondition=宣言済みの上限・性質が計算前に不成立（例: 距離/Hausdorff系は400面以下。ただしmesh.distance.symmetric_hausdorffはvalidation_mode=certified_bvhで2,000,000面まで。各カードに上限）。resource_limit/timeout=入力を小さくするか、cgal_system_healthの上限内でexecution={{"wall_time_ms","memory_mb"}}を指定。invalid_input・unmet_precondition・unsupported_operation・検証失敗の後に同じ要求を再試行しない。厳密ブーリアン（mesh.boolean.union/intersection/difference）とmesh.clip.plane・mesh.split.plane・mesh.corefine・mesh.autorefineは、結果の座標が厳密にbinary64で表せる場合だけ公開する。一般的な位置のメッシュはOUTPUT_BINARY64_LOSSまたはOUTPUT_NOT_REPRESENTABLEで失敗する。ブーリアンはその場合mesh.boolean.rounded（座標を丸め、明示した許容誤差内で検証）を使う。未知の操作は拒否され、サーバー自身がC++を書くことはない。cgal_experimental_run（サーバーの所有者が有効にした場合のみ）は、登録済みの操作に該当がないとき、あなたが書いたCGALのC++をコンパイルして実行する。結果は何も検証されず、作られたartifactはすべてverificationが'unverified'なので、提示するときは必ずそう伝える。
 
 曖昧さ
 cgal_plan(goal=...)は1つの操作が明確に当てはまるときだけ。ambiguous_route（またはdetails.optionsつきunsupported_operation）は記録済みの質問と選択肢を持つ。推測せずユーザーに尋ね、operation_idで再plan。検索でquery_analysis.abstained=trueは実行可能な該当なしの意味。

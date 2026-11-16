@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+- Rounded variants for meshes in general position (status IMPLEMENTED, not independently reviewed):
+  `mesh.clip.plane_rounded`, `mesh.split.plane_rounded`, `mesh.corefine_rounded`,
+  `mesh.autorefine_rounded`, each with a mandatory validator `mesh.validate.*_rounded` using the same
+  contract as `mesh.boolean.rounded` (exact EPECK result rounded to binary64, refused when rounding
+  breaks the mesh, accepted only within 2^-40 of the coordinate scale of an exact replay). The exact
+  operations now name the rounded variant in `suggested_operations` of `OUTPUT_NOT_REPRESENTABLE`.
+  Search routes to a fallback only when the query mentions rounding or representability.
+- New tool `cgal_experimental_run` (14 tools): compile and run caller-written CGAL C++ in a separate
+  process with wall-time and memory limits. Off unless `CGAL_MASTER_EXPERIMENTAL=1` and a compile
+  command are configured. Outputs are imported as `verification: unverified`
+  (`producer.kind = experimental_unverified`); `cgal_artifact_inspect` now reports `verification`
+  for every artifact. Not a security sandbox; trusted local host only. Verified on Linux only.
+- Registry: 238 operations (228 VALIDATED, 10 IMPLEMENTED), `catalog_revision` `-10`.
+- `scripts/publish_master_family_evidence.py`: copies replayed family reports to the published
+  paths and records their digests in `catalog/major_requirements.json`.
 - New operation `mesh.boolean.rounded` (status IMPLEMENTED, not independently reviewed) with the
   mandatory validator `mesh.validate.boolean_rounded`: union / intersection / difference of closed
   meshes in general position. The exact Booleans publish only results whose coordinates are exact

@@ -27,9 +27,13 @@ technical reconciliation separately.
 - Require source/license/version provenance, typed units and mandatory validation
   for mutation. Unknown operations must not execute generated C++ on demand.
   User decision 2026-11-13: an isolated "free execution" mode (AI-written CGAL code run in a
-  separate resource-limited process, every result labelled unverified) is approved as a planned
-  addition. It is not implemented. Until it exists with that isolation and labelling, the rule
-  above stands; when it is added, registered operations and their mandatory validators stay as they are.
+  separate resource-limited process, every result labelled unverified) is approved.
+  Implemented 2026-11-15 as the tool `cgal_experimental_run` (`cgal_mcp/master/experimental.py`):
+  off unless the host sets `CGAL_MASTER_EXPERIMENTAL=1` and a compile command; separate process with
+  wall-time and memory limits; outputs are imported with producer `experimental_unverified` and
+  reported as `verification: unverified`. It is not a security sandbox (no filesystem or network
+  isolation) and is for a trusted local host only. Registered operations never run generated code,
+  their mandatory validators stay as they are, and an unverified artifact never counts as validated.
 - Order agreed with the user on 2026-11-13 for "professional use": (1) remove practical input
   limits (face bounds, exact-representability refusals), (2) expose expert parameters,
   (3) add adapters for cataloged packages. See the dated section in

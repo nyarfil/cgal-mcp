@@ -1,7 +1,7 @@
 {
   "$schema": "operation.schema.json",
   "schema_version": 1,
-  "catalog_revision": "master-core-hull-wave-a-wave-b-mesh-boolean-repair-wave-c-wave-d-wave-e-validated-9",
+  "catalog_revision": "master-core-hull-wave-a-wave-b-mesh-boolean-repair-wave-c-wave-d-wave-e-validated-10",
   "cgal_version": "6.2.1",
   "build_requirements": {
     "source_kind": "official_release",
@@ -35042,6 +35042,1487 @@
         "source_kind": "official_release",
         "cgal_version": "6.2.1",
         "review_status": "self_verified_not_independently_reviewed"
+      }
+    },
+    {
+      "id": "mesh.clip.plane_rounded",
+      "revision": 1,
+      "status": "IMPLEMENTED",
+      "role": "transform",
+      "summary": "Clip a triangle mesh in general position with a plane (PMP::clip), keeping the side with a*x+b*y+c*z <= d; the exact result is rounded to binary64 coordinates and accepted only within a stated tolerance of the exact replay. Use it when mesh.clip.plane refuses with OUTPUT_NOT_REPRESENTABLE.",
+      "package": "PMP_Boolean_operations",
+      "aliases": [
+        "rounded plane clip",
+        "plane clip with rounded output",
+        "\u4e38\u3081\u51fa\u529b\u306e\u5e73\u9762\u30af\u30ea\u30c3\u30d7"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "PMP_Boolean_operations"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Polygon_mesh_processing::clip"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Polygon_mesh_processing/clip.h"
+        },
+        {
+          "kind": "manual",
+          "identifier": "PMP_Boolean_operations/index.html"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "PMP_Boolean_operations",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/clip.h",
+            "sha256": "189a706303e518fb43afcfd64949ec753a249112cb6b36419c6b733274e60477"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "source",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "geometry",
+            "type": "TriangleSurfaceMesh",
+            "format": "off",
+            "unit_from": "source"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "normal",
+          "offset",
+          "clip_volume"
+        ],
+        "properties": {
+          "normal": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            },
+            "description": "Plane normal (a, b, c), not all zero."
+          },
+          "offset": {
+            "type": "TypedLength",
+            "description": "Plane offset d of a*x+b*y+c*z = d, in artifact length units (signed)."
+          },
+          "clip_volume": {
+            "type": "boolean",
+            "description": "Clip the volume of a closed mesh (closing the cut with a cap) instead of the surface."
+          }
+        }
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 268435456,
+          "maximum_faces": 200000
+        }
+      ],
+      "validation": {
+        "required": true,
+        "validators": [
+          "mesh.validate.clip_rounded"
+        ],
+        "bindings": {
+          "mesh.validate.clip_rounded": {
+            "artifacts": {
+              "candidate": {
+                "output": "geometry"
+              },
+              "source": {
+                "input": "source"
+              }
+            },
+            "parameters": {
+              "normal": {
+                "parameter": "normal"
+              },
+              "offset": {
+                "parameter": "offset"
+              },
+              "clip_volume": {
+                "parameter": "clip_volume"
+              }
+            }
+          }
+        }
+      },
+      "output_contract": {
+        "geometry_mutation": true,
+        "source_sha256_preserved": true,
+        "producer_diagnostics_are_non_authoritative": true,
+        "candidate_published_only_after_validation": true,
+        "certified": "closeness to the exact result within the tolerance; not the exact tiling"
+      },
+      "dependencies": [
+        "AABB_tree",
+        "Polygon_mesh_processing",
+        "Surface_mesh"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "info": {
+          "input_slots": [
+            "source"
+          ],
+          "maximum_input_faces": 200000,
+          "maximum_output_faces": 1000000,
+          "rounds_exact_result_of": "mesh.clip.plane",
+          "source_header": "CGAL/Polygon_mesh_processing/clip.h",
+          "tolerance_rule": "2^-40 times the power of two above the largest absolute source coordinate",
+          "validator_parameter_bindings": {
+            "mesh.validate.clip_rounded": {
+              "clip_volume": "clip_volume",
+              "normal": "normal",
+              "offset": "offset"
+            }
+          },
+          "validators": [
+            "mesh.validate.clip_rounded"
+          ]
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64 converted to exact binary-rational coordinates",
+        "predicate_policy": "CGAL exact predicates and exact constructions (EPECK); reported points and barycentric weights are canonical exact rational strings",
+        "exact_constructions": "EPECK",
+        "requested_policy": "package_recommended only",
+        "output_coordinate_storage": "IEEE-754 binary64, rounded from the exact result",
+        "rounding_policy": "each exact coordinate is replaced by a neighbouring binary64 value; a rounded mesh with a degenerate face, or with a self-intersection the exact result does not have, is refused (NUMERIC_FAILURE/ROUNDING_INVALIDATED_RESULT)",
+        "tolerance_rule": "2^-40 times the power of two above the largest absolute source coordinate"
+      },
+      "evidence": {
+        "tests": [
+          "tests/test_master_rounded_mesh.py"
+        ],
+        "build": "build-master/cgal-master-worker",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed",
+        "worker_manifest_operation": "mesh.clip.plane_rounded"
+      },
+      "fallback_for": [
+        "mesh.clip.plane"
+      ]
+    },
+    {
+      "id": "mesh.validate.clip_rounded",
+      "revision": 1,
+      "status": "IMPLEMENTED",
+      "role": "validator",
+      "summary": "Validate a rounded clip candidate against the exact replay: valid mesh, equal element counts and border, no degenerate face, no new self-intersection, every vertex of either mesh within the tolerance of the other surface, volume within tolerance * area when closed.",
+      "package": "PMP_Boolean_operations",
+      "aliases": [],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "PMP_Boolean_operations"
+        },
+        {
+          "kind": "operation_reference",
+          "identifier": "mesh.clip.plane"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "PMP_Boolean_operations",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/clip.h",
+            "sha256": "189a706303e518fb43afcfd64949ec753a249112cb6b36419c6b733274e60477"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          },
+          {
+            "slot": "source",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "normal",
+          "offset",
+          "clip_volume"
+        ],
+        "properties": {
+          "normal": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            },
+            "description": "Plane normal (a, b, c), not all zero."
+          },
+          "offset": {
+            "type": "TypedLength",
+            "description": "Plane offset d of a*x+b*y+c*z = d, in artifact length units (signed)."
+          },
+          "clip_volume": {
+            "type": "boolean",
+            "description": "Clip the volume of a closed mesh (closing the cut with a cap) instead of the surface."
+          }
+        }
+      },
+      "preconditions": [],
+      "validation": {
+        "required": false,
+        "validators": [],
+        "bindings": {},
+        "terminal_validator": true,
+        "validates": "mesh.clip.plane_rounded",
+        "validates_all": [
+          "mesh.clip.plane_rounded"
+        ],
+        "required_report_checks": {
+          "status": "pass",
+          "passed": true,
+          "validator": "mesh.validate.clip_rounded",
+          "comparison": "tolerance",
+          "checks.candidate_is_valid_mesh": true,
+          "checks.element_counts_match_reference": true,
+          "checks.border_matches_reference": true,
+          "checks.no_degenerate_face": true,
+          "checks.self_intersection_free_like_reference": true,
+          "checks.candidate_vertices_within_tolerance_of_reference_surface": true,
+          "checks.reference_vertices_within_tolerance_of_candidate_surface": true,
+          "checks.volume_within_tolerance_when_closed": true
+        }
+      },
+      "output_contract": {
+        "schema": "ValidationReport/v1",
+        "required_true_checks": [
+          "candidate_is_valid_mesh",
+          "element_counts_match_reference",
+          "border_matches_reference",
+          "no_degenerate_face",
+          "self_intersection_free_like_reference",
+          "candidate_vertices_within_tolerance_of_reference_surface",
+          "reference_vertices_within_tolerance_of_candidate_surface",
+          "volume_within_tolerance_when_closed"
+        ],
+        "status": "pass",
+        "failure_or_indeterminate_publish": false,
+        "independence": "exact EPECK replay of the same CGAL operation compared within a stated tolerance; not a CGAL-free oracle"
+      },
+      "dependencies": [
+        "AABB_tree",
+        "Polygon_mesh_processing",
+        "Surface_mesh"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "info": {
+          "checks": [
+            "candidate_is_valid_mesh",
+            "element_counts_match_reference",
+            "border_matches_reference",
+            "no_degenerate_face",
+            "self_intersection_free_like_reference",
+            "candidate_vertices_within_tolerance_of_reference_surface",
+            "reference_vertices_within_tolerance_of_candidate_surface",
+            "volume_within_tolerance_when_closed"
+          ],
+          "independence": "exact EPECK replay of the same CGAL operation compared within a stated tolerance; not a CGAL-free oracle",
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "reference_comparison": "exact EPECK replay; exact predicates and exact vertex-to-witness-triangle squared distances compared with a binary64 tolerance",
+        "tolerance_rule": "2^-40 times the power of two above the largest absolute source coordinate",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/test_master_rounded_mesh.py"
+        ],
+        "build": "build-master/cgal-master-worker",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed",
+        "worker_manifest_operation": "mesh.validate.clip_rounded"
+      }
+    },
+    {
+      "id": "mesh.split.plane_rounded",
+      "revision": 1,
+      "status": "IMPLEMENTED",
+      "role": "transform",
+      "summary": "Split a triangle mesh in general position along a plane (PMP::split); the exact result is rounded to binary64 coordinates and accepted only within a stated tolerance of the exact replay. Use it when mesh.split.plane refuses with OUTPUT_NOT_REPRESENTABLE.",
+      "package": "PMP_Boolean_operations",
+      "aliases": [
+        "rounded plane split",
+        "plane split with rounded output",
+        "\u4e38\u3081\u51fa\u529b\u306e\u5e73\u9762\u5206\u5272"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "PMP_Boolean_operations"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Polygon_mesh_processing::split"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Polygon_mesh_processing/clip.h"
+        },
+        {
+          "kind": "manual",
+          "identifier": "PMP_Boolean_operations/index.html"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "PMP_Boolean_operations",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/clip.h",
+            "sha256": "189a706303e518fb43afcfd64949ec753a249112cb6b36419c6b733274e60477"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "source",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "geometry",
+            "type": "TriangleSurfaceMesh",
+            "format": "off",
+            "unit_from": "source"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "normal",
+          "offset"
+        ],
+        "properties": {
+          "normal": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            },
+            "description": "Plane normal (a, b, c), not all zero."
+          },
+          "offset": {
+            "type": "TypedLength",
+            "description": "Plane offset d of a*x+b*y+c*z = d, in artifact length units (signed)."
+          }
+        }
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 268435456,
+          "maximum_faces": 200000
+        }
+      ],
+      "validation": {
+        "required": true,
+        "validators": [
+          "mesh.validate.split_rounded"
+        ],
+        "bindings": {
+          "mesh.validate.split_rounded": {
+            "artifacts": {
+              "candidate": {
+                "output": "geometry"
+              },
+              "source": {
+                "input": "source"
+              }
+            },
+            "parameters": {
+              "normal": {
+                "parameter": "normal"
+              },
+              "offset": {
+                "parameter": "offset"
+              }
+            }
+          }
+        }
+      },
+      "output_contract": {
+        "geometry_mutation": true,
+        "source_sha256_preserved": true,
+        "producer_diagnostics_are_non_authoritative": true,
+        "candidate_published_only_after_validation": true,
+        "certified": "closeness to the exact result within the tolerance; not the exact tiling"
+      },
+      "dependencies": [
+        "AABB_tree",
+        "Polygon_mesh_processing",
+        "Surface_mesh"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "info": {
+          "input_slots": [
+            "source"
+          ],
+          "maximum_input_faces": 200000,
+          "maximum_output_faces": 1000000,
+          "rounds_exact_result_of": "mesh.split.plane",
+          "source_header": "CGAL/Polygon_mesh_processing/clip.h",
+          "tolerance_rule": "2^-40 times the power of two above the largest absolute source coordinate",
+          "validator_parameter_bindings": {
+            "mesh.validate.split_rounded": {
+              "normal": "normal",
+              "offset": "offset"
+            }
+          },
+          "validators": [
+            "mesh.validate.split_rounded"
+          ]
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64 converted to exact binary-rational coordinates",
+        "predicate_policy": "CGAL exact predicates and exact constructions (EPECK); reported points and barycentric weights are canonical exact rational strings",
+        "exact_constructions": "EPECK",
+        "requested_policy": "package_recommended only",
+        "output_coordinate_storage": "IEEE-754 binary64, rounded from the exact result",
+        "rounding_policy": "each exact coordinate is replaced by a neighbouring binary64 value; a rounded mesh with a degenerate face, or with a self-intersection the exact result does not have, is refused (NUMERIC_FAILURE/ROUNDING_INVALIDATED_RESULT)",
+        "tolerance_rule": "2^-40 times the power of two above the largest absolute source coordinate"
+      },
+      "evidence": {
+        "tests": [
+          "tests/test_master_rounded_mesh.py"
+        ],
+        "build": "build-master/cgal-master-worker",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed",
+        "worker_manifest_operation": "mesh.split.plane_rounded"
+      },
+      "fallback_for": [
+        "mesh.split.plane"
+      ]
+    },
+    {
+      "id": "mesh.validate.split_rounded",
+      "revision": 1,
+      "status": "IMPLEMENTED",
+      "role": "validator",
+      "summary": "Validate a rounded split candidate against the exact replay: valid mesh, equal element counts and border, no degenerate face, no new self-intersection, every vertex of either mesh within the tolerance of the other surface, volume within tolerance * area when closed.",
+      "package": "PMP_Boolean_operations",
+      "aliases": [],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "PMP_Boolean_operations"
+        },
+        {
+          "kind": "operation_reference",
+          "identifier": "mesh.split.plane"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "PMP_Boolean_operations",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/clip.h",
+            "sha256": "189a706303e518fb43afcfd64949ec753a249112cb6b36419c6b733274e60477"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          },
+          {
+            "slot": "source",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "normal",
+          "offset"
+        ],
+        "properties": {
+          "normal": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            },
+            "description": "Plane normal (a, b, c), not all zero."
+          },
+          "offset": {
+            "type": "TypedLength",
+            "description": "Plane offset d of a*x+b*y+c*z = d, in artifact length units (signed)."
+          }
+        }
+      },
+      "preconditions": [],
+      "validation": {
+        "required": false,
+        "validators": [],
+        "bindings": {},
+        "terminal_validator": true,
+        "validates": "mesh.split.plane_rounded",
+        "validates_all": [
+          "mesh.split.plane_rounded"
+        ],
+        "required_report_checks": {
+          "status": "pass",
+          "passed": true,
+          "validator": "mesh.validate.split_rounded",
+          "comparison": "tolerance",
+          "checks.candidate_is_valid_mesh": true,
+          "checks.element_counts_match_reference": true,
+          "checks.border_matches_reference": true,
+          "checks.no_degenerate_face": true,
+          "checks.self_intersection_free_like_reference": true,
+          "checks.candidate_vertices_within_tolerance_of_reference_surface": true,
+          "checks.reference_vertices_within_tolerance_of_candidate_surface": true,
+          "checks.volume_within_tolerance_when_closed": true
+        }
+      },
+      "output_contract": {
+        "schema": "ValidationReport/v1",
+        "required_true_checks": [
+          "candidate_is_valid_mesh",
+          "element_counts_match_reference",
+          "border_matches_reference",
+          "no_degenerate_face",
+          "self_intersection_free_like_reference",
+          "candidate_vertices_within_tolerance_of_reference_surface",
+          "reference_vertices_within_tolerance_of_candidate_surface",
+          "volume_within_tolerance_when_closed"
+        ],
+        "status": "pass",
+        "failure_or_indeterminate_publish": false,
+        "independence": "exact EPECK replay of the same CGAL operation compared within a stated tolerance; not a CGAL-free oracle"
+      },
+      "dependencies": [
+        "AABB_tree",
+        "Polygon_mesh_processing",
+        "Surface_mesh"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "info": {
+          "checks": [
+            "candidate_is_valid_mesh",
+            "element_counts_match_reference",
+            "border_matches_reference",
+            "no_degenerate_face",
+            "self_intersection_free_like_reference",
+            "candidate_vertices_within_tolerance_of_reference_surface",
+            "reference_vertices_within_tolerance_of_candidate_surface",
+            "volume_within_tolerance_when_closed"
+          ],
+          "independence": "exact EPECK replay of the same CGAL operation compared within a stated tolerance; not a CGAL-free oracle",
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "reference_comparison": "exact EPECK replay; exact predicates and exact vertex-to-witness-triangle squared distances compared with a binary64 tolerance",
+        "tolerance_rule": "2^-40 times the power of two above the largest absolute source coordinate",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/test_master_rounded_mesh.py"
+        ],
+        "build": "build-master/cgal-master-worker",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed",
+        "worker_manifest_operation": "mesh.validate.split_rounded"
+      }
+    },
+    {
+      "id": "mesh.corefine_rounded",
+      "revision": 1,
+      "status": "IMPLEMENTED",
+      "role": "transform",
+      "summary": "Refine a triangle mesh in general position along its intersection with another mesh (PMP::corefine); the exact result is rounded to binary64 coordinates and accepted only within a stated tolerance of the exact replay. Use it when mesh.corefine refuses with OUTPUT_NOT_REPRESENTABLE.",
+      "package": "PMP_Boolean_operations",
+      "aliases": [
+        "rounded corefinement",
+        "corefine with rounded output",
+        "\u4e38\u3081\u51fa\u529b\u306e\u5171\u7d30\u5206"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "PMP_Boolean_operations"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Polygon_mesh_processing::corefine"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Polygon_mesh_processing/corefinement.h"
+        },
+        {
+          "kind": "manual",
+          "identifier": "PMP_Boolean_operations/index.html"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "PMP_Boolean_operations",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/corefinement.h",
+            "sha256": "16db532539a0fa937ef8ee41409785fa6d97ee7cfaec856aaa424a09981654c5"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "source",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          },
+          {
+            "slot": "other",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "geometry",
+            "type": "TriangleSurfaceMesh",
+            "format": "off",
+            "unit_from": "source"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [],
+        "properties": {}
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 268435456,
+          "maximum_faces": 200000
+        }
+      ],
+      "validation": {
+        "required": true,
+        "validators": [
+          "mesh.validate.corefine_rounded"
+        ],
+        "bindings": {
+          "mesh.validate.corefine_rounded": {
+            "artifacts": {
+              "candidate": {
+                "output": "geometry"
+              },
+              "source": {
+                "input": "source"
+              },
+              "other": {
+                "input": "other"
+              }
+            }
+          }
+        }
+      },
+      "output_contract": {
+        "geometry_mutation": true,
+        "source_sha256_preserved": true,
+        "producer_diagnostics_are_non_authoritative": true,
+        "candidate_published_only_after_validation": true,
+        "certified": "closeness to the exact result within the tolerance; not the exact tiling"
+      },
+      "dependencies": [
+        "AABB_tree",
+        "Polygon_mesh_processing",
+        "Surface_mesh"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "info": {
+          "input_slots": [
+            "source",
+            "other"
+          ],
+          "maximum_input_faces": 200000,
+          "maximum_output_faces": 1000000,
+          "rounds_exact_result_of": "mesh.corefine",
+          "source_header": "CGAL/Polygon_mesh_processing/corefinement.h",
+          "tolerance_rule": "2^-40 times the power of two above the largest absolute source coordinate",
+          "validators": [
+            "mesh.validate.corefine_rounded"
+          ]
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64 converted to exact binary-rational coordinates",
+        "predicate_policy": "CGAL exact predicates and exact constructions (EPECK); reported points and barycentric weights are canonical exact rational strings",
+        "exact_constructions": "EPECK",
+        "requested_policy": "package_recommended only",
+        "output_coordinate_storage": "IEEE-754 binary64, rounded from the exact result",
+        "rounding_policy": "each exact coordinate is replaced by a neighbouring binary64 value; a rounded mesh with a degenerate face, or with a self-intersection the exact result does not have, is refused (NUMERIC_FAILURE/ROUNDING_INVALIDATED_RESULT)",
+        "tolerance_rule": "2^-40 times the power of two above the largest absolute source coordinate"
+      },
+      "evidence": {
+        "tests": [
+          "tests/test_master_rounded_mesh.py"
+        ],
+        "build": "build-master/cgal-master-worker",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed",
+        "worker_manifest_operation": "mesh.corefine_rounded"
+      },
+      "fallback_for": [
+        "mesh.corefine"
+      ]
+    },
+    {
+      "id": "mesh.validate.corefine_rounded",
+      "revision": 1,
+      "status": "IMPLEMENTED",
+      "role": "validator",
+      "summary": "Validate a rounded corefine candidate against the exact replay: valid mesh, equal element counts and border, no degenerate face, no new self-intersection, every vertex of either mesh within the tolerance of the other surface, volume within tolerance * area when closed.",
+      "package": "PMP_Boolean_operations",
+      "aliases": [],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "PMP_Boolean_operations"
+        },
+        {
+          "kind": "operation_reference",
+          "identifier": "mesh.corefine"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "PMP_Boolean_operations",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/corefinement.h",
+            "sha256": "16db532539a0fa937ef8ee41409785fa6d97ee7cfaec856aaa424a09981654c5"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          },
+          {
+            "slot": "source",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          },
+          {
+            "slot": "other",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [],
+        "properties": {}
+      },
+      "preconditions": [],
+      "validation": {
+        "required": false,
+        "validators": [],
+        "bindings": {},
+        "terminal_validator": true,
+        "validates": "mesh.corefine_rounded",
+        "validates_all": [
+          "mesh.corefine_rounded"
+        ],
+        "required_report_checks": {
+          "status": "pass",
+          "passed": true,
+          "validator": "mesh.validate.corefine_rounded",
+          "comparison": "tolerance",
+          "checks.candidate_is_valid_mesh": true,
+          "checks.element_counts_match_reference": true,
+          "checks.border_matches_reference": true,
+          "checks.no_degenerate_face": true,
+          "checks.self_intersection_free_like_reference": true,
+          "checks.candidate_vertices_within_tolerance_of_reference_surface": true,
+          "checks.reference_vertices_within_tolerance_of_candidate_surface": true,
+          "checks.volume_within_tolerance_when_closed": true
+        }
+      },
+      "output_contract": {
+        "schema": "ValidationReport/v1",
+        "required_true_checks": [
+          "candidate_is_valid_mesh",
+          "element_counts_match_reference",
+          "border_matches_reference",
+          "no_degenerate_face",
+          "self_intersection_free_like_reference",
+          "candidate_vertices_within_tolerance_of_reference_surface",
+          "reference_vertices_within_tolerance_of_candidate_surface",
+          "volume_within_tolerance_when_closed"
+        ],
+        "status": "pass",
+        "failure_or_indeterminate_publish": false,
+        "independence": "exact EPECK replay of the same CGAL operation compared within a stated tolerance; not a CGAL-free oracle"
+      },
+      "dependencies": [
+        "AABB_tree",
+        "Polygon_mesh_processing",
+        "Surface_mesh"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "info": {
+          "checks": [
+            "candidate_is_valid_mesh",
+            "element_counts_match_reference",
+            "border_matches_reference",
+            "no_degenerate_face",
+            "self_intersection_free_like_reference",
+            "candidate_vertices_within_tolerance_of_reference_surface",
+            "reference_vertices_within_tolerance_of_candidate_surface",
+            "volume_within_tolerance_when_closed"
+          ],
+          "independence": "exact EPECK replay of the same CGAL operation compared within a stated tolerance; not a CGAL-free oracle",
+          "input_slots": [
+            "candidate",
+            "source",
+            "other"
+          ],
+          "output_slot": "validation"
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "reference_comparison": "exact EPECK replay; exact predicates and exact vertex-to-witness-triangle squared distances compared with a binary64 tolerance",
+        "tolerance_rule": "2^-40 times the power of two above the largest absolute source coordinate",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/test_master_rounded_mesh.py"
+        ],
+        "build": "build-master/cgal-master-worker",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed",
+        "worker_manifest_operation": "mesh.validate.corefine_rounded"
+      }
+    },
+    {
+      "id": "mesh.autorefine_rounded",
+      "revision": 1,
+      "status": "IMPLEMENTED",
+      "role": "transform",
+      "summary": "Refine a self-intersecting triangle mesh in general position along its own intersections (PMP::autorefine); the exact result is rounded to binary64 coordinates and accepted only within a stated tolerance of the exact replay. Use it when mesh.autorefine refuses with OUTPUT_NOT_REPRESENTABLE.",
+      "package": "PMP_Boolean_operations",
+      "aliases": [
+        "rounded autorefinement",
+        "autorefine with rounded output",
+        "\u4e38\u3081\u51fa\u529b\u306e\u81ea\u5df1\u7d30\u5206"
+      ],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "PMP_Boolean_operations"
+        },
+        {
+          "kind": "cgal_symbol",
+          "identifier": "CGAL::Polygon_mesh_processing::autorefine"
+        },
+        {
+          "kind": "header",
+          "identifier": "CGAL/Polygon_mesh_processing/autorefinement.h"
+        },
+        {
+          "kind": "manual",
+          "identifier": "PMP_Boolean_operations/index.html"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "PMP_Boolean_operations",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/autorefinement.h",
+            "sha256": "69c9ddb1ee51dac722a9c4d1a3caee4c7a50bb2ecea96fc965a58bcb7646f00b"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "source",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "geometry",
+            "type": "TriangleSurfaceMesh",
+            "format": "off",
+            "unit_from": "source"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [],
+        "properties": {}
+      },
+      "preconditions": [
+        {
+          "id": "bounded_input",
+          "maximum_bytes": 268435456,
+          "maximum_faces": 200000
+        }
+      ],
+      "validation": {
+        "required": true,
+        "validators": [
+          "mesh.validate.autorefine_rounded"
+        ],
+        "bindings": {
+          "mesh.validate.autorefine_rounded": {
+            "artifacts": {
+              "candidate": {
+                "output": "geometry"
+              },
+              "source": {
+                "input": "source"
+              }
+            }
+          }
+        }
+      },
+      "output_contract": {
+        "geometry_mutation": true,
+        "source_sha256_preserved": true,
+        "producer_diagnostics_are_non_authoritative": true,
+        "candidate_published_only_after_validation": true,
+        "certified": "closeness to the exact result within the tolerance; not the exact tiling"
+      },
+      "dependencies": [
+        "AABB_tree",
+        "Polygon_mesh_processing",
+        "Surface_mesh"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "info": {
+          "input_slots": [
+            "source"
+          ],
+          "maximum_input_faces": 200000,
+          "maximum_output_faces": 1000000,
+          "rounds_exact_result_of": "mesh.autorefine",
+          "source_header": "CGAL/Polygon_mesh_processing/autorefinement.h",
+          "tolerance_rule": "2^-40 times the power of two above the largest absolute source coordinate",
+          "validators": [
+            "mesh.validate.autorefine_rounded"
+          ]
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "coordinate_storage": "IEEE-754 binary64 converted to exact binary-rational coordinates",
+        "predicate_policy": "CGAL exact predicates and exact constructions (EPECK); reported points and barycentric weights are canonical exact rational strings",
+        "exact_constructions": "EPECK",
+        "requested_policy": "package_recommended only",
+        "output_coordinate_storage": "IEEE-754 binary64, rounded from the exact result",
+        "rounding_policy": "each exact coordinate is replaced by a neighbouring binary64 value; a rounded mesh with a degenerate face, or with a self-intersection the exact result does not have, is refused (NUMERIC_FAILURE/ROUNDING_INVALIDATED_RESULT)",
+        "tolerance_rule": "2^-40 times the power of two above the largest absolute source coordinate"
+      },
+      "evidence": {
+        "tests": [
+          "tests/test_master_rounded_mesh.py"
+        ],
+        "build": "build-master/cgal-master-worker",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed",
+        "worker_manifest_operation": "mesh.autorefine_rounded"
+      },
+      "fallback_for": [
+        "mesh.autorefine"
+      ]
+    },
+    {
+      "id": "mesh.validate.autorefine_rounded",
+      "revision": 1,
+      "status": "IMPLEMENTED",
+      "role": "validator",
+      "summary": "Validate a rounded autorefine candidate against the exact replay: valid mesh, equal element counts and border, no degenerate face, no new self-intersection, every vertex of either mesh within the tolerance of the other surface, volume within tolerance * area when closed.",
+      "package": "PMP_Boolean_operations",
+      "aliases": [],
+      "sources": [
+        {
+          "kind": "cgal_package",
+          "identifier": "PMP_Boolean_operations"
+        },
+        {
+          "kind": "operation_reference",
+          "identifier": "mesh.autorefine"
+        }
+      ],
+      "license": {
+        "expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+        "package": "PMP_Boolean_operations",
+        "commercial_option": true,
+        "evidence": [
+          {
+            "path": "include/CGAL/Polygon_mesh_processing/autorefinement.h",
+            "sha256": "69c9ddb1ee51dac722a9c4d1a3caee4c7a50bb2ecea96fc965a58bcb7646f00b"
+          },
+          {
+            "path": "LICENSE.GPL",
+            "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+          }
+        ]
+      },
+      "io": {
+        "inputs": [
+          {
+            "slot": "candidate",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          },
+          {
+            "slot": "source",
+            "types": [
+              "TriangleSurfaceMesh"
+            ],
+            "formats": [
+              "off"
+            ],
+            "unit_dimension": "length",
+            "units": [
+              "mm",
+              "cm",
+              "m"
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "slot": "validation",
+            "type": "ValidationReport",
+            "format": "json",
+            "unit": "none"
+          }
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [],
+        "properties": {}
+      },
+      "preconditions": [],
+      "validation": {
+        "required": false,
+        "validators": [],
+        "bindings": {},
+        "terminal_validator": true,
+        "validates": "mesh.autorefine_rounded",
+        "validates_all": [
+          "mesh.autorefine_rounded"
+        ],
+        "required_report_checks": {
+          "status": "pass",
+          "passed": true,
+          "validator": "mesh.validate.autorefine_rounded",
+          "comparison": "tolerance",
+          "checks.candidate_is_valid_mesh": true,
+          "checks.element_counts_match_reference": true,
+          "checks.border_matches_reference": true,
+          "checks.no_degenerate_face": true,
+          "checks.self_intersection_free_like_reference": true,
+          "checks.candidate_vertices_within_tolerance_of_reference_surface": true,
+          "checks.reference_vertices_within_tolerance_of_candidate_surface": true,
+          "checks.volume_within_tolerance_when_closed": true
+        }
+      },
+      "output_contract": {
+        "schema": "ValidationReport/v1",
+        "required_true_checks": [
+          "candidate_is_valid_mesh",
+          "element_counts_match_reference",
+          "border_matches_reference",
+          "no_degenerate_face",
+          "self_intersection_free_like_reference",
+          "candidate_vertices_within_tolerance_of_reference_surface",
+          "reference_vertices_within_tolerance_of_candidate_surface",
+          "volume_within_tolerance_when_closed"
+        ],
+        "status": "pass",
+        "failure_or_indeterminate_publish": false,
+        "independence": "exact EPECK replay of the same CGAL operation compared within a stated tolerance; not a CGAL-free oracle"
+      },
+      "dependencies": [
+        "AABB_tree",
+        "Polygon_mesh_processing",
+        "Surface_mesh"
+      ],
+      "worker_manifest": {
+        "require_dependencies": true,
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "info": {
+          "checks": [
+            "candidate_is_valid_mesh",
+            "element_counts_match_reference",
+            "border_matches_reference",
+            "no_degenerate_face",
+            "self_intersection_free_like_reference",
+            "candidate_vertices_within_tolerance_of_reference_surface",
+            "reference_vertices_within_tolerance_of_candidate_surface",
+            "volume_within_tolerance_when_closed"
+          ],
+          "independence": "exact EPECK replay of the same CGAL operation compared within a stated tolerance; not a CGAL-free oracle",
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        }
+      },
+      "kernel": {
+        "supported": [
+          "package_recommended"
+        ],
+        "default": "package_recommended"
+      },
+      "precision": {
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "reference_comparison": "exact EPECK replay; exact predicates and exact vertex-to-witness-triangle squared distances compared with a binary64 tolerance",
+        "tolerance_rule": "2^-40 times the power of two above the largest absolute source coordinate",
+        "requested_policy": "package_recommended only"
+      },
+      "evidence": {
+        "tests": [
+          "tests/test_master_rounded_mesh.py"
+        ],
+        "build": "build-master/cgal-master-worker",
+        "source_kind": "official_release",
+        "cgal_version": "6.2.1",
+        "review_status": "self_verified_not_independently_reviewed",
+        "worker_manifest_operation": "mesh.validate.autorefine_rounded"
       }
     },
     {
