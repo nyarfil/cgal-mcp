@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
   "generator": "measure-blind-search",
-  "blind_set_sha256": "2897f677c459c65762be1ef2d699f5fc3f08ee5c45d59d85f809df619d39307d",
-  "generator_sha256": "e32d370ddcd8f484eccecf8f30d64dd6fd54c8fa4acecc2cf30ab6c7ef5175d3",
-  "search_py_sha256": "fd3a1b90ff8e2d135c5d00ed275b00a1568853acaefe43210ed36c55f26f9603",
-  "registry_py_sha256": "5030ac7b2efed28ea536148552f956bda6ad738386c31c0d4d91f0b4a8fed986",
-  "operations_sha256": "78abd290a0bcdf4c04f9500ba0b329bf604b555d213f28b2ff7fe260fdb894b9",
-  "search_data_sha256": "f50fc5294d0e436040d5045af1b629604489ad6b4048b9f965f7e4f11027e0fc",
+  "blind_set_sha256": "f96fa59273ed6801355bfed479996c0a7fbd73dd815981072a7dc922f316f9c0",
+  "generator_sha256": "0fb801bbf651cb3453cda848c28e2753ca5570a8cde4f64b74011cc51f632d84",
+  "search_py_sha256": "f9751f928b879b0dde168de4665ea4eaf66d16b39a22ae836b17a9768f11ee94",
+  "registry_py_sha256": "5eecb7c9dcc316920cf5afe9081d0b2072093b8a7fb3a7189eab5db42e5ef7d5",
+  "operations_sha256": "bd06cb2e428d49b646932d6ec700cbbbca591f083a0fe552cfa8e3a39bcaae38",
+  "search_data_sha256": "d8ce8c9910d767f6ba43224924c8041fd28e33333dc309f56ea694046ecf876d",
   "count": 118,
   "families": [
     "7.1",
@@ -26,24 +26,24 @@
     "7.9"
   ],
   "operation_level": {
-    "top1_pct": 86.44,
+    "top1_pct": 84.75,
     "top3_pct": 94.07
   },
   "requirement_level": {
     "top1_pct": 86.44,
-    "top3_pct": 89.83
+    "top3_pct": 90.68
   },
   "by_language": {
     "en": {
       "count": 59,
-      "op_top1_pct": 89.83,
-      "op_top3_pct": 94.92,
-      "req_top3_pct": 91.53
+      "op_top1_pct": 88.14,
+      "op_top3_pct": 96.61,
+      "req_top3_pct": 93.22
     },
     "ja": {
       "count": 59,
-      "op_top1_pct": 83.05,
-      "op_top3_pct": 93.22,
+      "op_top1_pct": 81.36,
+      "op_top3_pct": 91.53,
       "req_top3_pct": 88.14
     }
   },
@@ -360,7 +360,7 @@
       "returned": [
         "mesh.analysis.measures",
         "mesh.boolean.union",
-        "mesh.boolean.intersection"
+        "mesh.repair.fill_holes"
       ],
       "op_top1": true,
       "op_top3": true,
@@ -377,7 +377,7 @@
       "returned": [
         "mesh.analysis.measures",
         "mesh.boolean.union",
-        "mesh.clip.plane"
+        "mesh.repair.fill_holes"
       ],
       "op_top1": true,
       "op_top3": true,
@@ -411,10 +411,10 @@
       "returned": [
         "mesh.repair.fill_holes",
         "reconstruction.poisson_delaunay",
-        "mesh.analysis.sharp_features"
+        "mesh.analysis.boundary_cycles"
       ],
       "op_top1": false,
-      "op_top3": true,
+      "op_top3": false,
       "req_top1": false,
       "req_top3": false
     },
@@ -428,7 +428,7 @@
       "returned": [
         "mesh.distance.hausdorff_approximate",
         "mesh.distance.hausdorff_bounded",
-        "mesh.distance.hausdorff_approximate_symmetric"
+        "optimization.approximate_mesh"
       ],
       "op_top1": false,
       "op_top3": true,
@@ -461,8 +461,8 @@
       ],
       "returned": [
         "mesh.repair.fill_holes",
-        "mesh.repair.fill_holes_refine_fair",
-        "mesh.repair.stitch_borders"
+        "mesh.analysis.boundary_cycles",
+        "mesh.repair.fill_holes_refine_fair"
       ],
       "op_top1": true,
       "op_top3": true,
@@ -477,11 +477,11 @@
         "mesh.repair.fill_holes"
       ],
       "returned": [
+        "mesh.analysis.boundary_cycles",
         "mesh.repair.fill_holes",
-        "mesh.smooth.shape",
-        "pointset.remove_outliers"
+        "mesh.repair.fill_holes_refine_fair"
       ],
-      "op_top1": true,
+      "op_top1": false,
       "op_top3": true,
       "req_top1": true,
       "req_top3": true
@@ -728,13 +728,13 @@
         "mesh.remesh.isotropic"
       ],
       "returned": [
+        "mesh.repair.fill_holes_refine_fair",
         "mesh.remesh.isotropic",
-        "reconstruction.advancing_front",
-        "triangulation.regular_2"
+        "mesh.repair.fill_holes"
       ],
-      "op_top1": true,
+      "op_top1": false,
       "op_top3": true,
-      "req_top1": true,
+      "req_top1": false,
       "req_top3": true
     },
     {
@@ -795,11 +795,15 @@
       "expected": [
         "mesh.smooth.shape"
       ],
-      "returned": [],
+      "returned": [
+        "mesh.smooth.tangential_relaxation",
+        "mesh.smooth.shape",
+        "mesh.skeletonize.mean_curvature_flow"
+      ],
       "op_top1": false,
-      "op_top3": false,
-      "req_top1": false,
-      "req_top3": false
+      "op_top3": true,
+      "req_top1": true,
+      "req_top3": true
     },
     {
       "id": "blind-ja-046",
@@ -921,8 +925,8 @@
       ],
       "returned": [
         "mesh.simplify.edge_collapse",
-        "pointset.simplify.hierarchy",
-        "mesh.remesh.isotropic"
+        "mesh.repair.fill_holes",
+        "pointset.simplify.hierarchy"
       ],
       "op_top1": true,
       "op_top3": true,
@@ -1228,7 +1232,7 @@
       "returned": [
         "pointset.registration.register",
         "kernel.distance.squared",
-        "pointset.registration.compute_transformation"
+        "kernel.intersections.compute"
       ],
       "op_top1": true,
       "op_top3": true,
@@ -1601,8 +1605,8 @@
       ],
       "returned": [
         "polygon.minkowski_sum",
-        "mesh.boolean.union",
-        "polygon.minkowski_sum_reduced_convolution"
+        "polygon.minkowski_sum_reduced_convolution",
+        "mesh.boolean.union"
       ],
       "op_top1": true,
       "op_top3": true,
@@ -1806,7 +1810,7 @@
       "returned": [
         "mesh2.refine.delaunay",
         "mesh.volume.generate",
-        "mesh.surface.generate"
+        "mesh.analysis.boundary_cycles"
       ],
       "op_top1": true,
       "op_top3": true,
@@ -2039,7 +2043,8 @@
     "Run 1 (before reverting two over-broad vocabulary rules that broke fail-closed regression tests): op top-1 37.29%, top-3 47.46%.",
     "Run 2 (published, current search.py): op top-1 38.14%, top-3 47.46%. No blind case was inspected or used for tuning between the runs; the change only restored fail-closed behaviour required by tests/test_master_search_production.py.",
     "Run 3 (frozen code: operation-side bilingual search phrases in search_data.json authored from operation docs, IDF phrase evidence with Japanese bigrams, discovery-mode soft ranking of uncovered concepts; no blind case or miss was read or used; the set is considered contaminated for future tuning after this iteration). Result: op top-1 79.66%, top-3 87.29%.",
-    "DEV RE-MEASUREMENT after search tuning (JA segmentation, thesaurus, coverage feature, fitted weights, generic phrases, abstain threshold); this set was inspected and is no longer blind. Fresh blind set 3 required. Result: op top-1 86.44%, top-3 94.07%."
+    "DEV RE-MEASUREMENT after search tuning (JA segmentation, thesaurus, coverage feature, fitted weights, generic phrases, abstain threshold); this set was inspected and is no longer blind. Fresh blind set 3 required. Result: op top-1 86.44%, top-3 94.07%.",
+    "Re-measured on Linux with the registry at catalog_revision -9 (230 operations) because the recorded blind_set_sha256 was the digest of a CRLF checkout; the repository content is LF. This set is development data (see SEARCH_ACCEPTANCE_JA.md). Result: op top-1 84.75%, top-3 94.07%."
   ],
   "interpretation": "Run 3: operation-side bilingual phrases raised blind top-3 from 47.46% to 87.29% (top-1 38.14% to 79.66%), still below the 95% target, so the search gate stays unmet. The blind set is now considered contaminated: it was measured three times against successive router versions and the author of the phrases knew it existed, although no blind case or miss was read. A future acceptance claim needs a fresh blind set authored by a different agent (see SEARCH_ACCEPTANCE_JA.md). UPDATE: after the tuning round this set was read and used as development data (see measurement_history); the latest figures are NOT blind generalization estimates. A fresh blind set 3 authored by a different agent is required for the final claim."
 }

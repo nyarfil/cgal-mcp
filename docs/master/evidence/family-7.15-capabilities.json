@@ -80,17 +80,17 @@
     }
   },
   "unbound_requirements": {},
-  "family_contract_sha256": "c654c7883a47d237336e931f6172ac564d13168fa1b7d16e009cb1efb7c3d868",
+  "family_contract_sha256": "f6608cc2e13075ee35588cd6d7be7e11266238e3687ed25b13e0dd1ddf94f430",
   "family_contract_source_path": "scripts/master_replay_families.py",
-  "family_contract_source_sha256": "36df9bd959ac92695fa6da18bb93ea2465d412cc15e330db6d1a2bad1e37ee25",
+  "family_contract_source_sha256": "c370958bf42af9ebd8019ae82bcba3ddaab98ca67bc03f7b5360d25af8efbcc4",
   "family_contract_source_hash_encoding": "utf8-lf",
   "catalog_baseline_sha256": "143ec18a5b64d506aad60dc24b0a1ea30940c715d1223b3465fa140aeb9d02a7",
-  "operation_registry_sha256": "36550cdcac9bb548d26b2c19dbeb4a74900ad2479ab95b873b90cff737f9b07b",
+  "operation_registry_sha256": "6df8cc809f14a7651fde0a8252913ae8e11f7c382bbead7eb75b576fbaa416dc",
   "operation_registry_hash_encoding": "utf8-lf",
   "policy_catalog_sha256": "45f4be759288aaeb834a3ce97aa64ee7768048b15534618fc8c19512801f9a9f",
   "policy_catalog_hash_encoding": "utf8-lf",
-  "worker_sha256": "5c217a47ed72332bb2202cec6a894092f11b72718b71075194f5e82dd1b6ca61",
-  "worker_binary_format": "pe",
+  "worker_sha256": "efb5d66ec6da519133b8527da27e7b55d6ba4202de28f16c70d0ba4b59226ce2",
+  "worker_binary_format": "elf",
   "worker_manifest": {
     "actual_cgal_version": "6.2.1",
     "build": {
@@ -98,9 +98,8 @@
       "cgal_version": "6.2.1",
       "cgal_version_nr": 1060211000,
       "compiler": {
-        "family": "msvc",
-        "full_version": 195035725,
-        "version": 1950
+        "family": "gcc",
+        "version": "13.3.0"
       },
       "optional_dependencies": "OpenGR,SCIP",
       "source_attestation": "configured_pinned_official_archive",
@@ -2215,6 +2214,150 @@
           },
           "source_version": "6.2.1",
           "validates": "mesh.boolean.difference"
+        },
+        "input_types": [
+          "TriangleSurfaceMesh",
+          "TriangleSurfaceMesh",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "exact_constructions",
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing",
+          "Surface_mesh",
+          "AABB_tree"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "mesh.boolean.rounded",
+        "info": {
+          "boolean_operations": [
+            "union",
+            "intersection",
+            "difference"
+          ],
+          "empty_output": "canonical ASCII OFF with zero vertices and faces",
+          "input_format": "off",
+          "input_slots": [
+            "source_a",
+            "source_b"
+          ],
+          "input_units": [
+            "mm",
+            "cm",
+            "m"
+          ],
+          "license_expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+          "output_format": "off",
+          "output_slot": "geometry",
+          "output_unit_from": "source_a",
+          "precision_contract": {
+            "input_coordinate_storage": "IEEE-754 binary64 converted to exact binary-rational coordinates",
+            "internal_kernel": "EPECK",
+            "output_coordinate_storage": "IEEE-754 binary64 ASCII OFF, rounded from the exact result",
+            "rounding_policy": "each exact coordinate is replaced by a neighbouring binary64 value; a rounded mesh that is not a healthy volume boundary is refused (NUMERIC_FAILURE/ROUNDING_INVALIDATED_RESULT)",
+            "tolerance_rule": "2^-40 times the power of two above the largest absolute source coordinate"
+          },
+          "same_unit_inputs": true,
+          "source_header": "CGAL/Polygon_mesh_processing/corefinement.h",
+          "source_kind": "official_release",
+          "source_mutation": false,
+          "source_sha256": "16db532539a0fa937ef8ee41409785fa6d97ee7cfaec856aaa424a09981654c5",
+          "source_version": "6.2.1",
+          "validator_artifact_bindings": {
+            "mesh.validate.boolean_rounded": {
+              "candidate": {
+                "output": "geometry"
+              },
+              "source_a": {
+                "input": "source_a"
+              },
+              "source_b": {
+                "input": "source_b"
+              }
+            }
+          },
+          "validator_parameter_bindings": {
+            "mesh.validate.boolean_rounded": {
+              "operation": "operation"
+            }
+          },
+          "validators": [
+            "mesh.validate.boolean_rounded"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "TriangleSurfaceMesh",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "exact_constructions",
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing",
+          "Surface_mesh",
+          "AABB_tree"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "mesh.validate.boolean_rounded",
+        "info": {
+          "artifact_bindings": {
+            "candidate": {
+              "output": "geometry"
+            },
+            "source_a": {
+              "input": "source_a"
+            },
+            "source_b": {
+              "input": "source_b"
+            }
+          },
+          "independence": "exact EPECK replay of the same CGAL corefinement; the candidate is compared by exact volume and exact vertex-to-witness-triangle distances against a stated tolerance. This is a replay check, not a CGAL-free oracle, and it does not prove exact set equality",
+          "license_expression": "GPL-3.0-or-later OR LicenseRef-Commercial",
+          "parameter_bindings": {
+            "operation": {
+              "parameter": "operation"
+            }
+          },
+          "precision_contract": {
+            "input_coordinate_storage": "IEEE-754 binary64 converted to exact binary-rational coordinates",
+            "internal_kernel": "EPECK",
+            "output_coordinate_storage": "IEEE-754 binary64 ASCII OFF, rounded from the exact result",
+            "rounding_policy": "each exact coordinate is replaced by a neighbouring binary64 value; a rounded mesh that is not a healthy volume boundary is refused (NUMERIC_FAILURE/ROUNDING_INVALIDATED_RESULT)",
+            "tolerance_rule": "2^-40 times the power of two above the largest absolute source coordinate"
+          },
+          "report_schema": "ValidationReport/v1",
+          "required_checks": [
+            "topology_valid",
+            "closed_or_canonical_empty",
+            "volume_boundary_orientation_valid",
+            "self_intersection_free",
+            "operation_parameter_bound",
+            "result_status_matches_reference",
+            "element_counts_match_reference",
+            "volume_within_tolerance_of_reference",
+            "candidate_vertices_within_tolerance_of_reference_surface",
+            "reference_vertices_within_tolerance_of_candidate_surface"
+          ],
+          "source_headers": [
+            "CGAL/Polygon_mesh_processing/corefinement.h",
+            "CGAL/AABB_tree.h"
+          ],
+          "source_kind": "official_release",
+          "source_version": "6.2.1",
+          "validates": "mesh.boolean.rounded"
         },
         "input_types": [
           "TriangleSurfaceMesh",
@@ -4351,7 +4494,7 @@
           "input_slots": [
             "source"
           ],
-          "maximum_input_faces": 20000,
+          "maximum_input_faces": 200000,
           "required_parameters": [
             "method"
           ],
@@ -4384,7 +4527,7 @@
           "input_slots": [
             "source"
           ],
-          "maximum_input_faces": 20000,
+          "maximum_input_faces": 200000,
           "required_parameters": [
             "density_control_factor",
             "max_deviation"
@@ -4422,8 +4565,11 @@
           "input_slots": [
             "source"
           ],
-          "maximum_input_faces": 20000,
-          "maximum_output_faces": 60000,
+          "maximum_input_faces": 200000,
+          "maximum_output_faces": 1000000,
+          "optional_parameters": [
+            "protect_feature_angle_degrees"
+          ],
           "required_parameters": [
             "target_edge_length",
             "number_of_iterations",
@@ -4432,11 +4578,13 @@
           ],
           "source_header": "CGAL/Polygon_mesh_processing/remesh.h",
           "symbols": [
-            "isotropic_remeshing"
+            "isotropic_remeshing",
+            "detect_sharp_edges"
           ],
           "validator_parameter_bindings": {
             "mesh.validate.isotropic_remesh": {
               "max_deviation": "max_deviation",
+              "protect_feature_angle_degrees": "protect_feature_angle_degrees",
               "target_edge_length": "target_edge_length"
             }
           },
@@ -4464,8 +4612,8 @@
           "input_slots": [
             "source"
           ],
-          "maximum_input_faces": 20000,
-          "maximum_output_faces": 60000,
+          "maximum_input_faces": 200000,
+          "maximum_output_faces": 1000000,
           "required_parameters": [
             "max_length"
           ],
@@ -4502,7 +4650,7 @@
           "input_slots": [
             "source"
           ],
-          "maximum_input_faces": 20000,
+          "maximum_input_faces": 200000,
           "required_parameters": [
             "number_of_iterations",
             "max_deviation"
@@ -4542,7 +4690,7 @@
           "input_slots": [
             "source"
           ],
-          "maximum_input_faces": 20000,
+          "maximum_input_faces": 200000,
           "required_parameters": [
             "time_step",
             "number_of_iterations",
@@ -4584,8 +4732,8 @@
           "input_slots": [
             "source"
           ],
-          "maximum_input_faces": 20000,
-          "maximum_output_faces": 60000,
+          "maximum_input_faces": 200000,
+          "maximum_output_faces": 1000000,
           "required_parameters": [
             "tolerance",
             "min_edge_length",
@@ -6006,8 +6154,8 @@
           "input_slots": [
             "source"
           ],
-          "maximum_input_faces": 2000,
-          "maximum_output_faces": 60000,
+          "maximum_input_faces": 250000,
+          "maximum_output_faces": 1000000,
           "source_header": "CGAL/Subdivision_method_3/subdivision_methods_3.h",
           "validator_parameter_bindings": {
             "mesh.validate.catmull_clark": {
@@ -6039,8 +6187,8 @@
           "input_slots": [
             "source"
           ],
-          "maximum_input_faces": 2000,
-          "maximum_output_faces": 60000,
+          "maximum_input_faces": 250000,
+          "maximum_output_faces": 1000000,
           "source_header": "CGAL/Subdivision_method_3/subdivision_methods_3.h",
           "validator_parameter_bindings": {
             "mesh.validate.loop": {
@@ -6746,7 +6894,7 @@
           "input_slots": [
             "points"
           ],
-          "maximum_input_points": 400,
+          "maximum_input_points": 200000,
           "source_header": "CGAL/compute_average_spacing.h",
           "validator_parameter_bindings": {
             "pointset.validate.average_spacing": {
@@ -6777,7 +6925,7 @@
           "input_slots": [
             "points"
           ],
-          "maximum_input_points": 64,
+          "maximum_input_points": 200000,
           "source_header": "CGAL/Min_circle_2.h",
           "validators": [
             "shape.validate.min_circle"
@@ -6803,7 +6951,7 @@
           "input_slots": [
             "points"
           ],
-          "maximum_input_points": 32,
+          "maximum_input_points": 200000,
           "source_header": "CGAL/Min_sphere_of_spheres_d.h",
           "validator_parameter_bindings": {
             "shape.validate.min_sphere": {
@@ -6826,6 +6974,37 @@
       },
       {
         "dependencies": [
+          "Optimal_bounding_box"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+        "id": "shape.bounding.oriented_box",
+        "info": {
+          "input_slots": [
+            "points"
+          ],
+          "maximum_input_points": 200000,
+          "source_header": "CGAL/optimal_bounding_box.h",
+          "validator_parameter_bindings": {
+            "shape.validate.oriented_box": {
+              "random_seed": "random_seed"
+            }
+          },
+          "validators": [
+            "shape.validate.oriented_box"
+          ]
+        },
+        "input_types": [
+          "PointSet3"
+        ],
+        "output_type": "GeometryQueryReport",
+        "revision": 1,
+        "role": "analysis",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
           "Polygon_mesh_processing"
         ],
         "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
@@ -6834,7 +7013,7 @@
           "input_slots": [
             "mesh"
           ],
-          "maximum_input_faces": 600,
+          "maximum_input_faces": 200000,
           "source_header": "CGAL/Polygon_mesh_processing/detect_features.h",
           "validator_parameter_bindings": {
             "mesh.validate.features": {
@@ -6865,8 +7044,8 @@
           "input_slots": [
             "source"
           ],
-          "maximum_input_faces": 600,
-          "maximum_output_faces": 4000,
+          "maximum_input_faces": 200000,
+          "maximum_output_faces": 1000000,
           "source_header": "CGAL/Polygon_mesh_processing/clip.h",
           "validator_parameter_bindings": {
             "mesh.validate.clip": {
@@ -6899,8 +7078,8 @@
           "input_slots": [
             "source"
           ],
-          "maximum_input_faces": 600,
-          "maximum_output_faces": 4000,
+          "maximum_input_faces": 200000,
+          "maximum_output_faces": 1000000,
           "source_header": "CGAL/Polygon_mesh_processing/clip.h",
           "validator_parameter_bindings": {
             "mesh.validate.split": {
@@ -6933,8 +7112,8 @@
             "source",
             "other"
           ],
-          "maximum_input_faces": 600,
-          "maximum_output_faces": 4000,
+          "maximum_input_faces": 200000,
+          "maximum_output_faces": 1000000,
           "source_header": "CGAL/Polygon_mesh_processing/corefinement.h",
           "validators": [
             "mesh.validate.corefine"
@@ -6961,8 +7140,8 @@
           "input_slots": [
             "source"
           ],
-          "maximum_input_faces": 600,
-          "maximum_output_faces": 4000,
+          "maximum_input_faces": 200000,
+          "maximum_output_faces": 1000000,
           "source_header": "CGAL/Polygon_mesh_processing/autorefinement.h",
           "validators": [
             "mesh.validate.autorefine"
@@ -6974,6 +7153,295 @@
         "output_type": "TriangleSurfaceMesh",
         "revision": 1,
         "role": "transform",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing",
+          "Surface_mesh",
+          "AABB_tree"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "mesh.clip.plane_rounded",
+        "info": {
+          "input_slots": [
+            "source"
+          ],
+          "maximum_input_faces": 200000,
+          "maximum_output_faces": 1000000,
+          "rounds_exact_result_of": "mesh.clip.plane",
+          "source_header": "CGAL/Polygon_mesh_processing/clip.h",
+          "tolerance_rule": "2^-40 times the power of two above the largest absolute source coordinate",
+          "validator_parameter_bindings": {
+            "mesh.validate.clip_rounded": {
+              "clip_volume": "clip_volume",
+              "normal": "normal",
+              "offset": "offset"
+            }
+          },
+          "validators": [
+            "mesh.validate.clip_rounded"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "TriangleSurfaceMesh",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing",
+          "Surface_mesh",
+          "AABB_tree"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "mesh.validate.clip_rounded",
+        "info": {
+          "checks": [
+            "candidate_is_valid_mesh",
+            "element_counts_match_reference",
+            "border_matches_reference",
+            "no_degenerate_face",
+            "self_intersection_free_like_reference",
+            "candidate_vertices_within_tolerance_of_reference_surface",
+            "reference_vertices_within_tolerance_of_candidate_surface",
+            "volume_within_tolerance_when_closed"
+          ],
+          "independence": "exact EPECK replay of the same CGAL operation compared within a stated tolerance; not a CGAL-free oracle",
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "TriangleSurfaceMesh",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing",
+          "Surface_mesh",
+          "AABB_tree"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "mesh.split.plane_rounded",
+        "info": {
+          "input_slots": [
+            "source"
+          ],
+          "maximum_input_faces": 200000,
+          "maximum_output_faces": 1000000,
+          "rounds_exact_result_of": "mesh.split.plane",
+          "source_header": "CGAL/Polygon_mesh_processing/clip.h",
+          "tolerance_rule": "2^-40 times the power of two above the largest absolute source coordinate",
+          "validator_parameter_bindings": {
+            "mesh.validate.split_rounded": {
+              "normal": "normal",
+              "offset": "offset"
+            }
+          },
+          "validators": [
+            "mesh.validate.split_rounded"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "TriangleSurfaceMesh",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing",
+          "Surface_mesh",
+          "AABB_tree"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "mesh.validate.split_rounded",
+        "info": {
+          "checks": [
+            "candidate_is_valid_mesh",
+            "element_counts_match_reference",
+            "border_matches_reference",
+            "no_degenerate_face",
+            "self_intersection_free_like_reference",
+            "candidate_vertices_within_tolerance_of_reference_surface",
+            "reference_vertices_within_tolerance_of_candidate_surface",
+            "volume_within_tolerance_when_closed"
+          ],
+          "independence": "exact EPECK replay of the same CGAL operation compared within a stated tolerance; not a CGAL-free oracle",
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "TriangleSurfaceMesh",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing",
+          "Surface_mesh",
+          "AABB_tree"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "mesh.corefine_rounded",
+        "info": {
+          "input_slots": [
+            "source",
+            "other"
+          ],
+          "maximum_input_faces": 200000,
+          "maximum_output_faces": 1000000,
+          "rounds_exact_result_of": "mesh.corefine",
+          "source_header": "CGAL/Polygon_mesh_processing/corefinement.h",
+          "tolerance_rule": "2^-40 times the power of two above the largest absolute source coordinate",
+          "validators": [
+            "mesh.validate.corefine_rounded"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "TriangleSurfaceMesh",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing",
+          "Surface_mesh",
+          "AABB_tree"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "mesh.validate.corefine_rounded",
+        "info": {
+          "checks": [
+            "candidate_is_valid_mesh",
+            "element_counts_match_reference",
+            "border_matches_reference",
+            "no_degenerate_face",
+            "self_intersection_free_like_reference",
+            "candidate_vertices_within_tolerance_of_reference_surface",
+            "reference_vertices_within_tolerance_of_candidate_surface",
+            "volume_within_tolerance_when_closed"
+          ],
+          "independence": "exact EPECK replay of the same CGAL operation compared within a stated tolerance; not a CGAL-free oracle",
+          "input_slots": [
+            "candidate",
+            "source",
+            "other"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "TriangleSurfaceMesh",
+          "TriangleSurfaceMesh",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing",
+          "Surface_mesh",
+          "AABB_tree"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "mesh.autorefine_rounded",
+        "info": {
+          "input_slots": [
+            "source"
+          ],
+          "maximum_input_faces": 200000,
+          "maximum_output_faces": 1000000,
+          "rounds_exact_result_of": "mesh.autorefine",
+          "source_header": "CGAL/Polygon_mesh_processing/autorefinement.h",
+          "tolerance_rule": "2^-40 times the power of two above the largest absolute source coordinate",
+          "validators": [
+            "mesh.validate.autorefine_rounded"
+          ]
+        },
+        "input_types": [
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "TriangleSurfaceMesh",
+        "revision": 1,
+        "role": "transform",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Polygon_mesh_processing",
+          "Surface_mesh",
+          "AABB_tree"
+        ],
+        "effective_kernel": "CGAL::Exact_predicates_exact_constructions_kernel",
+        "id": "mesh.validate.autorefine_rounded",
+        "info": {
+          "checks": [
+            "candidate_is_valid_mesh",
+            "element_counts_match_reference",
+            "border_matches_reference",
+            "no_degenerate_face",
+            "self_intersection_free_like_reference",
+            "candidate_vertices_within_tolerance_of_reference_surface",
+            "reference_vertices_within_tolerance_of_candidate_surface",
+            "volume_within_tolerance_when_closed"
+          ],
+          "independence": "exact EPECK replay of the same CGAL operation compared within a stated tolerance; not a CGAL-free oracle",
+          "input_slots": [
+            "candidate",
+            "source"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "TriangleSurfaceMesh",
+          "TriangleSurfaceMesh"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
         "supported_kernels": [
           "package_recommended"
         ]
@@ -7022,7 +7490,7 @@
             "source_matches",
             "average_spacing_matches_bruteforce"
           ],
-          "independence": "brute-force k+1 nearest distances in long double (self included, as the CGAL neighbour query); no CGAL header",
+          "independence": "k+1 nearest distances in long double (self included, as the CGAL neighbour query), the smallest of all distances selected through a conservative box query; no CGAL header",
           "input_slots": [
             "candidate",
             "points"
@@ -7052,7 +7520,7 @@
             "kept_count_matches_thresholds",
             "kept_points_have_lowest_measures"
           ],
-          "independence": "brute-force average squared distance to the k+1 nearest points (self included) in long double; no CGAL header",
+          "independence": "average squared distance to the k+1 nearest points (self included) in long double, the smallest of all distances selected through a conservative box query; no CGAL header",
           "input_slots": [
             "candidate",
             "source"
@@ -7084,7 +7552,7 @@
             "radius_matches_exact_minimum",
             "all_balls_enclosed"
           ],
-          "independence": "exact rational enumeration of every support set of 1..d+1 points (center in the affine hull); no CGAL header",
+          "independence": "exact rational minimum enclosing ball by incremental construction over support sets of 1..d+1 points (center in the affine hull), cross-checked by full enumeration up to 24 points; no CGAL header",
           "input_slots": [
             "candidate",
             "points"
@@ -7116,7 +7584,41 @@
             "radius_matches_exact_minimum",
             "all_balls_enclosed"
           ],
-          "independence": "exact rational enumeration of every support set of 1..d+1 points (center in the affine hull); no CGAL header",
+          "independence": "exact rational minimum enclosing ball by incremental construction over support sets of 1..d+1 points (center in the affine hull), cross-checked by full enumeration up to 24 points; no CGAL header",
+          "input_slots": [
+            "candidate",
+            "points"
+          ],
+          "output_slot": "validation"
+        },
+        "input_types": [
+          "GeometryQueryReport",
+          "PointSet3"
+        ],
+        "output_type": "ValidationReport",
+        "revision": 1,
+        "role": "validator",
+        "supported_kernels": [
+          "package_recommended"
+        ]
+      },
+      {
+        "dependencies": [
+          "Optimal_bounding_box"
+        ],
+        "effective_kernel": "float:long_double",
+        "id": "shape.validate.oriented_box",
+        "info": {
+          "checks": [
+            "parameters_match",
+            "source_matches",
+            "edges_orthogonal",
+            "corners_form_a_box",
+            "all_points_inside",
+            "every_face_touches_a_point",
+            "extents_and_volume_match_corners"
+          ],
+          "independence": "orthogonality, corner consistency, containment of every point and contact on all six faces in long double; no CGAL header",
           "input_slots": [
             "candidate",
             "points"
@@ -8041,7 +8543,7 @@
           "input_slots": [
             "mesh"
           ],
-          "maximum_input_faces": 400,
+          "maximum_input_faces": 200000,
           "source_header": "CGAL/Polygon_mesh_processing/distance.h",
           "validator_parameter_bindings": {
             "mesh.validate.distance_samples": {
@@ -8074,7 +8576,7 @@
             "points",
             "mesh"
           ],
-          "maximum_input_faces": 400,
+          "maximum_input_faces": 200000,
           "source_header": "CGAL/Polygon_mesh_processing/distance.h",
           "validators": [
             "mesh.validate.max_distance_to_mesh"
@@ -8103,7 +8605,7 @@
             "first",
             "second"
           ],
-          "maximum_input_faces": 400,
+          "maximum_input_faces": 200000,
           "source_header": "CGAL/Polygon_mesh_processing/distance.h",
           "validator_parameter_bindings": {
             "mesh.validate.hausdorff_report": {
@@ -8137,7 +8639,7 @@
             "first",
             "second"
           ],
-          "maximum_input_faces": 400,
+          "maximum_input_faces": 200000,
           "source_header": "CGAL/Polygon_mesh_processing/distance.h",
           "validator_parameter_bindings": {
             "mesh.validate.hausdorff_report": {
@@ -8171,7 +8673,7 @@
             "mesh",
             "points"
           ],
-          "maximum_input_faces": 400,
+          "maximum_input_faces": 200000,
           "source_header": "CGAL/Polygon_mesh_processing/distance.h",
           "validator_parameter_bindings": {
             "mesh.validate.max_distance_to_points": {
@@ -8205,7 +8707,7 @@
             "first",
             "second"
           ],
-          "maximum_input_faces": 400,
+          "maximum_input_faces": 200000,
           "source_header": "CGAL/Polygon_mesh_processing/distance.h",
           "validator_parameter_bindings": {
             "mesh.validate.hausdorff_report": {
@@ -8358,7 +8860,7 @@
             "first",
             "second"
           ],
-          "maximum_input_faces": 200,
+          "maximum_input_faces": 200000,
           "source_header": "CGAL/Polygon_mesh_processing/intersection.h",
           "validator_parameter_bindings": {
             "mesh.validate.do_intersect": {
@@ -8392,7 +8894,7 @@
             "first",
             "second"
           ],
-          "maximum_input_faces": 200,
+          "maximum_input_faces": 200000,
           "source_header": "CGAL/Polygon_mesh_processing/intersection_polylines.h",
           "validators": [
             "mesh.validate.intersection_polylines"
@@ -8423,7 +8925,7 @@
             "samples_lie_on_mesh_surface",
             "vertices_sampled_as_requested"
           ],
-          "independence": "brute-force point-triangle and point-edge distances over all samples; sample positions of a seeded random stream are not re-derived; no CGAL header",
+          "independence": "point-triangle and point-edge distances of every sample against all triangles near it (conservative box hierarchy); sample positions of a seeded random stream are not re-derived; no CGAL header",
           "input_slots": [
             "candidate",
             "mesh"
@@ -8487,7 +8989,7 @@
             "distance_unit_matches_mesh",
             "distance_within_precision_of_exact_bracket"
           ],
-          "independence": "best-first Lipschitz subdivision bracket over brute-force point distances; no CGAL header",
+          "independence": "best-first Lipschitz subdivision bracket over nearest-point distances (minimum over all points through a conservative box hierarchy); no CGAL header",
           "input_slots": [
             "candidate",
             "mesh",
@@ -8520,7 +9022,7 @@
             "distance_unit_matches_mesh",
             "distance_consistent_with_exact_hausdorff_bracket"
           ],
-          "independence": "exact rational vertex distances plus best-first Lipschitz subdivision bracket over brute-force point-triangle distances; no CGAL header",
+          "independence": "exact rational vertex distances plus best-first Lipschitz subdivision bracket over nearest point-triangle distances (minimum over all triangles through a conservative box hierarchy); no CGAL header",
           "input_slots": [
             "candidate",
             "first",
@@ -8554,7 +9056,7 @@
             "verdict_follows_bounds_and_tolerance",
             "distance_within_error_bound_of_exact_symmetric_bracket"
           ],
-          "independence": "exact rational vertex distances plus best-first Lipschitz subdivision bracket over brute-force point-triangle distances in both directions; no CGAL header",
+          "independence": "exact rational vertex distances plus best-first Lipschitz subdivision bracket over nearest point-triangle distances (minimum over all triangles through a conservative box hierarchy) in both directions; no CGAL header",
           "input_slots": [
             "report",
             "reference",
@@ -9116,7 +9618,7 @@
           "input_slots": [
             "mesh"
           ],
-          "maximum_input_faces": 3000,
+          "maximum_input_faces": 10000,
           "source_header": "CGAL/extract_mean_curvature_flow_skeleton.h",
           "validators": [
             "mesh.validate.skeleton"
@@ -9142,7 +9644,7 @@
           "input_slots": [
             "mesh"
           ],
-          "maximum_input_faces": 3000,
+          "maximum_input_faces": 10000,
           "source_header": "CGAL/Mean_curvature_flow_skeletonization.h",
           "validator_parameter_bindings": {
             "mesh.validate.skeleton": {
@@ -9176,7 +9678,7 @@
           "input_slots": [
             "mesh"
           ],
-          "maximum_input_faces": 2000,
+          "maximum_input_faces": 20000,
           "source_header": "CGAL/Surface_mesh_parameterization/ARAP_parameterizer_3.h",
           "validator_parameter_bindings": {
             "mesh.validate.parameterization_isometric": {
@@ -9209,7 +9711,7 @@
           "input_slots": [
             "mesh"
           ],
-          "maximum_input_faces": 2000,
+          "maximum_input_faces": 20000,
           "source_header": "CGAL/Surface_mesh_parameterization/Discrete_conformal_map_parameterizer_3.h",
           "validators": [
             "mesh.validate.parameterization_harmonic"
@@ -9377,7 +9879,7 @@
           "input_slots": [
             "mesh"
           ],
-          "maximum_input_faces": 1500,
+          "maximum_input_faces": 3000,
           "source_header": "CGAL/mesh_segmentation.h",
           "validator_parameter_bindings": {
             "mesh.validate.sdf_values": {
@@ -9410,7 +9912,7 @@
           "input_slots": [
             "mesh"
           ],
-          "maximum_input_faces": 1500,
+          "maximum_input_faces": 3000,
           "source_header": "CGAL/mesh_segmentation.h",
           "validator_parameter_bindings": {
             "mesh.validate.sdf_segmentation": {
@@ -9445,7 +9947,7 @@
           "input_slots": [
             "points"
           ],
-          "maximum_input_points": 400,
+          "maximum_input_points": 5000,
           "source_header": "CGAL/Periodic_2_Delaunay_triangulation_2.h",
           "validator_parameter_bindings": {
             "triangulation.validate.periodic_delaunay_2": {
@@ -9477,7 +9979,7 @@
           "input_slots": [
             "points"
           ],
-          "maximum_input_points": 400,
+          "maximum_input_points": 5000,
           "source_header": "CGAL/Periodic_3_Delaunay_triangulation_3.h",
           "validator_parameter_bindings": {
             "triangulation.validate.periodic_delaunay_3": {
@@ -9724,12 +10226,12 @@
     ],
     "worker": "cgal-master-worker"
   },
-  "worker_manifest_sha256": "781b5a984815c322fa78386896b0a8665871e87ff50b42fbfcff488a2ec3f17c",
+  "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
   "tests": [
     {
       "id": "family-7.15-replay-cases",
       "source_path": "tests/master_family_replay_cases.py",
-      "source_sha256": "69b3216bf60de8b908dcf6f82e4fee3ffc438ee2a29cf2d756c4b558c6ce3e65",
+      "source_sha256": "9198797f7a3571702fcd52b23b91fd75982740de71e06007f97ce4582b9b0986",
       "source_hash_encoding": "utf8-lf",
       "stdout_sha256": "03287af3b6a719dd4ee6f648f502d9cefeec8ed3bfe7b2ba57f7a44462d970b2",
       "exit_code": 0,
@@ -9767,6 +10269,11 @@
       "byte_size": 471,
       "content": "ewogInNpdGVzIjogWwogIHsKICAgInBvaW50IjogWwogICAgIjAiLAogICAgIjAiCiAgIF0sCiAgICJ2YWx1ZSI6ICIxIiwKICAgImdyYWRpZW50IjogWwogICAgIjAiLAogICAgIjAiCiAgIF0KICB9LAogIHsKICAgInBvaW50IjogWwogICAgIjEiLAogICAgIjEiCiAgIF0sCiAgICJ2YWx1ZSI6ICIxIiwKICAgImdyYWRpZW50IjogWwogICAgIjAiLAogICAgIjAiCiAgIF0KICB9LAogIHsKICAgInBvaW50IjogWwogICAgIjIiLAogICAgIjIiCiAgIF0sCiAgICJ2YWx1ZSI6ICIxIiwKICAgImdyYWRpZW50IjogWwogICAgIjAiLAogICAgIjAiCiAgIF0KICB9LAogIHsKICAgInBvaW50IjogWwogICAgIjMiLAogICAgIjMiCiAgIF0sCiAgICJ2YWx1ZSI6ICIxIiwKICAgImdyYWRpZW50IjogWwogICAgIjAiLAogICAgIjAiCiAgIF0KICB9CiBdLAogInF1ZXJpZXMiOiBbCiAgWwogICAiMS8yIiwKICAgIjEvMiIKICBdCiBdCn0K"
     },
+    "36f47ada45b092ad0764b4e5a7559bbb2ef7dfd404ea5f85242c298debea4a95": {
+      "encoding": "base64",
+      "byte_size": 614,
+      "content": "eyJjaGVja3MiOnsiY29vcmRpbmF0ZXNfbWF0Y2giOnRydWUsImludGVycG9sYXRlZF92YWx1ZXNfbWF0Y2giOnRydWUsImtlcm5lbF9tYXRjaGVzIjp0cnVlLCJwYXJhbWV0ZXJzX21hdGNoIjp0cnVlLCJyZXN1bHRfc2V0X2NvbXBsZXRlIjp0cnVlLCJzb3VyY2VfbWF0Y2hlcyI6dHJ1ZX0sImNvbXBhcmlzb25fcG9saWN5IjoiZXhhY3QgVm9yb25vaS1hcmVhIGNvb3JkaW5hdGVzIG9mIHRoZSBiaW5hcnk2NCBpbnB1dHM7IGNvb3JkaW5hdGVzIHdpdGhpbiAxZS05LCB2YWx1ZXMgd2l0aGluIDFlLTkqc2NhbGUiLCJpbmRlcGVuZGVuY2UiOiJubyBDR0FMIGhlYWRlciBpcyB1c2VkIGJ5IHRoaXMgdmFsaWRhdG9yIHRyYW5zbGF0aW9uIHVuaXQiLCJtYXhfY29vcmRpbmF0ZV9lcnJvciI6MS44OTgyMjQ4NzU1OTM2MjY2ZS0xNiwibWF4X3ZhbHVlX2Vycm9yIjoxLjMyMTQyNTYwNzgyNTMzMjhlLTE1LCJtZXRob2QiOiJzaWJzb25fYzEiLCJwYXNzZWQiOnRydWUsInNjaGVtYV92ZXJzaW9uIjoxLCJzdGF0dXMiOiJwYXNzIiwidmFsaWRhdGVzIjoib3B0aW1pemF0aW9uLmludGVycG9sYXRlIiwidmFsaWRhdG9yIjoib3B0aW1pemF0aW9uLnZhbGlkYXRlLmludGVycG9sYXRpb24ifQo="
+    },
     "39f216d1cb4b671dcfc907fdc2f75238522b2e7f13ff0e6fb49937ddd8f56f3f": {
       "encoding": "base64",
       "byte_size": 771,
@@ -9797,10 +10304,10 @@
       "byte_size": 644,
       "content": "T0ZGCjI2IDQ4IDAKMCAwIDAKMCAxIDAKMCAxIDEKMCAwIDEKMCAxIDIKMCAwIDIKMCAyIDAKMCAyIDEKMCAyIDIKMiAwIDAKMiAxIDAKMiAxIDEKMiAwIDEKMiAxIDIKMiAwIDIKMiAyIDAKMiAyIDEKMiAyIDIKMSAwIDAKMSAwIDEKMSAwIDIKMSAyIDAKMSAyIDEKMSAyIDIKMSAxIDAKMSAxIDIKMyAwIDIgMQozIDAgMyAyCjMgMyA0IDIKMyAzIDUgNAozIDEgNyA2CjMgMSAyIDcKMyAyIDggNwozIDIgNCA4CjMgOSAxMCAxMQozIDkgMTEgMTIKMyAxMiAxMSAxMwozIDEyIDEzIDE0CjMgMTAgMTUgMTYKMyAxMCAxNiAxMQozIDExIDE2IDE3CjMgMTEgMTcgMTMKMyAwIDE4IDE5CjMgMCAxOSAzCjMgMyAxOSAyMAozIDMgMjAgNQozIDE4IDkgMTIKMyAxOCAxMiAxOQozIDE5IDEyIDE0CjMgMTkgMTQgMjAKMyA2IDIyIDIxCjMgNiA3IDIyCjMgNyAyMyAyMgozIDcgOCAyMwozIDIxIDE2IDE1CjMgMjEgMjIgMTYKMyAyMiAxNyAxNgozIDIyIDIzIDE3CjMgMCAyNCAxOAozIDAgMSAyNAozIDEgMjEgMjQKMyAxIDYgMjEKMyAxOCAxMCA5CjMgMTggMjQgMTAKMyAyNCAxNSAxMAozIDI0IDIxIDE1CjMgNSAyMCAyNQozIDUgMjUgNAozIDQgMjUgMjMKMyA0IDIzIDgKMyAyMCAxNCAxMwozIDIwIDEzIDI1CjMgMjUgMTMgMTcKMyAyNSAxNyAyMwo="
     },
-    "69c8069cd063647faa6531a67d9ecfb19887ef60209b93ef4b29cfd3ede513e6": {
+    "5c8d9f751e4fc9f97a5010dd484353b3fe53096b65d61a2181b4182478183d12": {
       "encoding": "base64",
-      "byte_size": 731,
-      "content": "eyJjaGVja3MiOnsiZGV2aWF0aW9uX21hdGNoZXMiOnRydWUsImwyMV9lcnJvcl9tYXRjaGVzIjp0cnVlLCJvdXRwdXRfbWVzaF92YWxpZCI6dHJ1ZSwicGFyYW1ldGVyc19tYXRjaCI6dHJ1ZSwicGFydGl0aW9uX2NvbXBsZXRlIjp0cnVlLCJwYXRjaGVzX2Nvbm5lY3RlZCI6dHJ1ZSwicHJveGllc19maXRfcGF0Y2hlcyI6dHJ1ZSwicmVzdWx0X3NldF9jb21wbGV0ZSI6dHJ1ZSwic291cmNlX21hdGNoZXMiOnRydWV9LCJjb21wYXJpc29uX3BvbGljeSI6ImxvbmcgZG91YmxlIHJlY29tcHV0YXRpb247IG5vcm1hbHMgd2l0aGluIDFlLTksIEwyMSBlcnJvciB3aXRoaW4gMWUtOSptYXgoMSwgYXJlYSksIGRldmlhdGlvbiB3aXRoaW4gMWUtOSptYXgoMSwgfGNvb3JkaW5hdGV8KSIsImluZGVwZW5kZW5jZSI6Im5vIENHQUwgaGVhZGVyIGlzIHVzZWQgYnkgdGhpcyB2YWxpZGF0b3IgdHJhbnNsYXRpb24gdW5pdCIsIm1heF9wcm94eV9ub3JtYWxfZXJyb3IiOjAuMCwicGFzc2VkIjp0cnVlLCJwcm94eV9jb3VudCI6MywicmVjb21wdXRlZF9hbmNob3JfZGV2aWF0aW9uIjowLjQsInJlY29tcHV0ZWRfbDIxX2Vycm9yIjoxNC44Mjk4ODUwNDA0NjQyMSwic2NoZW1hX3ZlcnNpb24iOjEsInN0YXR1cyI6InBhc3MiLCJ2YWxpZGF0ZXMiOiJvcHRpbWl6YXRpb24uYXBwcm94aW1hdGVfbWVzaCIsInZhbGlkYXRvciI6Im9wdGltaXphdGlvbi52YWxpZGF0ZS5tZXNoX2FwcHJveGltYXRpb24ifQo="
+      "byte_size": 750,
+      "content": "eyJjaGVja3MiOnsiZGV2aWF0aW9uX21hdGNoZXMiOnRydWUsImwyMV9lcnJvcl9tYXRjaGVzIjp0cnVlLCJvdXRwdXRfbWVzaF92YWxpZCI6dHJ1ZSwicGFyYW1ldGVyc19tYXRjaCI6dHJ1ZSwicGFydGl0aW9uX2NvbXBsZXRlIjp0cnVlLCJwYXRjaGVzX2Nvbm5lY3RlZCI6dHJ1ZSwicHJveGllc19maXRfcGF0Y2hlcyI6dHJ1ZSwicmVzdWx0X3NldF9jb21wbGV0ZSI6dHJ1ZSwic291cmNlX21hdGNoZXMiOnRydWV9LCJjb21wYXJpc29uX3BvbGljeSI6ImxvbmcgZG91YmxlIHJlY29tcHV0YXRpb247IG5vcm1hbHMgd2l0aGluIDFlLTksIEwyMSBlcnJvciB3aXRoaW4gMWUtOSptYXgoMSwgYXJlYSksIGRldmlhdGlvbiB3aXRoaW4gMWUtOSptYXgoMSwgfGNvb3JkaW5hdGV8KSIsImluZGVwZW5kZW5jZSI6Im5vIENHQUwgaGVhZGVyIGlzIHVzZWQgYnkgdGhpcyB2YWxpZGF0b3IgdHJhbnNsYXRpb24gdW5pdCIsIm1heF9wcm94eV9ub3JtYWxfZXJyb3IiOjcuNzU3NDY2NTQ0MTMzNzg0ZS0xNywicGFzc2VkIjp0cnVlLCJwcm94eV9jb3VudCI6MywicmVjb21wdXRlZF9hbmNob3JfZGV2aWF0aW9uIjowLjQsInJlY29tcHV0ZWRfbDIxX2Vycm9yIjoxNC44Mjk4ODUwNDA0NjQyMjMsInNjaGVtYV92ZXJzaW9uIjoxLCJzdGF0dXMiOiJwYXNzIiwidmFsaWRhdGVzIjoib3B0aW1pemF0aW9uLmFwcHJveGltYXRlX21lc2giLCJ2YWxpZGF0b3IiOiJvcHRpbWl6YXRpb24udmFsaWRhdGUubWVzaF9hcHByb3hpbWF0aW9uIn0K"
     },
     "73f19a10d11dc1c2a781f02b89fb4b03ced06095de2e96b4c31022c71351d96f": {
       "encoding": "base64",
@@ -9851,11 +10358,6 @@
       "encoding": "base64",
       "byte_size": 561,
       "content": "eyJjYW5kaWRhdGVfcGFpcnMiOjc4LCJjaGVja3MiOnsiY2VudGVyc19jb3Zlcl9wb2ludHMiOnRydWUsImRpYW1ldGVyX2ZlYXNpYmxlIjp0cnVlLCJkaWFtZXRlcl9pc19jYW5kaWRhdGUiOnRydWUsInBhcmFtZXRlcnNfbWF0Y2giOnRydWUsInJlc3VsdF9zZXRfY29tcGxldGUiOnRydWUsInNtYWxsZXJfY2FuZGlkYXRlX2luZmVhc2libGUiOnRydWUsInNvdXJjZV9tYXRjaGVzIjp0cnVlfSwiaW5kZXBlbmRlbmNlIjoibm8gQ0dBTCBoZWFkZXIgaXMgdXNlZCBieSB0aGlzIHZhbGlkYXRvciB0cmFuc2xhdGlvbiB1bml0IiwibGFyZ2VzdF9pbmZlYXNpYmxlX2NhbmRpZGF0ZSI6IjgiLCJwYXNzZWQiOnRydWUsInByb29mIjoiZXhoYXVzdGl2ZSBleGFjdCBjYW5kaWRhdGUgc2NhbiB3aXRoIGFuIGluZGVwZW5kZW50IGdyZWVkeSBmZWFzaWJpbGl0eSB0ZXN0Iiwic2NoZW1hX3ZlcnNpb24iOjEsInN0YXR1cyI6InBhc3MiLCJ2YWxpZGF0ZXMiOiJvcHRpbWl6YXRpb24ubWF0cml4X3NlYXJjaCIsInZhbGlkYXRvciI6Im9wdGltaXphdGlvbi52YWxpZGF0ZS5tYXRyaXhfc2VhcmNoIn0K"
-    },
-    "cf1879636a4367fa92797a6b266cad7f46ee7ed8b83ad7155d6d12a748331f73": {
-      "encoding": "base64",
-      "byte_size": 614,
-      "content": "eyJjaGVja3MiOnsiY29vcmRpbmF0ZXNfbWF0Y2giOnRydWUsImludGVycG9sYXRlZF92YWx1ZXNfbWF0Y2giOnRydWUsImtlcm5lbF9tYXRjaGVzIjp0cnVlLCJwYXJhbWV0ZXJzX21hdGNoIjp0cnVlLCJyZXN1bHRfc2V0X2NvbXBsZXRlIjp0cnVlLCJzb3VyY2VfbWF0Y2hlcyI6dHJ1ZX0sImNvbXBhcmlzb25fcG9saWN5IjoiZXhhY3QgVm9yb25vaS1hcmVhIGNvb3JkaW5hdGVzIG9mIHRoZSBiaW5hcnk2NCBpbnB1dHM7IGNvb3JkaW5hdGVzIHdpdGhpbiAxZS05LCB2YWx1ZXMgd2l0aGluIDFlLTkqc2NhbGUiLCJpbmRlcGVuZGVuY2UiOiJubyBDR0FMIGhlYWRlciBpcyB1c2VkIGJ5IHRoaXMgdmFsaWRhdG9yIHRyYW5zbGF0aW9uIHVuaXQiLCJtYXhfY29vcmRpbmF0ZV9lcnJvciI6MS44OTgyMjQ4NzU1OTM2MjY2ZS0xNiwibWF4X3ZhbHVlX2Vycm9yIjoxLjc3NjM1NjgzOTQwMDI1MDVlLTE1LCJtZXRob2QiOiJzaWJzb25fYzEiLCJwYXNzZWQiOnRydWUsInNjaGVtYV92ZXJzaW9uIjoxLCJzdGF0dXMiOiJwYXNzIiwidmFsaWRhdGVzIjoib3B0aW1pemF0aW9uLmludGVycG9sYXRlIiwidmFsaWRhdG9yIjoib3B0aW1pemF0aW9uLnZhbGlkYXRlLmludGVycG9sYXRpb24ifQo="
     },
     "d48fa2eccd939e10aa4783ddbc46aefd5a3474680cb66f0753cca5cb27df0665": {
       "encoding": "base64",
@@ -9977,7 +10479,7 @@
       "validates": "optimization.interpolate",
       "validator": "optimization.validate.interpolation"
     },
-    "63d3f227cbfe4eba0423b2d3b44e6db5ba044f6aef90eedac9fc9dcde4f99d8b": {
+    "d26e7337e887ddecdef9c8407538bc3602f12ed626d09037f432eaf8ddd59874": {
       "checks": {
         "coordinates_match": true,
         "interpolated_values_match": true,
@@ -9989,7 +10491,7 @@
       "comparison_policy": "exact Voronoi-area coordinates of the binary64 inputs; coordinates within 1e-9, values within 1e-9*scale",
       "independence": "no CGAL header is used by this validator translation unit",
       "max_coordinate_error": 1.8982248755936266e-16,
-      "max_value_error": 1.7763568394002505e-15,
+      "max_value_error": 1.3214256078253328e-15,
       "method": "sibson_c1",
       "passed": true,
       "schema_version": 1,
@@ -10021,7 +10523,7 @@
       "validates": "optimization.approximate_mesh",
       "validator": "optimization.validate.mesh_approximation"
     },
-    "2e06d61cb81cd412e6d05e4f90f65ca782981d33ecad677d0250ebdd38115076": {
+    "4be2516746aeabad4116118e9bcd7601ed73831b6708a163822310e607896d4b": {
       "checks": {
         "deviation_matches": true,
         "l21_error_matches": true,
@@ -10035,11 +10537,11 @@
       },
       "comparison_policy": "long double recomputation; normals within 1e-9, L21 error within 1e-9*max(1, area), deviation within 1e-9*max(1, |coordinate|)",
       "independence": "no CGAL header is used by this validator translation unit",
-      "max_proxy_normal_error": 0.0,
+      "max_proxy_normal_error": 7.757466544133784e-17,
       "passed": true,
       "proxy_count": 3,
       "recomputed_anchor_deviation": 0.4,
-      "recomputed_l21_error": 14.82988504046421,
+      "recomputed_l21_error": 14.829885040464223,
       "schema_version": 1,
       "status": "pass",
       "validates": "optimization.approximate_mesh",
@@ -10091,7 +10593,7 @@
       "case_id": "optimization-lp-optimal",
       "operation_id": "optimization.quadratic_program",
       "revision": 1,
-      "worker_manifest_sha256": "781b5a984815c322fa78386896b0a8665871e87ff50b42fbfcff488a2ec3f17c",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.15-replay-cases",
       "request": {
         "inputs": [
@@ -10250,7 +10752,7 @@
       "case_id": "optimization-lp-infeasible",
       "operation_id": "optimization.quadratic_program",
       "revision": 1,
-      "worker_manifest_sha256": "781b5a984815c322fa78386896b0a8665871e87ff50b42fbfcff488a2ec3f17c",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.15-replay-cases",
       "request": {
         "inputs": [
@@ -10409,7 +10911,7 @@
       "case_id": "optimization-lp-unbounded",
       "operation_id": "optimization.quadratic_program",
       "revision": 1,
-      "worker_manifest_sha256": "781b5a984815c322fa78386896b0a8665871e87ff50b42fbfcff488a2ec3f17c",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.15-replay-cases",
       "request": {
         "inputs": [
@@ -10568,7 +11070,7 @@
       "case_id": "optimization-qp-optimal",
       "operation_id": "optimization.quadratic_program",
       "revision": 1,
-      "worker_manifest_sha256": "781b5a984815c322fa78386896b0a8665871e87ff50b42fbfcff488a2ec3f17c",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.15-replay-cases",
       "request": {
         "inputs": [
@@ -10727,7 +11229,7 @@
       "case_id": "optimization-qp-unbounded",
       "operation_id": "optimization.quadratic_program",
       "revision": 1,
-      "worker_manifest_sha256": "781b5a984815c322fa78386896b0a8665871e87ff50b42fbfcff488a2ec3f17c",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.15-replay-cases",
       "request": {
         "inputs": [
@@ -10886,7 +11388,7 @@
       "case_id": "optimization-interpolation-linear-exact",
       "operation_id": "optimization.interpolate",
       "revision": 1,
-      "worker_manifest_sha256": "781b5a984815c322fa78386896b0a8665871e87ff50b42fbfcff488a2ec3f17c",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.15-replay-cases",
       "request": {
         "inputs": [
@@ -11044,7 +11546,7 @@
       "case_id": "optimization-interpolation-sibson-c1",
       "operation_id": "optimization.interpolate",
       "revision": 1,
-      "worker_manifest_sha256": "781b5a984815c322fa78386896b0a8665871e87ff50b42fbfcff488a2ec3f17c",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.15-replay-cases",
       "request": {
         "inputs": [
@@ -11147,7 +11649,7 @@
               "comparison_policy": "exact Voronoi-area coordinates of the binary64 inputs; coordinates within 1e-9, values within 1e-9*scale",
               "independence": "no CGAL header is used by this validator translation unit",
               "max_coordinate_error": 1.8982248755936266e-16,
-              "max_value_error": 1.7763568394002505e-15,
+              "max_value_error": 1.3214256078253328e-15,
               "method": "sibson_c1",
               "passed": true,
               "schema_version": 1,
@@ -11157,7 +11659,7 @@
             },
             "outputs": [
               {
-                "blob_sha256": "cf1879636a4367fa92797a6b266cad7f46ee7ed8b83ad7155d6d12a748331f73",
+                "blob_sha256": "36f47ada45b092ad0764b4e5a7559bbb2ef7dfd404ea5f85242c298debea4a95",
                 "format": "json",
                 "slot": "validation",
                 "type": "ValidationReport",
@@ -11168,16 +11670,16 @@
             "request_id": "optimization-interpolation-sibson-c1--optimization.validate.interpolation",
             "status": "ok"
           },
-          "response_sha256": "a9d8935784a44fd7ae7501555e43abcc71c429d798ebd49b2f9c7e1cc1e9d0ac",
+          "response_sha256": "b7687e5b284729495d3a356d67112cdba23fa0219024bd3c914985ec73e7c115",
           "input_hashes": [
             "d8a9b612c015702e8cd0f919050f722506b41ec25ba0172ecb7b8ad7c85f0d53",
             "db1c08c7ccbdb4576df5505edfffbdee8c58a9ddc60bc8995a704292d5f610bc"
           ],
           "output_hashes": [
-            "cf1879636a4367fa92797a6b266cad7f46ee7ed8b83ad7155d6d12a748331f73"
+            "36f47ada45b092ad0764b4e5a7559bbb2ef7dfd404ea5f85242c298debea4a95"
           ],
-          "report_blob_sha256": "cf1879636a4367fa92797a6b266cad7f46ee7ed8b83ad7155d6d12a748331f73",
-          "report_sha256": "63d3f227cbfe4eba0423b2d3b44e6db5ba044f6aef90eedac9fc9dcde4f99d8b",
+          "report_blob_sha256": "36f47ada45b092ad0764b4e5a7559bbb2ef7dfd404ea5f85242c298debea4a95",
+          "report_sha256": "d26e7337e887ddecdef9c8407538bc3602f12ed626d09037f432eaf8ddd59874",
           "status": "pass"
         }
       ],
@@ -11193,7 +11695,7 @@
           },
           "validator:optimization.validate.interpolation": {
             "pass": true,
-            "report_sha256": "63d3f227cbfe4eba0423b2d3b44e6db5ba044f6aef90eedac9fc9dcde4f99d8b"
+            "report_sha256": "d26e7337e887ddecdef9c8407538bc3602f12ed626d09037f432eaf8ddd59874"
           },
           "pair:different_outputs:optimization-interpolation-linear-on-quadratic": {
             "pass": true
@@ -11205,7 +11707,7 @@
       "case_id": "optimization-interpolation-linear-on-quadratic",
       "operation_id": "optimization.interpolate",
       "revision": 1,
-      "worker_manifest_sha256": "781b5a984815c322fa78386896b0a8665871e87ff50b42fbfcff488a2ec3f17c",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.15-replay-cases",
       "request": {
         "inputs": [
@@ -11366,7 +11868,7 @@
       "case_id": "optimization-vsa-fine",
       "operation_id": "optimization.approximate_mesh",
       "revision": 1,
-      "worker_manifest_sha256": "781b5a984815c322fa78386896b0a8665871e87ff50b42fbfcff488a2ec3f17c",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.15-replay-cases",
       "request": {
         "inputs": [
@@ -11537,7 +12039,7 @@
       "case_id": "optimization-vsa-coarse",
       "operation_id": "optimization.approximate_mesh",
       "revision": 1,
-      "worker_manifest_sha256": "781b5a984815c322fa78386896b0a8665871e87ff50b42fbfcff488a2ec3f17c",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.15-replay-cases",
       "request": {
         "inputs": [
@@ -11648,11 +12150,11 @@
               },
               "comparison_policy": "long double recomputation; normals within 1e-9, L21 error within 1e-9*max(1, area), deviation within 1e-9*max(1, |coordinate|)",
               "independence": "no CGAL header is used by this validator translation unit",
-              "max_proxy_normal_error": 0.0,
+              "max_proxy_normal_error": 7.757466544133784e-17,
               "passed": true,
               "proxy_count": 3,
               "recomputed_anchor_deviation": 0.4,
-              "recomputed_l21_error": 14.82988504046421,
+              "recomputed_l21_error": 14.829885040464223,
               "schema_version": 1,
               "status": "pass",
               "validates": "optimization.approximate_mesh",
@@ -11660,7 +12162,7 @@
             },
             "outputs": [
               {
-                "blob_sha256": "69c8069cd063647faa6531a67d9ecfb19887ef60209b93ef4b29cfd3ede513e6",
+                "blob_sha256": "5c8d9f751e4fc9f97a5010dd484353b3fe53096b65d61a2181b4182478183d12",
                 "format": "json",
                 "slot": "validation",
                 "type": "ValidationReport",
@@ -11671,16 +12173,16 @@
             "request_id": "optimization-vsa-coarse--optimization.validate.mesh_approximation",
             "status": "ok"
           },
-          "response_sha256": "a5fb509378d55ad45b78059f087d0c14bb58011c3edadb79da22e7e275b0ca07",
+          "response_sha256": "fdc4cafffc5b5be59585809de1be280befa02958d8cc207a83c4fd9a92a5f868",
           "input_hashes": [
             "f81fb337a516527853f28c05f399cc4d77dbc57220ba11a6723a267d98a01d91",
             "57afc11a0b7d545762e74d8c5fc417dc4d34489829b1b2835a16281879900c79"
           ],
           "output_hashes": [
-            "69c8069cd063647faa6531a67d9ecfb19887ef60209b93ef4b29cfd3ede513e6"
+            "5c8d9f751e4fc9f97a5010dd484353b3fe53096b65d61a2181b4182478183d12"
           ],
-          "report_blob_sha256": "69c8069cd063647faa6531a67d9ecfb19887ef60209b93ef4b29cfd3ede513e6",
-          "report_sha256": "2e06d61cb81cd412e6d05e4f90f65ca782981d33ecad677d0250ebdd38115076",
+          "report_blob_sha256": "5c8d9f751e4fc9f97a5010dd484353b3fe53096b65d61a2181b4182478183d12",
+          "report_sha256": "4be2516746aeabad4116118e9bcd7601ed73831b6708a163822310e607896d4b",
           "status": "pass"
         }
       ],
@@ -11696,7 +12198,7 @@
           },
           "validator:optimization.validate.mesh_approximation": {
             "pass": true,
-            "report_sha256": "2e06d61cb81cd412e6d05e4f90f65ca782981d33ecad677d0250ebdd38115076"
+            "report_sha256": "4be2516746aeabad4116118e9bcd7601ed73831b6708a163822310e607896d4b"
           },
           "pair:different_outputs:optimization-vsa-fine": {
             "pass": true
@@ -11708,7 +12210,7 @@
       "case_id": "optimization-p-center-3",
       "operation_id": "optimization.matrix_search",
       "revision": 1,
-      "worker_manifest_sha256": "781b5a984815c322fa78386896b0a8665871e87ff50b42fbfcff488a2ec3f17c",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.15-replay-cases",
       "request": {
         "inputs": [
@@ -11870,7 +12372,7 @@
       "case_id": "optimization-p-center-4",
       "operation_id": "optimization.matrix_search",
       "revision": 1,
-      "worker_manifest_sha256": "781b5a984815c322fa78386896b0a8665871e87ff50b42fbfcff488a2ec3f17c",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.15-replay-cases",
       "request": {
         "inputs": [
@@ -12034,7 +12536,7 @@
       "case_id": "optimization-qp-nonconvex-rejected",
       "operation_id": "optimization.quadratic_program",
       "revision": 1,
-      "worker_manifest_sha256": "781b5a984815c322fa78386896b0a8665871e87ff50b42fbfcff488a2ec3f17c",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.15-replay-cases",
       "request": {
         "inputs": [
@@ -12086,7 +12588,7 @@
       "case_id": "optimization-lp-quadratic-term-rejected",
       "operation_id": "optimization.quadratic_program",
       "revision": 1,
-      "worker_manifest_sha256": "781b5a984815c322fa78386896b0a8665871e87ff50b42fbfcff488a2ec3f17c",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.15-replay-cases",
       "request": {
         "inputs": [
@@ -12138,7 +12640,7 @@
       "case_id": "optimization-lp-tampered-objective-rejected",
       "operation_id": "optimization.validate.quadratic_program",
       "revision": 1,
-      "worker_manifest_sha256": "781b5a984815c322fa78386896b0a8665871e87ff50b42fbfcff488a2ec3f17c",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.15-replay-cases",
       "request": {
         "inputs": [
@@ -12199,7 +12701,7 @@
       "case_id": "optimization-interpolation-outside-hull-rejected",
       "operation_id": "optimization.interpolate",
       "revision": 1,
-      "worker_manifest_sha256": "781b5a984815c322fa78386896b0a8665871e87ff50b42fbfcff488a2ec3f17c",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.15-replay-cases",
       "request": {
         "inputs": [
@@ -12251,7 +12753,7 @@
       "case_id": "optimization-interpolation-collinear-rejected",
       "operation_id": "optimization.interpolate",
       "revision": 1,
-      "worker_manifest_sha256": "781b5a984815c322fa78386896b0a8665871e87ff50b42fbfcff488a2ec3f17c",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.15-replay-cases",
       "request": {
         "inputs": [
@@ -12303,7 +12805,7 @@
       "case_id": "optimization-interpolation-tampered-value-rejected",
       "operation_id": "optimization.validate.interpolation",
       "revision": 1,
-      "worker_manifest_sha256": "781b5a984815c322fa78386896b0a8665871e87ff50b42fbfcff488a2ec3f17c",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.15-replay-cases",
       "request": {
         "inputs": [
@@ -12364,7 +12866,7 @@
       "case_id": "optimization-vsa-too-many-proxies-rejected",
       "operation_id": "optimization.approximate_mesh",
       "revision": 1,
-      "worker_manifest_sha256": "781b5a984815c322fa78386896b0a8665871e87ff50b42fbfcff488a2ec3f17c",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.15-replay-cases",
       "request": {
         "inputs": [
@@ -12418,7 +12920,7 @@
       "case_id": "optimization-vsa-tampered-proxy-rejected",
       "operation_id": "optimization.validate.mesh_approximation",
       "revision": 1,
-      "worker_manifest_sha256": "781b5a984815c322fa78386896b0a8665871e87ff50b42fbfcff488a2ec3f17c",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.15-replay-cases",
       "request": {
         "inputs": [
@@ -12481,7 +12983,7 @@
       "case_id": "optimization-p-center-trivial-rejected",
       "operation_id": "optimization.matrix_search",
       "revision": 1,
-      "worker_manifest_sha256": "781b5a984815c322fa78386896b0a8665871e87ff50b42fbfcff488a2ec3f17c",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.15-replay-cases",
       "request": {
         "inputs": [
@@ -12533,7 +13035,7 @@
       "case_id": "optimization-p-center-tampered-optimum-rejected",
       "operation_id": "optimization.validate.matrix_search",
       "revision": 1,
-      "worker_manifest_sha256": "781b5a984815c322fa78386896b0a8665871e87ff50b42fbfcff488a2ec3f17c",
+      "worker_manifest_sha256": "06bf81e13f9c717319c2934d2e0d29be125d10f7ad2cb7fc84e5834a82596d49",
       "test_id": "family-7.15-replay-cases",
       "request": {
         "inputs": [

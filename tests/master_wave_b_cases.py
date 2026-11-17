@@ -168,7 +168,11 @@ expected_bindings = {
     },
 }
 for operation_id, bindings in expected_bindings.items():
-    assert manifest_operations[operation_id]["info"]["validator_parameter_bindings"] == bindings
+    # Later waves added further mandatory validators (outliers_removed, smoothing_quality); the
+    # Wave B bindings must still be declared unchanged.
+    declared = manifest_operations[operation_id]["info"]["validator_parameter_bindings"]
+    for validator_id, parameters in bindings.items():
+        assert declared[validator_id] == parameters, (operation_id, validator_id)
 assert "normal_vectors_unit" in manifest_operations["pointset.validate.basic"]["info"]["checks"]
 assert "cgal_reference_match" in manifest_operations["pointset.validate.subset"]["info"]["checks"]
 

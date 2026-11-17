@@ -24,10 +24,10 @@ std::vector<OperationDefinition> skeleton_validators();
 std::vector<OperationDefinition> producer_operations();
 std::vector<OperationDefinition> validator_operations();
 
-inline constexpr std::size_t kMaximumDistanceFaces = 400;
-inline constexpr std::size_t kMaximumDistancePoints = 2000;
-inline constexpr std::size_t kMaximumSamplePoints = 20000;
-inline constexpr std::size_t kMaximumIntersectionFaces = 200;
+inline constexpr std::size_t kMaximumDistanceFaces = 200000;
+inline constexpr std::size_t kMaximumDistancePoints = 50000;
+inline constexpr std::size_t kMaximumSamplePoints = 200000;
+inline constexpr std::size_t kMaximumIntersectionFaces = 200000;
 inline constexpr std::size_t kMaximumSkeletonVertices = 64;
 
 // Parameters of sample_triangle_mesh shared by the sampling-based distance operations.

@@ -6,6 +6,7 @@ import asyncio
 import ctypes
 import json
 import os
+import signal
 import sys
 import uuid
 from pathlib import Path
@@ -45,10 +46,28 @@ def _command(executable: Path, *arguments: str) -> list[str]:
 
 
 def _posix_limit(memory_mb: int):
+    """Child setup on POSIX: address-space limit and, on Linux, death with the host.
+
+    PR_SET_PDEATHSIG makes the kernel kill the worker when the supervising process dies, so a
+    killed host leaves no worker behind (the Windows build gets this from the kill-on-close Job).
+    libc is loaded before the fork; the child only makes the prctl call.
+    """
+    host_pid = os.getpid()
+    libc = None
+    if sys.platform.startswith("linux"):
+        try:
+            libc = ctypes.CDLL(None, use_errno=True)
+        except OSError:
+            libc = None
+
     def apply() -> None:
         import resource
         maximum = memory_mb * 1024 * 1024
         resource.setrlimit(resource.RLIMIT_AS, (maximum, maximum))
+        if libc is not None:
+            libc.prctl(1, int(signal.SIGKILL), 0, 0, 0)  # PR_SET_PDEATHSIG
+            if os.getppid() != host_pid:  # the host died between fork and prctl
+                os._exit(1)
     return apply
 
 
@@ -105,6 +124,22 @@ def _assign_windows_job(pid: int, memory_mb: int) -> tuple[int | None, str]:
         kernel32.CloseHandle(job)
         return None, f"unsupported:AssignProcessToJobObject:{error}"
     return int(job), "windows_job_object"
+
+
+def _kill_posix_group(pid: int) -> None:
+    """Kill every process of the worker's own session (POSIX).
+
+    A worker is started as a session leader. Killing only the worker leaves a grandchild that
+    inherited its pipes alive, the pipe never reaches EOF and the supervisor would wait forever,
+    so a timeout would not be enforced. This is the POSIX counterpart of the Windows kill-on-close
+    Job. It is also called after a normal exit: a finished worker must not leave processes behind.
+    """
+    if os.name == "nt":
+        return
+    try:
+        os.killpg(pid, signal.SIGKILL)
+    except (ProcessLookupError, PermissionError):
+        pass
 
 
 def _close_windows_job(handle: int | None) -> None:
@@ -210,6 +245,7 @@ class WorkerSupervisor:
         kwargs: dict[str, Any] = {}
         if os.name != "nt":
             kwargs["preexec_fn"] = _posix_limit(memory_mb)
+            kwargs["start_new_session"] = True
         try:
             process = await asyncio.create_subprocess_exec(*_command(self.executable),
                 stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE,
@@ -235,17 +271,21 @@ class WorkerSupervisor:
         except asyncio.TimeoutError as exc:
             # Kill-on-close reaps grandchildren that inherited the pipes; otherwise the
             # waits below would block on pipe EOF forever and the timeout would not be enforced.
+            _kill_posix_group(process.pid)
             process.kill(); _close_windows_job(job_handle); job_handle = None
             await process.wait()
             await asyncio.gather(stdout_task, stderr_task)
             raise WorkerFailure("worker_timeout", f"Worker exceeded {wall_ms} ms", "timeout", True) from exc
         except asyncio.CancelledError:
+            _kill_posix_group(process.pid)
             process.kill(); _close_windows_job(job_handle); job_handle = None
             await process.wait()
             await asyncio.gather(stdout_task, stderr_task)
             raise
         finally:
             _close_windows_job(job_handle)
+        # The worker has exited: reap anything it left in its session so the pipes reach EOF.
+        _kill_posix_group(process.pid)
         (stdout, stdout_exceeded), (stderr, stderr_exceeded) = await asyncio.gather(stdout_task, stderr_task)
         diagnostics = {"returncode": process.returncode,
                        "stderr": stderr.decode("utf-8", "replace"),
@@ -323,6 +363,7 @@ class WorkerSupervisor:
         kwargs: dict[str, Any] = {}
         if os.name != "nt":
             kwargs["preexec_fn"] = _posix_limit(memory_mb)
+            kwargs["start_new_session"] = True
         environment = {key: value for key, value in os.environ.items()
                        if not key.startswith("CGAL_MASTER_SESSION_CACHE")}
         if self.persistent is not None and self.persistent.session_cache:
@@ -715,6 +756,7 @@ class _SessionWorker:
             raise _SessionBroken("health check reply does not match")
 
     def kill_now(self) -> None:
+        _kill_posix_group(self.process.pid)
         if self.process.returncode is None:
             try:
                 self.process.kill()

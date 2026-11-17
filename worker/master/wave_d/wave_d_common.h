@@ -30,8 +30,8 @@ inline constexpr const char* kEpick =
 
 // Producers refuse inputs/outputs whose mandatory validation would exceed the
 // validator budget, so no candidate is produced that cannot be validated.
-inline constexpr std::size_t kMaximumInputFaces = 20000;
-inline constexpr std::size_t kMaximumOutputFaces = 60000;
+inline constexpr std::size_t kMaximumInputFaces = 200000;
+inline constexpr std::size_t kMaximumOutputFaces = 1000000;
 inline constexpr std::size_t kMaximumFaceDegree = 64;
 inline constexpr std::size_t kMaximumSamples = 3000000;
 inline constexpr std::size_t kMaximumIterations = 50;

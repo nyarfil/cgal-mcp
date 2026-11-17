@@ -23,6 +23,7 @@ from .unsupported import UnsupportedPackageIndex
 from .resources import ResourceConfig
 from .result_cache import ResultCache
 from .supervisor import PersistentPolicy, WorkerSupervisor, default_worker_path
+from .experimental import ExperimentalRunner, verification_of
 from .util import digest_file, within
 
 
@@ -101,7 +102,8 @@ class MasterRuntime:
                  allowed_file_roots: list[Path] | None = None,
                  docs_index: Path | None = None,
                  persistent_workers: PersistentPolicy | bool | None = None,
-                 result_cache: bool | None = None):
+                 result_cache: bool | None = None,
+                 experimental: "ExperimentalRunner | bool | None" = None):
         resources = resource_config or ResourceConfig()
         if concurrency is not None:
             resources = resources.with_concurrency(concurrency)
@@ -135,6 +137,15 @@ class MasterRuntime:
                                    tuple(path.resolve() for path in allowed_file_roots))
         self.semaphore = asyncio.Semaphore(resources.concurrency)
         self.resources = resources
+        # Caller-supplied C++ (results unverified): off unless enabled explicitly or by environment.
+        if experimental is None:
+            experimental = ExperimentalRunner.from_environment(
+                self.store, max_memory_mb=resources.max_memory_mb, max_wall_time_ms=resources.max_wall_time_ms)
+        elif experimental is False:
+            experimental = None
+        elif experimental is True:
+            raise ValueError("experimental=True needs an ExperimentalRunner with a compile command")
+        self.experimental = experimental
         self.concurrency = resources.concurrency
         self.tasks: dict[str, asyncio.Task[None]] = {}
         self.started = time.time()
@@ -565,7 +576,26 @@ class MasterRuntime:
             "parameters": parameters or {}}]})
 
     def artifact_inspect(self, artifact_id: str) -> dict[str, Any]:
-        return self.store.inspect(artifact_id)
+        inspection = self.store.inspect(artifact_id)
+        # unverified: produced by experimental caller-supplied code, nothing checked it.
+        inspection["verification"] = verification_of(inspection)
+        return inspection
+
+    def experimental_run(self, source: str, inputs: dict[str, str] | None, outputs: list[dict[str, str]],
+                         execution: dict[str, Any] | None = None, note: str | None = None) -> dict[str, Any]:
+        """Compile and run caller-supplied CGAL C++; the outputs are imported as UNVERIFIED artifacts."""
+        if self.experimental is None:
+            raise MasterError(
+                "experimental_disabled",
+                "Experimental execution is off. The server owner enables it with CGAL_MASTER_EXPERIMENTAL=1 and a "
+                "compile command (CGAL_MASTER_EXPERIMENTAL_COMPILE, or CGAL_MASTER_EXPERIMENTAL_INCLUDE on POSIX). "
+                "Registered operations (cgal_capabilities_search) do not need it.",
+                "unsupported_adapter")
+        options = execution or {}
+        if not isinstance(options, dict) or set(options) - {"wall_time_ms", "memory_mb"}:
+            raise InvalidInput("experimental_limits", "execution may hold wall_time_ms and memory_mb only")
+        return self.experimental.run(source, inputs, outputs, wall_time_ms=options.get("wall_time_ms"),
+                                     memory_mb=options.get("memory_mb"), note=note)
 
     def artifact_import(self, path: str, unit: str, format: str | None = None,
                         artifact_type: str | None = None) -> dict[str, Any]:
@@ -842,6 +872,8 @@ class MasterRuntime:
                 "cgal_versions": sorted(self.registry.cgal_versions),
                 "operation_counts": {status: sum(op["status"] == status for op in self.registry.operations.values())
                                      for status in sorted({op["status"] for op in self.registry.operations.values()})},
+                "experimental": (self.experimental.describe() if self.experimental is not None
+                                 else {"enabled": False}),
                 "store": self.store.counts(), "worker": worker, "catalog": catalog,
                 "docs_index": docs_index_health,
                 "file_access": {"mode": "local_unrestricted" if self.allowed_file_roots is None else "allowlist",

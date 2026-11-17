@@ -143,7 +143,7 @@ class GuideServerTests(unittest.TestCase):
                 runtime = MasterRuntime(Path(data), worker=WORKER, require_memory_limit=False)
                 try:
                     server = create_server(runtime)
-                    self.assertEqual(len(await server.list_tools()), 13)
+                    self.assertEqual(len(await server.list_tools()), 14)
                     resources = await server.list_resources()
                     self.assertEqual(len(resources), 12)
                     self.assertEqual(len(await server.list_resource_templates()), 6)

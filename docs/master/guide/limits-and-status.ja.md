@@ -1,18 +1,18 @@
 # 上限と正直な対応範囲
 
 ## 操作の状態
-VALIDATED: 228 (CGAL 6.2.1)
+IMPLEMENTED: 12, VALIDATED: 228 (CGAL 6.2.1)
 実行できるのはVALIDATED/IMPLEMENTEDの操作だけ。VALIDATEDは同梱fixtureで独立検証器つきの再実行に合格した意味で、全入力の証明ではない。システム全体の受入は再実行束縛の評価器（scripts/master_acceptance.py）が別に管理し、このガイドは達成を主張しない。
 
 ## パッケージ目録
-126 CGAL packages: VALIDATED 45, CATALOGED 69, EXCLUDED 12
-VALIDATED=実行可能な検証済み操作が1つ以上ある。CATALOGED=文書・ソースの索引のみで実行不可。EXCLUDED=単独のヘッドレス操作が存在しない。
+126 CGAL packages: VALIDATED 45, IMPLEMENTED 1, CATALOGED 68, EXCLUDED 12
+VALIDATED=実行可能な検証済み操作が1つ以上ある。IMPLEMENTED=必須検証器つきで実行できる操作があるが自己検証のみ（検証済みには数えない）。CATALOGED=文書・ソースの索引のみで実行不可。EXCLUDED=単独のヘッドレス操作が存在しない。
 
 ## 上限
 - import: at most 512 MiB per file; formats off, obj, ply (ASCII), stl, xyz and typed json; units mm, cm or m (reports: none)
 - execution defaults: concurrency 2, worker memory 4096 MiB, wall time 120 s, ceiling 86400 s; live values: cgal_system_health; per call: cgal_execute execution={"wall_time_ms":..., "memory_mb":...}
-- 操作ごとの面数上限（各カードに明記）: 64 faces: 1 ops; 200 faces: 2 ops; 400 faces: 7 ops; 600 faces: 5 ops; 1500 faces: 2 ops; 2000 faces: 5 ops; 3000 faces: 2 ops; 20000 faces: 12 ops; 200000 faces: 7 ops; 400000 faces: 3 ops; 2000000 faces: 17 ops
-- 厳しい上限の例: 400 faces: mesh.distance.hausdorff_approximate, mesh.distance.hausdorff_approximate_symmetric, mesh.distance.hausdorff_bounded, mesh.distance.max_to_mesh, mesh.distance.max_to_points, mesh.distance.sample_points, mesh.distance.symmetric_hausdorff
+- 操作ごとの面数上限（各カードに明記）: 64 faces: 1 ops; 2000 faces: 1 ops; 3000 faces: 2 ops; 10000 faces: 2 ops; 20000 faces: 7 ops; 200000 faces: 32 ops; 250000 faces: 2 ops; 400000 faces: 4 ops; 2000000 faces: 18 ops
+- 厳しい上限の例: 64 faces: mesh.path.shortest
 
 ## 未対応（CATALOGEDまたはEXCLUDEDのパッケージ）
 これらを名指しした要求は、cgal_capabilities_search/cgal_planがfail-closed（unsupported_operation、details.unsupported_cgal_packages）。ユーザーに未対応と伝え、近い操作を黙って代用しない。
@@ -50,7 +50,6 @@ VALIDATED=実行可能な検証済み操作が1つ以上ある。CATALOGED=文�
 - Nef_2: algorithm_adapter_not_implemented (ネフ多角形)
 - Nef_3: algorithm_adapter_not_implemented (ネフ多面体)
 - Nef_S2: algorithm_adapter_not_implemented (球面上のネフ)
-- Optimal_bounding_box: algorithm_adapter_not_implemented (最適バウンディングボックス)
 - Optimal_transportation_reconstruction_2: algorithm_adapter_not_implemented (最適輸送)
 - Orthtree: algorithm_adapter_not_implemented (四分木)
 - Partition_2: algorithm_adapter_not_implemented (多角形分割)
@@ -107,6 +106,7 @@ VALIDATED=実行可能な検証済み操作が1つ以上ある。CATALOGED=文�
 - data_structure_adapter_not_implemented (CATALOGED): Official chapter <title> defines a data structure; the MCP uses typed artifacts for exchange and has no dedicated operation or adapter for it yet (not excluded: operations over it remain in scope).
 - generic_support_infrastructure (EXCLUDED): Official chapter <title> is generic-programming or arithmetic infrastructure (concepts, number types, containers, property maps, graph/solver adapters) consumed by other packages; it has no standalone geometric operation to expose.
 - gui_only (EXCLUDED): Official chapter <title> is an interactive visualization/GUI integration (Qt Graphics View, Ipe, or the Basic Viewer); it produces no headless geometric result that a typed artifact operation could return.
+- has_implemented_unvalidated_operations (IMPLEMENTED): At least one operation adapter with a mandatory independent validator lists this package as its primary package with status IMPLEMENTED (self-verified, not independently reviewed, not counted as validated).
 - has_validated_operations (VALIDATED): At least one VALIDATED operation lists this package as its primary package (derived, never listed here).
 - io_only (EXCLUDED): Official chapter <title> covers stream/file I/O and formatting; file formats are handled by the MCP artifact import/export layer, not as geometry operations.
 - needs_third_party_lib (BLOCKED): Whole package unusable without a third-party library that is not available in the build; no package currently qualifies (optional-dependency packages such as Polygonal_surface_reconstruction/SCIP are built and validated).

@@ -138,6 +138,18 @@ Do: Never guess. Read details.options (each has operation_id, summary, distingui
 - `search_limit`
 - `search_query`
 
+### Experimental execution (cgal_experimental_run) refused
+Meaning: experimental_disabled: the server owner has not enabled caller-supplied C++. experimental_source / experimental_inputs / experimental_outputs / experimental_limits / experimental_note: the request is malformed. experimental_compiler / experimental_memory_limit: the configured compiler cannot start or the memory limit cannot be applied. A compile or run failure is not an error: the tool returns status compile_failed, run_failed or run_timeout with the compiler output or stderr.
+Do: Prefer a registered operation (cgal_capabilities_search). If none fits and the mode is disabled, tell the user it must be enabled by the server owner (CGAL_MASTER_EXPERIMENTAL=1 plus a compile command). Results of this tool are unverified; say so whenever you present them.
+- `experimental_compiler`
+- `experimental_disabled`
+- `experimental_inputs`
+- `experimental_limits`
+- `experimental_memory_limit`
+- `experimental_note`
+- `experimental_outputs`
+- `experimental_source`
+
 ### Policy (cost/placement/licence) not selectable
 Meaning: A required policy choice is missing or not registered, or the licence/dependency/kernel policy in the plan excludes the operation.
 Do: Choose among the policies listed on the card; relax allowed_licenses/dependencies only if the user agrees.

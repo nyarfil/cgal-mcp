@@ -26,6 +26,20 @@ technical reconciliation separately.
   dispatch, worker supervision, and operation-specific validators.
 - Require source/license/version provenance, typed units and mandatory validation
   for mutation. Unknown operations must not execute generated C++ on demand.
+  User decision 2026-11-13: an isolated "free execution" mode (AI-written CGAL code run in a
+  separate resource-limited process, every result labelled unverified) is approved.
+  Implemented 2026-11-15 as the tool `cgal_experimental_run` (`cgal_mcp/master/experimental.py`):
+  off unless the host sets `CGAL_MASTER_EXPERIMENTAL=1` and a compile command; separate process with
+  wall-time and memory limits; outputs are imported with producer `experimental_unverified` and
+  reported as `verification: unverified`. It is not a security sandbox (no filesystem or network
+  isolation) and is for a trusted local host only. Registered operations never run generated code,
+  their mandatory validators stay as they are, and an unverified artifact never counts as validated.
+- Order agreed with the user on 2026-11-13 for "professional use": (1) remove practical input
+  limits (face bounds, exact-representability refusals), (2) expose expert parameters,
+  (3) add adapters for cataloged packages. See the dated sections in
+  `docs/master/CAPABILITY_ACCEPTANCE_JA.md` for what is done and what is not (as of 2026-11-16:
+  most validator bounds raised, one expert parameter, one new package adapter; 68 packages remain
+  cataloged only).
 - Evaluate mesh, point set, spatial, 2D, triangulation, meshing and advanced families.
   Simplification-only fixtures cannot establish Master acceptance.
 - Master (`cgal_mcp.master`, console script `cgal-mcp`, version 1.0.0) is the primary and

@@ -1,8 +1,9 @@
 // Independent validators for the 7.3.06 distance operations. No CGAL header.
 //
-// Point-to-triangle distances are brute force over all triangles: exact GMP rationals for point sets
+// Point-to-triangle distances are minima over all triangles: exact GMP rationals for point sets
 // (squared distances) and for the vertex lower bounds, long double for the subdivision bracket of a
-// supremum. The Hausdorff distance sup_{p in A} dist(p, B) is bracketed by a best-first subdivision of
+// supremum. A bounding-box hierarchy (Hierarchy below) only skips items that cannot attain the
+// minimum, with a margin far above the rounding error, so every value equals the all-items loop. The Hausdorff distance sup_{p in A} dist(p, B) is bracketed by a best-first subdivision of
 // the triangles of A using the 1-Lipschitz bound dist(p) <= dist(c) + |p - c|; the bracket width is
 // kBracketWidth times the diagonal of A. Square roots force the declared tolerance kRelativeTolerance.
 
@@ -98,25 +99,183 @@ LD diagonal_of(const RawMesh& raw) {
                    (high[2] - low[2]) * (high[2] - low[2]));
 }
 
-LD distance_to_mesh(const P3& p, const std::vector<Tri>& mesh) {
-  LD best = std::numeric_limits<LD>::infinity();
-  for (const Tri& t : mesh) best = std::min(best, distance_to_triangle(p, t));
-  return best;
-}
+// Bounding-box hierarchy over items (triangles or points) given by their boxes. The boxes are the
+// exact min/max of binary64 input coordinates. A subtree is skipped only when its box is farther
+// from the query than the current bound plus kMargin times the magnitudes involved; long double
+// rounding errors are about 1e-19 relative, so a skipped item never has a computed distance at or
+// below the bound.
+constexpr LD kMargin = 1e-9L;
 
-// Exact squared distance of a point to a mesh / to a point set (GMP rationals).
-Q exact_squared_to_mesh(const V3& p, const RawMesh& raw) {
-  const auto point = vec(p);
-  bool first = true;
-  Q best = 0;
-  for (const auto& face : raw.faces) {
-    const Q d = squared_distance_point_triangle(point, vec(raw.vertices[face[0]]), vec(raw.vertices[face[1]]),
-                                                vec(raw.vertices[face[2]]));
-    if (first || d < best) best = d;
-    first = false;
+class Hierarchy {
+ public:
+  struct Bounds {
+    LD lo[3], hi[3];
+  };
+
+  explicit Hierarchy(std::vector<Bounds> boxes) : boxes_(std::move(boxes)) {
+    order_.resize(boxes_.size());
+    for (std::size_t i = 0; i < order_.size(); ++i) order_[i] = i;
+    for (const Bounds& b : boxes_) {
+      for (int a = 0; a < 3; ++a) extent_ = std::max({extent_, std::fabs(b.lo[a]), std::fabs(b.hi[a])});
+    }
+    if (!boxes_.empty()) build(0, boxes_.size());
   }
-  return best;
-}
+
+  static Hierarchy of_triangles(const std::vector<Tri>& tris) {
+    std::vector<Bounds> boxes;
+    boxes.reserve(tris.size());
+    for (const Tri& t : tris) {
+      boxes.push_back({{std::min({t.a.x, t.b.x, t.c.x}), std::min({t.a.y, t.b.y, t.c.y}), std::min({t.a.z, t.b.z, t.c.z})},
+                       {std::max({t.a.x, t.b.x, t.c.x}), std::max({t.a.y, t.b.y, t.c.y}), std::max({t.a.z, t.b.z, t.c.z})}});
+    }
+    return Hierarchy(std::move(boxes));
+  }
+
+  static Hierarchy of_points(const std::vector<P3>& points) {
+    std::vector<Bounds> boxes;
+    boxes.reserve(points.size());
+    for (const P3& p : points) boxes.push_back({{p.x, p.y, p.z}, {p.x, p.y, p.z}});
+    return Hierarchy(std::move(boxes));
+  }
+
+  // min over all items of distance(index); equal to the loop over every item.
+  template <typename Distance>
+  LD nearest(const P3& p, Distance&& distance) const {
+    LD best = std::numeric_limits<LD>::infinity();
+    if (nodes_.empty()) return best;
+    const LD slack = kMargin * (extent_ + magnitude(p));
+    std::vector<std::pair<LD, std::size_t>> stack{{box_distance(p, nodes_[0].box), 0}};
+    while (!stack.empty()) {
+      const auto [bound, id] = stack.back();
+      stack.pop_back();
+      if (bound > best + kMargin * best + slack) continue;
+      const Node& node = nodes_[id];
+      if (node.left == kNone) {
+        for (std::size_t k = node.begin; k < node.end; ++k) best = std::min(best, distance(order_[k]));
+        continue;
+      }
+      const LD dl = box_distance(p, nodes_[node.left].box), dr = box_distance(p, nodes_[node.right].box);
+      // The nearer child is visited first (pushed last).
+      if (dl <= dr) {
+        stack.push_back({dr, node.right});
+        stack.push_back({dl, node.left});
+      } else {
+        stack.push_back({dl, node.left});
+        stack.push_back({dr, node.right});
+      }
+    }
+    return best;
+  }
+
+  // Calls visit(index) for a superset of the items within `radius` of p (every item whose box is
+  // within radius plus the margin).
+  template <typename Visit>
+  void within(const P3& p, LD radius, Visit&& visit) const {
+    if (nodes_.empty()) return;
+    const LD reach = radius + kMargin * radius + kMargin * (extent_ + magnitude(p));
+    std::vector<std::size_t> stack{0};
+    while (!stack.empty()) {
+      const Node& node = nodes_[stack.back()];
+      stack.pop_back();
+      if (box_distance(p, node.box) > reach) continue;
+      if (node.left == kNone) {
+        for (std::size_t k = node.begin; k < node.end; ++k) {
+          if (box_distance(p, boxes_[order_[k]]) <= reach) visit(order_[k]);
+        }
+      } else {
+        stack.push_back(node.left);
+        stack.push_back(node.right);
+      }
+    }
+  }
+
+ private:
+  static constexpr std::size_t kNone = static_cast<std::size_t>(-1);
+  static constexpr std::size_t kLeaf = 4;
+  struct Node {
+    Bounds box;
+    std::size_t left = kNone, right = kNone, begin = 0, end = 0;
+  };
+
+  static LD magnitude(const P3& p) { return std::max({std::fabs(p.x), std::fabs(p.y), std::fabs(p.z)}); }
+
+  static LD box_distance(const P3& p, const Bounds& b) {
+    const LD c[3] = {p.x, p.y, p.z};
+    LD sum = 0;
+    for (int a = 0; a < 3; ++a) {
+      const LD d = c[a] < b.lo[a] ? b.lo[a] - c[a] : (c[a] > b.hi[a] ? c[a] - b.hi[a] : 0);
+      sum += d * d;
+    }
+    return std::sqrt(sum);
+  }
+
+  std::size_t build(std::size_t begin, std::size_t end) {
+    const std::size_t id = nodes_.size();
+    nodes_.push_back({});
+    Bounds bound = boxes_[order_[begin]];
+    for (std::size_t k = begin + 1; k < end; ++k) {
+      for (int a = 0; a < 3; ++a) {
+        bound.lo[a] = std::min(bound.lo[a], boxes_[order_[k]].lo[a]);
+        bound.hi[a] = std::max(bound.hi[a], boxes_[order_[k]].hi[a]);
+      }
+    }
+    nodes_[id].box = bound;
+    nodes_[id].begin = begin;
+    nodes_[id].end = end;
+    if (end - begin <= kLeaf) return id;
+    int axis = 0;
+    for (int a = 1; a < 3; ++a) {
+      if (bound.hi[a] - bound.lo[a] > bound.hi[axis] - bound.lo[axis]) axis = a;
+    }
+    const std::size_t middle = begin + (end - begin) / 2;
+    std::nth_element(order_.begin() + static_cast<std::ptrdiff_t>(begin), order_.begin() + static_cast<std::ptrdiff_t>(middle),
+                     order_.begin() + static_cast<std::ptrdiff_t>(end), [&](std::size_t a, std::size_t b) {
+                       return boxes_[a].lo[axis] + boxes_[a].hi[axis] < boxes_[b].lo[axis] + boxes_[b].hi[axis];
+                     });
+    const std::size_t left = build(begin, middle);
+    const std::size_t right = build(middle, end);
+    nodes_[id].left = left;
+    nodes_[id].right = right;
+    return id;
+  }
+
+  std::vector<Bounds> boxes_;
+  std::vector<std::size_t> order_;
+  std::vector<Node> nodes_;
+  LD extent_ = 0;
+};
+
+// A mesh with its hierarchy: nearest distances in long double and exact rational squared distances.
+struct Surface {
+  const RawMesh& raw;
+  const std::vector<Tri>& tris;
+  Hierarchy tree;
+
+  Surface(const RawMesh& mesh, const std::vector<Tri>& triangles)
+      : raw(mesh), tris(triangles), tree(Hierarchy::of_triangles(triangles)) {}
+
+  LD distance(const P3& p) const {
+    return tree.nearest(p, [&](std::size_t f) { return distance_to_triangle(p, tris[f]); });
+  }
+
+  // Exact squared distance of a point to the mesh (GMP rationals): the minimum over every triangle
+  // whose box lies within the long double distance (plus margin), which contains every minimizer.
+  Q exact_squared(const V3& p) const {
+    const P3 q = to_p3(p);
+    const auto point = vec(p);
+    bool first = true;
+    Q best = 0;
+    tree.within(q, distance(q), [&](std::size_t f) {
+      const auto& face = raw.faces[f];
+      const Q d = squared_distance_point_triangle(point, vec(raw.vertices[face[0]]), vec(raw.vertices[face[1]]),
+                                                  vec(raw.vertices[face[2]]));
+      if (first || d < best) best = d;
+      first = false;
+    });
+    if (first) validation_failure("INTERNAL_ERROR", "The nearest-triangle search returned no candidate");
+    return best;
+  }
+};
 
 LD sqrt_of(const Q& value) { return std::sqrt(static_cast<LD>(value.get_d())); }
 
@@ -186,9 +345,10 @@ struct OneSided {
 OneSided one_sided(const RawMesh& a, const RawMesh& b, const std::vector<Tri>& ta, const std::vector<Tri>& tb) {
   OneSided result{};
   Q best = 0;
-  for (const auto& v : a.vertices) best = std::max(best, exact_squared_to_mesh(v, b));
+  const Surface target(b, tb);
+  for (const auto& v : a.vertices) best = std::max(best, target.exact_squared(v));
   result.vertex_lower = sqrt_of(best);
-  bracket(ta, [&](const P3& p) { return distance_to_mesh(p, tb); }, kBracketWidth * diagonal_of(a), result.lower,
+  bracket(ta, [&](const P3& p) { return target.distance(p); }, kBracketWidth * diagonal_of(a), result.lower,
           result.upper);
   result.lower = std::max(result.lower, result.vertex_lower);
   result.upper = std::max(result.upper, result.lower);
@@ -267,7 +427,7 @@ Json run_hausdorff(const Request& request) {
                     {"recomputed_bracket_upper", static_cast<double>(upper)},
                     {"bracket_width_relative_to_diagonal", static_cast<double>(kBracketWidth)},
                     {"length_tolerance_relative_to_diagonal", static_cast<double>(kRelativeTolerance)},
-                    {"independence", "exact rational vertex distances plus best-first Lipschitz subdivision bracket over brute-force point-triangle distances; no CGAL header"}});
+                    {"independence", "exact rational vertex distances plus best-first Lipschitz subdivision bracket over nearest point-triangle distances (minimum over all triangles through a conservative box hierarchy); no CGAL header"}});
 }
 
 // ---- bounded_error_symmetric_Hausdorff_distance (report of mesh.distance.symmetric_hausdorff) ------------
@@ -395,8 +555,13 @@ Json run_symmetric_hausdorff_report(const Request& request) {
   const LD error_bound = typed_in_unit(request.parameters.at("error_bound"), "error_bound", unit, true);
 
   // The report frame must be self-consistent with the declared bounds and verdict.
-  const LD reported_lower = std::max<LD>(0, reported - error_bound);
-  const LD reported_upper = reported + error_bound;
+  // The producer derives its bounds and verdict in binary64. Evaluating them here in long double
+  // would decide differently at an exact boundary (0.5 - 0.01 against a tolerance of 0.49) on
+  // platforms where long double is wider than double, so the same binary64 arithmetic is used.
+  const double tolerance64 = static_cast<double>(tolerance);
+  const double error_bound64 = static_cast<double>(error_bound);
+  const double reported_lower = std::max(0.0, reported - error_bound64);
+  const double reported_upper = reported + error_bound64;
   if (!close_to(report_length(report, "distance_estimate", unit), reported) ||
       !close_to(report_length(report, "tolerance", unit), tolerance) ||
       !close_to(report_length(report, "error_bound", unit), error_bound) ||
@@ -406,7 +571,7 @@ Json run_symmetric_hausdorff_report(const Request& request) {
                        "The reported estimate, bounds, tolerance or error bound disagree with the parameters");
   }
   const std::string expected_verdict =
-      reported_upper <= tolerance ? "pass" : (reported_lower > tolerance ? "fail" : "indeterminate");
+      reported_upper <= tolerance64 ? "pass" : (reported_lower > tolerance64 ? "fail" : "indeterminate");
   const auto verdict = require_member(report, "verdict", "report");
   const auto status = require_member(report, "status", "report");
   const auto valid = require_member(report, "valid", "report");
@@ -441,7 +606,7 @@ Json run_symmetric_hausdorff_report(const Request& request) {
                     {"recomputed_backward_vertex_lower_bound", static_cast<double>(backward.vertex_lower)},
                     {"bracket_width_relative_to_diagonal", static_cast<double>(kBracketWidth)},
                     {"length_tolerance_relative_to_diagonal", static_cast<double>(kRelativeTolerance)},
-                    {"independence", "exact rational vertex distances plus best-first Lipschitz subdivision bracket over brute-force point-triangle distances in both directions; no CGAL header"}});
+                    {"independence", "exact rational vertex distances plus best-first Lipschitz subdivision bracket over nearest point-triangle distances (minimum over all triangles through a conservative box hierarchy) in both directions; no CGAL header"}});
 }
 
 // ---- max_distance_to_triangle_mesh --------------------------------------------------------------------
@@ -453,8 +618,9 @@ Json run_max_to_mesh(const Request& request) {
   const auto report = read_report(request.inputs[0], "GeometryQueryReport", "report_kind", "max_distance_to_mesh");
   const auto points = read_points3(request.inputs[1]);
   const auto raw = read_raw_mesh(request.inputs[2], {"TriangleSurfaceMesh"});
-  triangles_of(raw, "The mesh");
-  if (points.empty() || points.size() > kMaximumDistancePoints) validation_failure("POINT_COUNT", "Between 1 and 2000 points are supported");
+  const auto tris = triangles_of(raw, "The mesh");
+  const Surface surface(raw, tris);
+  if (points.empty() || points.size() > kMaximumDistancePoints) validation_failure("POINT_COUNT", "The number of points is outside the supported range");
   if (request.inputs[1].unit != request.inputs[2].unit) validation_failure("UNIT_MISMATCH", "Points and mesh use different units");
   Json checks;
   const auto results = batch2::check_report_frame(
@@ -463,7 +629,7 @@ Json run_max_to_mesh(const Request& request) {
   const double reported = distance_value(results, request.inputs[2].unit).get<double>();
   checks["distance_unit_matches_mesh"] = true;
   Q best = 0;
-  for (const auto& p : points) best = std::max(best, exact_squared_to_mesh(p, raw));
+  for (const auto& p : points) best = std::max(best, surface.exact_squared(p));
   const LD exact = sqrt_of(best);
   if (std::fabs(static_cast<LD>(reported) - exact) > kRelativeTolerance * (1 + exact)) {
     validation_failure("DISTANCE_MISMATCH", "The reported maximum distance differs from the exact brute-force result");
@@ -485,7 +651,7 @@ Json run_max_to_points(const Request& request) {
   const auto raw = read_raw_mesh(request.inputs[1], {"TriangleSurfaceMesh"});
   const auto tris = triangles_of(raw, "The mesh");
   const auto points = read_points3(request.inputs[2]);
-  if (points.empty() || points.size() > kMaximumDistancePoints) validation_failure("POINT_COUNT", "Between 1 and 2000 points are supported");
+  if (points.empty() || points.size() > kMaximumDistancePoints) validation_failure("POINT_COUNT", "The number of points is outside the supported range");
   if (request.inputs[1].unit != request.inputs[2].unit) validation_failure("UNIT_MISMATCH", "Points and mesh use different units");
   Json checks;
   const auto results = batch2::check_report_frame(
@@ -496,10 +662,9 @@ Json run_max_to_points(const Request& request) {
   const LD precision = positive_length(request.parameters.at("precision"), "precision", request.inputs[1].unit);
   std::vector<P3> targets;
   for (const auto& p : points) targets.push_back(to_p3(p));
+  const Hierarchy target_tree = Hierarchy::of_points(targets);
   auto nearest = [&](const P3& p) {
-    LD best = std::numeric_limits<LD>::infinity();
-    for (const P3& q : targets) best = std::min(best, length3(p - q));
-    return best;
+    return target_tree.nearest(p, [&](std::size_t i) { return length3(p - targets[i]); });
   };
   LD lower = 0, upper = 0;
   bracket(tris, nearest, kBracketWidth * diagonal_of(raw), lower, upper);
@@ -512,7 +677,7 @@ Json run_max_to_points(const Request& request) {
                    {{"recomputed_bracket_lower", static_cast<double>(lower)}, {"recomputed_bracket_upper", static_cast<double>(upper)},
                     {"bracket_width_relative_to_diagonal", static_cast<double>(kBracketWidth)},
                     {"length_tolerance_relative_to_diagonal", static_cast<double>(kRelativeTolerance)},
-                    {"independence", "best-first Lipschitz subdivision bracket over brute-force point distances; no CGAL header"}});
+                    {"independence", "best-first Lipschitz subdivision bracket over nearest-point distances (minimum over all points through a conservative box hierarchy); no CGAL header"}});
 }
 
 // ---- sample_triangle_mesh ------------------------------------------------------------------------------
@@ -538,7 +703,7 @@ Json run_samples(const Request& request) {
                                                   {{"mesh_sha256", &request.inputs[1]}}, checks);
   const auto& list = require_member(results, "points", "results");
   if (!list.is_array() || list.empty() || list.size() > kMaximumSamplePoints) {
-    validation_failure("REPORT_VALUE_INVALID", "points must be a non-empty array of at most 20000 points");
+    validation_failure("REPORT_VALUE_INVALID", "points must be a non-empty array within the sample limit");
   }
   if (require_member(results, "length_unit", "results") != request.inputs[1].unit) {
     validation_failure("UNIT_MISMATCH", "The report length unit differs from the mesh unit");
@@ -559,8 +724,9 @@ Json run_samples(const Request& request) {
     points.push_back(to_p3(v));
   }
   const LD eps = kRelativeTolerance * (1 + diagonal_of(raw));
+  const Surface surface(raw, tris);
   for (const P3& p : points) {
-    if (distance_to_mesh(p, tris) > eps) validation_failure("SAMPLE_OFF_SURFACE", "A sample does not lie on the mesh surface");
+    if (surface.distance(p) > eps) validation_failure("SAMPLE_OFF_SURFACE", "A sample does not lie on the mesh surface");
   }
   checks["samples_lie_on_mesh_surface"] = true;
   const std::size_t vertex_count = spec.include_vertices ? raw.vertices.size() : 0;
@@ -576,14 +742,15 @@ Json run_samples(const Request& request) {
   std::vector<bool> face_covered(tris.size(), false);
   for (std::size_t i = vertex_count; i < points.size(); ++i) {
     bool on_edge = false;
-    for (std::size_t f = 0; f < tris.size(); ++f) {
+    // Triangles farther than eps from the sample satisfy neither test, so only those near it are visited.
+    surface.tree.within(points[i], eps, [&](std::size_t f) {
       const Tri& t = tris[f];
       if (distance_to_triangle(points[i], t) <= eps) face_covered[f] = true;
       if (distance_to_segment(points[i], t.a, t.b) <= eps || distance_to_segment(points[i], t.b, t.c) <= eps ||
           distance_to_segment(points[i], t.c, t.a) <= eps) {
         on_edge = true;
       }
-    }
+    });
     if (on_edge) ++edge_samples;
   }
   if (spec.grid) {
@@ -604,7 +771,7 @@ Json run_samples(const Request& request) {
   return concluded(request, validator, checks,
                    {{"sample_count", points.size()}, {"edge_sample_count", edge_samples},
                     {"length_tolerance_relative_to_diagonal", static_cast<double>(kRelativeTolerance)},
-                    {"independence", "brute-force point-triangle and point-edge distances over all samples; sample positions of a seeded random stream are not re-derived; no CGAL header"}});
+                    {"independence", "point-triangle and point-edge distances of every sample against all triangles near it (conservative box hierarchy); sample positions of a seeded random stream are not re-derived; no CGAL header"}});
 }
 
 }  // namespace
@@ -617,7 +784,7 @@ std::vector<OperationDefinition> distance_validators() {
       run_samples, {"Polygon_mesh_processing"}, "long double (no CGAL header)",
       vinfo({"parameters_match", "source_matches", "length_unit_matches_mesh", "samples_lie_on_mesh_surface",
              "vertices_sampled_as_requested"},
-            {"candidate", "mesh"}, "brute-force point-triangle and point-edge distances over all samples; sample positions of a seeded random stream are not re-derived; no CGAL header")));
+            {"candidate", "mesh"}, "point-triangle and point-edge distances of every sample against all triangles near it (conservative box hierarchy); sample positions of a seeded random stream are not re-derived; no CGAL header")));
   result.push_back(query_definition(
       "mesh.validate.max_distance_to_mesh", {"GeometryQueryReport", "PointSet3", "TriangleSurfaceMesh"}, "ValidationReport",
       "validator", run_max_to_mesh, {"Polygon_mesh_processing"}, "GMP rationals (no CGAL header)",
@@ -627,12 +794,12 @@ std::vector<OperationDefinition> distance_validators() {
       "mesh.validate.max_distance_to_points", {"GeometryQueryReport", "TriangleSurfaceMesh", "PointSet3"}, "ValidationReport",
       "validator", run_max_to_points, {"Polygon_mesh_processing"}, "long double (no CGAL header)",
       vinfo({"parameters_match", "source_matches", "distance_unit_matches_mesh", "distance_within_precision_of_exact_bracket"},
-            {"candidate", "mesh", "points"}, "best-first Lipschitz subdivision bracket over brute-force point distances; no CGAL header")));
+            {"candidate", "mesh", "points"}, "best-first Lipschitz subdivision bracket over nearest-point distances (minimum over all points through a conservative box hierarchy); no CGAL header")));
   result.push_back(query_definition(
       "mesh.validate.hausdorff_report", {"GeometryQueryReport", "TriangleSurfaceMesh", "TriangleSurfaceMesh"}, "ValidationReport",
       "validator", run_hausdorff, {"Polygon_mesh_processing"}, "long double (no CGAL header)",
       vinfo({"parameters_match", "source_matches", "distance_unit_matches_mesh", "distance_consistent_with_exact_hausdorff_bracket"}, {"candidate", "first", "second"},
-            "exact rational vertex distances plus best-first Lipschitz subdivision bracket over brute-force point-triangle distances; no CGAL header")));
+            "exact rational vertex distances plus best-first Lipschitz subdivision bracket over nearest point-triangle distances (minimum over all triangles through a conservative box hierarchy); no CGAL header")));
   result.push_back(query_definition(
       "mesh.validate.hausdorff_symmetric_report", {"ValidationReport", "TriangleSurfaceMesh", "TriangleSurfaceMesh"},
       "ValidationReport", "validator", run_symmetric_hausdorff_report, {"Polygon_mesh_processing"},
@@ -640,7 +807,7 @@ std::vector<OperationDefinition> distance_validators() {
       vinfo({"parameters_match", "source_matches", "distance_unit_matches_mesh", "verdict_follows_bounds_and_tolerance",
              "distance_within_error_bound_of_exact_symmetric_bracket"},
             {"report", "reference", "candidate"},
-            "exact rational vertex distances plus best-first Lipschitz subdivision bracket over brute-force point-triangle distances in both directions; no CGAL header")));
+            "exact rational vertex distances plus best-first Lipschitz subdivision bracket over nearest point-triangle distances (minimum over all triangles through a conservative box hierarchy) in both directions; no CGAL header")));
   return result;
 }
 

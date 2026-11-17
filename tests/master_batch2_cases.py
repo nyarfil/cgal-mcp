@@ -135,7 +135,7 @@ def main() -> None:
         reject(scratch, "mesh.validate.clip", [cube, cube], {**x1, "clip_volume": True}, "VERTEX_ON_REMOVED_SIDE")
         reject(scratch, "mesh.validate.clip", [mesh(B2 / "clip_tampered_strip.off"), open_square],
                {**x1, "clip_volume": False}, "REGION_NOT_COVERED_EXACTLY")
-        reject(scratch, "mesh.validate.split", [art(QUERY / "cube12.off", "PolygonSoup3"), cube], x1,
+        reject(scratch, "mesh.validate.split", [art(QUERY / "cube12.off", "TriangleSurfaceMesh"), cube], x1,
                "TRIANGLE_STRADDLES_PLANE")
         reject(scratch, "mesh.validate.corefine", [tetra, tetra, mesh(B2 / "tetra_b.off")], {},
                "TRIANGLE_CROSSED_BY_OTHER_SURFACE")

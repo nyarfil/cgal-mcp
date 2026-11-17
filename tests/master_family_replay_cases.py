@@ -91,6 +91,17 @@ def run(worker: str, request: dict) -> dict:
     return response
 
 
+def work_dir(root: pathlib.Path, name: str) -> pathlib.Path:
+    """Short per-request directory.
+
+    The worker stages its output as ``.<slot>.<request id>.tmp.<ext>`` inside the directory. With
+    the directory also named after the case and validator, the path of a long case exceeded the
+    260-character limit of Windows and the worker failed with OUTPUT_WRITE_FAILED. The directory
+    is not part of the recorded trace.
+    """
+    return root / hashlib.sha256(name.encode("utf-8")).hexdigest()[:16]
+
+
 def request(case_id: str, operation: str, inputs: list[dict], parameters: dict,
             output_dir: pathlib.Path) -> dict:
     output_dir.mkdir()
@@ -123,7 +134,7 @@ def main() -> None:
             assert operation["status"] == "VALIDATED", case["operation"]
             inputs = [fixture_artifact(index, item) for index, item in enumerate(case["inputs"])]
             transform_request = request(case["id"], case["operation"], inputs, case["parameters"],
-                                        root / case["id"])
+                                        work_dir(root, case["id"]))
             response = run(worker, transform_request)
             assert response["status"] == "ok", (case["id"], response)
             portable_request, portable_response, content = trace(transform_request, response)
@@ -151,7 +162,7 @@ def main() -> None:
                             "sha256": digest(path)})
                 validator_request = request(f"{case['id']}--{validator_id}", validator_id,
                                             validator_inputs, parameters,
-                                            root / f"{case['id']}--{validator_id}")
+                                            work_dir(root, f"{case['id']}--{validator_id}"))
                 validator_response = run(worker, validator_request)
                 assert validator_response["status"] == "ok", (case["id"], validator_response)
                 trace(validator_request, validator_response)
@@ -169,7 +180,7 @@ def main() -> None:
         for control in family["negative_controls"]:
             inputs = [fixture_artifact(index, item) for index, item in enumerate(control["inputs"])]
             control_request = request(control["id"], control["operation"], inputs,
-                                      control["parameters"], root / control["id"])
+                                      control["parameters"], work_dir(root, control["id"]))
             response = run(worker, control_request)
             assert response["status"] == "error", (control["id"], response)
             assert response["error"]["class"] == control["expect_error_class"], response

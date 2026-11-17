@@ -1,18 +1,18 @@
 # Limits and honest coverage
 
 ## Operation status
-VALIDATED: 228 (CGAL 6.2.1)
+IMPLEMENTED: 12, VALIDATED: 228 (CGAL 6.2.1)
 Only VALIDATED/IMPLEMENTED operations can execute. VALIDATED means replay-verified on bundled fixtures with an independent validator, not a proof for every input. Whole-system acceptance is tracked separately by the replay-bound evaluator (scripts/master_acceptance.py) and is not claimed by this guide.
 
 ## Package catalog
-126 CGAL packages: VALIDATED 45, CATALOGED 69, EXCLUDED 12
-VALIDATED = has at least one executable validated operation. CATALOGED = documentation/source indexed only, NOT executable. EXCLUDED = no standalone headless operation exists.
+126 CGAL packages: VALIDATED 45, IMPLEMENTED 1, CATALOGED 68, EXCLUDED 12
+VALIDATED = has at least one executable validated operation. IMPLEMENTED = has executable operations with mandatory validators that are self-verified only (not counted as validated). CATALOGED = documentation/source indexed only, NOT executable. EXCLUDED = no standalone headless operation exists.
 
 ## Limits
 - import: at most 512 MiB per file; formats off, obj, ply (ASCII), stl, xyz and typed json; units mm, cm or m (reports: none)
 - execution defaults: concurrency 2, worker memory 4096 MiB, wall time 120 s, ceiling 86400 s; live values: cgal_system_health; per call: cgal_execute execution={"wall_time_ms":..., "memory_mb":...}
-- per-operation face bounds (cards list each one): 64 faces: 1 ops; 200 faces: 2 ops; 400 faces: 7 ops; 600 faces: 5 ops; 1500 faces: 2 ops; 2000 faces: 5 ops; 3000 faces: 2 ops; 20000 faces: 12 ops; 200000 faces: 7 ops; 400000 faces: 3 ops; 2000000 faces: 17 ops
-- tightest common bound: 400 faces: mesh.distance.hausdorff_approximate, mesh.distance.hausdorff_approximate_symmetric, mesh.distance.hausdorff_bounded, mesh.distance.max_to_mesh, mesh.distance.max_to_points, mesh.distance.sample_points, mesh.distance.symmetric_hausdorff
+- per-operation face bounds (cards list each one): 64 faces: 1 ops; 2000 faces: 1 ops; 3000 faces: 2 ops; 10000 faces: 2 ops; 20000 faces: 7 ops; 200000 faces: 32 ops; 250000 faces: 2 ops; 400000 faces: 4 ops; 2000000 faces: 18 ops
+- tightest common bound: 64 faces: mesh.path.shortest
 
 ## Not supported (cataloged or excluded packages)
 When a request names one of these, cgal_capabilities_search/cgal_plan fail closed (unsupported_operation with details.unsupported_cgal_packages). Tell the user it is not supported; do not substitute a nearby operation silently.
@@ -50,7 +50,6 @@ When a request names one of these, cgal_capabilities_search/cgal_plan fail close
 - Nef_2: algorithm_adapter_not_implemented
 - Nef_3: algorithm_adapter_not_implemented
 - Nef_S2: algorithm_adapter_not_implemented
-- Optimal_bounding_box: algorithm_adapter_not_implemented
 - Optimal_transportation_reconstruction_2: algorithm_adapter_not_implemented
 - Orthtree: algorithm_adapter_not_implemented
 - Partition_2: algorithm_adapter_not_implemented
@@ -107,6 +106,7 @@ When a request names one of these, cgal_capabilities_search/cgal_plan fail close
 - data_structure_adapter_not_implemented (CATALOGED): Official chapter <title> defines a data structure; the MCP uses typed artifacts for exchange and has no dedicated operation or adapter for it yet (not excluded: operations over it remain in scope).
 - generic_support_infrastructure (EXCLUDED): Official chapter <title> is generic-programming or arithmetic infrastructure (concepts, number types, containers, property maps, graph/solver adapters) consumed by other packages; it has no standalone geometric operation to expose.
 - gui_only (EXCLUDED): Official chapter <title> is an interactive visualization/GUI integration (Qt Graphics View, Ipe, or the Basic Viewer); it produces no headless geometric result that a typed artifact operation could return.
+- has_implemented_unvalidated_operations (IMPLEMENTED): At least one operation adapter with a mandatory independent validator lists this package as its primary package with status IMPLEMENTED (self-verified, not independently reviewed, not counted as validated).
 - has_validated_operations (VALIDATED): At least one VALIDATED operation lists this package as its primary package (derived, never listed here).
 - io_only (EXCLUDED): Official chapter <title> covers stream/file I/O and formatting; file formats are handled by the MCP artifact import/export layer, not as geometry operations.
 - needs_third_party_lib (BLOCKED): Whole package unusable without a third-party library that is not available in the build; no package currently qualifies (optional-dependency packages such as Polygonal_surface_reconstruction/SCIP are built and validated).

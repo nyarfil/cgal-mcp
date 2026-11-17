@@ -12,6 +12,7 @@ std::vector<OperationDefinition> producer_operations() {
   std::vector<OperationDefinition> result;
   append(result, points_producer_operations());
   append(result, mesh_producer_operations());
+  append(result, mesh_rounded_operations());
   append(result, polygon_producer_operations());
   return result;
 }

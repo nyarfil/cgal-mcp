@@ -190,9 +190,9 @@ Each recipe is a verified workflow (run by the acceptance suite against the real
 - neg06b-validator-budget-exceeded: a validator bound too tight for its validation budget fails closed -> {"code": "VALIDATION_BUDGET_EXCEEDED", "stage": "execute", "state": "failed"}
 - neg07-validator-rejects-jet-smoothing: jet smoothing that does not reduce roughness is rejected -> {"code": "ROUGHNESS_NOT_REDUCED", "stage": "execute", "state": "rejected"}
 - neg08-empty-reconstruction-fails-closed: Poisson reconstruction from estimated normals yields nothing and publishes nothing -> {"code": "EMPTY_RECONSTRUCTION", "stage": "execute", "state": "failed"}
-- neg09-face-limit-refused-at-plan: a mesh over the Hausdorff face limit is refused when planning -> {"code": "unmet_precondition", "stage": "plan", "state": "refused"}
+- neg09-face-limit-refused-at-plan: a mesh over the shortest-path face limit is refused when planning -> {"code": "unmet_precondition", "stage": "plan", "state": "refused"}
 - neg10-face-limit-refused-at-runtime: an intermediate mesh over a downstream face limit is refused before dispatch -> {"code": "unmet_precondition", "stage": "execute", "state": "failed"}
-- neg10b-torus-simplify-limit: a large mesh is simplified but its Hausdorff validator is refused over the face limit -> {"code": "unmet_precondition", "stage": "execute", "state": "failed"}
+- neg10b-torus-subdivide-limit: a mesh is subdivided past the face limit of the SDF operation, which is refused before dispatch -> {"code": "unmet_precondition", "stage": "execute", "state": "failed"}
 - neg11-wall-time-limit-out-of-range: an out-of-range wall-time request is refused -> {"code": "execution_limits", "stage": "execute_limits", "state": "refused"}
 - neg12-memory-limit-out-of-range: an out-of-range memory request is refused -> {"code": "execution_limits", "stage": "execute_limits", "state": "refused"}
 - neg13-missing-required-parameter: a missing required parameter is refused -> {"code": "parameters_required", "stage": "plan", "state": "refused"}

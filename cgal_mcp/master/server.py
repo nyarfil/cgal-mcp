@@ -219,6 +219,14 @@ def create_server(runtime: MasterRuntime | None = None) -> MCPServer:
         """Cancel a queued or running job. Unverified output is never published."""
         return await active.job_cancel(job_id)
 
+    @tool(name="cgal_experimental_run")
+    def experimental_run(source: str, outputs: list[dict[str, str]],
+                         inputs: dict[str, str] | None = None,
+                         execution: dict[str, Any] | None = None,
+                         note: str | None = None) -> dict[str, Any]:
+        """EXPERIMENTAL, UNVERIFIED, off by default. Compile and run ONE C++17 translation unit you write against CGAL 6.2.1 when no registered operation fits (check cgal_capabilities_search first). source: full program text with main(); it reads inputs from the directory in environment variable CGAL_IN (files <name>.<format>, one per entry of inputs={<name>: <artifact_id>}) and writes results into the directory CGAL_OUT. outputs: [{"file": "result.off", "artifact_type": "TriangleSurfaceMesh", "unit": "mm"}] (extensions off, xyz, ply, json; unit 'none' for reports). execution={"wall_time_ms","memory_mb"} within cgal_system_health limits. Nothing validates the result: every returned artifact has verification 'unverified' and you must tell the user so. Returns status completed / compile_failed (with compiler_output) / run_failed / run_timeout, plus stdout and stderr tails. If the server owner has not enabled it the call fails with experimental_disabled."""
+        return active.experimental_run(source, inputs, outputs, execution, note)
+
     for lang in ("en", "ja"):
         _register_guide_resources(server, guide, lang)
     _register_prompts(server, guide)
